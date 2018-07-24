@@ -1,5 +1,15 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
+}
+
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 group 'io.minimum.minecraft'
@@ -12,7 +22,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.netty:netty-all:4.1.27.Final'
+    compile 'io.netty:netty-handler:4.1.27.Final'
+    compile 'io.netty:netty-codec:4.1.27.Final'
+    compile 'io.netty:netty-codec-http:4.1.27.Final'
     compile 'com.google.guava:guava:25.1-jre'
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'net.kyori:text:1.12-1.5.0'
