@@ -24,15 +24,22 @@ public class MinecraftClientSessionHandler extends ChannelInboundHandlerAdapter 
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        InboundMinecraftConnection connection = ctx.channel().attr(InboundMinecraftConnection.CONNECTION).get();
         if (msg instanceof PacketWrapper) {
+            PacketWrapper pw = (PacketWrapper) msg;
             try {
-                handle(ctx, (PacketWrapper) msg);
+                if (pw.getPacket() == null) {
+                    connection.getSessionHandler().handleUnknown(pw.getBuffer());
+                } else {
+                    connection.getSessionHandler().handle(pw.getPacket());
+                }
             } finally {
                 ((PacketWrapper) msg).getBuffer().release();
             }
         }
 
         if (msg instanceof LegacyPing) {
+            // TODO: port this
             System.out.println("Got LEGACY status request!");
             ServerPing ping = new ServerPing(
                     new ServerPing.Version(340, "1.12"),
@@ -49,45 +56,5 @@ public class MinecraftClientSessionHandler extends ChannelInboundHandlerAdapter 
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
-    }
-
-    private void handle(ChannelHandlerContext ctx, PacketWrapper msg) {
-        MinecraftPacket packet = msg.getPacket();
-        if (packet == null) {
-            System.out.println("no packet!");
-            return;
-        }
-
-        if (packet instanceof Handshake) {
-            System.out.println("Handshake: " + packet);
-            switch (((Handshake) packet).getNextStatus()) {
-                case 1:
-                    // status
-                    ctx.pipeline().get(MinecraftDecoder.class).setState(StateRegistry.STATUS);
-                    ctx.pipeline().get(MinecraftEncoder.class).setState(StateRegistry.STATUS);
-                    break;
-                case 2:
-                    // login
-                    throw new UnsupportedOperationException("Login not supported yet");
-            }
-        }
-
-        if (packet instanceof StatusRequest) {
-            System.out.println("Got status request!");
-            ServerPing ping = new ServerPing(
-                    new ServerPing.Version(340, "1.12.2"),
-                    new ServerPing.Players(0, 0),
-                    TextComponent.of("test"),
-                    null
-            );
-            StatusResponse response = new StatusResponse();
-            response.setStatus(GSON.toJson(ping));
-            ctx.writeAndFlush(response, ctx.voidPromise());
-        }
-
-        if (packet instanceof Ping) {
-            System.out.println("Ping: " + packet);
-            ctx.writeAndFlush(packet).addListener(ChannelFutureListener.CLOSE);
-        }
     }
 }

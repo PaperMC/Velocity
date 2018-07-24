@@ -2,6 +2,7 @@ package io.minimum.minecraft.velocity;
 
 import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
 import io.minimum.minecraft.velocity.protocol.netty.*;
+import io.minimum.minecraft.velocity.proxy.InboundMinecraftConnection;
 import io.minimum.minecraft.velocity.proxy.MinecraftClientSessionHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -17,6 +18,7 @@ public class Velocity {
                 .childHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
+                        ch.attr(InboundMinecraftConnection.CONNECTION).set(new InboundMinecraftConnection(ch));
                         ch.pipeline().addLast("legacy-ping-decode", new LegacyPingDecoder());
                         ch.pipeline().addLast("frame-decoder", new MinecraftVarintFrameDecoder());
                         ch.pipeline().addLast("legacy-ping-encode", new LegacyPingEncoder());
