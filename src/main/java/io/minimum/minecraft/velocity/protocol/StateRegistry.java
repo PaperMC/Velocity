@@ -27,7 +27,10 @@ public enum StateRegistry {
     LOGIN {
         {
             TO_SERVER.register(0x00, ServerLogin.class, ServerLogin::new);
+
             TO_CLIENT.register(0x00, Disconnect.class, Disconnect::new);
+            // Encryption Success will follow once Mojang auth/encryption is done
+            TO_CLIENT.register(0x02, ServerLoginSuccess.class, ServerLogin::new);
         }
     };
 

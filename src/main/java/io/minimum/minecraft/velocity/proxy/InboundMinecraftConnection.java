@@ -66,10 +66,12 @@ public class InboundMinecraftConnection {
                 this.setStatus(StateRegistry.STATUS);
                 this.sessionHandler = new StatusSessionHandler(this);
                 break;
-            default:
+            case 2:
                 this.setStatus(StateRegistry.LOGIN);
                 this.sessionHandler = new LoginSessionHandler(this);
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
     }
 
@@ -82,5 +84,9 @@ public class InboundMinecraftConnection {
         this.state = state;
         channel.pipeline().get(MinecraftEncoder.class).setState(state);
         channel.pipeline().get(MinecraftDecoder.class).setState(state);
+    }
+
+    public void teardown() {
+        closed = true;
     }
 }

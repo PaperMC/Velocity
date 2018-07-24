@@ -2,12 +2,13 @@ package io.minimum.minecraft.velocity.proxy.handler;
 
 import com.google.common.base.Preconditions;
 import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
-import io.minimum.minecraft.velocity.protocol.packets.Disconnect;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLogin;
+import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
 import io.minimum.minecraft.velocity.proxy.InboundMinecraftConnection;
 import io.minimum.minecraft.velocity.proxy.MinecraftSessionHandler;
-import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.ComponentSerializers;
+
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final InboundMinecraftConnection connection;
@@ -20,9 +21,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public void handle(MinecraftPacket packet) {
         Preconditions.checkArgument(packet instanceof ServerLogin, "Expected a ServerLogin packet, not " + packet.getClass().getName());
 
-        // Disconnect with test message
-        Disconnect disconnect = new Disconnect();
-        disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of("Hi there!")));
-        connection.closeWith(disconnect);
+        String username = ((ServerLogin) packet).getUsername();
+        ServerLoginSuccess success = new ServerLoginSuccess();
+        success.setUsername(username);
+        success.setUuid(generateOfflinePlayerUuid(username));
+
+        connection.write(success);
+    }
+
+    private static UUID generateOfflinePlayerUuid(String username) {
+        return UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
     }
 }

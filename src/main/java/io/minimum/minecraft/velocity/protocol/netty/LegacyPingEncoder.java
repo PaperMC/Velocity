@@ -2,16 +2,23 @@ package io.minimum.minecraft.velocity.protocol.netty;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import io.minimum.minecraft.velocity.protocol.packets.LegacyPing;
 import io.minimum.minecraft.velocity.protocol.packets.LegacyPingResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@ChannelHandler.Sharable
 public class LegacyPingEncoder extends MessageToByteEncoder<LegacyPingResponse> {
+    public static final LegacyPingEncoder INSTANCE = new LegacyPingEncoder();
+
+    private LegacyPingEncoder() {}
+
     @Override
     protected void encode(ChannelHandlerContext ctx, LegacyPingResponse msg, ByteBuf out) throws Exception {
         out.writeByte(0xff);

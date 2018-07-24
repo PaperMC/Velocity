@@ -9,4 +9,8 @@ public interface MinecraftSessionHandler {
     default void handleUnknown(ByteBuf buf) {
         // No-op: we'll release the buffer later.
     }
+
+    default void connectionClosed() {
+
+    }
 }

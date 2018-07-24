@@ -53,6 +53,12 @@ public class MinecraftClientSessionHandler extends ChannelInboundHandlerAdapter 
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        InboundMinecraftConnection connection = ctx.channel().attr(InboundMinecraftConnection.CONNECTION).get();
+        connection.teardown();
+    }
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
     }
