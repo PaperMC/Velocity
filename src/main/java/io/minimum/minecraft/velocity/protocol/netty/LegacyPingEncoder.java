@@ -16,9 +16,8 @@ public class LegacyPingEncoder extends MessageToByteEncoder<LegacyPingResponse> 
     protected void encode(ChannelHandlerContext ctx, LegacyPingResponse msg, ByteBuf out) throws Exception {
         out.writeByte(0xff);
         String serializedResponse = serialize(msg);
-        byte[] serializedBytes = serializedResponse.getBytes(StandardCharsets.UTF_16BE);
-        out.writeShort(serializedBytes.length);
-        out.writeBytes(serializedBytes);
+        out.writeShort(serializedResponse.length());
+        out.writeBytes(serializedResponse.getBytes(StandardCharsets.UTF_16BE));
         System.out.println(ByteBufUtil.prettyHexDump(out));
     }
 
