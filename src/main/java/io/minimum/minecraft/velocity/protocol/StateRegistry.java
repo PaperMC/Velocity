@@ -1,9 +1,6 @@
 package io.minimum.minecraft.velocity.protocol;
 
-import io.minimum.minecraft.velocity.protocol.packets.Handshake;
-import io.minimum.minecraft.velocity.protocol.packets.Ping;
-import io.minimum.minecraft.velocity.protocol.packets.StatusRequest;
-import io.minimum.minecraft.velocity.protocol.packets.StatusResponse;
+import io.minimum.minecraft.velocity.protocol.packets.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +19,15 @@ public enum StateRegistry {
 
             TO_CLIENT.register(0x00, StatusResponse.class, StatusResponse::new);
             TO_CLIENT.register(0x01, Ping.class, Ping::new);
+        }
+    },
+    PLAY {
+
+    },
+    LOGIN {
+        {
+            TO_SERVER.register(0x00, ServerLogin.class, ServerLogin::new);
+            TO_CLIENT.register(0x00, Disconnect.class, Disconnect::new);
         }
     };
 

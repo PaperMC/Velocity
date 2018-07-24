@@ -6,6 +6,7 @@ import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftEncoder;
 import io.minimum.minecraft.velocity.protocol.packets.Handshake;
 import io.minimum.minecraft.velocity.proxy.handler.HandshakeSessionHandler;
+import io.minimum.minecraft.velocity.proxy.handler.LoginSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.StatusSessionHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -66,7 +67,9 @@ public class InboundMinecraftConnection {
                 this.sessionHandler = new StatusSessionHandler(this);
                 break;
             default:
-                throw new UnsupportedOperationException("Unsupported next protocol state " + handshake.getNextStatus());
+                this.setStatus(StateRegistry.LOGIN);
+                this.sessionHandler = new LoginSessionHandler(this);
+                break;
         }
     }
 

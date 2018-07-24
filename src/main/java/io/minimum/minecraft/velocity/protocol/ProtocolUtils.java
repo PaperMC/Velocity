@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import java.nio.charset.StandardCharsets;
 
 public enum ProtocolUtils { ;
-    private static final int DEFAULT_MAX_STRING_SIZE = 1024 * 1024; // 1MB
+    private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
 
     public static int readVarInt(ByteBuf buf) {
         int numRead = 0;

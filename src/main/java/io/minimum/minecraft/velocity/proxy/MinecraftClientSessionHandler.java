@@ -55,6 +55,5 @@ public class MinecraftClientSessionHandler extends ChannelInboundHandlerAdapter 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-        ctx.close();
     }
 }
