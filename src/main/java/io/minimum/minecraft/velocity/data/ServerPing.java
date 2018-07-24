@@ -43,26 +43,26 @@ public class ServerPing {
 
     public static class Version {
         private final int protocol;
-        private final String version;
+        private final String name;
 
-        public Version(int protocol, String version) {
+        public Version(int protocol, String name) {
             this.protocol = protocol;
-            this.version = version;
+            this.name = name;
         }
 
         public int getProtocol() {
             return protocol;
         }
 
-        public String getVersion() {
-            return version;
+        public String getName() {
+            return name;
         }
 
         @Override
         public String toString() {
             return "Version{" +
                     "protocol=" + protocol +
-                    ", version='" + version + '\'' +
+                    ", name='" + name + '\'' +
                     '}';
         }
     }

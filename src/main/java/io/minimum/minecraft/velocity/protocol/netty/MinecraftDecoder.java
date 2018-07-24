@@ -21,7 +21,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        if (msg.isReadable()) {
+        if (!msg.isReadable()) {
             return;
         }
 

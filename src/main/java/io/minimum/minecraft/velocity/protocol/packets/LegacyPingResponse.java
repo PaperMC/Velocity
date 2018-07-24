@@ -74,7 +74,7 @@ public class LegacyPingResponse {
 
     public static LegacyPingResponse from(ServerPing ping) {
         return new LegacyPingResponse(ping.getVersion().getProtocol(),
-                ping.getVersion().getVersion(),
+                ping.getVersion().getName(),
                 ComponentSerializers.LEGACY.serialize(ping.getDescription()),
                 ping.getPlayers().getOnline(),
                 ping.getPlayers().getMax());
