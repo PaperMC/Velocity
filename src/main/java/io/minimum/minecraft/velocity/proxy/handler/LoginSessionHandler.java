@@ -30,6 +30,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private static UUID generateOfflinePlayerUuid(String username) {
-        return UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 }
