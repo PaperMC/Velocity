@@ -21,7 +21,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
             return;
         }
 
-        System.out.println("Got a varint-prefixed packet length " + packetLength);
         out.add(in.slice(in.readerIndex(), packetLength).retain());
         in.skipBytes(packetLength);
     }

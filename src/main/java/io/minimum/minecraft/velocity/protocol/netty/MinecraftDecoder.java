@@ -30,9 +30,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         int packetId = ProtocolUtils.readVarInt(msg);
         StateRegistry.ProtocolMappings mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
         MinecraftPacket packet = mappings.createPacket(packetId);
-        System.out.println("Decode!");
-        System.out.println("packet ID: " + packetId);
-        System.out.println("packet hexdump: " + ByteBufUtil.hexDump(slice));
+        System.out.println(direction + " <- " + ByteBufUtil.hexDump(slice));
         if (packet == null) {
             msg.skipBytes(msg.readableBytes());
             out.add(new PacketWrapper(null, slice));

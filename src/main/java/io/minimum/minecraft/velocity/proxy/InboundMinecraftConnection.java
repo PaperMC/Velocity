@@ -13,6 +13,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.AttributeKey;
 
+import java.util.Optional;
+
 public class InboundMinecraftConnection {
     public static final AttributeKey<InboundMinecraftConnection> CONNECTION = AttributeKey.newInstance("velocity-connection");
 
@@ -21,6 +23,7 @@ public class InboundMinecraftConnection {
     private Handshake handshake;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
+    private ConnectedPlayer connectedPlayer;
 
     public InboundMinecraftConnection(Channel channel) {
         this.channel = channel;
@@ -79,7 +82,7 @@ public class InboundMinecraftConnection {
         Preconditions.checkState(!closed, "Connection is closed.");
     }
 
-    private void setStatus(StateRegistry state) {
+    public void setStatus(StateRegistry state) {
         Preconditions.checkNotNull(state, "state");
         this.state = state;
         channel.pipeline().get(MinecraftEncoder.class).setState(state);
@@ -88,5 +91,13 @@ public class InboundMinecraftConnection {
 
     public void teardown() {
         closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public Optional<ConnectedPlayer> getConnectedPlayer() {
+        return Optional.ofNullable(connectedPlayer);
     }
 }

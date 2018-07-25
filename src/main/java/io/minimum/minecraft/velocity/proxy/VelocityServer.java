@@ -1,8 +1,6 @@
 package io.minimum.minecraft.velocity.proxy;
 
-import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
 import io.minimum.minecraft.velocity.protocol.netty.*;
-import io.minimum.minecraft.velocity.proxy.server.ServerConnection;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -11,6 +9,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class VelocityServer {
+    private static VelocityServer server;
+
     private EventLoopGroup bossGroup;
     private EventLoopGroup childGroup;
 
@@ -18,9 +18,14 @@ public class VelocityServer {
 
     }
 
+    public static VelocityServer getServer() {
+        return server;
+    }
+
     public void initialize() {
         bossGroup = new NioEventLoopGroup();
         childGroup = new NioEventLoopGroup();
+        server = this;
         new ServerBootstrap()
                 .channel(NioServerSocketChannel.class)
                 .group(bossGroup, childGroup)
@@ -28,7 +33,7 @@ public class VelocityServer {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
                         ch.attr(InboundMinecraftConnection.CONNECTION).set(new InboundMinecraftConnection(ch));
-                        MinecraftPipelineUtils.strapPipeline(ch);
+                        MinecraftPipelineUtils.strapPipelineForServer(ch);
                         ch.pipeline().addLast("handler", new MinecraftClientSessionHandler());
                     }
                 })

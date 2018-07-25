@@ -22,7 +22,9 @@ public enum StateRegistry {
         }
     },
     PLAY {
-
+        {
+            TO_CLIENT.register(0x1A, Disconnect.class, Disconnect::new);
+        }
     },
     LOGIN {
         {
