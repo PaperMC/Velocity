@@ -1,5 +1,7 @@
 package io.minimum.minecraft.velocity.proxy;
 
+import io.minimum.minecraft.velocity.data.ServerInfo;
+import io.minimum.minecraft.velocity.protocol.packets.Chat;
 import io.minimum.minecraft.velocity.protocol.packets.Disconnect;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -35,19 +37,30 @@ public class ConnectedPlayer {
         return connectedServer;
     }
 
-    public void handleConnectionException(Throwable throwable) {
-        String error = "Exception: " + throwable.getClass().getName() + ": " + throwable.getMessage();
+    public void handleConnectionException(ServerInfo info, Throwable throwable) {
+        String error = String.format("%s: %s",
+                throwable.getClass().getName(), throwable.getMessage());
         Disconnect disconnect = new Disconnect();
         disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of(error, TextColor.RED)));
-        handleConnectionException(disconnect);
+        handleConnectionException(info, disconnect);
     }
 
-    public void handleConnectionException(Disconnect disconnect) {
+    public void handleConnectionException(ServerInfo info, Disconnect disconnect) {
+        TextComponent component = TextComponent.builder()
+                .content("Exception connecting to server " + info.getName() + ": ")
+                .color(TextColor.RED)
+                .append(ComponentSerializers.JSON.deserialize(disconnect.getReason()))
+                .build();
+
         if (connectedServer == null) {
             // The player isn't yet connected to a server - we should disconnect them.
-            connection.closeWith(disconnect);
+            Disconnect d = new Disconnect();
+            d.setReason(ComponentSerializers.JSON.serialize(component));
+            connection.closeWith(d);
         } else {
-            // TODO
+            Chat chat = new Chat();
+            chat.setMessage(ComponentSerializers.JSON.serialize(component));
+            connection.write(chat);
         }
     }
 

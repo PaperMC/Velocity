@@ -23,6 +23,9 @@ public enum StateRegistry {
     },
     PLAY {
         {
+            TO_SERVER.register(0x02, Chat.class, Chat::new);
+
+            TO_CLIENT.register(0x0F, Chat.class, Chat::new);
             TO_CLIENT.register(0x1A, Disconnect.class, Disconnect::new);
         }
     },

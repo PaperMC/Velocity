@@ -39,7 +39,11 @@ public class ServerConnection {
                 .addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
-                        channel = future.channel();
+                        if (future.isSuccess()) {
+                            channel = future.channel();
+                        } else {
+                            proxyPlayer.handleConnectionException(info, future.cause());
+                        }
                     }
                 });
     }
@@ -49,11 +53,11 @@ public class ServerConnection {
         channel = null;
     }
 
-    public void forward(ByteBuf buf) {
+    public void forward(Object o) {
         if (registry != StateRegistry.PLAY) {
             throw new IllegalStateException("Not accepting player information until PLAY state");
         }
-        channel.writeAndFlush(buf.retain());
+        channel.writeAndFlush(o, channel.voidPromise());
     }
 
     private class StateBasedInterceptor extends ChannelInboundHandlerAdapter {
@@ -62,7 +66,7 @@ public class ServerConnection {
             // Initiate a handshake.
             Handshake handshake = new Handshake();
             handshake.setNextStatus(2); // login
-            handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion()); // TODO: Expose client version
+            handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
             handshake.setServerAddress(info.getAddress().getHostString());
             handshake.setPort(info.getAddress().getPort());
             ctx.writeAndFlush(handshake, ctx.voidPromise());
@@ -113,7 +117,7 @@ public class ServerConnection {
             if (packet instanceof Disconnect) {
                 Disconnect disconnect = (Disconnect) packet;
                 ctx.close();
-                proxyPlayer.handleConnectionException(disconnect);
+                proxyPlayer.handleConnectionException(info, disconnect);
             }
 
             if (packet instanceof SetCompression) {
