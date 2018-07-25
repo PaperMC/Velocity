@@ -17,14 +17,12 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
         if (msg.readableBytes() <= threshold) {
-            System.out.println("not compressing packet of 0x" + msg.readableBytes() + " size");
             // Under the threshold, there is nothing to do.
             ProtocolUtils.writeVarInt(out, 0);
             out.writeBytes(msg);
             return;
         }
 
-        System.out.println("compressing packet of 0x" + msg.readableBytes() + " size");
         Deflater deflater = new Deflater();
         byte[] buf = new byte[msg.readableBytes()];
         msg.readBytes(buf);

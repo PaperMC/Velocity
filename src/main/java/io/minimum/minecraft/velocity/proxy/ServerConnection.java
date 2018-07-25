@@ -7,10 +7,7 @@ import io.minimum.minecraft.velocity.data.ServerInfo;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftEncoder;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftPipelineUtils;
-import io.minimum.minecraft.velocity.protocol.packets.Disconnect;
-import io.minimum.minecraft.velocity.protocol.packets.Handshake;
-import io.minimum.minecraft.velocity.protocol.packets.ServerLogin;
-import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
+import io.minimum.minecraft.velocity.protocol.packets.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import net.kyori.text.TextComponent;
@@ -117,6 +114,12 @@ public class ServerConnection {
                 Disconnect disconnect = (Disconnect) packet;
                 ctx.close();
                 proxyPlayer.handleConnectionException(disconnect);
+            }
+
+            if (packet instanceof SetCompression) {
+                System.out.println("Enabling compression on server connection, this is inefficient!");
+                SetCompression sc = (SetCompression) packet;
+                MinecraftPipelineUtils.enableCompression(channel, sc.getThreshold());
             }
 
             if (packet instanceof ServerLoginSuccess) {

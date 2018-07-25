@@ -23,6 +23,12 @@ public class MinecraftPipelineUtils {
     }
 
     public static void enableCompression(Channel ch, int threshold) {
+        if (threshold == -1) {
+            ch.pipeline().remove("compress-decoder");
+            ch.pipeline().remove("compress-encoder");
+            return;
+        }
+
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold);
 
