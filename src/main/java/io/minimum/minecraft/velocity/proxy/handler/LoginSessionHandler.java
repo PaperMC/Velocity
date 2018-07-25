@@ -5,6 +5,7 @@ import io.minimum.minecraft.velocity.data.ServerInfo;
 import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLogin;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
+import io.minimum.minecraft.velocity.protocol.packets.SetCompression;
 import io.minimum.minecraft.velocity.proxy.*;
 
 import java.net.InetSocketAddress;
@@ -22,7 +23,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public void handle(MinecraftPacket packet) {
         Preconditions.checkArgument(packet instanceof ServerLogin, "Expected a ServerLogin packet, not " + packet.getClass().getName());
 
-        // TODO: Encryption and compression
+        // TODO: Encryption
+        connection.enableCompression();
+
         String username = ((ServerLogin) packet).getUsername();
         ServerLoginSuccess success = new ServerLoginSuccess();
         success.setUsername(username);

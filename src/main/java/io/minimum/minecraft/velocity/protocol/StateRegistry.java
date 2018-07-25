@@ -33,6 +33,7 @@ public enum StateRegistry {
             TO_CLIENT.register(0x00, Disconnect.class, Disconnect::new);
             // Encryption Success will follow once Mojang auth/encryption is done
             TO_CLIENT.register(0x02, ServerLoginSuccess.class, ServerLoginSuccess::new);
+            TO_CLIENT.register(0x03, SetCompression.class, SetCompression::new);
         }
     };
 
@@ -50,7 +51,7 @@ public enum StateRegistry {
             this.state = state;
         }
 
-        public void register(int id, Class<? extends MinecraftPacket> clazz, Supplier<? extends MinecraftPacket> packetSupplier) {
+        public <P extends MinecraftPacket> void register(int id, Class<P> clazz, Supplier<P> packetSupplier) {
             idsToSuppliers.put(id, packetSupplier);
             packetClassesToIds.put(clazz, id);
         }

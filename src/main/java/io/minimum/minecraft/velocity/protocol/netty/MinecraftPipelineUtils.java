@@ -21,4 +21,12 @@ public class MinecraftPipelineUtils {
         ch.pipeline().addLast("minecraft-decoder", new MinecraftDecoder(ProtocolConstants.Direction.TO_CLIENT));
         ch.pipeline().addLast("minecraft-encoder", new MinecraftEncoder(ProtocolConstants.Direction.TO_SERVER));
     }
+
+    public static void enableCompression(Channel ch, int threshold) {
+        MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold);
+        MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold);
+
+        ch.pipeline().addBefore("minecraft-decoder", "compress-decoder", decoder);
+        ch.pipeline().addBefore("minecraft-encoder", "compress-encoder", encoder);
+    }
 }

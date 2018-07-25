@@ -6,8 +6,10 @@ import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
 import io.minimum.minecraft.velocity.protocol.StateRegistry;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftEncoder;
+import io.minimum.minecraft.velocity.protocol.netty.MinecraftPipelineUtils;
 import io.minimum.minecraft.velocity.protocol.packets.Handshake;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
+import io.minimum.minecraft.velocity.protocol.packets.SetCompression;
 import io.minimum.minecraft.velocity.proxy.handler.HandshakeSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.LoginSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.PlaySessionHandler;
@@ -121,5 +123,10 @@ public class InboundMinecraftConnection {
         ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
         sessionHandler = new PlaySessionHandler(player, connection);
         connection.connect();
+    }
+
+    public void enableCompression() {
+        write(new SetCompression(256));
+        MinecraftPipelineUtils.enableCompression(channel, 256);
     }
 }
