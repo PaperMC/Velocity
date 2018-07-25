@@ -10,7 +10,15 @@ public interface MinecraftSessionHandler {
         // No-op: we'll release the buffer later.
     }
 
-    default void connectionClosed() {
+    default void connected() {
+
+    }
+
+    default void disconnected() {
+
+    }
+
+    default void exception(Throwable throwable) {
 
     }
 }

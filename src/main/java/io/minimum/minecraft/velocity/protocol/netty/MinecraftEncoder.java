@@ -3,7 +3,6 @@ package io.minimum.minecraft.velocity.protocol.netty;
 import com.google.common.base.Preconditions;
 import io.minimum.minecraft.velocity.protocol.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
@@ -23,8 +22,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
         int packetId = mappings.getId(msg);
         ProtocolUtils.writeVarInt(out, packetId);
         msg.encode(out, direction, protocolVersion);
-
-        //System.out.println(direction + " -> " + ByteBufUtil.hexDump(out));
+        System.out.println("OUT: " + msg);
     }
 
     public int getProtocolVersion() {

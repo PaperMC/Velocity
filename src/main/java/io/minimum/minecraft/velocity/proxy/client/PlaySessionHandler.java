@@ -1,20 +1,16 @@
-package io.minimum.minecraft.velocity.proxy.handler;
+package io.minimum.minecraft.velocity.proxy.client;
 
 import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
 import io.minimum.minecraft.velocity.protocol.packets.Chat;
 import io.minimum.minecraft.velocity.protocol.packets.Ping;
-import io.minimum.minecraft.velocity.proxy.ConnectedPlayer;
 import io.minimum.minecraft.velocity.proxy.MinecraftSessionHandler;
-import io.minimum.minecraft.velocity.proxy.ServerConnection;
 import io.netty.buffer.ByteBuf;
 
 public class PlaySessionHandler implements MinecraftSessionHandler {
     private final ConnectedPlayer player;
-    private final ServerConnection connection;
 
-    public PlaySessionHandler(ConnectedPlayer player, ServerConnection connection) {
+    public PlaySessionHandler(ConnectedPlayer player) {
         this.player = player;
-        this.connection = connection;
     }
 
     @Override
@@ -25,14 +21,17 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (packet instanceof Chat) {
-            // TODO: handle this ourselves, for now do this
-            player.getConnectedServer().forward(packet);
-        }
+        // If we don't want to handle this packet, just forward it on.
+        player.getConnectedServer().getChannel().write(packet);
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        connection.forward(buf.retain());
+        player.getConnectedServer().getChannel().write(buf.retain());
+    }
+
+    @Override
+    public void disconnected() {
+        player.getConnectedServer().disconnect();
     }
 }

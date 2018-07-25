@@ -3,7 +3,6 @@ package io.minimum.minecraft.velocity.protocol.netty;
 import com.google.common.base.Preconditions;
 import io.minimum.minecraft.velocity.protocol.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -31,7 +30,6 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         int packetId = ProtocolUtils.readVarInt(msg);
         StateRegistry.ProtocolMappings mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
         MinecraftPacket packet = mappings.createPacket(packetId);
-        //System.out.println(direction + " <- " + ByteBufUtil.hexDump(slice));
         if (packet == null) {
             msg.skipBytes(msg.readableBytes());
             out.add(new PacketWrapper(null, slice));
@@ -42,6 +40,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
                         + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
             }
+            System.out.println("IN: " + packet);
             out.add(new PacketWrapper(packet, slice));
         }
     }

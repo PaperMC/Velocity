@@ -1,8 +1,11 @@
-package io.minimum.minecraft.velocity.proxy;
+package io.minimum.minecraft.velocity.proxy.client;
 
 import io.minimum.minecraft.velocity.data.ServerInfo;
 import io.minimum.minecraft.velocity.protocol.packets.Chat;
 import io.minimum.minecraft.velocity.protocol.packets.Disconnect;
+import io.minimum.minecraft.velocity.proxy.MinecraftConnection;
+import io.minimum.minecraft.velocity.proxy.backend.ServerConnection;
+import io.minimum.minecraft.velocity.util.ThrowableUtils;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
@@ -12,10 +15,10 @@ import java.util.UUID;
 public class ConnectedPlayer {
     private final String username;
     private final UUID uniqueId;
-    private final InboundMinecraftConnection connection;
+    private final MinecraftConnection connection;
     private ServerConnection connectedServer;
 
-    public ConnectedPlayer(String username, UUID uniqueId, InboundMinecraftConnection connection) {
+    public ConnectedPlayer(String username, UUID uniqueId, MinecraftConnection connection) {
         this.username = username;
         this.uniqueId = uniqueId;
         this.connection = connection;
@@ -29,7 +32,7 @@ public class ConnectedPlayer {
         return uniqueId;
     }
 
-    public InboundMinecraftConnection getConnection() {
+    public MinecraftConnection getConnection() {
         return connection;
     }
 
@@ -38,8 +41,7 @@ public class ConnectedPlayer {
     }
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {
-        String error = String.format("%s: %s",
-                throwable.getClass().getName(), throwable.getMessage());
+        String error = ThrowableUtils.briefDescription(throwable);
         Disconnect disconnect = new Disconnect();
         disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of(error, TextColor.RED)));
         handleConnectionException(info, disconnect);
@@ -66,5 +68,11 @@ public class ConnectedPlayer {
 
     public void setConnectedServer(ServerConnection serverConnection) {
         this.connectedServer = serverConnection;
+    }
+
+    public void close(TextComponent reason) {
+        Disconnect disconnect = new Disconnect();
+        disconnect.setReason(ComponentSerializers.JSON.serialize(reason));
+        connection.closeWith(disconnect);
     }
 }

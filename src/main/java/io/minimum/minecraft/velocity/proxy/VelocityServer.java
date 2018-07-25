@@ -1,6 +1,8 @@
 package io.minimum.minecraft.velocity.proxy;
 
+import io.minimum.minecraft.velocity.protocol.StateRegistry;
 import io.minimum.minecraft.velocity.protocol.netty.*;
+import io.minimum.minecraft.velocity.proxy.client.HandshakeSessionHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -32,9 +34,12 @@ public class VelocityServer {
                 .childHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
-                        ch.attr(InboundMinecraftConnection.CONNECTION).set(new InboundMinecraftConnection(ch));
                         MinecraftPipelineUtils.strapPipelineForServer(ch);
-                        ch.pipeline().addLast("handler", new MinecraftClientSessionHandler());
+
+                        MinecraftConnection connection = new MinecraftConnection(ch);
+                        connection.setState(StateRegistry.HANDSHAKE);
+                        connection.setSessionHandler(new HandshakeSessionHandler(connection));
+                        ch.pipeline().addLast("handler", connection);
                     }
                 })
                 .bind(26671)
@@ -51,7 +56,7 @@ public class VelocityServer {
                 });
     }
 
-    Bootstrap initializeGenericBootstrap() {
+    public Bootstrap initializeGenericBootstrap() {
         return new Bootstrap()
                 .channel(NioSocketChannel.class)
                 .group(childGroup);

@@ -1,15 +1,14 @@
-package io.minimum.minecraft.velocity.proxy.handler;
+package io.minimum.minecraft.velocity.proxy.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.minimum.minecraft.velocity.data.ServerPing;
 import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
-import io.minimum.minecraft.velocity.protocol.packets.LegacyPing;
 import io.minimum.minecraft.velocity.protocol.packets.Ping;
 import io.minimum.minecraft.velocity.protocol.packets.StatusRequest;
 import io.minimum.minecraft.velocity.protocol.packets.StatusResponse;
-import io.minimum.minecraft.velocity.proxy.InboundMinecraftConnection;
+import io.minimum.minecraft.velocity.proxy.MinecraftConnection;
 import io.minimum.minecraft.velocity.proxy.MinecraftSessionHandler;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -19,9 +18,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
             .create();
-    private final InboundMinecraftConnection connection;
+    private final MinecraftConnection connection;
 
-    public StatusSessionHandler(InboundMinecraftConnection connection) {
+    public StatusSessionHandler(MinecraftConnection connection) {
         this.connection = connection;
     }
 
