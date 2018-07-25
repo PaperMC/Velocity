@@ -26,8 +26,9 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
 
         ByteBuf compressedBuffer = ctx.alloc().buffer();
         try {
+            int uncompressed = msg.readableBytes();
             compressor.deflate(msg, compressedBuffer);
-            ProtocolUtils.writeVarInt(out, msg.readableBytes());
+            ProtocolUtils.writeVarInt(out, uncompressed);
             out.writeBytes(compressedBuffer);
         } finally {
             compressedBuffer.release();
