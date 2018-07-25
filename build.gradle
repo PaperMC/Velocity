@@ -3,7 +3,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-group 'io.minimum.minecraft'
+group 'com.velocitypowered'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
