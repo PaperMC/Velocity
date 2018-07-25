@@ -9,33 +9,27 @@ public enum ProtocolUtils { ;
     private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
 
     public static int readVarInt(ByteBuf buf) {
-        int numRead = 0;
-        int result = 0;
-        byte read;
-        do {
-            read = buf.readByte();
-            int value = (read & 0b01111111);
-            result |= (value << (7 * numRead));
-
-            numRead++;
-            if (numRead > 5) {
-                throw new RuntimeException("VarInt is too big");
-            }
-        } while ((read & 0b10000000) != 0);
-
-        return result;
+        int i = 0;
+        int j = 0;
+        while (true) {
+            int k = buf.readByte();
+            i |= (k & 0x7F) << j++ * 7;
+            if (j > 5) throw new RuntimeException("VarInt too big");
+            if ((k & 0x80) != 128) break;
+        }
+        return i;
     }
 
     public static void writeVarInt(ByteBuf buf, int value) {
-        do {
-            byte temp = (byte)(value & 0b01111111);
-            // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
-            value >>>= 7;
-            if (value != 0) {
-                temp |= 0b10000000;
+        while (true) {
+            if ((value & 0xFFFFFF80) == 0) {
+                buf.writeByte(value);
+                return;
             }
-            buf.writeByte(temp);
-        } while (value != 0);
+
+            buf.writeByte(value & 0x7F | 0x80);
+            value >>>= 7;
+        }
     }
 
     public static String readString(ByteBuf buf) {
@@ -44,7 +38,7 @@ public enum ProtocolUtils { ;
 
     public static String readString(ByteBuf buf, int cap) {
         int length = readVarInt(buf);
-        Preconditions.checkArgument(length < cap, "Bad string size (got %s, maximum is %s)", length, cap);
+        Preconditions.checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
         byte[] str = new byte[length];
         buf.readBytes(str);
         return new String(str, StandardCharsets.UTF_8);

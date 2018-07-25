@@ -2,7 +2,6 @@ package io.minimum.minecraft.velocity.proxy;
 
 import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
 import io.minimum.minecraft.velocity.protocol.PacketWrapper;
-import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
 import io.minimum.minecraft.velocity.protocol.StateRegistry;
 import io.minimum.minecraft.velocity.data.ServerInfo;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
@@ -13,9 +12,6 @@ import io.minimum.minecraft.velocity.protocol.packets.Handshake;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLogin;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
 import io.netty.channel.*;
-import net.kyori.text.serializer.ComponentSerializers;
-
-import java.io.IOException;
 
 public class ServerConnection {
     private Channel channel;
@@ -55,7 +51,7 @@ public class ServerConnection {
             // Initiate a handshake.
             Handshake handshake = new Handshake();
             handshake.setNextStatus(2); // login
-            handshake.setProtocolVersion(ProtocolConstants.MINECRAFT_1_12); // TODO: Expose client version
+            handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion()); // TODO: Expose client version
             handshake.setServerAddress(info.getAddress().getHostString());
             handshake.setPort(info.getAddress().getPort());
             ctx.writeAndFlush(handshake, ctx.voidPromise());
@@ -77,6 +73,9 @@ public class ServerConnection {
                         case LOGIN:
                             onLogin(ctx, pw);
                             break;
+                        case PLAY:
+                            onPlay(ctx, pw);
+                            break;
                         default:
                             throw new UnsupportedOperationException("Unsupported state " + registry);
                     }
@@ -86,16 +85,23 @@ public class ServerConnection {
             }
         }
 
+        private void onPlay(ChannelHandlerContext ctx, PacketWrapper pw) {
+            proxyPlayer.getConnection().write(pw.getBuffer().retain());
+        }
+
         private void onLogin(ChannelHandlerContext ctx, PacketWrapper wrapper) {
+            //System.out.println("FROM PROXIED SERVER -> " + wrapper.getPacket() + " / " + ByteBufUtil.hexDump(wrapper.getBuffer()));
             MinecraftPacket packet = wrapper.getPacket();
             if (packet instanceof Disconnect) {
                 Disconnect disconnect = (Disconnect) packet;
                 ctx.close();
-                proxyPlayer.handleConnectionException(new IOException("Disconnected from target: " + jsonToPlain(disconnect.getReason())));
+                proxyPlayer.handleConnectionException(disconnect);
             }
 
             if (packet instanceof ServerLoginSuccess) {
-                System.out.println("got it");
+                // the player has been logged on.
+                System.out.println("Player connected to remote server");
+                setRegistry(StateRegistry.PLAY);
             }
         }
     }
@@ -104,11 +110,5 @@ public class ServerConnection {
         this.registry = registry;
         this.channel.pipeline().get(MinecraftEncoder.class).setState(registry);
         this.channel.pipeline().get(MinecraftDecoder.class).setState(registry);
-    }
-
-    private static String jsonToPlain(String j) {
-        return ComponentSerializers.LEGACY.serialize(
-                ComponentSerializers.JSON.deserialize(j)
-        ).replaceAll("\\u00A7[a-z0-9]", "");
     }
 }

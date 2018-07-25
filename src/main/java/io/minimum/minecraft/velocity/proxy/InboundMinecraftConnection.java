@@ -1,10 +1,13 @@
 package io.minimum.minecraft.velocity.proxy;
 
 import com.google.common.base.Preconditions;
+import io.minimum.minecraft.velocity.data.ServerInfo;
+import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
 import io.minimum.minecraft.velocity.protocol.StateRegistry;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
 import io.minimum.minecraft.velocity.protocol.netty.MinecraftEncoder;
 import io.minimum.minecraft.velocity.protocol.packets.Handshake;
+import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
 import io.minimum.minecraft.velocity.proxy.handler.HandshakeSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.LoginSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.StatusSessionHandler;
@@ -13,6 +16,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.AttributeKey;
 
+import java.net.InetSocketAddress;
 import java.util.Optional;
 
 public class InboundMinecraftConnection {
@@ -82,7 +86,7 @@ public class InboundMinecraftConnection {
         Preconditions.checkState(!closed, "Connection is closed.");
     }
 
-    public void setStatus(StateRegistry state) {
+    private void setStatus(StateRegistry state) {
         Preconditions.checkNotNull(state, "state");
         this.state = state;
         channel.pipeline().get(MinecraftEncoder.class).setState(state);
@@ -99,5 +103,17 @@ public class InboundMinecraftConnection {
 
     public Optional<ConnectedPlayer> getConnectedPlayer() {
         return Optional.ofNullable(connectedPlayer);
+    }
+
+    public int getProtocolVersion() {
+        return handshake == null ? ProtocolConstants.MINECRAFT_1_12 : handshake.getProtocolVersion();
+    }
+
+    public void initiatePlay(ServerLoginSuccess success) {
+        setStatus(StateRegistry.PLAY);
+        ConnectedPlayer player = new ConnectedPlayer(success.getUsername(), success.getUuid(), this);
+        ServerInfo info = new ServerInfo("test", new InetSocketAddress("127.0.0.1", 25565));
+        ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
+        connection.connect();
     }
 }

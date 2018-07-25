@@ -37,11 +37,14 @@ public class ConnectedPlayer {
 
     public void handleConnectionException(Throwable throwable) {
         String error = "Exception: " + throwable.getClass().getName() + ": " + throwable.getMessage();
+        Disconnect disconnect = new Disconnect();
+        disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of(error, TextColor.RED)));
+        handleConnectionException(disconnect);
+    }
 
+    public void handleConnectionException(Disconnect disconnect) {
         if (connectedServer == null) {
             // The player isn't yet connected to a server - we should disconnect them.
-            Disconnect disconnect = new Disconnect();
-            disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of(error, TextColor.RED)));
             connection.closeWith(disconnect);
         } else {
             // TODO

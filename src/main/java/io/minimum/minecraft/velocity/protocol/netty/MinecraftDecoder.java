@@ -5,6 +5,7 @@ import io.minimum.minecraft.velocity.protocol.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
 import java.util.List;
@@ -35,7 +36,12 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
             msg.skipBytes(msg.readableBytes());
             out.add(new PacketWrapper(null, slice));
         } else {
-            packet.decode(msg, direction, protocolVersion);
+            try {
+                packet.decode(msg, direction, protocolVersion);
+            } catch (Exception e) {
+                throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
+                        + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
+            }
             out.add(new PacketWrapper(packet, slice));
         }
     }
