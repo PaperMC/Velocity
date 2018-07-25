@@ -11,5 +11,6 @@ Velocity is a next-generation Minecraft: Java Edition proxy suite.
 
 ## Status
 
-Velocity is far from finished. You should join us on **irc.spi.gt**
-`#velocity` or send us a pull request.
+Velocity is far from finished. It's currently enough to act as an MITM
+proxy for a Minecraft server even though that's not the goal. You should
+join us on **irc.spi.gt** `#velocity` or send us a pull request.
