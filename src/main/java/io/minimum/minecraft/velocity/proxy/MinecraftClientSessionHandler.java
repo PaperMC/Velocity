@@ -1,27 +1,13 @@
 package io.minimum.minecraft.velocity.proxy;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.minimum.minecraft.velocity.data.ServerPing;
-import io.minimum.minecraft.velocity.protocol.MinecraftPacket;
 import io.minimum.minecraft.velocity.protocol.PacketWrapper;
-import io.minimum.minecraft.velocity.protocol.StateRegistry;
-import io.minimum.minecraft.velocity.protocol.netty.MinecraftDecoder;
-import io.minimum.minecraft.velocity.protocol.netty.MinecraftEncoder;
 import io.minimum.minecraft.velocity.protocol.packets.*;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
-import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.GsonComponentSerializer;
 
 public class MinecraftClientSessionHandler extends ChannelInboundHandlerAdapter {
-    private static final Gson GSON = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
-            .create();
-
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         InboundMinecraftConnection connection = ctx.channel().attr(InboundMinecraftConnection.CONNECTION).get();

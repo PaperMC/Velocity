@@ -1,6 +1,7 @@
 package io.minimum.minecraft.velocity.protocol.netty;
 
 import io.minimum.minecraft.velocity.protocol.ProtocolConstants;
+import io.minimum.minecraft.velocity.protocol.compression.JavaVelocityCompressor;
 import io.netty.channel.Channel;
 
 public class MinecraftPipelineUtils {
@@ -29,8 +30,9 @@ public class MinecraftPipelineUtils {
             return;
         }
 
-        MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold);
-        MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold);
+        JavaVelocityCompressor compressor = new JavaVelocityCompressor();
+        MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
+        MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 
         ch.pipeline().addBefore("minecraft-decoder", "compress-decoder", decoder);
         ch.pipeline().addBefore("minecraft-encoder", "compress-encoder", encoder);

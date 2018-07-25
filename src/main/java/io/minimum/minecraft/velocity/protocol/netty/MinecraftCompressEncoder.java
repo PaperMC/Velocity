@@ -1,17 +1,18 @@
 package io.minimum.minecraft.velocity.protocol.netty;
 
 import io.minimum.minecraft.velocity.protocol.ProtocolUtils;
+import io.minimum.minecraft.velocity.protocol.compression.VelocityCompressor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-import java.util.zip.Deflater;
-
 public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
     private final int threshold;
+    private final VelocityCompressor compressor;
 
-    public MinecraftCompressEncoder(int threshold) {
+    public MinecraftCompressEncoder(int threshold, VelocityCompressor compressor) {
         this.threshold = threshold;
+        this.compressor = compressor;
     }
 
     @Override
@@ -23,20 +24,10 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
             return;
         }
 
-        Deflater deflater = new Deflater();
-        byte[] buf = new byte[msg.readableBytes()];
-        msg.readBytes(buf);
-        deflater.setInput(buf);
-        deflater.finish();
-
         ByteBuf compressedBuffer = ctx.alloc().buffer();
         try {
-            byte[] deflated = new byte[8192];
-            while (!deflater.finished()) {
-                int bytes = deflater.deflate(deflated);
-                compressedBuffer.writeBytes(deflated, 0, bytes);
-            }
-            ProtocolUtils.writeVarInt(out, buf.length);
+            compressor.deflate(msg, compressedBuffer);
+            ProtocolUtils.writeVarInt(out, msg.readableBytes());
             out.writeBytes(compressedBuffer);
         } finally {
             compressedBuffer.release();
