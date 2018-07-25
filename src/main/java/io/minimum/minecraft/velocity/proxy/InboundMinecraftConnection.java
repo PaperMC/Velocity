@@ -10,11 +10,13 @@ import io.minimum.minecraft.velocity.protocol.packets.Handshake;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
 import io.minimum.minecraft.velocity.proxy.handler.HandshakeSessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.LoginSessionHandler;
+import io.minimum.minecraft.velocity.proxy.handler.PlaySessionHandler;
 import io.minimum.minecraft.velocity.proxy.handler.StatusSessionHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.AttributeKey;
+import net.kyori.text.TextComponent;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -43,7 +45,7 @@ public class InboundMinecraftConnection {
 
     public void closeWith(Object msg) {
         ensureOpen();
-        closed = true;
+        teardown();
         channel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
@@ -54,8 +56,8 @@ public class InboundMinecraftConnection {
 
     public void close() {
         ensureOpen();
+        teardown();
         channel.close();
-        closed = true;
     }
 
     public MinecraftSessionHandler getSessionHandler() {
@@ -95,6 +97,9 @@ public class InboundMinecraftConnection {
 
     public void teardown() {
         closed = true;
+        if (connectedPlayer != null && connectedPlayer.getConnectedServer() != null) {
+            connectedPlayer.getConnectedServer().disconnect();
+        }
     }
 
     public boolean isClosed() {
@@ -114,6 +119,7 @@ public class InboundMinecraftConnection {
         ConnectedPlayer player = new ConnectedPlayer(success.getUsername(), success.getUuid(), this);
         ServerInfo info = new ServerInfo("test", new InetSocketAddress("127.0.0.1", 25565));
         ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
+        sessionHandler = new PlaySessionHandler(player, connection);
         connection.connect();
     }
 }

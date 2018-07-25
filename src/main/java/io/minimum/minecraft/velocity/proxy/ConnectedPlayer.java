@@ -50,4 +50,8 @@ public class ConnectedPlayer {
             // TODO
         }
     }
+
+    public void setConnectedServer(ServerConnection serverConnection) {
+        this.connectedServer = serverConnection;
+    }
 }

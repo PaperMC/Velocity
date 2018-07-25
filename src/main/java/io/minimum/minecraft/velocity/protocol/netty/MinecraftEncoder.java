@@ -24,7 +24,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
         ProtocolUtils.writeVarInt(out, packetId);
         msg.encode(out, direction, protocolVersion);
 
-        System.out.println(direction + " -> " + ByteBufUtil.hexDump(out));
+        //System.out.println(direction + " -> " + ByteBufUtil.hexDump(out));
     }
 
     public int getProtocolVersion() {

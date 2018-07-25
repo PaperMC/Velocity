@@ -11,7 +11,9 @@ import io.minimum.minecraft.velocity.protocol.packets.Disconnect;
 import io.minimum.minecraft.velocity.protocol.packets.Handshake;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLogin;
 import io.minimum.minecraft.velocity.protocol.packets.ServerLoginSuccess;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import net.kyori.text.TextComponent;
 
 public class ServerConnection {
     private Channel channel;
@@ -45,6 +47,18 @@ public class ServerConnection {
                 });
     }
 
+    public void disconnect() {
+        channel.close();
+        channel = null;
+    }
+
+    public void forward(ByteBuf buf) {
+        if (registry != StateRegistry.PLAY) {
+            throw new IllegalStateException("Not accepting player information until PLAY state");
+        }
+        channel.writeAndFlush(buf.retain());
+    }
+
     private class StateBasedInterceptor extends ChannelInboundHandlerAdapter {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -66,6 +80,13 @@ public class ServerConnection {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            if (proxyPlayer.getConnection().isClosed()) {
+                // The upstream connection is closed, but we didn't forward that on for some reason. Close the connection
+                // here.
+                ctx.close();
+                return;
+            }
+
             if (msg instanceof PacketWrapper) {
                 PacketWrapper pw = (PacketWrapper) msg;
                 try {
@@ -102,6 +123,7 @@ public class ServerConnection {
                 // the player has been logged on.
                 System.out.println("Player connected to remote server");
                 setRegistry(StateRegistry.PLAY);
+                proxyPlayer.setConnectedServer(ServerConnection.this);
             }
         }
     }
