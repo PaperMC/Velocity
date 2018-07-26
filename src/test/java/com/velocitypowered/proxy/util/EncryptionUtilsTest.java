@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EncryptionUtilsTest {
     @Test
-    void twoComplementsSha1Digest() throws Exception {
+    void twosComplementSha1Digest() throws Exception {
         String notchHash = hexDigest("Notch");
         assertEquals("4ed1f46bbe04bc756bcb17c0c7ce3e4632f06a48", notchHash);
 
@@ -21,6 +21,6 @@ class EncryptionUtilsTest {
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
         digest.update(str.getBytes(StandardCharsets.UTF_8));
         byte[] digested = digest.digest();
-        return EncryptionUtils.twoComplementsSha1Digest(digested);
+        return EncryptionUtils.twosComplementSha1Digest(digested);
     }
 }

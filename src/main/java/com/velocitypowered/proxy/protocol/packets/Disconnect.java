@@ -1,12 +1,22 @@
 package com.velocitypowered.proxy.protocol.packets;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.text.TextComponent;
+import net.kyori.text.serializer.ComponentSerializers;
 
 public class Disconnect implements MinecraftPacket {
     private String reason;
+
+    public Disconnect() {
+    }
+
+    public Disconnect(String reason) {
+        this.reason = reason;
+    }
 
     public String getReason() {
         return reason;
@@ -31,5 +41,10 @@ public class Disconnect implements MinecraftPacket {
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, reason);
+    }
+
+    public static Disconnect create(TextComponent component) {
+        Preconditions.checkNotNull(component, "component");
+        return new Disconnect(ComponentSerializers.JSON.serialize(component));
     }
 }

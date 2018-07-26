@@ -2,10 +2,13 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packets.Disconnect;
 import com.velocitypowered.proxy.protocol.packets.Handshake;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import net.kyori.text.TextComponent;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -30,7 +33,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 break;
             case 2:
                 connection.setState(StateRegistry.LOGIN);
-                connection.setSessionHandler(new LoginSessionHandler(connection));
+                if (!ProtocolConstants.isSupported(handshake.getProtocolVersion())) {
+                    connection.closeWith(Disconnect.create(TextComponent.of("Unsupported client")));
+                    return;
+                } else {
+                    connection.setSessionHandler(new LoginSessionHandler(connection));
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());

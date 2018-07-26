@@ -42,8 +42,7 @@ public class ConnectedPlayer {
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {
         String error = ThrowableUtils.briefDescription(throwable);
-        Disconnect disconnect = new Disconnect();
-        disconnect.setReason(ComponentSerializers.JSON.serialize(TextComponent.of(error, TextColor.RED)));
+        Disconnect disconnect = Disconnect.create(TextComponent.of(error, TextColor.RED));
         handleConnectionException(info, disconnect);
     }
 
@@ -56,9 +55,7 @@ public class ConnectedPlayer {
 
         if (connectedServer == null) {
             // The player isn't yet connected to a server - we should disconnect them.
-            Disconnect d = new Disconnect();
-            d.setReason(ComponentSerializers.JSON.serialize(component));
-            connection.closeWith(d);
+            connection.closeWith(Disconnect.create(component));
         } else {
             Chat chat = new Chat();
             chat.setMessage(ComponentSerializers.JSON.serialize(component));
@@ -71,8 +68,6 @@ public class ConnectedPlayer {
     }
 
     public void close(TextComponent reason) {
-        Disconnect disconnect = new Disconnect();
-        disconnect.setReason(ComponentSerializers.JSON.serialize(reason));
-        connection.closeWith(disconnect);
+        connection.closeWith(Disconnect.create(reason));
     }
 }
