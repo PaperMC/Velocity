@@ -90,14 +90,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().write(joinGame);
         } else {
             // In order to handle switching to another server we will need send three packets:
-            // - The join game packet
-            // - A respawn packet, with a different dimension, if it differs
+            // - The join game packet from the backend server
+            // - A respawn packet with a different dimension
             // - Another respawn with the correct dimension
+            // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
+            // work.
             player.getConnection().write(joinGame);
-            if (joinGame.getDimension() == currentDimension) {
-                int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-                player.getConnection().write(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
-            }
+            int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+            player.getConnection().write(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             player.getConnection().write(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             currentDimension = joinGame.getDimension();
         }
