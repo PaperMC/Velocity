@@ -17,14 +17,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class PlaySessionHandler implements MinecraftSessionHandler {
+public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private final ConnectedPlayer player;
     private ScheduledFuture<?> pingTask;
     private long lastPing = -1;
     private boolean spawned = false;
     private int currentDimension;
 
-    public PlaySessionHandler(ConnectedPlayer player) {
+    public ClientPlaySessionHandler(ConnectedPlayer player) {
         this.player = player;
     }
 

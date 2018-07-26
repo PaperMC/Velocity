@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
@@ -37,12 +38,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             connection.getChannel().setState(StateRegistry.PLAY);
             if (connection.getProxyPlayer().getConnectedServer() == null) {
                 // Strap on the play session handler
-                connection.getProxyPlayer().getConnection().setSessionHandler(new com.velocitypowered.proxy.connection.client.PlaySessionHandler(connection.getProxyPlayer()));
+                connection.getProxyPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(connection.getProxyPlayer()));
             } else {
                 // The previous server connection should become obsolete.
                 connection.getProxyPlayer().getConnectedServer().disconnect();
             }
-            connection.getChannel().setSessionHandler(new PlaySessionHandler(connection));
+            connection.getChannel().setSessionHandler(new BackendPlaySessionHandler(connection));
             connection.getProxyPlayer().setConnectedServer(connection);
         }
     }

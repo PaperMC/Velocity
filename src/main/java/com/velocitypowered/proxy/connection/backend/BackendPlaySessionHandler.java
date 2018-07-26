@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
 import com.velocitypowered.proxy.protocol.packets.JoinGame;
@@ -11,10 +12,10 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
 
-public class PlaySessionHandler implements MinecraftSessionHandler {
+public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
 
-    public PlaySessionHandler(ServerConnection connection) {
+    public BackendPlaySessionHandler(ServerConnection connection) {
         this.connection = connection;
     }
 
@@ -34,13 +35,13 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
                     .build();
             connection.getProxyPlayer().close(reason);
         } else if (packet instanceof JoinGame) {
-            com.velocitypowered.proxy.connection.client.PlaySessionHandler playerHandler =
-                    (com.velocitypowered.proxy.connection.client.PlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+            ClientPlaySessionHandler playerHandler =
+                    (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
             playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else if (packet instanceof Respawn) {
             // Record the dimension switch, and then forward the packet on.
-            com.velocitypowered.proxy.connection.client.PlaySessionHandler playerHandler =
-                    (com.velocitypowered.proxy.connection.client.PlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+            ClientPlaySessionHandler playerHandler =
+                    (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
             playerHandler.setCurrentDimension(((Respawn) packet).getDimension());
             connection.getProxyPlayer().getConnection().write(packet);
         } else {
