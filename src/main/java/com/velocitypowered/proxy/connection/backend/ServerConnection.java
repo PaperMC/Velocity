@@ -8,6 +8,7 @@ import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.util.UuidUtils;
 import io.netty.channel.*;
 
 public class ServerConnection {
@@ -51,12 +52,23 @@ public class ServerConnection {
                 });
     }
 
+    private String createBungeeForwardingAddress() {
+        // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
+        // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
+        // UUID (undashed), and if you are in online-mode, their login properties (retrieved from Mojang).
+        //
+        // Velocity doesn't yet support online-mode, unfortunately. That will come soon.
+        return serverInfo.getAddress().getHostString() + "\0" +
+                proxyPlayer.getRemoteAddress().getHostString() + "\0" +
+                UuidUtils.toUndashed(proxyPlayer.getUniqueId());
+    }
+
     private void startHandshake() {
         // Initiate a handshake.
         Handshake handshake = new Handshake();
         handshake.setNextStatus(2); // login
         handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
-        handshake.setServerAddress(serverInfo.getAddress().getHostString());
+        handshake.setServerAddress(createBungeeForwardingAddress());
         handshake.setPort(serverInfo.getAddress().getPort());
         channel.write(handshake);
 

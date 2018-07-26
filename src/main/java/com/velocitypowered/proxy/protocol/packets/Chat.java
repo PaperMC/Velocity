@@ -1,13 +1,24 @@
 package com.velocitypowered.proxy.protocol.packets;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.text.TextComponent;
+import net.kyori.text.serializer.ComponentSerializers;
 
 public class Chat implements MinecraftPacket {
     private String message;
     private byte position;
+
+    public Chat() {
+    }
+
+    public Chat(String message, byte position) {
+        this.message = message;
+        this.position = position;
+    }
 
     public String getMessage() {
         return message;
@@ -47,5 +58,14 @@ public class Chat implements MinecraftPacket {
         if (direction == ProtocolConstants.Direction.TO_CLIENT) {
             buf.writeByte(position);
         }
+    }
+
+    public static Chat create(TextComponent component) {
+        return create(component, (byte) 0);
+    }
+
+    public static Chat create(TextComponent component, byte pos) {
+        Preconditions.checkNotNull(component, "component");
+        return new Chat(ComponentSerializers.JSON.serialize(component), pos);
     }
 }

@@ -10,6 +10,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
 
+import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class ConnectedPlayer {
@@ -36,6 +37,10 @@ public class ConnectedPlayer {
         return connection;
     }
 
+    public InetSocketAddress getRemoteAddress() {
+        return (InetSocketAddress) connection.getChannel().remoteAddress();
+    }
+
     public ServerConnection getConnectedServer() {
         return connectedServer;
     }
@@ -57,9 +62,7 @@ public class ConnectedPlayer {
             // The player isn't yet connected to a server - we should disconnect them.
             connection.closeWith(Disconnect.create(component));
         } else {
-            Chat chat = new Chat();
-            chat.setMessage(ComponentSerializers.JSON.serialize(component));
-            connection.write(chat);
+            connection.write(Chat.create(component));
         }
     }
 

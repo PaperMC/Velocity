@@ -14,12 +14,17 @@ class UuidUtilsTest {
     private static final String TEST_OFFLINE_PLAYER = "tuxed";
 
     @Test
-    void testFromUndashed() {
+    void generateOfflinePlayerUuid() {
+        assertEquals(TEST_OFFLINE_PLAYER_UUID, UuidUtils.generateOfflinePlayerUuid(TEST_OFFLINE_PLAYER), "UUIDs do not match");
+    }
+
+    @Test
+    void fromUndashed() {
         assertEquals(EXPECTED_DASHED_UUID, UuidUtils.fromUndashed(ACTUAL_UNDASHED_UUID), "UUIDs do not match");
     }
 
     @Test
-    void generateOfflinePlayerUuid() {
-        assertEquals(TEST_OFFLINE_PLAYER_UUID, UuidUtils.generateOfflinePlayerUuid(TEST_OFFLINE_PLAYER), "UUIDs do not match");
+    void toUndashed() {
+        assertEquals(ACTUAL_UNDASHED_UUID, UuidUtils.toUndashed(EXPECTED_DASHED_UUID), "UUIDs do not match");
     }
 }

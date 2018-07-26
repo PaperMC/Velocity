@@ -18,6 +18,11 @@ public enum UuidUtils {
         );
     }
 
+    public static String toUndashed(final UUID uuid) {
+        Preconditions.checkNotNull(uuid, "uuid");
+        return Long.toUnsignedString(uuid.getMostSignificantBits(), 16) + Long.toUnsignedString(uuid.getLeastSignificantBits(), 16);
+    }
+
     public static UUID generateOfflinePlayerUuid(String username) {
         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
