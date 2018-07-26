@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'gradle:jdk8-slim'
+      args '-v m2-cache:/root/.m2'
     }
 
   }
