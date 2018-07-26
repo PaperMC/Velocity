@@ -19,7 +19,7 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void handle(MinecraftPacket packet) {
         if (packet instanceof Ping) {
-            // Make sure to reply back to the server so it doesn't think we're gone.
+            // Forward onto the server
             connection.getChannel().write(packet);
         } else if (packet instanceof Disconnect) {
             // The server wants to disconnect us. TODO fallback handling

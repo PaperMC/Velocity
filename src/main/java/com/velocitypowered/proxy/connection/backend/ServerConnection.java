@@ -72,6 +72,7 @@ public class ServerConnection {
         handshake.setPort(serverInfo.getAddress().getPort());
         channel.write(handshake);
 
+        channel.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
         channel.setState(StateRegistry.LOGIN);
 
         // Login

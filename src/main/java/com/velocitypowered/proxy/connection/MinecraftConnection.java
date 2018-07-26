@@ -133,6 +133,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
         this.sessionHandler = sessionHandler;
+        sessionHandler.activated();
     }
 
     private void ensureOpen() {

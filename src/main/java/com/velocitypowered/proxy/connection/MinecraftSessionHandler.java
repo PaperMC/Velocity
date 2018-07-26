@@ -18,6 +18,10 @@ public interface MinecraftSessionHandler {
 
     }
 
+    default void activated() {
+
+    }
+
     default void exception(Throwable throwable) {
 
     }
