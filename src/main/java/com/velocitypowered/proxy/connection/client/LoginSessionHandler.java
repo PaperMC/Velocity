@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packets.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packets.ServerLogin;
 import com.velocitypowered.proxy.protocol.packets.ServerLoginSuccess;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -13,9 +14,11 @@ import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.util.UuidUtils;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
+    private ServerLogin login;
 
     public LoginSessionHandler(MinecraftConnection inbound) {
         this.inbound = Preconditions.checkNotNull(inbound, "inbound");
@@ -23,12 +26,27 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
-        Preconditions.checkArgument(packet instanceof ServerLogin, "Expected a ServerLogin packet, not " + packet.getClass().getName());
+        if (packet instanceof ServerLogin) {
+            this.login = (ServerLogin) packet;
+            // TODO: Online-mode checks
+            handleSuccessfulLogin();
+        }
+    }
 
-        // TODO: Encryption
+    private EncryptionRequest generateRequest() {
+        byte[] verify = new byte[4];
+        ThreadLocalRandom.current().nextBytes(verify);
+
+        EncryptionRequest request = new EncryptionRequest();
+        request.setPublicKey(VelocityServer.getServer().getServerKeyPair().getPublic().getEncoded());
+        request.setVerifyToken(verify);
+        return request;
+    }
+
+    private void handleSuccessfulLogin() {
         inbound.setCompressionThreshold(256);
 
-        String username = ((ServerLogin) packet).getUsername();
+        String username = login.getUsername();
         ServerLoginSuccess success = new ServerLoginSuccess();
         success.setUsername(username);
         success.setUuid(UuidUtils.generateOfflinePlayerUuid(username));
@@ -43,5 +61,4 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
         connection.connect();
     }
-
 }

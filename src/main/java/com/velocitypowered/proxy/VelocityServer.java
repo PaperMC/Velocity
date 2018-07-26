@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
+import com.velocitypowered.proxy.protocol.packets.EncryptionRequest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -28,6 +29,10 @@ public class VelocityServer {
 
     public static VelocityServer getServer() {
         return server;
+    }
+
+    public KeyPair getServerKeyPair() {
+        return serverKeyPair;
     }
 
     public void initialize() {

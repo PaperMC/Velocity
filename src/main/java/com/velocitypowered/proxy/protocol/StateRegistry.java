@@ -34,6 +34,7 @@ public enum StateRegistry {
     LOGIN {
         {
             TO_SERVER.register(0x00, ServerLogin.class, ServerLogin::new);
+            TO_SERVER.register(0x01, EncryptionResponse.class, EncryptionResponse::new);
 
             TO_CLIENT.register(0x00, Disconnect.class, Disconnect::new);
             TO_CLIENT.register(0x01, EncryptionRequest.class, EncryptionRequest::new);
