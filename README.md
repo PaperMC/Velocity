@@ -1,6 +1,7 @@
 # Velocity
 
-Velocity is a next-generation Minecraft: Java Edition proxy suite.
+Velocity is a next-generation Minecraft: Java Edition proxy suite. It is
+designed specifically with mass-scale Minecraft in mind.
 
 ## Goals
 
@@ -8,6 +9,9 @@ Velocity is a next-generation Minecraft: Java Edition proxy suite.
 * High performance: handle thousands of players on one proxy.
 * Flexible API built for mass-scale Minecraft.
 * Licensed under the MIT license.
+* First-class support for Paper, Sponge, and Forge. (Other implementations
+  may work, but we make every endeavor to support these server implementations
+  specifically.)
 
 ## Status
 
