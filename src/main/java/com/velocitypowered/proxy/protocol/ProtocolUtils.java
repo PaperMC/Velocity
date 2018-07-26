@@ -49,4 +49,21 @@ public enum ProtocolUtils { ;
         writeVarInt(buf, asUtf8.length);
         buf.writeBytes(asUtf8);
     }
+
+    public static byte[] readByteArray(ByteBuf buf) {
+        return readByteArray(buf, DEFAULT_MAX_STRING_SIZE);
+    }
+
+    public static byte[] readByteArray(ByteBuf buf, int cap) {
+        int length = readVarInt(buf);
+        Preconditions.checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+        byte[] array = new byte[length];
+        buf.readBytes(array);
+        return array;
+    }
+
+    public static void writeByteArray(ByteBuf buf, byte[] array) {
+        writeVarInt(buf, array.length);
+        buf.writeBytes(array);
+    }
 }
