@@ -7,13 +7,12 @@ import com.velocitypowered.proxy.protocol.packets.ServerLogin;
 import com.velocitypowered.proxy.protocol.packets.ServerLoginSuccess;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.connection.VelocityServer;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
+import com.velocitypowered.proxy.util.UuidUtils;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
@@ -32,7 +31,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         String username = ((ServerLogin) packet).getUsername();
         ServerLoginSuccess success = new ServerLoginSuccess();
         success.setUsername(username);
-        success.setUuid(generateOfflinePlayerUuid(username));
+        success.setUuid(UuidUtils.generateOfflinePlayerUuid(username));
         inbound.write(success);
 
         // Initiate a regular connection and move over to it.
@@ -45,7 +44,4 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         connection.connect();
     }
 
-    private static UUID generateOfflinePlayerUuid(String username) {
-        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
-    }
 }

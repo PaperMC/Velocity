@@ -1,7 +1,5 @@
 package com.velocitypowered.proxy;
 
-import com.velocitypowered.proxy.connection.VelocityServer;
-
 public class Velocity {
     public static void main(String... args) throws InterruptedException {
         VelocityServer server = new VelocityServer();

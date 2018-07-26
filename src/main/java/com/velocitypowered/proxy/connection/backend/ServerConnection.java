@@ -6,7 +6,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils;
-import com.velocitypowered.proxy.connection.VelocityServer;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
 

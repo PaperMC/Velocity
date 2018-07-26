@@ -1,5 +1,6 @@
-package com.velocitypowered.proxy.connection;
+package com.velocitypowered.proxy;
 
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
@@ -10,11 +11,16 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+
 public class VelocityServer {
     private static VelocityServer server;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup childGroup;
+    private KeyPair serverKeyPair;
 
     public VelocityServer() {
 
@@ -25,6 +31,16 @@ public class VelocityServer {
     }
 
     public void initialize() {
+        // Create a key pair
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(1024);
+            serverKeyPair = generator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to generate server encryption key", e);
+        }
+
+        // Start the listener
         bossGroup = new NioEventLoopGroup();
         childGroup = new NioEventLoopGroup();
         server = this;
