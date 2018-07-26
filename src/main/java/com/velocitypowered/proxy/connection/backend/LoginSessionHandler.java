@@ -23,14 +23,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof SetCompression) {
-            System.out.println("Enabling compression on server connection, this is inefficient!");
             SetCompression sc = (SetCompression) packet;
             connection.getChannel().setCompressionThreshold(sc.getThreshold());
         }
 
         if (packet instanceof ServerLoginSuccess) {
             // the player has been logged on.
-            System.out.println("Player connected to remote server");
             connection.getChannel().setState(StateRegistry.PLAY);
             connection.getProxyPlayer().setConnectedServer(connection);
             connection.getProxyPlayer().getConnection().setSessionHandler(new com.velocitypowered.proxy.connection.client.PlaySessionHandler(connection.getProxyPlayer()));

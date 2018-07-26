@@ -40,7 +40,6 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
                         + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
             }
-            System.out.println("IN: " + packet);
             out.add(new PacketWrapper(packet, slice));
         }
     }

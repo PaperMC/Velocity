@@ -21,7 +21,6 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
         if (packet instanceof Ping) {
             // Make sure to reply back to the server so it doesn't think we're gone.
             connection.getChannel().write(packet);
-            connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             // The server wants to disconnect us. TODO fallback handling
             Disconnect original = (Disconnect) packet;

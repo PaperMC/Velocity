@@ -24,7 +24,6 @@ public class LegacyPingEncoder extends MessageToByteEncoder<LegacyPingResponse> 
         String serializedResponse = serialize(msg);
         out.writeShort(serializedResponse.length());
         out.writeBytes(serializedResponse.getBytes(StandardCharsets.UTF_16BE));
-        System.out.println(ByteBufUtil.prettyHexDump(out));
     }
 
     private String serialize(LegacyPingResponse response) {
