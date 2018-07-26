@@ -33,11 +33,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof ServerLoginSuccess) {
-            // the player has been logged on.
+            // The player has been logged on to the backend server.
             connection.getChannel().setState(StateRegistry.PLAY);
-            connection.getProxyPlayer().setConnectedServer(connection);
-            connection.getProxyPlayer().getConnection().setSessionHandler(new com.velocitypowered.proxy.connection.client.PlaySessionHandler(connection.getProxyPlayer()));
+            if (connection.getProxyPlayer().getConnectedServer() == null) {
+                // Strap on the play session handler
+                connection.getProxyPlayer().getConnection().setSessionHandler(new com.velocitypowered.proxy.connection.client.PlaySessionHandler(connection.getProxyPlayer()));
+            } else {
+                // The previous server connection should become obsolete.
+                connection.getProxyPlayer().getConnectedServer().disconnect();
+            }
             connection.getChannel().setSessionHandler(new PlaySessionHandler(connection));
+            connection.getProxyPlayer().setConnectedServer(connection);
         }
     }
 

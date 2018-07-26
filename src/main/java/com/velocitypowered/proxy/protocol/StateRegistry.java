@@ -47,6 +47,10 @@ public enum StateRegistry {
                     map(0x1A, MINECRAFT_1_12));
             TO_CLIENT.register(Ping.class, Ping::new,
                     map(0x1F, MINECRAFT_1_12));
+            TO_CLIENT.register(JoinGame.class, JoinGame::new,
+                    map(0x23, MINECRAFT_1_12));
+            TO_CLIENT.register(Respawn.class, Respawn::new,
+                    map(0x35, MINECRAFT_1_12));
         }
     },
     LOGIN {

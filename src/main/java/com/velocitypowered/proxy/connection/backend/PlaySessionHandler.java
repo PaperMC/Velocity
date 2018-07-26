@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
+import com.velocitypowered.proxy.protocol.packets.JoinGame;
 import com.velocitypowered.proxy.protocol.packets.Ping;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
@@ -31,6 +32,10 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
                     .append(ComponentSerializers.JSON.deserialize(original.getReason()))
                     .build();
             connection.getProxyPlayer().close(reason);
+        } else if (packet instanceof JoinGame) {
+            com.velocitypowered.proxy.connection.client.PlaySessionHandler playerHandler =
+                    (com.velocitypowered.proxy.connection.client.PlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+            playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getProxyPlayer().getConnection().write(packet);
