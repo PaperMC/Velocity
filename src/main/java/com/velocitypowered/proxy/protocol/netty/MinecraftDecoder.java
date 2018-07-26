@@ -28,8 +28,8 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         ByteBuf slice = msg.slice().retain();
 
         int packetId = ProtocolUtils.readVarInt(msg);
-        StateRegistry.ProtocolMappings mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
-        MinecraftPacket packet = mappings.createPacket(packetId);
+        StateRegistry.PacketRegistry mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
+        MinecraftPacket packet = mappings.createPacket(packetId, protocolVersion);
         if (packet == null) {
             msg.skipBytes(msg.readableBytes());
             out.add(new PacketWrapper(null, slice));

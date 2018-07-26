@@ -21,8 +21,8 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) throws Exception {
-        StateRegistry.ProtocolMappings mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
-        int packetId = mappings.getId(msg);
+        StateRegistry.PacketRegistry mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
+        int packetId = mappings.getId(msg, protocolVersion);
         ProtocolUtils.writeVarInt(out, packetId);
         msg.encode(out, direction, protocolVersion);
     }
