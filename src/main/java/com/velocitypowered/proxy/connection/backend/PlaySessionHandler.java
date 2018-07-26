@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.protocol.packets.Disconnect;
 import com.velocitypowered.proxy.protocol.packets.JoinGame;
 import com.velocitypowered.proxy.protocol.packets.Ping;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.packets.Respawn;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -36,6 +37,12 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
             com.velocitypowered.proxy.connection.client.PlaySessionHandler playerHandler =
                     (com.velocitypowered.proxy.connection.client.PlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
             playerHandler.handleBackendJoinGame((JoinGame) packet);
+        } else if (packet instanceof Respawn) {
+            // Record the dimension switch, and then forward the packet on.
+            com.velocitypowered.proxy.connection.client.PlaySessionHandler playerHandler =
+                    (com.velocitypowered.proxy.connection.client.PlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+            playerHandler.setCurrentDimension(((Respawn) packet).getDimension());
+            connection.getProxyPlayer().getConnection().write(packet);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getProxyPlayer().getConnection().write(packet);

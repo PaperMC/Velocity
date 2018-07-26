@@ -60,7 +60,8 @@ public class ServerConnection {
         // Velocity doesn't yet support online-mode, unfortunately. That will come soon.
         return serverInfo.getAddress().getHostString() + "\0" +
                 proxyPlayer.getRemoteAddress().getHostString() + "\0" +
-                UuidUtils.toUndashed(proxyPlayer.getUniqueId());
+                UuidUtils.toUndashed(proxyPlayer.getUniqueId()) + "\0" +
+                "[]";
     }
 
     private void startHandshake() {

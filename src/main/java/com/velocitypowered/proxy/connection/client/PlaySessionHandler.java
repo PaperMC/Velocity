@@ -47,7 +47,7 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
         if (packet instanceof Ping) {
             Ping ping = (Ping) packet;
             if (ping.getRandomId() != lastPing) {
-//                throw new IllegalStateException("Client sent invalid ping; expected " + lastPing + ", got " + ping.getRandomId());
+                throw new IllegalStateException("Client sent invalid ping; expected " + lastPing + ", got " + ping.getRandomId());
             }
 
             // Do not forward the packet to the player's server, because we handle pings for all servers already.
@@ -101,5 +101,9 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().write(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             currentDimension = joinGame.getDimension();
         }
+    }
+
+    public void setCurrentDimension(int currentDimension) {
+        this.currentDimension = currentDimension;
     }
 }
