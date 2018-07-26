@@ -22,7 +22,7 @@ public class PlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void activated() {
         EventLoop loop = player.getConnection().getChannel().eventLoop();
-        loop.scheduleAtFixedRate(this::ping, 5, 15, TimeUnit.SECONDS);
+        pingTask = loop.scheduleAtFixedRate(this::ping, 5, 15, TimeUnit.SECONDS);
     }
 
     private void ping() {
