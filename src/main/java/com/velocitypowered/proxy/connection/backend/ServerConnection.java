@@ -27,7 +27,7 @@ public class ServerConnection {
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
-                        MinecraftPipelineUtils.strapPipelineForProxy(ch);
+                        MinecraftPipelineUtils.strapPipelineForBackend(ch);
 
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);

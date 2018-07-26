@@ -34,7 +34,7 @@ public class VelocityServer {
                 .childHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
-                        MinecraftPipelineUtils.strapPipelineForServer(ch);
+                        MinecraftPipelineUtils.strapPipelineForProxy(ch);
 
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
