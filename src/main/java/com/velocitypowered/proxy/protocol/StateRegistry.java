@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.protocol;
 
 import com.velocitypowered.proxy.protocol.packets.*;
+import io.netty.util.collection.IntObjectHashMap;
+import io.netty.util.collection.IntObjectMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +51,7 @@ public enum StateRegistry {
     public static class ProtocolMappings {
         private final ProtocolConstants.Direction direction;
         private final StateRegistry state;
-        private final Map<Integer, Supplier<? extends MinecraftPacket>> idsToSuppliers = new HashMap<>();
+        private final IntObjectMap<Supplier<? extends MinecraftPacket>> idsToSuppliers = new IntObjectHashMap<>();
         private final Map<Class<? extends MinecraftPacket>, Integer> packetClassesToIds = new HashMap<>();
 
         public ProtocolMappings(ProtocolConstants.Direction direction, StateRegistry state) {

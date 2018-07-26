@@ -7,17 +7,20 @@ group 'com.velocitypowered'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    compile 'io.netty:netty-handler:4.1.27.Final'
+    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'com.google.guava:guava:25.1-jre'
     compile 'io.netty:netty-codec:4.1.27.Final'
     compile 'io.netty:netty-codec-http:4.1.27.Final'
-    compile 'com.google.guava:guava:25.1-jre'
-    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'io.netty:netty-handler:4.1.27.Final'
     compile 'net.kyori:text:1.12-1.5.0'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.0-M1'
+    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1'
 }
