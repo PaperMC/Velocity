@@ -5,9 +5,6 @@ public class Velocity {
         VelocityServer server = new VelocityServer();
         server.initialize();
 
-        while (true) {
-            // temporary until jline is added.
-            Thread.sleep(999999);
-        }
+        Thread.currentThread().join();
     }
 }

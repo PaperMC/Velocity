@@ -1,19 +1,20 @@
 package com.velocitypowered.proxy.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
-public class EncryptionUtilsTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class EncryptionUtilsTest {
     @Test
-    public void twoComplementsSha1Digest() throws Exception {
+    void twoComplementsSha1Digest() throws Exception {
         String notchHash = hexDigest("Notch");
-        Assert.assertEquals("4ed1f46bbe04bc756bcb17c0c7ce3e4632f06a48", notchHash);
+        assertEquals("4ed1f46bbe04bc756bcb17c0c7ce3e4632f06a48", notchHash);
 
         String jebHash = hexDigest("jeb_");
-        Assert.assertEquals("-7c9d5b0044c130109a5d7b5fb5c317c02b4e28c1", jebHash);
+        assertEquals("-7c9d5b0044c130109a5d7b5fb5c317c02b4e28c1", jebHash);
     }
 
     private String hexDigest(String str) throws Exception {

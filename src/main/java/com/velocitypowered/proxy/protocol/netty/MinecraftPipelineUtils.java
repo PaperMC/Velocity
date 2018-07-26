@@ -6,22 +6,32 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import java.util.concurrent.TimeUnit;
 
-public class MinecraftPipelineUtils {
-    public static void strapPipelineForProxy(Channel ch) {
-        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(30, TimeUnit.SECONDS));
-        ch.pipeline().addLast("legacy-ping-decode", new LegacyPingDecoder());
-        ch.pipeline().addLast("frame-decoder", new MinecraftVarintFrameDecoder());
-        ch.pipeline().addLast("legacy-ping-encode", LegacyPingEncoder.INSTANCE);
-        ch.pipeline().addLast("frame-encoder", MinecraftVarintLengthEncoder.INSTANCE);
-        ch.pipeline().addLast("minecraft-decoder", new MinecraftDecoder(ProtocolConstants.Direction.TO_SERVER));
-        ch.pipeline().addLast("minecraft-encoder", new MinecraftEncoder(ProtocolConstants.Direction.TO_CLIENT));
+public interface MinecraftPipelineUtils {
+    String FRAME_DECODER = "frame-decoder";
+    String FRAME_ENCODER = "frame-encoder";
+    String LEGACY_PING_DECODER = "legacy-ping-decoder";
+    String LEGACY_PING_ENCODER = "legacy-ping-encoder";
+    String MINECRAFT_DECODER = "minecraft-decoder";
+    String MINECRAFT_ENCODER = "minecraft-encoder";
+    String READ_TIMEOUT = "read-timeout";
+
+    static void strapPipelineForProxy(Channel ch) {
+        ch.pipeline()
+          .addLast(READ_TIMEOUT, new ReadTimeoutHandler(30, TimeUnit.SECONDS))
+          .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
+          .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+          .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
+          .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+          .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.TO_SERVER))
+          .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.TO_CLIENT));
     }
 
-    public static void strapPipelineForBackend(Channel ch) {
-        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(30, TimeUnit.SECONDS));
-        ch.pipeline().addLast("frame-decoder", new MinecraftVarintFrameDecoder());
-        ch.pipeline().addLast("frame-encoder", MinecraftVarintLengthEncoder.INSTANCE);
-        ch.pipeline().addLast("minecraft-decoder", new MinecraftDecoder(ProtocolConstants.Direction.TO_CLIENT));
-        ch.pipeline().addLast("minecraft-encoder", new MinecraftEncoder(ProtocolConstants.Direction.TO_SERVER));
+    static void strapPipelineForBackend(Channel ch) {
+        ch.pipeline()
+          .addLast(READ_TIMEOUT, new ReadTimeoutHandler(30, TimeUnit.SECONDS))
+          .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+          .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+          .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.TO_CLIENT))
+          .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.TO_SERVER));
     }
 }
