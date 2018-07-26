@@ -4,16 +4,16 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.compression.JavaVelocityCompressor;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.netty.*;
 import com.velocitypowered.proxy.protocol.packets.SetCompression;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
+
+import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.MINECRAFT_ENCODER;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft
@@ -152,7 +152,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 
-        channel.pipeline().addBefore("minecraft-decoder", "compress-decoder", decoder);
-        channel.pipeline().addBefore("minecraft-encoder", "compress-encoder", encoder);
+        channel.pipeline().addBefore(MINECRAFT_DECODER, "compress-decoder", decoder);
+        channel.pipeline().addBefore(MINECRAFT_ENCODER, "compress-encoder", encoder);
     }
 }
