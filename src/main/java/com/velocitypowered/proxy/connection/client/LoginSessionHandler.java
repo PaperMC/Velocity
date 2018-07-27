@@ -60,7 +60,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
             VelocityServer.getServer().getHttpClient()
                     .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
-                    .thenAccept(profileResponse -> {
+                    .thenAcceptAsync(profileResponse -> {
                         try {
                             inbound.enableEncryption(decryptedSharedSecret);
                         } catch (GeneralSecurityException e) {
@@ -69,7 +69,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
                         GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
                         handleSuccessfulLogin(profile);
-                    })
+                    }, inbound.getChannel().eventLoop())
                     .exceptionally(exception -> {
                         System.out.println("Can't enable encryption");
                         exception.printStackTrace();
