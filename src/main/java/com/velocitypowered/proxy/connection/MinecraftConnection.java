@@ -1,19 +1,19 @@
 package com.velocitypowered.proxy.connection;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.proxy.Velocity;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.compression.JavaVelocityCompressor;
 import com.velocitypowered.proxy.protocol.encryption.JavaVelocityCipher;
 import com.velocitypowered.proxy.protocol.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;
-import com.velocitypowered.proxy.protocol.packets.SetCompression;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -34,11 +34,14 @@ import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
  * protocol mechanics.
  */
 public class MinecraftConnection extends ChannelInboundHandlerAdapter {
+    private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
+
     private final Channel channel;
     private boolean closed;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
+    private MinecraftConnectionAssociation association;
 
     public MinecraftConnection(Channel channel) {
         this.channel = channel;
@@ -51,12 +54,20 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (sessionHandler != null) {
             sessionHandler.connected();
         }
+
+        if (association != null) {
+            logger.info("{} has connected", association);
+        }
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (sessionHandler != null) {
             sessionHandler.disconnected();
+        }
+
+        if (association != null) {
+            logger.info("{} has disconnected", association);
         }
     }
 
@@ -85,6 +96,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
             if (sessionHandler != null) {
                 sessionHandler.exception(cause);
+            }
+
+            if (association != null) {
+                logger.error("{}: exception encountered", association, cause);
+            } else {
+                logger.error("{} encountered an exception", cause);
             }
 
             closed = true;
@@ -186,5 +203,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         VelocityCipher encryptionCipher = new JavaVelocityCipher(true, key);
         channel.pipeline().addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
         channel.pipeline().addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
+    }
+
+    public MinecraftConnectionAssociation getAssociation() {
+        return association;
+    }
+
+    public void setAssociation(MinecraftConnectionAssociation association) {
+        this.association = association;
     }
 }

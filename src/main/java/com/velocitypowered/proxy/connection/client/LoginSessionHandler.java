@@ -105,6 +105,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
         // Initiate a regular connection and move over to it.
         ConnectedPlayer player = new ConnectedPlayer(profile, inbound);
+        logger.info("{} has connected", player);
+        inbound.setAssociation(player);
         ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25565));
         ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
 

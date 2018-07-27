@@ -8,9 +8,6 @@ import com.velocitypowered.proxy.protocol.packets.Ping;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.packets.Respawn;
 import io.netty.buffer.ByteBuf;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
-import net.kyori.text.serializer.ComponentSerializers;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
@@ -25,15 +22,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             // Forward onto the server
             connection.getChannel().write(packet);
         } else if (packet instanceof Disconnect) {
-            // The server wants to disconnect us. TODO fallback handling
             Disconnect original = (Disconnect) packet;
-            TextComponent reason = TextComponent.builder()
-                    .content("Disconnected from " + connection.getServerInfo().getName() + ":")
-                    .color(TextColor.RED)
-                    .append(TextComponent.of(" ", TextColor.WHITE))
-                    .append(ComponentSerializers.JSON.deserialize(original.getReason()))
-                    .build();
-            connection.getProxyPlayer().close(reason);
+            connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
             ClientPlaySessionHandler playerHandler =
                     (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();

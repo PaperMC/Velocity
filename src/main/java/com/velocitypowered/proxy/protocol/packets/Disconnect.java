@@ -5,7 +5,7 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.text.TextComponent;
+import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class Disconnect implements MinecraftPacket {
@@ -43,7 +43,7 @@ public class Disconnect implements MinecraftPacket {
         ProtocolUtils.writeString(buf, reason);
     }
 
-    public static Disconnect create(TextComponent component) {
+    public static Disconnect create(Component component) {
         Preconditions.checkNotNull(component, "component");
         return new Disconnect(ComponentSerializers.JSON.serialize(component));
     }

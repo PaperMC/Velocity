@@ -5,7 +5,7 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.text.TextComponent;
+import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class Chat implements MinecraftPacket {
@@ -60,11 +60,11 @@ public class Chat implements MinecraftPacket {
         }
     }
 
-    public static Chat create(TextComponent component) {
+    public static Chat create(Component component) {
         return create(component, (byte) 0);
     }
 
-    public static Chat create(TextComponent component, byte pos) {
+    public static Chat create(Component component, byte pos) {
         Preconditions.checkNotNull(component, "component");
         return new Chat(ComponentSerializers.JSON.serialize(component), pos);
     }

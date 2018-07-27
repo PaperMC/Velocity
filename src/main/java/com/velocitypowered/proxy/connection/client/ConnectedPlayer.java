@@ -1,20 +1,27 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packets.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
+import com.velocitypowered.proxy.util.ComponentUtils;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-public class ConnectedPlayer {
+public class ConnectedPlayer implements MinecraftConnectionAssociation {
+    private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
+
     private final GameProfile profile;
     private final MinecraftConnection connection;
     private ServerConnection connectedServer;
@@ -50,22 +57,39 @@ public class ConnectedPlayer {
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {
         String error = ThrowableUtils.briefDescription(throwable);
-        Disconnect disconnect = Disconnect.create(TextComponent.of(error, TextColor.RED));
-        handleConnectionException(info, disconnect);
+        String userMessage;
+        if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
+            logger.error("{}: exception occurred in connection to {}", this, info.getName(), throwable);
+            userMessage = "Exception in server " + info.getName();
+        } else {
+            logger.error("{}: unable to connect to server {}", this, info.getName(), throwable);
+            userMessage = "Exception connecting to server " + info.getName();
+        }
+        handleConnectionException(info, TextComponent.builder()
+                .content(userMessage + ": ")
+                .color(TextColor.RED)
+                .append(TextComponent.of(error))
+                .build());
     }
 
     public void handleConnectionException(ServerInfo info, Disconnect disconnect) {
-        TextComponent component = TextComponent.builder()
-                .content("Exception connecting to server " + info.getName() + ": ")
-                .color(TextColor.RED)
-                .append(ComponentSerializers.JSON.deserialize(disconnect.getReason()))
-                .build();
-
-        if (connectedServer == null) {
-            // The player isn't yet connected to a server - we should disconnect them.
-            connection.closeWith(Disconnect.create(component));
+        Component disconnectReason = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+        String reason = ComponentUtils.asPlainText(disconnectReason);
+        if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
+            logger.error("{}: kicked from server {}: {}", this, info.getName(), reason);
         } else {
-            connection.write(Chat.create(component));
+            logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), reason);
+        }
+        handleConnectionException(info, disconnectReason);
+    }
+
+    private void handleConnectionException(ServerInfo info, Component disconnectReason) {
+        if (connectedServer == null || connectedServer.getServerInfo().equals(info)) {
+            // The player isn't yet connected to a server or they are already connected to the server
+            // they're disconnected from.
+            connection.closeWith(Disconnect.create(disconnectReason));
+        } else {
+            connection.write(Chat.create(disconnectReason));
         }
     }
 
@@ -75,5 +99,10 @@ public class ConnectedPlayer {
 
     public void close(TextComponent reason) {
         connection.closeWith(Disconnect.create(reason));
+    }
+
+    @Override
+    public String toString() {
+        return "[connected player] " + getProfile().getName() + " (" + getRemoteAddress() + ")";
     }
 }

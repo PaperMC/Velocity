@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.config.IPForwardingMode;
+import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -26,7 +27,7 @@ import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
-public class ServerConnection {
+public class ServerConnection implements MinecraftConnectionAssociation {
     private final ServerInfo serverInfo;
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
@@ -53,6 +54,7 @@ public class ServerConnection {
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
+                        connection.setAssociation(ServerConnection.this);
                         ch.pipeline().addLast(HANDLER, connection);
                     }
                 })
@@ -119,5 +121,10 @@ public class ServerConnection {
     public void disconnect() {
         channel.close();
         channel = null;
+    }
+
+    @Override
+    public String toString() {
+        return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
     }
 }
