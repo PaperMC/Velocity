@@ -20,7 +20,14 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.security.GeneralSecurityException;
 
-import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.*;
+import static com.velocitypowered.network.Connections.CIPHER_DECODER;
+import static com.velocitypowered.network.Connections.CIPHER_ENCODER;
+import static com.velocitypowered.network.Connections.COMPRESSION_DECODER;
+import static com.velocitypowered.network.Connections.COMPRESSION_ENCODER;
+import static com.velocitypowered.network.Connections.FRAME_DECODER;
+import static com.velocitypowered.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
+import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft
@@ -149,8 +156,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setCompressionThreshold(int threshold) {
         if (threshold == -1) {
-            channel.pipeline().remove("compress-decoder");
-            channel.pipeline().remove("compress-encoder");
+            channel.pipeline().remove(COMPRESSION_DECODER);
+            channel.pipeline().remove(COMPRESSION_ENCODER);
             return;
         }
 
@@ -158,8 +165,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 
-        channel.pipeline().addBefore(MINECRAFT_DECODER, "compress-decoder", decoder);
-        channel.pipeline().addBefore(MINECRAFT_ENCODER, "compress-encoder", encoder);
+        channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
+        channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
     }
 
     public void enableEncryption(byte[] secret) throws GeneralSecurityException {
@@ -167,7 +174,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
         VelocityCipher decryptionCipher = new JavaVelocityCipher(false, key);
         VelocityCipher encryptionCipher = new JavaVelocityCipher(true, key);
-        channel.pipeline().addBefore(FRAME_DECODER, "cipher-decoder", new MinecraftCipherDecoder(decryptionCipher));
-        channel.pipeline().addBefore(FRAME_ENCODER, "cipher-encoder", new MinecraftCipherEncoder(encryptionCipher));
+        channel.pipeline().addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
+        channel.pipeline().addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
     }
 }

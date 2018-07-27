@@ -22,6 +22,8 @@ dependencies {
     compile "io.netty:netty-codec:${nettyVersion}"
     compile "io.netty:netty-codec-http:${nettyVersion}"
     compile "io.netty:netty-handler:${nettyVersion}"
+    compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
+    compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
     compile 'net.kyori:text:1.12-1.5.0'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.0-M1'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1'
