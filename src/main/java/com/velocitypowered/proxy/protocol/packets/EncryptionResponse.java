@@ -5,14 +5,40 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
+
 public class EncryptionResponse implements MinecraftPacket {
     private byte[] sharedSecret;
     private byte[] verifyToken;
 
+    public byte[] getSharedSecret() {
+        return sharedSecret;
+    }
+
+    public void setSharedSecret(byte[] sharedSecret) {
+        this.sharedSecret = sharedSecret;
+    }
+
+    public byte[] getVerifyToken() {
+        return verifyToken;
+    }
+
+    public void setVerifyToken(byte[] verifyToken) {
+        this.verifyToken = verifyToken;
+    }
+
+    @Override
+    public String toString() {
+        return "EncryptionResponse{" +
+                "sharedSecret=" + Arrays.toString(sharedSecret) +
+                ", verifyToken=" + Arrays.toString(verifyToken) +
+                '}';
+    }
+
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
-        this.verifyToken = ProtocolUtils.readByteArray(buf, 4);
+        this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
     }
 
     @Override

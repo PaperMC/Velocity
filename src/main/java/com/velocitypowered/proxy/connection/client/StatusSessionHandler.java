@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.Ping;
 import com.velocitypowered.proxy.protocol.packets.StatusRequest;
@@ -15,9 +16,6 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
-    private static final Gson GSON = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
-            .create();
     private final MinecraftConnection connection;
 
     public StatusSessionHandler(MinecraftConnection connection) {
@@ -43,7 +41,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 null
         );
         StatusResponse response = new StatusResponse();
-        response.setStatus(GSON.toJson(ping));
+        response.setStatus(VelocityServer.GSON.toJson(ping));
         connection.write(response);
     }
 }

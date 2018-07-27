@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packets.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
@@ -14,23 +15,25 @@ import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class ConnectedPlayer {
-    private final String username;
-    private final UUID uniqueId;
+    private final GameProfile profile;
     private final MinecraftConnection connection;
     private ServerConnection connectedServer;
 
-    public ConnectedPlayer(String username, UUID uniqueId, MinecraftConnection connection) {
-        this.username = username;
-        this.uniqueId = uniqueId;
+    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection) {
+        this.profile = profile;
         this.connection = connection;
     }
 
     public String getUsername() {
-        return username;
+        return profile.getName();
     }
 
     public UUID getUniqueId() {
-        return uniqueId;
+        return profile.idAsUuid();
+    }
+
+    public GameProfile getProfile() {
+        return profile;
     }
 
     public MinecraftConnection getConnection() {

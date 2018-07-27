@@ -1,9 +1,12 @@
 package com.velocitypowered.proxy.connection;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.Velocity;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.compression.JavaVelocityCompressor;
+import com.velocitypowered.proxy.protocol.encryption.JavaVelocityCipher;
+import com.velocitypowered.proxy.protocol.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;
 import com.velocitypowered.proxy.protocol.packets.SetCompression;
 import io.netty.channel.Channel;
@@ -12,8 +15,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
-import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.MINECRAFT_DECODER;
-import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.MINECRAFT_ENCODER;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.security.GeneralSecurityException;
+
+import static com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils.*;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft
@@ -155,5 +162,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
         channel.pipeline().addBefore(MINECRAFT_DECODER, "compress-decoder", decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, "compress-encoder", encoder);
+    }
+
+    public void enableEncryption(byte[] secret) throws GeneralSecurityException {
+        SecretKey key = new SecretKeySpec(secret, "AES");
+
+        VelocityCipher decryptionCipher = new JavaVelocityCipher(false, key);
+        VelocityCipher encryptionCipher = new JavaVelocityCipher(true, key);
+        channel.pipeline().addBefore(FRAME_DECODER, "cipher-decoder", new MinecraftCipherDecoder(decryptionCipher));
+        channel.pipeline().addBefore(FRAME_ENCODER, "cipher-encoder", new MinecraftCipherEncoder(encryptionCipher));
     }
 }
