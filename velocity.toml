@@ -2,7 +2,9 @@
 bind = "0.0.0.0:26671"
 
 # What should be the MOTD? Legacy color codes and JSON are accepted.
-motd = "&3A Velocity Server"
+motd = """
+{"text":"hi"}
+"""
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
 # on the number of players online.)

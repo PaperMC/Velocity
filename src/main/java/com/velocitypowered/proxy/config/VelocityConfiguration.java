@@ -80,6 +80,13 @@ public class VelocityConfiguration {
             }
         }
 
+        try {
+            getMotdComponent();
+        } catch (Exception e) {
+            logger.error("Can't parse your MOTD", e);
+            valid = false;
+        }
+
         return valid;
     }
 
