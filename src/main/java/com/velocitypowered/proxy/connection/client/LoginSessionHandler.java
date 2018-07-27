@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packets.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packets.EncryptionResponse;
-import com.velocitypowered.proxy.protocol.packets.ServerLogin;
-import com.velocitypowered.proxy.protocol.packets.ServerLoginSuccess;
+import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.VelocityServer;
@@ -93,6 +90,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void handleSuccessfulLogin(GameProfile profile) {
+        inbound.write(new SetCompression(256));
         inbound.setCompressionThreshold(256);
 
         ServerLoginSuccess success = new ServerLoginSuccess();

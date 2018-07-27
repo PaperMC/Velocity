@@ -148,8 +148,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void setCompressionThreshold(int threshold) {
-        channel.writeAndFlush(new SetCompression(threshold), channel.voidPromise());
-
         if (threshold == -1) {
             channel.pipeline().remove("compress-decoder");
             channel.pipeline().remove("compress-encoder");
