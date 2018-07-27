@@ -17,7 +17,7 @@ public enum EncryptionUtils {
         }
     }
 
-    public static String twosComplementSha1Digest(byte[] digest) {
+    public static String twosComplementHexdigest(byte[] digest) {
         return new BigInteger(digest).toString(16);
     }
 
@@ -32,7 +32,7 @@ public enum EncryptionUtils {
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             digest.update(sharedSecret);
             digest.update(key.getEncoded());
-            return twosComplementSha1Digest(digest.digest());
+            return twosComplementHexdigest(digest.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new AssertionError(e);
         }
