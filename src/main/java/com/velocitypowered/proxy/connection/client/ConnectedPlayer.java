@@ -5,14 +5,15 @@ import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packets.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
-import com.velocitypowered.proxy.util.ComponentUtils;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,6 +21,8 @@ import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation {
+    private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
+
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
     private final GameProfile profile;
@@ -74,11 +77,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
 
     public void handleConnectionException(ServerInfo info, Disconnect disconnect) {
         Component disconnectReason = ComponentSerializers.JSON.deserialize(disconnect.getReason());
-        String reason = ComponentUtils.asPlainText(disconnectReason);
+        String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
         if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
-            logger.error("{}: kicked from server {}: {}", this, info.getName(), reason);
+            logger.error("{}: kicked from server {}: {}", this, info.getName(), plainTextReason);
         } else {
-            logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), reason);
+            logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), plainTextReason);
         }
         handleConnectionException(info, disconnectReason);
     }

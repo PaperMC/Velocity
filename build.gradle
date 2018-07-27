@@ -12,6 +12,9 @@ targetCompatibility = 1.8
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        url 'https://oss.sonatype.org/content/groups/public/'
+    }
 }
 
 dependencies {
@@ -24,7 +27,7 @@ dependencies {
     compile "io.netty:netty-handler:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
-    compile 'net.kyori:text:1.12-1.5.0'
+    compile 'net.kyori:text:1.12-1.6.0-SNAPSHOT'
     compile 'org.apache.logging.log4j:log4j-api:2.11.0'
     compile 'org.apache.logging.log4j:log4j-core:2.11.0'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
