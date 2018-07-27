@@ -11,6 +11,8 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -45,6 +47,8 @@ import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 
 public final class ConnectionManager {
+    private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(ConnectionManager.class);
+
     private static final String DISABLE_EPOLL_PROPERTY = "velocity.connection.disable-epoll";
     private static final boolean DISABLE_EPOLL = Boolean.getBoolean(DISABLE_EPOLL_PROPERTY);
     private final Set<Channel> endpoints = new HashSet<>();
@@ -71,12 +75,12 @@ public final class ConnectionManager {
 
     private void logChannelInformation(final boolean epoll) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Channel type: ");
+        sb.append("Using channel type ");
         sb.append(epoll ? "epoll": "nio");
         if(DISABLE_EPOLL) {
             sb.append(String.format(" - epoll explicitly disabled using -D%s=true", DISABLE_EPOLL_PROPERTY));
         }
-        System.out.println(sb.toString()); // TODO: move to logger
+        logger.info(sb.toString()); // TODO: move to logger
     }
 
     public void bind(final InetSocketAddress address) {
@@ -109,10 +113,9 @@ public final class ConnectionManager {
                     final Channel channel = future.channel();
                     if (future.isSuccess()) {
                         this.endpoints.add(channel);
-                        System.out.println("Listening on " + channel.localAddress()); // TODO: move to logger
+                        logger.info("Listening on {}", channel.localAddress());
                     } else {
-                        System.out.println("Can't bind to " + channel.localAddress()); // TODO: move to logger
-                        future.cause().printStackTrace();
+                        logger.error("Can't bind to {}", address, future.cause());
                     }
                 });
     }
@@ -126,11 +129,10 @@ public final class ConnectionManager {
     public void shutdown() {
         for (final Channel endpoint : this.endpoints) {
             try {
-                System.out.println(String.format("Closing endpoint %s", endpoint.localAddress())); // TODO: move to logger
+                logger.info("Closing endpoint {}", endpoint.localAddress());
                 endpoint.close().sync();
             } catch (final InterruptedException e) {
-                System.err.println("Interrupted whilst closing endpoint"); // TODO: move to logger
-                e.printStackTrace();
+                logger.info("Interrupted whilst closing endpoint", e);
             }
         }
     }

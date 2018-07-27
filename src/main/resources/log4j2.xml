@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss} %level]: %msg%n"/>
+        </Console>
+        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz"
+                                 immediateFlush="false">
+            <PatternLayout pattern="[%d{HH:mm:ss} %level]: %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <OnStartupTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>

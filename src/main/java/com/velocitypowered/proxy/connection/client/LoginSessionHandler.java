@@ -12,6 +12,8 @@ import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.UuidUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -21,6 +23,8 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+    private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
+
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
@@ -71,8 +75,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         handleSuccessfulLogin(profile);
                     }, inbound.getChannel().eventLoop())
                     .exceptionally(exception -> {
-                        System.out.println("Can't enable encryption");
-                        exception.printStackTrace();
+                        logger.error("Unable to enable encryption", exception);
                         inbound.close();
                         return null;
                     });
