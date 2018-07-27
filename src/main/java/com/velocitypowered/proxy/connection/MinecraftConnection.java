@@ -97,6 +97,16 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         channel.writeAndFlush(msg, channel.voidPromise());
     }
 
+    public void delayedWrite(Object msg) {
+        ensureOpen();
+        channel.write(msg, channel.voidPromise());
+    }
+
+    public void flush() {
+        ensureOpen();
+        channel.flush();
+    }
+
     public void closeWith(Object msg) {
         ensureOpen();
         teardown();

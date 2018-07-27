@@ -41,13 +41,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         if (packet instanceof ServerLogin) {
             this.login = (ServerLogin) packet;
 
-            // Request encryption.
-            EncryptionRequest request = generateRequest();
-            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-            inbound.write(request);
-
-            // TODO: Online-mode checks
-            //handleSuccessfulLogin();
+            if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
+                // Request encryption.
+                EncryptionRequest request = generateRequest();
+                this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+                inbound.write(request);
+            } else {
+                // Offline-mode, don't try to request encryption.
+                handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
+            }
         }
 
         if (packet instanceof EncryptionResponse) {

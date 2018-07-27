@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.Ping;
 import com.velocitypowered.proxy.protocol.packets.StatusRequest;
@@ -33,11 +34,13 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             return;
         }
 
+        VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+
         // Status request
         ServerPing ping = new ServerPing(
                 new ServerPing.Version(340, "1.12.2"),
-                new ServerPing.Players(0, 0),
-                TextComponent.of("test"),
+                new ServerPing.Players(0, configuration.getShowMaxPlayers()),
+                configuration.getMotdComponent(),
                 null
         );
         StatusResponse response = new StatusResponse();

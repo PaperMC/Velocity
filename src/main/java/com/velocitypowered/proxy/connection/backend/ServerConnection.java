@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -86,7 +87,11 @@ public class ServerConnection {
         Handshake handshake = new Handshake();
         handshake.setNextStatus(2); // login
         handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
-        handshake.setServerAddress(createBungeeForwardingAddress());
+        if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.LEGACY) {
+            handshake.setServerAddress(createBungeeForwardingAddress());
+        } else {
+            handshake.setServerAddress(serverInfo.getAddress().getHostString());
+        }
         handshake.setPort(serverInfo.getAddress().getPort());
         channel.write(handshake);
 

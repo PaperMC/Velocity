@@ -95,10 +95,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // - Another respawn with the correct dimension
             // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
             // work.
-            player.getConnection().write(joinGame);
+            player.getConnection().delayedWrite(joinGame);
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-            player.getConnection().write(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
-            player.getConnection().write(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
+            player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
+            player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
+            player.getConnection().flush();
             currentDimension = joinGame.getDimension();
         }
     }

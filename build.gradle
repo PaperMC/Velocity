@@ -27,6 +27,7 @@ dependencies {
     compile 'net.kyori:text:1.12-1.5.0'
     compile 'org.apache.logging.log4j:log4j-api:2.11.0'
     compile 'org.apache.logging.log4j:log4j-core:2.11.0'
+    compile 'com.moandjiezana.toml:toml4j:0.7.2'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.0-M1'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1'
 }
