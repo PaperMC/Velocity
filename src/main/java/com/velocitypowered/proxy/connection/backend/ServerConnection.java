@@ -1,14 +1,29 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.packets.Handshake;
 import com.velocitypowered.proxy.protocol.packets.ServerLogin;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.data.ServerInfo;
-import com.velocitypowered.proxy.protocol.netty.MinecraftPipelineUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+
+import java.util.concurrent.TimeUnit;
+
+import static com.velocitypowered.network.Connections.FRAME_DECODER;
+import static com.velocitypowered.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.network.Connections.HANDLER;
+import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
+import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class ServerConnection {
     private final ServerInfo serverInfo;
@@ -27,12 +42,17 @@ public class ServerConnection {
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
-                        MinecraftPipelineUtils.strapPipelineForBackend(ch);
+                        ch.pipeline()
+                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(SERVER_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+                                .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+                                .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.TO_CLIENT))
+                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.TO_SERVER));
 
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
-                        ch.pipeline().addLast("handler", connection);
+                        ch.pipeline().addLast(HANDLER, connection);
                     }
                 })
                 .connect(serverInfo.getAddress())

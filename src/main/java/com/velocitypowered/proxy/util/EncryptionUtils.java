@@ -4,7 +4,19 @@ import javax.crypto.Cipher;
 import java.math.BigInteger;
 import java.security.*;
 
-public enum EncryptionUtils { ;
+public enum EncryptionUtils {
+    ;
+
+    public static KeyPair createRsaKeyPair(final int keysize) {
+        try {
+            final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(keysize);
+            return generator.generateKeyPair();
+        } catch (final NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to generate RSA keypair", e);
+        }
+    }
+
     public static String twosComplementSha1Digest(byte[] digest) {
         return new BigInteger(digest).toString(16);
     }
