@@ -47,7 +47,7 @@ import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 
 public final class ConnectionManager {
-    private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(ConnectionManager.class);
+    private static final Logger logger = LogManager.getLogger(ConnectionManager.class);
 
     private static final String DISABLE_EPOLL_PROPERTY = "velocity.connection.disable-epoll";
     private static final boolean DISABLE_EPOLL = Boolean.getBoolean(DISABLE_EPOLL_PROPERTY);

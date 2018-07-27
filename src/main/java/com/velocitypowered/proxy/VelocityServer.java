@@ -8,11 +8,14 @@ import com.velocitypowered.proxy.util.EncryptionUtils;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.GsonComponentSerializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
 
 public class VelocityServer {
+    private static final Logger logger = LogManager.getLogger(VelocityServer.class);
     private static final VelocityServer INSTANCE = new VelocityServer();
     public static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
@@ -35,6 +38,7 @@ public class VelocityServer {
 
     public void start() {
         // Create a key pair
+        logger.info("Booting up Velocity...");
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
         httpClient = new NettyHttpClient(this);
