@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.config;
 
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
+import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.LegacyChatColorUtils;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,6 +52,13 @@ public class VelocityConfiguration {
             valid = false;
         }
 
+        try {
+            AddressUtil.parseAddress(bind);
+        } catch (IllegalArgumentException e) {
+            logger.error("'bind' option does not specify a valid IP address.", e);
+            valid = false;
+        }
+
         if (!onlineMode) {
             logger.info("Proxy is running in offline mode!");
         }
@@ -72,6 +81,15 @@ public class VelocityConfiguration {
                 valid = false;
             }
 
+            for (Map.Entry<String, String> entry : servers.entrySet()) {
+                try {
+                    AddressUtil.parseAddress(entry.getValue());
+                } catch (IllegalArgumentException e) {
+                    logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
+                    valid = false;
+                }
+            }
+
             for (String s : attemptConnectionOrder) {
                 if (!servers.containsKey(s)) {
                     logger.error("Fallback server " + s + " doesn't exist!");
@@ -90,8 +108,8 @@ public class VelocityConfiguration {
         return valid;
     }
 
-    public String getBind() {
-        return bind;
+    public InetSocketAddress getBind() {
+        return AddressUtil.parseAddress(bind);
     }
 
     public String getMotd() {

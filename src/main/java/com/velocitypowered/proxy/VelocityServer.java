@@ -61,7 +61,7 @@ public class VelocityServer {
 
         httpClient = new NettyHttpClient(this);
 
-        this.cm.bind(new InetSocketAddress(26671));
+        this.cm.bind(configuration.getBind());
     }
 
     public Bootstrap initializeGenericBootstrap() {

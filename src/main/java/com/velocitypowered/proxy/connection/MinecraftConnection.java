@@ -92,8 +92,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (ctx.channel().isActive()) {
-            cause.printStackTrace();
-
             if (sessionHandler != null) {
                 sessionHandler.exception(cause);
             }
