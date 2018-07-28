@@ -47,7 +47,7 @@ public class Chat implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         message = ProtocolUtils.readString(buf);
-        if (direction == ProtocolConstants.Direction.TO_CLIENT) {
+        if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
             position = buf.readByte();
         }
     }
@@ -55,7 +55,7 @@ public class Chat implements MinecraftPacket {
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, message);
-        if (direction == ProtocolConstants.Direction.TO_CLIENT) {
+        if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
             buf.writeByte(position);
         }
     }

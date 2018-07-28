@@ -12,7 +12,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     private StateRegistry state;
     private final ProtocolConstants.Direction direction;
-    private int protocolVersion;
+    private StateRegistry.PacketRegistry.ProtocolVersion protocolVersion;
 
     public MinecraftEncoder(ProtocolConstants.Direction direction) {
         this.state = StateRegistry.HANDSHAKE;
@@ -20,19 +20,18 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) throws Exception {
-        StateRegistry.PacketRegistry mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
-        int packetId = mappings.getId(msg, protocolVersion);
+    protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
+        int packetId = this.protocolVersion.getPacketId(msg);
         ProtocolUtils.writeVarInt(out, packetId);
-        msg.encode(out, direction, protocolVersion);
+        msg.encode(out, direction, protocolVersion.id);
     }
 
-    public int getProtocolVersion() {
+    public StateRegistry.PacketRegistry.ProtocolVersion getProtocolVersion() {
         return protocolVersion;
     }
 
-    public void setProtocolVersion(int protocolVersion) {
-        this.protocolVersion = protocolVersion;
+    public void setProtocolVersion(final int protocolVersion) {
+        this.protocolVersion = (this.direction == ProtocolConstants.Direction.CLIENTBOUND ? this.state.CLIENTBOUND : this.state.SERVERBOUND).getVersion(protocolVersion);
     }
 
     public StateRegistry getState() {

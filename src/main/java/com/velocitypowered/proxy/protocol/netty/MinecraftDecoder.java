@@ -12,7 +12,7 @@ import java.util.List;
 public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
     private StateRegistry state;
     private final ProtocolConstants.Direction direction;
-    private int protocolVersion;
+    private StateRegistry.PacketRegistry.ProtocolVersion protocolVersion;
 
     public MinecraftDecoder(ProtocolConstants.Direction direction) {
         this.state = StateRegistry.HANDSHAKE;
@@ -28,14 +28,13 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         ByteBuf slice = msg.slice().retain();
 
         int packetId = ProtocolUtils.readVarInt(msg);
-        StateRegistry.PacketRegistry mappings = direction == ProtocolConstants.Direction.TO_CLIENT ? state.TO_CLIENT : state.TO_SERVER;
-        MinecraftPacket packet = mappings.createPacket(packetId, protocolVersion);
+        MinecraftPacket packet = this.protocolVersion.createPacket(packetId);
         if (packet == null) {
             msg.skipBytes(msg.readableBytes());
             out.add(new PacketWrapper(null, slice));
         } else {
             try {
-                packet.decode(msg, direction, protocolVersion);
+                packet.decode(msg, direction, protocolVersion.id);
             } catch (Exception e) {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
                         + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
@@ -44,12 +43,12 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         }
     }
 
-    public int getProtocolVersion() {
+    public StateRegistry.PacketRegistry.ProtocolVersion getProtocolVersion() {
         return protocolVersion;
     }
 
     public void setProtocolVersion(int protocolVersion) {
-        this.protocolVersion = protocolVersion;
+        this.protocolVersion = (this.direction == ProtocolConstants.Direction.CLIENTBOUND ? this.state.CLIENTBOUND : this.state.SERVERBOUND).getVersion(protocolVersion);
     }
 
     public StateRegistry getState() {
