@@ -13,7 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
 
@@ -48,7 +50,15 @@ public class VelocityServer {
         // Create a key pair
         logger.info("Booting up Velocity...");
         try {
-            configuration = VelocityConfiguration.read(Paths.get("velocity.toml"));
+            Path configPath = Paths.get("velocity.toml");
+            try {
+                configuration = VelocityConfiguration.read(configPath);
+            } catch (NoSuchFileException e) {
+                logger.info("No velocity.toml found, creating one for you...");
+                Files.copy(VelocityServer.class.getResourceAsStream("/velocity.toml"), configPath);
+                configuration = VelocityConfiguration.read(configPath);
+            }
+
             if (!configuration.validate()) {
                 logger.error("Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
                 System.exit(1);
