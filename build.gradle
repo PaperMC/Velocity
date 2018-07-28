@@ -9,6 +9,13 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+ext {
+    // dependency versions
+    junitVersion = '5.3.0-M1'
+    log4jVersion = '2.11.0'
+    nettyVersion = '4.1.27.Final'
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -18,8 +25,6 @@ repositories {
 }
 
 dependencies {
-    def nettyVersion = '4.1.27.Final'
-
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'com.google.guava:guava:25.1-jre'
     compile "io.netty:netty-codec:${nettyVersion}"
@@ -28,9 +33,31 @@ dependencies {
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
     compile 'net.kyori:text:1.12-1.6.0-SNAPSHOT'
-    compile 'org.apache.logging.log4j:log4j-api:2.11.0'
-    compile 'org.apache.logging.log4j:log4j-core:2.11.0'
+    compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
-    testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.0-M1'
-    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1'
+    testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.velocitypowered.proxy.Velocity'
+    }
+}
+
+task javadocJar(type: Jar) {
+    classifier 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives shadowJar
+    archives sourcesJar
 }
