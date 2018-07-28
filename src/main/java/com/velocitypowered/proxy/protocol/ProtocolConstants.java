@@ -14,7 +14,7 @@ public enum ProtocolConstants { ;
     }
 
     public enum Direction {
-        TO_SERVER,
-        TO_CLIENT
+        SERVERBOUND,
+        CLIENTBOUND
     }
 }

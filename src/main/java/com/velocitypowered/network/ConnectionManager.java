@@ -96,8 +96,8 @@ public final class ConnectionManager {
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
                                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                                .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.TO_SERVER))
-                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.TO_CLIENT));
+                                .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.SERVERBOUND))
+                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.CLIENTBOUND));
 
                         final MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
