@@ -7,9 +7,7 @@ import io.netty.util.collection.IntObjectMap;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_2;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
 
 public enum StateRegistry {
     HANDSHAKE {
@@ -34,24 +32,32 @@ public enum StateRegistry {
     PLAY {
         {
             SERVERBOUND.register(Chat.class, Chat::new,
+                    map(0x02, MINECRAFT_1_11),
                     map(0x03, MINECRAFT_1_12),
                     map(0x02, MINECRAFT_1_12_2));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
+                    map(0x0B, MINECRAFT_1_11),
                     map(0x0C, MINECRAFT_1_12),
                     map(0x0B, MINECRAFT_1_12_1));
             SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
+                    map(0x04, MINECRAFT_1_11),
                     map(0x05, MINECRAFT_1_12),
                     map(0x04, MINECRAFT_1_12_1));
 
             CLIENTBOUND.register(Chat.class, Chat::new,
+                    map(0x0F, MINECRAFT_1_11),
                     map(0x0F, MINECRAFT_1_12));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
+                    map(0x1A, MINECRAFT_1_11),
                     map(0x1A, MINECRAFT_1_12));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
+                    map(0x1F, MINECRAFT_1_11),
                     map(0x1F, MINECRAFT_1_12));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
+                    map(0x23, MINECRAFT_1_11),
                     map(0x23, MINECRAFT_1_12));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
+                    map(0x33, MINECRAFT_1_11),
                     map(0x34, MINECRAFT_1_12),
                     map(0x35, MINECRAFT_1_12_2));
         }
@@ -81,6 +87,7 @@ public enum StateRegistry {
         private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_11, new int[] { MINECRAFT_1_11_1 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
         }
@@ -204,6 +211,6 @@ public enum StateRegistry {
     }
 
     private static PacketMapping lowestVersion(int id) {
-        return new PacketMapping(id, MINECRAFT_1_12);
+        return new PacketMapping(id, MINECRAFT_1_11);
     }
 }

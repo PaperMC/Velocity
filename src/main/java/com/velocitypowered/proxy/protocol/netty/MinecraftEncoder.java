@@ -17,7 +17,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     public MinecraftEncoder(ProtocolConstants.Direction direction) {
         this.state = StateRegistry.HANDSHAKE;
         this.direction = Preconditions.checkNotNull(direction, "direction");
-        this.setProtocolVersion(ProtocolConstants.MINECRAFT_1_12);
+        this.setProtocolVersion(ProtocolConstants.MINIMUM_VERSION_SUPPORTED);
     }
 
     @Override
