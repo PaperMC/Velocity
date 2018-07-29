@@ -39,6 +39,9 @@ public enum StateRegistry {
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
                     map(0x0C, MINECRAFT_1_12),
                     map(0x0B, MINECRAFT_1_12_1));
+            SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
+                    map(0x05, MINECRAFT_1_12),
+                    map(0x04, MINECRAFT_1_12_1));
 
             CLIENTBOUND.register(Chat.class, Chat::new,
                     map(0x0F, MINECRAFT_1_12));
@@ -107,10 +110,6 @@ public enum StateRegistry {
 
             for (final PacketMapping mapping : mappings) {
                 ProtocolVersion version = this.versions.get(mapping.protocolVersion);
-                if (version == null) {
-                    version = new ProtocolVersion(mapping.protocolVersion);
-                    this.versions.put(mapping.protocolVersion, version);
-                }
                 version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 version.packetClassToId.put(clazz, mapping.id);
 

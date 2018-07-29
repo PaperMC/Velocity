@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packets.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
+import com.velocitypowered.proxy.protocol.packets.ClientSettings;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
@@ -28,6 +29,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
     private final GameProfile profile;
     private final MinecraftConnection connection;
     private ServerConnection connectedServer;
+    private ClientSettings clientSettings;
 
     public ConnectedPlayer(GameProfile profile, MinecraftConnection connection) {
         this.profile = profile;
@@ -56,6 +58,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
 
     public ServerConnection getConnectedServer() {
         return connectedServer;
+    }
+
+    public ClientSettings getClientSettings() {
+        return clientSettings;
+    }
+
+    public void setClientSettings(ClientSettings clientSettings) {
+        this.clientSettings = clientSettings;
     }
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {

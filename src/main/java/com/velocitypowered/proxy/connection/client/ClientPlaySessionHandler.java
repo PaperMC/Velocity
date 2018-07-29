@@ -4,11 +4,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.packets.Chat;
-import com.velocitypowered.proxy.protocol.packets.JoinGame;
-import com.velocitypowered.proxy.protocol.packets.KeepAlive;
+import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.packets.Respawn;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
 import org.apache.logging.log4j.LogManager;
@@ -58,6 +55,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
+        if (packet instanceof ClientSettings) {
+            player.setClientSettings((ClientSettings) packet);
+            // forward it on
+        }
+
         if (packet instanceof Chat) {
             Chat chat = (Chat) packet;
             if (chat.getMessage().equals("/connect")) {
@@ -105,6 +107,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             player.getConnection().flush();
             currentDimension = joinGame.getDimension();
+        }
+
+        if (player.getClientSettings() != null) {
+            player.getConnectedServer().getChannel().write(player.getClientSettings());
         }
     }
 
