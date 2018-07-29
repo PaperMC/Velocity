@@ -1,26 +1,11 @@
 package com.velocitypowered.proxy.protocol.packets;
 
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import io.netty.buffer.ByteBuf;
 
-public class Ping implements MinecraftPacket {
+public class StatusPing implements MinecraftPacket {
     private long randomId;
-
-    public long getRandomId() {
-        return randomId;
-    }
-
-    public void setRandomId(long randomId) {
-        this.randomId = randomId;
-    }
-
-    @Override
-    public String toString() {
-        return "Ping{" +
-                "randomId=" + randomId +
-                '}';
-    }
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {

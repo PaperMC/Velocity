@@ -17,6 +17,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
     public MinecraftDecoder(ProtocolConstants.Direction direction) {
         this.state = StateRegistry.HANDSHAKE;
         this.direction = Preconditions.checkNotNull(direction, "direction");
+        this.setProtocolVersion(ProtocolConstants.MINECRAFT_1_12);
     }
 
     @Override
@@ -57,6 +58,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     public void setState(StateRegistry state) {
         this.state = state;
+        this.setProtocolVersion(protocolVersion.id);
     }
 
     public ProtocolConstants.Direction getDirection() {

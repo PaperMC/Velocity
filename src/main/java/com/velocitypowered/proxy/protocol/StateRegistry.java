@@ -4,67 +4,70 @@ import com.velocitypowered.proxy.protocol.packets.*;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_1;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_2;
 
 public enum StateRegistry {
     HANDSHAKE {
         {
             SERVERBOUND.register(Handshake.class, Handshake::new,
-                    generic(0x00));
+                    lowestVersion(0x00));
         }
     },
     STATUS {
         {
             SERVERBOUND.register(StatusRequest.class, StatusRequest::new,
-                    generic(0x00));
-            SERVERBOUND.register(Ping.class, Ping::new,
-                    generic(0x01));
+                    lowestVersion(0x00));
+            SERVERBOUND.register(StatusPing.class, StatusPing::new,
+                    lowestVersion(0x01));
 
             CLIENTBOUND.register(StatusResponse.class, StatusResponse::new,
-                    generic(0x00));
-            CLIENTBOUND.register(Ping.class, Ping::new,
-                    generic(0x01));
+                    lowestVersion(0x00));
+            CLIENTBOUND.register(StatusPing.class, StatusPing::new,
+                    lowestVersion(0x01));
         }
     },
     PLAY {
         {
             SERVERBOUND.register(Chat.class, Chat::new,
-                    map(0x02, MINECRAFT_1_12));
-            SERVERBOUND.register(Ping.class, Ping::new,
-                    map(0x0b, MINECRAFT_1_12));
+                    map(0x03, MINECRAFT_1_12),
+                    map(0x02, MINECRAFT_1_12_2));
+            SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
+                    map(0x0C, MINECRAFT_1_12),
+                    map(0x0B, MINECRAFT_1_12_1));
 
             CLIENTBOUND.register(Chat.class, Chat::new,
                     map(0x0F, MINECRAFT_1_12));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
                     map(0x1A, MINECRAFT_1_12));
-            CLIENTBOUND.register(Ping.class, Ping::new,
+            CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
                     map(0x1F, MINECRAFT_1_12));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
                     map(0x23, MINECRAFT_1_12));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
-                    map(0x35, MINECRAFT_1_12));
+                    map(0x34, MINECRAFT_1_12),
+                    map(0x35, MINECRAFT_1_12_2));
         }
     },
     LOGIN {
         {
             SERVERBOUND.register(ServerLogin.class, ServerLogin::new,
-                    generic(0x00));
+                    lowestVersion(0x00));
             SERVERBOUND.register(EncryptionResponse.class, EncryptionResponse::new,
-                    generic(0x01));
+                    lowestVersion(0x01));
 
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
-                    generic(0x00));
+                    lowestVersion(0x00));
             CLIENTBOUND.register(EncryptionRequest.class, EncryptionRequest::new,
-                    generic(0x01));
+                    lowestVersion(0x01));
             CLIENTBOUND.register(ServerLoginSuccess.class, ServerLoginSuccess::new,
-                    generic(0x02));
+                    lowestVersion(0x02));
             CLIENTBOUND.register(SetCompression.class, SetCompression::new,
-                    generic(0x03));
+                    lowestVersion(0x03));
         }
     };
 
@@ -72,20 +75,25 @@ public enum StateRegistry {
     public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND);
 
     public static class PacketRegistry {
+        private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
+
+        static {
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
+        }
+
         private final ProtocolConstants.Direction direction;
         private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>();
 
         public PacketRegistry(ProtocolConstants.Direction direction) {
             this.direction = direction;
+            for (int version : ProtocolConstants.SUPPORTED_VERSIONS) {
+                versions.put(version, new ProtocolVersion(version));
+            }
         }
 
         public ProtocolVersion getVersion(final int version) {
-            ProtocolVersion result = null;
-            for (final IntObjectMap.PrimitiveEntry<ProtocolVersion> entry : this.versions.entries()) {
-                if (entry.key() <= version) {
-                    result = entry.value();
-                }
-            }
+            ProtocolVersion result = versions.get(version);
             if (result == null) {
                 throw new IllegalArgumentException("Could not find data for protocol version " + version);
             }
@@ -105,6 +113,17 @@ public enum StateRegistry {
                 }
                 version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 version.packetClassToId.put(clazz, mapping.id);
+
+                int[] linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
+                if (linked != null) {
+                    links: for (int i : linked) {
+                        // Make sure that later mappings override this one.
+                        for (PacketMapping m : mappings) {
+                            if (i == m.protocolVersion) continue links;
+                        }
+                        register(clazz, packetSupplier, map(mapping.id, i));
+                    }
+                }
             }
         }
 
@@ -134,6 +153,14 @@ public enum StateRegistry {
                     ));
                 }
                 return id;
+            }
+
+            @Override
+            public String toString() {
+                return "ProtocolVersion{" +
+                        "id=" + id +
+                        ", packetClassToId=" + packetClassToId +
+                        '}';
             }
         }
     }
@@ -174,7 +201,7 @@ public enum StateRegistry {
         return new PacketMapping(id, version);
     }
 
-    private static PacketMapping generic(int id) {
-        return new PacketMapping(id, 0);
+    private static PacketMapping lowestVersion(int id) {
+        return new PacketMapping(id, MINECRAFT_1_12);
     }
 }

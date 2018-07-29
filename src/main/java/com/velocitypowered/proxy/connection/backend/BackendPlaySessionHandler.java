@@ -4,7 +4,7 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.Disconnect;
 import com.velocitypowered.proxy.protocol.packets.JoinGame;
-import com.velocitypowered.proxy.protocol.packets.Ping;
+import com.velocitypowered.proxy.protocol.packets.KeepAlive;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.packets.Respawn;
 import io.netty.buffer.ByteBuf;
@@ -18,7 +18,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
-        if (packet instanceof Ping) {
+        if (packet instanceof KeepAlive) {
             // Forward onto the server
             connection.getChannel().write(packet);
         } else if (packet instanceof Disconnect) {

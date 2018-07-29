@@ -1,20 +1,16 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.packets.Ping;
+import com.velocitypowered.proxy.protocol.packets.KeepAlive;
+import com.velocitypowered.proxy.protocol.packets.StatusPing;
 import com.velocitypowered.proxy.protocol.packets.StatusRequest;
 import com.velocitypowered.proxy.protocol.packets.StatusResponse;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.data.ServerPing;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.GsonComponentSerializer;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -25,10 +21,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
-        Preconditions.checkArgument(packet instanceof Ping || packet instanceof StatusRequest,
+        Preconditions.checkArgument(packet instanceof StatusPing|| packet instanceof StatusRequest,
                 "Unrecognized packet type " + packet.getClass().getName());
 
-        if (packet instanceof Ping) {
+        if (packet instanceof StatusPing) {
             // Just send back the client's packet, no processing to do here.
             connection.closeWith(packet);
             return;
