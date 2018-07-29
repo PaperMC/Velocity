@@ -110,6 +110,9 @@ public enum StateRegistry {
 
             for (final PacketMapping mapping : mappings) {
                 ProtocolVersion version = this.versions.get(mapping.protocolVersion);
+                if (version == null) {
+                    throw new IllegalArgumentException("Unknown protocol version " + mapping.protocolVersion);
+                }
                 version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 version.packetClassToId.put(clazz, mapping.id);
 
