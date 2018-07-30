@@ -64,6 +64,14 @@ public enum StateRegistry {
                     map(0x33, MINECRAFT_1_11),
                     map(0x34, MINECRAFT_1_12),
                     map(0x35, MINECRAFT_1_12_2));
+            CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
+                    map(0x3B, MINECRAFT_1_12_2));
+            CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
+                    map(0x42, MINECRAFT_1_12_2));
+            CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
+                    map(0x44, MINECRAFT_1_12_2));
+            CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
+                    map(0x45, MINECRAFT_1_12_2));
         }
     },
     LOGIN {

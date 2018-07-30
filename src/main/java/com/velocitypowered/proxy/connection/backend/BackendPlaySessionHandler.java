@@ -60,6 +60,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             }
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
+            if (packet.getClass().getName().contains("Scoreboard")) {
+                System.out.println(packet);
+            }
             connection.getProxyPlayer().getConnection().write(packet);
         }
     }

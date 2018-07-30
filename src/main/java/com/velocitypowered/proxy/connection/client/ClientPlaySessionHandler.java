@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
+import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -34,6 +35,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
     private PluginMessage brandMessage;
     private int currentDimension;
+    private Scoreboard serverScoreboard = new Scoreboard();
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
         this.player = player;
