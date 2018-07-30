@@ -36,7 +36,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
         // Status request
         ServerPing ping = new ServerPing(
-                new ServerPing.Version(340, "1.12.2"),
+                new ServerPing.Version(connection.getProtocolVersion(), "Velocity 1.10-1.12.2"),
                 new ServerPing.Players(0, configuration.getShowMaxPlayers()),
                 configuration.getMotdComponent(),
                 null

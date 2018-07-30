@@ -85,8 +85,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         return message.getChannel().startsWith("MC|") ||
-                message.getChannel().startsWith("FML") ||
-                message.getChannel().equals("FORGE") ||
                 playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
     }
 }

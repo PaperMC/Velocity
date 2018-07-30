@@ -32,52 +32,52 @@ public enum StateRegistry {
     PLAY {
         {
             SERVERBOUND.register(Chat.class, Chat::new,
-                    map(0x02, MINECRAFT_1_11),
+                    map(0x02, MINECRAFT_1_10),
                     map(0x03, MINECRAFT_1_12),
                     map(0x02, MINECRAFT_1_12_2));
+            SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
+                    map(0x04, MINECRAFT_1_10),
+                    map(0x05, MINECRAFT_1_12),
+                    map(0x04, MINECRAFT_1_12_1));
             SERVERBOUND.register(PluginMessage.class, PluginMessage::new,
-                    map(0x09, MINECRAFT_1_11),
+                    map(0x09, MINECRAFT_1_10),
                     map(0x0A, MINECRAFT_1_12),
                     map(0x09, MINECRAFT_1_12_1));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
-                    map(0x0B, MINECRAFT_1_11),
+                    map(0x0B, MINECRAFT_1_10),
                     map(0x0C, MINECRAFT_1_12),
                     map(0x0B, MINECRAFT_1_12_1));
-            SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
-                    map(0x04, MINECRAFT_1_11),
-                    map(0x05, MINECRAFT_1_12),
-                    map(0x04, MINECRAFT_1_12_1));
 
             CLIENTBOUND.register(BossBar.class, BossBar::new,
-                    map(0x0C, MINECRAFT_1_11));
+                    map(0x0C, MINECRAFT_1_10));
             CLIENTBOUND.register(Chat.class, Chat::new,
-                    map(0x0F, MINECRAFT_1_11));
+                    map(0x0F, MINECRAFT_1_10));
             CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
-                    map(0x18, MINECRAFT_1_11));
+                    map(0x18, MINECRAFT_1_10));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
-                    map(0x1A, MINECRAFT_1_11));
+                    map(0x1A, MINECRAFT_1_10));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
-                    map(0x1F, MINECRAFT_1_11));
+                    map(0x1F, MINECRAFT_1_10));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
-                    map(0x23, MINECRAFT_1_11));
+                    map(0x23, MINECRAFT_1_10));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
-                    map(0x33, MINECRAFT_1_11),
+                    map(0x33, MINECRAFT_1_10),
                     map(0x34, MINECRAFT_1_12),
                     map(0x35, MINECRAFT_1_12_2));
             CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
-                    map(0x38, MINECRAFT_1_11),
+                    map(0x38, MINECRAFT_1_10),
                     map(0x3A, MINECRAFT_1_12),
                     map(0x3B, MINECRAFT_1_12_1));
             CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
-                    map(0x3F, MINECRAFT_1_11),
+                    map(0x3F, MINECRAFT_1_10),
                     map(0x41, MINECRAFT_1_12),
                     map(0x42, MINECRAFT_1_12_1));
             CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
-                    map(0x41, MINECRAFT_1_11),
+                    map(0x41, MINECRAFT_1_10),
                     map(0x43, MINECRAFT_1_12),
                     map(0x44, MINECRAFT_1_12_1));
             CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
-                    map(0x42, MINECRAFT_1_11),
+                    map(0x42, MINECRAFT_1_10),
                     map(0x44, MINECRAFT_1_12),
                     map(0x45, MINECRAFT_1_12_1));
         }
@@ -107,6 +107,7 @@ public enum StateRegistry {
         private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_10, new int[] { MINECRAFT_1_11 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_11, new int[] { MINECRAFT_1_11_1, MINECRAFT_1_12 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
