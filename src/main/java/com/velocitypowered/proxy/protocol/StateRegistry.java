@@ -13,20 +13,20 @@ public enum StateRegistry {
     HANDSHAKE {
         {
             SERVERBOUND.register(Handshake.class, Handshake::new,
-                    lowestVersion(0x00));
+                    genericMapping(0x00));
         }
     },
     STATUS {
         {
             SERVERBOUND.register(StatusRequest.class, StatusRequest::new,
-                    lowestVersion(0x00));
+                    genericMapping(0x00));
             SERVERBOUND.register(StatusPing.class, StatusPing::new,
-                    lowestVersion(0x01));
+                    genericMapping(0x01));
 
             CLIENTBOUND.register(StatusResponse.class, StatusResponse::new,
-                    lowestVersion(0x00));
+                    genericMapping(0x00));
             CLIENTBOUND.register(StatusPing.class, StatusPing::new,
-                    lowestVersion(0x01));
+                    genericMapping(0x01));
         }
     },
     PLAY {
@@ -69,18 +69,18 @@ public enum StateRegistry {
     LOGIN {
         {
             SERVERBOUND.register(ServerLogin.class, ServerLogin::new,
-                    lowestVersion(0x00));
+                    genericMapping(0x00));
             SERVERBOUND.register(EncryptionResponse.class, EncryptionResponse::new,
-                    lowestVersion(0x01));
+                    genericMapping(0x01));
 
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
-                    lowestVersion(0x00));
+                    genericMapping(0x00));
             CLIENTBOUND.register(EncryptionRequest.class, EncryptionRequest::new,
-                    lowestVersion(0x01));
+                    genericMapping(0x01));
             CLIENTBOUND.register(ServerLoginSuccess.class, ServerLoginSuccess::new,
-                    lowestVersion(0x02));
+                    genericMapping(0x02));
             CLIENTBOUND.register(SetCompression.class, SetCompression::new,
-                    lowestVersion(0x03));
+                    genericMapping(0x03));
         }
     };
 
@@ -104,6 +104,7 @@ public enum StateRegistry {
             for (int version : ProtocolConstants.SUPPORTED_VERSIONS) {
                 versions.put(version, new ProtocolVersion(version));
             }
+            versions.put(MINIMUM_GENERIC_VERSION, new ProtocolVersion(MINIMUM_GENERIC_VERSION));
         }
 
         public ProtocolVersion getVersion(final int version) {
@@ -214,7 +215,7 @@ public enum StateRegistry {
         return new PacketMapping(id, version);
     }
 
-    private static PacketMapping lowestVersion(int id) {
-        return new PacketMapping(id, MINECRAFT_1_11);
+    private static PacketMapping genericMapping(int id) {
+        return new PacketMapping(id, MINIMUM_GENERIC_VERSION);
     }
 }

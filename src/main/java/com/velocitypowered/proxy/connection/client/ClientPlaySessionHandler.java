@@ -4,10 +4,12 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -15,15 +17,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
+    private static final int MAX_PLUGIN_CHANNELS = 128;
 
     private final ConnectedPlayer player;
     private ScheduledFuture<?> pingTask;
@@ -74,6 +75,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
                 connection.connect();
             }
+        }
+
+        if (packet instanceof PluginMessage) {
+            handlePluginMessage((PluginMessage) packet, false);
+            return;
         }
 
         // If we don't want to handle this packet, just forward it on.
@@ -148,5 +154,65 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public List<UUID> getServerBossBars() {
         return serverBossBars;
+    }
+
+    public void handlePluginMessage(PluginMessage packet, boolean fromBackend) {
+        logger.info("Got plugin message packet {}", packet);
+
+        // TODO: this certainly isn't the right approach, need a better way!
+        /*if (packet.getChannel().equals("REGISTER")) {
+            List<String> actuallyRegistered = new ArrayList<>();
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            for (String channel : channels) {
+                if (pluginMessageChannels.size() >= MAX_PLUGIN_CHANNELS && !pluginMessageChannels.contains(channel)) {
+                    throw new IllegalStateException("Too many plugin message channels registered");
+                }
+                if (pluginMessageChannels.add(channel)) {
+                    actuallyRegistered.add(channel);
+                }
+            }
+
+            if (actuallyRegistered.size() > 0) {
+                logger.info("Rewritten register packet: {}", actuallyRegistered);
+                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket("REGISTER", actuallyRegistered);
+                if (fromBackend) {
+                    player.getConnection().write(newRegisterPacket);
+                } else {
+                    player.getConnectedServer().getChannel().write(newRegisterPacket);
+                }
+            }
+
+            return;
+        }
+
+        if (packet.getChannel().equals("UNREGISTER")) {
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            pluginMessageChannels.removeAll(channels);
+        }*/
+
+        if (packet.getChannel().equals("MC|Brand")) {
+            // Rewrite this packet to indicate that Velocity is running. Hurrah!
+            ByteBuf currentBrandBuf = Unpooled.wrappedBuffer(packet.getData());
+
+            ByteBuf buf = Unpooled.buffer();
+            byte[] rewrittenBrand;
+            try {
+                String currentBrand = ProtocolUtils.readString(currentBrandBuf);
+                logger.info("Remote server brand: {}", currentBrand);
+                ProtocolUtils.writeString(buf, currentBrand + " (Velocity)");
+                rewrittenBrand = new byte[buf.readableBytes()];
+                buf.readBytes(rewrittenBrand);
+            } finally {
+                buf.release();
+            }
+            packet.setData(rewrittenBrand);
+        }
+
+        // No other special handling?
+        if (fromBackend) {
+            player.getConnection().write(packet);
+        } else {
+            player.getConnectedServer().getChannel().write(packet);
+        }
     }
 }

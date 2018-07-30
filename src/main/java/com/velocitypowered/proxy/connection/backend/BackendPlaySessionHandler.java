@@ -40,6 +40,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                     break;
             }
             connection.getProxyPlayer().getConnection().write(packet);
+        } else if (packet instanceof PluginMessage) {
+            playerHandler.handlePluginMessage((PluginMessage) packet, true);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getProxyPlayer().getConnection().write(packet);
