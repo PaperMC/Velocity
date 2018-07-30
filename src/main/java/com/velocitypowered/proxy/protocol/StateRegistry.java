@@ -36,7 +36,7 @@ public enum StateRegistry {
                     map(0x03, MINECRAFT_1_12),
                     map(0x02, MINECRAFT_1_12_2));
             SERVERBOUND.register(PluginMessage.class, PluginMessage::new,
-                    map(0x0A, MINECRAFT_1_11),
+                    map(0x09, MINECRAFT_1_11),
                     map(0x0A, MINECRAFT_1_12),
                     map(0x09, MINECRAFT_1_12_1));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
