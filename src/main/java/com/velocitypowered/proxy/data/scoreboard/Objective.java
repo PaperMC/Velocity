@@ -36,6 +36,14 @@ public class Objective {
         return scores;
     }
 
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     @Override
     public String toString() {
         return "Objective{" +

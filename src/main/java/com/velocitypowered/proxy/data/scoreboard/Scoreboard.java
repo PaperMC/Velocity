@@ -1,23 +1,20 @@
 package com.velocitypowered.proxy.data.scoreboard;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Scoreboard {
-    private String name;
+    private String displayName;
     private byte position;
-    private final List<Objective> objectives = new ArrayList<>();
+    private final Map<String, Objective> objectives = new HashMap<>();
+    private final Map<String, Team> teams = new HashMap<>();
 
-    public Scoreboard() {
-
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public byte getPosition() {
@@ -28,16 +25,21 @@ public class Scoreboard {
         this.position = position;
     }
 
-    public List<Objective> getObjectives() {
+    public Map<String, Objective> getObjectives() {
         return objectives;
+    }
+
+    public Map<String, Team> getTeams() {
+        return teams;
     }
 
     @Override
     public String toString() {
         return "Scoreboard{" +
-                "name='" + name + '\'' +
+                "displayName='" + displayName + '\'' +
                 ", position=" + position +
                 ", objectives=" + objectives +
+                ", teams=" + teams +
                 '}';
     }
 }

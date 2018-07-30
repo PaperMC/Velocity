@@ -3,7 +3,10 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
+import com.velocitypowered.proxy.data.scoreboard.Objective;
+import com.velocitypowered.proxy.data.scoreboard.Score;
 import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
+import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -149,6 +152,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
         serverBossBars.clear();
 
+        // Remove scoreboard junk.
+        clearServerScoreboard();
+
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
         if (!clientPluginMsgChannels.isEmpty()) {
             player.getConnectedServer().getChannel().delayedWrite(
@@ -216,6 +222,86 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         } finally {
             ReferenceCountUtil.release(original.getData());
         }
+    }
+
+    public void handleServerScoreboardPacket(MinecraftPacket packet) {
+        logger.info("Server scoreboard packet: {}", packet);
+
+        if (packet instanceof ScoreboardDisplay) {
+            ScoreboardDisplay sd = (ScoreboardDisplay) packet;
+            serverScoreboard.setPosition(sd.getPosition());
+            serverScoreboard.setDisplayName(sd.getDisplayName());
+        }
+
+        if (packet instanceof ScoreboardObjective) {
+            ScoreboardObjective so = (ScoreboardObjective) packet;
+            if (so.getMode() == 0) {
+                Objective o = new Objective(so.getId());
+                o.setDisplayName(so.getDisplayName());
+                o.setType(so.getType());
+                serverScoreboard.getObjectives().put(so.getId(), o);
+            } else {
+                serverScoreboard.getObjectives().remove(so.getId());
+            }
+        }
+
+        if (packet instanceof ScoreboardSetScore) {
+            ScoreboardSetScore sss = (ScoreboardSetScore) packet;
+            Objective objective = serverScoreboard.getObjectives().get(sss.getObjective());
+            if (objective == null) {
+                return;
+            }
+            switch (sss.getAction()) {
+                case 0:
+                    Score score = new Score(sss.getEntity(), sss.getValue());
+                    objective.getScores().put(sss.getEntity(), score);
+                    break;
+                case 1:
+                    objective.getScores().remove(sss.getEntity());
+                    break;
+            }
+        }
+
+        if (packet instanceof ScoreboardTeam) {
+            ScoreboardTeam st = (ScoreboardTeam) packet;
+            switch (st.getMode()) {
+                case 0:
+                    // TODO: Preserve other team information? We might not need to...
+                    Team team = new Team(st.getId());
+                    serverScoreboard.getTeams().put(st.getId(), team);
+                    break;
+                case 1:
+                    serverScoreboard.getTeams().remove(st.getId());
+                    break;
+            }
+        }
+    }
+
+    private void clearServerScoreboard() {
+        logger.info("Scoreboard prior to cleaning: {}", serverScoreboard);
+        for (Objective objective : serverScoreboard.getObjectives().values()) {
+            for (Score score : objective.getScores().values()) {
+                ScoreboardSetScore sss = new ScoreboardSetScore();
+                sss.setObjective(objective.getId());
+                sss.setAction((byte) 1);
+                sss.setEntity(score.getTarget());
+                player.getConnection().delayedWrite(sss);
+            }
+
+            ScoreboardObjective so = new ScoreboardObjective();
+            so.setId(objective.getId());
+            so.setMode((byte) 1);
+            player.getConnection().delayedWrite(so);
+        }
+
+        for (Team team : serverScoreboard.getTeams().values()) {
+            ScoreboardTeam st = new ScoreboardTeam();
+            st.setId(team.getId());
+            st.setMode((byte) 1);
+            player.getConnection().delayedWrite(st);
+        }
+
+        serverScoreboard = new Scoreboard();
     }
 
     public Set<String> getClientPluginMsgChannels() {
