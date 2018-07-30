@@ -88,6 +88,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
     }
 
+    @Override
+    public void exception(Throwable throwable) {
+        player.handleConnectionException(player.getConnectedServer().getServerInfo(), throwable);
+    }
+
     public void handleBackendJoinGame(JoinGame joinGame) {
         if (!spawned) {
             // nothing special to do here
