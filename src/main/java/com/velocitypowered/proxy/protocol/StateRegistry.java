@@ -35,6 +35,10 @@ public enum StateRegistry {
                     map(0x02, MINECRAFT_1_11),
                     map(0x03, MINECRAFT_1_12),
                     map(0x02, MINECRAFT_1_12_2));
+            SERVERBOUND.register(PluginMessage.class, PluginMessage::new,
+                    map(0x0A, MINECRAFT_1_11),
+                    map(0x0A, MINECRAFT_1_12),
+                    map(0x09, MINECRAFT_1_12_1));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
                     map(0x0B, MINECRAFT_1_11),
                     map(0x0C, MINECRAFT_1_12),
@@ -48,6 +52,8 @@ public enum StateRegistry {
                     map(0x0C, MINECRAFT_1_11));
             CLIENTBOUND.register(Chat.class, Chat::new,
                     map(0x0F, MINECRAFT_1_11));
+            CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
+                    map(0x18, MINECRAFT_1_11));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
                     map(0x1A, MINECRAFT_1_11));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,

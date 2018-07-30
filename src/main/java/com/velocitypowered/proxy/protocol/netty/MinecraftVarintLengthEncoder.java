@@ -14,6 +14,7 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
+        out.ensureWritable(msg.readableBytes() + 5);
         ProtocolUtils.writeVarInt(out, msg.readableBytes());
         out.writeBytes(msg);
     }
