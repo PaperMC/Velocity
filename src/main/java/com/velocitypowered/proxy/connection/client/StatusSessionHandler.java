@@ -11,6 +11,8 @@ import com.velocitypowered.proxy.protocol.packets.StatusResponse;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.data.ServerPing;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -42,5 +44,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         StatusResponse response = new StatusResponse();
         response.setStatus(VelocityServer.GSON.toJson(ping));
         connection.write(response);
+    }
+
+    @Override
+    public void handleUnknown(ByteBuf buf) {
+        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 }

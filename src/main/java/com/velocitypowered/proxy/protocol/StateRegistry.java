@@ -45,17 +45,13 @@ public enum StateRegistry {
                     map(0x04, MINECRAFT_1_12_1));
 
             CLIENTBOUND.register(Chat.class, Chat::new,
-                    map(0x0F, MINECRAFT_1_11),
-                    map(0x0F, MINECRAFT_1_12));
+                    map(0x0F, MINECRAFT_1_11));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
-                    map(0x1A, MINECRAFT_1_11),
-                    map(0x1A, MINECRAFT_1_12));
+                    map(0x1A, MINECRAFT_1_11));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
-                    map(0x1F, MINECRAFT_1_11),
-                    map(0x1F, MINECRAFT_1_12));
+                    map(0x1F, MINECRAFT_1_11));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
-                    map(0x23, MINECRAFT_1_11),
-                    map(0x23, MINECRAFT_1_12));
+                    map(0x23, MINECRAFT_1_11));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
                     map(0x33, MINECRAFT_1_11),
                     map(0x34, MINECRAFT_1_12),
@@ -87,7 +83,7 @@ public enum StateRegistry {
         private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_11, new int[] { MINECRAFT_1_11_1 });
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_11, new int[] { MINECRAFT_1_11_1, MINECRAFT_1_12 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
         }
