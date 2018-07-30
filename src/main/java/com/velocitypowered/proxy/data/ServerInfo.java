@@ -1,22 +1,24 @@
 package com.velocitypowered.proxy.data;
 
+import com.google.common.base.Preconditions;
+
 import java.net.InetSocketAddress;
 import java.util.Objects;
 
-public class ServerInfo {
+public final class ServerInfo {
     private final String name;
     private final InetSocketAddress address;
 
     public ServerInfo(String name, InetSocketAddress address) {
-        this.name = name;
-        this.address = address;
+        this.name = Preconditions.checkNotNull(name, "name");
+        this.address = Preconditions.checkNotNull(address, "address");
     }
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    public InetSocketAddress getAddress() {
+    public final InetSocketAddress getAddress() {
         return address;
     }
 
@@ -29,7 +31,7 @@ public class ServerInfo {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ServerInfo that = (ServerInfo) o;
@@ -38,7 +40,7 @@ public class ServerInfo {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(name, address);
     }
 }

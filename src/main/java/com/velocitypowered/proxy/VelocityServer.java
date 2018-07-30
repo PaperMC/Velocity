@@ -5,7 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
+import com.velocitypowered.proxy.data.ServerInfo;
+import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import com.velocitypowered.proxy.util.ServerMap;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.GsonComponentSerializer;
@@ -18,6 +21,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VelocityServer {
     private static final Logger logger = LogManager.getLogger(VelocityServer.class);
@@ -30,6 +35,7 @@ public class VelocityServer {
     private VelocityConfiguration configuration;
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
+    private final ServerMap servers = new ServerMap();
 
     private VelocityServer() {
     }
@@ -67,11 +73,20 @@ public class VelocityServer {
             logger.error("Unable to load your velocity.toml. The server will shut down.", e);
             System.exit(1);
         }
+
+        for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
+            servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+        }
+
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
         httpClient = new NettyHttpClient(this);
 
         this.cm.bind(configuration.getBind());
+    }
+
+    public ServerMap getServers() {
+        return servers;
     }
 
     public Bootstrap initializeGenericBootstrap() {

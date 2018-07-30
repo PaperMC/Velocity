@@ -12,6 +12,8 @@ import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.UuidUtils;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,6 +22,7 @@ import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
@@ -95,6 +98,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void handleSuccessfulLogin(GameProfile profile) {
+        // Initiate a regular connection and move over to it.
+        ConnectedPlayer player = new ConnectedPlayer(profile, inbound);
+        Optional<ServerInfo> toTry = player.getNextServerToTry();
+        if (!toTry.isPresent()) {
+            player.close(TextComponent.of("No available servers", TextColor.RED));
+            return;
+        }
+
         inbound.write(new SetCompression(256));
         inbound.setCompressionThreshold(256);
 
@@ -103,15 +114,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         success.setUuid(profile.idAsUuid());
         inbound.write(success);
 
-        // Initiate a regular connection and move over to it.
-        ConnectedPlayer player = new ConnectedPlayer(profile, inbound);
         logger.info("{} has connected", player);
         inbound.setAssociation(player);
-        ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25565));
-        ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
-
         inbound.setState(StateRegistry.PLAY);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        connection.connect();
+        player.connect(toTry.get());
     }
 }

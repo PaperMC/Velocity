@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packets.Chat;
@@ -19,6 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation {
@@ -28,6 +32,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
 
     private final GameProfile profile;
     private final MinecraftConnection connection;
+    private int tryIndex = 0;
     private ServerConnection connectedServer;
     private ClientSettings clientSettings;
 
@@ -106,7 +111,27 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
         }
     }
 
+    public Optional<ServerInfo> getNextServerToTry() {
+        List<String> serversToTry = VelocityServer.getServer().getConfiguration().getAttemptConnectionOrder();
+        if (tryIndex >= serversToTry.size()) {
+            return Optional.empty();
+        }
+
+        String toTryName = serversToTry.get(tryIndex);
+        tryIndex++;
+        return VelocityServer.getServer().getServers().getServer(toTryName);
+    }
+
+    public void connect(ServerInfo info) {
+        Preconditions.checkNotNull(info, "info");
+        ServerConnection connection = new ServerConnection(info, this, VelocityServer.getServer());
+        connection.connect();
+    }
+
     public void setConnectedServer(ServerConnection serverConnection) {
+        if (this.connectedServer != null && !serverConnection.getServerInfo().equals(connectedServer.getServerInfo())) {
+            this.tryIndex = 0;
+        }
         this.connectedServer = serverConnection;
     }
 
