@@ -225,8 +225,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleServerScoreboardPacket(MinecraftPacket packet) {
-        logger.info("Server scoreboard packet: {}", packet);
-
         if (packet instanceof ScoreboardDisplay) {
             ScoreboardDisplay sd = (ScoreboardDisplay) packet;
             serverScoreboard.setPosition(sd.getPosition());
@@ -278,7 +276,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     private void clearServerScoreboard() {
-        logger.info("Scoreboard prior to cleaning: {}", serverScoreboard);
         for (Objective objective : serverScoreboard.getObjectives().values()) {
             for (Score score : objective.getScores().values()) {
                 ScoreboardSetScore sss = new ScoreboardSetScore();

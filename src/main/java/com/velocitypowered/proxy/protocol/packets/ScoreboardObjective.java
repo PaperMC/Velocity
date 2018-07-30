@@ -58,8 +58,8 @@ public class ScoreboardObjective implements MinecraftPacket {
         this.id = ProtocolUtils.readString(buf, 16);
         this.mode = buf.readByte();
         if (this.mode != 1) {
-            this.displayName = ProtocolUtils.readString(buf, 32);
-            this.type = ProtocolUtils.readString(buf, 16);
+            this.displayName = ProtocolUtils.readString(buf);
+            this.type = ProtocolUtils.readString(buf);
         }
     }
 

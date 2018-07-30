@@ -125,9 +125,9 @@ public class ScoreboardTeam implements MinecraftPacket {
         switch (mode) {
             case 0: // create
             case 2: // update
-                this.displayName = ProtocolUtils.readString(buf, 32);
-                this.prefix = ProtocolUtils.readString(buf, 16);
-                this.suffix = ProtocolUtils.readString(buf, 16);
+                this.displayName = ProtocolUtils.readString(buf);
+                this.prefix = ProtocolUtils.readString(buf);
+                this.suffix = ProtocolUtils.readString(buf);
                 this.flags = buf.readByte();
                 this.nameTagVisibility = ProtocolUtils.readString(buf, 32);
                 this.collisionRule = ProtocolUtils.readString(buf, 32);
