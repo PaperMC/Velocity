@@ -6,8 +6,11 @@ import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,7 +93,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void exception(Throwable throwable) {
-        player.handleConnectionException(player.getConnectedServer().getServerInfo(), throwable);
+        player.close(TextComponent.builder()
+                .content("An exception occurred in your connection: ")
+                .color(TextColor.RED)
+                .append(TextComponent.of(ThrowableUtils.briefDescription(throwable), TextColor.WHITE))
+                .build());
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {

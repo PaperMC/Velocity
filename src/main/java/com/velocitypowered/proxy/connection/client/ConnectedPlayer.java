@@ -81,7 +81,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
         handleConnectionException(info, TextComponent.builder()
                 .content(userMessage + ": ")
                 .color(TextColor.RED)
-                .append(TextComponent.of(error))
+                .append(TextComponent.of(error, TextColor.WHITE))
                 .build());
     }
 

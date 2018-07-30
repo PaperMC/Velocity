@@ -44,4 +44,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     public void handleUnknown(ByteBuf buf) {
         connection.getProxyPlayer().getConnection().write(buf.retain());
     }
+
+    @Override
+    public void exception(Throwable throwable) {
+        connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
 }
