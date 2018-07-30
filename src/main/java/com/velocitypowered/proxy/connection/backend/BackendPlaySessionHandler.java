@@ -2,11 +2,8 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.packets.Disconnect;
-import com.velocitypowered.proxy.protocol.packets.JoinGame;
-import com.velocitypowered.proxy.protocol.packets.KeepAlive;
+import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.packets.Respawn;
 import io.netty.buffer.ByteBuf;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
@@ -18,6 +15,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        ClientPlaySessionHandler playerHandler =
+                (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
             // Forward onto the server
             connection.getChannel().write(packet);
@@ -25,14 +24,21 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             Disconnect original = (Disconnect) packet;
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
-            ClientPlaySessionHandler playerHandler =
-                    (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
             playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else if (packet instanceof Respawn) {
             // Record the dimension switch, and then forward the packet on.
-            ClientPlaySessionHandler playerHandler =
-                    (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
             playerHandler.setCurrentDimension(((Respawn) packet).getDimension());
+            connection.getProxyPlayer().getConnection().write(packet);
+        } else if (packet instanceof BossBar) {
+            BossBar bossBar = (BossBar) packet;
+            switch (bossBar.getAction()) {
+                case 0: // add
+                    playerHandler.getServerBossBars().add(bossBar.getUuid());
+                    break;
+                case 1: // remove
+                    playerHandler.getServerBossBars().remove(bossBar.getUuid());
+                    break;
+            }
             connection.getProxyPlayer().getConnection().write(packet);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.

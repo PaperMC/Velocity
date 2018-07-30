@@ -15,6 +15,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +29,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private ScheduledFuture<?> pingTask;
     private long lastPing = -1;
     private boolean spawned = false;
+    private final List<UUID> serverBossBars = new ArrayList<>();
     private int currentDimension;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
@@ -105,7 +109,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // nothing special to do here
             spawned = true;
             currentDimension = joinGame.getDimension();
-            player.getConnection().write(joinGame);
+            player.getConnection().delayedWrite(joinGame);
         } else {
             // In order to handle switching to another server we will need send three packets:
             // - The join game packet from the backend server
@@ -117,16 +121,32 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
             player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
-            player.getConnection().flush();
             currentDimension = joinGame.getDimension();
         }
 
+        // Resend client settings packet to remote server if we have it, this preserves client settings across
+        // transitions.
         if (player.getClientSettings() != null) {
             player.getConnectedServer().getChannel().write(player.getClientSettings());
         }
+
+        // Remove old boss bars.
+        for (UUID serverBossBar : serverBossBars) {
+            BossBar deletePacket = new BossBar();
+            deletePacket.setUuid(serverBossBar);
+            deletePacket.setAction(1); // remove
+            player.getConnection().delayedWrite(deletePacket);
+        }
+
+        serverBossBars.clear();
+        player.getConnection().flush();
     }
 
     public void setCurrentDimension(int currentDimension) {
         this.currentDimension = currentDimension;
+    }
+
+    public List<UUID> getServerBossBars() {
+        return serverBossBars;
     }
 }

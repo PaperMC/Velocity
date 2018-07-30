@@ -44,6 +44,8 @@ public enum StateRegistry {
                     map(0x05, MINECRAFT_1_12),
                     map(0x04, MINECRAFT_1_12_1));
 
+            CLIENTBOUND.register(BossBar.class, BossBar::new,
+                    map(0x0C, MINECRAFT_1_11));
             CLIENTBOUND.register(Chat.class, Chat::new,
                     map(0x0F, MINECRAFT_1_11));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,

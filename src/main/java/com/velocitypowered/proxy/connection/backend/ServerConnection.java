@@ -17,6 +17,8 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.network.Connections.FRAME_DECODER;

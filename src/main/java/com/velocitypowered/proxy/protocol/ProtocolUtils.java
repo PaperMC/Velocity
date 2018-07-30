@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public enum ProtocolUtils { ;
     private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
@@ -65,5 +66,16 @@ public enum ProtocolUtils { ;
     public static void writeByteArray(ByteBuf buf, byte[] array) {
         writeVarInt(buf, array.length);
         buf.writeBytes(array);
+    }
+
+    public static UUID readUuid(ByteBuf buf) {
+        long msb = buf.readLong();
+        long lsb = buf.readLong();
+        return new UUID(msb, lsb);
+    }
+
+    public static void writeUuid(ByteBuf buf, UUID uuid) {
+        buf.writeLong(uuid.getMostSignificantBits());
+        buf.writeLong(uuid.getLeastSignificantBits());
     }
 }
