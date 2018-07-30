@@ -4,12 +4,13 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 
 import java.util.Arrays;
 
 public class PluginMessage implements MinecraftPacket {
     private String channel;
-    private byte[] data;
+    private ByteBuf data;
 
     public String getChannel() {
         return channel;
@@ -19,11 +20,11 @@ public class PluginMessage implements MinecraftPacket {
         this.channel = channel;
     }
 
-    public byte[] getData() {
+    public ByteBuf getData() {
         return data;
     }
 
-    public void setData(byte[] data) {
+    public void setData(ByteBuf data) {
         this.data = data;
     }
 
@@ -31,15 +32,14 @@ public class PluginMessage implements MinecraftPacket {
     public String toString() {
         return "PluginMessage{" +
                 "channel='" + channel + '\'' +
-                ", data=" + Arrays.toString(data) +
+                ", data=" + ByteBufUtil.hexDump(data) +
                 '}';
     }
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.channel = ProtocolUtils.readString(buf, 20);
-        this.data = new byte[buf.readableBytes()];
-        buf.readBytes(this.data);
+        this.data = buf.readRetainedSlice(buf.readableBytes());
     }
 
     @Override

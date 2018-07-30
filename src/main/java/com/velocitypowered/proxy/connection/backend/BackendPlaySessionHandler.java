@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
@@ -43,15 +44,20 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof PluginMessage) {
             PluginMessage pm = (PluginMessage) packet;
-            if (!canForwardMessage(pm)) {
-                return;
-            }
+            try {
+                PluginMessage newPacket = pm;
+                if (!canForwardMessage(newPacket)) {
+                    return;
+                }
 
-            if (pm.getChannel().equals("MC|Brand")) {
-                pm = PluginMessageUtil.rewriteMCBrand(pm);
-            }
+                if (newPacket.getChannel().equals("MC|Brand")) {
+                    newPacket = PluginMessageUtil.rewriteMCBrand(pm);
+                }
 
-            connection.getProxyPlayer().getConnection().write(pm);
+                connection.getProxyPlayer().getConnection().write(newPacket);
+            } finally {
+                ReferenceCountUtil.release(pm.getData());
+            }
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getProxyPlayer().getConnection().write(packet);

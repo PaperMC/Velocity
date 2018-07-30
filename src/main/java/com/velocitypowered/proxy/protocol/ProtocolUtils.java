@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -40,15 +41,15 @@ public enum ProtocolUtils { ;
     public static String readString(ByteBuf buf, int cap) {
         int length = readVarInt(buf);
         Preconditions.checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
-        byte[] str = new byte[length];
-        buf.readBytes(str);
-        return new String(str, StandardCharsets.UTF_8);
+        String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
+        buf.skipBytes(length);
+        return str;
     }
 
     public static void writeString(ByteBuf buf, String str) {
-        byte[] asUtf8 = str.getBytes(StandardCharsets.UTF_8);
-        writeVarInt(buf, asUtf8.length);
-        buf.writeBytes(asUtf8);
+        int size = ByteBufUtil.utf8Bytes(str);
+        writeVarInt(buf, size);
+        ByteBufUtil.writeUtf8(buf, str);
     }
 
     public static byte[] readByteArray(ByteBuf buf) {

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packets.PluginMessage;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 import java.nio.charset.StandardCharsets;
@@ -18,32 +19,33 @@ public enum PluginMessageUtil {
     public static List<String> getChannels(PluginMessage message) {
         Preconditions.checkArgument(message.getChannel().equals("REGISTER") ||
                 message.getChannel().equals("UNREGISTER"), "Unknown channel type " + message.getChannel());
-        return ImmutableList.copyOf(new String(message.getData()).split("\0"));
+        String channels = message.getData().toString(StandardCharsets.UTF_8);
+        return ImmutableList.copyOf(channels.split("\0"));
     }
 
     public static PluginMessage constructChannelsPacket(String channel, Collection<String> channels) {
         PluginMessage message = new PluginMessage();
         message.setChannel(channel);
-        message.setData(Joiner.on("\0").join(channels).getBytes(StandardCharsets.UTF_8));
+
+        ByteBuf data = Unpooled.buffer();
+        for (String s : channels) {
+            ByteBufUtil.writeUtf8(data, s);
+            data.writeByte(0);
+        }
+        data.writerIndex(data.writerIndex() - 1);
+
+        message.setData(data);
         return message;
     }
 
     public static PluginMessage rewriteMCBrand(PluginMessage message) {
-        ByteBuf currentBrandBuf = Unpooled.wrappedBuffer(message.getData());
         ByteBuf rewrittenBuf = Unpooled.buffer();
-        byte[] rewrittenBrand;
-        try {
-            String currentBrand = ProtocolUtils.readString(currentBrandBuf);
-            ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
-            rewrittenBrand = new byte[rewrittenBuf.readableBytes()];
-            rewrittenBuf.readBytes(rewrittenBrand);
-        } finally {
-            rewrittenBuf.release();
-        }
+        String currentBrand = ProtocolUtils.readString(message.getData());
+        ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
 
         PluginMessage newMsg = new PluginMessage();
         newMsg.setChannel("MC|Brand");
-        newMsg.setData(rewrittenBrand);
+        newMsg.setData(rewrittenBuf);
         return newMsg;
     }
 }

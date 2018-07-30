@@ -10,6 +10,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
+import io.netty.util.ReferenceCountUtil;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -173,41 +174,46 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public void handleClientPluginMessage(PluginMessage packet) {
         logger.info("Got client plugin message packet {}", packet);
 
-        if (packet.getChannel().equals("REGISTER")) {
-            List<String> actuallyRegistered = new ArrayList<>();
-            List<String> channels = PluginMessageUtil.getChannels(packet);
-            for (String channel : channels) {
-                if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
-                        !clientPluginMsgChannels.contains(channel)) {
-                    throw new IllegalStateException("Too many plugin message channels registered");
+        PluginMessage original = packet;
+        try {
+            if (packet.getChannel().equals("REGISTER")) {
+                List<String> actuallyRegistered = new ArrayList<>();
+                List<String> channels = PluginMessageUtil.getChannels(packet);
+                for (String channel : channels) {
+                    if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
+                            !clientPluginMsgChannels.contains(channel)) {
+                        throw new IllegalStateException("Too many plugin message channels registered");
+                    }
+                    if (clientPluginMsgChannels.add(channel)) {
+                        actuallyRegistered.add(channel);
+                    }
                 }
-                if (clientPluginMsgChannels.add(channel)) {
-                    actuallyRegistered.add(channel);
+
+                if (actuallyRegistered.size() > 0) {
+                    logger.info("Rewritten register packet: {}", actuallyRegistered);
+                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket("REGISTER", actuallyRegistered);
+                    player.getConnectedServer().getChannel().write(newRegisterPacket);
                 }
+
+                return;
             }
 
-            if (actuallyRegistered.size() > 0) {
-                logger.info("Rewritten register packet: {}", actuallyRegistered);
-                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket("REGISTER", actuallyRegistered);
-                player.getConnectedServer().getChannel().write(newRegisterPacket);
+            if (packet.getChannel().equals("UNREGISTER")) {
+                List<String> channels = PluginMessageUtil.getChannels(packet);
+                clientPluginMsgChannels.removeAll(channels);
             }
 
-            return;
-        }
+            if (packet.getChannel().equals("MC|Brand")) {
+                // Rewrite this packet to indicate that Velocity is running. Hurrah!
+                packet = PluginMessageUtil.rewriteMCBrand(packet);
+                this.brandMessage = packet;
+            }
 
-        if (packet.getChannel().equals("UNREGISTER")) {
-            List<String> channels = PluginMessageUtil.getChannels(packet);
-            clientPluginMsgChannels.removeAll(channels);
+            // No other special handling?
+            player.getConnectedServer().getChannel().write(packet);
+        } finally {
+            ReferenceCountUtil.release(original.getData());
         }
-
-        if (packet.getChannel().equals("MC|Brand")) {
-            // Rewrite this packet to indicate that Velocity is running. Hurrah!
-            packet = PluginMessageUtil.rewriteMCBrand(packet);
-            this.brandMessage = packet;
-        }
-
-        // No other special handling?
-        player.getConnectedServer().getChannel().write(packet);
     }
 
     public Set<String> getClientPluginMsgChannels() {
