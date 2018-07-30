@@ -4,12 +4,11 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -31,6 +30,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private long lastPing = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
+    private final Set<String> clientPluginMsgChannels = new HashSet<>();
+    private PluginMessage brandMessage;
     private int currentDimension;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
@@ -78,7 +79,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof PluginMessage) {
-            handlePluginMessage((PluginMessage) packet, false);
+            handleClientPluginMessage((PluginMessage) packet);
             return;
         }
 
@@ -133,7 +134,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Resend client settings packet to remote server if we have it, this preserves client settings across
         // transitions.
         if (player.getClientSettings() != null) {
-            player.getConnectedServer().getChannel().write(player.getClientSettings());
+            player.getConnectedServer().getChannel().delayedWrite(player.getClientSettings());
         }
 
         // Remove old boss bars.
@@ -143,9 +144,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             deletePacket.setAction(1); // remove
             player.getConnection().delayedWrite(deletePacket);
         }
-
         serverBossBars.clear();
+
+        // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
+        if (!clientPluginMsgChannels.isEmpty()) {
+            player.getConnectedServer().getChannel().delayedWrite(
+                    PluginMessageUtil.constructChannelsPacket("REGISTER", clientPluginMsgChannels));
+        }
+
+        // Tell the server the client's brand
+        if (brandMessage != null) {
+            player.getConnectedServer().getChannel().delayedWrite(brandMessage);
+        }
+
+        // Flush everything
         player.getConnection().flush();
+        player.getConnectedServer().getChannel().flush();
     }
 
     public void setCurrentDimension(int currentDimension) {
@@ -156,18 +170,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return serverBossBars;
     }
 
-    public void handlePluginMessage(PluginMessage packet, boolean fromBackend) {
-        logger.info("Got plugin message packet {}", packet);
+    public void handleClientPluginMessage(PluginMessage packet) {
+        logger.info("Got client plugin message packet {}", packet);
 
-        // TODO: this certainly isn't the right approach, need a better way!
-        /*if (packet.getChannel().equals("REGISTER")) {
+        if (packet.getChannel().equals("REGISTER")) {
             List<String> actuallyRegistered = new ArrayList<>();
             List<String> channels = PluginMessageUtil.getChannels(packet);
             for (String channel : channels) {
-                if (pluginMessageChannels.size() >= MAX_PLUGIN_CHANNELS && !pluginMessageChannels.contains(channel)) {
+                if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
+                        !clientPluginMsgChannels.contains(channel)) {
                     throw new IllegalStateException("Too many plugin message channels registered");
                 }
-                if (pluginMessageChannels.add(channel)) {
+                if (clientPluginMsgChannels.add(channel)) {
                     actuallyRegistered.add(channel);
                 }
             }
@@ -175,11 +189,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (actuallyRegistered.size() > 0) {
                 logger.info("Rewritten register packet: {}", actuallyRegistered);
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket("REGISTER", actuallyRegistered);
-                if (fromBackend) {
-                    player.getConnection().write(newRegisterPacket);
-                } else {
-                    player.getConnectedServer().getChannel().write(newRegisterPacket);
-                }
+                player.getConnectedServer().getChannel().write(newRegisterPacket);
             }
 
             return;
@@ -187,32 +197,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (packet.getChannel().equals("UNREGISTER")) {
             List<String> channels = PluginMessageUtil.getChannels(packet);
-            pluginMessageChannels.removeAll(channels);
-        }*/
+            clientPluginMsgChannels.removeAll(channels);
+        }
 
         if (packet.getChannel().equals("MC|Brand")) {
             // Rewrite this packet to indicate that Velocity is running. Hurrah!
-            ByteBuf currentBrandBuf = Unpooled.wrappedBuffer(packet.getData());
-
-            ByteBuf buf = Unpooled.buffer();
-            byte[] rewrittenBrand;
-            try {
-                String currentBrand = ProtocolUtils.readString(currentBrandBuf);
-                logger.info("Remote server brand: {}", currentBrand);
-                ProtocolUtils.writeString(buf, currentBrand + " (Velocity)");
-                rewrittenBrand = new byte[buf.readableBytes()];
-                buf.readBytes(rewrittenBrand);
-            } finally {
-                buf.release();
-            }
-            packet.setData(rewrittenBrand);
+            packet = PluginMessageUtil.rewriteMCBrand(packet);
+            this.brandMessage = packet;
         }
 
         // No other special handling?
-        if (fromBackend) {
-            player.getConnection().write(packet);
-        } else {
-            player.getConnectedServer().getChannel().write(packet);
-        }
+        player.getConnectedServer().getChannel().write(packet);
+    }
+
+    public Set<String> getClientPluginMsgChannels() {
+        return clientPluginMsgChannels;
     }
 }

@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
@@ -41,7 +42,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             }
             connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof PluginMessage) {
-            playerHandler.handlePluginMessage((PluginMessage) packet, true);
+            PluginMessage pm = (PluginMessage) packet;
+            if (!canForwardMessage(pm)) {
+                return;
+            }
+
+            if (pm.getChannel().equals("MC|Brand")) {
+                pm = PluginMessageUtil.rewriteMCBrand(pm);
+            }
+
+            connection.getProxyPlayer().getConnection().write(pm);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getProxyPlayer().getConnection().write(packet);
@@ -56,5 +66,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void exception(Throwable throwable) {
         connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
+
+    private boolean canForwardMessage(PluginMessage message) {
+        // TODO: Update for 1.13
+        ClientPlaySessionHandler playerHandler =
+                (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+        return message.getChannel().startsWith("MC|") ||
+                message.getChannel().startsWith("FML") ||
+                message.getChannel().equals("FORGE") ||
+                playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
     }
 }
