@@ -107,8 +107,7 @@ public enum StateRegistry {
         private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_10, new int[] { MINECRAFT_1_11 });
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_11, new int[] { MINECRAFT_1_11_1, MINECRAFT_1_12 });
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_10, new int[] { MINECRAFT_1_11, MINECRAFT_1_11_1, MINECRAFT_1_12 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
         }
@@ -142,6 +141,7 @@ public enum StateRegistry {
                 if (version == null) {
                     throw new IllegalArgumentException("Unknown protocol version " + mapping.protocolVersion);
                 }
+
                 version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 version.packetClassToId.put(clazz, mapping.id);
 

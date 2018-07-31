@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -46,7 +47,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             PluginMessage pm = (PluginMessage) packet;
             try {
                 PluginMessage newPacket = pm;
-                if (!canForwardMessage(newPacket)) {
+                if (!canForwardPluginMessage(newPacket)) {
                     return;
                 }
 
@@ -72,7 +73,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        connection.getProxyPlayer().getConnection().write(buf.retain());
+        ClientPlaySessionHandler playerHandler =
+                (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
+        ByteBuf remapped = playerHandler.getIdRemapper().remap(buf, ProtocolConstants.Direction.CLIENTBOUND);
+        connection.getProxyPlayer().getConnection().write(remapped);
     }
 
     @Override
@@ -80,7 +84,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
     }
 
-    private boolean canForwardMessage(PluginMessage message) {
+    private boolean canForwardPluginMessage(PluginMessage message) {
         // TODO: Update for 1.13
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();

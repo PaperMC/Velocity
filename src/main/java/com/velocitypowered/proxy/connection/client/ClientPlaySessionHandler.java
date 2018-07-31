@@ -8,8 +8,10 @@ import com.velocitypowered.proxy.data.scoreboard.Score;
 import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
 import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
@@ -39,6 +41,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private PluginMessage brandMessage;
     private int currentDimension;
     private Scoreboard serverScoreboard = new Scoreboard();
+    private EntityIdRemapper idRemapper;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
         this.player = player;
@@ -95,7 +98,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        player.getConnectedServer().getChannel().write(buf.retain());
+        ByteBuf remapped = idRemapper.remap(buf, ProtocolConstants.Direction.SERVERBOUND);
+        player.getConnectedServer().getChannel().write(remapped);
     }
 
     @Override
@@ -123,6 +127,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             spawned = true;
             currentDimension = joinGame.getDimension();
             player.getConnection().delayedWrite(joinGame);
+            idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
             // In order to handle switching to another server we will need send three packets:
             // - The join game packet from the backend server
@@ -130,6 +135,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // - Another respawn with the correct dimension
             // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
             // work.
+            idRemapper.setServerEntityId(joinGame.getEntityId());
             player.getConnection().delayedWrite(joinGame);
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
             player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
@@ -303,5 +309,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public Set<String> getClientPluginMsgChannels() {
         return clientPluginMsgChannels;
+    }
+
+    public EntityIdRemapper getIdRemapper() {
+        return idRemapper;
     }
 }

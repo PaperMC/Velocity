@@ -58,7 +58,7 @@ public class ScoreboardSetScore implements MinecraftPacket {
         this.entity = ProtocolUtils.readString(buf, 40);
         this.action = buf.readByte();
         this.objective = ProtocolUtils.readString(buf, 16);
-        if (this.action == 0) {
+        if (this.action != 1) {
             value = ProtocolUtils.readVarInt(buf);
         }
     }
@@ -68,7 +68,7 @@ public class ScoreboardSetScore implements MinecraftPacket {
         ProtocolUtils.writeString(buf, entity);
         buf.writeByte(action);
         ProtocolUtils.writeString(buf, objective);
-        if (this.action == 0) {
+        if (this.action != 1) {
             ProtocolUtils.writeVarInt(buf, value);
         }
     }
