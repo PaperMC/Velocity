@@ -9,6 +9,9 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 
 public class ScoreboardObjective implements MinecraftPacket {
+    public static final byte ADD = (byte) 0;
+    public static final byte REMOVE = (byte) 1;
+    public static final byte CHANGE = (byte) 2;
     private String id;
     private byte mode;
     private Component displayName;
@@ -60,7 +63,7 @@ public class ScoreboardObjective implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.id = ProtocolUtils.readString(buf, 16);
         this.mode = buf.readByte();
-        if (this.mode != 1) {
+        if (this.mode != REMOVE) {
             this.displayName = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
             if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
                 this.type = ScoreboardProtocolUtil.getMode(ProtocolUtils.readVarInt(buf));
@@ -74,7 +77,7 @@ public class ScoreboardObjective implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, id);
         buf.writeByte(mode);
-        if (this.mode != 1) {
+        if (this.mode != REMOVE) {
             ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, displayName);
             if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
                 ProtocolUtils.writeVarInt(buf, type.ordinal());

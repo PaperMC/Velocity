@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScoreboardTeam implements MinecraftPacket {
+    public static final byte ADD = (byte) 0;
+    public static final byte REMOVE = (byte) 1;
+    public static final byte UPDATE = (byte) 2;
+    public static final byte ADD_PLAYER = (byte) 3;
+    public static final byte REMOVE_PLAYER = (byte) 4;
     private String id;
     private byte mode;
 
@@ -124,8 +129,8 @@ public class ScoreboardTeam implements MinecraftPacket {
         this.mode = buf.readByte();
 
         switch (mode) {
-            case 0: // create
-            case 2: // update
+            case ADD:
+            case UPDATE:
                 this.displayName = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
                 if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2) {
                     this.prefix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
@@ -140,14 +145,14 @@ public class ScoreboardTeam implements MinecraftPacket {
                     this.prefix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
                     this.suffix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
                 }
-                if (mode == 0) {
+                if (mode == ADD) {
                     this.entities = readEntities(buf);
                 }
                 break;
-            case 1: // remove
+            case REMOVE: // remove
                 break;
-            case 3: // add player
-            case 4: // remove player
+            case ADD_PLAYER: // add player
+            case REMOVE_PLAYER: // remove player
                 this.entities = readEntities(buf);
                 break;
         }
@@ -158,8 +163,8 @@ public class ScoreboardTeam implements MinecraftPacket {
         ProtocolUtils.writeString(buf, id);
         buf.writeByte(mode);
         switch (mode) {
-            case 0: // create
-            case 2: // update
+            case ADD:
+            case UPDATE:
                 ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, displayName);
                 if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2) {
                     ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, prefix);
@@ -175,14 +180,14 @@ public class ScoreboardTeam implements MinecraftPacket {
                 } else {
                     buf.writeByte(color);
                 }
-                if (mode == 0) {
+                if (mode == ADD) {
                     writeEntities(buf, entities);
                 }
                 break;
-            case 1:
+            case REMOVE:
                 break;
-            case 3:
-            case 4:
+            case ADD_PLAYER:
+            case REMOVE_PLAYER:
                 writeEntities(buf, entities);
                 break;
         }

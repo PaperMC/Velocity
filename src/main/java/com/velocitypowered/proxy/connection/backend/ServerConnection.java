@@ -87,7 +87,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     private void startHandshake() {
         // Initiate a handshake.
         Handshake handshake = new Handshake();
-        handshake.setNextStatus(2); // login
+        handshake.setNextStatus(StateRegistry.LOGIN_ID);
         handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
         if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.LEGACY) {
             handshake.setServerAddress(createBungeeForwardingAddress());

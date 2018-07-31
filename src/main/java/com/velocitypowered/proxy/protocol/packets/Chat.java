@@ -9,15 +9,16 @@ import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class Chat implements MinecraftPacket {
+    public static final byte CHAT = (byte) 0;
     private String message;
-    private byte position;
+    private byte type;
 
     public Chat() {
     }
 
-    public Chat(String message, byte position) {
+    public Chat(String message, byte type) {
         this.message = message;
-        this.position = position;
+        this.type = type;
     }
 
     public String getMessage() {
@@ -28,19 +29,19 @@ public class Chat implements MinecraftPacket {
         this.message = message;
     }
 
-    public byte getPosition() {
-        return position;
+    public byte getType() {
+        return type;
     }
 
-    public void setPosition(byte position) {
-        this.position = position;
+    public void setType(byte type) {
+        this.type = type;
     }
 
     @Override
     public String toString() {
         return "Chat{" +
                 "message='" + message + '\'' +
-                ", position=" + position +
+                ", type=" + type +
                 '}';
     }
 
@@ -48,7 +49,7 @@ public class Chat implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         message = ProtocolUtils.readString(buf);
         if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
-            position = buf.readByte();
+            type = buf.readByte();
         }
     }
 
@@ -56,16 +57,16 @@ public class Chat implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, message);
         if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
-            buf.writeByte(position);
+            buf.writeByte(type);
         }
     }
 
     public static Chat create(Component component) {
-        return create(component, (byte) 0);
+        return create(component, CHAT);
     }
 
-    public static Chat create(Component component, byte pos) {
+    public static Chat create(Component component, byte type) {
         Preconditions.checkNotNull(component, "component");
-        return new Chat(ComponentSerializers.JSON.serialize(component), pos);
+        return new Chat(ComponentSerializers.JSON.serialize(component), type);
     }
 }

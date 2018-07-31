@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 public class ClientSettings implements MinecraftPacket {
     private String locale;
     private byte viewDistance;
-    private int chatMode;
+    private int chatVisibility;
     private boolean chatColors;
     private short skinParts;
     private int mainHand;
@@ -29,12 +29,12 @@ public class ClientSettings implements MinecraftPacket {
         this.viewDistance = viewDistance;
     }
 
-    public int getChatMode() {
-        return chatMode;
+    public int getChatVisibility() {
+        return chatVisibility;
     }
 
-    public void setChatMode(int chatMode) {
-        this.chatMode = chatMode;
+    public void setChatVisibility(int chatVisibility) {
+        this.chatVisibility = chatVisibility;
     }
 
     public boolean isChatColors() {
@@ -66,7 +66,7 @@ public class ClientSettings implements MinecraftPacket {
         return "ClientSettings{" +
                 "locale='" + locale + '\'' +
                 ", viewDistance=" + viewDistance +
-                ", chatMode=" + chatMode +
+                ", chatVisibility=" + chatVisibility +
                 ", chatColors=" + chatColors +
                 ", skinParts=" + skinParts +
                 ", mainHand=" + mainHand +
@@ -77,7 +77,7 @@ public class ClientSettings implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.locale = ProtocolUtils.readString(buf, 16);
         this.viewDistance = buf.readByte();
-        this.chatMode = ProtocolUtils.readVarInt(buf);
+        this.chatVisibility = ProtocolUtils.readVarInt(buf);
         this.chatColors = buf.readBoolean();
         this.skinParts = buf.readUnsignedByte();
         this.mainHand = ProtocolUtils.readVarInt(buf);
@@ -87,7 +87,7 @@ public class ClientSettings implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, locale);
         buf.writeByte(viewDistance);
-        ProtocolUtils.writeVarInt(buf, chatMode);
+        ProtocolUtils.writeVarInt(buf, chatVisibility);
         buf.writeBoolean(chatColors);
         buf.writeByte(skinParts);
         ProtocolUtils.writeVarInt(buf, mainHand);
