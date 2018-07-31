@@ -1,15 +1,18 @@
 package com.velocitypowered.proxy.protocol.packets;
 
+import com.velocitypowered.proxy.data.scoreboard.ObjectiveMode;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.util.ScoreboardProtocolUtil;
 import io.netty.buffer.ByteBuf;
+import net.kyori.text.Component;
 
 public class ScoreboardObjective implements MinecraftPacket {
     private String id;
     private byte mode;
-    private String displayName;
-    private String type;
+    private Component displayName;
+    private ObjectiveMode type;
 
     public String getId() {
         return id;
@@ -27,19 +30,19 @@ public class ScoreboardObjective implements MinecraftPacket {
         this.mode = mode;
     }
 
-    public String getDisplayName() {
+    public Component getDisplayName() {
         return displayName;
     }
 
-    public void setDisplayName(String displayName) {
+    public void setDisplayName(Component displayName) {
         this.displayName = displayName;
     }
 
-    public String getType() {
+    public ObjectiveMode getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(ObjectiveMode type) {
         this.type = type;
     }
 
@@ -58,8 +61,12 @@ public class ScoreboardObjective implements MinecraftPacket {
         this.id = ProtocolUtils.readString(buf, 16);
         this.mode = buf.readByte();
         if (this.mode != 1) {
-            this.displayName = ProtocolUtils.readString(buf);
-            this.type = ProtocolUtils.readString(buf);
+            this.displayName = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+            if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+                this.type = ScoreboardProtocolUtil.getMode(ProtocolUtils.readVarInt(buf));
+            } else {
+                this.type = ScoreboardProtocolUtil.getMode(ProtocolUtils.readString(buf));
+            }
         }
     }
 
@@ -68,8 +75,12 @@ public class ScoreboardObjective implements MinecraftPacket {
         ProtocolUtils.writeString(buf, id);
         buf.writeByte(mode);
         if (this.mode != 1) {
-            ProtocolUtils.writeString(buf, displayName);
-            ProtocolUtils.writeString(buf, type);
+            ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, displayName);
+            if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+                ProtocolUtils.writeVarInt(buf, type.ordinal());
+            } else {
+                ProtocolUtils.writeString(buf, type.name().toLowerCase());
+            }
         }
     }
 }

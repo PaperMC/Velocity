@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.protocol.util;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -18,7 +17,10 @@ public enum PluginMessageUtil {
 
     public static List<String> getChannels(PluginMessage message) {
         Preconditions.checkArgument(message.getChannel().equals("REGISTER") ||
-                message.getChannel().equals("UNREGISTER"), "Unknown channel type " + message.getChannel());
+                message.getChannel().equals("UNREGISTER") ||
+                message.getChannel().equals("minecraft:register") ||
+                message.getChannel().equals("minecraft:unregister"),
+                "Unknown channel type " + message.getChannel());
         String channels = message.getData().toString(StandardCharsets.UTF_8);
         return ImmutableList.copyOf(channels.split("\0"));
     }
@@ -44,7 +46,7 @@ public enum PluginMessageUtil {
         ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
 
         PluginMessage newMsg = new PluginMessage();
-        newMsg.setChannel("MC|Brand");
+        newMsg.setChannel(message.getChannel());
         newMsg.setData(rewrittenBuf);
         return newMsg;
     }

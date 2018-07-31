@@ -36,7 +36,7 @@ public class PluginMessage implements MinecraftPacket {
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.channel = ProtocolUtils.readString(buf, 20);
+        this.channel = ProtocolUtils.readString(buf);
         this.data = buf.readRetainedSlice(buf.readableBytes());
     }
 

@@ -3,6 +3,9 @@ package com.velocitypowered.proxy.protocol;
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
+import net.kyori.text.Component;
+import net.kyori.text.serializer.ComponentSerializer;
+import net.kyori.text.serializer.ComponentSerializers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -78,5 +81,18 @@ public enum ProtocolUtils { ;
     public static void writeUuid(ByteBuf buf, UUID uuid) {
         buf.writeLong(uuid.getMostSignificantBits());
         buf.writeLong(uuid.getLeastSignificantBits());
+    }
+
+    public static Component readScoreboardTextComponent(ByteBuf buf, int protocolVersion) {
+        String toDeserialize = readString(buf);
+        ComponentSerializer<Component, ? extends Component, String> serializer =
+                protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? ComponentSerializers.JSON : ComponentSerializers.LEGACY;
+        return serializer.deserialize(toDeserialize);
+    }
+
+    public static void writeScoreboardTextComponent(ByteBuf buf, int protocolVersion, Component component) {
+        ComponentSerializer<Component, ? extends Component, String> serializer =
+                protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? ComponentSerializers.JSON : ComponentSerializers.LEGACY;
+        writeString(buf, serializer.serialize(component));
     }
 }

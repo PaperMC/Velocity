@@ -34,58 +34,72 @@ public enum StateRegistry {
             SERVERBOUND.register(Chat.class, Chat::new,
                     map(0x02, MINECRAFT_1_9),
                     map(0x03, MINECRAFT_1_12),
-                    map(0x02, MINECRAFT_1_12_2));
+                    map(0x02, MINECRAFT_1_12_2),
+                    map(0x02, MINECRAFT_1_13));
             SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
                     map(0x04, MINECRAFT_1_9),
                     map(0x05, MINECRAFT_1_12),
-                    map(0x04, MINECRAFT_1_12_1));
+                    map(0x04, MINECRAFT_1_12_1),
+                    map(0x04, MINECRAFT_1_13));
             SERVERBOUND.register(PluginMessage.class, PluginMessage::new,
                     map(0x09, MINECRAFT_1_9),
                     map(0x0A, MINECRAFT_1_12),
-                    map(0x09, MINECRAFT_1_12_1));
+                    map(0x09, MINECRAFT_1_12_1),
+                    map(0x0A, MINECRAFT_1_13));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
                     map(0x0B, MINECRAFT_1_9),
                     map(0x0C, MINECRAFT_1_12),
-                    map(0x0B, MINECRAFT_1_12_1));
+                    map(0x0B, MINECRAFT_1_12_1),
+                    map(0x0E, MINECRAFT_1_13));
 
             CLIENTBOUND.register(BossBar.class, BossBar::new,
                     map(0x0C, MINECRAFT_1_9),
                     map(0x0C, MINECRAFT_1_12));
             CLIENTBOUND.register(Chat.class, Chat::new,
                     map(0x0F, MINECRAFT_1_9),
-                    map(0x0F, MINECRAFT_1_12));
+                    map(0x0F, MINECRAFT_1_12),
+                    map(0x0E, MINECRAFT_1_13));
             CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
                     map(0x18, MINECRAFT_1_9),
-                    map(0x18, MINECRAFT_1_12));
+                    map(0x18, MINECRAFT_1_12),
+                    map(0x19, MINECRAFT_1_13));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
                     map(0x1A, MINECRAFT_1_9),
-                    map(0x1A, MINECRAFT_1_12));
+                    map(0x1A, MINECRAFT_1_12),
+                    map(0x1B, MINECRAFT_1_13));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
                     map(0x1F, MINECRAFT_1_9),
-                    map(0x1F, MINECRAFT_1_12));
+                    map(0x1F, MINECRAFT_1_12),
+                    map(0x21, MINECRAFT_1_13));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
                     map(0x23, MINECRAFT_1_9),
-                    map(0x23, MINECRAFT_1_12));
+                    map(0x23, MINECRAFT_1_12),
+                    map(0x25, MINECRAFT_1_13));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
                     map(0x33, MINECRAFT_1_9),
                     map(0x34, MINECRAFT_1_12),
-                    map(0x35, MINECRAFT_1_12_2));
+                    map(0x35, MINECRAFT_1_12_2),
+                    map(0x38, MINECRAFT_1_13));
             CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
                     map(0x38, MINECRAFT_1_9),
                     map(0x3A, MINECRAFT_1_12),
-                    map(0x3B, MINECRAFT_1_12_1));
+                    map(0x3B, MINECRAFT_1_12_1),
+                    map(0x3E, MINECRAFT_1_13));
             CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
                     map(0x3F, MINECRAFT_1_9),
                     map(0x41, MINECRAFT_1_12),
-                    map(0x42, MINECRAFT_1_12_1));
+                    map(0x42, MINECRAFT_1_12_1),
+                    map(0x45, MINECRAFT_1_13));
             CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
                     map(0x41, MINECRAFT_1_9),
                     map(0x43, MINECRAFT_1_12),
-                    map(0x44, MINECRAFT_1_12_1));
+                    map(0x44, MINECRAFT_1_12_1),
+                    map(0x47, MINECRAFT_1_13));
             CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
                     map(0x42, MINECRAFT_1_9),
                     map(0x44, MINECRAFT_1_12),
-                    map(0x45, MINECRAFT_1_12_1));
+                    map(0x45, MINECRAFT_1_12_1),
+                    map(0x48, MINECRAFT_1_13));
         }
     },
     LOGIN {
@@ -247,7 +261,8 @@ public enum StateRegistry {
     private static PacketMapping[] genericMappings(int id) {
         return new PacketMapping[]{
                 map(id, MINECRAFT_1_9),
-                map(id, MINECRAFT_1_12)
+                map(id, MINECRAFT_1_12),
+                map(id, MINECRAFT_1_13)
         };
     }
 }

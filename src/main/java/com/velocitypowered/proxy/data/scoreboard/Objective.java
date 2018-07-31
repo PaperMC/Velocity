@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.data.scoreboard;
 
+import net.kyori.text.Component;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,8 +9,8 @@ import java.util.Map;
 
 public class Objective {
     private final String id;
-    private String displayName;
-    private String type;
+    private Component displayName;
+    private ObjectiveMode type;
     private final List<Team> teams = new ArrayList<>();
     private final Map<String, Score> scores = new HashMap<>();
 
@@ -20,12 +22,20 @@ public class Objective {
         return id;
     }
 
-    public String getDisplayName() {
+    public Component getDisplayName() {
         return displayName;
     }
 
-    public String getType() {
+    public void setDisplayName(Component displayName) {
+        this.displayName = displayName;
+    }
+
+    public ObjectiveMode getType() {
         return type;
+    }
+
+    public void setType(ObjectiveMode type) {
+        this.type = type;
     }
 
     public List<Team> getTeams() {
@@ -34,14 +44,6 @@ public class Objective {
 
     public Map<String, Score> getScores() {
         return scores;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     @Override

@@ -167,8 +167,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
         if (!clientPluginMsgChannels.isEmpty()) {
+            String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
+                    "minecraft:register" : "REGISTER";
             player.getConnectedServer().getChannel().delayedWrite(
-                    PluginMessageUtil.constructChannelsPacket("REGISTER", clientPluginMsgChannels));
+                    PluginMessageUtil.constructChannelsPacket(channel, clientPluginMsgChannels));
         }
 
         // Tell the server the client's brand
@@ -195,7 +197,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         PluginMessage original = packet;
         try {
-            if (packet.getChannel().equals("REGISTER")) {
+            if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
                 List<String> actuallyRegistered = new ArrayList<>();
                 List<String> channels = PluginMessageUtil.getChannels(packet);
                 for (String channel : channels) {
@@ -210,19 +212,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
                 if (actuallyRegistered.size() > 0) {
                     logger.info("Rewritten register packet: {}", actuallyRegistered);
-                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket("REGISTER", actuallyRegistered);
+                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                     player.getConnectedServer().getChannel().write(newRegisterPacket);
                 }
 
                 return;
             }
 
-            if (packet.getChannel().equals("UNREGISTER")) {
+            if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
                 List<String> channels = PluginMessageUtil.getChannels(packet);
                 clientPluginMsgChannels.removeAll(channels);
             }
 
-            if (packet.getChannel().equals("MC|Brand")) {
+            if (packet.getChannel().equals("MC|Brand") || packet.getChannel().equals("minecraft:brand")) {
                 if (this.brandMessage != null) {
                     // Rewrite this packet to indicate that Velocity is running. Hurrah!
                     packet = PluginMessageUtil.rewriteMCBrand(packet);

@@ -55,6 +55,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                     newPacket = PluginMessageUtil.rewriteMCBrand(pm);
                 }
 
+                if (newPacket == pm) {
+                    // we'll decrement this thrice: once when writing to the server, once just below this block,
+                    // and once in the MinecraftConnection (since this is a slice)
+                    pm.getData().retain();
+                }
                 connection.getProxyPlayer().getConnection().write(newPacket);
             } finally {
                 ReferenceCountUtil.release(pm.getData());
@@ -85,10 +90,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {
-        // TODO: Update for 1.13
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
-        return message.getChannel().startsWith("MC|") ||
-                playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
+        if (connection.getChannel().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+            return message.getChannel().startsWith("MC|") ||
+                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
+        } else {
+            return message.getChannel().startsWith("minecraft:") ||
+                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
+        }
     }
 }

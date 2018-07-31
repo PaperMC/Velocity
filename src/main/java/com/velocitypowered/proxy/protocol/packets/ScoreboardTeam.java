@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +13,13 @@ public class ScoreboardTeam implements MinecraftPacket {
     private String id;
     private byte mode;
 
-    private String displayName;
-    private String prefix;
-    private String suffix;
+    private Component displayName;
+    private Component prefix;
+    private Component suffix;
     private byte flags;
     private String nameTagVisibility;
     private String collisionRule;
-    private byte color;
+    private int color;
     private List<String> entities;
 
     public String getId() {
@@ -37,27 +38,27 @@ public class ScoreboardTeam implements MinecraftPacket {
         this.mode = mode;
     }
 
-    public String getDisplayName() {
+    public Component getDisplayName() {
         return displayName;
     }
 
-    public void setDisplayName(String displayName) {
+    public void setDisplayName(Component displayName) {
         this.displayName = displayName;
     }
 
-    public String getPrefix() {
+    public Component getPrefix() {
         return prefix;
     }
 
-    public void setPrefix(String prefix) {
+    public void setPrefix(Component prefix) {
         this.prefix = prefix;
     }
 
-    public String getSuffix() {
+    public Component getSuffix() {
         return suffix;
     }
 
-    public void setSuffix(String suffix) {
+    public void setSuffix(Component suffix) {
         this.suffix = suffix;
     }
 
@@ -85,11 +86,11 @@ public class ScoreboardTeam implements MinecraftPacket {
         this.collisionRule = collisionRule;
     }
 
-    public byte getColor() {
+    public int getColor() {
         return color;
     }
 
-    public void setColor(byte color) {
+    public void setColor(int color) {
         this.color = color;
     }
 
@@ -125,13 +126,20 @@ public class ScoreboardTeam implements MinecraftPacket {
         switch (mode) {
             case 0: // create
             case 2: // update
-                this.displayName = ProtocolUtils.readString(buf);
-                this.prefix = ProtocolUtils.readString(buf);
-                this.suffix = ProtocolUtils.readString(buf);
+                this.displayName = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+                if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2) {
+                    this.prefix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+                    this.suffix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+                }
                 this.flags = buf.readByte();
                 this.nameTagVisibility = ProtocolUtils.readString(buf, 32);
                 this.collisionRule = ProtocolUtils.readString(buf, 32);
-                this.color = buf.readByte();
+                this.color = protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 ? buf.readByte() :
+                        ProtocolUtils.readVarInt(buf);
+                if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+                    this.prefix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+                    this.suffix = ProtocolUtils.readScoreboardTextComponent(buf, protocolVersion);
+                }
                 if (mode == 0) {
                     this.entities = readEntities(buf);
                 }
@@ -152,13 +160,22 @@ public class ScoreboardTeam implements MinecraftPacket {
         switch (mode) {
             case 0: // create
             case 2: // update
-                ProtocolUtils.writeString(buf, displayName);
-                ProtocolUtils.writeString(buf, prefix);
-                ProtocolUtils.writeString(buf, suffix);
+                ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, displayName);
+                if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2) {
+                    ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, prefix);
+                    ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, suffix);
+                }
                 buf.writeByte(flags);
                 ProtocolUtils.writeString(buf, nameTagVisibility);
                 ProtocolUtils.writeString(buf, collisionRule);
                 buf.writeByte(color);
+                if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+                    ProtocolUtils.writeVarInt(buf, color);
+                    ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, prefix);
+                    ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, suffix);
+                } else {
+                    buf.writeByte(color);
+                }
                 if (mode == 0) {
                     writeEntities(buf, entities);
                 }

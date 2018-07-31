@@ -13,6 +13,7 @@ public enum ProtocolConstants { ;
     public static final int MINECRAFT_1_12 = 335;
     public static final int MINECRAFT_1_12_1 = 338;
     public static final int MINECRAFT_1_12_2 = 340;
+    public static final int MINECRAFT_1_13 = 393;
 
     public static final int MINIMUM_GENERIC_VERSION = MINECRAFT_1_9;
 
@@ -26,7 +27,8 @@ public enum ProtocolConstants { ;
             MINECRAFT_1_11_1,
             MINECRAFT_1_12,
             MINECRAFT_1_12_1,
-            MINECRAFT_1_12_2
+            MINECRAFT_1_12_2,
+            MINECRAFT_1_13
     };
 
     public static boolean isSupported(int version) {
