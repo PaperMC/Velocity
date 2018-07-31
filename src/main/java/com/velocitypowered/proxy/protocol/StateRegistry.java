@@ -106,8 +106,8 @@ public enum StateRegistry {
         }
     };
 
-    public final PacketRegistry CLIENTBOUND = new PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND);
-    public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND);
+    public final PacketRegistry CLIENTBOUND = new PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, this);
+    public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND, this);
 
     public static class PacketRegistry {
         private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
@@ -120,10 +120,12 @@ public enum StateRegistry {
         }
 
         private final ProtocolConstants.Direction direction;
+        private final StateRegistry state;
         private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>();
 
-        public PacketRegistry(ProtocolConstants.Direction direction) {
+        public PacketRegistry(Direction direction, StateRegistry state) {
             this.direction = direction;
+            this.state = state;
             for (int version : ProtocolConstants.SUPPORTED_VERSIONS) {
                 versions.put(version, new ProtocolVersion(version));
             }
@@ -133,6 +135,9 @@ public enum StateRegistry {
         public ProtocolVersion getVersion(final int version) {
             ProtocolVersion result = versions.get(version);
             if (result == null) {
+                if (state != PLAY) {
+                    return getVersion(MINIMUM_GENERIC_VERSION);
+                }
                 throw new IllegalArgumentException("Could not find data for protocol version " + version);
             }
             return result;

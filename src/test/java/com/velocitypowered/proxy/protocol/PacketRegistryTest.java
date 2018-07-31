@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
 import com.velocitypowered.proxy.protocol.packets.Handshake;
-import com.velocitypowered.proxy.protocol.packets.KeepAlive;
 import org.junit.jupiter.api.Test;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;
@@ -11,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PacketRegistryTest {
     private StateRegistry.PacketRegistry setupRegistry() {
-        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND);
+        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, StateRegistry.HANDSHAKE);
         registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12));
         return registry;
     }
@@ -37,14 +36,14 @@ class PacketRegistryTest {
 
     @Test
     void failOnNoMappings() {
-        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND);
+        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, StateRegistry.HANDSHAKE);
         assertThrows(IllegalArgumentException.class, () -> registry.register(Handshake.class, Handshake::new));
         assertThrows(IllegalArgumentException.class, () -> registry.getVersion(0).getPacketId(new Handshake()));
     }
 
     @Test
     void registrySuppliesCorrectPacketsByProtocol() {
-        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND);
+        StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, StateRegistry.HANDSHAKE);
         registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12),
                 new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12_1));
         assertEquals(Handshake.class, registry.getVersion(MINECRAFT_1_12).createPacket(0x00).getClass());
