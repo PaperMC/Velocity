@@ -14,6 +14,13 @@ designed specifically with mass-scale Minecraft in mind.
 * First-class support for Paper, Sponge, and Forge. (Other implementations
   may work, but we make every endeavor to support these server implementations
   specifically.)
+  
+## Building
+
+Velocity is built with [Gradle](https://gradle.org). We recommend using the
+wrapper script (`./gradlew`) as our CI builds using it.
+
+It is sufficient to run `./gradlew build` to run the full build cycle.
 
 ## Status
 
