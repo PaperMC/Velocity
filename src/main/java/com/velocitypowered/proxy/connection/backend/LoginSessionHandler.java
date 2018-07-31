@@ -104,8 +104,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private static ByteBuf createForwardingData(String address, GameProfile profile) {
         ByteBuf buf = Unpooled.buffer();
         ProtocolUtils.writeString(buf, address);
-        ProtocolUtils.writeString(buf, profile.getName());
         ProtocolUtils.writeUuid(buf, profile.idAsUuid());
+        ProtocolUtils.writeString(buf, profile.getName());
         ProtocolUtils.writeVarInt(buf, profile.getProperties().size());
         for (GameProfile.Property property : profile.getProperties()) {
             ProtocolUtils.writeString(buf, property.getName());
