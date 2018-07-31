@@ -24,6 +24,6 @@ public interface EntityIdRemapper {
     void setServerEntityId(int id);
 
     static EntityIdRemapper getMapper(int eid, int protocolVersion) {
-        return DummyEntityIdRemapper.INSTANCE;
+        return NoopEntityIdRemapper.INSTANCE;
     }
 }

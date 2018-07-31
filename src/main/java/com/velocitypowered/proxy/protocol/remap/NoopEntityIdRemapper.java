@@ -3,10 +3,10 @@ package com.velocitypowered.proxy.protocol.remap;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import io.netty.buffer.ByteBuf;
 
-public class DummyEntityIdRemapper implements EntityIdRemapper {
-    public static final DummyEntityIdRemapper INSTANCE = new DummyEntityIdRemapper();
+public class NoopEntityIdRemapper implements EntityIdRemapper {
+    public static final NoopEntityIdRemapper INSTANCE = new NoopEntityIdRemapper();
 
-    private DummyEntityIdRemapper() {
+    private NoopEntityIdRemapper() {
 
     }
 
