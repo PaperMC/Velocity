@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
     private int tryIndex = 0;
     private ServerConnection connectedServer;
     private ClientSettings clientSettings;
+    private ServerConnection connectionInFlight;
 
     public ConnectedPlayer(GameProfile profile, MinecraftConnection connection) {
         this.profile = profile;
@@ -101,7 +103,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
         handleConnectionException(info, disconnectReason);
     }
 
-    private void handleConnectionException(ServerInfo info, Component disconnectReason) {
+    public void handleConnectionException(ServerInfo info, Component disconnectReason) {
         if (connectedServer == null || connectedServer.getServerInfo().equals(info)) {
             // The player isn't yet connected to a server or they are already connected to the server
             // they're disconnected from.
@@ -124,7 +126,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
 
     public void connect(ServerInfo info) {
         Preconditions.checkNotNull(info, "info");
+        Preconditions.checkState(connectionInFlight == null, "A connection is already active!");
         ServerConnection connection = new ServerConnection(info, this, VelocityServer.getServer());
+        connectionInFlight = connection;
         connection.connect();
     }
 
@@ -137,6 +141,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
 
     public void close(TextComponent reason) {
         connection.closeWith(Disconnect.create(reason));
+    }
+
+    public void teardown() {
+        if (connectionInFlight != null) {
+            connectionInFlight.disconnect();
+        }
+        if (connectedServer != null) {
+            connectedServer.disconnect();
+        }
     }
 
     @Override

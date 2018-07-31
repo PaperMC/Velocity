@@ -93,18 +93,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        player.getConnectedServer().getChannel().write(packet);
+        player.getConnectedServer().getMinecraftConnection().write(packet);
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
         ByteBuf remapped = idRemapper.remap(buf, ProtocolConstants.Direction.SERVERBOUND);
-        player.getConnectedServer().getChannel().write(remapped);
+        player.getConnectedServer().getMinecraftConnection().write(remapped);
     }
 
     @Override
     public void disconnected() {
-        player.getConnectedServer().disconnect();
+        player.teardown();
 
         if (pingTask != null && !pingTask.isCancelled()) {
             pingTask.cancel(false);
@@ -150,7 +150,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Resend client settings packet to remote server if we have it, this preserves client settings across
         // transitions.
         if (player.getClientSettings() != null) {
-            player.getConnectedServer().getChannel().delayedWrite(player.getClientSettings());
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(player.getClientSettings());
         }
 
         // Remove old boss bars.
@@ -169,19 +169,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (!clientPluginMsgChannels.isEmpty()) {
             String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
                     "minecraft:register" : "REGISTER";
-            player.getConnectedServer().getChannel().delayedWrite(
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(
                     PluginMessageUtil.constructChannelsPacket(channel, clientPluginMsgChannels));
         }
 
         // Tell the server the client's brand
         if (brandMessage != null) {
             brandMessage.getData().retain();
-            player.getConnectedServer().getChannel().delayedWrite(brandMessage);
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(brandMessage);
         }
 
         // Flush everything
         player.getConnection().flush();
-        player.getConnectedServer().getChannel().flush();
+        player.getConnectedServer().getMinecraftConnection().flush();
     }
 
     public void setCurrentDimension(int currentDimension) {
@@ -213,7 +213,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 if (actuallyRegistered.size() > 0) {
                     logger.info("Rewritten register packet: {}", actuallyRegistered);
                     PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
-                    player.getConnectedServer().getChannel().write(newRegisterPacket);
+                    player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
                 }
 
                 return;
@@ -242,7 +242,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 packet.getData().retain();
             }
 
-            player.getConnectedServer().getChannel().write(packet);
+            player.getConnectedServer().getMinecraftConnection().write(packet);
         } finally {
             ReferenceCountUtil.release(original.getData());
         }

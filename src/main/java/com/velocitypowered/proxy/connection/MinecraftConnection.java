@@ -171,6 +171,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
+        if (this.sessionHandler != null) {
+            this.sessionHandler.deactivated();
+        }
         this.sessionHandler = sessionHandler;
         sessionHandler.activated();
     }

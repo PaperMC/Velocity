@@ -67,9 +67,6 @@ public class VelocityConfiguration {
             case NONE:
                 logger.info("IP forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
                 break;
-            case MODERN:
-                logger.warn("Modern IP forwarding is not currently implemented.");
-                break;
         }
 
         if (servers.isEmpty()) {

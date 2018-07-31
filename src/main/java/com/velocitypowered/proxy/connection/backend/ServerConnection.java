@@ -2,28 +2,21 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
-import com.velocitypowered.proxy.connection.VelocityConstants;
-import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.packets.Handshake;
-import com.velocitypowered.proxy.protocol.packets.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packets.ServerLogin;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.network.Connections.FRAME_DECODER;
@@ -38,7 +31,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     private final ServerInfo serverInfo;
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
-    private MinecraftConnection channel;
+    private MinecraftConnection minecraftConnection;
 
     public ServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
         this.serverInfo = target;
@@ -60,7 +53,6 @@ public class ServerConnection implements MinecraftConnectionAssociation {
 
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
-                        connection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
                         connection.setAssociation(ServerConnection.this);
                         ch.pipeline().addLast(HANDLER, connection);
                     }
@@ -70,9 +62,10 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (future.isSuccess()) {
-                            channel = future.channel().pipeline().get(MinecraftConnection.class);
+                            minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             // Kick off the connection process
+                            minecraftConnection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
                             startHandshake();
                         } else {
                             proxyPlayer.handleConnectionException(serverInfo, future.cause());
@@ -102,43 +95,27 @@ public class ServerConnection implements MinecraftConnectionAssociation {
             handshake.setServerAddress(serverInfo.getAddress().getHostString());
         }
         handshake.setPort(serverInfo.getAddress().getPort());
-        channel.write(handshake);
+        minecraftConnection.write(handshake);
 
         int protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-        channel.setProtocolVersion(protocolVersion);
-        channel.setState(StateRegistry.LOGIN);
+        minecraftConnection.setProtocolVersion(protocolVersion);
+        minecraftConnection.setState(StateRegistry.LOGIN);
 
-        // 1.13 stuff
-        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
-            if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.MODERN) {
-                // Velocity's IP forwarding includes the player's IP address and their game profile.
-                GameProfile profile = proxyPlayer.getProfile();
-                ByteBuf buf = createForwardingData(proxyPlayer.getRemoteAddress().getHostString(), profile);
-
-                // Send the message on
-                LoginPluginMessage forwarding = new LoginPluginMessage();
-                forwarding.setId(ThreadLocalRandom.current().nextInt());
-                forwarding.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
-                forwarding.setData(buf);
-
-                LoginSessionHandler lsh = (LoginSessionHandler) channel.getSessionHandler();
-                lsh.setForwardingPacketId(forwarding.getId());
-                channel.write(forwarding);
-            }
+        // Send the server login packet for <=1.12.2 and for 1.13+ servers not using "modern" forwarding.
+        if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 ||
+                VelocityServer.getServer().getConfiguration().getIpForwardingMode() != IPForwardingMode.MODERN) {
+            ServerLogin login = new ServerLogin();
+            login.setUsername(proxyPlayer.getUsername());
+            minecraftConnection.write(login);
         }
-
-        // Login
-        ServerLogin login = new ServerLogin();
-        login.setUsername(proxyPlayer.getUsername());
-        channel.write(login);
     }
 
     public ConnectedPlayer getProxyPlayer() {
         return proxyPlayer;
     }
 
-    public MinecraftConnection getChannel() {
-        return channel;
+    public MinecraftConnection getMinecraftConnection() {
+        return minecraftConnection;
     }
 
     public ServerInfo getServerInfo() {
@@ -146,32 +123,12 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     }
 
     public void disconnect() {
-        channel.close();
-        channel = null;
+        minecraftConnection.close();
+        minecraftConnection = null;
     }
 
     @Override
     public String toString() {
         return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
-    }
-
-    private static ByteBuf createForwardingData(String address, GameProfile profile) {
-        ByteBuf buf = Unpooled.buffer();
-        ProtocolUtils.writeString(buf, address);
-        ProtocolUtils.writeString(buf, profile.getName());
-        ProtocolUtils.writeUuid(buf, profile.idAsUuid());
-        ProtocolUtils.writeVarInt(buf, profile.getProperties().size());
-        for (GameProfile.Property property : profile.getProperties()) {
-            ProtocolUtils.writeString(buf, property.getName());
-            ProtocolUtils.writeString(buf, property.getValue());
-            String signature = property.getSignature();
-            if (signature != null) {
-                buf.writeBoolean(true);
-                ProtocolUtils.writeString(buf, signature);
-            } else {
-                buf.writeBoolean(false);
-            }
-        }
-        return buf;
     }
 }

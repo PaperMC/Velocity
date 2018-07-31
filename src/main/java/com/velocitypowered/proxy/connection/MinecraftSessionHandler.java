@@ -22,6 +22,10 @@ public interface MinecraftSessionHandler {
 
     }
 
+    default void deactivated() {
+
+    }
+
     default void exception(Throwable throwable) {
 
     }

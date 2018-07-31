@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -35,27 +36,33 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
     private ServerLogin login;
     private byte[] verify;
+    private int playerInfoId;
 
     public LoginSessionHandler(MinecraftConnection inbound) {
         this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     }
 
     @Override
+    public void activated() {
+        if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            LoginPluginMessage message = new LoginPluginMessage();
+            playerInfoId = ThreadLocalRandom.current().nextInt();
+            message.setId(playerInfoId);
+            message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
+            message.setData(Unpooled.EMPTY_BUFFER);
+            inbound.write(message);
+        }
+    }
+
+    @Override
     public void handle(MinecraftPacket packet) throws Exception {
-        if (packet instanceof LoginPluginMessage) {
-            LoginPluginMessage lpm = (LoginPluginMessage) packet;
-            if (lpm.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+        if (packet instanceof LoginPluginResponse) {
+            LoginPluginResponse lpr = (LoginPluginResponse) packet;
+            if (lpr.getId() == playerInfoId && lpr.isSuccess()) {
                 // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
                 inbound.closeWith(Disconnect.create(
                         TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
                 ));
-            } else {
-                // We don't know what this message is.
-                LoginPluginResponse response = new LoginPluginResponse();
-                response.setId(lpm.getId());
-                response.setSuccess(false);
-                response.setData(Unpooled.EMPTY_BUFFER);
-                inbound.write(response);
             }
         } else if (packet instanceof ServerLogin) {
             this.login = (ServerLogin) packet;

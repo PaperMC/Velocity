@@ -22,7 +22,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
             // Forward onto the server
-            connection.getChannel().write(packet);
+            connection.getMinecraftConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), original);
@@ -92,7 +92,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private boolean canForwardPluginMessage(PluginMessage message) {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
-        if (connection.getChannel().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+        if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             return message.getChannel().startsWith("MC|") ||
                     playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
         } else {
