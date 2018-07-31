@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'openjdk:8-jdk-slim'
-      args '-v gradle-cache:/home/gradle/.gradle:rw'
+      args '-v gradle-cache:/root/.gradle:rw'
     }
 
   }
