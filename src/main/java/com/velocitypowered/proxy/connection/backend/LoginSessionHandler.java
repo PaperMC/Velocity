@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
-    private ScheduledFuture<?> modernForwardingNotice;
+    private ScheduledFuture<?> forwardingCheckTask;
 
     public LoginSessionHandler(ServerConnection connection) {
         this.connection = connection;
@@ -28,7 +28,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     @Override
     public void activated() {
         if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.MODERN) {
-            modernForwardingNotice = connection.getMinecraftConnection().getChannel().eventLoop().schedule(() -> {
+            forwardingCheckTask = connection.getMinecraftConnection().getChannel().eventLoop().schedule(() -> {
                 connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(),
                         TextComponent.of("Your server did not send the forwarding request in time. Is it set up correctly?"));
             }, 1, TimeUnit.SECONDS);
@@ -49,10 +49,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 response.setData(createForwardingData(connection.getProxyPlayer().getRemoteAddress().getHostString(),
                         connection.getProxyPlayer().getProfile()));
                 connection.getMinecraftConnection().write(response);
-                if (modernForwardingNotice != null) {
-                    modernForwardingNotice.cancel(false);
-                    modernForwardingNotice = null;
-                }
+                cancelForwardingCheck();
 
                 ServerLogin login = new ServerLogin();
                 login.setUsername(connection.getProxyPlayer().getUsername());
@@ -90,15 +87,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void deactivated() {
-        if (modernForwardingNotice != null) {
-            modernForwardingNotice.cancel(false);
-            modernForwardingNotice = null;
-        }
+        cancelForwardingCheck();
     }
 
     @Override
     public void exception(Throwable throwable) {
         connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
+
+    private void cancelForwardingCheck() {
+        if (forwardingCheckTask != null) {
+            forwardingCheckTask.cancel(false);
+            forwardingCheckTask = null;
+        }
     }
 
     private static ByteBuf createForwardingData(String address, GameProfile profile) {
