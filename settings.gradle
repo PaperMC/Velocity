@@ -1,1 +1,6 @@
 rootProject.name = 'velocity'
+include 'api'
+include 'proxy'
+findProject(':api')?.name = 'velocity-api'
+findProject(':proxy')?.name = 'velocity-proxy'
+

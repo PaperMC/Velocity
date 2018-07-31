@@ -1,7 +1,7 @@
 pipeline {
   agent {
     docker {
-      image 'gradle:jdk8-slim'
+      image 'openjdk:8-jdk-slim'
       args '-v gradle-cache:/home/gradle/.gradle:rw'
     }
 
@@ -10,7 +10,7 @@ pipeline {
     stage('Build') {
       steps {
         sh './gradlew shadowJar'
-        archiveArtifacts 'build/libs/*.jar'
+        archiveArtifacts 'proxy/build/libs/*-all.jar'
       }
     }
     stage('Test') {

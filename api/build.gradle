@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+}
+
+dependencies {
+    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'com.google.guava:guava:25.1-jre'
+    compile 'net.kyori:text:1.12-1.6.0-SNAPSHOT'
+    compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+task javadocJar(type: Jar) {
+    classifier 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives shadowJar
+    archives sourcesJar
+}
