@@ -110,6 +110,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             pingTask.cancel(false);
             pingTask = null;
         }
+
+        if (brandMessage != null) {
+            brandMessage.getData().release();
+        }
     }
 
     @Override
@@ -169,6 +173,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         // Tell the server the client's brand
         if (brandMessage != null) {
+            brandMessage.getData().retain();
             player.getConnectedServer().getChannel().delayedWrite(brandMessage);
         }
 
@@ -218,12 +223,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (packet.getChannel().equals("MC|Brand")) {
-                // Rewrite this packet to indicate that Velocity is running. Hurrah!
-                packet = PluginMessageUtil.rewriteMCBrand(packet);
-                this.brandMessage = packet;
+                if (this.brandMessage != null) {
+                    // Rewrite this packet to indicate that Velocity is running. Hurrah!
+                    packet = PluginMessageUtil.rewriteMCBrand(packet);
+                    this.brandMessage = packet;
+                } else {
+                    // Already have the brand packet and don't need this one.
+                    return;
+                }
             }
 
             // No other special handling?
+            if (packet == original) {
+                // we'll decrement this thrice: once when writing to the server, once just below this block,
+                // and once in the MinecraftConnection (since this is a slice)
+                packet.getData().retain();
+            }
+
             player.getConnectedServer().getChannel().write(packet);
         } finally {
             ReferenceCountUtil.release(original.getData());

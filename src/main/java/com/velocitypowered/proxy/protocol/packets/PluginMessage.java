@@ -6,8 +6,6 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 
-import java.util.Arrays;
-
 public class PluginMessage implements MinecraftPacket {
     private String channel;
     private ByteBuf data;
