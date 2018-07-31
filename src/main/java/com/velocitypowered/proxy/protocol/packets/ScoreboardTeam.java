@@ -168,7 +168,6 @@ public class ScoreboardTeam implements MinecraftPacket {
                 buf.writeByte(flags);
                 ProtocolUtils.writeString(buf, nameTagVisibility);
                 ProtocolUtils.writeString(buf, collisionRule);
-                buf.writeByte(color);
                 if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
                     ProtocolUtils.writeVarInt(buf, color);
                     ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, prefix);
