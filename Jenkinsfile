@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'gradle:jdk8-slim'
-      args '-v gradle-cache:/root/.gradle'
+      args '-v gradle-cache:/home/gradle/.gradle:rw'
     }
 
   }
