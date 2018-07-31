@@ -134,11 +134,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
             // In order to handle switching to another server we will need send three packets:
+            //
             // - The join game packet from the backend server
             // - A respawn packet with a different dimension
             // - Another respawn with the correct dimension
+            //
             // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
             // work.
+            //
+            // Most notably, by having the client accept the join game packet, we can work around the need to perform
+            // entity ID rewrites, eliminating potential issues from rewriting packets and improving compatibility with
+            // mods.
             idRemapper.setServerEntityId(joinGame.getEntityId());
             player.getConnection().delayedWrite(joinGame);
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;

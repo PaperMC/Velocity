@@ -8,11 +8,15 @@ import java.util.regex.Pattern;
  * LegacyChatColorUtils contains utilities for handling legacy Minecraft color codes. Generally, you should prefer
  * JSON-based components, but for convenience Velocity provides a limited set of tools to handle Minecraft color codes.
  */
-public enum LegacyChatColorUtils {
-    ;
+public class LegacyChatColorUtils {
+    private LegacyChatColorUtils() {
+        throw new AssertionError();
+    }
 
+    /**
+     * Represents the legacy Minecraft format character, the section symbol.
+     */
     public static final char FORMAT_CHAR = '\u00a7';
-    private static final Pattern CHAT_COLOR_MATCHER = Pattern.compile("(?i)" + Character.toString(FORMAT_CHAR) + "[0-9A-FL-OR]");
 
     /**
      * Translates a string with Minecraft color codes prefixed with a different character than the section symbol into
@@ -43,6 +47,11 @@ public enum LegacyChatColorUtils {
         }
         return new String(textChars);
     }
+
+    /**
+     * A regex that matches all Minecraft color codes and removes them.
+     */
+    private static final Pattern CHAT_COLOR_MATCHER = Pattern.compile("(?i)" + Character.toString(FORMAT_CHAR) + "[0-9A-FL-OR]");
 
     /**
      * Removes all Minecraft color codes from the string.
