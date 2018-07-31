@@ -159,7 +159,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         ByteBuf buf = Unpooled.buffer();
         ProtocolUtils.writeString(buf, address);
         ProtocolUtils.writeString(buf, profile.getName());
-        ProtocolUtils.writeString(buf, profile.idAsUuid().toString());
+        ProtocolUtils.writeUuid(buf, profile.idAsUuid());
         ProtocolUtils.writeVarInt(buf, profile.getProperties().size());
         for (GameProfile.Property property : profile.getProperties()) {
             ProtocolUtils.writeString(buf, property.getName());
