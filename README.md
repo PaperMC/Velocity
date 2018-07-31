@@ -16,7 +16,7 @@ designed specifically with mass-scale Minecraft in mind.
 ## Status
 
 Velocity is far from finished, but most of the essential pieces are in place:
-you can switch between two servers running Minecraft 1.10-1.12.2. More versions
+you can switch between two servers running Minecraft 1.9-1.13. More versions
 and functionality is planned.
 
 You should join us on **irc.spi.gt** `#velocity` or send us a pull request.
