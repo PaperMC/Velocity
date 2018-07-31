@@ -8,12 +8,18 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 
 public class BossBar implements MinecraftPacket {
+    public static final int ADD = 0;
+    public static final int REMOVE = 1;
+    public static final int UPDATE_PERCENT = 2;
+    public static final int UPDATE_NAME = 3;
+    public static final int UPDATE_STYLE = 4;
+    public static final int UPDATE_PROPERTIES = 5;
     private UUID uuid;
     private int action;
-    private String title;
-    private float health;
+    private String name;
+    private float percent;
     private int color;
-    private int divisions;
+    private int overlay;
     private short flags;
 
     public UUID getUuid() {
@@ -32,20 +38,20 @@ public class BossBar implements MinecraftPacket {
         this.action = action;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public float getHealth() {
-        return health;
+    public float getPercent() {
+        return percent;
     }
 
-    public void setHealth(float health) {
-        this.health = health;
+    public void setPercent(float percent) {
+        this.percent = percent;
     }
 
     public int getColor() {
@@ -56,12 +62,12 @@ public class BossBar implements MinecraftPacket {
         this.color = color;
     }
 
-    public int getDivisions() {
-        return divisions;
+    public int getOverlay() {
+        return overlay;
     }
 
-    public void setDivisions(int divisions) {
-        this.divisions = divisions;
+    public void setOverlay(int overlay) {
+        this.overlay = overlay;
     }
 
     public short getFlags() {
@@ -77,10 +83,10 @@ public class BossBar implements MinecraftPacket {
         return "BossBar{" +
                 "uuid=" + uuid +
                 ", action=" + action +
-                ", title='" + title + '\'' +
-                ", health=" + health +
+                ", name='" + name + '\'' +
+                ", percent=" + percent +
                 ", color=" + color +
-                ", divisions=" + divisions +
+                ", overlay=" + overlay +
                 ", flags=" + flags +
                 '}';
     }
@@ -90,26 +96,26 @@ public class BossBar implements MinecraftPacket {
         this.uuid = ProtocolUtils.readUuid(buf);
         this.action = ProtocolUtils.readVarInt(buf);
         switch (action) {
-            case 0: // add
-                this.title = ProtocolUtils.readString(buf);
-                this.health = buf.readFloat();
+            case ADD:
+                this.name = ProtocolUtils.readString(buf);
+                this.percent = buf.readFloat();
                 this.color = ProtocolUtils.readVarInt(buf);
-                this.divisions = ProtocolUtils.readVarInt(buf);
+                this.overlay = ProtocolUtils.readVarInt(buf);
                 this.flags = buf.readUnsignedByte();
                 break;
-            case 1: // remove
+            case REMOVE:
                 break;
-            case 2: // set health
-                this.health = buf.readFloat();
+            case UPDATE_PERCENT:
+                this.percent = buf.readFloat();
                 break;
-            case 3: // update title
-                this.title = ProtocolUtils.readString(buf);
+            case UPDATE_NAME:
+                this.name = ProtocolUtils.readString(buf);
                 break;
-            case 4: // update style
+            case UPDATE_STYLE:
                 this.color = ProtocolUtils.readVarInt(buf);
-                this.divisions = ProtocolUtils.readVarInt(buf);
+                this.overlay = ProtocolUtils.readVarInt(buf);
                 break;
-            case 5:
+            case UPDATE_PROPERTIES:
                 this.flags = buf.readUnsignedByte();
                 break;
         }
@@ -120,26 +126,26 @@ public class BossBar implements MinecraftPacket {
         ProtocolUtils.writeUuid(buf, uuid);
         ProtocolUtils.writeVarInt(buf, action);
         switch (action) {
-            case 0: // add
-                ProtocolUtils.writeString(buf, title);
-                buf.writeFloat(health);
+            case ADD:
+                ProtocolUtils.writeString(buf, name);
+                buf.writeFloat(percent);
                 ProtocolUtils.writeVarInt(buf, color);
-                ProtocolUtils.writeVarInt(buf, divisions);
+                ProtocolUtils.writeVarInt(buf, overlay);
                 buf.writeByte(flags);
                 break;
-            case 1: // remove
+            case REMOVE:
                 break;
-            case 2: // set health
-                buf.writeFloat(health);
+            case UPDATE_PERCENT:
+                buf.writeFloat(percent);
                 break;
-            case 3: // update title
-                ProtocolUtils.writeString(buf, title);
+            case UPDATE_NAME:
+                ProtocolUtils.writeString(buf, name);
                 break;
-            case 4: // update style
+            case UPDATE_STYLE:
                 ProtocolUtils.writeVarInt(buf, color);
-                ProtocolUtils.writeVarInt(buf, divisions);
+                ProtocolUtils.writeVarInt(buf, overlay);
                 break;
-            case 5:
+            case UPDATE_PROPERTIES:
                 buf.writeByte(flags);
                 break;
         }

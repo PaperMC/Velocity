@@ -257,13 +257,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (packet instanceof ScoreboardObjective) {
             ScoreboardObjective so = (ScoreboardObjective) packet;
-            if (so.getMode() == 0) {
-                Objective o = new Objective(so.getId());
-                o.setDisplayName(so.getDisplayName());
-                o.setType(so.getType());
-                serverScoreboard.getObjectives().put(so.getId(), o);
-            } else {
-                serverScoreboard.getObjectives().remove(so.getId());
+            switch (so.getMode()) {
+                case ScoreboardObjective.ADD:
+                    Objective o = new Objective(so.getId());
+                    o.setDisplayName(so.getDisplayName());
+                    o.setType(so.getType());
+                    serverScoreboard.getObjectives().put(so.getId(), o);
+                    break;
+                case ScoreboardObjective.REMOVE:
+                    serverScoreboard.getObjectives().remove(so.getId());
+                    break;
             }
         }
 
@@ -274,11 +277,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
             switch (sss.getAction()) {
-                case 0:
+                case ScoreboardSetScore.CHANGE:
                     Score score = new Score(sss.getEntity(), sss.getValue());
                     objective.getScores().put(sss.getEntity(), score);
                     break;
-                case 1:
+                case ScoreboardSetScore.REMOVE:
                     objective.getScores().remove(sss.getEntity());
                     break;
             }
@@ -287,12 +290,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (packet instanceof ScoreboardTeam) {
             ScoreboardTeam st = (ScoreboardTeam) packet;
             switch (st.getMode()) {
-                case 0:
+                case ScoreboardTeam.ADD:
                     // TODO: Preserve other team information? We might not need to...
                     Team team = new Team(st.getId());
                     serverScoreboard.getTeams().put(st.getId(), team);
                     break;
-                case 1:
+                case ScoreboardTeam.REMOVE:
                     serverScoreboard.getTeams().remove(st.getId());
                     break;
             }
@@ -304,21 +307,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             for (Score score : objective.getScores().values()) {
                 ScoreboardSetScore sss = new ScoreboardSetScore();
                 sss.setObjective(objective.getId());
-                sss.setAction((byte) 1);
+                sss.setAction(ScoreboardSetScore.REMOVE);
                 sss.setEntity(score.getTarget());
                 player.getConnection().delayedWrite(sss);
             }
 
             ScoreboardObjective so = new ScoreboardObjective();
             so.setId(objective.getId());
-            so.setMode((byte) 1);
+            so.setMode(ScoreboardObjective.REMOVE);
             player.getConnection().delayedWrite(so);
         }
 
         for (Team team : serverScoreboard.getTeams().values()) {
             ScoreboardTeam st = new ScoreboardTeam();
             st.setId(team.getId());
-            st.setMode((byte) 1);
+            st.setMode(ScoreboardTeam.REMOVE);
             player.getConnection().delayedWrite(st);
         }
 

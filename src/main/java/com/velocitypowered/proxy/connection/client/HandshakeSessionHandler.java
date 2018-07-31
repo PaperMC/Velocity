@@ -25,13 +25,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
         Handshake handshake = (Handshake) packet;
         switch (handshake.getNextStatus()) {
-            case 1:
-                // Status protocol
+            case StateRegistry.STATUS_ID:
                 connection.setState(StateRegistry.STATUS);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
                 connection.setSessionHandler(new StatusSessionHandler(connection));
                 break;
-            case 2:
+            case StateRegistry.LOGIN_ID:
                 connection.setState(StateRegistry.LOGIN);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
                 if (!ProtocolConstants.isSupported(handshake.getProtocolVersion())) {
