@@ -3,14 +3,12 @@ package com.velocitypowered.proxy.connection.backend;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packets.Disconnect;
-import com.velocitypowered.proxy.protocol.packets.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packets.ServerLoginSuccess;
+import com.velocitypowered.proxy.protocol.packets.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.packets.SetCompression;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
+    private int forwardingPacketId = -1;
 
     public LoginSessionHandler(ServerConnection connection) {
         this.connection = connection;
@@ -20,20 +18,21 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public void handle(MinecraftPacket packet) {
         if (packet instanceof EncryptionRequest) {
             throw new IllegalStateException("Backend server is online-mode!");
-        }
-
-        if (packet instanceof Disconnect) {
+        } else if (packet instanceof LoginPluginResponse) {
+            LoginPluginResponse lpr = (LoginPluginResponse) packet;
+            if (lpr.getId() == forwardingPacketId) {
+                if (!lpr.isSuccess()) {
+                    throw new IllegalStateException("Unable to forward player information to server! Is it configured properly?");
+                }
+            }
+        } else if (packet instanceof Disconnect) {
             Disconnect disconnect = (Disconnect) packet;
             connection.disconnect();
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), disconnect);
-        }
-
-        if (packet instanceof SetCompression) {
+        } else if (packet instanceof SetCompression) {
             SetCompression sc = (SetCompression) packet;
             connection.getChannel().setCompressionThreshold(sc.getThreshold());
-        }
-
-        if (packet instanceof ServerLoginSuccess) {
+        } else if (packet instanceof ServerLoginSuccess) {
             // The player has been logged on to the backend server.
             connection.getChannel().setState(StateRegistry.PLAY);
             ServerConnection existingConnection = connection.getProxyPlayer().getConnectedServer();
@@ -52,5 +51,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     @Override
     public void exception(Throwable throwable) {
         connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
+
+    public int getForwardingPacketId() {
+        return forwardingPacketId;
+    }
+
+    public void setForwardingPacketId(int forwardingPacketId) {
+        this.forwardingPacketId = forwardingPacketId;
     }
 }

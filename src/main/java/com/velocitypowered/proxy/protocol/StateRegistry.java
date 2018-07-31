@@ -108,6 +108,8 @@ public enum StateRegistry {
                     genericMappings(0x00));
             SERVERBOUND.register(EncryptionResponse.class, EncryptionResponse::new,
                     genericMappings(0x01));
+            SERVERBOUND.register(LoginPluginMessage.class, LoginPluginMessage::new,
+                    map(0x02, MINECRAFT_1_13));
 
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
                     genericMappings(0x00));
@@ -117,6 +119,8 @@ public enum StateRegistry {
                     genericMappings(0x02));
             CLIENTBOUND.register(SetCompression.class, SetCompression::new,
                     genericMappings(0x03));
+            CLIENTBOUND.register(LoginPluginResponse.class, LoginPluginResponse::new,
+                    map(0x04, MINECRAFT_1_13));
         }
     };
 

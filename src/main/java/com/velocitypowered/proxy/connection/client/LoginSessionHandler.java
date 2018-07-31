@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -12,6 +13,7 @@ import com.velocitypowered.proxy.connection.backend.ServerConnection;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.UuidUtils;
+import io.netty.buffer.Unpooled;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +29,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
-
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
@@ -41,7 +42,22 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) throws Exception {
-        if (packet instanceof ServerLogin) {
+        if (packet instanceof LoginPluginMessage) {
+            LoginPluginMessage lpm = (LoginPluginMessage) packet;
+            if (lpm.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+                // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
+                inbound.closeWith(Disconnect.create(
+                        TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
+                ));
+            } else {
+                // We don't know what this message is.
+                LoginPluginResponse response = new LoginPluginResponse();
+                response.setId(lpm.getId());
+                response.setSuccess(false);
+                response.setData(Unpooled.EMPTY_BUFFER);
+                inbound.write(response);
+            }
+        } else if (packet instanceof ServerLogin) {
             this.login = (ServerLogin) packet;
 
             if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
@@ -53,9 +69,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 // Offline-mode, don't try to request encryption.
                 handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
             }
-        }
-
-        if (packet instanceof EncryptionResponse) {
+        } else if (packet instanceof EncryptionResponse) {
             KeyPair serverKeyPair = VelocityServer.getServer().getServerKeyPair();
             EncryptionResponse response = (EncryptionResponse) packet;
             byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());

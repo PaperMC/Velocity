@@ -2,23 +2,28 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.packets.Handshake;
+import com.velocitypowered.proxy.protocol.packets.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packets.ServerLogin;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.data.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.network.Connections.FRAME_DECODER;
@@ -99,8 +104,28 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         handshake.setPort(serverInfo.getAddress().getPort());
         channel.write(handshake);
 
-        channel.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
+        int protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
+        channel.setProtocolVersion(protocolVersion);
         channel.setState(StateRegistry.LOGIN);
+
+        // 1.13 stuff
+        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+            if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.MODERN) {
+                // Velocity's IP forwarding includes the player's IP address and their game profile.
+                GameProfile profile = proxyPlayer.getProfile();
+                ByteBuf buf = createForwardingData(proxyPlayer.getRemoteAddress().getHostString(), profile);
+
+                // Send the message on
+                LoginPluginMessage forwarding = new LoginPluginMessage();
+                forwarding.setId(ThreadLocalRandom.current().nextInt());
+                forwarding.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
+                forwarding.setData(buf);
+
+                LoginSessionHandler lsh = (LoginSessionHandler) channel.getSessionHandler();
+                lsh.setForwardingPacketId(forwarding.getId());
+                channel.write(forwarding);
+            }
+        }
 
         // Login
         ServerLogin login = new ServerLogin();
@@ -128,5 +153,25 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     @Override
     public String toString() {
         return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
+    }
+
+    private static ByteBuf createForwardingData(String address, GameProfile profile) {
+        ByteBuf buf = Unpooled.buffer();
+        ProtocolUtils.writeString(buf, address);
+        ProtocolUtils.writeString(buf, profile.getName());
+        ProtocolUtils.writeString(buf, profile.idAsUuid().toString());
+        ProtocolUtils.writeVarInt(buf, profile.getProperties().size());
+        for (GameProfile.Property property : profile.getProperties()) {
+            ProtocolUtils.writeString(buf, property.getName());
+            ProtocolUtils.writeString(buf, property.getValue());
+            String signature = property.getSignature();
+            if (signature != null) {
+                buf.writeBoolean(true);
+                ProtocolUtils.writeString(buf, signature);
+            } else {
+                buf.writeBoolean(false);
+            }
+        }
+        return buf;
     }
 }
