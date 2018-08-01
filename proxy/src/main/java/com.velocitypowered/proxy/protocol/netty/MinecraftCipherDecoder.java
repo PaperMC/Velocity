@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.proxy.protocol.encryption.VelocityCipher;
+import com.velocitypowered.natives.encryption.VelocityCipher;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -25,5 +25,10 @@ public class MinecraftCipherDecoder extends ByteToMessageDecoder {
             decrypted.release();
             throw e;
         }
+    }
+
+    @Override
+    protected void handlerRemoved0(ChannelHandlerContext ctx) throws Exception {
+        cipher.dispose();
     }
 }

@@ -1,9 +1,10 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.compression.VelocityCompressor;
+import com.velocitypowered.natives.compression.VelocityCompressor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
@@ -33,5 +34,10 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
         } finally {
             compressedBuffer.release();
         }
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        compressor.dispose();
     }
 }

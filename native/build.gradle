@@ -1,0 +1,8 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    compile "com.google.guava:guava:${guavaVersion}"
+    compile "io.netty:netty-buffer:${nettyVersion}"
+}

@@ -1,6 +1,6 @@
-package com.velocitypowered.proxy.protocol.encryption;
+package com.velocitypowered.natives.encryption;
 
-import com.velocitypowered.proxy.util.Disposable;
+import com.velocitypowered.natives.Disposable;
 import io.netty.buffer.ByteBuf;
 
 import javax.crypto.ShortBufferException;

@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.encryption;
+package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
@@ -33,7 +33,6 @@ public class JavaVelocityCipher implements VelocityCipher {
 
     @Override
     public void dispose() {
-        ensureNotDisposed();
         disposed = true;
     }
 

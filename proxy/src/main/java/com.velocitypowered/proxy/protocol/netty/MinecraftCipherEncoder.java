@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.proxy.protocol.encryption.VelocityCipher;
+import com.velocitypowered.natives.encryption.VelocityCipher;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -16,5 +16,10 @@ public class MinecraftCipherEncoder extends MessageToByteEncoder<ByteBuf> {
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
         cipher.process(msg, out);
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        cipher.dispose();
     }
 }

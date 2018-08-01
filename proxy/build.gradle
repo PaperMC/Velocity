@@ -20,6 +20,7 @@ jar {
 
 dependencies {
     compile project(':velocity-api')
+    compile project(':velocity-native')
     compile "io.netty:netty-codec:${nettyVersion}"
     compile "io.netty:netty-codec-http:${nettyVersion}"
     compile "io.netty:netty-handler:${nettyVersion}"

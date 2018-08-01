@@ -1,6 +1,6 @@
-package com.velocitypowered.proxy.protocol.compression;
+package com.velocitypowered.natives.compression;
 
-import com.velocitypowered.proxy.util.Disposable;
+import com.velocitypowered.natives.Disposable;
 import io.netty.buffer.ByteBuf;
 
 import java.util.zip.DataFormatException;
