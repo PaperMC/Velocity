@@ -10,7 +10,7 @@ pipeline {
     stage('Build') {
       steps {
         sh './gradlew shadowJar'
-        archiveArtifacts 'proxy/build/libs/*-all.jar'
+        archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
       }
     }
     stage('Test') {
