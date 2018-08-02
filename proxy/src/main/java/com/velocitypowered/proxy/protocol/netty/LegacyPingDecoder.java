@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol.netty;
 
-import com.velocitypowered.proxy.protocol.packets.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;

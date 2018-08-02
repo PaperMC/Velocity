@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.data.ServerPing;
 import net.kyori.text.serializer.ComponentSerializers;

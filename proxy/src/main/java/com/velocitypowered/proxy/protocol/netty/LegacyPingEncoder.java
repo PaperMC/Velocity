@@ -2,9 +2,8 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.proxy.protocol.packets.LegacyPingResponse;
+import com.velocitypowered.proxy.protocol.packet.LegacyPingResponse;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

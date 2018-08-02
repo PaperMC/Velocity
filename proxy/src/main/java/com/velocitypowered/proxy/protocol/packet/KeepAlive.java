@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;

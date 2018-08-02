@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;

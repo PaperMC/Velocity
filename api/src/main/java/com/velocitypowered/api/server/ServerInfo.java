@@ -1,4 +1,4 @@
-package com.velocitypowered.api.servers;
+package com.velocitypowered.api.server;
 
 import com.google.common.base.Preconditions;
 

@@ -2,14 +2,14 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
-import com.velocitypowered.api.servers.ServerInfo;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.data.scoreboard.Objective;
 import com.velocitypowered.proxy.data.scoreboard.Score;
 import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
 import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
-import com.velocitypowered.proxy.protocol.packets.*;
+import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;

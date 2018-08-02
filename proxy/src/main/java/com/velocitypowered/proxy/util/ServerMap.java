@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.servers.ServerInfo;
+import com.velocitypowered.api.server.ServerInfo;
 
 import java.util.Collection;
 import java.util.HashMap;

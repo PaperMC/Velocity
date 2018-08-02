@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -7,16 +7,16 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
-public class EncryptionResponse implements MinecraftPacket {
-    private byte[] sharedSecret;
+public class EncryptionRequest implements MinecraftPacket {
+    private byte[] publicKey;
     private byte[] verifyToken;
 
-    public byte[] getSharedSecret() {
-        return sharedSecret;
+    public byte[] getPublicKey() {
+        return publicKey;
     }
 
-    public void setSharedSecret(byte[] sharedSecret) {
-        this.sharedSecret = sharedSecret;
+    public void setPublicKey(byte[] publicKey) {
+        this.publicKey = publicKey;
     }
 
     public byte[] getVerifyToken() {
@@ -29,21 +29,23 @@ public class EncryptionResponse implements MinecraftPacket {
 
     @Override
     public String toString() {
-        return "EncryptionResponse{" +
-                "sharedSecret=" + Arrays.toString(sharedSecret) +
+        return "EncryptionRequest{" +
+                "publicKey=" + Arrays.toString(publicKey) +
                 ", verifyToken=" + Arrays.toString(verifyToken) +
                 '}';
     }
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
-        this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
+        ProtocolUtils.readString(buf); // Server ID, can be ignored since it is an empty string
+        publicKey = ProtocolUtils.readByteArray(buf, 256);
+        verifyToken = ProtocolUtils.readByteArray(buf, 16);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeByteArray(buf, sharedSecret);
+        ProtocolUtils.writeString(buf, ""); // Server ID
+        ProtocolUtils.writeByteArray(buf, publicKey);
         ProtocolUtils.writeByteArray(buf, verifyToken);
     }
 }

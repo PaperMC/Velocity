@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.data.scoreboard.ObjectiveMode;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;

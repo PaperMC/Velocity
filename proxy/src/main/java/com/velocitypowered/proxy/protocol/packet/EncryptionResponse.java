@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -7,16 +7,16 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
-public class EncryptionRequest implements MinecraftPacket {
-    private byte[] publicKey;
+public class EncryptionResponse implements MinecraftPacket {
+    private byte[] sharedSecret;
     private byte[] verifyToken;
 
-    public byte[] getPublicKey() {
-        return publicKey;
+    public byte[] getSharedSecret() {
+        return sharedSecret;
     }
 
-    public void setPublicKey(byte[] publicKey) {
-        this.publicKey = publicKey;
+    public void setSharedSecret(byte[] sharedSecret) {
+        this.sharedSecret = sharedSecret;
     }
 
     public byte[] getVerifyToken() {
@@ -29,23 +29,21 @@ public class EncryptionRequest implements MinecraftPacket {
 
     @Override
     public String toString() {
-        return "EncryptionRequest{" +
-                "publicKey=" + Arrays.toString(publicKey) +
+        return "EncryptionResponse{" +
+                "sharedSecret=" + Arrays.toString(sharedSecret) +
                 ", verifyToken=" + Arrays.toString(verifyToken) +
                 '}';
     }
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.readString(buf); // Server ID, can be ignored since it is an empty string
-        publicKey = ProtocolUtils.readByteArray(buf, 256);
-        verifyToken = ProtocolUtils.readByteArray(buf, 16);
+        this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
+        this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeString(buf, ""); // Server ID
-        ProtocolUtils.writeByteArray(buf, publicKey);
+        ProtocolUtils.writeByteArray(buf, sharedSecret);
         ProtocolUtils.writeByteArray(buf, verifyToken);
     }
 }

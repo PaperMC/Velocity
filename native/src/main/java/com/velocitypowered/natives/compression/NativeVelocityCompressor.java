@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 
 import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 
 public class NativeVelocityCompressor implements VelocityCompressor {
     private final NativeZlibInflate inflate = new NativeZlibInflate();
@@ -14,7 +15,7 @@ public class NativeVelocityCompressor implements VelocityCompressor {
 
     public NativeVelocityCompressor() {
         this.inflateCtx = inflate.init();
-        this.deflateCtx = deflate.init(7);
+        this.deflateCtx = deflate.init(Deflater.DEFAULT_COMPRESSION);
     }
 
     @Override

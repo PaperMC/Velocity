@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
-import com.velocitypowered.proxy.protocol.packets.*;
+import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 

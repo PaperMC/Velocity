@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
-import com.velocitypowered.proxy.protocol.packets.Handshake;
+import com.velocitypowered.proxy.protocol.packet.Handshake;
 import org.junit.jupiter.api.Test;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;

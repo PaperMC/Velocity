@@ -4,7 +4,6 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {

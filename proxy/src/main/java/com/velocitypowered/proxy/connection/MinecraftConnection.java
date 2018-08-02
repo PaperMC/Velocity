@@ -5,7 +5,6 @@ import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;

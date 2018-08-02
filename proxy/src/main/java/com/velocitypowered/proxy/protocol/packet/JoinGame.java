@@ -1,24 +1,33 @@
-package com.velocitypowered.proxy.protocol.packets;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class Respawn implements MinecraftPacket {
+public class JoinGame implements MinecraftPacket {
+    private int entityId;
+    private short gamemode;
     private int dimension;
     private short difficulty;
-    private short gamemode;
+    private short maxPlayers;
     private String levelType;
+    private boolean reducedDebugInfo;
 
-    public Respawn() {
+    public int getEntityId() {
+        return entityId;
     }
 
-    public Respawn(int dimension, short difficulty, short gamemode, String levelType) {
-        this.dimension = dimension;
-        this.difficulty = difficulty;
+    public void setEntityId(int entityId) {
+        this.entityId = entityId;
+    }
+
+    public short getGamemode() {
+        return gamemode;
+    }
+
+    public void setGamemode(short gamemode) {
         this.gamemode = gamemode;
-        this.levelType = levelType;
     }
 
     public int getDimension() {
@@ -37,12 +46,12 @@ public class Respawn implements MinecraftPacket {
         this.difficulty = difficulty;
     }
 
-    public short getGamemode() {
-        return gamemode;
+    public short getMaxPlayers() {
+        return maxPlayers;
     }
 
-    public void setGamemode(short gamemode) {
-        this.gamemode = gamemode;
+    public void setMaxPlayers(short maxPlayers) {
+        this.maxPlayers = maxPlayers;
     }
 
     public String getLevelType() {
@@ -53,29 +62,46 @@ public class Respawn implements MinecraftPacket {
         this.levelType = levelType;
     }
 
+    public boolean isReducedDebugInfo() {
+        return reducedDebugInfo;
+    }
+
+    public void setReducedDebugInfo(boolean reducedDebugInfo) {
+        this.reducedDebugInfo = reducedDebugInfo;
+    }
+
     @Override
     public String toString() {
-        return "Respawn{" +
-                "dimension=" + dimension +
-                ", difficulty=" + difficulty +
+        return "JoinGame{" +
+                "entityId=" + entityId +
                 ", gamemode=" + gamemode +
+                ", dimension=" + dimension +
+                ", difficulty=" + difficulty +
+                ", maxPlayers=" + maxPlayers +
                 ", levelType='" + levelType + '\'' +
+                ", reducedDebugInfo=" + reducedDebugInfo +
                 '}';
     }
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        this.entityId = buf.readInt();
+        this.gamemode = buf.readUnsignedByte();
         this.dimension = buf.readInt();
         this.difficulty = buf.readUnsignedByte();
-        this.gamemode = buf.readUnsignedByte();
+        this.maxPlayers = buf.readUnsignedByte();
         this.levelType = ProtocolUtils.readString(buf, 16);
+        this.reducedDebugInfo = buf.readBoolean();
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        buf.writeInt(entityId);
+        buf.writeByte(gamemode);
         buf.writeInt(dimension);
         buf.writeByte(difficulty);
-        buf.writeByte(gamemode);
+        buf.writeByte(maxPlayers);
         ProtocolUtils.writeString(buf, levelType);
+        buf.writeBoolean(reducedDebugInfo);
     }
 }

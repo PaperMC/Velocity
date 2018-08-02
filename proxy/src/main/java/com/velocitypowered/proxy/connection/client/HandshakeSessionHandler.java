@@ -6,8 +6,8 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packets.Disconnect;
-import com.velocitypowered.proxy.protocol.packets.Handshake;
+import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.Handshake;
 import net.kyori.text.TranslatableComponent;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {

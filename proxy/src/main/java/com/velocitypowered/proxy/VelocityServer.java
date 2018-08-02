@@ -6,7 +6,7 @@ import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.api.servers.ServerInfo;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.ServerMap;

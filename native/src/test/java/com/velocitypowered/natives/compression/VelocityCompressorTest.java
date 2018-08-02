@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.zip.DataFormatException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,19 +30,19 @@ class VelocityCompressorTest {
         if (compressor instanceof JavaVelocityCompressor) {
             fail("Loaded regular compressor");
         }
-        check(compressor);
+        check(compressor, Unpooled::directBuffer);
     }
 
     @Test
     void javaIntegrityCheck() throws DataFormatException {
         JavaVelocityCompressor compressor = new JavaVelocityCompressor();
-        check(compressor);
+        check(compressor, Unpooled::buffer);
     }
 
-    private void check(VelocityCompressor compressor) throws DataFormatException {
-        ByteBuf source = Unpooled.directBuffer();
-        ByteBuf dest = Unpooled.directBuffer();
-        ByteBuf decompressed = Unpooled.directBuffer();
+    private void check(VelocityCompressor compressor, Supplier<ByteBuf> supplier) throws DataFormatException {
+        ByteBuf source = supplier.get();
+        ByteBuf dest = supplier.get();
+        ByteBuf decompressed = supplier.get();
 
         Random random = new Random(1);
         byte[] randomBytes = new byte[1 << 16];
