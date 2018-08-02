@@ -1,5 +1,6 @@
 package com.velocitypowered.natives.compression;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 
 import java.util.zip.DataFormatException;
@@ -18,6 +19,7 @@ public class NativeVelocityCompressor implements VelocityCompressor {
 
     @Override
     public void inflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
+        ensureNotDisposed();
         source.memoryAddress();
         destination.memoryAddress();
 
@@ -38,6 +40,7 @@ public class NativeVelocityCompressor implements VelocityCompressor {
 
     @Override
     public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
+        ensureNotDisposed();
         source.memoryAddress();
         destination.memoryAddress();
 
@@ -54,6 +57,10 @@ public class NativeVelocityCompressor implements VelocityCompressor {
         deflate.reset(deflateCtx);
         deflate.consumed = 0;
         deflate.finished = false;
+    }
+
+    private void ensureNotDisposed() {
+        Preconditions.checkState(!disposed, "Object already disposed");
     }
 
     @Override
