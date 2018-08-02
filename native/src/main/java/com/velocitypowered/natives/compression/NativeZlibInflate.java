@@ -3,7 +3,7 @@ package com.velocitypowered.natives.compression;
 /**
  * Represents a native interface for zlib's inflate functions.
  */
-public class NativeZlibInflate {
+class NativeZlibInflate {
     boolean finished;
     int consumed;
 
@@ -19,5 +19,5 @@ public class NativeZlibInflate {
         initIDs();
     }
 
-    static native void initIDs();
+    private static native void initIDs();
 }

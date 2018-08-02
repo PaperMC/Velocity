@@ -20,5 +20,5 @@ class NativeZlibDeflate {
         initIDs();
     }
 
-    static native void initIDs();
+    private static native void initIDs();
 }

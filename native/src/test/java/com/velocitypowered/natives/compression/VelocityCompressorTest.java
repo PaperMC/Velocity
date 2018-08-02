@@ -4,6 +4,7 @@ import com.velocitypowered.natives.util.Natives;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 
@@ -16,10 +17,15 @@ import static org.junit.jupiter.api.condition.OS.LINUX;
 import static org.junit.jupiter.api.condition.OS.MAC;
 
 class VelocityCompressorTest {
+    @BeforeAll
+    static void checkNatives() {
+        Natives.compressor.getLoadedVariant();
+    }
+
     @Test
     @EnabledOnOs({ MAC, LINUX })
     void nativeIntegrityCheck() throws DataFormatException {
-        VelocityCompressor compressor = Natives.compressor.supply().get();
+        VelocityCompressor compressor = Natives.compressor.get();
         if (compressor instanceof JavaVelocityCompressor) {
             fail("Loaded regular compressor");
         }
@@ -38,7 +44,7 @@ class VelocityCompressorTest {
         ByteBuf decompressed = Unpooled.directBuffer();
 
         Random random = new Random(1);
-        byte[] randomBytes = new byte[1 << 21];
+        byte[] randomBytes = new byte[1 << 16];
         random.nextBytes(randomBytes);
         source.writeBytes(randomBytes);
 

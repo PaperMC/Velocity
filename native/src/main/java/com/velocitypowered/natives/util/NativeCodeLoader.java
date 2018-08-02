@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-public class NativeCodeLoader<T> {
+public class NativeCodeLoader<T> implements Supplier<T> {
     private final List<Variant<T>> variants;
     private Variant<T> selected;
 
@@ -14,11 +14,12 @@ public class NativeCodeLoader<T> {
         this.variants = ImmutableList.copyOf(variants);
     }
 
-    public Supplier<T> supply() {
+    @Override
+    public T get() {
         if (selected == null) {
             selected = select();
         }
-        return selected.supplier;
+        return selected.supplier.get();
     }
 
     private Variant<T> select() {
@@ -33,14 +34,10 @@ public class NativeCodeLoader<T> {
     }
 
     public String getLoadedVariant() {
-        for (Variant<T> variant : variants) {
-            T got = variant.get();
-            if (got == null) {
-                continue;
-            }
-            return variant.name;
+        if (selected == null) {
+            selected = select();
         }
-        throw new IllegalArgumentException("Can't find any suitable variants");
+        return selected.name;
     }
 
     static class Variant<T> {
@@ -57,17 +54,15 @@ public class NativeCodeLoader<T> {
             this.supplier = supplier;
         }
 
-        public boolean setup() {
+        private void setup() {
             if (available && !hasBeenSetup) {
                 try {
                     setup.run();
                     hasBeenSetup = true;
                 } catch (Exception e) {
-                    //logger.error("Unable to set up {}", name, e);
                     available = false;
                 }
             }
-            return hasBeenSetup;
         }
 
         public T get() {
@@ -83,10 +78,9 @@ public class NativeCodeLoader<T> {
         }
     }
 
-    public static final BooleanSupplier MACOS = () -> System.getProperty("os.name").equalsIgnoreCase("Mac OS X") &&
+    static final BooleanSupplier MACOS = () -> System.getProperty("os.name").equalsIgnoreCase("Mac OS X") &&
             System.getProperty("os.arch").equals("x86_64");
-    public static final BooleanSupplier LINUX = () -> System.getProperties().getProperty("os.name").equalsIgnoreCase("Linux") &&
+    static final BooleanSupplier LINUX = () -> System.getProperties().getProperty("os.name").equalsIgnoreCase("Linux") &&
             System.getProperty("os.arch").equals("amd64");
-    public static final BooleanSupplier MAC_AND_LINUX = () -> MACOS.getAsBoolean() || LINUX.getAsBoolean();
-    public static final BooleanSupplier ALWAYS = () -> true;
+    static final BooleanSupplier ALWAYS = () -> true;
 }

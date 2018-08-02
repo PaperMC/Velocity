@@ -191,7 +191,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        VelocityCompressor compressor = Natives.compressor.supply().get();
+        VelocityCompressor compressor = Natives.compressor.get();
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 
