@@ -25,7 +25,8 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
             return;
         }
 
-        ByteBuf compressedBuffer = ctx.alloc().buffer();
+        // in other words, see if a plain 8KiB buffer fits us well
+        ByteBuf compressedBuffer = ctx.alloc().buffer(8192);
         try {
             int uncompressed = msg.readableBytes();
             compressor.deflate(msg, compressedBuffer);

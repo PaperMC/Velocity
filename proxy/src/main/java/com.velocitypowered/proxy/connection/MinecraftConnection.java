@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.connection;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
@@ -189,7 +191,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        JavaVelocityCompressor compressor = new JavaVelocityCompressor();
+        VelocityCompressor compressor = Natives.compressor.supply().get();
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 

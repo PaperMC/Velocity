@@ -31,6 +31,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
         }
 
         Preconditions.checkState(uncompressedSize >= threshold, "Uncompressed size %s doesn't make sense with threshold %s", uncompressedSize, threshold);
+        // Try to use the uncompressed size, but place a cap if it might be too big (possibly malicious).
         ByteBuf uncompressed = ctx.alloc().buffer(Math.min(uncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
         try {
             compressor.inflate(msg, uncompressed);

@@ -16,7 +16,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     public JavaVelocityCompressor() {
         this.deflater = new Deflater();
         this.inflater = new Inflater();
-        this.buf = new byte[8192];
+        this.buf = new byte[ZLIB_BUFFER_SIZE];
     }
 
     @Override

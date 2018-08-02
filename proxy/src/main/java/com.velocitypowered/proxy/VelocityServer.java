@@ -2,6 +2,7 @@ package com.velocitypowered.proxy;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
@@ -52,6 +53,8 @@ public class VelocityServer {
     }
 
     public void start() {
+        logger.info("Using {}", Natives.compressor.getLoadedVariant());
+
         // Create a key pair
         logger.info("Booting up Velocity...");
         try {
