@@ -30,19 +30,19 @@ class VelocityCompressorTest {
         if (compressor instanceof JavaVelocityCompressor) {
             fail("Loaded regular compressor");
         }
-        check(compressor, Unpooled::directBuffer);
+        check(compressor);
     }
 
     @Test
     void javaIntegrityCheck() throws DataFormatException {
         JavaVelocityCompressor compressor = new JavaVelocityCompressor();
-        check(compressor, Unpooled::buffer);
+        check(compressor);
     }
 
-    private void check(VelocityCompressor compressor, Supplier<ByteBuf> supplier) throws DataFormatException {
-        ByteBuf source = supplier.get();
-        ByteBuf dest = supplier.get();
-        ByteBuf decompressed = supplier.get();
+    private void check(VelocityCompressor compressor) throws DataFormatException {
+        ByteBuf source = Unpooled.directBuffer();
+        ByteBuf dest = Unpooled.directBuffer();
+        ByteBuf decompressed = Unpooled.directBuffer();
 
         Random random = new Random(1);
         byte[] randomBytes = new byte[1 << 16];
