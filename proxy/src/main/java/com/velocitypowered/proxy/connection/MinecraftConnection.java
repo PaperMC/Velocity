@@ -20,6 +20,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import java.security.GeneralSecurityException;
+import java.util.zip.Deflater;
 
 import static com.velocitypowered.network.Connections.CIPHER_DECODER;
 import static com.velocitypowered.network.Connections.CIPHER_ENCODER;
@@ -192,7 +193,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        VelocityCompressor compressor = Natives.compressor.get();
+        VelocityCompressor compressor = Natives.compressor.get().create(Deflater.DEFAULT_COMPRESSION);
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 

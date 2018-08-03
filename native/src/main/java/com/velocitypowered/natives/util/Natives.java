@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.NativeVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,15 +35,15 @@ public class Natives {
         };
     }
 
-    public static final NativeCodeLoader<VelocityCompressor> compressor = new NativeCodeLoader<>(
+    public static final NativeCodeLoader<VelocityCompressorFactory> compressor = new NativeCodeLoader<>(
             ImmutableList.of(
                     new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
                             copyAndLoadNative("/macosx/velocity-compress.dylib"), "native compression (macOS)",
-                            NativeVelocityCompressor::new),
+                            NativeVelocityCompressor.FACTORY),
                     new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
                             copyAndLoadNative("/linux_x64/velocity-compress.so"), "native compression (Linux amd64)",
-                            NativeVelocityCompressor::new),
-                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java compression", JavaVelocityCompressor::new)
+                            NativeVelocityCompressor.FACTORY),
+                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java compression", JavaVelocityCompressor.FACTORY)
             )
     );
 }

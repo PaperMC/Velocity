@@ -11,6 +11,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import java.util.Random;
 import java.util.function.Supplier;
 import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -26,7 +27,7 @@ class VelocityCompressorTest {
     @Test
     @EnabledOnOs({ MAC, LINUX })
     void nativeIntegrityCheck() throws DataFormatException {
-        VelocityCompressor compressor = Natives.compressor.get();
+        VelocityCompressor compressor = Natives.compressor.get().create(Deflater.DEFAULT_COMPRESSION);
         if (compressor instanceof JavaVelocityCompressor) {
             fail("Loaded regular compressor");
         }
@@ -35,7 +36,7 @@ class VelocityCompressorTest {
 
     @Test
     void javaIntegrityCheck() throws DataFormatException {
-        JavaVelocityCompressor compressor = new JavaVelocityCompressor();
+        VelocityCompressor compressor = JavaVelocityCompressor.FACTORY.create(Deflater.DEFAULT_COMPRESSION);
         check(compressor);
     }
 

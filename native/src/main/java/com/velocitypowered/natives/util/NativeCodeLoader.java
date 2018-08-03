@@ -19,7 +19,7 @@ public class NativeCodeLoader<T> implements Supplier<T> {
         if (selected == null) {
             selected = select();
         }
-        return selected.supplier.get();
+        return selected.object;
     }
 
     private Variant<T> select() {
@@ -44,14 +44,14 @@ public class NativeCodeLoader<T> implements Supplier<T> {
         private boolean available;
         private final Runnable setup;
         private final String name;
-        private final Supplier<T> supplier;
+        private final T object;
         private boolean hasBeenSetup = false;
 
-        Variant(BooleanSupplier available, Runnable setup, String name, Supplier<T> supplier) {
+        Variant(BooleanSupplier available, Runnable setup, String name, T object) {
             this.available = available.getAsBoolean();
             this.setup = setup;
             this.name = name;
-            this.supplier = supplier;
+            this.object = object;
         }
 
         private void setup() {
@@ -71,7 +71,7 @@ public class NativeCodeLoader<T> implements Supplier<T> {
             }
 
             if (available) {
-                return supplier.get();
+                return object;
             }
 
             return null;

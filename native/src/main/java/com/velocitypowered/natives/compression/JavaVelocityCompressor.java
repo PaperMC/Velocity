@@ -8,13 +8,15 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class JavaVelocityCompressor implements VelocityCompressor {
+    public static final VelocityCompressorFactory FACTORY = JavaVelocityCompressor::new;
+
     private final Deflater deflater;
     private final Inflater inflater;
     private final byte[] buf;
     private boolean disposed = false;
 
-    public JavaVelocityCompressor() {
-        this.deflater = new Deflater();
+    private JavaVelocityCompressor(int level) {
+        this.deflater = new Deflater(level);
         this.inflater = new Inflater();
         this.buf = new byte[ZLIB_BUFFER_SIZE];
     }

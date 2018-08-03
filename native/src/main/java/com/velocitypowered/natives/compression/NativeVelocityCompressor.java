@@ -4,18 +4,19 @@ import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 
 import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
 
 public class NativeVelocityCompressor implements VelocityCompressor {
+    public static final VelocityCompressorFactory FACTORY = NativeVelocityCompressor::new;
+
     private final NativeZlibInflate inflate = new NativeZlibInflate();
     private final long inflateCtx;
     private final NativeZlibDeflate deflate = new NativeZlibDeflate();
     private final long deflateCtx;
     private boolean disposed = false;
 
-    public NativeVelocityCompressor() {
+    private NativeVelocityCompressor(int level) {
         this.inflateCtx = inflate.init();
-        this.deflateCtx = deflate.init(Deflater.DEFAULT_COMPRESSION);
+        this.deflateCtx = deflate.init(level);
     }
 
     @Override
