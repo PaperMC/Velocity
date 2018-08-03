@@ -190,7 +190,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleClientPluginMessage(PluginMessage packet) {
-        logger.info("Got client plugin message packet {}", packet);
         if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
             List<String> actuallyRegistered = new ArrayList<>();
             List<String> channels = PluginMessageUtil.getChannels(packet);

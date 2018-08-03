@@ -30,7 +30,6 @@ public class NettyHttpClient {
 
                     @Override
                     public void channelAcquired(Channel channel) throws Exception {
-                        System.out.println("ACQUIRED");
                     }
 
                     @Override
