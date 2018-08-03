@@ -70,6 +70,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (association != null) {
             logger.info("{} has disconnected", association);
         }
+
+        teardown();
     }
 
     @Override
