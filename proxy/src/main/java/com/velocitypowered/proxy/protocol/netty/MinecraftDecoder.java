@@ -26,7 +26,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
             return;
         }
 
-        ByteBuf slice = msg.slice().retain();
+        ByteBuf slice = msg.retainedSlice();
 
         int packetId = ProtocolUtils.readVarInt(msg);
         MinecraftPacket packet = this.protocolVersion.createPacket(packetId);

@@ -25,7 +25,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
         int uncompressedSize = ProtocolUtils.readVarInt(msg);
         if (uncompressedSize == 0) {
             // Strip the now-useless uncompressed size, this message is already uncompressed.
-            out.add(msg.slice().retain());
+            out.add(msg.retainedSlice());
             msg.skipBytes(msg.readableBytes());
             return;
         }

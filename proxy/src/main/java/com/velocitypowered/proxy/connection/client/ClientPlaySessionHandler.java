@@ -9,12 +9,14 @@ import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
 import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
 import io.netty.util.ReferenceCountUtil;
 import net.kyori.text.TextComponent;
@@ -38,7 +40,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
-    private PluginMessage brandMessage;
     private int currentDimension;
     private Scoreboard serverScoreboard = new Scoreboard();
     private EntityIdRemapper idRemapper;
@@ -110,10 +111,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             pingTask.cancel(false);
             pingTask = null;
         }
-
-        if (brandMessage != null) {
-            brandMessage.getData().release();
-        }
     }
 
     @Override
@@ -179,12 +176,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     PluginMessageUtil.constructChannelsPacket(channel, clientPluginMsgChannels));
         }
 
-        // Tell the server the client's brand
-        if (brandMessage != null) {
-            brandMessage.getData().retain();
-            player.getConnectedServer().getMinecraftConnection().delayedWrite(brandMessage);
-        }
-
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
@@ -201,7 +192,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public void handleClientPluginMessage(PluginMessage packet) {
         logger.info("Got client plugin message packet {}", packet);
 
-        PluginMessage original = packet;
         try {
             if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
                 List<String> actuallyRegistered = new ArrayList<>();
@@ -230,27 +220,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 clientPluginMsgChannels.removeAll(channels);
             }
 
-            if (packet.getChannel().equals("MC|Brand") || packet.getChannel().equals("minecraft:brand")) {
-                if (this.brandMessage != null) {
-                    // Rewrite this packet to indicate that Velocity is running. Hurrah!
-                    packet = PluginMessageUtil.rewriteMCBrand(packet);
-                    this.brandMessage = packet;
-                } else {
-                    // Already have the brand packet and don't need this one.
-                    return;
-                }
+            if (PluginMessageUtil.isMCBrand(packet)) {
+                player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
+                return;
             }
 
-            // No other special handling?
-            if (packet == original) {
-                // we'll decrement this thrice: once when writing to the server, once just below this block,
-                // and once in the MinecraftConnection (since this is a slice)
-                packet.getData().retain();
-            }
-
+            // We're going to forward on the original packet.
+            packet.getData().retain();
             player.getConnectedServer().getMinecraftConnection().write(packet);
         } finally {
-            ReferenceCountUtil.release(original.getData());
+            ReferenceCountUtil.release(packet.getData());
         }
     }
 

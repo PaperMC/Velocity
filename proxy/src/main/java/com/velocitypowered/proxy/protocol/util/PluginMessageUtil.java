@@ -15,7 +15,13 @@ import java.util.List;
 public enum PluginMessageUtil {
     ;
 
+    public static boolean isMCBrand(PluginMessage message) {
+        Preconditions.checkNotNull(message, "message");
+        return message.getChannel().equals("MC|Brand") || message.getChannel().equals("minecraft:brand");
+    }
+
     public static List<String> getChannels(PluginMessage message) {
+        Preconditions.checkNotNull(message, "message");
         Preconditions.checkArgument(message.getChannel().equals("REGISTER") ||
                 message.getChannel().equals("UNREGISTER") ||
                 message.getChannel().equals("minecraft:register") ||
@@ -26,6 +32,9 @@ public enum PluginMessageUtil {
     }
 
     public static PluginMessage constructChannelsPacket(String channel, Collection<String> channels) {
+        Preconditions.checkNotNull(channel, "channel");
+        Preconditions.checkNotNull(channel, "channels");
+
         PluginMessage message = new PluginMessage();
         message.setChannel(channel);
 
@@ -41,6 +50,9 @@ public enum PluginMessageUtil {
     }
 
     public static PluginMessage rewriteMCBrand(PluginMessage message) {
+        Preconditions.checkNotNull(message, "message");
+        Preconditions.checkArgument(isMCBrand(message), "message is not a MC Brand plugin message");
+
         ByteBuf rewrittenBuf = Unpooled.buffer();
         String currentBrand = ProtocolUtils.readString(message.getData());
         ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");

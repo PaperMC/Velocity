@@ -21,7 +21,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
             return;
         }
 
-        out.add(in.slice(in.readerIndex(), packetLength).retain());
-        in.skipBytes(packetLength);
+        out.add(in.readRetainedSlice(packetLength));
     }
 }
