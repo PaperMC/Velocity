@@ -10,7 +10,7 @@ import java.util.List;
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        if (in.readableBytes() < 1) {
+        if (!in.isReadable()) {
             return;
         }
 

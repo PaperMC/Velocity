@@ -17,22 +17,14 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-        if (msg.readableBytes() <= threshold) {
+        int uncompressed = msg.readableBytes();
+        if (uncompressed <= threshold) {
             // Under the threshold, there is nothing to do.
             ProtocolUtils.writeVarInt(out, 0);
             out.writeBytes(msg);
-            return;
-        }
-
-        // in other words, see if a plain 8KiB buffer fits us well
-        ByteBuf compressedBuffer = ctx.alloc().buffer(8192);
-        try {
-            int uncompressed = msg.readableBytes();
-            compressor.deflate(msg, compressedBuffer);
+        } else {
             ProtocolUtils.writeVarInt(out, uncompressed);
-            out.writeBytes(compressedBuffer);
-        } finally {
-            compressedBuffer.release();
+            compressor.deflate(msg, out);
         }
     }
 
