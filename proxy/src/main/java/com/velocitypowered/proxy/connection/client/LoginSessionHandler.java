@@ -125,8 +125,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        inbound.write(new SetCompression(256));
-        inbound.setCompressionThreshold(256);
+        int threshold = VelocityServer.getServer().getConfiguration().getCompressionThreshold();
+        inbound.write(new SetCompression(threshold));
+        inbound.setCompressionThreshold(threshold);
 
         ServerLoginSuccess success = new ServerLoginSuccess();
         success.setUsername(profile.getName());

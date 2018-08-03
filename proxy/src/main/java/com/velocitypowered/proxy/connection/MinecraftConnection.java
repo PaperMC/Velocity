@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.Natives;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
@@ -20,7 +21,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import java.security.GeneralSecurityException;
-import java.util.zip.Deflater;
 
 import static com.velocitypowered.network.Connections.CIPHER_DECODER;
 import static com.velocitypowered.network.Connections.CIPHER_ENCODER;
@@ -193,7 +193,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        VelocityCompressor compressor = Natives.compressor.get().create(Deflater.DEFAULT_COMPRESSION);
+        int level = VelocityServer.getServer().getConfiguration().getCompressionLevel();
+        VelocityCompressor compressor = Natives.compressor.get().create(level);
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
 

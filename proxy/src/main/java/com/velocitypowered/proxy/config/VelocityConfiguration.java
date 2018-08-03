@@ -29,12 +29,15 @@ public class VelocityConfiguration {
     private final IPForwardingMode ipForwardingMode;
     private final Map<String, String> servers;
     private final List<String> attemptConnectionOrder;
+    private final int compressionThreshold;
+    private final int compressionLevel;
 
     private Component motdAsComponent;
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
                                   IPForwardingMode ipForwardingMode, Map<String, String> servers,
-                                  List<String> attemptConnectionOrder) {
+                                  List<String> attemptConnectionOrder, int compressionThreshold,
+                                  int compressionLevel) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
@@ -42,6 +45,8 @@ public class VelocityConfiguration {
         this.ipForwardingMode = ipForwardingMode;
         this.servers = servers;
         this.attemptConnectionOrder = attemptConnectionOrder;
+        this.compressionThreshold = compressionThreshold;
+        this.compressionLevel = compressionLevel;
     }
 
     public boolean validate() {
@@ -102,6 +107,18 @@ public class VelocityConfiguration {
             valid = false;
         }
 
+        if (compressionLevel < -1 || compressionLevel > 9) {
+            logger.error("Invalid compression level {}", compressionLevel);
+        } else if (compressionLevel == 0) {
+            logger.warn("ALL packets going through the proxy are going to be uncompressed. This will increase bandwidth usage.");
+        }
+
+        if (compressionThreshold < -1) {
+            logger.error("Invalid compression threshold {}", compressionLevel);
+        } else if (compressionThreshold == 0) {
+            logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
+        }
+
         return valid;
     }
 
@@ -144,6 +161,14 @@ public class VelocityConfiguration {
         return attemptConnectionOrder;
     }
 
+    public int getCompressionThreshold() {
+        return compressionThreshold;
+    }
+
+    public int getCompressionLevel() {
+        return compressionLevel;
+    }
+
     @Override
     public String toString() {
         return "VelocityConfiguration{" +
@@ -179,7 +204,9 @@ public class VelocityConfiguration {
                     toml.getBoolean("online-mode"),
                     IPForwardingMode.valueOf(toml.getString("ip-forwarding").toUpperCase()),
                     ImmutableMap.copyOf(servers),
-                    toml.getTable("servers").getList("try"));
+                    toml.getTable("servers").getList("try"),
+                    toml.getTable("advanced").getLong("compression-threshold", 1024L).intValue(),
+                    toml.getTable("advanced").getLong("compression-level", -1L).intValue());
         }
     }
 }
