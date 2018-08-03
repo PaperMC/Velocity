@@ -1,21 +1,50 @@
 package com.velocitypowered.proxy.connection.http;
 
 import com.velocitypowered.proxy.VelocityServer;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.pool.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 
 import javax.net.ssl.SSLEngine;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
 public class NettyHttpClient {
-    private final VelocityServer server;
+    private final ChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap;
 
     public NettyHttpClient(VelocityServer server) {
-        this.server = server;
+        Bootstrap bootstrap = server.initializeGenericBootstrap();
+        this.poolMap = new AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool>() {
+            @Override
+            protected SimpleChannelPool newPool(InetSocketAddress key) {
+                return new FixedChannelPool(bootstrap.remoteAddress(key), new ChannelPoolHandler() {
+                    @Override
+                    public void channelReleased(Channel channel) throws Exception {
+                        channel.pipeline().remove("collector");
+                    }
+
+                    @Override
+                    public void channelAcquired(Channel channel) throws Exception {
+                        System.out.println("ACQUIRED");
+                    }
+
+                    @Override
+                    public void channelCreated(Channel channel) throws Exception {
+                        if (key.getPort() == 443) {
+                            SslContext context = SslContextBuilder.forClient().build();
+                            SSLEngine engine = context.newEngine(channel.alloc());
+                            channel.pipeline().addLast("ssl", new SslHandler(engine));
+                        }
+                        channel.pipeline().addLast("http", new HttpClientCodec());
+                    }
+                }, 8);
+            }
+        };
     }
 
     public CompletableFuture<String> get(URL url) {
@@ -27,35 +56,25 @@ public class NettyHttpClient {
         }
 
         CompletableFuture<String> reply = new CompletableFuture<>();
-        server.initializeGenericBootstrap()
-                .handler(new ChannelInitializer<Channel>() {
-                    @Override
-                    protected void initChannel(Channel ch) throws Exception {
-                        if (ssl) {
-                            SslContext context = SslContextBuilder.forClient().build();
-                            SSLEngine engine = context.newEngine(ch.alloc());
-                            ch.pipeline().addLast(new SslHandler(engine));
-                        }
-                        ch.pipeline().addLast(new HttpClientCodec());
-                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                                DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url.getPath() + "?" + url.getQuery());
-                                request.headers().add(HttpHeaderNames.HOST, url.getHost());
-                                request.headers().add(HttpHeaderNames.USER_AGENT, "Velocity");
-                                ctx.writeAndFlush(request);
-                            }
+        InetSocketAddress address = new InetSocketAddress(host, port);
+        poolMap.get(address)
+                .acquire()
+                .addListener(future -> {
+                    if (future.isSuccess()) {
+                        Channel channel = (Channel) future.getNow();
+                        channel.pipeline().addLast("collector", new SimpleHttpResponseCollector(reply));
+
+                        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url.getPath() + "?" + url.getQuery());
+                        request.headers().add(HttpHeaderNames.HOST, url.getHost());
+                        request.headers().add(HttpHeaderNames.USER_AGENT, "Velocity");
+                        channel.writeAndFlush(request);
+
+                        reply.whenComplete((resp, err) -> {
+                            // Make sure to release this connection
+                            poolMap.get(address).release(channel, channel.voidPromise());
                         });
-                        ch.pipeline().addLast(new SimpleHttpResponseCollector(reply));
-                    }
-                })
-                .connect(host, port)
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (!future.isSuccess()) {
-                            reply.completeExceptionally(future.cause());
-                        }
+                    } else {
+                        reply.completeExceptionally(future.cause());
                     }
                 });
         return reply;
