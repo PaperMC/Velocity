@@ -179,6 +179,9 @@ public class VelocityConfiguration {
                 ", ipForwardingMode=" + ipForwardingMode +
                 ", servers=" + servers +
                 ", attemptConnectionOrder=" + attemptConnectionOrder +
+                ", compressionThreshold=" + compressionThreshold +
+                ", compressionLevel=" + compressionLevel +
+                ", motdAsComponent=" + motdAsComponent +
                 '}';
     }
 
