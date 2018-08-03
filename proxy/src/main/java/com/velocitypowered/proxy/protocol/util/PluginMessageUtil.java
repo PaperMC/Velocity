@@ -27,7 +27,7 @@ public enum PluginMessageUtil {
                 message.getChannel().equals("minecraft:register") ||
                 message.getChannel().equals("minecraft:unregister"),
                 "Unknown channel type " + message.getChannel());
-        String channels = message.getData().toString(StandardCharsets.UTF_8);
+        String channels = new String(message.getData(), StandardCharsets.UTF_8);
         return ImmutableList.copyOf(channels.split("\0"));
     }
 
@@ -37,15 +37,7 @@ public enum PluginMessageUtil {
 
         PluginMessage message = new PluginMessage();
         message.setChannel(channel);
-
-        ByteBuf data = Unpooled.buffer();
-        for (String s : channels) {
-            ByteBufUtil.writeUtf8(data, s);
-            data.writeByte(0);
-        }
-        data.writerIndex(data.writerIndex() - 1);
-
-        message.setData(data);
+        message.setData(String.join("\0", channels).getBytes(StandardCharsets.UTF_8));
         return message;
     }
 
@@ -53,13 +45,20 @@ public enum PluginMessageUtil {
         Preconditions.checkNotNull(message, "message");
         Preconditions.checkArgument(isMCBrand(message), "message is not a MC Brand plugin message");
 
+        byte[] rewrittenData;
         ByteBuf rewrittenBuf = Unpooled.buffer();
-        String currentBrand = ProtocolUtils.readString(message.getData());
-        ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
+        try {
+            String currentBrand = ProtocolUtils.readString(Unpooled.wrappedBuffer(message.getData()));
+            ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
+            rewrittenData = new byte[rewrittenBuf.readableBytes()];
+            rewrittenBuf.readBytes(rewrittenData);
+        } finally {
+            rewrittenBuf.release();
+        }
 
         PluginMessage newMsg = new PluginMessage();
         newMsg.setChannel(message.getChannel());
-        newMsg.setData(rewrittenBuf);
+        newMsg.setData(rewrittenData);
         return newMsg;
     }
 }

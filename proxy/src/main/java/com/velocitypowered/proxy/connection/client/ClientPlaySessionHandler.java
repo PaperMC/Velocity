@@ -191,46 +191,40 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public void handleClientPluginMessage(PluginMessage packet) {
         logger.info("Got client plugin message packet {}", packet);
-
-        try {
-            if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
-                List<String> actuallyRegistered = new ArrayList<>();
-                List<String> channels = PluginMessageUtil.getChannels(packet);
-                for (String channel : channels) {
-                    if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
-                            !clientPluginMsgChannels.contains(channel)) {
-                        throw new IllegalStateException("Too many plugin message channels registered");
-                    }
-                    if (clientPluginMsgChannels.add(channel)) {
-                        actuallyRegistered.add(channel);
-                    }
+        if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
+            List<String> actuallyRegistered = new ArrayList<>();
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            for (String channel : channels) {
+                if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
+                        !clientPluginMsgChannels.contains(channel)) {
+                    throw new IllegalStateException("Too many plugin message channels registered");
                 }
-
-                if (actuallyRegistered.size() > 0) {
-                    logger.info("Rewritten register packet: {}", actuallyRegistered);
-                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
-                    player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
+                if (clientPluginMsgChannels.add(channel)) {
+                    actuallyRegistered.add(channel);
                 }
-
-                return;
             }
 
-            if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
-                List<String> channels = PluginMessageUtil.getChannels(packet);
-                clientPluginMsgChannels.removeAll(channels);
+            if (actuallyRegistered.size() > 0) {
+                logger.info("Rewritten register packet: {}", actuallyRegistered);
+                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
+                player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }
 
-            if (PluginMessageUtil.isMCBrand(packet)) {
-                player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-                return;
-            }
-
-            // We're going to forward on the original packet.
-            packet.getData().retain();
-            player.getConnectedServer().getMinecraftConnection().write(packet);
-        } finally {
-            ReferenceCountUtil.release(packet.getData());
+            return;
         }
+
+        if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            clientPluginMsgChannels.removeAll(channels);
+        }
+
+        if (PluginMessageUtil.isMCBrand(packet)) {
+            player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
+            return;
+        }
+
+        // We're going to forward on the original packet.
+        player.getConnectedServer().getMinecraftConnection().write(packet);
     }
 
     public void handleServerScoreboardPacket(MinecraftPacket packet) {

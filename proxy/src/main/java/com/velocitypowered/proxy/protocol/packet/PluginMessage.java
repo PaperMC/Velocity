@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBufUtil;
 
 public class PluginMessage implements MinecraftPacket {
     private String channel;
-    private ByteBuf data;
+    private byte[] data;
 
     public String getChannel() {
         return channel;
@@ -18,11 +18,11 @@ public class PluginMessage implements MinecraftPacket {
         this.channel = channel;
     }
 
-    public ByteBuf getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(ByteBuf data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
 
@@ -37,7 +37,8 @@ public class PluginMessage implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.channel = ProtocolUtils.readString(buf);
-        this.data = buf.readRetainedSlice(buf.readableBytes());
+        this.data = new byte[buf.readableBytes()];
+        buf.readBytes(data);
     }
 
     @Override

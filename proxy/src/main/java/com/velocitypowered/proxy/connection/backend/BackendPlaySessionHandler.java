@@ -45,24 +45,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof PluginMessage) {
             PluginMessage pm = (PluginMessage) packet;
-            try {
-                if (!canForwardPluginMessage(pm)) {
-                    return;
-                }
-
-                if (PluginMessageUtil.isMCBrand(pm)) {
-                    connection.getProxyPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
-                    return;
-                }
-
-                // we'll decrement this twice: once when writing to the server, once just below this block,
-                // and once in the MinecraftConnection (since this is a slice)
-                pm.getData().retain();
-
-                connection.getProxyPlayer().getConnection().write(pm);
-            } finally {
-                pm.getData().release();
+            if (!canForwardPluginMessage(pm)) {
+                return;
             }
+
+            if (PluginMessageUtil.isMCBrand(pm)) {
+                connection.getProxyPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
+                return;
+            }
+
+            connection.getProxyPlayer().getConnection().write(pm);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             if (packet instanceof ScoreboardTeam ||
