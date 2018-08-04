@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.connection.VelocityConstants;
@@ -13,6 +14,7 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelPipeline;
 import net.kyori.text.TextComponent;
 
 import java.util.concurrent.ScheduledFuture;
@@ -68,11 +70,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             connection.disconnect();
 
             // Do we have an outstanding notification? If so, fulfill it.
-            ServerConnection.ConnectionNotifier n = connection.getMinecraftConnection().getChannel()
-                    .pipeline().get(ServerConnection.ConnectionNotifier.class);
-            if (n != null) {
-                n.getResult().complete(ConnectionRequestResults.forDisconnect(disconnect));
-            }
+            doNotify(ConnectionRequestResults.forDisconnect(disconnect));
 
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), disconnect);
         } else if (packet instanceof SetCompression) {
@@ -91,12 +89,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             }
 
             // Do we have an outstanding notification? If so, fulfill it.
-            ServerConnection.ConnectionNotifier n = connection.getMinecraftConnection().getChannel()
-                    .pipeline().get(ServerConnection.ConnectionNotifier.class);
-            if (n != null) {
-                n.onComplete();
-                connection.getMinecraftConnection().getChannel().pipeline().remove(n);
-            }
+            doNotify(ConnectionRequestResults.SUCCESSFUL);
 
             connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(connection));
             connection.getProxyPlayer().setConnectedServer(connection);
@@ -111,6 +104,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     @Override
     public void exception(Throwable throwable) {
         connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
+
+    private void doNotify(ConnectionRequestBuilder.Result result) {
+        ChannelPipeline pipeline = connection.getMinecraftConnection().getChannel().pipeline();
+        ServerConnection.ConnectionNotifier n = pipeline.get(ServerConnection.ConnectionNotifier.class);
+        if (n != null) {
+            n.getResult().complete(result);
+            pipeline.remove(ServerConnection.ConnectionNotifier.class);
+        }
     }
 
     private void cancelForwardingCheck() {

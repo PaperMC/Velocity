@@ -191,14 +191,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return connection.connect();
     }
 
-    void connect(ServerInfo info) {
-        Preconditions.checkNotNull(info, "info");
-        Preconditions.checkState(connectionInFlight == null, "A connection is already active!");
-        ServerConnection connection = new ServerConnection(info, this, VelocityServer.getServer());
-        connectionInFlight = connection;
-        connection.connect();
-    }
-
     public void setConnectedServer(ServerConnection serverConnection) {
         if (this.connectedServer != null && !serverConnection.getServerInfo().equals(connectedServer.getServerInfo())) {
             this.tryIndex = 0;
