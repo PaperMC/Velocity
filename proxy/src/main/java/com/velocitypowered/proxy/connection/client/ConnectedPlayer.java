@@ -1,6 +1,9 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
+import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.proxy.ProxiedPlayer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.data.GameProfile;
@@ -20,12 +23,13 @@ import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ConnectedPlayer implements MinecraftConnectionAssociation {
+public class ConnectedPlayer implements MinecraftConnectionAssociation, ProxiedPlayer {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
@@ -42,12 +46,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
         this.connection = connection;
     }
 
+    @Override
     public String getUsername() {
         return profile.getName();
     }
 
+    @Override
     public UUID getUniqueId() {
         return profile.idAsUuid();
+    }
+
+    @Override
+    public Optional<ServerInfo> getCurrentServer() {
+        return Optional.empty();
     }
 
     public GameProfile getProfile() {
@@ -58,8 +69,37 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
         return connection;
     }
 
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return (InetSocketAddress) connection.getChannel().remoteAddress();
+    }
+
+    @Override
+    public boolean isActive() {
+        return connection.getChannel().isActive();
+    }
+
+    @Override
+    public void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position) {
+        Preconditions.checkNotNull(component, "component");
+        Preconditions.checkNotNull(position, "position");
+
+        byte pos = (byte) position.ordinal();
+        String json;
+        if (position == MessagePosition.ACTION_BAR) {
+            // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
+            // and then inject the legacy text into a component... yuck!
+            JsonObject object = new JsonObject();
+            object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
+            json = VelocityServer.GSON.toJson(object);
+        } else {
+            json = ComponentSerializers.JSON.serialize(component);
+        }
+
+        Chat chat = new Chat();
+        chat.setType(pos);
+        chat.setMessage(json);
+        connection.write(chat);
     }
 
     public ServerConnection getConnectedServer() {

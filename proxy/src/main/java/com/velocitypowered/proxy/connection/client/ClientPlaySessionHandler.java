@@ -85,6 +85,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25566));
                 ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
                 connection.connect();
+                return;
             }
         }
 
