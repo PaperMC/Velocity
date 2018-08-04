@@ -2,10 +2,13 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.util.ConnectionMessages;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -28,6 +31,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
@@ -58,7 +62,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     @Override
     public Optional<ServerInfo> getCurrentServer() {
-        return Optional.empty();
+        return connectedServer != null ? Optional.of(connectedServer.getServerInfo()) : Optional.empty();
     }
 
     public GameProfile getProfile() {
@@ -102,6 +106,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         connection.write(chat);
     }
 
+    @Override
+    public ConnectionRequestBuilder createConnectionRequest(@Nonnull ServerInfo info) {
+        return new ConnectionRequestBuilderImpl(info);
+    }
+
     public ServerConnection getConnectedServer() {
         return connectedServer;
     }
@@ -118,8 +127,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         String error = ThrowableUtils.briefDescription(throwable);
         String userMessage;
         if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
+            logger.error("{}: exception occurred in connection to {}", this, info.getName(), throwable);
             userMessage = "Exception in server " + info.getName();
         } else {
+            logger.error("{}: unable to connect to server {}", this, info.getName(), throwable);
             userMessage = "Exception connecting to server " + info.getName();
         }
         handleConnectionException(info, TextComponent.builder()
@@ -151,7 +162,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
     }
 
-    public Optional<ServerInfo> getNextServerToTry() {
+    Optional<ServerInfo> getNextServerToTry() {
         List<String> serversToTry = VelocityServer.getServer().getConfiguration().getAttemptConnectionOrder();
         if (tryIndex >= serversToTry.size()) {
             return Optional.empty();
@@ -162,7 +173,25 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return VelocityServer.getServer().getServers().getServer(toTryName);
     }
 
-    public void connect(ServerInfo info) {
+    private CompletableFuture<ConnectionRequestBuilder.Result> connect(ConnectionRequestBuilderImpl request) {
+        if (connectionInFlight != null) {
+            return CompletableFuture.completedFuture(
+                    ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS)
+            );
+        }
+
+        if (connectedServer != null && connectedServer.getServerInfo().equals(request.getServer())) {
+            return CompletableFuture.completedFuture(
+                    ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.ALREADY_CONNECTED)
+            );
+        }
+
+        // Otherwise, initiate the connection.
+        ServerConnection connection = new ServerConnection(request.getServer(), this, VelocityServer.getServer());
+        return connection.connect();
+    }
+
+    void connect(ServerInfo info) {
         Preconditions.checkNotNull(info, "info");
         Preconditions.checkState(connectionInFlight == null, "A connection is already active!");
         ServerConnection connection = new ServerConnection(info, this, VelocityServer.getServer());
@@ -193,5 +222,49 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public String toString() {
         return "[connected player] " + getProfile().getName() + " (" + getRemoteAddress() + ")";
+    }
+
+    private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
+        private final ServerInfo info;
+
+        public ConnectionRequestBuilderImpl(ServerInfo info) {
+            this.info = Preconditions.checkNotNull(info, "info");
+        }
+
+        @Override
+        public ServerInfo getServer() {
+            return info;
+        }
+
+        @Override
+        public CompletableFuture<Result> connect() {
+            return ConnectedPlayer.this.connect(this);
+        }
+
+        @Override
+        public void fireAndForget() {
+            connect()
+                    .whenComplete((status, throwable) -> {
+                        if (throwable != null) {
+                            handleConnectionException(info, throwable);
+                            return;
+                        }
+
+                        switch (status.getStatus()) {
+                            case ALREADY_CONNECTED:
+                                sendMessage(ConnectionMessages.ALREADY_CONNECTED);
+                                break;
+                            case CONNECTION_IN_PROGRESS:
+                                sendMessage(ConnectionMessages.IN_PROGRESS);
+                                break;
+                            case CONNECTION_CANCELLED:
+                                // Ignored; the plugin probably already handled this.
+                                break;
+                            case SERVER_DISCONNECTED:
+                                handleConnectionException(info, Disconnect.create(status.getReason().orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
+                                break;
+                        }
+                    });
+        }
     }
 }

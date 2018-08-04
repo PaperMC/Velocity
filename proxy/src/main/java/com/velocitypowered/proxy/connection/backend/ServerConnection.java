@@ -1,7 +1,9 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -17,6 +19,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.network.Connections.FRAME_DECODER;
@@ -28,6 +31,8 @@ import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class ServerConnection implements MinecraftConnectionAssociation {
+    static final String CONNECTION_NOTIFIER = "connection-notifier";
+
     private final ServerInfo serverInfo;
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
@@ -39,7 +44,8 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         this.server = server;
     }
 
-    public void connect() {
+    public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
+        CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
         server.initializeGenericBootstrap()
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
@@ -49,7 +55,8 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
-                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
+                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND))
+                                .addLast(CONNECTION_NOTIFIER, new ConnectionNotifier(result));
 
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
@@ -68,10 +75,11 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                             minecraftConnection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
                             startHandshake();
                         } else {
-                            proxyPlayer.handleConnectionException(serverInfo, future.cause());
+                            result.completeExceptionally(future.cause());
                         }
                     }
                 });
+        return result;
     }
 
     private String createBungeeForwardingAddress() {
@@ -130,5 +138,26 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     @Override
     public String toString() {
         return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
+    }
+
+    static class ConnectionNotifier extends ChannelInboundHandlerAdapter {
+        private final CompletableFuture<ConnectionRequestBuilder.Result> result;
+
+        public ConnectionNotifier(CompletableFuture<ConnectionRequestBuilder.Result> result) {
+            this.result = result;
+        }
+
+        public CompletableFuture<ConnectionRequestBuilder.Result> getResult() {
+            return result;
+        }
+
+        public void onComplete() {
+            result.complete(ConnectionRequestResults.SUCCESSFUL);
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            result.completeExceptionally(cause);
+        }
     }
 }

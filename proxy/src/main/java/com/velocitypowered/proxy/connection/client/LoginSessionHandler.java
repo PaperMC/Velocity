@@ -140,6 +140,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         inbound.setAssociation(player);
         inbound.setState(StateRegistry.PLAY);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        player.connect(toTry.get());
+        player.createConnectionRequest(toTry.get()).fireAndForget();
     }
 }

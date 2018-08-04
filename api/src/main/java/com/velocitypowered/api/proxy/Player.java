@@ -57,4 +57,11 @@ public interface Player {
      * @param position the position for the message
      */
     void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position);
+
+    /**
+     * Creates a new connection request so that the player can connect to another server.
+     * @param info the server to connect to
+     * @return a new connection request
+     */
+    ConnectionRequestBuilder createConnectionRequest(@Nonnull ServerInfo info);
 }

@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.IPForwardingMode;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -65,6 +66,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         } else if (packet instanceof Disconnect) {
             Disconnect disconnect = (Disconnect) packet;
             connection.disconnect();
+
+            // Do we have an outstanding notification? If so, fulfill it.
+            ServerConnection.ConnectionNotifier n = connection.getMinecraftConnection().getChannel()
+                    .pipeline().get(ServerConnection.ConnectionNotifier.class);
+            if (n != null) {
+                n.getResult().complete(ConnectionRequestResults.forDisconnect(disconnect));
+            }
+
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), disconnect);
         } else if (packet instanceof SetCompression) {
             SetCompression sc = (SetCompression) packet;
@@ -80,6 +89,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 // The previous server connection should become obsolete.
                 existingConnection.disconnect();
             }
+
+            // Do we have an outstanding notification? If so, fulfill it.
+            ServerConnection.ConnectionNotifier n = connection.getMinecraftConnection().getChannel()
+                    .pipeline().get(ServerConnection.ConnectionNotifier.class);
+            if (n != null) {
+                n.onComplete();
+                connection.getMinecraftConnection().getChannel().pipeline().remove(n);
+            }
+
             connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(connection));
             connection.getProxyPlayer().setConnectedServer(connection);
         }

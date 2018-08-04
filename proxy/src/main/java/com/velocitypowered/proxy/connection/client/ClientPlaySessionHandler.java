@@ -83,8 +83,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             Chat chat = (Chat) packet;
             if (chat.getMessage().equals("/connect")) {
                 ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25566));
-                ServerConnection connection = new ServerConnection(info, player, VelocityServer.getServer());
-                connection.connect();
+                player.createConnectionRequest(info).fireAndForget();
                 return;
             }
         }
