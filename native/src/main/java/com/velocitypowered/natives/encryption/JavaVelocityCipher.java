@@ -10,10 +10,22 @@ import javax.crypto.spec.IvParameterSpec;
 import java.security.GeneralSecurityException;
 
 public class JavaVelocityCipher implements VelocityCipher {
+    public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
+        @Override
+        public VelocityCipher forEncryption(SecretKey key) throws GeneralSecurityException {
+            return new JavaVelocityCipher(true, key);
+        }
+
+        @Override
+        public VelocityCipher forDecryption(SecretKey key) throws GeneralSecurityException {
+            return new JavaVelocityCipher(false, key);
+        }
+    };
+
     private final Cipher cipher;
     private boolean disposed = false;
 
-    public JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
+    private JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
         this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
         this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key, new IvParameterSpec(key.getEncoded()));
     }

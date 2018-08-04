@@ -101,6 +101,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation {
     }
 
     public void handleConnectionException(ServerInfo info, Component disconnectReason) {
+        connectionInFlight = null;
         if (connectedServer == null || connectedServer.getServerInfo().equals(info)) {
             // The player isn't yet connected to a server or they are already connected to the server
             // they're disconnected from.

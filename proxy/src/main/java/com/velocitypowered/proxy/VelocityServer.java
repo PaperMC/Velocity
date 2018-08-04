@@ -54,6 +54,7 @@ public class VelocityServer {
 
     public void start() {
         logger.info("Using {}", Natives.compressor.getLoadedVariant());
+        logger.info("Using {}", Natives.cipher.getLoadedVariant());
 
         // Create a key pair
         logger.info("Booting up Velocity...");

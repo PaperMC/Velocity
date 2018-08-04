@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
@@ -205,8 +206,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     public void enableEncryption(byte[] secret) throws GeneralSecurityException {
         SecretKey key = new SecretKeySpec(secret, "AES");
 
-        VelocityCipher decryptionCipher = new JavaVelocityCipher(false, key);
-        VelocityCipher encryptionCipher = new JavaVelocityCipher(true, key);
+        VelocityCipherFactory factory = Natives.cipher.get();
+        VelocityCipher decryptionCipher = factory.forDecryption(key);
+        VelocityCipher encryptionCipher = factory.forEncryption(key);
         channel.pipeline().addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
         channel.pipeline().addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
     }
