@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.util.MessagePosition;
-import com.velocitypowered.api.proxy.ProxiedPlayer;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.data.GameProfile;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ConnectedPlayer implements MinecraftConnectionAssociation, ProxiedPlayer {
+public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);

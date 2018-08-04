@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface ProxiedPlayer {
+public interface Player {
     /**
      * Returns the player's current username.
      * @return the username
