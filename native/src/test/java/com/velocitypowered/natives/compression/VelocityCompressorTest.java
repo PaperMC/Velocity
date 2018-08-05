@@ -29,6 +29,7 @@ class VelocityCompressorTest {
     void nativeIntegrityCheck() throws DataFormatException {
         VelocityCompressor compressor = Natives.compressor.get().create(Deflater.DEFAULT_COMPRESSION);
         if (compressor instanceof JavaVelocityCompressor) {
+            compressor.dispose();
             fail("Loaded regular compressor");
         }
         check(compressor);
@@ -58,6 +59,7 @@ class VelocityCompressorTest {
         } finally {
             source.release();
             dest.release();
+            decompressed.release();
             compressor.dispose();
         }
     }

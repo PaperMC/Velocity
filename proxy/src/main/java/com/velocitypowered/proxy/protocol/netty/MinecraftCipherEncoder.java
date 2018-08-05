@@ -19,6 +19,11 @@ public class MinecraftCipherEncoder extends MessageToByteEncoder<ByteBuf> {
     }
 
     @Override
+    protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect) throws Exception {
+        return ctx.alloc().directBuffer(msg.readableBytes());
+    }
+
+    @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         cipher.dispose();
     }
