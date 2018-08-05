@@ -5,8 +5,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
@@ -14,8 +14,6 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.condition.OS.LINUX;
-import static org.junit.jupiter.api.condition.OS.MAC;
 
 class VelocityCipherTest {
     private static final int ENCRYPT_DATA_SIZE = 1 << 16;
@@ -26,7 +24,7 @@ class VelocityCipherTest {
     }
 
     @Test
-    @EnabledOnOs({ MAC, LINUX })
+    @Disabled
     void nativeIntegrityCheck() throws GeneralSecurityException {
         VelocityCipherFactory factory = Natives.cipher.get();
         if (factory == JavaVelocityCipher.FACTORY) {
