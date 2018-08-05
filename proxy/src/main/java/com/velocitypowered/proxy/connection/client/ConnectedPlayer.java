@@ -240,7 +240,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             connect()
                     .whenComplete((status, throwable) -> {
                         if (throwable != null) {
-                            if (throwable instanceof ConnectException) {
+                            if (throwable instanceof ConnectException && connectedServer == null) {
                                 Optional<ServerInfo> nextServer = getNextServerToTry();
                                 if (nextServer.isPresent()) {
                                     createConnectionRequest(nextServer.get()).fireAndForget();
