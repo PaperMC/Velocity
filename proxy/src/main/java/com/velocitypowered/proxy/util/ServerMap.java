@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.server.ServerInfo;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -17,9 +14,10 @@ public class ServerMap {
 
     public Optional<ServerInfo> getServer(String server) {
         Preconditions.checkNotNull(server, "server");
+        String lowerName = server.toLowerCase(Locale.US);
         lock.readLock().lock();
         try {
-            return Optional.ofNullable(servers.get(server.toLowerCase()));
+            return Optional.ofNullable(servers.get(lowerName));
         } finally {
             lock.readLock().unlock();
         }
@@ -36,9 +34,10 @@ public class ServerMap {
 
     public void register(ServerInfo server) {
         Preconditions.checkNotNull(server, "server");
+        String lowerName = server.getName().toLowerCase(Locale.US);
         lock.writeLock().lock();
         try {
-            Preconditions.checkArgument(servers.putIfAbsent(server.getName(), server) == null, "Server with name %s already registered", server.getName());
+            Preconditions.checkArgument(servers.putIfAbsent(lowerName, server) == null, "Server with name %s already registered", server.getName());
         } finally {
             lock.writeLock().unlock();
         }
@@ -46,9 +45,10 @@ public class ServerMap {
 
     public void unregister(ServerInfo server) {
         Preconditions.checkNotNull(server, "server");
+        String lowerName = server.getName().toLowerCase(Locale.US);
         lock.writeLock().lock();
         try {
-            Preconditions.checkArgument(servers.remove(server.getName(), server), "Server with this name is not registered!");
+            Preconditions.checkArgument(servers.remove(lowerName, server), "Server with this name is not registered!");
         } finally {
             lock.writeLock().unlock();
         }

@@ -29,10 +29,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VelocityServer implements ProxyServer {
@@ -119,11 +116,12 @@ public class VelocityServer implements ProxyServer {
     }
 
     public boolean registerConnection(ConnectedPlayer connection) {
-        if (connectionsByName.putIfAbsent(connection.getUsername(), connection) != null) {
+        String lowerName = connection.getUsername().toLowerCase(Locale.US);
+        if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
             return false;
         }
         if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
-            connectionsByName.remove(connection.getUsername(), connection);
+            connectionsByName.remove(lowerName, connection);
             return false;
         }
         return true;
@@ -137,7 +135,7 @@ public class VelocityServer implements ProxyServer {
     @Override
     public Optional<Player> getPlayer(@Nonnull String username) {
         Preconditions.checkNotNull(username, "username");
-        return Optional.ofNullable(connectionsByName.get(username));
+        return Optional.ofNullable(connectionsByName.get(username.toLowerCase(Locale.US)));
     }
 
     @Override
