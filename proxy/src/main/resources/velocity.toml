@@ -1,0 +1,13 @@
+bind = "0.0.0.0:25565"
+motd = "A new Velocity proxy"
+show-max-players = 1
+online-mode = true
+ip-forwarding = "NONE"
+
+[servers]
+lobby = "localhost:25577"
+try = ["lobby"]
+
+[advanced]
+compression-threshold = 1024
+compression-level = -1
