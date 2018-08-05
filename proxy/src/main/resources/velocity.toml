@@ -1,0 +1,41 @@
+# What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
+bind = "0.0.0.0:25577"
+
+# What should be the MOTD? Legacy color codes and JSON are accepted.
+motd = "&3A Velocity Server"
+
+# What should we display for the maximum number of players? (Velocity does not support a cap
+# on the number of players online.)
+show-max-players = 500
+
+# Should we authenticate players with Mojang? By default, this is on.
+online-mode = true
+
+# Should we forward IP addresses and other data to backend servers?
+# Available options:
+# - "none":   No forwarding will be done. All players will appear to be connecting from the proxy
+#             and will have offline-mode UUIDs.
+# - "legacy": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run
+#             servers using Minecraft 1.12 or lower.
+# - "modern": Forward player IPs and UUIDs as part of the login process using Velocity's native
+#             forwarding. Only applicable for Minecraft 1.13 or higher.
+ip-forwarding = "modern"
+
+[servers]
+# Configure your servers here.
+lobby = "127.0.0.1:30066"
+factions = "127.0.0.1:30067"
+minigames = "127.0.0.1:30068"
+
+# In what order we should try servers when a player logs in or is kicked from a server.
+try = [
+  "lobby"
+]
+
+[advanced]
+# How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and
+# setting it to -1 will disable compression entirely.
+compression-threshold = 1024
+
+# How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.
+compression-level = -1

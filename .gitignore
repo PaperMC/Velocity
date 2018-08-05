@@ -121,4 +121,4 @@ gradle-app.setting
 
 # Other trash
 logs/
-velocity.toml
+/velocity.toml
