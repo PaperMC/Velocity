@@ -118,9 +118,15 @@ public class VelocityServer implements ProxyServer {
         return httpClient;
     }
 
-    public void registerConnection(ConnectedPlayer connection) {
-        connectionsByName.put(connection.getUsername(), connection);
-        connectionsByUuid.put(connection.getUniqueId(), connection);
+    public boolean registerConnection(ConnectedPlayer connection) {
+        if (connectionsByName.putIfAbsent(connection.getUsername(), connection) != null) {
+            return false;
+        }
+        if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+            connectionsByName.remove(connection.getUsername(), connection);
+            return false;
+        }
+        return true;
     }
 
     public void unregisterConnection(ConnectedPlayer connection) {

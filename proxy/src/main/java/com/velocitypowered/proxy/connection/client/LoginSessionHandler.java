@@ -136,11 +136,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         success.setUuid(profile.idAsUuid());
         inbound.write(success);
 
-        logger.info("{} has connected", player);
         inbound.setAssociation(player);
         inbound.setState(StateRegistry.PLAY);
+
+        if (!VelocityServer.getServer().registerConnection(player)) {
+            inbound.closeWith(Disconnect.create(TextComponent.of("You are already on this proxy!", TextColor.RED)));
+        }
+
+        logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        VelocityServer.getServer().registerConnection(player);
         player.createConnectionRequest(toTry.get()).fireAndForget();
     }
 }
