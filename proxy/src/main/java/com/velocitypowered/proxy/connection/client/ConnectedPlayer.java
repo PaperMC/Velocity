@@ -209,6 +209,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         if (connectedServer != null) {
             connectedServer.disconnect();
         }
+        VelocityServer.getServer().unregisterConnection(this);
     }
 
     @Override

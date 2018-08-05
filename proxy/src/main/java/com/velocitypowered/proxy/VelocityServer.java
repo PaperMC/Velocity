@@ -1,10 +1,16 @@
 package com.velocitypowered.proxy;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -16,15 +22,20 @@ import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class VelocityServer {
+public class VelocityServer implements ProxyServer {
     private static final Logger logger = LogManager.getLogger(VelocityServer.class);
     private static final VelocityServer INSTANCE = new VelocityServer();
     public static final Gson GSON = new GsonBuilder()
@@ -36,6 +47,9 @@ public class VelocityServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
+
+    private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
+    private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
 
     private VelocityServer() {
     }
@@ -102,5 +116,32 @@ public class VelocityServer {
 
     public NettyHttpClient getHttpClient() {
         return httpClient;
+    }
+
+    public void registerConnection(ConnectedPlayer connection) {
+        connectionsByName.put(connection.getUsername(), connection);
+        connectionsByUuid.put(connection.getUniqueId(), connection);
+    }
+
+    public void unregisterConnection(ConnectedPlayer connection) {
+        connectionsByName.remove(connection.getUsername(), connection);
+        connectionsByUuid.remove(connection.getUniqueId(), connection);
+    }
+
+    @Override
+    public Optional<Player> getPlayer(@Nonnull String username) {
+        Preconditions.checkNotNull(username, "username");
+        return Optional.ofNullable(connectionsByName.get(username));
+    }
+
+    @Override
+    public Optional<Player> getPlayer(@Nonnull UUID uuid) {
+        Preconditions.checkNotNull(uuid, "uuid");
+        return Optional.ofNullable(connectionsByUuid.get(uuid));
+    }
+
+    @Override
+    public Collection<Player> getAllPlayers() {
+        return ImmutableList.copyOf(connectionsByUuid.values());
     }
 }
