@@ -150,4 +150,25 @@ public class VelocityServer implements ProxyServer {
     public Collection<Player> getAllPlayers() {
         return ImmutableList.copyOf(connectionsByUuid.values());
     }
+
+    @Override
+    public Optional<ServerInfo> getServerInfo(@Nonnull String name) {
+        Preconditions.checkNotNull(name, "name");
+        return servers.getServer(name);
+    }
+
+    @Override
+    public Collection<ServerInfo> getAllServers() {
+        return servers.getAllServers();
+    }
+
+    @Override
+    public void registerServer(@Nonnull ServerInfo server) {
+        servers.register(server);
+    }
+
+    @Override
+    public void unregisterServer(@Nonnull ServerInfo server) {
+        servers.unregister(server);
+    }
 }
