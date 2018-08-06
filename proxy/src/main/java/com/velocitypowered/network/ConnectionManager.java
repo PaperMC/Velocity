@@ -11,6 +11,9 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import io.netty.bootstrap.Bootstrap;
@@ -54,6 +57,7 @@ public final class ConnectionManager {
     private final Set<Channel> endpoints = new HashSet<>();
     private final Class<? extends ServerSocketChannel> serverSocketChannelClass;
     private final Class<? extends SocketChannel> socketChannelClass;
+    private final Class<? extends DatagramChannel> datagramChannelClass;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
 
@@ -62,11 +66,13 @@ public final class ConnectionManager {
         if (epoll) {
             this.serverSocketChannelClass = EpollServerSocketChannel.class;
             this.socketChannelClass = EpollSocketChannel.class;
+            this.datagramChannelClass = EpollDatagramChannel.class;
             this.bossGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Boss #%d"));
             this.workerGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Worker #%d"));
         } else {
             this.serverSocketChannelClass = NioServerSocketChannel.class;
             this.socketChannelClass = NioSocketChannel.class;
+            this.datagramChannelClass = NioDatagramChannel.class;
             this.bossGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Boss #%d"));
             this.workerGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Worker #%d"));
         }
