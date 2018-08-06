@@ -24,6 +24,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     private final static byte QUERY_TYPE_STAT = 0x00;
     private final static byte[] QUERY_RESPONSE_FULL_PADDING = new byte[] { 0x73, 0x70, 0x6C, 0x69, 0x74, 0x6E, 0x75, 0x6D, 0x00, (byte) 0x80, 0x00 };
     private final static byte[] QUERY_RESPONSE_FULL_PADDING2 = new byte[] { 0x01, 0x70, 0x6C, 0x61, 0x79, 0x65, 0x72, 0x5F, 0x00, 0x00 };
+
+    // Contents to add into basic stat response. See ResponseWriter class below
     private final static List<String> QUERY_BASIC_RESPONSE_CONTENTS = Arrays.asList(
             "hostname",
             "gametype",
@@ -52,15 +54,17 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         short type = queryMessage.readUnsignedByte();
         int sessionId = queryMessage.readInt();
 
-        // Allocate memory for response
+        // Allocate buffer for response
         ByteBuf queryResponse = ctx.alloc().buffer();
         DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
 
         switch(type) {
             case QUERY_TYPE_HANDSHAKE: {
+                // Generate new challenge token and put it into the sessions cache
                 int challengeToken = random.nextInt();
                 sessions.put(msg.sender().getAddress(), challengeToken);
 
+                // Respond with challenge token
                 queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
                 queryResponse.writeInt(sessionId);
                 writeString(queryResponse, Integer.toString(challengeToken));
@@ -68,6 +72,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             }
 
             case QUERY_TYPE_STAT: {
+                // Check if query was done with session previously generated using a handshake packet
                 int challengeToken = queryMessage.readInt();
                 Integer session = sessions.getIfPresent(msg.sender().getAddress());
                 if (session == null || session != challengeToken) {
@@ -138,6 +143,10 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             }
         }
 
+        // Writes k/v to stat packet body if this writer is initialized
+        // for full stat response. Otherwise this follows
+        // GS4QueryHandler#QUERY_BASIC_RESPONSE_CONTENTS to decide what
+        // to write into packet body
         void write(String key, String value) {
             if (isBasic) {
                 // Basic contains only specific set of data
@@ -157,6 +166,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             }
         }
 
+        // Ends packet k/v body writing and writes stat player list to
+        // the packet if this writer is initialized for full stat response
         void writePlayers(Collection<Player> players) {
             if (isBasic) {
                 return;
