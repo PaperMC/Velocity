@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
@@ -120,6 +121,24 @@ public final class ConnectionManager {
                     if (future.isSuccess()) {
                         this.endpoints.add(channel);
                         logger.info("Listening on {}", channel.localAddress());
+                    } else {
+                        logger.error("Can't bind to {}", address, future.cause());
+                    }
+                });
+    }
+
+    public void queryBind(final InetSocketAddress address) {
+        final Bootstrap bootstrap = new Bootstrap()
+                .channel(datagramChannelClass)
+                .group(this.workerGroup)
+                .handler(new GS4QueryHandler())
+                .localAddress(address);
+        bootstrap.bind()
+                .addListener((ChannelFutureListener) future -> {
+                    final Channel channel = future.channel();
+                    if (future.isSuccess()) {
+                        this.endpoints.add(channel);
+                        logger.info("Listening for GS4 query on {}", channel.localAddress());
                     } else {
                         logger.error("Can't bind to {}", address, future.cause());
                     }
