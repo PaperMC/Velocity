@@ -97,6 +97,10 @@ public class VelocityServer implements ProxyServer {
         httpClient = new NettyHttpClient(this);
 
         this.cm.bind(configuration.getBind());
+
+        if (configuration.isQueryEnabled()) {
+            this.cm.queryBind(configuration.getQueryBind());
+        }
     }
 
     public ServerMap getServers() {
