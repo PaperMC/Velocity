@@ -17,6 +17,9 @@ public enum ProtocolConstants { ;
     public static final int MINECRAFT_1_13 = 393;
 
     public static final int MINIMUM_GENERIC_VERSION = MINECRAFT_1_8;
+    public static final int MAXIMUM_GENERIC_VERSION = MINECRAFT_1_13;
+
+    public static final String SUPPORTED_GENERIC_VERSION_STRING = "1.8-1.13";
 
     public static final int[] SUPPORTED_VERSIONS = new int[] {
             MINECRAFT_1_8,

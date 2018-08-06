@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
@@ -35,7 +36,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
         // Status request
         ServerPing ping = new ServerPing(
-                new ServerPing.Version(connection.getProtocolVersion(), "Velocity 1.9-1.13"),
+                new ServerPing.Version(connection.getProtocolVersion(), "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                 new ServerPing.Players(0, configuration.getShowMaxPlayers()),
                 configuration.getMotdComponent(),
                 null
