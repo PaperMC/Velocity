@@ -121,7 +121,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     }
 
     private static void writeString(ByteBuf buf, String string) {
-        buf.writeBytes((string + '\0').getBytes(StandardCharsets.UTF_8));
+        buf.writeBytes(string.getBytes(StandardCharsets.UTF_8));
+        buf.writeByte(0x00);
     }
 
     private static class ResponseWriter {
