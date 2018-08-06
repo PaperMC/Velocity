@@ -58,12 +58,12 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
         switch(type) {
             case QUERY_TYPE_HANDSHAKE: {
+                int challengeToken = random.nextInt();
+                sessions.put(msg.sender().getAddress(), challengeToken);
+
                 queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
                 queryResponse.writeInt(sessionId);
-                int challengeToken = random.nextInt();
-
                 writeString(queryResponse, Integer.toString(challengeToken));
-                sessions.put(msg.sender().getAddress(), challengeToken);
                 break;
             }
 
