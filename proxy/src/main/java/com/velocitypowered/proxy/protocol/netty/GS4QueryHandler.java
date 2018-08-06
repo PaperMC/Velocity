@@ -8,6 +8,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +20,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+    private static final Logger logger = LogManager.getLogger(GS4QueryHandler.class);
+
     private final static short QUERY_MAGIC_FIRST = 0xFE;
     private final static short QUERY_MAGIC_SECOND = 0xFD;
     private final static byte QUERY_TYPE_HANDSHAKE = 0x09;
@@ -44,6 +48,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         ByteBuf queryMessage = msg.content();
+        InetAddress senderAddress = msg.sender().getAddress();
 
         // Verify query packet magic
         if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST && queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
@@ -62,7 +67,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             case QUERY_TYPE_HANDSHAKE: {
                 // Generate new challenge token and put it into the sessions cache
                 int challengeToken = random.nextInt();
-                sessions.put(msg.sender().getAddress(), challengeToken);
+                sessions.put(senderAddress, challengeToken);
 
                 // Respond with challenge token
                 queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
@@ -74,9 +79,9 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             case QUERY_TYPE_STAT: {
                 // Check if query was done with session previously generated using a handshake packet
                 int challengeToken = queryMessage.readInt();
-                Integer session = sessions.getIfPresent(msg.sender().getAddress());
+                Integer session = sessions.getIfPresent(senderAddress);
                 if (session == null || session != challengeToken) {
-                    throw new IllegalStateException("Couldn't find a query session");
+                    throw new IllegalStateException("Invalid challenge token");
                 }
 
                 // Check which query response client expects
@@ -122,7 +127,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause); // TODO
+        logger.warn("Error while trying to handle a query packet from " + ctx.channel().remoteAddress(), cause);
     }
 
     private static void writeString(ByteBuf buf, String string) {
