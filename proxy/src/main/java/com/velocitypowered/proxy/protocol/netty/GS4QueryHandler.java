@@ -71,13 +71,11 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 int challengeToken = queryMessage.readInt();
                 Integer session = sessions.getIfPresent(msg.sender().getAddress());
                 if (session == null || session != challengeToken) {
-                    queryResponse.release();
                     throw new IllegalStateException("Couldn't find a query session");
                 }
 
                 // Check which query response client expects
                 if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
-                    queryResponse.release();
                     throw new IllegalStateException("Invalid query packet");
                 }
 
@@ -109,7 +107,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             }
 
             default: {
-                queryResponse.release();
                 throw new IllegalStateException("Invalid query type: " + type);
             }
         }
