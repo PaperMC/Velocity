@@ -128,7 +128,7 @@ public class VelocityServer implements ProxyServer {
     }
 
     public void unregisterConnection(ConnectedPlayer connection) {
-        connectionsByName.remove(connection.getUsername(), connection);
+        connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
         connectionsByUuid.remove(connection.getUniqueId(), connection);
     }
 
