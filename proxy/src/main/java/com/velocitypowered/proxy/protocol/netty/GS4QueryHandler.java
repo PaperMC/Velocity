@@ -102,9 +102,9 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 responseWriter.write("plugins", ""); // TODO
 
                 responseWriter.write("map", "Velocity"); // TODO
-                responseWriter.write("numplayers", Integer.toString(players.size()));
-                responseWriter.write("maxplayers", Integer.toString(server.getConfiguration().getShowMaxPlayers()));
-                responseWriter.write("hostport", Integer.toString(server.getConfiguration().getBind().getPort()));
+                responseWriter.write("numplayers", players.size());
+                responseWriter.write("maxplayers", server.getConfiguration().getShowMaxPlayers());
+                responseWriter.write("hostport", server.getConfiguration().getBind().getPort());
                 responseWriter.write("hostip", server.getConfiguration().getBind().getHostString());
 
                 responseWriter.writePlayers(players);
@@ -147,7 +147,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         // for full stat response. Otherwise this follows
         // GS4QueryHandler#QUERY_BASIC_RESPONSE_CONTENTS to decide what
         // to write into packet body
-        void write(String key, String value) {
+        void write(String key, Object value) {
             if (isBasic) {
                 // Basic contains only specific set of data
                 if (!QUERY_BASIC_RESPONSE_CONTENTS.contains(key)) {
@@ -156,13 +156,13 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
                 // Special case hostport
                 if (key.equals("hostport")) {
-                    buf.writeShortLE(Integer.parseInt(value));
+                    buf.writeShortLE((Integer) value);
                 } else {
-                    writeString(buf, value);
+                    writeString(buf, value instanceof Integer ? Integer.toString((Integer) value) : (String) value);
                 }
             } else {
                 writeString(buf, key);
-                writeString(buf, value);
+                writeString(buf, value instanceof Integer ? Integer.toString((Integer) value) : (String) value);
             }
         }
 
