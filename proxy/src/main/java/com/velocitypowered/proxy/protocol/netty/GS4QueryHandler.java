@@ -75,7 +75,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 }
 
                 // Check which query response client expects
-                if(queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
+                if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
                     queryResponse.release();
                     throw new IllegalStateException("Invalid query packet");
                 }
@@ -134,20 +134,20 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             this.buf = buf;
             this.isBasic = isBasic;
 
-            if(!isBasic) {
+            if (!isBasic) {
                 buf.writeBytes(QUERY_RESPONSE_FULL_PADDING);
             }
         }
 
         void write(String key, String value) {
-            if(isBasic) {
+            if (isBasic) {
                 // Basic contains only specific set of data
-                if(!QUERY_BASIC_RESPONSE_CONTENTS.contains(key)) {
+                if (!QUERY_BASIC_RESPONSE_CONTENTS.contains(key)) {
                     return;
                 }
 
                 // Special case hostport
-                if(key.equals("hostport")) {
+                if (key.equals("hostport")) {
                     buf.writeShortLE(Integer.parseInt(value));
                 } else {
                     writeString(buf, value);
@@ -159,9 +159,10 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         }
 
         void writePlayers(Collection<Player> players) {
-            if(isBasic) {
+            if (isBasic) {
                 return;
             }
+
             // Ends the full stat key-value body with \0
             buf.writeByte(0x00);
 
