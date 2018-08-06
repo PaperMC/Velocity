@@ -84,9 +84,13 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 queryResponse.writeByte(QUERY_TYPE_STAT);
                 queryResponse.writeInt(sessionId);
 
+                // Fetch information
+                VelocityServer server = VelocityServer.getServer();
+                Collection<Player> players = server.getAllPlayers();
+
                 // Start writing the response
                 ResponseWriter responseWriter = new ResponseWriter(queryResponse, queryMessage.readableBytes() == 0);
-                responseWriter.write("hostname", VelocityServer.getServer().getConfiguration().getMotd());
+                responseWriter.write("hostname", server.getConfiguration().getMotd());
                 responseWriter.write("gametype", "SMP");
 
                 responseWriter.write("game_id", "MINECRAFT");
@@ -94,12 +98,12 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 responseWriter.write("plugins", ""); // TODO
 
                 responseWriter.write("map", "Velocity"); // TODO
-                responseWriter.write("numplayers", Integer.toString(VelocityServer.getServer().getAllPlayers().size()));
-                responseWriter.write("maxplayers", Integer.toString(VelocityServer.getServer().getConfiguration().getShowMaxPlayers()));
-                responseWriter.write("hostport", Integer.toString(VelocityServer.getServer().getConfiguration().getBind().getPort()));
-                responseWriter.write("hostip", VelocityServer.getServer().getConfiguration().getBind().getHostString());
+                responseWriter.write("numplayers", Integer.toString(players.size()));
+                responseWriter.write("maxplayers", Integer.toString(server.getConfiguration().getShowMaxPlayers()));
+                responseWriter.write("hostport", Integer.toString(server.getConfiguration().getBind().getPort()));
+                responseWriter.write("hostip", server.getConfiguration().getBind().getHostString());
 
-                responseWriter.writePlayers(VelocityServer.getServer().getAllPlayers());
+                responseWriter.writePlayers(players);
                 break;
             }
 
@@ -115,7 +119,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+        super.exceptionCaught(ctx, cause); // TODO
     }
 
     private static void writeString(ByteBuf buf, String string) {
@@ -136,20 +140,21 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         }
 
         void write(String key, String value) {
-            if(!isBasic) {
-                writeString(buf, key);
-                writeString(buf, value);
-            } else {
+            if(isBasic) {
+                // Basic contains only specific set of data
                 if(!QUERY_BASIC_RESPONSE_CONTENTS.contains(key)) {
                     return;
                 }
 
-                // Special case host port
+                // Special case hostport
                 if(key.equals("hostport")) {
                     buf.writeShortLE(Integer.parseInt(value));
                 } else {
                     writeString(buf, value);
                 }
+            } else {
+                writeString(buf, key);
+                writeString(buf, value);
             }
         }
 
@@ -157,9 +162,10 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             if(isBasic) {
                 return;
             }
+            // Ends the full stat key-value body with \0
             buf.writeByte(0x00);
-            buf.writeBytes(QUERY_RESPONSE_FULL_PADDING2);
 
+            buf.writeBytes(QUERY_RESPONSE_FULL_PADDING2);
             players.forEach(player -> writeString(buf, player.getUsername()));
             buf.writeByte(0x00);
         }
