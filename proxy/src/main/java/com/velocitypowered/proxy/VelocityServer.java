@@ -57,8 +57,7 @@ public class VelocityServer implements ProxyServer {
     private final CommandInvoker consoleCommandInvoker = new CommandInvoker() {
         @Override
         public void sendMessage(@Nonnull Component component) {
-            // TODO: TerminalConsoleAppender
-            logger.info(ComponentSerializers.PLAIN.serialize(component));
+            logger.info(ComponentSerializers.LEGACY.serialize(component));
         }
 
         @Override
