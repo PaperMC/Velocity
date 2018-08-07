@@ -1,6 +1,7 @@
 # Velocity
 
 [![Build Status](https://img.shields.io/jenkins/s/https/ci.velocitypowered.com/job/velocity/job/master.svg)](https://ci.velocitypowered.com/job/velocity/job/master/)
+[![Join our Discord](https://img.shields.io/discord/472484458856185878.svg?logo=discord&label=)](https://discord.gg/8cB9Bgf)
 
 Velocity is a next-generation Minecraft: Java Edition proxy suite. It is
 designed specifically with mass-scale Minecraft in mind.
