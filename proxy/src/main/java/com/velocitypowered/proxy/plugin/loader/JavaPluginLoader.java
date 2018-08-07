@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 public class JavaPluginLoader implements PluginLoader {
     private final ProxyServer server;
@@ -46,7 +47,16 @@ public class JavaPluginLoader implements PluginLoader {
             throw new InvalidPluginException("Main class does not have @Plugin annotation");
         }
 
-        return createDescription((Plugin) annotation, source, mainClass);
+        VelocityPluginDescription description = createDescription((Plugin) annotation, source, mainClass);
+
+        String pluginId = description.getId();
+        Pattern pattern = PluginDescription.ID_PATTERN;
+
+        if (!pattern.matcher(pluginId).matches()) {
+            throw new InvalidPluginException("Plugin ID '" + pluginId + "' must match pattern " + pattern.pattern());
+        }
+
+        return description;
     }
 
     @Nonnull
