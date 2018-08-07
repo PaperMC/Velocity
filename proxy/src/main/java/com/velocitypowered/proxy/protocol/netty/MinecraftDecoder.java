@@ -26,13 +26,13 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
             return;
         }
 
-        ByteBuf slice = msg.retainedSlice();
+        ByteBuf slice = msg.slice();
 
         int packetId = ProtocolUtils.readVarInt(msg);
         MinecraftPacket packet = this.protocolVersion.createPacket(packetId);
         if (packet == null) {
             msg.skipBytes(msg.readableBytes());
-            out.add(new PacketWrapper(null, slice));
+            out.add(slice.retain());
         } else {
             try {
                 packet.decode(msg, direction, protocolVersion.id);
@@ -40,7 +40,7 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
                         + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
             }
-            out.add(new PacketWrapper(packet, slice));
+            out.add(packet);
         }
     }
 

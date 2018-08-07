@@ -5,12 +5,12 @@ import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.protocol.PacketWrapper;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -79,18 +79,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof PacketWrapper) {
-            PacketWrapper pw = (PacketWrapper) msg;
+        if (msg instanceof MinecraftPacket) {
+            sessionHandler.handle((MinecraftPacket) msg);
+        } else if (msg instanceof ByteBuf) {
             try {
-                if (sessionHandler != null) {
-                    if (pw.getPacket() == null) {
-                        sessionHandler.handleUnknown(pw.getBuffer());
-                    } else {
-                        sessionHandler.handle(pw.getPacket());
-                    }
-                }
+                sessionHandler.handleUnknown((ByteBuf) msg);
             } finally {
-                ReferenceCountUtil.release(pw.getBuffer());
+                ReferenceCountUtil.release(msg);
             }
         }
     }
