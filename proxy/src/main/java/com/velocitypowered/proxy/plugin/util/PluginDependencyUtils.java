@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.plugin.util;
 
+import com.google.common.collect.Maps;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
@@ -12,16 +13,17 @@ public class PluginDependencyUtils {
     public static List<PluginCandidate> sortCandidates(List<PluginCandidate> candidates) {
         // Create our graph, we're going to be using this for Kahn's algorithm.
         MutableGraph<PluginCandidate> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
+        Map<String, PluginCandidate> candidateMap = Maps.uniqueIndex(candidates, PluginCandidate::getId);
 
         // Add edges
         for (PluginCandidate description : candidates) {
             graph.addNode(description);
 
             for (PluginDependency dependency : description.getDependencies()) {
-                Optional<PluginCandidate> in = candidates.stream().filter(d -> d.getId().equals(dependency.getId())).findFirst();
+                PluginCandidate in = candidateMap.get(dependency.getId());
 
-                if (in.isPresent()) {
-                    graph.putEdge(description, in.get());
+                if (in != null) {
+                    graph.putEdge(description, in);
                 }
             }
         }
