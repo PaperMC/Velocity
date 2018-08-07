@@ -10,6 +10,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import net.kyori.text.serializer.ComponentSerializers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -100,7 +101,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
                     // Start writing the response
                     ResponseWriter responseWriter = new ResponseWriter(queryResponse, queryMessage.readableBytes() == 0);
-                    responseWriter.write("hostname", server.getConfiguration().getMotd());
+                    responseWriter.write("hostname", ComponentSerializers.PLAIN.serialize(server.getConfiguration().getMotdComponent()));
                     responseWriter.write("gametype", "SMP");
 
                     responseWriter.write("game_id", "MINECRAFT");
