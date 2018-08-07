@@ -113,7 +113,7 @@ public class VelocityServer implements ProxyServer {
                 Files.createDirectory(pluginPath);
             } else {
                 if (!Files.isDirectory(pluginPath)) {
-                    logger.info("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
+                    logger.warn("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
                     return;
                 }
 
