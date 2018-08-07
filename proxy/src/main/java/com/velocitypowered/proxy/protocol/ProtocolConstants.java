@@ -38,8 +38,6 @@ public enum ProtocolConstants { ;
             MINECRAFT_1_13
     );
 
-    public static final String SUPPORTED_VERSIONS_STRING = "1.9-1.13";
-
     public static boolean isSupported(int version) {
         return SUPPORTED_VERSIONS.contains(version);
     }
