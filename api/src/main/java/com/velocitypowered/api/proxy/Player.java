@@ -1,18 +1,18 @@
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.command.CommandInvoker;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
 
 import javax.annotation.Nonnull;
-import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface Player {
+public interface Player extends CommandInvoker, InboundConnection {
     /**
      * Returns the player's current username.
      * @return the username
@@ -30,18 +30,6 @@ public interface Player {
      * @return an {@link Optional} the server that the player is connected to, which may be empty
      */
     Optional<ServerInfo> getCurrentServer();
-
-    /**
-     * Returns the player's IP address.
-     * @return the player's IP
-     */
-    InetSocketAddress getRemoteAddress();
-
-    /**
-     * Determine whether or not the player remains online.
-     * @return whether or not the player active
-     */
-    boolean isActive();
 
     /**
      * Sends a chat message to the player's client.

@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.command.CommandInvoker;
 import com.velocitypowered.api.server.ServerInfo;
 
 import javax.annotation.Nonnull;
@@ -62,4 +63,12 @@ public interface ProxyServer {
      * @param server the server to unregister
      */
     void unregisterServer(@Nonnull ServerInfo server);
+
+    /**
+     * Returns an instance of {@link CommandInvoker} that can be used to determine if the command is being invoked by
+     * the console or a console-like executor. Plugins that execute commands are strongly urged to implement their own
+     * {@link CommandInvoker} instead of using the console invoker.
+     * @return the console command invoker
+     */
+    CommandInvoker getConsoleCommandInvoker();
 }

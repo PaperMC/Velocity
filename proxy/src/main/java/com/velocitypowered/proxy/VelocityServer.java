@@ -4,19 +4,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.api.command.CommandInvoker;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
+import com.velocitypowered.proxy.command.ServerCommand;
+import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.proxy.command.CommandManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.ServerMap;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
+import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,11 +48,26 @@ public class VelocityServer implements ProxyServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
+    private final CommandManager commandManager = new CommandManager();
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
+    private final CommandInvoker consoleCommandInvoker = new CommandInvoker() {
+        @Override
+        public void sendMessage(@Nonnull Component component) {
+            // TODO: TerminalConsoleAppender
+            logger.info(ComponentSerializers.PLAIN.serialize(component));
+        }
+
+        @Override
+        public boolean hasPermission(@Nonnull String permission) {
+            return true;
+        }
+    };
 
     private VelocityServer() {
+        commandManager.registerCommand("velocity", new VelocityCommand());
+        commandManager.registerCommand("server", new ServerCommand());
     }
 
     public static VelocityServer getServer() {
@@ -60,6 +80,10 @@ public class VelocityServer implements ProxyServer {
 
     public VelocityConfiguration getConfiguration() {
         return configuration;
+    }
+
+    public CommandManager getCommandManager() {
+        return commandManager;
     }
 
     public void start() {
@@ -176,5 +200,10 @@ public class VelocityServer implements ProxyServer {
     @Override
     public void unregisterServer(@Nonnull ServerInfo server) {
         servers.unregister(server);
+    }
+
+    @Override
+    public CommandInvoker getConsoleCommandInvoker() {
+        return consoleCommandInvoker;
     }
 }

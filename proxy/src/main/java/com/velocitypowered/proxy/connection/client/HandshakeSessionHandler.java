@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -13,6 +14,8 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
+
+import java.net.InetSocketAddress;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -68,6 +71,29 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(ping)));
         } else if (packet instanceof LegacyHandshake) {
             connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
+        }
+    }
+
+    private static class InitialInboundConnection implements InboundConnection {
+        private final MinecraftConnection connection;
+
+        private InitialInboundConnection(MinecraftConnection connection) {
+            this.connection = connection;
+        }
+
+        @Override
+        public InetSocketAddress getRemoteAddress() {
+            return (InetSocketAddress) connection.getChannel().remoteAddress();
+        }
+
+        @Override
+        public boolean isActive() {
+            return connection.getChannel().isActive();
+        }
+
+        @Override
+        public int getProtocolVersion() {
+            return connection.getProtocolVersion();
         }
     }
 }

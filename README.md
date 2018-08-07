@@ -23,6 +23,15 @@ wrapper script (`./gradlew`) as our CI builds using it.
 
 It is sufficient to run `./gradlew build` to run the full build cycle.
 
+## Running
+
+Once you've built Velocity, you can copy and run the `-all` JAR from
+`proxy/build/libs`. Velocity will generate a default configuration file
+and you can configure it from there.
+
+Alternatively, you can get the proxy JAR from the [downloads](https://www.velocitypowered.com/downloads)
+page.
+
 ## Status
 
 Velocity is far from finished, but most of the essential pieces are in place:

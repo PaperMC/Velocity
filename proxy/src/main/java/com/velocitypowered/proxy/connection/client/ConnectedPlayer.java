@@ -84,6 +84,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return connection.getProtocolVersion();
+    }
+
+    @Override
     public void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position) {
         Preconditions.checkNotNull(component, "component");
         Preconditions.checkNotNull(position, "position");
@@ -215,6 +220,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public String toString() {
         return "[connected player] " + getProfile().getName() + " (" + getRemoteAddress() + ")";
+    }
+
+    @Override
+    public boolean hasPermission(@Nonnull String permission) {
+        return false; // TODO: Implement permissions.
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

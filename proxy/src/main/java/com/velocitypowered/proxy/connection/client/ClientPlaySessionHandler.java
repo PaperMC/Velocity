@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.backend.ServerConnection;
+import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.data.scoreboard.Objective;
 import com.velocitypowered.proxy.data.scoreboard.Score;
@@ -9,16 +9,13 @@ import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
 import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
-import io.netty.util.ReferenceCountUtil;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -81,11 +78,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (packet instanceof Chat) {
             Chat chat = (Chat) packet;
-            if (chat.getMessage().equals("/connect")) {
-                ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25566));
-                player.createConnectionRequest(info).fireAndForget();
-                return;
+            String msg = ((Chat) packet).getMessage();
+            if (msg.startsWith("/")) {
+                try {
+                    if (!VelocityServer.getServer().getCommandManager().execute(player, msg.substring(1))) {
+                        player.getConnectedServer().getMinecraftConnection().write(msg);
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
+                    player.sendMessage(TextComponent.of("An error occurred while running this command.", TextColor.RED));
+                    return;
+                }
+            } else {
+                player.getConnectedServer().getMinecraftConnection().write(chat);
             }
+            return;
         }
 
         if (packet instanceof PluginMessage) {
