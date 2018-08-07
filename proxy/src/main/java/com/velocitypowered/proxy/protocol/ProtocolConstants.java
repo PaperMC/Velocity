@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
-import java.util.Arrays;
+import com.google.common.primitives.ImmutableIntArray;
 
 public enum ProtocolConstants { ;
     public static final int LEGACY = -1;
@@ -23,7 +23,7 @@ public enum ProtocolConstants { ;
 
     public static final String SUPPORTED_GENERIC_VERSION_STRING = "1.8-1.13";
 
-    public static final int[] SUPPORTED_VERSIONS = new int[] {
+    public static final ImmutableIntArray SUPPORTED_VERSIONS = ImmutableIntArray.of(
             MINECRAFT_1_8,
             MINECRAFT_1_9,
             MINECRAFT_1_9_1,
@@ -36,10 +36,10 @@ public enum ProtocolConstants { ;
             MINECRAFT_1_12_1,
             MINECRAFT_1_12_2,
             MINECRAFT_1_13
-    };
+    );
 
     public static boolean isSupported(int version) {
-        return Arrays.binarySearch(SUPPORTED_VERSIONS, version) >= 0;
+        return SUPPORTED_VERSIONS.contains(version);
     }
 
     public enum Direction {

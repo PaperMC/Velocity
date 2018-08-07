@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
+import com.google.common.primitives.ImmutableIntArray;
 import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
@@ -144,13 +145,13 @@ public enum StateRegistry {
     public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND, this);
 
     public static class PacketRegistry {
-        private static final IntObjectMap<int[]> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
+        private static final IntObjectMap<ImmutableIntArray> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, new int[] { MINECRAFT_1_9_1, MINECRAFT_1_9_2, MINECRAFT_1_9_4 });
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, new int[] { MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1 });
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, new int[] { MINECRAFT_1_12_1 });
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, new int[] { MINECRAFT_1_12_2 });
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, ImmutableIntArray.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2, MINECRAFT_1_9_4));
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableIntArray.of(MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1));
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableIntArray.of(MINECRAFT_1_12_1));
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableIntArray.of(MINECRAFT_1_12_2));
         }
 
         private final ProtocolConstants.Direction direction;
@@ -160,10 +161,7 @@ public enum StateRegistry {
         public PacketRegistry(Direction direction, StateRegistry state) {
             this.direction = direction;
             this.state = state;
-            for (int version : ProtocolConstants.SUPPORTED_VERSIONS) {
-                versions.put(version, new ProtocolVersion(version));
-            }
-            versions.put(MINIMUM_GENERIC_VERSION, new ProtocolVersion(MINIMUM_GENERIC_VERSION));
+            ProtocolConstants.SUPPORTED_VERSIONS.forEach(version -> versions.put(version, new ProtocolVersion(version)));
         }
 
         public ProtocolVersion getVersion(final int version) {
@@ -191,14 +189,15 @@ public enum StateRegistry {
                 version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 version.packetClassToId.put(clazz, mapping.id);
 
-                int[] linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
+                ImmutableIntArray linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
                 if (linked != null) {
-                    links: for (int i : linked) {
+                    links: for (int i = 0; i < linked.length(); i++) {
+                        int linkedVersion = linked.get(i);
                         // Make sure that later mappings override this one.
                         for (PacketMapping m : mappings) {
-                            if (i == m.protocolVersion) continue links;
+                            if (linkedVersion == m.protocolVersion) continue links;
                         }
-                        register(clazz, packetSupplier, map(mapping.id, i));
+                        register(clazz, packetSupplier, map(mapping.id, linkedVersion));
                     }
                 }
             }
