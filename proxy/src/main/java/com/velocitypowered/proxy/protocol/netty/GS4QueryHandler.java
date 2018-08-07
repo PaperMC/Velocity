@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
@@ -40,7 +40,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             "hostip"
     );
 
-    private final static Random random = new Random();
     private final static Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .build();
@@ -66,7 +65,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         switch(type) {
             case QUERY_TYPE_HANDSHAKE: {
                 // Generate new challenge token and put it into the sessions cache
-                int challengeToken = random.nextInt();
+                int challengeToken = ThreadLocalRandom.current().nextInt();
                 sessions.put(senderAddress, challengeToken);
 
                 // Respond with challenge token
