@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.server.ServerInfo;
 
 import javax.annotation.Nonnull;
@@ -56,4 +57,11 @@ public interface ProxyServer {
      * @param server the server to unregister
      */
     void unregisterServer(@Nonnull ServerInfo server);
+
+    /**
+     * Gets the {@link PluginManager} instance.
+     *
+     * @return the plugin manager instance
+     */
+    PluginManager getPluginManager();
 }

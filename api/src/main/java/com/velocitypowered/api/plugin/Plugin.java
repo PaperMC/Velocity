@@ -17,7 +17,7 @@ public @interface Plugin {
      * alphanumeric characters, dashes or underscores, must start with
      * an alphabetic character and cannot be longer than 64 characters.
      */
-    Pattern ID_PATTERN = Pattern.compile("[A-z][A-z0-9-_]{0,63}");
+    Pattern ID_PATTERN = PluginDescription.ID_PATTERN;
 
     /**
      * The ID of the plugin. This ID should be unique as to

@@ -4,15 +4,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
-import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.ServerMap;
@@ -44,6 +45,7 @@ public class VelocityServer implements ProxyServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
+    private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -96,7 +98,32 @@ public class VelocityServer implements ProxyServer {
 
         httpClient = new NettyHttpClient(this);
 
+        loadPlugins();
+
         this.cm.bind(configuration.getBind());
+    }
+
+    private void loadPlugins() {
+        logger.info("Loading plugins...");
+
+        try {
+            Path pluginPath = Paths.get("plugins");
+
+            if (Files.notExists(pluginPath)) {
+                Files.createDirectory(pluginPath);
+            } else {
+                if (!Files.isDirectory(pluginPath)) {
+                    logger.info("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
+                    return;
+                }
+
+                pluginManager.loadPlugins(pluginPath);
+            }
+        } catch (Exception e) {
+            logger.error("Couldn't load plugins", e);
+        }
+
+        logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }
 
     public ServerMap getServers() {
@@ -168,5 +195,10 @@ public class VelocityServer implements ProxyServer {
     @Override
     public void unregisterServer(@Nonnull ServerInfo server) {
         servers.unregister(server);
+    }
+
+    @Override
+    public PluginManager getPluginManager() {
+        return pluginManager;
     }
 }
