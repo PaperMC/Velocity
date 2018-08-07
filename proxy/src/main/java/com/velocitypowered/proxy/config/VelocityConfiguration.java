@@ -187,8 +187,6 @@ public class VelocityConfiguration {
         return "VelocityConfiguration{" +
                 "bind='" + bind + '\'' +
                 ", motd='" + motd + '\'' +
-                ", queryEnabled=" + queryEnabled +
-                ", queryPort='" + queryPort + '\'' +
                 ", showMaxPlayers=" + showMaxPlayers +
                 ", onlineMode=" + onlineMode +
                 ", ipForwardingMode=" + ipForwardingMode +
@@ -196,6 +194,8 @@ public class VelocityConfiguration {
                 ", attemptConnectionOrder=" + attemptConnectionOrder +
                 ", compressionThreshold=" + compressionThreshold +
                 ", compressionLevel=" + compressionLevel +
+                ", queryEnabled=" + queryEnabled +
+                ", queryPort=" + queryPort +
                 ", motdAsComponent=" + motdAsComponent +
                 '}';
     }
