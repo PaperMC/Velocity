@@ -2,11 +2,12 @@ package com.velocitypowered.proxy.plugin.loader;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 public class VelocityPluginContainer extends VelocityPluginDescription implements PluginContainer {
     private final Optional<?> instance;
@@ -23,7 +24,6 @@ public class VelocityPluginContainer extends VelocityPluginDescription implement
 
     @Override
     public Logger getLogger() {
-        // TODO Figure out how to use Log4j logger
-        return Logger.getLogger(getId());
+        return LogManager.getLogger(getId());
     }
 }

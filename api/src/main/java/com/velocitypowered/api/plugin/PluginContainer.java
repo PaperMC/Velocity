@@ -1,7 +1,8 @@
 package com.velocitypowered.api.plugin;
 
+import org.apache.logging.log4j.Logger;
+
 import java.util.Optional;
-import java.util.logging.Logger;
 
 /**
  * A wrapper around a class marked with an {@link Plugin} annotation to

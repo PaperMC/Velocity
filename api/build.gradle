@@ -8,6 +8,7 @@ dependencies {
     compile "com.google.guava:guava:${guavaVersion}"
     compile 'net.kyori:text:1.12-1.6.0-SNAPSHOT'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
