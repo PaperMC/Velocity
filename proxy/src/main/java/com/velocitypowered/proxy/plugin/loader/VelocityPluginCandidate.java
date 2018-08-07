@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.plugin.loader;
 
 import com.google.common.collect.Maps;
-import com.velocitypowered.api.plugin.PluginDescription;
+import com.velocitypowered.api.plugin.PluginCandidate;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 
 import java.nio.file.Path;
@@ -9,14 +9,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-public class VelocityPluginDescription implements PluginDescription {
+public class VelocityPluginCandidate implements PluginCandidate {
     private final String id;
     private final String version;
     private final String author;
     private final Map<String, PluginDependency> dependencies;
     private final Path source;
 
-    public VelocityPluginDescription(String id, String version, String author, Collection<PluginDependency> dependencies, Path source) {
+    public VelocityPluginCandidate(String id, String version, String author, Collection<PluginDependency> dependencies, Path source) {
         this.id = id;
         this.version = version;
         this.author = author;
@@ -56,7 +56,7 @@ public class VelocityPluginDescription implements PluginDescription {
 
     @Override
     public String toString() {
-        return "VelocityPluginDescription{" +
+        return "VelocityPluginCandidate{" +
                 "id='" + id + '\'' +
                 ", version='" + version + '\'' +
                 ", author='" + author + '\'' +

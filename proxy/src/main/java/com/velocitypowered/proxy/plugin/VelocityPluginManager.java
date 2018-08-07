@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.plugin;
 
+import com.velocitypowered.api.plugin.PluginCandidate;
 import com.velocitypowered.api.plugin.PluginContainer;
-import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.proxy.VelocityServer;
@@ -39,7 +39,7 @@ public class VelocityPluginManager implements PluginManager {
         checkNotNull(directory, "directory");
         checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
 
-        List<PluginDescription> found = new ArrayList<>();
+        List<PluginCandidate> found = new ArrayList<>();
         JavaPluginLoader loader = new JavaPluginLoader(server);
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, p -> Files.isRegularFile(p) && p.toString().endsWith(".jar"))) {
@@ -57,11 +57,11 @@ public class VelocityPluginManager implements PluginManager {
             return;
         }
 
-        List<PluginDescription> sortedPlugins = sortDescriptions(found);
+        List<PluginCandidate> sortedPlugins = sortDescriptions(found);
 
         // Now load the plugins
         pluginLoad:
-        for (PluginDescription plugin : sortedPlugins) {
+        for (PluginCandidate plugin : sortedPlugins) {
             // Verify dependencies
             for (PluginDependency dependency : plugin.getDependencies()) {
                 if (!dependency.isOptional() && !isLoaded(dependency.getId())) {
@@ -84,16 +84,16 @@ public class VelocityPluginManager implements PluginManager {
         }
     }
 
-    List<PluginDescription> sortDescriptions(List<PluginDescription> descriptions) {
+    List<PluginCandidate> sortDescriptions(List<PluginCandidate> descriptions) {
         // Create our graph, we're going to be using this for Kahn's algorithm.
-        DirectedAcyclicGraph<PluginDescription> graph = new DirectedAcyclicGraph<>();
+        DirectedAcyclicGraph<PluginCandidate> graph = new DirectedAcyclicGraph<>();
 
         // Add edges
-        for (PluginDescription description : descriptions) {
+        for (PluginCandidate description : descriptions) {
             graph.add(description);
 
             for (PluginDependency dependency : description.getDependencies()) {
-                Optional<PluginDescription> in = descriptions.stream().filter(d -> d.getId().equals(dependency.getId())).findFirst();
+                Optional<PluginCandidate> in = descriptions.stream().filter(d -> d.getId().equals(dependency.getId())).findFirst();
 
                 if (in.isPresent()) {
                     graph.addEdges(description, in.get());
@@ -102,16 +102,16 @@ public class VelocityPluginManager implements PluginManager {
         }
 
         // Find nodes that have no edges
-        Queue<DirectedAcyclicGraph.Node<PluginDescription>> noEdges = graph.getNodesWithNoEdges();
+        Queue<DirectedAcyclicGraph.Node<PluginCandidate>> noEdges = graph.getNodesWithNoEdges();
 
         // Actually run Kahn's algorithm
-        List<PluginDescription> sorted = new ArrayList<>();
+        List<PluginCandidate> sorted = new ArrayList<>();
         while (!noEdges.isEmpty()) {
-            DirectedAcyclicGraph.Node<PluginDescription> descriptionNode = noEdges.poll();
-            PluginDescription description = descriptionNode.getData();
+            DirectedAcyclicGraph.Node<PluginCandidate> descriptionNode = noEdges.poll();
+            PluginCandidate description = descriptionNode.getData();
             sorted.add(description);
 
-            for (DirectedAcyclicGraph.Node<PluginDescription> node : graph.withEdge(description)) {
+            for (DirectedAcyclicGraph.Node<PluginCandidate> node : graph.withEdge(description)) {
                 node.removeEdge(descriptionNode);
 
                 if (node.getAdjacent().isEmpty()) {

@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 /**
  * Represents metadata for a specific version of a plugin.
  */
-public interface PluginDescription {
+public interface PluginCandidate {
     /**
      * The pattern plugin IDs must match. Plugin IDs may only contain
      * alphanumeric characters, dashes or underscores, must start with

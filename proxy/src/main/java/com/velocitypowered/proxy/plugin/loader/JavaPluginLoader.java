@@ -4,7 +4,7 @@ import com.velocitypowered.api.plugin.*;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
-import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
+import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginCandidate;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
@@ -29,7 +29,7 @@ public class JavaPluginLoader implements PluginLoader {
 
     @Nonnull
     @Override
-    public PluginDescription loadPlugin(Path source) throws Exception {
+    public PluginCandidate loadPlugin(Path source) throws Exception {
         String mainClassName = getMainClassName(source);
 
         if (mainClassName == null) {
@@ -47,10 +47,10 @@ public class JavaPluginLoader implements PluginLoader {
             throw new InvalidPluginException("Main class does not have @Plugin annotation");
         }
 
-        VelocityPluginDescription description = createDescription((Plugin) annotation, source, mainClass);
+        VelocityPluginCandidate description = createDescription((Plugin) annotation, source, mainClass);
 
         String pluginId = description.getId();
-        Pattern pattern = PluginDescription.ID_PATTERN;
+        Pattern pattern = PluginCandidate.ID_PATTERN;
 
         if (!pattern.matcher(pluginId).matches()) {
             throw new InvalidPluginException("Plugin ID '" + pluginId + "' must match pattern " + pattern.pattern());
@@ -61,12 +61,12 @@ public class JavaPluginLoader implements PluginLoader {
 
     @Nonnull
     @Override
-    public PluginContainer createPlugin(PluginDescription description) throws Exception {
-        if (!(description instanceof JavaVelocityPluginDescription)) {
+    public PluginContainer createPlugin(PluginCandidate description) throws Exception {
+        if (!(description instanceof JavaVelocityPluginCandidate)) {
             throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
         }
 
-        JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
+        JavaVelocityPluginCandidate javaDescription = (JavaVelocityPluginCandidate) description;
         Optional<Path> source = javaDescription.getSource();
 
         if (!source.isPresent()) {
@@ -106,14 +106,14 @@ public class JavaPluginLoader implements PluginLoader {
         }
     }
 
-    private VelocityPluginDescription createDescription(Plugin annotation, Path source, Class mainClass) {
+    private VelocityPluginCandidate createDescription(Plugin annotation, Path source, Class mainClass) {
         Set<PluginDependency> dependencies = new HashSet<>();
 
         for (Dependency dependency : annotation.dependencies()) {
             dependencies.add(toDependencyMeta(dependency));
         }
 
-        return new JavaVelocityPluginDescription(
+        return new JavaVelocityPluginCandidate(
             annotation.id(),
             annotation.version(),
             annotation.author(),

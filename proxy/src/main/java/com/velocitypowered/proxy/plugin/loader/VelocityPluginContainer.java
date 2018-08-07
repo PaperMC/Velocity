@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
-public class VelocityPluginContainer extends VelocityPluginDescription implements PluginContainer {
+public class VelocityPluginContainer extends VelocityPluginCandidate implements PluginContainer {
     private final Optional<?> instance;
 
     public VelocityPluginContainer(String id, String version, String author, Collection<PluginDependency> dependencies, Path source, Object instance) {
