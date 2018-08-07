@@ -35,9 +35,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
 
         // Status request
+        int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection.getProtocolVersion() :
+                ProtocolConstants.MAXIMUM_GENERIC_VERSION;
         ServerPing ping = new ServerPing(
-                new ServerPing.Version(connection.getProtocolVersion(), "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                new ServerPing.Players(0, configuration.getShowMaxPlayers()),
+                new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
+                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers()),
                 configuration.getMotdComponent(),
                 null
         );

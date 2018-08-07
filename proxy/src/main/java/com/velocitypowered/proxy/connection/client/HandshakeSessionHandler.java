@@ -1,14 +1,18 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.data.ServerPing;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
+import com.velocitypowered.proxy.protocol.packet.*;
+import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
+import net.kyori.text.format.TextColor;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -19,6 +23,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        if (packet instanceof LegacyPing || packet instanceof LegacyHandshake) {
+            connection.setProtocolVersion(ProtocolConstants.LEGACY);
+            handleLegacy(packet);
+            return;
+        }
+
         if (!(packet instanceof Handshake)) {
             throw new IllegalArgumentException("Did not expect packet " + packet.getClass().getName());
         }
@@ -43,6 +53,21 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
+    }
 
+    private void handleLegacy(MinecraftPacket packet) {
+        if (packet instanceof LegacyPing) {
+            VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+            ServerPing ping = new ServerPing(
+                    new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
+                    new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers()),
+                    configuration.getMotdComponent(),
+                    null
+            );
+            // The disconnect packet is the same as the server response one.
+            connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(ping)));
+        } else if (packet instanceof LegacyHandshake) {
+            connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
+        }
     }
 }

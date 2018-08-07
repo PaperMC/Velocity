@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -53,7 +54,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) throws Exception {
+    public void handle(MinecraftPacket packet) {
         if (packet instanceof LoginPluginResponse) {
             LoginPluginResponse lpr = (LoginPluginResponse) packet;
             if (lpr.getId() == playerInfoId && lpr.isSuccess()) {
@@ -75,34 +76,41 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
             }
         } else if (packet instanceof EncryptionResponse) {
-            KeyPair serverKeyPair = VelocityServer.getServer().getServerKeyPair();
-            EncryptionResponse response = (EncryptionResponse) packet;
-            byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
-            if (!Arrays.equals(verify, decryptedVerifyToken)) {
-                throw new IllegalStateException("Unable to successfully decrypt the verification token.");
+            try {
+                KeyPair serverKeyPair = VelocityServer.getServer().getServerKeyPair();
+                EncryptionResponse response = (EncryptionResponse) packet;
+                byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
+                if (!Arrays.equals(verify, decryptedVerifyToken)) {
+                    throw new IllegalStateException("Unable to successfully decrypt the verification token.");
+                }
+
+                byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, response.getSharedSecret());
+                String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
+
+                String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
+                VelocityServer.getServer().getHttpClient()
+                        .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
+                        .thenAcceptAsync(profileResponse -> {
+                            try {
+                                inbound.enableEncryption(decryptedSharedSecret);
+                            } catch (GeneralSecurityException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
+                            handleSuccessfulLogin(profile);
+                        }, inbound.getChannel().eventLoop())
+                        .exceptionally(exception -> {
+                            logger.error("Unable to enable encryption", exception);
+                            inbound.close();
+                            return null;
+                        });
+            } catch (GeneralSecurityException e) {
+                logger.error("Unable to enable encryption", e);
+                inbound.close();
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e);
             }
-
-            byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, response.getSharedSecret());
-            String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
-
-            String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
-            VelocityServer.getServer().getHttpClient()
-                    .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
-                    .thenAcceptAsync(profileResponse -> {
-                        try {
-                            inbound.enableEncryption(decryptedSharedSecret);
-                        } catch (GeneralSecurityException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
-                        handleSuccessfulLogin(profile);
-                    }, inbound.getChannel().eventLoop())
-                    .exceptionally(exception -> {
-                        logger.error("Unable to enable encryption", exception);
-                        inbound.close();
-                        return null;
-                    });
         }
     }
 

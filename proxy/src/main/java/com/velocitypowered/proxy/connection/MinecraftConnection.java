@@ -6,6 +6,7 @@ import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.PacketWrapper;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipher;
@@ -167,8 +168,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
-        this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
-        this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
+        if (protocolVersion != ProtocolConstants.LEGACY) {
+            this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
+            this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
+        } else {
+            // Legacy handshake handling
+            this.channel.pipeline().remove(MINECRAFT_ENCODER);
+            this.channel.pipeline().remove(MINECRAFT_DECODER);
+        }
     }
 
     public MinecraftSessionHandler getSessionHandler() {

@@ -33,6 +33,12 @@ public interface ProxyServer {
     Collection<Player> getAllPlayers();
 
     /**
+     * Returns the number of players currently connected to this proxy.
+     * @return the players on this proxy
+     */
+    int getPlayerCount();
+
+    /**
      * Retrieves a registered {@link ServerInfo} instance by its name.
      * @param name the name of the server
      * @return the server

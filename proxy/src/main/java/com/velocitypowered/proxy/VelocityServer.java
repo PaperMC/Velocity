@@ -150,6 +150,11 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
+    public int getPlayerCount() {
+        return connectionsByUuid.size();
+    }
+
+    @Override
     public Optional<ServerInfo> getServerInfo(@Nonnull String name) {
         Preconditions.checkNotNull(name, "name");
         return servers.getServer(name);

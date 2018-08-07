@@ -3,6 +3,8 @@ package com.velocitypowered.proxy.protocol;
 import java.util.Arrays;
 
 public enum ProtocolConstants { ;
+    public static final int LEGACY = -1;
+
     public static final int MINECRAFT_1_8 = 47;
     public static final int MINECRAFT_1_9 = 107;
     public static final int MINECRAFT_1_9_1 = 108;
