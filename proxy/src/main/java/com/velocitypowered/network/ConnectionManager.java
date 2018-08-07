@@ -128,19 +128,19 @@ public final class ConnectionManager {
     }
 
     public void queryBind(final String hostname, final int port) {
-        new Bootstrap()
+        Bootstrap bootstrap = new Bootstrap()
                 .channel(datagramChannelClass)
                 .group(this.workerGroup)
                 .handler(new GS4QueryHandler())
-                .localAddress(hostname, port)
-                .bind()
+                .localAddress(hostname, port);
+        bootstrap.bind()
                 .addListener((ChannelFutureListener) future -> {
                     final Channel channel = future.channel();
                     if (future.isSuccess()) {
                         this.endpoints.add(channel);
                         logger.info("Listening for GS4 query on {}", channel.localAddress());
                     } else {
-                        logger.error("Can't bind to {}", channel.localAddress(), future.cause());
+                        logger.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
                     }
                 });
     }
