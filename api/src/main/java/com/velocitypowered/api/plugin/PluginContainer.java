@@ -1,6 +1,6 @@
 package com.velocitypowered.api.plugin;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.Optional;
 

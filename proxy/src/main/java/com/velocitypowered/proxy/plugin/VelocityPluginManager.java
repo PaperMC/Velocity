@@ -6,7 +6,7 @@ import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.JavaPluginLoader;
-import com.velocitypowered.proxy.plugin.util.DirectedAcyclicGraph;
+import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,7 +57,7 @@ public class VelocityPluginManager implements PluginManager {
             return;
         }
 
-        List<PluginCandidate> sortedPlugins = sortDescriptions(found);
+        List<PluginCandidate> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
         // Now load the plugins
         pluginLoad:
@@ -82,51 +82,6 @@ public class VelocityPluginManager implements PluginManager {
 
             registerPlugin(pluginObject);
         }
-    }
-
-    List<PluginCandidate> sortDescriptions(List<PluginCandidate> descriptions) {
-        // Create our graph, we're going to be using this for Kahn's algorithm.
-        DirectedAcyclicGraph<PluginCandidate> graph = new DirectedAcyclicGraph<>();
-
-        // Add edges
-        for (PluginCandidate description : descriptions) {
-            graph.add(description);
-
-            for (PluginDependency dependency : description.getDependencies()) {
-                Optional<PluginCandidate> in = descriptions.stream().filter(d -> d.getId().equals(dependency.getId())).findFirst();
-
-                if (in.isPresent()) {
-                    graph.addEdges(description, in.get());
-                }
-            }
-        }
-
-        // Find nodes that have no edges
-        Queue<DirectedAcyclicGraph.Node<PluginCandidate>> noEdges = graph.getNodesWithNoEdges();
-
-        // Actually run Kahn's algorithm
-        List<PluginCandidate> sorted = new ArrayList<>();
-        while (!noEdges.isEmpty()) {
-            DirectedAcyclicGraph.Node<PluginCandidate> descriptionNode = noEdges.poll();
-            PluginCandidate description = descriptionNode.getData();
-            sorted.add(description);
-
-            for (DirectedAcyclicGraph.Node<PluginCandidate> node : graph.withEdge(description)) {
-                node.removeEdge(descriptionNode);
-
-                if (node.getAdjacent().isEmpty()) {
-                    if (!noEdges.contains(node)) {
-                        noEdges.add(node);
-                    }
-                }
-            }
-        }
-
-        if (graph.hasEdges()) {
-            throw new IllegalStateException("Plugin circular dependency found: " + graph.toString());
-        }
-
-        return sorted;
     }
 
     @Override
