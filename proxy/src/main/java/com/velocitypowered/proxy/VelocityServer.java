@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
     private static final Logger logger = LogManager.getLogger(VelocityServer.class);
@@ -49,7 +50,7 @@ public class VelocityServer implements ProxyServer {
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
     private final CommandManager commandManager = new CommandManager();
-    private boolean shutdown = false;
+    private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -136,15 +137,12 @@ public class VelocityServer implements ProxyServer {
     }
 
     public boolean isShutdown() {
-        return shutdown;
+        return shutdown.get();
     }
 
     public void shutdown() {
-        Preconditions.checkState(!shutdown, "Server already shut down");
-        shutdown = true;
-
+        if (!shutdown.compareAndSet(false, true)) return;
         logger.info("Shutting down the proxy...");
-
         this.cm.shutdown();
     }
 
