@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -102,8 +103,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 responseWriter.write("gametype", "SMP");
 
                 responseWriter.write("game_id", "MINECRAFT");
-                responseWriter.write("version", ""); // TODO
-                responseWriter.write("plugins", ""); // TODO
+                responseWriter.write("version", ProtocolConstants.SUPPORTED_VERSIONS_STRING);
+                responseWriter.write("plugins", "");
 
                 responseWriter.write("map", "Velocity"); // TODO
                 responseWriter.write("numplayers", players.size());
