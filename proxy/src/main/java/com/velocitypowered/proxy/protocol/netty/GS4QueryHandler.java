@@ -50,84 +50,84 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         ByteBuf queryMessage = msg.content();
         InetAddress senderAddress = msg.sender().getAddress();
 
-        // Verify query packet magic
-        if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST && queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
-            throw new IllegalStateException("Invalid query packet magic");
-        }
-
-        // Read packet header
-        short type = queryMessage.readUnsignedByte();
-        int sessionId = queryMessage.readInt();
-
         // Allocate buffer for response
         ByteBuf queryResponse = ctx.alloc().buffer();
         DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
 
-        switch(type) {
-            case QUERY_TYPE_HANDSHAKE: {
-                // Generate new challenge token and put it into the sessions cache
-                int challengeToken = ThreadLocalRandom.current().nextInt();
-                sessions.put(senderAddress, challengeToken);
-
-                // Respond with challenge token
-                queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
-                queryResponse.writeInt(sessionId);
-                writeString(queryResponse, Integer.toString(challengeToken));
-                break;
+        try {
+            // Verify query packet magic
+            if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
+                throw new IllegalStateException("Invalid query packet magic");
             }
 
-            case QUERY_TYPE_STAT: {
-                // Check if query was done with session previously generated using a handshake packet
-                int challengeToken = queryMessage.readInt();
-                Integer session = sessions.getIfPresent(senderAddress);
-                if (session == null || session != challengeToken) {
-                    throw new IllegalStateException("Invalid challenge token");
+            // Read packet header
+            short type = queryMessage.readUnsignedByte();
+            int sessionId = queryMessage.readInt();
+
+            switch (type) {
+                case QUERY_TYPE_HANDSHAKE: {
+                    // Generate new challenge token and put it into the sessions cache
+                    int challengeToken = ThreadLocalRandom.current().nextInt();
+                    sessions.put(senderAddress, challengeToken);
+
+                    // Respond with challenge token
+                    queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
+                    queryResponse.writeInt(sessionId);
+                    writeString(queryResponse, Integer.toString(challengeToken));
+                    break;
                 }
 
-                // Check which query response client expects
-                if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
-                    throw new IllegalStateException("Invalid query packet");
+                case QUERY_TYPE_STAT: {
+                    // Check if query was done with session previously generated using a handshake packet
+                    int challengeToken = queryMessage.readInt();
+                    Integer session = sessions.getIfPresent(senderAddress);
+                    if (session == null || session != challengeToken) {
+                        throw new IllegalStateException("Invalid challenge token");
+                    }
+
+                    // Check which query response client expects
+                    if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
+                        throw new IllegalStateException("Invalid query packet");
+                    }
+
+                    // Packet header
+                    queryResponse.writeByte(QUERY_TYPE_STAT);
+                    queryResponse.writeInt(sessionId);
+
+                    // Fetch information
+                    VelocityServer server = VelocityServer.getServer();
+                    Collection<Player> players = server.getAllPlayers();
+
+                    // Start writing the response
+                    ResponseWriter responseWriter = new ResponseWriter(queryResponse, queryMessage.readableBytes() == 0);
+                    responseWriter.write("hostname", server.getConfiguration().getMotd());
+                    responseWriter.write("gametype", "SMP");
+
+                    responseWriter.write("game_id", "MINECRAFT");
+                    responseWriter.write("version", ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING);
+                    responseWriter.write("plugins", "");
+
+                    responseWriter.write("map", "Velocity");
+                    responseWriter.write("numplayers", players.size());
+                    responseWriter.write("maxplayers", server.getConfiguration().getShowMaxPlayers());
+                    responseWriter.write("hostport", server.getConfiguration().getBind().getPort());
+                    responseWriter.write("hostip", server.getConfiguration().getBind().getHostString());
+
+                    responseWriter.writePlayers(players);
+                    break;
                 }
 
-                // Packet header
-                queryResponse.writeByte(QUERY_TYPE_STAT);
-                queryResponse.writeInt(sessionId);
-
-                // Fetch information
-                VelocityServer server = VelocityServer.getServer();
-                Collection<Player> players = server.getAllPlayers();
-
-                // Start writing the response
-                ResponseWriter responseWriter = new ResponseWriter(queryResponse, queryMessage.readableBytes() == 0);
-                responseWriter.write("hostname", server.getConfiguration().getMotd());
-                responseWriter.write("gametype", "SMP");
-
-                responseWriter.write("game_id", "MINECRAFT");
-                responseWriter.write("version", ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING);
-                responseWriter.write("plugins", "");
-
-                responseWriter.write("map", "Velocity");
-                responseWriter.write("numplayers", players.size());
-                responseWriter.write("maxplayers", server.getConfiguration().getShowMaxPlayers());
-                responseWriter.write("hostport", server.getConfiguration().getBind().getPort());
-                responseWriter.write("hostip", server.getConfiguration().getBind().getHostString());
-
-                responseWriter.writePlayers(players);
-                break;
+                default: {
+                    throw new IllegalStateException("Invalid query type: " + type);
+                }
             }
 
-            default: {
-                throw new IllegalStateException("Invalid query type: " + type);
-            }
+            // Send the response
+            ctx.writeAndFlush(responsePacket);
+        } catch (Exception e) {
+            logger.warn("Error while trying to handle a query packet from {}", msg.sender(), e);
+            responsePacket.release();
         }
-
-        // Send the response
-        ctx.writeAndFlush(responsePacket);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("Error while trying to handle a query packet from {}", ctx.channel().remoteAddress(), cause);
     }
 
     private static void writeString(ByteBuf buf, String string) {
