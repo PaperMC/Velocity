@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -14,9 +15,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +31,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     private final static byte[] QUERY_RESPONSE_FULL_PADDING2 = new byte[] { 0x01, 0x70, 0x6C, 0x61, 0x79, 0x65, 0x72, 0x5F, 0x00, 0x00 };
 
     // Contents to add into basic stat response. See ResponseWriter class below
-    private final static List<String> QUERY_BASIC_RESPONSE_CONTENTS = Arrays.asList(
+    private final static Set<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
             "hostname",
             "gametype",
             "map",
