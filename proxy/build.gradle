@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
 }
 
 compileJava {
@@ -21,13 +22,20 @@ jar {
 dependencies {
     compile project(':velocity-api')
     compile project(':velocity-native')
+
     compile "io.netty:netty-codec:${nettyVersion}"
     compile "io.netty:netty-codec-http:${nettyVersion}"
     compile "io.netty:netty-handler:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
+
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+
+    compile 'net.minecrell:terminalconsoleappender:1.1.1'
+    runtime 'net.java.dev.jna:jna:4.5.2' // Needed for JLine
+    runtime 'com.lmax:disruptor:3.4.2' // Async loggers
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
