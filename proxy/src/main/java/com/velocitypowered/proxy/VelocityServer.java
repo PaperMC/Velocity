@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
+import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -21,6 +22,7 @@ import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.ServerMap;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +52,8 @@ public class VelocityServer implements ProxyServer {
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
     private final CommandManager commandManager = new CommandManager();
-    private final AtomicBoolean shutdown = new AtomicBoolean(false);
+    private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
+    private boolean shutdown = false;
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -69,6 +72,7 @@ public class VelocityServer implements ProxyServer {
     private VelocityServer() {
         commandManager.registerCommand("velocity", new VelocityCommand());
         commandManager.registerCommand("server", new ServerCommand());
+        commandManager.registerCommand("shutdown", new ShutdownCommand());
     }
 
     public static VelocityServer getServer() {
@@ -136,13 +140,19 @@ public class VelocityServer implements ProxyServer {
     }
 
     public boolean isShutdown() {
-        return shutdown.get();
+        return shutdown;
     }
 
     public void shutdown() {
-        if (!shutdown.compareAndSet(false, true)) return;
+        if (!shutdownInProgress.compareAndSet(false, true)) return;
         logger.info("Shutting down the proxy...");
+
+        for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
+            player.close(TextComponent.of("Proxy shutting down."));
+        }
+
         this.cm.shutdown();
+        shutdown = true;
     }
 
     public NettyHttpClient getHttpClient() {

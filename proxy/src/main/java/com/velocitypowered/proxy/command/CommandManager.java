@@ -1,12 +1,15 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandExecutor;
 import com.velocitypowered.api.command.CommandInvoker;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CommandManager {
     private final Map<String, CommandExecutor> executors = new HashMap<>();
@@ -43,6 +46,35 @@ public class CommandManager {
             return true;
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + invoker, e);
+        }
+    }
+
+    public List<String> offerSuggestions(CommandInvoker invoker, String cmdLine) {
+        Preconditions.checkNotNull(invoker, "invoker");
+        Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+        String[] split = cmdLine.split(" ", -1);
+        if (split.length == 0) {
+            return ImmutableList.of();
+        }
+
+        String command = split[0];
+        if (split.length == 1) {
+            return executors.keySet().stream()
+                    .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
+                    .collect(Collectors.toList());
+        }
+
+        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
+        CommandExecutor executor = executors.get(command);
+        if (executor == null) {
+            return ImmutableList.of();
+        }
+
+        try {
+            return executor.suggest(invoker, actualArgs);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + invoker, e);
         }
     }
 }

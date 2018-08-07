@@ -1,9 +1,12 @@
 package com.velocitypowered.proxy.console;
 
 import com.velocitypowered.proxy.VelocityServer;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.*;
+
+import java.util.List;
 
 public final class VelocityConsole extends SimpleTerminalConsole {
 
@@ -16,8 +19,14 @@ public final class VelocityConsole extends SimpleTerminalConsole {
     @Override
     protected LineReader buildReader(LineReaderBuilder builder) {
         return super.buildReader(builder
-            .appName("Velocity")
-            // TODO: Command completion
+                .appName("Velocity")
+                .completer((reader, parsedLine, list) -> {
+                    List<String> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandInvoker(), parsedLine.line());
+                    for (String offer : offers) {
+                        if (offer.isEmpty()) continue;
+                        list.add(new Candidate(offer));
+                    }
+                })
         );
     }
 
@@ -28,7 +37,9 @@ public final class VelocityConsole extends SimpleTerminalConsole {
 
     @Override
     protected void runCommand(String command) {
-        this.server.getCommandManager().execute(this.server.getConsoleCommandInvoker(), command);
+        if (!this.server.getCommandManager().execute(this.server.getConsoleCommandInvoker(), command)) {
+            server.getConsoleCommandInvoker().sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+        }
     }
 
     @Override

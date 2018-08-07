@@ -16,7 +16,7 @@ public class VelocityCommand implements CommandExecutor {
         TextComponent thisIsVelocity = TextComponent.builder()
                 .content("This is ")
                 .append(TextComponent.of("Velocity " + implVersion, TextColor.DARK_AQUA))
-                .append(TextComponent.of(", the next generation Minecraft: Java Edition proxy.", TextColor.WHITE))
+                .append(TextComponent.of(", the next generation Minecraft: Java Edition proxy.").resetStyle())
                 .build();
         TextComponent velocityInfo = TextComponent.builder()
                 .content("Copyright 2018 Velocity Contributors. Velocity is freely licensed under the terms of the " +
@@ -28,7 +28,7 @@ public class VelocityCommand implements CommandExecutor {
                         .color(TextColor.GREEN)
                         .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.velocitypowered.com"))
                         .build())
-                .append(TextComponent.of(" or the ", TextColor.WHITE))
+                .append(TextComponent.of(" or the ").resetStyle())
                 .append(TextComponent.builder("Velocity GitHub")
                         .color(TextColor.GREEN)
                         .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/astei/velocity"))
