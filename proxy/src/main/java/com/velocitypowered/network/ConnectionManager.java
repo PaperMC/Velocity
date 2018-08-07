@@ -5,14 +5,13 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -21,15 +20,20 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -54,6 +58,7 @@ public final class ConnectionManager {
     private final Set<Channel> endpoints = new HashSet<>();
     private final Class<? extends ServerSocketChannel> serverSocketChannelClass;
     private final Class<? extends SocketChannel> socketChannelClass;
+    private final Class<? extends DatagramChannel> datagramChannelClass;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
 
@@ -62,11 +67,13 @@ public final class ConnectionManager {
         if (epoll) {
             this.serverSocketChannelClass = EpollServerSocketChannel.class;
             this.socketChannelClass = EpollSocketChannel.class;
+            this.datagramChannelClass = EpollDatagramChannel.class;
             this.bossGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Boss #%d"));
             this.workerGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Worker #%d"));
         } else {
             this.serverSocketChannelClass = NioServerSocketChannel.class;
             this.socketChannelClass = NioSocketChannel.class;
+            this.datagramChannelClass = NioDatagramChannel.class;
             this.bossGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Boss #%d"));
             this.workerGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Worker #%d"));
         }
@@ -116,6 +123,24 @@ public final class ConnectionManager {
                         logger.info("Listening on {}", channel.localAddress());
                     } else {
                         logger.error("Can't bind to {}", address, future.cause());
+                    }
+                });
+    }
+
+    public void queryBind(final String hostname, final int port) {
+        new Bootstrap()
+                .channel(datagramChannelClass)
+                .group(this.workerGroup)
+                .handler(new GS4QueryHandler())
+                .localAddress(hostname, port)
+                .bind()
+                .addListener((ChannelFutureListener) future -> {
+                    final Channel channel = future.channel();
+                    if (future.isSuccess()) {
+                        this.endpoints.add(channel);
+                        logger.info("Listening for GS4 query on {}", channel.localAddress());
+                    } else {
+                        logger.error("Can't bind to {}", channel.localAddress(), future.cause());
                     }
                 });
     }

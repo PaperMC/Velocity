@@ -39,3 +39,10 @@ compression-threshold = 1024
 
 # How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.
 compression-level = -1
+
+[query]
+# Whether to enable responding to GameSpy 4 query responses or not
+enabled = false
+
+# If query responding is enabled, on what port should query response listener listen on?
+port = 25577
