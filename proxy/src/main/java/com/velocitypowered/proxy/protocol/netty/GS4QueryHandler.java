@@ -127,7 +127,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("Error while trying to handle a query packet from " + ctx.channel().remoteAddress(), cause);
+        logger.warn("Error while trying to handle a query packet from {}", ctx.channel().remoteAddress(), cause);
     }
 
     private static void writeString(ByteBuf buf, String string) {
