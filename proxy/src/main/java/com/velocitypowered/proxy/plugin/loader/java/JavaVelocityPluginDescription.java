@@ -8,10 +8,6 @@ import java.util.Collection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * @author Hugo Manrique
- * @since 07/08/2018
- */
 public class JavaVelocityPluginDescription extends VelocityPluginDescription {
     private final Class mainClass;
 
