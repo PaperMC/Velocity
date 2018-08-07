@@ -5,10 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandExecutor;
 import com.velocitypowered.api.command.CommandInvoker;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CommandManager {
@@ -49,30 +46,30 @@ public class CommandManager {
         }
     }
 
-    public List<String> offerSuggestions(CommandInvoker invoker, String cmdLine) {
+    public Optional<List<String>> offerSuggestions(CommandInvoker invoker, String cmdLine) {
         Preconditions.checkNotNull(invoker, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
         String[] split = cmdLine.split(" ", -1);
         if (split.length == 0) {
-            return ImmutableList.of();
+            return Optional.empty();
         }
 
         String command = split[0];
         if (split.length == 1) {
-            return executors.keySet().stream()
+            return Optional.of(executors.keySet().stream()
                     .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
         CommandExecutor executor = executors.get(command);
         if (executor == null) {
-            return ImmutableList.of();
+            return Optional.empty();
         }
 
         try {
-            return executor.suggest(invoker, actualArgs);
+            return Optional.of(executor.suggest(invoker, actualArgs));
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + invoker, e);
         }
