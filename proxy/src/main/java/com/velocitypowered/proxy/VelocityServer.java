@@ -9,7 +9,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
-import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
@@ -99,7 +98,7 @@ public class VelocityServer implements ProxyServer {
         this.cm.bind(configuration.getBind());
 
         if (configuration.isQueryEnabled()) {
-            this.cm.queryBind(configuration.getQueryBind());
+            this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
         }
     }
 

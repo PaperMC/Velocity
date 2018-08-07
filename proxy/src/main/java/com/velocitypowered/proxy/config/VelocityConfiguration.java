@@ -24,8 +24,6 @@ public class VelocityConfiguration {
 
     private final String bind;
     private final String motd;
-    private final boolean queryEnabled;
-    private final String queryBind;
     private final int showMaxPlayers;
     private final boolean onlineMode;
     private final IPForwardingMode ipForwardingMode;
@@ -34,16 +32,17 @@ public class VelocityConfiguration {
     private final int compressionThreshold;
     private final int compressionLevel;
 
+    private final boolean queryEnabled;
+    private final int queryPort;
+
     private Component motdAsComponent;
 
-    private VelocityConfiguration(String bind, String motd, boolean queryEnabled, String queryBind,
-                                  int showMaxPlayers, boolean onlineMode, IPForwardingMode ipForwardingMode,
-                                  Map<String, String> servers, List<String> attemptConnectionOrder,
-                                  int compressionThreshold, int compressionLevel) {
+    private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
+                                  IPForwardingMode ipForwardingMode, Map<String, String> servers,
+                                  List<String> attemptConnectionOrder, int compressionThreshold,
+                                  int compressionLevel, boolean queryEnabled, int queryPort) {
         this.bind = bind;
         this.motd = motd;
-        this.queryEnabled = queryEnabled;
-        this.queryBind = queryBind;
         this.showMaxPlayers = showMaxPlayers;
         this.onlineMode = onlineMode;
         this.ipForwardingMode = ipForwardingMode;
@@ -51,6 +50,8 @@ public class VelocityConfiguration {
         this.attemptConnectionOrder = attemptConnectionOrder;
         this.compressionThreshold = compressionThreshold;
         this.compressionLevel = compressionLevel;
+        this.queryEnabled = queryEnabled;
+        this.queryPort = queryPort;
     }
 
     public boolean validate() {
@@ -65,13 +66,6 @@ public class VelocityConfiguration {
             AddressUtil.parseAddress(bind);
         } catch (IllegalArgumentException e) {
             logger.error("'bind' option does not specify a valid IP address.", e);
-            valid = false;
-        }
-
-        try {
-            AddressUtil.parseAddress(queryBind);
-        } catch (IllegalArgumentException e) {
-            logger.error("'query-bind' option does not specify a valid IP address.", e);
             valid = false;
         }
 
@@ -141,8 +135,8 @@ public class VelocityConfiguration {
         return queryEnabled;
     }
 
-    public InetSocketAddress getQueryBind() {
-        return AddressUtil.parseAddress(queryBind);
+    public int getQueryPort() {
+        return queryPort;
     }
 
     public String getMotd() {
@@ -194,7 +188,7 @@ public class VelocityConfiguration {
                 "bind='" + bind + '\'' +
                 ", motd='" + motd + '\'' +
                 ", queryEnabled=" + queryEnabled +
-                ", queryBind='" + queryBind + '\'' +
+                ", queryPort='" + queryPort + '\'' +
                 ", showMaxPlayers=" + showMaxPlayers +
                 ", onlineMode=" + onlineMode +
                 ", ipForwardingMode=" + ipForwardingMode +
@@ -224,15 +218,15 @@ public class VelocityConfiguration {
             return new VelocityConfiguration(
                     toml.getString("bind"),
                     toml.getString("motd"),
-                    toml.getBoolean("query-enabled"),
-                    toml.getString("query-bind"),
                     toml.getLong("show-max-players").intValue(),
                     toml.getBoolean("online-mode"),
                     IPForwardingMode.valueOf(toml.getString("ip-forwarding").toUpperCase()),
                     ImmutableMap.copyOf(servers),
                     toml.getTable("servers").getList("try"),
                     toml.getTable("advanced").getLong("compression-threshold", 1024L).intValue(),
-                    toml.getTable("advanced").getLong("compression-level", -1L).intValue());
+                    toml.getTable("advanced").getLong("compression-level", -1L).intValue(),
+                    toml.getTable("query").getBoolean("enabled"),
+                    toml.getTable("query").getLong("port", 25577L).intValue());
         }
     }
 }

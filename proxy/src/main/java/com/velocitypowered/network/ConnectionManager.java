@@ -127,12 +127,12 @@ public final class ConnectionManager {
                 });
     }
 
-    public void queryBind(final InetSocketAddress address) {
+    public void queryBind(final String hostname, final int port) {
         final Bootstrap bootstrap = new Bootstrap()
                 .channel(datagramChannelClass)
                 .group(this.workerGroup)
                 .handler(new GS4QueryHandler())
-                .localAddress(address);
+                .localAddress(hostname, port);
         bootstrap.bind()
                 .addListener((ChannelFutureListener) future -> {
                     final Channel channel = future.channel();
@@ -140,7 +140,7 @@ public final class ConnectionManager {
                         this.endpoints.add(channel);
                         logger.info("Listening for GS4 query on {}", channel.localAddress());
                     } else {
-                        logger.error("Can't bind to {}", address, future.cause());
+                        logger.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
                     }
                 });
     }
