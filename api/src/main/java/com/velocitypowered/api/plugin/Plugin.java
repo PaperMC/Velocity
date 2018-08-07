@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.regex.Pattern;
 
 /**
  * Annotation used to describe a Velocity plugin.
@@ -13,17 +12,10 @@ import java.util.regex.Pattern;
 @Target(ElementType.TYPE)
 public @interface Plugin {
     /**
-     * The pattern plugin IDs must match. Plugin IDs may only contain
-     * alphanumeric characters, dashes or underscores, must start with
-     * an alphabetic character and cannot be longer than 64 characters.
-     */
-    Pattern ID_PATTERN = PluginDescription.ID_PATTERN;
-
-    /**
      * The ID of the plugin. This ID should be unique as to
      * not conflict with other plugins.
      *
-     * The plugin ID must match the {@link #ID_PATTERN}.
+     * The plugin ID must match the {@link PluginDescription#ID_PATTERN}.
      *
      * @return the ID for this plugin
      */
