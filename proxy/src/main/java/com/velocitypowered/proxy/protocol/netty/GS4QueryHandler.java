@@ -106,7 +106,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 responseWriter.write("version", ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING);
                 responseWriter.write("plugins", "");
 
-                responseWriter.write("map", "Velocity"); // TODO
+                responseWriter.write("map", "Velocity");
                 responseWriter.write("numplayers", players.size());
                 responseWriter.write("maxplayers", server.getConfiguration().getShowMaxPlayers());
                 responseWriter.write("hostport", server.getConfiguration().getBind().getPort());
