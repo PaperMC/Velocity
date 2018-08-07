@@ -41,7 +41,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
     private final Channel channel;
-    private boolean closed;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
@@ -49,7 +48,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public MinecraftConnection(Channel channel) {
         this.channel = channel;
-        this.closed = false;
         this.state = StateRegistry.HANDSHAKE;
     }
 
@@ -73,8 +71,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (association != null) {
             logger.info("{} has disconnected", association);
         }
-
-        teardown();
     }
 
     @Override
@@ -103,7 +99,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
                 logger.error("{} encountered an exception", ctx.channel().remoteAddress(), cause);
             }
 
-            closed = true;
             ctx.close();
         }
     }
@@ -124,19 +119,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void closeWith(Object msg) {
-        ensureOpen();
-        teardown();
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        if (channel.isActive()) {
+            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     public void close() {
-        ensureOpen();
-        teardown();
-        channel.close();
-    }
-
-    public void teardown() {
-        closed = true;
+        if (channel.isActive()) {
+            channel.close();
+        }
     }
 
     public Channel getChannel() {
@@ -144,7 +135,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public boolean isClosed() {
-        return closed;
+        return !channel.isActive();
     }
 
     public StateRegistry getState() {
@@ -186,10 +177,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     private void ensureOpen() {
-        Preconditions.checkState(!closed, "Connection is closed.");
+        Preconditions.checkState(!isClosed(), "Connection is closed.");
     }
 
     public void setCompressionThreshold(int threshold) {
+        ensureOpen();
+
         if (threshold == -1) {
             channel.pipeline().remove(COMPRESSION_DECODER);
             channel.pipeline().remove(COMPRESSION_ENCODER);
@@ -206,6 +199,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void enableEncryption(byte[] secret) throws GeneralSecurityException {
+        ensureOpen();
+
         SecretKey key = new SecretKeySpec(secret, "AES");
 
         VelocityCipherFactory factory = Natives.cipher.get();
