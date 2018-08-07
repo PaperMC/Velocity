@@ -163,11 +163,11 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 if (key.equals("hostport")) {
                     buf.writeShortLE((Integer) value);
                 } else {
-                    writeString(buf, value instanceof Integer ? Integer.toString((Integer) value) : (String) value);
+                    writeString(buf, value.toString());
                 }
             } else {
                 writeString(buf, key);
-                writeString(buf, value instanceof Integer ? Integer.toString((Integer) value) : (String) value);
+                writeString(buf, value.toString());
             }
         }
 
