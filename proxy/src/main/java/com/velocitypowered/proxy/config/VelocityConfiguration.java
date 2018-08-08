@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.config;
 
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
+import com.velocitypowered.api.server.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.api.util.LegacyChatColorUtils;
 import net.kyori.text.Component;
@@ -15,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ public class VelocityConfiguration {
     private final int queryPort;
 
     private Component motdAsComponent;
+    private Favicon favicon;
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
                                   IPForwardingMode ipForwardingMode, Map<String, String> servers,
@@ -124,7 +127,20 @@ public class VelocityConfiguration {
             logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
         }
 
+        loadFavicon();
+
         return valid;
+    }
+
+    private void loadFavicon() {
+        Path faviconPath = Paths.get("server-icon.png");
+        if (Files.exists(faviconPath)) {
+            try {
+                this.favicon = Favicon.create(faviconPath);
+            } catch (Exception e) {
+                logger.info("Unable to load your server-icon.png, continuing without it.", e);
+            }
+        }
     }
 
     public InetSocketAddress getBind() {
@@ -182,6 +198,14 @@ public class VelocityConfiguration {
         return compressionLevel;
     }
 
+    public Favicon getFavicon() {
+        return favicon;
+    }
+
+    public static Logger getLogger() {
+        return logger;
+    }
+
     @Override
     public String toString() {
         return "VelocityConfiguration{" +
@@ -197,6 +221,7 @@ public class VelocityConfiguration {
                 ", queryEnabled=" + queryEnabled +
                 ", queryPort=" + queryPort +
                 ", motdAsComponent=" + motdAsComponent +
+                ", favicon=" + favicon +
                 '}';
     }
 

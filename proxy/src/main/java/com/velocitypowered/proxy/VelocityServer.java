@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.command.CommandInvoker;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.server.Favicon;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
@@ -17,6 +18,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.command.CommandManager;
+import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.ServerMap;
@@ -44,6 +46,7 @@ public class VelocityServer implements ProxyServer {
     private static final VelocityServer INSTANCE = new VelocityServer();
     public static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
+            .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
     private final ConnectionManager cm = new ConnectionManager();
