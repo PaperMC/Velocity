@@ -202,10 +202,6 @@ public class VelocityConfiguration {
         return favicon;
     }
 
-    public static Logger getLogger() {
-        return logger;
-    }
-
     @Override
     public String toString() {
         return "VelocityConfiguration{" +
