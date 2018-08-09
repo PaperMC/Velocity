@@ -34,8 +34,6 @@ page.
 
 ## Status
 
-Velocity is far from finished, but most of the essential pieces are in place:
-you can switch between two servers running Minecraft 1.8-1.13. More versions
-and functionality is planned.
-
-You should join us on **irc.spi.gt** `#velocity` or send us a pull request.
+Velocity is far from finished, but most of the essential pieces you would
+expect are in place. Velocity supports Minecraft 1.8-1.13. More functionality
+is planned.

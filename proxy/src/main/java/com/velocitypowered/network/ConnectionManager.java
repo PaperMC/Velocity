@@ -24,6 +24,7 @@ import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
@@ -37,6 +38,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -53,46 +55,25 @@ import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 public final class ConnectionManager {
     private static final Logger logger = LogManager.getLogger(ConnectionManager.class);
 
-    private static final String DISABLE_EPOLL_PROPERTY = "velocity.connection.disable-epoll";
-    private static final boolean DISABLE_EPOLL = Boolean.getBoolean(DISABLE_EPOLL_PROPERTY);
     private final Set<Channel> endpoints = new HashSet<>();
-    private final Class<? extends ServerSocketChannel> serverSocketChannelClass;
-    private final Class<? extends SocketChannel> socketChannelClass;
-    private final Class<? extends DatagramChannel> datagramChannelClass;
+    private final TransportType transportType;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
 
     public ConnectionManager() {
-        final boolean epoll = canUseEpoll();
-        if (epoll) {
-            this.serverSocketChannelClass = EpollServerSocketChannel.class;
-            this.socketChannelClass = EpollSocketChannel.class;
-            this.datagramChannelClass = EpollDatagramChannel.class;
-            this.bossGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Boss #%d"));
-            this.workerGroup = new EpollEventLoopGroup(0, createThreadFactory("Netty Epoll Worker #%d"));
-        } else {
-            this.serverSocketChannelClass = NioServerSocketChannel.class;
-            this.socketChannelClass = NioSocketChannel.class;
-            this.datagramChannelClass = NioDatagramChannel.class;
-            this.bossGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Boss #%d"));
-            this.workerGroup = new NioEventLoopGroup(0, createThreadFactory("Netty Nio Worker #%d"));
-        }
-        this.logChannelInformation(epoll);
+        this.transportType = TransportType.bestType();
+        this.bossGroup = transportType.createEventLoopGroup(true);
+        this.workerGroup = transportType.createEventLoopGroup(false);
+        this.logChannelInformation();
     }
 
-    private void logChannelInformation(final boolean epoll) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Using channel type ");
-        sb.append(epoll ? "epoll": "nio");
-        if(DISABLE_EPOLL) {
-            sb.append(String.format(" - epoll explicitly disabled using -D%s=true", DISABLE_EPOLL_PROPERTY));
-        }
-        logger.info(sb.toString()); // TODO: move to logger
+    private void logChannelInformation() {
+        logger.info("Using channel type {}", transportType);
     }
 
     public void bind(final InetSocketAddress address) {
         final ServerBootstrap bootstrap = new ServerBootstrap()
-                .channel(this.serverSocketChannelClass)
+                .channel(this.transportType.serverSocketChannelClass)
                 .group(this.bossGroup, this.workerGroup)
                 .childHandler(new ChannelInitializer<Channel>() {
                     @Override
@@ -129,7 +110,7 @@ public final class ConnectionManager {
 
     public void queryBind(final String hostname, final int port) {
         Bootstrap bootstrap = new Bootstrap()
-                .channel(datagramChannelClass)
+                .channel(transportType.datagramChannelClass)
                 .group(this.workerGroup)
                 .handler(new GS4QueryHandler())
                 .localAddress(hostname, port);
@@ -147,7 +128,7 @@ public final class ConnectionManager {
 
     public Bootstrap createWorker() {
         return new Bootstrap()
-                .channel(this.socketChannelClass)
+                .channel(this.transportType.socketChannelClass)
                 .group(this.workerGroup);
     }
 
@@ -162,14 +143,61 @@ public final class ConnectionManager {
         }
     }
 
-    private static boolean canUseEpoll() {
-        return Epoll.isAvailable() && !DISABLE_EPOLL;
-    }
-
     private static ThreadFactory createThreadFactory(final String nameFormat) {
         return new ThreadFactoryBuilder()
                 .setNameFormat(nameFormat)
                 .setDaemon(true)
                 .build();
+    }
+
+    private enum TransportType {
+        NIO(NioServerSocketChannel.class, NioSocketChannel.class, NioDatagramChannel.class) {
+            @Override
+            public EventLoopGroup createEventLoopGroup(boolean boss) {
+                String name = "Netty NIO " + (boss ? "Boss" : "Worker") + " #%d";
+                return new NioEventLoopGroup(0, createThreadFactory(name));
+            }
+        },
+        EPOLL(EpollServerSocketChannel.class, EpollSocketChannel.class, EpollDatagramChannel.class) {
+            @Override
+            public EventLoopGroup createEventLoopGroup(boolean boss) {
+                String name = "Netty Epoll " + (boss ? "Boss" : "Worker") + " #%d";
+                return new EpollEventLoopGroup(0, createThreadFactory(name));
+            }
+        },
+        KQUEUE(KQueueServerSocketChannel.class, KQueueSocketChannel.class, KQueueDatagramChannel.class) {
+            @Override
+            public EventLoopGroup createEventLoopGroup(boolean boss) {
+                String name = "Netty Kqueue " + (boss ? "Boss" : "Worker") + " #%d";
+                return new KQueueEventLoopGroup(0, createThreadFactory(name));
+            }
+        };
+
+        private final Class<? extends ServerSocketChannel> serverSocketChannelClass;
+        private final Class<? extends SocketChannel> socketChannelClass;
+        private final Class<? extends DatagramChannel> datagramChannelClass;
+
+        TransportType(Class<? extends ServerSocketChannel> serverSocketChannelClass, Class<? extends SocketChannel> socketChannelClass, Class<? extends DatagramChannel> datagramChannelClass) {
+            this.serverSocketChannelClass = serverSocketChannelClass;
+            this.socketChannelClass = socketChannelClass;
+            this.datagramChannelClass = datagramChannelClass;
+        }
+
+        @Override
+        public String toString() {
+            return name().toLowerCase(Locale.US);
+        }
+
+        public abstract EventLoopGroup createEventLoopGroup(boolean boss);
+
+        public static TransportType bestType() {
+            if (Epoll.isAvailable()) {
+                return EPOLL;
+            } else if (KQueue.isAvailable()) {
+                return KQUEUE;
+            } else {
+                return NIO;
+            }
+        }
     }
 }

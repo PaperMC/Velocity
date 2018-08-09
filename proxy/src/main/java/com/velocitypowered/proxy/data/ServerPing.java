@@ -1,14 +1,15 @@
 package com.velocitypowered.proxy.data;
 
+import com.velocitypowered.api.server.Favicon;
 import net.kyori.text.Component;
 
 public class ServerPing {
     private final Version version;
     private final Players players;
     private final Component description;
-    private final String favicon;
+    private final Favicon favicon;
 
-    public ServerPing(Version version, Players players, Component description, String favicon) {
+    public ServerPing(Version version, Players players, Component description, Favicon favicon) {
         this.version = version;
         this.players = players;
         this.description = description;
@@ -27,7 +28,7 @@ public class ServerPing {
         return description;
     }
 
-    public String getFavicon() {
+    public Favicon getFavicon() {
         return favicon;
     }
 

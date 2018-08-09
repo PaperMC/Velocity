@@ -41,7 +41,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                 new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers()),
                 configuration.getMotdComponent(),
-                null
+                configuration.getFavicon()
         );
         StatusResponse response = new StatusResponse();
         response.setStatus(VelocityServer.GSON.toJson(ping));

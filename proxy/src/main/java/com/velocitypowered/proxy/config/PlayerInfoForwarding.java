@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.config;
 
-public enum IPForwardingMode {
+public enum PlayerInfoForwarding {
     NONE,
     LEGACY,
     MODERN
