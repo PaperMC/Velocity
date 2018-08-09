@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.proxy.config.IPForwardingMode;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -97,7 +97,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         Handshake handshake = new Handshake();
         handshake.setNextStatus(StateRegistry.LOGIN_ID);
         handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
-        if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.LEGACY) {
+        if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
             handshake.setServerAddress(createBungeeForwardingAddress());
         } else {
             handshake.setServerAddress(serverInfo.getAddress().getHostString());
@@ -111,7 +111,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
 
         // Send the server login packet for <=1.12.2 and for 1.13+ servers not using "modern" forwarding.
         if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 ||
-                VelocityServer.getServer().getConfiguration().getIpForwardingMode() != IPForwardingMode.MODERN) {
+                VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() != PlayerInfoForwarding.MODERN) {
             ServerLogin login = new ServerLogin();
             login.setUsername(proxyPlayer.getUsername());
             minecraftConnection.write(login);

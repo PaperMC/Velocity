@@ -2,7 +2,8 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.IPForwardingMode;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
@@ -17,6 +18,11 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelPipeline;
 import net.kyori.text.TextComponent;
 
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +36,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.MODERN) {
+        if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN) {
             forwardingCheckTask = connection.getMinecraftConnection().getChannel().eventLoop().schedule(() -> {
                 connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(),
                         TextComponent.of("Your server did not send the forwarding request in time. Is it set up correctly?"));
@@ -44,12 +50,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             throw new IllegalStateException("Backend server is online-mode!");
         } else if (packet instanceof LoginPluginMessage) {
             LoginPluginMessage message = (LoginPluginMessage) packet;
-            if (VelocityServer.getServer().getConfiguration().getIpForwardingMode() == IPForwardingMode.MODERN &&
+            VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+            if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN &&
                     message.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
                 LoginPluginResponse response = new LoginPluginResponse();
                 response.setSuccess(true);
                 response.setId(message.getId());
-                response.setData(createForwardingData(connection.getProxyPlayer().getRemoteAddress().getHostString(),
+                response.setData(createForwardingData(configuration.getForwardingSecret(),
+                        connection.getProxyPlayer().getRemoteAddress().getHostString(),
                         connection.getProxyPlayer().getProfile()));
                 connection.getMinecraftConnection().write(response);
                 cancelForwardingCheck();
@@ -122,23 +130,43 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
     }
 
-    private static ByteBuf createForwardingData(String address, GameProfile profile) {
-        ByteBuf buf = Unpooled.buffer();
-        ProtocolUtils.writeString(buf, address);
-        ProtocolUtils.writeUuid(buf, profile.idAsUuid());
-        ProtocolUtils.writeString(buf, profile.getName());
-        ProtocolUtils.writeVarInt(buf, profile.getProperties().size());
-        for (GameProfile.Property property : profile.getProperties()) {
-            ProtocolUtils.writeString(buf, property.getName());
-            ProtocolUtils.writeString(buf, property.getValue());
-            String signature = property.getSignature();
-            if (signature != null) {
-                buf.writeBoolean(true);
-                ProtocolUtils.writeString(buf, signature);
-            } else {
-                buf.writeBoolean(false);
+    static ByteBuf createForwardingData(byte[] hmacSecret, String address, GameProfile profile) {
+        ByteBuf dataToForward = Unpooled.buffer();
+        ByteBuf finalData = Unpooled.buffer();
+        try {
+            ProtocolUtils.writeString(dataToForward, address);
+            ProtocolUtils.writeUuid(dataToForward, profile.idAsUuid());
+            ProtocolUtils.writeString(dataToForward, profile.getName());
+            ProtocolUtils.writeVarInt(dataToForward, profile.getProperties().size());
+            for (GameProfile.Property property : profile.getProperties()) {
+                ProtocolUtils.writeString(dataToForward, property.getName());
+                ProtocolUtils.writeString(dataToForward, property.getValue());
+                String signature = property.getSignature();
+                if (signature != null) {
+                    dataToForward.writeBoolean(true);
+                    ProtocolUtils.writeString(dataToForward, signature);
+                } else {
+                    dataToForward.writeBoolean(false);
+                }
             }
+
+            SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(key);
+            mac.update(dataToForward.array(), dataToForward.arrayOffset(), dataToForward.readableBytes());
+            byte[] sig = mac.doFinal();
+            finalData.writeBytes(sig);
+            finalData.writeBytes(dataToForward);
+            return finalData;
+        } catch (InvalidKeyException e) {
+            finalData.release();
+            throw new RuntimeException("Unable to authenticate data", e);
+        } catch (NoSuchAlgorithmException e) {
+            // Should never happen
+            finalData.release();
+            throw new AssertionError(e);
+        } finally {
+            dataToForward.release();
         }
-        return buf;
     }
 }
