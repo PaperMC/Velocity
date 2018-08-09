@@ -91,6 +91,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 VelocityServer.getServer().getHttpClient()
                         .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
                         .thenAcceptAsync(profileResponse -> {
+                            if (inbound.isClosed()) {
+                                // The player disconnected after we authenticated them.
+                                return;
+                            }
+
                             try {
                                 inbound.enableEncryption(decryptedSharedSecret);
                             } catch (GeneralSecurityException e) {

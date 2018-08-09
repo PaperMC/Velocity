@@ -15,6 +15,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
@@ -50,6 +51,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     connection.closeWith(Disconnect.create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
                     return;
                 } else {
+                    InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
+                    if (!VelocityServer.getServer().getIpAttemptLimiter().attempt(address)) {
+                        connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
+                        return;
+                    }
                     connection.setSessionHandler(new LoginSessionHandler(connection));
                 }
                 break;

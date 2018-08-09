@@ -21,6 +21,7 @@ import com.velocitypowered.proxy.command.CommandManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import com.velocitypowered.proxy.util.Ratelimiter;
 import com.velocitypowered.proxy.util.ServerMap;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
@@ -71,6 +72,7 @@ public class VelocityServer implements ProxyServer {
             return true;
         }
     };
+    private final Ratelimiter ipAttemptLimiter = new Ratelimiter(3000); // TODO: Configurable.
 
     private VelocityServer() {
         commandManager.registerCommand("velocity", new VelocityCommand());
@@ -160,6 +162,10 @@ public class VelocityServer implements ProxyServer {
 
     public NettyHttpClient getHttpClient() {
         return httpClient;
+    }
+
+    public Ratelimiter getIpAttemptLimiter() {
+        return ipAttemptLimiter;
     }
 
     public boolean registerConnection(ConnectedPlayer connection) {
