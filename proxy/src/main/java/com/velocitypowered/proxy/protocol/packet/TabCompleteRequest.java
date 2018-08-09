@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_13;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9;
 
 public class TabCompleteRequest implements MinecraftPacket {
     private int transactionId;
@@ -72,7 +73,9 @@ public class TabCompleteRequest implements MinecraftPacket {
             this.command = ProtocolUtils.readString(buf);
         } else {
             this.command = ProtocolUtils.readString(buf);
-            this.assumeCommand = buf.readBoolean();
+            if (protocolVersion >= MINECRAFT_1_9) {
+                this.assumeCommand = buf.readBoolean();
+            }
             this.hasPosition = buf.readBoolean();
             if (hasPosition) {
                 this.position = buf.readLong();
@@ -87,7 +90,9 @@ public class TabCompleteRequest implements MinecraftPacket {
             ProtocolUtils.writeString(buf, command);
         } else {
             ProtocolUtils.writeString(buf, command);
-            buf.writeBoolean(assumeCommand);
+            if (protocolVersion >= MINECRAFT_1_9) {
+                buf.writeBoolean(assumeCommand);
+            }
             buf.writeBoolean(hasPosition);
             if (hasPosition) {
                 buf.writeLong(position);

@@ -33,7 +33,10 @@ public enum StateRegistry {
     PLAY {
         {
             SERVERBOUND.register(TabCompleteRequest.class, TabCompleteRequest::new,
-                    map(0x01, MINECRAFT_1_12_2),
+                    map(0x14, MINECRAFT_1_8),
+                    map(0x01, MINECRAFT_1_9),
+                    map(0x02, MINECRAFT_1_12),
+                    map(0x01, MINECRAFT_1_12_1),
                     map(0x05, MINECRAFT_1_13));
             SERVERBOUND.register(Chat.class, Chat::new,
                     map(0x01, MINECRAFT_1_8),
@@ -69,6 +72,8 @@ public enum StateRegistry {
                     map(0x0F, MINECRAFT_1_12),
                     map(0x0E, MINECRAFT_1_13));
             CLIENTBOUND.register(TabCompleteResponse.class, TabCompleteResponse::new,
+                    map(0x3A, MINECRAFT_1_8),
+                    map(0x0E, MINECRAFT_1_9),
                     map(0x0E, MINECRAFT_1_12),
                     map(0x10, MINECRAFT_1_13));
             CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
