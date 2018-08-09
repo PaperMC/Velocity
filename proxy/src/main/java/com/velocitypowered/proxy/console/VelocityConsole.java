@@ -7,6 +7,7 @@ import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.jline.reader.*;
 
 import java.util.List;
+import java.util.Optional;
 
 public final class VelocityConsole extends SimpleTerminalConsole {
 
@@ -21,10 +22,12 @@ public final class VelocityConsole extends SimpleTerminalConsole {
         return super.buildReader(builder
                 .appName("Velocity")
                 .completer((reader, parsedLine, list) -> {
-                    List<String> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandInvoker(), parsedLine.line());
-                    for (String offer : offers) {
-                        if (offer.isEmpty()) continue;
-                        list.add(new Candidate(offer));
+                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandInvoker(), parsedLine.line());
+                    if (offers.isPresent()) {
+                        for (String offer : offers.get()) {
+                            if (offer.isEmpty()) continue;
+                            list.add(new Candidate(offer));
+                        }
                     }
                 })
         );
