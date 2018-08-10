@@ -43,6 +43,10 @@ compression-threshold = 1024
 # How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.
 compression-level = -1
 
+# How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000
+# Disable by setting to 0
+login-ratelimit = 3000
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not
 enabled = false

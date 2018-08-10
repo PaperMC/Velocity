@@ -72,7 +72,7 @@ public class VelocityServer implements ProxyServer {
             return true;
         }
     };
-    private final Ratelimiter ipAttemptLimiter = new Ratelimiter(3000); // TODO: Configurable.
+    private Ratelimiter ipAttemptLimiter;
 
     private VelocityServer() {
         commandManager.registerCommand("velocity", new VelocityCommand());
@@ -126,6 +126,8 @@ public class VelocityServer implements ProxyServer {
         }
 
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
+
+        ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
 
         httpClient = new NettyHttpClient(this);
 
