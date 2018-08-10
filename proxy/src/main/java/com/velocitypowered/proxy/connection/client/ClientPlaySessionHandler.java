@@ -82,7 +82,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (msg.startsWith("/")) {
                 try {
                     if (!VelocityServer.getServer().getCommandManager().execute(player, msg.substring(1))) {
-                        player.getConnectedServer().getMinecraftConnection().write(msg);
+                        player.getConnectedServer().getMinecraftConnection().write(chat);
                     }
                 } catch (Exception e) {
                     logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
