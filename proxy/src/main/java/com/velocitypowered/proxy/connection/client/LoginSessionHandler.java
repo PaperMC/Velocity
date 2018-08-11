@@ -42,38 +42,32 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void activated() {
-        if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            LoginPluginMessage message = new LoginPluginMessage();
-            playerInfoId = ThreadLocalRandom.current().nextInt();
-            message.setId(playerInfoId);
-            message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
-            message.setData(Unpooled.EMPTY_BUFFER);
-            inbound.write(message);
-        }
-    }
-
-    @Override
     public void handle(MinecraftPacket packet) {
         if (packet instanceof LoginPluginResponse) {
             LoginPluginResponse lpr = (LoginPluginResponse) packet;
-            if (lpr.getId() == playerInfoId && lpr.isSuccess()) {
-                // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
-                inbound.closeWith(Disconnect.create(
-                        TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
-                ));
+            if (lpr.getId() == playerInfoId) {
+                if (lpr.isSuccess()) {
+                    // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
+                    inbound.closeWith(Disconnect.create(
+                            TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
+                    ));
+                } else {
+                    // Proceed with the regular login process.
+                    initiateLogin();
+                }
             }
         } else if (packet instanceof ServerLogin) {
             this.login = (ServerLogin) packet;
 
-            if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
-                // Request encryption.
-                EncryptionRequest request = generateRequest();
-                this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-                inbound.write(request);
+            if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+                LoginPluginMessage message = new LoginPluginMessage();
+                playerInfoId = ThreadLocalRandom.current().nextInt();
+                message.setId(playerInfoId);
+                message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
+                message.setData(Unpooled.EMPTY_BUFFER);
+                inbound.write(message);
             } else {
-                // Offline-mode, don't try to request encryption.
-                handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
+                initiateLogin();
             }
         } else if (packet instanceof EncryptionResponse) {
             try {
@@ -116,6 +110,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             } catch (MalformedURLException e) {
                 throw new AssertionError(e);
             }
+        }
+    }
+
+    private void initiateLogin() {
+        if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
+            // Request encryption.
+            EncryptionRequest request = generateRequest();
+            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+            inbound.write(request);
+        } else {
+            // Offline-mode, don't try to request encryption.
+            handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
         }
     }
 
