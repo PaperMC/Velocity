@@ -7,7 +7,6 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
@@ -35,10 +34,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
-        } else if (packet instanceof Respawn) {
-            // Record the dimension switch, and then forward the packet on.
-            playerHandler.setCurrentDimension(((Respawn) packet).getDimension());
-            connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof BossBar) {
             BossBar bossBar = (BossBar) packet;
             switch (bossBar.getAction()) {
@@ -64,12 +59,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getProxyPlayer().getConnection().write(pm);
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
-            if (packet instanceof ScoreboardTeam ||
-                    packet instanceof ScoreboardObjective ||
-                    packet instanceof ScoreboardSetScore ||
-                    packet instanceof ScoreboardDisplay) {
-                playerHandler.handleServerScoreboardPacket(packet);
-            }
             connection.getProxyPlayer().getConnection().write(packet);
         }
     }
