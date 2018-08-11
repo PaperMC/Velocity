@@ -18,6 +18,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        if (!connection.getProxyPlayer().isActive()) {
+            // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
+            // errors.
+            connection.getMinecraftConnection().close();
+            return;
+        }
+
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
@@ -69,6 +76,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleUnknown(ByteBuf buf) {
+        if (!connection.getProxyPlayer().isActive()) {
+            // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
+            // errors.
+            connection.getMinecraftConnection().close();
+            return;
+        }
+
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         ByteBuf remapped = playerHandler.getIdRemapper().remap(buf, ProtocolConstants.Direction.CLIENTBOUND);

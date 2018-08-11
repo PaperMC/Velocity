@@ -132,7 +132,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         String error = ThrowableUtils.briefDescription(throwable);
         String userMessage;
         if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
-            logger.error("{}: exception occurred in connection to {}", this, info.getName(), throwable);
             userMessage = "Exception in server " + info.getName();
         } else {
             logger.error("{}: unable to connect to server {}", this, info.getName(), throwable);
