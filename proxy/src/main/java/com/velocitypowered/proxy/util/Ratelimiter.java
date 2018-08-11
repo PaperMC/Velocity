@@ -19,15 +19,21 @@ public class Ratelimiter {
 
     @VisibleForTesting
     Ratelimiter(long timeoutMs, Ticker ticker) {
-        this.timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMs);
-        this.expiringCache = CacheBuilder.newBuilder()
-                .ticker(ticker)
-                .concurrencyLevel(Runtime.getRuntime().availableProcessors())
-                .expireAfterWrite(timeoutMs, TimeUnit.MILLISECONDS)
-                .build();
+        if (timeoutMs == 0) {
+            this.timeoutNanos = timeoutMs;
+            this.expiringCache = null;
+        } else {
+            this.timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+            this.expiringCache = CacheBuilder.newBuilder()
+                    .ticker(ticker)
+                    .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+                    .expireAfterWrite(timeoutMs, TimeUnit.MILLISECONDS)
+                    .build();
+        }
     }
 
     public boolean attempt(InetAddress address) {
+        if (timeoutNanos == 0) return true;
         long expectedNewValue = System.nanoTime() + timeoutNanos;
         long last;
         try {

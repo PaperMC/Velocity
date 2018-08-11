@@ -12,7 +12,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class RatelimiterTest {
 
     @Test
-    void attempt() {
+    void attemptZero() {
+        Ratelimiter noRatelimiter = new Ratelimiter(0);
+        assertTrue(noRatelimiter.attempt(InetAddress.getLoopbackAddress()));
+        assertTrue(noRatelimiter.attempt(InetAddress.getLoopbackAddress()));
+    }
+
+    @Test
+    void attemptOne() {
         long base = System.nanoTime();
         AtomicLong extra = new AtomicLong();
         Ticker testTicker = new Ticker() {
@@ -27,4 +34,5 @@ class RatelimiterTest {
         extra.addAndGet(TimeUnit.SECONDS.toNanos(2));
         assertTrue(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
     }
+
 }

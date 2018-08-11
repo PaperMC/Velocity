@@ -34,6 +34,7 @@ public class VelocityConfiguration {
     private final List<String> attemptConnectionOrder;
     private final int compressionThreshold;
     private final int compressionLevel;
+    private final int loginRatelimit;
 
     private final boolean queryEnabled;
     private final int queryPort;
@@ -46,8 +47,8 @@ public class VelocityConfiguration {
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
                                   PlayerInfoForwarding playerInfoForwardingMode, Map<String, String> servers,
                                   List<String> attemptConnectionOrder, int compressionThreshold,
-                                  int compressionLevel, boolean queryEnabled, int queryPort,
-                                  byte[] forwardingSecret) {
+                                  int compressionLevel, int loginRatelimit, boolean queryEnabled,
+                                  int queryPort, byte[] forwardingSecret) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
@@ -57,6 +58,7 @@ public class VelocityConfiguration {
         this.attemptConnectionOrder = attemptConnectionOrder;
         this.compressionThreshold = compressionThreshold;
         this.compressionLevel = compressionLevel;
+        this.loginRatelimit = loginRatelimit;
         this.queryEnabled = queryEnabled;
         this.queryPort = queryPort;
         this.forwardingSecret = forwardingSecret;
@@ -140,6 +142,11 @@ public class VelocityConfiguration {
             logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
         }
 
+        if (loginRatelimit < 0) {
+            logger.error("Invalid login ratelimit {}", loginRatelimit);
+            valid = false;
+        }
+
         loadFavicon();
 
         return valid;
@@ -211,6 +218,10 @@ public class VelocityConfiguration {
         return compressionLevel;
     }
 
+    public int getLoginRatelimit() {
+        return loginRatelimit;
+    }
+
     public Favicon getFavicon() {
         return favicon;
     }
@@ -231,6 +242,7 @@ public class VelocityConfiguration {
                 ", attemptConnectionOrder=" + attemptConnectionOrder +
                 ", compressionThreshold=" + compressionThreshold +
                 ", compressionLevel=" + compressionLevel +
+                ", loginRatelimit=" + loginRatelimit +
                 ", queryEnabled=" + queryEnabled +
                 ", queryPort=" + queryPort +
                 ", motdAsComponent=" + motdAsComponent +
@@ -267,6 +279,7 @@ public class VelocityConfiguration {
                     toml.getTable("servers").getList("try"),
                     toml.getTable("advanced").getLong("compression-threshold", 1024L).intValue(),
                     toml.getTable("advanced").getLong("compression-level", -1L).intValue(),
+                    toml.getTable("advanced").getLong("login-ratelimit", 3000L).intValue(),
                     toml.getTable("query").getBoolean("enabled", false),
                     toml.getTable("query").getLong("port", 25577L).intValue(),
                     forwardingSecret);
