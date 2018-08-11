@@ -93,11 +93,13 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     }
 
     private void startHandshake() {
+        PlayerInfoForwarding forwardingMode =  VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode();
+
         // Initiate a handshake.
         Handshake handshake = new Handshake();
         handshake.setNextStatus(StateRegistry.LOGIN_ID);
         handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
-        if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+        if (forwardingMode == PlayerInfoForwarding.LEGACY) {
             handshake.setServerAddress(createBungeeForwardingAddress());
         } else {
             handshake.setServerAddress(serverInfo.getAddress().getHostString());
@@ -110,8 +112,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         minecraftConnection.setState(StateRegistry.LOGIN);
 
         // Send the server login packet for <=1.12.2 and for 1.13+ servers not using "modern" forwarding.
-        if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 ||
-                VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() != PlayerInfoForwarding.MODERN) {
+        if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 || forwardingMode != PlayerInfoForwarding.MODERN) {
             ServerLogin login = new ServerLogin();
             login.setUsername(proxyPlayer.getUsername());
             minecraftConnection.write(login);
