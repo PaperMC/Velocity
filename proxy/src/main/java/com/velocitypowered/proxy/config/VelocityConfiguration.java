@@ -128,12 +128,14 @@ public class VelocityConfiguration {
 
         if (compressionLevel < -1 || compressionLevel > 9) {
             logger.error("Invalid compression level {}", compressionLevel);
+            valid = false;
         } else if (compressionLevel == 0) {
             logger.warn("ALL packets going through the proxy are going to be uncompressed. This will increase bandwidth usage.");
         }
 
         if (compressionThreshold < -1) {
             logger.error("Invalid compression threshold {}", compressionLevel);
+            valid = false;
         } else if (compressionThreshold == 0) {
             logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
         }
