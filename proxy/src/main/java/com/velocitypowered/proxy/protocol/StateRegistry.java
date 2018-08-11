@@ -167,7 +167,7 @@ public enum StateRegistry {
 
         private final ProtocolConstants.Direction direction;
         private final StateRegistry state;
-        private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>();
+        private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>(16);
 
         public PacketRegistry(Direction direction, StateRegistry state) {
             this.direction = direction;
@@ -216,8 +216,8 @@ public enum StateRegistry {
 
         public class ProtocolVersion {
             public final int id;
-            final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>();
-            final Map<Class<? extends MinecraftPacket>, Integer> packetClassToId = new HashMap<>();
+            final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>(16, 0.5f);
+            final Map<Class<? extends MinecraftPacket>, Integer> packetClassToId = new HashMap<>(16, 0.5f);
 
             ProtocolVersion(final int id) {
                 this.id = id;
