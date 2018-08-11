@@ -4,6 +4,8 @@ import com.google.common.primitives.ImmutableIntArray;
 import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -217,10 +219,11 @@ public enum StateRegistry {
         public class ProtocolVersion {
             public final int id;
             final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>(16, 0.5f);
-            final Map<Class<? extends MinecraftPacket>, Integer> packetClassToId = new HashMap<>(16, 0.5f);
+            final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId = new Object2IntOpenHashMap<>(16, 0.5f);
 
             ProtocolVersion(final int id) {
                 this.id = id;
+                this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
             }
 
             public MinecraftPacket createPacket(final int id) {
@@ -232,8 +235,8 @@ public enum StateRegistry {
             }
 
             public int getPacketId(final MinecraftPacket packet) {
-                final Integer id = this.packetClassToId.get(packet.getClass());
-                if (id == null) {
+                final int id = this.packetClassToId.getInt(packet.getClass());
+                if (id == Integer.MIN_VALUE) {
                     throw new IllegalArgumentException(String.format(
                             "Unable to find id for packet of type %s in %s protocol %s",
                             packet.getClass().getName(), PacketRegistry.this.direction, this.id

@@ -37,8 +37,51 @@ dependencies {
     runtime 'net.java.dev.jna:jna:4.5.2' // Needed for JLine
     runtime 'com.lmax:disruptor:3.4.2' // Async loggers
 
+    compile 'it.unimi.dsi:fastutil:8.2.1'
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+shadowJar {
+    exclude 'it/unimi/dsi/fastutil/booleans/**'
+    exclude 'it/unimi/dsi/fastutil/bytes/**'
+    exclude 'it/unimi/dsi/fastutil/chars/**'
+    exclude 'it/unimi/dsi/fastutil/doubles/**'
+    exclude 'it/unimi/dsi/fastutil/floats/**'
+    exclude 'it/unimi/dsi/fastutil/ints/*Int2*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntAVL*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntArray*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntBi*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntList*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntOpen*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntRB*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntSet*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntSorted*'
+    exclude 'it/unimi/dsi/fastutil/io/**'
+    exclude 'it/unimi/dsi/fastutil/longs/**'
+    exclude 'it/unimi/dsi/fastutil/objects/*ObjectArray*'
+    exclude 'it/unimi/dsi/fastutil/objects/*ObjectAVL*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object*Big*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Boolean*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Byte*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Char*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Double*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Float*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntArray*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntAVL*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntLinked*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object*OpenCustom*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntRB*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntSorted*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Long*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Object*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Reference*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Object2Short*'
+    exclude 'it/unimi/dsi/fastutil/objects/*ObjectRB*'
+    exclude 'it/unimi/dsi/fastutil/objects/*ObjectSorted*'
+    exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
+    exclude 'it/unimi/dsi/fastutil/shorts/**'
 }
 
 artifacts {
