@@ -247,7 +247,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         @Override
         public void fireAndForget() {
             connect()
-                    .whenComplete((status, throwable) -> {
+                    .whenCompleteAsync((status, throwable) -> {
                         if (throwable != null) {
                             handleConnectionException(info, throwable);
                             return;
@@ -267,7 +267,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 handleConnectionException(info, Disconnect.create(status.getReason().orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
                                 break;
                         }
-                    });
+                    }, connection.getChannel().eventLoop());
         }
     }
 }

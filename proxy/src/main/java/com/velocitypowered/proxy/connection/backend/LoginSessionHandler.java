@@ -15,7 +15,6 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelPipeline;
 import net.kyori.text.TextComponent;
 
 import javax.crypto.Mac;
@@ -23,25 +22,14 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final ServerConnection connection;
-    private ScheduledFuture<?> forwardingCheckTask;
+    private boolean informationForwarded;
 
     public LoginSessionHandler(ServerConnection connection) {
         this.connection = connection;
-    }
-
-    @Override
-    public void activated() {
-        if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN) {
-            forwardingCheckTask = connection.getMinecraftConnection().getChannel().eventLoop().schedule(() -> {
-                connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(),
-                        TextComponent.of("Your server did not send the forwarding request in time. Is it set up correctly?"));
-            }, 1, TimeUnit.SECONDS);
-        }
     }
 
     @Override
@@ -60,11 +48,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         connection.getProxyPlayer().getRemoteAddress().getHostString(),
                         connection.getProxyPlayer().getProfile()));
                 connection.getMinecraftConnection().write(response);
-                cancelForwardingCheck();
-
-                ServerLogin login = new ServerLogin();
-                login.setUsername(connection.getProxyPlayer().getUsername());
-                connection.getMinecraftConnection().write(login);
+                informationForwarded = true;
             } else {
                 // Don't understand
                 LoginPluginResponse response = new LoginPluginResponse();
@@ -75,16 +59,21 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             }
         } else if (packet instanceof Disconnect) {
             Disconnect disconnect = (Disconnect) packet;
-            connection.disconnect();
-
             // Do we have an outstanding notification? If so, fulfill it.
             doNotify(ConnectionRequestResults.forDisconnect(disconnect));
-
-            connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), disconnect);
+            connection.disconnect();
         } else if (packet instanceof SetCompression) {
             SetCompression sc = (SetCompression) packet;
             connection.getMinecraftConnection().setCompressionThreshold(sc.getThreshold());
         } else if (packet instanceof ServerLoginSuccess) {
+            if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN &&
+                    !informationForwarded) {
+                doNotify(ConnectionRequestResults.forDisconnect(
+                        TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
+                connection.disconnect();
+                return;
+            }
+
             // The player has been logged on to the backend server.
             connection.getMinecraftConnection().setState(StateRegistry.PLAY);
             ServerConnection existingConnection = connection.getProxyPlayer().getConnectedServer();
@@ -96,37 +85,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 existingConnection.disconnect();
             }
 
-            // Do we have an outstanding notification? If so, fulfill it.
             doNotify(ConnectionRequestResults.SUCCESSFUL);
-
             connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(connection));
             connection.getProxyPlayer().setConnectedServer(connection);
         }
     }
 
     @Override
-    public void deactivated() {
-        cancelForwardingCheck();
-    }
-
-    @Override
     public void exception(Throwable throwable) {
-        connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), throwable);
-    }
-
-    private void doNotify(ConnectionRequestBuilder.Result result) {
-        ChannelPipeline pipeline = connection.getMinecraftConnection().getChannel().pipeline();
-        ServerConnection.ConnectionNotifier n = pipeline.get(ServerConnection.ConnectionNotifier.class);
-        if (n != null) {
-            n.getResult().complete(result);
-            pipeline.remove(ServerConnection.ConnectionNotifier.class);
+        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+                .attr(ServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
+        if (future != null) {
+            future.completeExceptionally(throwable);
         }
     }
 
-    private void cancelForwardingCheck() {
-        if (forwardingCheckTask != null) {
-            forwardingCheckTask.cancel(false);
-            forwardingCheckTask = null;
+    private void doNotify(ConnectionRequestBuilder.Result result) {
+        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+                .attr(ServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
+        if (future != null) {
+            future.complete(result);
         }
     }
 

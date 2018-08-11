@@ -18,6 +18,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.AttributeKey;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,8 @@ import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class ServerConnection implements MinecraftConnectionAssociation {
-    static final String CONNECTION_NOTIFIER = "connection-notifier";
+    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
+            AttributeKey.newInstance("connection-notification-result");
 
     private final ServerInfo serverInfo;
     private final ConnectedPlayer proxyPlayer;
@@ -55,9 +57,9 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
-                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND))
-                                .addLast(CONNECTION_NOTIFIER, new ConnectionNotifier(result));
+                                .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
 
+                        ch.attr(CONNECTION_NOTIFIER).set(result);
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setAssociation(ServerConnection.this);
@@ -93,7 +95,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     }
 
     private void startHandshake() {
-        PlayerInfoForwarding forwardingMode =  VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode();
+        PlayerInfoForwarding forwardingMode = VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode();
 
         // Initiate a handshake.
         Handshake handshake = new Handshake();
@@ -111,12 +113,9 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         minecraftConnection.setProtocolVersion(protocolVersion);
         minecraftConnection.setState(StateRegistry.LOGIN);
 
-        // Send the server login packet for <=1.12.2 and for 1.13+ servers not using "modern" forwarding.
-        if (protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 || forwardingMode != PlayerInfoForwarding.MODERN) {
-            ServerLogin login = new ServerLogin();
-            login.setUsername(proxyPlayer.getUsername());
-            minecraftConnection.write(login);
-        }
+        ServerLogin login = new ServerLogin();
+        login.setUsername(proxyPlayer.getUsername());
+        minecraftConnection.write(login);
     }
 
     public ConnectedPlayer getProxyPlayer() {
@@ -139,26 +138,5 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     @Override
     public String toString() {
         return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
-    }
-
-    static class ConnectionNotifier extends ChannelInboundHandlerAdapter {
-        private final CompletableFuture<ConnectionRequestBuilder.Result> result;
-
-        public ConnectionNotifier(CompletableFuture<ConnectionRequestBuilder.Result> result) {
-            this.result = result;
-        }
-
-        public CompletableFuture<ConnectionRequestBuilder.Result> getResult() {
-            return result;
-        }
-
-        public void onComplete() {
-            result.complete(ConnectionRequestResults.SUCCESSFUL);
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            result.completeExceptionally(cause);
-        }
     }
 }
