@@ -1,7 +1,5 @@
 package com.velocitypowered.proxy.plugin.loader;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.velocitypowered.api.plugin.*;
@@ -10,13 +8,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
+import com.velocitypowered.proxy.plugin.loader.java.SerializedPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,24 +35,18 @@ public class JavaPluginLoader implements PluginLoader {
     @Nonnull
     @Override
     public PluginDescription loadPlugin(Path source) throws Exception {
-        String mainClassName = getMainClassName(source);
+        Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
-        if (mainClassName == null) {
-            throw new AssertionError();
+        if (!serialized.isPresent()) {
+            throw new InvalidPluginException("Did not find a valid velocity-info.json.");
         }
 
         PluginClassLoader loader = new PluginClassLoader(
                 new URL[] {source.toUri().toURL() }
         );
 
-        Class mainClass = loader.loadClass(mainClassName);
-        Annotation annotation = mainClass.getAnnotation(Plugin.class);
-
-        if (!(annotation instanceof Plugin)) {
-            throw new InvalidPluginException("Main class does not have @Plugin annotation");
-        }
-
-        VelocityPluginDescription description = createDescription((Plugin) annotation, source, mainClass);
+        Class mainClass = loader.loadClass(serialized.get().getMain());
+        VelocityPluginDescription description = createDescription(serialized.get(), source, mainClass);
 
         String pluginId = description.getId();
         Pattern pattern = PluginDescription.ID_PATTERN;
@@ -93,49 +85,43 @@ public class JavaPluginLoader implements PluginLoader {
         );
     }
 
-    private String getMainClassName(Path source) throws Exception {
+    private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source) throws Exception {
         try (JarInputStream in = new JarInputStream(new BufferedInputStream(Files.newInputStream(source)))) {
             JarEntry entry;
             while ((entry = in.getNextJarEntry()) != null) {
                 if (entry.getName().equals("velocity-plugin.json")) {
                     try (Reader pluginInfoReader = new InputStreamReader(in)) {
-                        JsonObject pluginInfo = VelocityServer.GSON.fromJson(pluginInfoReader, JsonObject.class);
-                        JsonElement mainClass = pluginInfo.get("main");
-                        if (mainClass == null) {
-                            throw new IllegalStateException("JAR's plugin info doesn't contain a main class.");
-                        }
-
-                        return mainClass.getAsString();
+                        return Optional.of(VelocityServer.GSON.fromJson(pluginInfoReader, SerializedPluginDescription.class));
                     }
                 }
             }
 
-            throw new IllegalStateException("JAR does not contain a valid Velocity plugin.");
+            return Optional.empty();
         }
     }
 
-    private VelocityPluginDescription createDescription(Plugin annotation, Path source, Class mainClass) {
+    private VelocityPluginDescription createDescription(SerializedPluginDescription description, Path source, Class mainClass) {
         Set<PluginDependency> dependencies = new HashSet<>();
 
-        for (Dependency dependency : annotation.dependencies()) {
+        for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
             dependencies.add(toDependencyMeta(dependency));
         }
 
         return new JavaVelocityPluginDescription(
-                annotation.id(),
-                annotation.version(),
-                annotation.author(),
+                description.getId(),
+                description.getVersion(),
+                description.getAuthor(),
                 dependencies,
                 source,
                 mainClass
         );
     }
 
-    private static PluginDependency toDependencyMeta(Dependency dependency) {
+    private static PluginDependency toDependencyMeta(SerializedPluginDescription.Dependency dependency) {
         return new PluginDependency(
-            dependency.id(),
+            dependency.getId(),
             null, // TODO Implement version matching in dependency annotation
-            dependency.optional()
+            dependency.isOptional()
         );
     }
 }
