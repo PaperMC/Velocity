@@ -25,7 +25,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final int MAX_PLUGIN_CHANNELS = 128;
 
     private final ConnectedPlayer player;
-    private ScheduledFuture<?> pingTask;
     private long lastPing = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
@@ -37,29 +36,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void activated() {
-        EventLoop loop = player.getConnection().getChannel().eventLoop();
-        pingTask = loop.scheduleAtFixedRate(this::ping, 5, 15, TimeUnit.SECONDS);
-    }
-
-    private void ping() {
-        long randomId = ThreadLocalRandom.current().nextInt();
-        lastPing = randomId;
-        KeepAlive keepAlive = new KeepAlive();
-        keepAlive.setRandomId(randomId);
-        player.getConnection().write(keepAlive);
-    }
-
-    @Override
     public void handle(MinecraftPacket packet) {
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
             if (keepAlive.getRandomId() != lastPing) {
-                throw new IllegalStateException("Client sent invalid keepAlive; expected " + lastPing + ", got " + keepAlive.getRandomId());
+                // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
+                // ping is alright.
+                return;
             }
-
-            // Do not forward the packet to the player's server, because we handle pings for all servers already.
-            return;
         }
 
         if (packet instanceof ClientSettings) {
@@ -132,11 +116,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
-
-        if (pingTask != null && !pingTask.isCancelled()) {
-            pingTask.cancel(false);
-            pingTask = null;
-        }
     }
 
     @Override
@@ -149,6 +128,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
+        lastPing = Long.MIN_VALUE; // reset last ping
         if (!spawned) {
             // nothing special to do here
             spawned = true;
@@ -243,5 +223,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public EntityIdRemapper getIdRemapper() {
         return idRemapper;
+    }
+
+    public void setLastPing(long lastPing) {
+        this.lastPing = lastPing;
     }
 }

@@ -27,8 +27,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getProxyPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
-            // Forward onto the server
-            connection.getMinecraftConnection().write(packet);
+            // Forward onto the player
+            playerHandler.setLastPing(((KeepAlive) packet).getRandomId());
+            connection.getProxyPlayer().getConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
             connection.getProxyPlayer().handleConnectionException(connection.getServerInfo(), original);
