@@ -3,6 +3,12 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
+sourceSets {
+    ap {
+        compileClasspath += main.compileClasspath + main.output
+    }
+}
+
 dependencies {
     compile 'com.google.code.gson:gson:2.8.5'
     compile "com.google.guava:guava:${guavaVersion}"
@@ -21,6 +27,11 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource
+    from sourceSets.ap.output
+}
+
+shadowJar {
+    from sourceSets.ap.output
 }
 
 artifacts {
