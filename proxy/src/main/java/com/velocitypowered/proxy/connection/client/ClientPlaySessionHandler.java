@@ -1,12 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.command.VelocityCommand;
-import com.velocitypowered.api.server.ServerInfo;
-import com.velocitypowered.proxy.data.scoreboard.Objective;
-import com.velocitypowered.proxy.data.scoreboard.Score;
-import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
-import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
@@ -21,7 +15,6 @@ import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -37,8 +30,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
-    private int currentDimension;
-    private Scoreboard serverScoreboard = new Scoreboard();
     private EntityIdRemapper idRemapper;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
@@ -161,7 +152,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (!spawned) {
             // nothing special to do here
             spawned = true;
-            currentDimension = joinGame.getDimension();
             player.getConnection().delayedWrite(joinGame);
             idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
@@ -182,13 +172,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
             player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
-            currentDimension = joinGame.getDimension();
-        }
-
-        // Resend client settings packet to remote server if we have it, this preserves client settings across
-        // transitions.
-        if (player.getClientSettings() != null) {
-            player.getConnectedServer().getMinecraftConnection().delayedWrite(player.getClientSettings());
         }
 
         // Remove old boss bars.
@@ -199,9 +182,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().delayedWrite(deletePacket);
         }
         serverBossBars.clear();
-
-        // Remove scoreboard junk.
-        clearServerScoreboard();
 
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
         if (!clientPluginMsgChannels.isEmpty()) {
@@ -214,10 +194,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
-    }
-
-    public void setCurrentDimension(int currentDimension) {
-        this.currentDimension = currentDimension;
     }
 
     public List<UUID> getServerBossBars() {
@@ -259,86 +235,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         // We're going to forward on the original packet.
         player.getConnectedServer().getMinecraftConnection().write(packet);
-    }
-
-    public void handleServerScoreboardPacket(MinecraftPacket packet) {
-        if (packet instanceof ScoreboardDisplay) {
-            ScoreboardDisplay sd = (ScoreboardDisplay) packet;
-            serverScoreboard.setPosition(sd.getPosition());
-            serverScoreboard.setDisplayName(sd.getDisplayName());
-        }
-
-        if (packet instanceof ScoreboardObjective) {
-            ScoreboardObjective so = (ScoreboardObjective) packet;
-            switch (so.getMode()) {
-                case ScoreboardObjective.ADD:
-                    Objective o = new Objective(so.getId());
-                    o.setDisplayName(so.getDisplayName());
-                    o.setType(so.getType());
-                    serverScoreboard.getObjectives().put(so.getId(), o);
-                    break;
-                case ScoreboardObjective.REMOVE:
-                    serverScoreboard.getObjectives().remove(so.getId());
-                    break;
-            }
-        }
-
-        if (packet instanceof ScoreboardSetScore) {
-            ScoreboardSetScore sss = (ScoreboardSetScore) packet;
-            Objective objective = serverScoreboard.getObjectives().get(sss.getObjective());
-            if (objective == null) {
-                return;
-            }
-            switch (sss.getAction()) {
-                case ScoreboardSetScore.CHANGE:
-                    Score score = new Score(sss.getEntity(), sss.getValue());
-                    objective.getScores().put(sss.getEntity(), score);
-                    break;
-                case ScoreboardSetScore.REMOVE:
-                    objective.getScores().remove(sss.getEntity());
-                    break;
-            }
-        }
-
-        if (packet instanceof ScoreboardTeam) {
-            ScoreboardTeam st = (ScoreboardTeam) packet;
-            switch (st.getMode()) {
-                case ScoreboardTeam.ADD:
-                    // TODO: Preserve other team information? We might not need to...
-                    Team team = new Team(st.getId());
-                    serverScoreboard.getTeams().put(st.getId(), team);
-                    break;
-                case ScoreboardTeam.REMOVE:
-                    serverScoreboard.getTeams().remove(st.getId());
-                    break;
-            }
-        }
-    }
-
-    private void clearServerScoreboard() {
-        for (Objective objective : serverScoreboard.getObjectives().values()) {
-            for (Score score : objective.getScores().values()) {
-                ScoreboardSetScore sss = new ScoreboardSetScore();
-                sss.setObjective(objective.getId());
-                sss.setAction(ScoreboardSetScore.REMOVE);
-                sss.setEntity(score.getTarget());
-                player.getConnection().delayedWrite(sss);
-            }
-
-            ScoreboardObjective so = new ScoreboardObjective();
-            so.setId(objective.getId());
-            so.setMode(ScoreboardObjective.REMOVE);
-            player.getConnection().delayedWrite(so);
-        }
-
-        for (Team team : serverScoreboard.getTeams().values()) {
-            ScoreboardTeam st = new ScoreboardTeam();
-            st.setId(team.getId());
-            st.setMode(ScoreboardTeam.REMOVE);
-            player.getConnection().delayedWrite(st);
-        }
-
-        serverScoreboard = new Scoreboard();
     }
 
     public Set<String> getClientPluginMsgChannels() {

@@ -30,7 +30,7 @@ public interface Player extends CommandInvoker, InboundConnection {
      * @return an {@link Optional} the server that the player is connected to, which may be empty
      */
     Optional<ServerInfo> getCurrentServer();
-
+    
     /**
      * Sends a chat message to the player's client.
      * @param component the chat message to send

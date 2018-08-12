@@ -99,35 +99,35 @@ public enum StateRegistry {
                     map(0x23, MINECRAFT_1_12),
                     map(0x25, MINECRAFT_1_13));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
-                    map(0x07, MINECRAFT_1_8),
-                    map(0x33, MINECRAFT_1_9),
-                    map(0x34, MINECRAFT_1_12),
-                    map(0x35, MINECRAFT_1_12_2),
-                    map(0x38, MINECRAFT_1_13));
+                    map(0x07, MINECRAFT_1_8, false),
+                    map(0x33, MINECRAFT_1_9, false),
+                    map(0x34, MINECRAFT_1_12, false),
+                    map(0x35, MINECRAFT_1_12_2, false),
+                    map(0x38, MINECRAFT_1_13, false));
             CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
-                    map(0x3D, MINECRAFT_1_8),
-                    map(0x38, MINECRAFT_1_9),
-                    map(0x3A, MINECRAFT_1_12),
-                    map(0x3B, MINECRAFT_1_12_1),
-                    map(0x3E, MINECRAFT_1_13));
+                    map(0x3D, MINECRAFT_1_8, false),
+                    map(0x38, MINECRAFT_1_9, false),
+                    map(0x3A, MINECRAFT_1_12, false),
+                    map(0x3B, MINECRAFT_1_12_1, false),
+                    map(0x3E, MINECRAFT_1_13, false));
             CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
-                    map(0x3B, MINECRAFT_1_8),
-                    map(0x3F, MINECRAFT_1_9),
-                    map(0x41, MINECRAFT_1_12),
-                    map(0x42, MINECRAFT_1_12_1),
-                    map(0x45, MINECRAFT_1_13));
+                    map(0x3B, MINECRAFT_1_8, false),
+                    map(0x3F, MINECRAFT_1_9, false),
+                    map(0x41, MINECRAFT_1_12, false),
+                    map(0x42, MINECRAFT_1_12_1, false),
+                    map(0x45, MINECRAFT_1_13, false));
             CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
-                    map(0x3E, MINECRAFT_1_8),
-                    map(0x41, MINECRAFT_1_9),
-                    map(0x43, MINECRAFT_1_12),
-                    map(0x44, MINECRAFT_1_12_1),
-                    map(0x47, MINECRAFT_1_13));
+                    map(0x3E, MINECRAFT_1_8, false),
+                    map(0x41, MINECRAFT_1_9, false),
+                    map(0x43, MINECRAFT_1_12, false),
+                    map(0x44, MINECRAFT_1_12_1, false),
+                    map(0x47, MINECRAFT_1_13, false));
             CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
-                    map(0x3C, MINECRAFT_1_8),
-                    map(0x42, MINECRAFT_1_9),
-                    map(0x44, MINECRAFT_1_12),
-                    map(0x45, MINECRAFT_1_12_1),
-                    map(0x48, MINECRAFT_1_13));
+                    map(0x3C, MINECRAFT_1_8, false),
+                    map(0x42, MINECRAFT_1_9, false),
+                    map(0x44, MINECRAFT_1_12, false),
+                    map(0x45, MINECRAFT_1_12_1, false),
+                    map(0x48, MINECRAFT_1_13, false));
         }
     },
     LOGIN {
@@ -188,6 +188,7 @@ public enum StateRegistry {
             return result;
         }
 
+        
         public <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier, PacketMapping... mappings) {
             if (mappings.length == 0) {
                 throw new IllegalArgumentException("At least one mapping must be provided.");
@@ -198,8 +199,9 @@ public enum StateRegistry {
                 if (version == null) {
                     throw new IllegalArgumentException("Unknown protocol version " + mapping.protocolVersion);
                 }
-
-                version.packetIdToSupplier.put(mapping.id, packetSupplier);
+                if (mapping.needPacketDecode) {
+                    version.packetIdToSupplier.put(mapping.id, packetSupplier);
+                }
                 version.packetClassToId.put(clazz, mapping.id);
 
                 ImmutableIntArray linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
@@ -210,7 +212,7 @@ public enum StateRegistry {
                         for (PacketMapping m : mappings) {
                             if (linkedVersion == m.protocolVersion) continue links;
                         }
-                        register(clazz, packetSupplier, map(mapping.id, linkedVersion));
+                        register(clazz, packetSupplier, map(mapping.id, linkedVersion, mapping.needPacketDecode));
                     }
                 }
             }
@@ -258,10 +260,12 @@ public enum StateRegistry {
     public static class PacketMapping {
         private final int id;
         private final int protocolVersion;
-
-        public PacketMapping(int id, int protocolVersion) {
+        private final boolean needPacketDecode;
+        
+        public PacketMapping(int id, int protocolVersion, boolean needPacketDecode) {
             this.id = id;
             this.protocolVersion = protocolVersion;
+            this.needPacketDecode = needPacketDecode;
         }
 
         @Override
@@ -287,8 +291,12 @@ public enum StateRegistry {
         }
     }
 
+    private static PacketMapping map(int id, int version, boolean handleFromBackend) {
+        return new PacketMapping(id, version, handleFromBackend);
+    }
+    
     private static PacketMapping map(int id, int version) {
-        return new PacketMapping(id, version);
+        return map(id, version, true);
     }
 
     private static PacketMapping[] genericMappings(int id) {

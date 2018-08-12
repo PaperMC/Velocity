@@ -85,6 +85,12 @@ modules.xml
 # BlueJ files
 *.ctxt
 
+# Eclipse #
+**/.classpath
+**/.project
+**/.settings/
+**/bin/
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -123,3 +129,4 @@ gradle-app.setting
 logs/
 /velocity.toml
 server-icon.png
+/bin/
