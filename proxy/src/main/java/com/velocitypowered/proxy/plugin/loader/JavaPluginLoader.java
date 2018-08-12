@@ -2,12 +2,15 @@ package com.velocitypowered.proxy.plugin.loader;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.velocitypowered.api.plugin.*;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginCandidate;
+import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
@@ -77,17 +80,16 @@ public class JavaPluginLoader implements PluginLoader {
             throw new IllegalArgumentException("No path in plugin description");
         }
 
-        Object instance = javaDescription.getMainClass().newInstance();
-        // TODO Inject server variable, logger...
-        // Should we add Guice?
+        Injector injector = Guice.createInjector(new VelocityPluginModule(javaDescription));
+        Object instance = injector.getInstance(javaDescription.getMainClass());
 
         return new VelocityPluginContainer(
-            description.getId(),
-            description.getVersion().orElse(null),
-            description.getAuthor().orElse(null),
-            description.getDependencies(),
-            source.get(),
-            instance
+                description.getId(),
+                description.getVersion().orElse(null),
+                description.getAuthor().orElse(null),
+                description.getDependencies(),
+                source.get(),
+                instance
         );
     }
 
@@ -120,12 +122,12 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         return new JavaVelocityPluginCandidate(
-            annotation.id(),
-            annotation.version(),
-            annotation.author(),
-            dependencies,
-            source,
-            mainClass
+                annotation.id(),
+                annotation.version(),
+                annotation.author(),
+                dependencies,
+                source,
+                mainClass
         );
     }
 
