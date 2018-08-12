@@ -8,6 +8,10 @@ import com.velocitypowered.api.command.CommandInvoker;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.Favicon;
+import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
@@ -19,6 +23,7 @@ import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.command.CommandManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
+import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.Ratelimiter;
@@ -58,6 +63,7 @@ public class VelocityServer implements ProxyServer {
     private final CommandManager commandManager = new CommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
+    private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -131,11 +137,36 @@ public class VelocityServer implements ProxyServer {
 
         httpClient = new NettyHttpClient(this);
 
+        loadPlugins();
+
         this.cm.bind(configuration.getBind());
 
         if (configuration.isQueryEnabled()) {
             this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
         }
+    }
+
+    private void loadPlugins() {
+        logger.info("Loading plugins...");
+
+        try {
+            Path pluginPath = Paths.get("plugins");
+
+            if (Files.notExists(pluginPath)) {
+                Files.createDirectory(pluginPath);
+            } else {
+                if (!Files.isDirectory(pluginPath)) {
+                    logger.warn("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
+                    return;
+                }
+
+                pluginManager.loadPlugins(pluginPath);
+            }
+        } catch (Exception e) {
+            logger.error("Couldn't load plugins", e);
+        }
+
+        logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }
 
     public ServerMap getServers() {
@@ -233,5 +264,10 @@ public class VelocityServer implements ProxyServer {
     @Override
     public CommandInvoker getConsoleCommandInvoker() {
         return consoleCommandInvoker;
+    }
+
+    @Override
+    public PluginManager getPluginManager() {
+        return pluginManager;
     }
 }

@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.server.ServerInfo;
 
 import javax.annotation.Nonnull;
@@ -71,4 +72,11 @@ public interface ProxyServer {
      * @return the console command invoker
      */
     CommandInvoker getConsoleCommandInvoker();
+
+    /**
+     * Gets the {@link PluginManager} instance.
+     *
+     * @return the plugin manager instance
+     */
+    PluginManager getPluginManager();
 }
