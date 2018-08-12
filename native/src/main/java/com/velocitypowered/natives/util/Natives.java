@@ -40,18 +40,18 @@ public class Natives {
     public static final NativeCodeLoader<VelocityCompressorFactory> compressor = new NativeCodeLoader<>(
             ImmutableList.of(
                     new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
-                            copyAndLoadNative("/macosx/velocity-compress.dylib"), "native compression (macOS)",
+                            copyAndLoadNative("/macosx/velocity-compress.dylib"), "native (macOS)",
                             NativeVelocityCompressor.FACTORY),
                     new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
-                            copyAndLoadNative("/linux_x64/velocity-compress.so"), "native compression (Linux amd64)",
+                            copyAndLoadNative("/linux_x64/velocity-compress.so"), "native (Linux amd64)",
                             NativeVelocityCompressor.FACTORY),
-                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java compression", JavaVelocityCompressor.FACTORY)
+                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java", JavaVelocityCompressor.FACTORY)
             )
     );
 
     public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
             ImmutableList.of(
-                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java cipher", JavaVelocityCipher.FACTORY)
+                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java", JavaVelocityCipher.FACTORY)
             )
     );
 }
