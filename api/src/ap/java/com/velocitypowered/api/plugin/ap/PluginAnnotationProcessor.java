@@ -26,6 +26,8 @@ import java.util.*;
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
     private ProcessingEnvironment environment;
+    private String pluginClassFound;
+    private boolean warnedAboutMultiplePlugins;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -51,6 +53,16 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             }
 
             Name qualifiedName = ((TypeElement) element).getQualifiedName();
+
+            if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
+                if (!warnedAboutMultiplePlugins) {
+                    environment.getMessager().printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support " +
+                            "multiple plugins. We are using " + pluginClassFound + " for your plugin's main class.");
+                    warnedAboutMultiplePlugins = true;
+                }
+                return false;
+            }
+
             Plugin plugin = element.getAnnotation(Plugin.class);
             if (!PluginCandidate.ID_PATTERN.matcher(plugin.id()).matches()) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
@@ -75,6 +87,7 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
                 try (Writer writer = new BufferedWriter(object.openWriter())) {
                     new Gson().toJson(pluginJson, writer);
                 }
+                pluginClassFound = qualifiedName.toString();
             } catch (IOException e) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Unable to generate plugin file");
             }
