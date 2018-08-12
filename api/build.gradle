@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'maven-publish'
 }
 
 sourceSets {
@@ -30,6 +31,10 @@ task sourcesJar(type: Jar) {
     from sourceSets.ap.output
 }
 
+jar {
+    from sourceSets.ap.output
+}
+
 shadowJar {
     from sourceSets.ap.output
 }
@@ -38,4 +43,23 @@ artifacts {
     archives javadocJar
     archives shadowJar
     archives sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+
+    // TODO: Set up a Maven repository on Velocity's infrastructure, preferably something lightweight.
+    /*repositories {
+        maven {
+            name = 'myRepo'
+            url = "file://${buildDir}/repo"
+        }
+    }*/
 }

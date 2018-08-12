@@ -18,7 +18,7 @@ public interface PluginCandidate {
      * alphanumeric characters, dashes or underscores, must start with
      * an alphabetic character and cannot be longer than 64 characters.
      */
-    Pattern ID_PATTERN = Pattern.compile("[A-z][A-z0-9-_]{0,63}");
+    Pattern ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{0,63}");
 
     /**
      * Gets the qualified ID of the {@link Plugin} within this container.

@@ -1,6 +1,8 @@
-package com.velocitypowered.api.plugin.apt;
+package com.velocitypowered.api.plugin.ap;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginCandidate;
 
@@ -19,9 +21,7 @@ import javax.tools.StandardLocation;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
@@ -39,6 +39,10 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        if (roundEnv.processingOver()) {
+            return false;
+        }
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Plugin.class)) {
             if (element.getKind() != ElementKind.CLASS) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Only classes can be annotated with "
@@ -58,9 +62,13 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             // All good, generate the velocity-plugin.json.
             Map<String, Object> pluginJson = new HashMap<>();
             pluginJson.put("id", plugin.id());
-            pluginJson.put("main", qualifiedName);
+            pluginJson.put("main", qualifiedName.toString());
             pluginJson.put("author", plugin.author());
-            pluginJson.put("dependencies", plugin.dependencies());
+            List<Map<String, Object>> serializedDependencies = new ArrayList<>();
+            for (Dependency dependency : plugin.dependencies()) {
+                serializedDependencies.add(ImmutableMap.of("id", dependency.id(), "optional", dependency.optional()));
+            }
+            pluginJson.put("dependencies", serializedDependencies);
             pluginJson.put("version", plugin.version());
             try {
                 FileObject object = environment.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "velocity-plugin.json");
