@@ -85,8 +85,8 @@ public class JavaPluginLoader implements PluginLoader {
 
         return new VelocityPluginContainer(
                 description.getId(),
-                description.getVersion().orElse(null),
-                description.getAuthor().orElse(null),
+                description.getVersion(),
+                description.getAuthor(),
                 description.getDependencies(),
                 source.get(),
                 instance
