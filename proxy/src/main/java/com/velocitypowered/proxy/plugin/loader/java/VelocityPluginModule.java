@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VelocityPluginModule implements Module {
-    private final JavaVelocityPluginCandidate description;
+    private final JavaVelocityPluginDescription description;
 
-    public VelocityPluginModule(JavaVelocityPluginCandidate description) {
+    public VelocityPluginModule(JavaVelocityPluginDescription description) {
         this.description = description;
     }
 

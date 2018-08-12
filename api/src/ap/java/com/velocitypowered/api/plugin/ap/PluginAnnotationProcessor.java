@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
-import com.velocitypowered.api.plugin.PluginCandidate;
+import com.velocitypowered.api.plugin.PluginDescription;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -64,7 +64,7 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             }
 
             Plugin plugin = element.getAnnotation(Plugin.class);
-            if (!PluginCandidate.ID_PATTERN.matcher(plugin.id()).matches()) {
+            if (!PluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
                         + qualifiedName + ". IDs must start alphabetically, have alphanumeric characters, and can " +
                         "contain dashes or underscores.");

@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 /**
  * Represents metadata for a specific version of a plugin.
  */
-public interface PluginCandidate {
+public interface PluginDescription {
     /**
      * The pattern plugin IDs must match. Plugin IDs may only contain
      * alphanumeric characters, dashes or underscores, must start with
@@ -31,25 +31,21 @@ public interface PluginCandidate {
     /**
      * Gets the version of the {@link Plugin} within this container.
      *
-     * @return the plugin version, or {@link Optional#empty()} if unknown
+     * @return the plugin version
      * @see Plugin#version()
      */
-    default Optional<String> getVersion() {
-        return Optional.empty();
-    }
+    String getVersion();
 
     /**
      * Gets the author of the {@link Plugin} within this container.
      *
-     * @return the plugin author, or {@link Optional#empty()} if unknown
+     * @return the plugin author
      * @see Plugin#author()
      */
-    default Optional<String> getAuthor() {
-        return Optional.empty();
-    }
+    String getAuthor();
 
     /**
-     * Gets a {@link Set} of all dependencies of the {@link Plugin} within
+     * Gets a {@link Collection} of all dependencies of the {@link Plugin} within
      * this container.
      *
      * @return the plugin dependencies, can be empty

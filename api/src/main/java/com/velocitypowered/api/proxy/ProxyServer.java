@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Represents a Minecraft proxy server that follows the Velocity API.
+ * Represents a Minecraft proxy server that is compatible with the Velocity API.
  */
 public interface ProxyServer {
     /**

@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.plugin;
 
-import com.velocitypowered.api.plugin.PluginCandidate;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
@@ -31,7 +31,7 @@ public class VelocityPluginManager implements PluginManager {
     }
 
     private void registerPlugin(PluginContainer plugin) {
-        plugins.put(plugin.getId(), plugin);
+        plugins.put(plugin.getDescription().getId(), plugin);
         plugin.getInstance().ifPresent(instance -> pluginInstances.put(instance, plugin));
     }
 
@@ -39,7 +39,7 @@ public class VelocityPluginManager implements PluginManager {
         checkNotNull(directory, "directory");
         checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
 
-        List<PluginCandidate> found = new ArrayList<>();
+        List<PluginDescription> found = new ArrayList<>();
         JavaPluginLoader loader = new JavaPluginLoader(server);
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, p -> Files.isRegularFile(p) && p.toString().endsWith(".jar"))) {
@@ -57,11 +57,11 @@ public class VelocityPluginManager implements PluginManager {
             return;
         }
 
-        List<PluginCandidate> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
+        List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
         // Now load the plugins
         pluginLoad:
-        for (PluginCandidate plugin : sortedPlugins) {
+        for (PluginDescription plugin : sortedPlugins) {
             // Verify dependencies
             for (PluginDependency dependency : plugin.getDependencies()) {
                 if (!dependency.isOptional() && !isLoaded(dependency.getId())) {

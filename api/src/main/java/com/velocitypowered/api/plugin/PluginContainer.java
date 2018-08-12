@@ -1,27 +1,24 @@
 package com.velocitypowered.api.plugin;
 
-import org.slf4j.Logger;
-
 import java.util.Optional;
 
 /**
- * A wrapper around a class marked with an {@link Plugin} annotation to
- * retrieve information from the annotation for easier use.
+ * A wrapper around a plugin loaded by the proxy.
  */
-public interface PluginContainer extends PluginCandidate {
+public interface PluginContainer {
     /**
-     * Returns the created instance of {@link Plugin} if it is available.
+     * Returns the plugin's description.
+     *
+     * @return the plugin's description
+     */
+    PluginDescription getDescription();
+
+    /**
+     * Returns the created plugin if it is available.
      *
      * @return the instance if available
      */
     default Optional<?> getInstance() {
         return Optional.empty();
     }
-
-    /**
-     * Returns the assigned logger to this {@link Plugin}.
-     *
-     * @return the assigned logger
-     */
-    Logger getLogger();
 }
