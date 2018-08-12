@@ -1,8 +1,6 @@
 package com.velocitypowered.api.plugin.ap;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginDescription;
 
@@ -72,20 +70,11 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             }
 
             // All good, generate the velocity-plugin.json.
-            Map<String, Object> pluginJson = new HashMap<>();
-            pluginJson.put("id", plugin.id());
-            pluginJson.put("main", qualifiedName.toString());
-            pluginJson.put("author", plugin.author());
-            List<Map<String, Object>> serializedDependencies = new ArrayList<>();
-            for (Dependency dependency : plugin.dependencies()) {
-                serializedDependencies.add(ImmutableMap.of("id", dependency.id(), "optional", dependency.optional()));
-            }
-            pluginJson.put("dependencies", serializedDependencies);
-            pluginJson.put("version", plugin.version());
+            SerializedPluginDescription description = SerializedPluginDescription.from(plugin, qualifiedName.toString());
             try {
                 FileObject object = environment.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "velocity-plugin.json");
                 try (Writer writer = new BufferedWriter(object.openWriter())) {
-                    new Gson().toJson(pluginJson, writer);
+                    new Gson().toJson(description, writer);
                 }
                 pluginClassFound = qualifiedName.toString();
             } catch (IOException e) {
