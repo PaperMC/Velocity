@@ -1,13 +1,18 @@
 package com.velocitypowered.proxy.plugin.loader;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.velocitypowered.api.plugin.*;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginCandidate;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.nio.file.Files;
@@ -15,9 +20,8 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 
 public class JavaPluginLoader implements PluginLoader {
@@ -89,20 +93,22 @@ public class JavaPluginLoader implements PluginLoader {
 
     private String getMainClassName(Path source) throws Exception {
         try (JarInputStream in = new JarInputStream(new BufferedInputStream(Files.newInputStream(source)))) {
-            Manifest manifest = in.getManifest();
+            JarEntry entry;
+            while ((entry = in.getNextJarEntry()) != null) {
+                if (entry.getName().equals("velocity-plugin.json")) {
+                    try (Reader pluginInfoReader = new InputStreamReader(in)) {
+                        JsonObject pluginInfo = VelocityServer.GSON.fromJson(pluginInfoReader, JsonObject.class);
+                        JsonElement mainClass = pluginInfo.get("main");
+                        if (mainClass == null) {
+                            throw new IllegalStateException("JAR's plugin info doesn't contain a main class.");
+                        }
 
-            if (manifest == null) {
-                throw new InvalidPluginException("Jar does not contain a manifest");
+                        return mainClass.getAsString();
+                    }
+                }
             }
 
-            Attributes attributes = manifest.getMainAttributes();
-            String className = attributes.getValue("Main-Class");
-
-            if (className == null) {
-                throw new InvalidPluginException("Plugin manifest does not contain Main-Class attribute");
-            }
-
-            return className;
+            throw new IllegalStateException("JAR does not contain a valid Velocity plugin.");
         }
     }
 
