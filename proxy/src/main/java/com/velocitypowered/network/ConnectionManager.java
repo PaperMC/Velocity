@@ -1,6 +1,7 @@
 package com.velocitypowered.network;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -68,7 +69,7 @@ public final class ConnectionManager {
     }
 
     private void logChannelInformation() {
-        logger.info("Using channel type {}", transportType);
+        logger.info("Connections will use {} channels, {} compression, {} ciphers", transportType, Natives.compressor.getLoadedVariant(), Natives.cipher.getLoadedVariant());
     }
 
     public void bind(final InetSocketAddress address) {
@@ -168,7 +169,7 @@ public final class ConnectionManager {
         KQUEUE(KQueueServerSocketChannel.class, KQueueSocketChannel.class, KQueueDatagramChannel.class) {
             @Override
             public EventLoopGroup createEventLoopGroup(boolean boss) {
-                String name = "Netty Kqueue " + (boss ? "Boss" : "Worker") + " #%d";
+                String name = "Netty KQueue " + (boss ? "Boss" : "Worker") + " #%d";
                 return new KQueueEventLoopGroup(0, createThreadFactory(name));
             }
         };
