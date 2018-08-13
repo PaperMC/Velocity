@@ -6,7 +6,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.Listener;
+import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginManager;
 import net.kyori.event.EventSubscriber;
 import net.kyori.event.PostOrder;
@@ -125,7 +125,7 @@ public class VelocityEventManager implements EventManager {
     private static class VelocityMethodScanner implements MethodScanner<Object> {
         @Override
         public boolean shouldRegister(@NonNull Object listener, @NonNull Method method) {
-            return method.isAnnotationPresent(Listener.class);
+            return method.isAnnotationPresent(Subscribe.class);
         }
 
         @Override

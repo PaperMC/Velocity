@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Represents a method that can
+ * An annotation that indicates that this method can be used to listen for an event from the proxy.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Listener {
+public @interface Subscribe {
 }
