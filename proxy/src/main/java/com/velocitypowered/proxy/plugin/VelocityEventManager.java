@@ -11,10 +11,7 @@ import com.velocitypowered.api.plugin.PluginManager;
 import net.kyori.event.EventSubscriber;
 import net.kyori.event.PostOrder;
 import net.kyori.event.PostResult;
-import net.kyori.event.method.MethodEventBus;
-import net.kyori.event.method.MethodScanner;
-import net.kyori.event.method.SimpleMethodEventBus;
-import net.kyori.event.method.annotation.DefaultMethodScanner;
+import net.kyori.event.method.*;
 import net.kyori.event.method.asm.ASMEventExecutorFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,14 +19,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class VelocityEventManager implements EventManager {
     private static final Logger logger = LogManager.getLogger(VelocityEventManager.class);
@@ -38,7 +30,9 @@ public class VelocityEventManager implements EventManager {
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
     private final ListMultimap<Object, EventHandler> registeredHandlersByPlugin = Multimaps
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
-    private final MethodEventBus<Object, Object> bus = new SimpleMethodEventBus<>(new ASMEventExecutorFactory<>(), new KyoriMethodScanner());
+    private final MethodEventBus<Object, Object> bus = new SimpleMethodEventBus<>(
+            new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
+            new VelocityMethodScanner());
     private final ExecutorService service;
     private final PluginManager pluginManager;
 
@@ -111,7 +105,7 @@ public class VelocityEventManager implements EventManager {
         service.awaitTermination(10, TimeUnit.SECONDS);
     }
 
-    private static class KyoriMethodScanner implements MethodScanner<Object> {
+    private static class VelocityMethodScanner implements MethodScanner<Object> {
         @Override
         public boolean shouldRegister(@NonNull Object listener, @NonNull Method method) {
             return method.isAnnotationPresent(Listener.class);

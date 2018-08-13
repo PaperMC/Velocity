@@ -49,6 +49,7 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
@@ -141,7 +142,11 @@ public class VelocityServer implements ProxyServer {
         pluginManager.getPlugins().forEach(container -> {
             container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
         });
-        eventManager.post(new ProxyInitializeEvent());
+        try {
+            eventManager.post(new ProxyInitializeEvent()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            // Ignore, we don't care.
+        }
 
         this.cm.bind(configuration.getBind());
 

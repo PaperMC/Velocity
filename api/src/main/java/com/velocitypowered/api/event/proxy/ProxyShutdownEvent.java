@@ -5,4 +5,8 @@ package com.velocitypowered.api.event.proxy;
  * exits.
  */
 public class ProxyShutdownEvent {
+    @Override
+    public String toString() {
+        return "ProxyShutdownEvent";
+    }
 }
