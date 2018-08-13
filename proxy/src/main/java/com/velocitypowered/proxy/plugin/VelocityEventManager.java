@@ -61,6 +61,11 @@ public class VelocityEventManager implements EventManager {
 
     @Override
     public CompletableFuture<Object> post(@Nonnull Object event) {
+        if (!bus.hasSubscribers(event.getClass())) {
+            // Optimization: nobody's listening, better to optimize for the common case.
+            return CompletableFuture.completedFuture(event);
+        }
+
         CompletableFuture<Object> eventFuture = new CompletableFuture<>();
         service.execute(() -> {
             PostResult result = bus.post(event);
