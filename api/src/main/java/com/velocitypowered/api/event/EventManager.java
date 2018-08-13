@@ -19,6 +19,7 @@ public interface EventManager {
      * @param plugin the plugin to associate with the listener
      * @param eventClass the class for the event listener to register
      * @param listener the listener to register
+     * @param <E> the event type to handle
      */
     <E> void register(@Nonnull Object plugin, @Nonnull Class<E> eventClass, @Nonnull EventHandler<E> listener);
 
@@ -55,6 +56,7 @@ public interface EventManager {
      * Unregisters a specific listener for a specific plugin.
      * @param plugin the plugin to associate with the listener
      * @param listener the listener to register
+     * @param <E> the event type to handle
      */
     <E> void unregister(@Nonnull Object plugin, @Nonnull EventHandler<E> listener);
 }

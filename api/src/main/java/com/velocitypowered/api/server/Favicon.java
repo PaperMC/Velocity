@@ -79,6 +79,7 @@ public final class Favicon {
      * Creates a new {@code Favicon} by reading the image from the specified {@code path}.
      * @param path the path to the image to create a favicon for
      * @return the created {@link Favicon} instance
+     * @throws IOException if the file could not be read from the path
      */
     public static Favicon create(@Nonnull Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path)) {
