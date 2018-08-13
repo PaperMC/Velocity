@@ -4,9 +4,7 @@ import com.velocitypowered.proxy.console.VelocityConsole;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.text.DecimalFormat;
 
 public class Velocity {
     private static final Logger logger = LogManager.getLogger(Velocity.class);
@@ -28,7 +26,8 @@ public class Velocity {
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown, "Shutdown thread"));
 
-        logger.info("Done ({}s)!", new SimpleDateFormat("ss.S", Locale.getDefault()).format(new Date(System.currentTimeMillis() - startTime)));
+        double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
+        logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
         new VelocityConsole(server).start();
     }
 }
