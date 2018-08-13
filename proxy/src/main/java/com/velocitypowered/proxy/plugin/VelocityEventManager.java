@@ -28,9 +28,9 @@ public class VelocityEventManager implements EventManager {
 
     private final ListMultimap<Object, Object> registeredListenersByPlugin = Multimaps
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
-    private final ListMultimap<Object, EventHandler> registeredHandlersByPlugin = Multimaps
+    private final ListMultimap<Object, EventHandler<?>> registeredHandlersByPlugin = Multimaps
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
-    private final MethodEventBus<Object, Object> bus = new SimpleMethodEventBus<>(
+    private final VelocityEventBus bus = new VelocityEventBus(
             new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
             new VelocityMethodScanner());
     private final ExecutorService service;
@@ -81,6 +81,8 @@ public class VelocityEventManager implements EventManager {
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
         Collection<Object> listeners = registeredListenersByPlugin.removeAll(plugin);
         listeners.forEach(bus::unregister);
+        Collection<EventHandler<?>> handlers = registeredHandlersByPlugin.removeAll(plugin);
+        handlers.forEach(bus::unregister);
     }
 
     @Override
@@ -97,12 +99,22 @@ public class VelocityEventManager implements EventManager {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(listener, "listener");
         registeredHandlersByPlugin.remove(plugin, listener);
-        bus.unregister(new KyoriToVelocityHandler<>(listener));
+        bus.unregister(listener);
     }
 
     public void shutdown() throws InterruptedException {
         service.shutdown();
         service.awaitTermination(10, TimeUnit.SECONDS);
+    }
+
+    private static class VelocityEventBus extends SimpleMethodEventBus<Object, Object> {
+        public VelocityEventBus(EventExecutor.@NonNull Factory<Object, Object> factory, @NonNull MethodScanner<Object> methodScanner) {
+            super(factory, methodScanner);
+        }
+
+        public void unregister(EventHandler<?> handler) {
+            this.unregisterMatching(s -> s instanceof KyoriToVelocityHandler && ((KyoriToVelocityHandler<?>) s).getHandler().equals(handler));
+        }
     }
 
     private static class VelocityMethodScanner implements MethodScanner<Object> {
@@ -134,17 +146,8 @@ public class VelocityEventManager implements EventManager {
             handler.execute(event);
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            KyoriToVelocityHandler<?> that = (KyoriToVelocityHandler<?>) o;
-            return Objects.equals(handler, that.handler);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(handler);
+        public EventHandler<E> getHandler() {
+            return handler;
         }
     }
 }
