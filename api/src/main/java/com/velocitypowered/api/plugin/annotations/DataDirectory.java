@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * This annotation requests that Velocity inject a {@link java.nio.file.Path} instance with a data directory for the
  * plugin.
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DataDirectory {
 }
