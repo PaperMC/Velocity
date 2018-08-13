@@ -2,7 +2,8 @@ package com.velocitypowered.proxy.plugin.loader.java;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.velocitypowered.api.plugin.annotations.DataDirectory;
+import com.velocitypowered.api.plugin.PluginDescription;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import org.slf4j.Logger;
@@ -24,5 +25,6 @@ public class VelocityPluginModule implements Module {
         binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.getId()));
         binder.bind(ProxyServer.class).toInstance(VelocityServer.getServer());
         binder.bind(Path.class).annotatedWith(DataDirectory.class).toInstance(basePluginPath.resolve(description.getId()));
+        binder.bind(PluginDescription.class).toInstance(description);
     }
 }

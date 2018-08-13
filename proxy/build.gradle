@@ -39,6 +39,7 @@ dependencies {
     runtime 'com.lmax:disruptor:3.4.2' // Async loggers
 
     compile 'it.unimi.dsi:fastutil:8.2.1'
+    compile 'net.kyori:event-method-asm:2.0.1'
 
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
