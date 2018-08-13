@@ -40,7 +40,7 @@ public class VelocityPluginManager implements PluginManager {
         checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
 
         List<PluginDescription> found = new ArrayList<>();
-        JavaPluginLoader loader = new JavaPluginLoader(server);
+        JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, p -> Files.isRegularFile(p) && p.toString().endsWith(".jar"))) {
             for (Path path : stream) {
