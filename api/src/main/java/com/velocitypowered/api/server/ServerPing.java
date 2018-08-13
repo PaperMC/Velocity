@@ -1,8 +1,10 @@
-package com.velocitypowered.proxy.data;
+package com.velocitypowered.api.server;
 
-import com.velocitypowered.api.server.Favicon;
 import net.kyori.text.Component;
 
+/**
+ * Represents a 1.7 and above server list ping response. This class is immutable.
+ */
 public class ServerPing {
     private final Version version;
     private final Players players;

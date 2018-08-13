@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.data.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -33,12 +34,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
     private final MinecraftConnection inbound;
+    private final InboundConnection apiInbound;
     private ServerLogin login;
     private byte[] verify;
     private int playerInfoId;
 
-    public LoginSessionHandler(MinecraftConnection inbound) {
+    public LoginSessionHandler(MinecraftConnection inbound, InboundConnection apiInbound) {
         this.inbound = Preconditions.checkNotNull(inbound, "inbound");
+        this.apiInbound = Preconditions.checkNotNull(apiInbound, "apiInbound");
     }
 
     @Override
@@ -137,7 +140,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private void handleSuccessfulLogin(GameProfile profile) {
         // Initiate a regular connection and move over to it.
-        ConnectedPlayer player = new ConnectedPlayer(profile, inbound);
+        ConnectedPlayer player = new ConnectedPlayer(profile, inbound, apiInbound.getVirtualHost().orElse(null));
         Optional<ServerInfo> toTry = player.getNextServerToTry();
         if (!toTry.isPresent()) {
             player.close(TextComponent.of("No available servers", TextColor.RED));

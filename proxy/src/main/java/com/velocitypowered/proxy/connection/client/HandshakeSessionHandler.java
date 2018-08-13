@@ -1,12 +1,14 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
+import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.data.ServerPing;
+import com.velocitypowered.api.server.ServerPing;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -17,6 +19,7 @@ import net.kyori.text.format.TextColor;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
@@ -37,12 +40,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             throw new IllegalArgumentException("Did not expect packet " + packet.getClass().getName());
         }
 
+        InitialInboundConnection ic = new InitialInboundConnection(connection, (Handshake) packet);
+
         Handshake handshake = (Handshake) packet;
         switch (handshake.getNextStatus()) {
             case StateRegistry.STATUS_ID:
                 connection.setState(StateRegistry.STATUS);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
-                connection.setSessionHandler(new StatusSessionHandler(connection));
+                connection.setSessionHandler(new StatusSessionHandler(connection, ic));
                 break;
             case StateRegistry.LOGIN_ID:
                 connection.setState(StateRegistry.LOGIN);
@@ -56,7 +61,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                         connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
                         return;
                     }
-                    connection.setSessionHandler(new LoginSessionHandler(connection));
+                    VelocityServer.getServer().getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+                    connection.setSessionHandler(new LoginSessionHandler(connection, ic));
                 }
                 break;
             default:
@@ -73,17 +79,21 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     configuration.getMotdComponent(),
                     null
             );
-            // The disconnect packet is the same as the server response one.
-            connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(ping)));
+            ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
+            VelocityServer.getServer().getEventManager().post(event)
+                    .thenRunAsync(() -> {
+                        // The disconnect packet is the same as the server response one.
+                        connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));
+                    }, connection.getChannel().eventLoop());
         } else if (packet instanceof LegacyHandshake) {
             connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
         }
     }
 
-    private static class InitialInboundConnection implements InboundConnection {
+    private static class LegacyInboundConnection implements InboundConnection {
         private final MinecraftConnection connection;
 
-        private InitialInboundConnection(MinecraftConnection connection) {
+        private LegacyInboundConnection(MinecraftConnection connection) {
             this.connection = connection;
         }
 
@@ -93,13 +103,18 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
         }
 
         @Override
+        public Optional<InetSocketAddress> getVirtualHost() {
+            return Optional.empty();
+        }
+
+        @Override
         public boolean isActive() {
-            return connection.getChannel().isActive();
+            return !connection.isClosed();
         }
 
         @Override
         public int getProtocolVersion() {
-            return connection.getProtocolVersion();
+            return 0;
         }
     }
 }

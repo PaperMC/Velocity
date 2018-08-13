@@ -40,14 +40,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     private final GameProfile profile;
     private final MinecraftConnection connection;
+    private final InetSocketAddress virtualHost;
     private int tryIndex = 0;
     private ServerConnection connectedServer;
     private ClientSettings clientSettings;
     private ServerConnection connectionInFlight;
 
-    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection) {
+    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.profile = profile;
         this.connection = connection;
+        this.virtualHost = virtualHost;
     }
 
     @Override
@@ -76,6 +78,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return (InetSocketAddress) connection.getChannel().remoteAddress();
+    }
+
+    @Override
+    public Optional<InetSocketAddress> getVirtualHost() {
+        return Optional.ofNullable(virtualHost);
     }
 
     @Override

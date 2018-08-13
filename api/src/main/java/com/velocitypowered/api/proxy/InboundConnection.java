@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
 
 /**
  * Represents a connection to the proxy. There is no guarantee that the connection has been fully initialized.
@@ -11,6 +12,12 @@ public interface InboundConnection {
      * @return the player's IP
      */
     InetSocketAddress getRemoteAddress();
+
+    /**
+     * Returns the hostname that the user entered into the client, if applicable.
+     * @return the hostname from the client
+     */
+    Optional<InetSocketAddress> getVirtualHost();
 
     /**
      * Determine whether or not the player remains online.
