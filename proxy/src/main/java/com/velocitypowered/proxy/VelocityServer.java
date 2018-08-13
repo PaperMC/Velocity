@@ -5,6 +5,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.Favicon;
@@ -22,6 +25,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.command.CommandManager;
+import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -79,6 +83,7 @@ public class VelocityServer implements ProxyServer {
         }
     };
     private Ratelimiter ipAttemptLimiter;
+    private VelocityEventManager eventManager;
 
     private VelocityServer() {
         commandManager.registerCommand("velocity", new VelocityCommand());
@@ -127,12 +132,16 @@ public class VelocityServer implements ProxyServer {
         }
 
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
-
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
-
         httpClient = new NettyHttpClient(this);
-
+        eventManager = new VelocityEventManager(pluginManager);
         loadPlugins();
+
+        // Post the first event
+        pluginManager.getPlugins().forEach(container -> {
+            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
+        });
+        eventManager.post(new ProxyInitializeEvent());
 
         this.cm.bind(configuration.getBind());
 
@@ -185,6 +194,14 @@ public class VelocityServer implements ProxyServer {
         }
 
         this.cm.shutdown();
+
+        eventManager.post(new ProxyShutdownEvent());
+        try {
+            eventManager.shutdown();
+        } catch (InterruptedException e) {
+            logger.error("Your plugins took over 10 seconds to shut down.");
+        }
+
         shutdown = true;
     }
 
@@ -264,5 +281,10 @@ public class VelocityServer implements ProxyServer {
     @Override
     public PluginManager getPluginManager() {
         return pluginManager;
+    }
+
+    @Override
+    public EventManager getEventManager() {
+        return eventManager;
     }
 }

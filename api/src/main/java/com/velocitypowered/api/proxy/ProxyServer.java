@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.server.ServerInfo;
 
@@ -79,4 +80,11 @@ public interface ProxyServer {
      * @return the plugin manager instance
      */
     PluginManager getPluginManager();
+
+    /**
+     * Gets the {@link EventManager} instance.
+     *
+     * @return the event manager instance
+     */
+    EventManager getEventManager();
 }
