@@ -20,7 +20,7 @@ import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.proxy.command.CommandManager;
+import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
@@ -61,7 +61,7 @@ public class VelocityServer implements ProxyServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
-    private final CommandManager commandManager = new CommandManager();
+    private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
     private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
@@ -100,7 +100,8 @@ public class VelocityServer implements ProxyServer {
         return configuration;
     }
 
-    public CommandManager getCommandManager() {
+    @Override
+    public VelocityCommandManager getCommandManager() {
         return commandManager;
     }
 

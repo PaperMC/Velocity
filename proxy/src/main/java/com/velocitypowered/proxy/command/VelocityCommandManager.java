@@ -1,27 +1,30 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandExecutor;
 import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CommandManager {
+public class VelocityCommandManager implements CommandManager {
     private final Map<String, CommandExecutor> executors = new HashMap<>();
 
+    @Override
     public void registerCommand(String name, CommandExecutor executor) {
         Preconditions.checkNotNull(name, "name");
         Preconditions.checkNotNull(executor, "executor");
         this.executors.put(name, executor);
     }
 
+    @Override
     public void unregisterCommand(String name) {
         Preconditions.checkNotNull(name, "name");
         this.executors.remove(name);
     }
 
+    @Override
     public boolean execute(CommandInvoker invoker, String cmdLine) {
         Preconditions.checkNotNull(invoker, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
