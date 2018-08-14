@@ -9,19 +9,23 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VelocityCommandManager implements CommandManager {
-    private final Map<String, Command> executors = new HashMap<>();
+    private final Map<String, Command> commands = new HashMap<>();
 
     @Override
-    public void registerCommand(String name, Command command) {
-        Preconditions.checkNotNull(name, "name");
+    public void register(final Command command, final String... aliases) {
+        Preconditions.checkNotNull(aliases, "aliases");
         Preconditions.checkNotNull(command, "executor");
-        this.executors.put(name, command);
+        for (int i = 0, length = aliases.length; i < length; i++) {
+            final String alias = aliases[i];
+            Preconditions.checkNotNull(aliases, "alias at index %s", i);
+            this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
+        }
     }
 
     @Override
-    public void unregisterCommand(String name) {
-        Preconditions.checkNotNull(name, "name");
-        this.executors.remove(name);
+    public void unregister(final String alias) {
+        Preconditions.checkNotNull(alias, "name");
+        this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
     }
 
     @Override
@@ -34,15 +38,15 @@ public class VelocityCommandManager implements CommandManager {
             return false;
         }
 
-        String command = split[0];
+        String alias = split[0];
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        Command executor = executors.get(command);
-        if (executor == null) {
+        Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+        if (command == null) {
             return false;
         }
 
         try {
-            executor.execute(source, actualArgs);
+            command.execute(source, actualArgs);
             return true;
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -60,13 +64,13 @@ public class VelocityCommandManager implements CommandManager {
 
         String command = split[0];
         if (split.length == 1) {
-            return Optional.of(executors.keySet().stream()
+            return Optional.of(commands.keySet().stream()
                     .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
                     .collect(Collectors.toList()));
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        Command executor = executors.get(command);
+        Command executor = commands.get(command);
         if (executor == null) {
             return Optional.empty();
         }
