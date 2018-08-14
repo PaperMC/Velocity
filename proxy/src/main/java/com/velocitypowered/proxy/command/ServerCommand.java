@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.command.CommandExecutor;
+import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.server.ServerInfo;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ServerCommand implements CommandExecutor {
+public class ServerCommand implements Command {
     @Override
     public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
         if (!(source instanceof Player)) {

@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.command;
 
-import com.velocitypowered.api.command.CommandExecutor;
+import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
@@ -9,7 +9,7 @@ import net.kyori.text.format.TextColor;
 
 import javax.annotation.Nonnull;
 
-public class VelocityCommand implements CommandExecutor {
+public class VelocityCommand implements Command {
     @Override
     public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
         String implVersion = VelocityServer.class.getPackage().getImplementationVersion();

@@ -9,7 +9,7 @@ import java.util.List;
  * Represents a command that can be executed by a {@link CommandSource}, such as a {@link com.velocitypowered.api.proxy.Player}
  * or the console.
  */
-public interface CommandExecutor {
+public interface Command {
     /**
      * Executes the command for the specified {@link CommandSource}.
      * @param source the source of this command

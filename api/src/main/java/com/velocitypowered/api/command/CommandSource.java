@@ -5,7 +5,7 @@ import net.kyori.text.Component;
 import javax.annotation.Nonnull;
 
 /**
- * Represents something that can be used to run a {@link CommandExecutor}.
+ * Represents something that can be used to run a {@link Command}.
  */
 public interface CommandSource {
     /**

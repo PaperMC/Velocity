@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.command.CommandExecutor;
+import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
 
@@ -9,13 +9,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VelocityCommandManager implements CommandManager {
-    private final Map<String, CommandExecutor> executors = new HashMap<>();
+    private final Map<String, Command> executors = new HashMap<>();
 
     @Override
-    public void registerCommand(String name, CommandExecutor executor) {
+    public void registerCommand(String name, Command command) {
         Preconditions.checkNotNull(name, "name");
-        Preconditions.checkNotNull(executor, "executor");
-        this.executors.put(name, executor);
+        Preconditions.checkNotNull(command, "executor");
+        this.executors.put(name, command);
     }
 
     @Override
@@ -25,8 +25,8 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     @Override
-    public boolean execute(CommandSource invoker, String cmdLine) {
-        Preconditions.checkNotNull(invoker, "invoker");
+    public boolean execute(CommandSource source, String cmdLine) {
+        Preconditions.checkNotNull(source, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
         String[] split = cmdLine.split(" ", -1);
@@ -36,21 +36,21 @@ public class VelocityCommandManager implements CommandManager {
 
         String command = split[0];
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        CommandExecutor executor = executors.get(command);
+        Command executor = executors.get(command);
         if (executor == null) {
             return false;
         }
 
         try {
-            executor.execute(invoker, actualArgs);
+            executor.execute(source, actualArgs);
             return true;
         } catch (Exception e) {
-            throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + invoker, e);
+            throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
         }
     }
 
-    public Optional<List<String>> offerSuggestions(CommandSource invoker, String cmdLine) {
-        Preconditions.checkNotNull(invoker, "invoker");
+    public Optional<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
+        Preconditions.checkNotNull(source, "source");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
         String[] split = cmdLine.split(" ", -1);
@@ -66,15 +66,15 @@ public class VelocityCommandManager implements CommandManager {
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        CommandExecutor executor = executors.get(command);
+        Command executor = executors.get(command);
         if (executor == null) {
             return Optional.empty();
         }
 
         try {
-            return Optional.of(executor.suggest(invoker, actualArgs));
+            return Optional.of(executor.suggest(source, actualArgs));
         } catch (Exception e) {
-            throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + invoker, e);
+            throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + source, e);
         }
     }
 }
