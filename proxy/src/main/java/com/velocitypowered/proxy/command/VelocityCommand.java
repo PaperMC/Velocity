@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 
 public class VelocityCommand implements CommandExecutor {
     @Override
-    public void execute(@Nonnull CommandSource invoker, @Nonnull String[] args) {
+    public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
         String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
         TextComponent thisIsVelocity = TextComponent.builder()
                 .content("This is ")
@@ -35,8 +35,8 @@ public class VelocityCommand implements CommandExecutor {
                         .build())
                 .build();
 
-        invoker.sendMessage(thisIsVelocity);
-        invoker.sendMessage(velocityInfo);
-        invoker.sendMessage(velocityWebsite);
+        source.sendMessage(thisIsVelocity);
+        source.sendMessage(velocityInfo);
+        source.sendMessage(velocityWebsite);
     }
 }

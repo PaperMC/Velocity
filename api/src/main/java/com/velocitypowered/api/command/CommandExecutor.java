@@ -12,18 +12,18 @@ import java.util.List;
 public interface CommandExecutor {
     /**
      * Executes the command for the specified {@link CommandSource}.
-     * @param invoker the invoker of this command
+     * @param source the source of this command
      * @param args the arguments for this command
      */
-    void execute(@Nonnull CommandSource invoker, @Nonnull String[] args);
+    void execute(@Nonnull CommandSource source, @Nonnull String[] args);
 
     /**
      * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
-     * @param invoker the invoker to run the command for
+     * @param source the source to run the command for
      * @param currentArgs the current, partial arguments for this command
      * @return tab complete suggestions
      */
-    default List<String> suggest(@Nonnull CommandSource invoker, @Nonnull String[] currentArgs) {
+    default List<String> suggest(@Nonnull CommandSource source, @Nonnull String[] currentArgs) {
         return ImmutableList.of();
     }
 }
