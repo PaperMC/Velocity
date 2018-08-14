@@ -1,10 +1,10 @@
 package com.velocitypowered.api.server;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.kyori.text.Component;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Represents a 1.7 and above server list ping response. This class is immutable.
@@ -16,9 +16,9 @@ public class ServerPing {
     private final Favicon favicon;
 
     public ServerPing(Version version, Players players, Component description, Favicon favicon) {
-        this.version = version;
-        this.players = players;
-        this.description = description;
+        this.version = Preconditions.checkNotNull(version, "version");
+        this.players = Preconditions.checkNotNull(players, "players");
+        this.description = Preconditions.checkNotNull(description, "description");
         this.favicon = favicon;
     }
 
@@ -34,8 +34,8 @@ public class ServerPing {
         return description;
     }
 
-    public Favicon getFavicon() {
-        return favicon;
+    public Optional<Favicon> getFavicon() {
+        return Optional.ofNullable(favicon);
     }
 
     @Override
@@ -46,6 +46,104 @@ public class ServerPing {
                 ", description=" + description +
                 ", favicon='" + favicon + '\'' +
                 '}';
+    }
+
+    public Builder asBuilder() {
+        Builder builder = new Builder();
+        builder.version = version;
+        builder.onlinePlayers = players.online;
+        builder.maximumPlayers = players.max;
+        builder.samplePlayers.addAll(players.sample);
+        builder.description = description;
+        builder.favicon = favicon;
+        return builder;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Version version;
+        private int onlinePlayers;
+        private int maximumPlayers;
+        private final List<SamplePlayer> samplePlayers = new ArrayList<>();
+        private Component description;
+        private Favicon favicon;
+
+        private Builder() {
+
+        }
+
+        public Builder version(Version version) {
+            this.version = Preconditions.checkNotNull(version, "version");
+            return this;
+        }
+
+        public Builder onlinePlayers(int onlinePlayers) {
+            this.onlinePlayers = onlinePlayers;
+            return this;
+        }
+
+        public Builder maximumPlayers(int maximumPlayers) {
+            this.maximumPlayers = maximumPlayers;
+            return this;
+        }
+
+        public Builder samplePlayers(SamplePlayer... players) {
+            this.samplePlayers.addAll(Arrays.asList(players));
+            return this;
+        }
+
+        public Builder description(Component description) {
+            this.description = Preconditions.checkNotNull(description, "description");
+            return this;
+        }
+
+        public Builder favicon(Favicon favicon) {
+            this.favicon = Preconditions.checkNotNull(favicon, "favicon");
+            return this;
+        }
+
+        public ServerPing build() {
+            return new ServerPing(version, new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon);
+        }
+
+        public Version getVersion() {
+            return version;
+        }
+
+        public int getOnlinePlayers() {
+            return onlinePlayers;
+        }
+
+        public int getMaximumPlayers() {
+            return maximumPlayers;
+        }
+
+        public List<SamplePlayer> getSamplePlayers() {
+            return samplePlayers;
+        }
+
+        public Component getDescription() {
+            return description;
+        }
+
+        public Favicon getFavicon() {
+            return favicon;
+        }
+
+        @Override
+        public String toString() {
+            return "Builder{" +
+                    "version=" + version +
+                    ", onlinePlayers=" + onlinePlayers +
+                    ", maximumPlayers=" + maximumPlayers +
+                    ", samplePlayers=" + samplePlayers +
+                    ", description=" + description +
+                    ", favicon=" + favicon +
+                    '}';
+        }
     }
 
     public static class Version {
