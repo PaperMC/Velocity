@@ -109,4 +109,18 @@ public class VelocityPluginManager implements PluginManager {
     public boolean isLoaded(String id) {
         return plugins.containsKey(id);
     }
+
+    @Override
+    public void addToClasspath(Object plugin, Path path) {
+        checkNotNull(plugin, "instance");
+        checkNotNull(path, "path");
+        checkArgument(pluginInstances.containsKey(plugin), "plugin is not loaded");
+
+        ClassLoader pluginClassloader = plugin.getClass().getClassLoader();
+        if (pluginClassloader instanceof PluginClassLoader) {
+            ((PluginClassLoader) pluginClassloader).addPath(path);
+        } else {
+            throw new UnsupportedOperationException("Operation is not supported on non-Java Velocity plugins.");
+        }
+    }
 }

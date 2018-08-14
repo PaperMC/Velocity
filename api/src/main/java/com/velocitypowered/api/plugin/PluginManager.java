@@ -1,5 +1,6 @@
 package com.velocitypowered.api.plugin;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -41,4 +42,12 @@ public interface PluginManager {
      */
     boolean isLoaded(String id);
 
+    /**
+     * Adds the specified {@code path} to the plugin classpath.
+     *
+     * @param plugin the plugin
+     * @param path the path to the JAR you want to inject into the classpath
+     * @throws UnsupportedOperationException if the operation is not applicable to this plugin
+     */
+    void addToClasspath(Object plugin, Path path);
 }
