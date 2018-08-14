@@ -3,8 +3,7 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
-
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * This event is fired when a player has initiated a connection with the proxy but before the proxy authenticates the
@@ -16,8 +15,8 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
     private ComponentResult result;
 
     public PreLoginEvent(InboundConnection connection, String username) {
-        this.connection = connection;
-        this.username = username;
+        this.connection = Preconditions.checkNotNull(connection, "connection");
+        this.username = Preconditions.checkNotNull(username, "username");
         this.result = ComponentResult.allowed();
     }
 
@@ -35,7 +34,7 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
     }
 
     @Override
-    public void setResult(@Nonnull ComponentResult result) {
+    public void setResult(@NonNull ComponentResult result) {
         this.result = Preconditions.checkNotNull(result, "result");
     }
 

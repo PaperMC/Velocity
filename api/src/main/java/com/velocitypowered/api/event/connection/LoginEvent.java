@@ -13,7 +13,7 @@ public class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> 
     private ComponentResult result;
 
     public LoginEvent(@NonNull Player player) {
-        this.player = player;
+        this.player = Preconditions.checkNotNull(player, "player");
         this.result = ComponentResult.allowed();
     }
 
