@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.util;
+package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
 
@@ -6,8 +6,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
-public enum UuidUtils {
-    ;
+public class UuidUtils {
+    private UuidUtils() {
+        throw new AssertionError();
+    }
 
     public static UUID fromUndashed(final String string) {
         Objects.requireNonNull(string, "string");

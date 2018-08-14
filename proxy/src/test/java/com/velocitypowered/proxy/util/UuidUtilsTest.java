@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.util;
 
+import com.velocitypowered.api.util.UuidUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

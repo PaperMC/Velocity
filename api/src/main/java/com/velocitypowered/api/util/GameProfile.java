@@ -1,8 +1,7 @@
-package com.velocitypowered.proxy.data;
+package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.proxy.util.UuidUtils;
 
 import java.util.List;
 import java.util.UUID;
