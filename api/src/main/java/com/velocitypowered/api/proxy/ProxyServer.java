@@ -1,6 +1,6 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -68,12 +68,12 @@ public interface ProxyServer {
     void unregisterServer(@Nonnull ServerInfo server);
 
     /**
-     * Returns an instance of {@link CommandInvoker} that can be used to determine if the command is being invoked by
+     * Returns an instance of {@link CommandSource} that can be used to determine if the command is being invoked by
      * the console or a console-like executor. Plugins that execute commands are strongly urged to implement their own
-     * {@link CommandInvoker} instead of using the console invoker.
+     * {@link CommandSource} instead of using the console invoker.
      * @return the console command invoker
      */
-    CommandInvoker getConsoleCommandInvoker();
+    CommandSource getConsoleCommandSource();
 
     /**
      * Gets the {@link PluginManager} instance.

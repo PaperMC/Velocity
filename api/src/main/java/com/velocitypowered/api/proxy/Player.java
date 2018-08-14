@@ -1,6 +1,6 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface Player extends CommandInvoker, InboundConnection {
+public interface Player extends CommandSource, InboundConnection {
     /**
      * Returns the player's current username.
      * @return the username

@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 /**
  * Represents something that can be used to run a {@link CommandExecutor}.
  */
-public interface CommandInvoker {
+public interface CommandSource {
     /**
      * Sends the specified {@code component} to the invoker.
      * @param component the text component to send

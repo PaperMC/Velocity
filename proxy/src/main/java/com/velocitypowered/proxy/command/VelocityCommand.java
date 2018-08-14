@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.command;
 
 import com.velocitypowered.api.command.CommandExecutor;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 
 public class VelocityCommand implements CommandExecutor {
     @Override
-    public void execute(@Nonnull CommandInvoker invoker, @Nonnull String[] args) {
+    public void execute(@Nonnull CommandSource invoker, @Nonnull String[] args) {
         String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
         TextComponent thisIsVelocity = TextComponent.builder()
                 .content("This is ")

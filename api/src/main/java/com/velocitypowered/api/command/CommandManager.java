@@ -8,5 +8,5 @@ public interface CommandManager {
 
     void unregisterCommand(String name);
 
-    boolean execute(CommandInvoker invoker, String cmdLine);
+    boolean execute(CommandSource invoker, String cmdLine);
 }

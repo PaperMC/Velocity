@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandExecutor;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class ServerCommand implements CommandExecutor {
     @Override
-    public void execute(@Nonnull CommandInvoker invoker, @Nonnull String[] args) {
+    public void execute(@Nonnull CommandSource invoker, @Nonnull String[] args) {
         if (!(invoker instanceof Player)) {
             invoker.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
             return;
@@ -42,7 +42,7 @@ public class ServerCommand implements CommandExecutor {
     }
 
     @Override
-    public List<String> suggest(@Nonnull CommandInvoker invoker, @Nonnull String[] currentArgs) {
+    public List<String> suggest(@Nonnull CommandSource invoker, @Nonnull String[] currentArgs) {
         if (currentArgs.length == 0) {
             return VelocityServer.getServer().getAllServers().stream()
                     .map(ServerInfo::getName)

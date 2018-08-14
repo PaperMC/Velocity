@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -68,7 +68,7 @@ public class VelocityServer implements ProxyServer {
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-    private final CommandInvoker consoleCommandInvoker = new CommandInvoker() {
+    private final CommandSource consoleCommandSource = new CommandSource() {
         @Override
         public void sendMessage(@Nonnull Component component) {
             logger.info(ComponentSerializers.LEGACY.serialize(component));
@@ -276,8 +276,8 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public CommandInvoker getConsoleCommandInvoker() {
-        return consoleCommandInvoker;
+    public CommandSource getConsoleCommandSource() {
+        return consoleCommandSource;
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandExecutor;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
 
 import java.util.*;
@@ -25,7 +25,7 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     @Override
-    public boolean execute(CommandInvoker invoker, String cmdLine) {
+    public boolean execute(CommandSource invoker, String cmdLine) {
         Preconditions.checkNotNull(invoker, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -49,7 +49,7 @@ public class VelocityCommandManager implements CommandManager {
         }
     }
 
-    public Optional<List<String>> offerSuggestions(CommandInvoker invoker, String cmdLine) {
+    public Optional<List<String>> offerSuggestions(CommandSource invoker, String cmdLine) {
         Preconditions.checkNotNull(invoker, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
