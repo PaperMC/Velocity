@@ -95,6 +95,11 @@ public class ServerPing {
             return this;
         }
 
+        public Builder clearSamplePlayers() {
+            this.samplePlayers.clear();
+            return this;
+        }
+
         public Builder description(Component description) {
             this.description = Preconditions.checkNotNull(description, "description");
             return this;
