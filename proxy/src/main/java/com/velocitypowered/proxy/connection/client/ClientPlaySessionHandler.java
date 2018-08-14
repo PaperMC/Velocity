@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -116,6 +117,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
+        VelocityServer.getServer().getEventManager().fireAndForget(new DisconnectEvent(player));
     }
 
     @Override

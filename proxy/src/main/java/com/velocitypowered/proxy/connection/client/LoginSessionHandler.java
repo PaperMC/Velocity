@@ -1,7 +1,10 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -11,7 +14,6 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import io.netty.buffer.Unpooled;
 import net.kyori.text.TextComponent;
@@ -100,7 +102,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                             }
 
                             GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
-                            handleSuccessfulLogin(profile);
+                            startProxyLogin(profile);
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
@@ -117,15 +119,25 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void initiateLogin() {
-        if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
-            // Request encryption.
-            EncryptionRequest request = generateRequest();
-            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-            inbound.write(request);
-        } else {
-            // Offline-mode, don't try to request encryption.
-            handleSuccessfulLogin(GameProfile.forOfflinePlayer(login.getUsername()));
-        }
+        PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
+        VelocityServer.getServer().getEventManager().fire(event)
+                .thenRunAsync(() -> {
+                    if (!event.getResult().isAllowed()) {
+                        // The component is guaranteed to be provided if the connection was denied.
+                        inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                        return;
+                    }
+
+                    if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
+                        // Request encryption.
+                        EncryptionRequest request = generateRequest();
+                        this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+                        inbound.write(request);
+                    } else {
+                        // Offline-mode, don't try to request encryption.
+                        startProxyLogin(GameProfile.forOfflinePlayer(login.getUsername()));
+                    }
+                }, inbound.getChannel().eventLoop());
     }
 
     private EncryptionRequest generateRequest() {
@@ -138,9 +150,24 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return request;
     }
 
-    private void handleSuccessfulLogin(GameProfile profile) {
+    private void startProxyLogin(GameProfile profile) {
         // Initiate a regular connection and move over to it.
         ConnectedPlayer player = new ConnectedPlayer(profile, inbound, apiInbound.getVirtualHost().orElse(null));
+
+        LoginEvent event = new LoginEvent(player);
+        VelocityServer.getServer().getEventManager().fire(event)
+                .thenRunAsync(() -> {
+                    if (!event.getResult().isAllowed()) {
+                        // The component is guaranteed to be provided if the connection was denied.
+                        inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                        return;
+                    }
+
+                    handleProxyLogin(player);
+                }, inbound.getChannel().eventLoop());
+    }
+
+    private void handleProxyLogin(ConnectedPlayer player) {
         Optional<ServerInfo> toTry = player.getNextServerToTry();
         if (!toTry.isPresent()) {
             player.close(TextComponent.of("No available servers", TextColor.RED));
@@ -154,8 +181,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
 
         ServerLoginSuccess success = new ServerLoginSuccess();
-        success.setUsername(profile.getName());
-        success.setUuid(profile.idAsUuid());
+        success.setUsername(player.getUsername());
+        success.setUuid(player.getUniqueId());
         inbound.write(success);
 
         inbound.setAssociation(player);

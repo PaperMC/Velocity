@@ -12,15 +12,21 @@ import javax.annotation.Nonnull;
  */
 public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
     private final InboundConnection connection;
+    private final String username;
     private ComponentResult result;
 
-    public PreLoginEvent(InboundConnection connection) {
+    public PreLoginEvent(InboundConnection connection, String username) {
         this.connection = connection;
+        this.username = username;
         this.result = ComponentResult.allowed();
     }
 
     public InboundConnection getConnection() {
         return connection;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     @Override
@@ -37,6 +43,7 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
     public String toString() {
         return "PreLoginEvent{" +
                 "connection=" + connection +
+                ", username='" + username + '\'' +
                 ", result=" + result +
                 '}';
     }
