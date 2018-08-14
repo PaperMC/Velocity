@@ -26,11 +26,11 @@ import java.util.jar.JarInputStream;
 import java.util.regex.Pattern;
 
 public class JavaPluginLoader implements PluginLoader {
-    private final ProxyServer server;
+    private final PluginManager pluginManager;
     private final Path baseDirectory;
 
-    public JavaPluginLoader(ProxyServer server, Path baseDirectory) {
-        this.server = server;
+    public JavaPluginLoader(PluginManager pluginManager, Path baseDirectory) {
+        this.pluginManager = pluginManager;
         this.baseDirectory = baseDirectory;
     }
 
@@ -74,7 +74,7 @@ public class JavaPluginLoader implements PluginLoader {
             throw new IllegalArgumentException("No path in plugin description");
         }
 
-        Injector injector = Guice.createInjector(new VelocityPluginModule(javaDescription, baseDirectory));
+        Injector injector = Guice.createInjector(new VelocityPluginModule(pluginManager, javaDescription, baseDirectory));
         Object instance = injector.getInstance(javaDescription.getMainClass());
 
         return new VelocityPluginContainer(

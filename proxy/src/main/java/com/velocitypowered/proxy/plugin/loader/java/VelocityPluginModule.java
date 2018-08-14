@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.plugin.loader.java;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.velocitypowered.api.plugin.PluginDescription;
+import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
@@ -12,10 +13,12 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 
 public class VelocityPluginModule implements Module {
+    private final PluginManager pluginManager;
     private final JavaVelocityPluginDescription description;
     private final Path basePluginPath;
 
-    public VelocityPluginModule(JavaVelocityPluginDescription description, Path basePluginPath) {
+    public VelocityPluginModule(PluginManager pluginManager, JavaVelocityPluginDescription description, Path basePluginPath) {
+        this.pluginManager = pluginManager;
         this.description = description;
         this.basePluginPath = basePluginPath;
     }
@@ -26,5 +29,6 @@ public class VelocityPluginModule implements Module {
         binder.bind(ProxyServer.class).toInstance(VelocityServer.getServer());
         binder.bind(Path.class).annotatedWith(DataDirectory.class).toInstance(basePluginPath.resolve(description.getId()));
         binder.bind(PluginDescription.class).toInstance(description);
+        binder.bind(PluginManager.class).toInstance(pluginManager);
     }
 }
