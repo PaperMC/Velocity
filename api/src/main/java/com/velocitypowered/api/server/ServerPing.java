@@ -3,6 +3,8 @@ package com.velocitypowered.api.server;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 
@@ -13,9 +15,9 @@ public class ServerPing {
     private final Version version;
     private final Players players;
     private final Component description;
-    private final Favicon favicon;
+    private final @Nullable Favicon favicon;
 
-    public ServerPing(Version version, Players players, Component description, Favicon favicon) {
+    public ServerPing(@NonNull Version version, @NonNull Players players, @NonNull Component description, @Nullable Favicon favicon) {
         this.version = Preconditions.checkNotNull(version, "version");
         this.players = Preconditions.checkNotNull(players, "players");
         this.description = Preconditions.checkNotNull(description, "description");

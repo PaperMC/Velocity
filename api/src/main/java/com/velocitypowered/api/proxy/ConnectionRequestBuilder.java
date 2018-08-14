@@ -2,6 +2,7 @@ package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.server.ServerInfo;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -15,14 +16,14 @@ public interface ConnectionRequestBuilder {
      * Returns the server that this connection request represents.
      * @return the server this request will connect to
      */
-    ServerInfo getServer();
+    @NonNull ServerInfo getServer();
 
     /**
      * Initiates the connection to the remote server and emits a result on the {@link CompletableFuture} after the user
      * has logged on. No messages will be communicated to the client: the user is responsible for all error handling.
      * @return a {@link CompletableFuture} representing the status of this connection
      */
-    CompletableFuture<Result> connect();
+    @NonNull CompletableFuture<Result> connect();
 
     /**
      * Initiates the connection to the remote server without waiting for a result. Velocity will use generic error

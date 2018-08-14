@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
@@ -43,7 +42,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public void register(@Nonnull Object plugin, @Nonnull Object listener) {
+    public void register(@NonNull Object plugin, @NonNull Object listener) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(listener, "listener");
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
@@ -52,7 +51,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public <E> void register(@Nonnull Object plugin, @Nonnull Class<E> eventClass, @Nonnull EventHandler<E> handler) {
+    public <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(eventClass, "eventClass");
         Preconditions.checkNotNull(handler, "listener");
@@ -60,7 +59,8 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public CompletableFuture<Object> fire(@Nonnull Object event) {
+    public @NonNull CompletableFuture<Object> fire(@NonNull Object event) {
+        Preconditions.checkNotNull(event, "event");
         if (!bus.hasSubscribers(event.getClass())) {
             // Optimization: nobody's listening.
             return CompletableFuture.completedFuture(event);
@@ -81,7 +81,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public void unregisterListeners(@Nonnull Object plugin) {
+    public void unregisterListeners(@NonNull Object plugin) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
         Collection<Object> listeners = registeredListenersByPlugin.removeAll(plugin);
@@ -91,7 +91,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public void unregisterListener(@Nonnull Object plugin, @Nonnull Object listener) {
+    public void unregisterListener(@NonNull Object plugin, @NonNull Object listener) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(listener, "listener");
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
@@ -100,7 +100,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public <E> void unregister(@Nonnull Object plugin, @Nonnull EventHandler<E> handler) {
+    public <E> void unregister(@NonNull Object plugin, @NonNull EventHandler<E> handler) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(handler, "listener");
         registeredHandlersByPlugin.remove(plugin, handler);

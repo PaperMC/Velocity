@@ -3,8 +3,9 @@ package com.velocitypowered.api.event;
 import com.google.common.base.Preconditions;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -21,7 +22,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
      * Sets the result of this event.
      * @param result the new result
      */
-    void setResult(@Nonnull R result);
+    void setResult(@NonNull R result);
 
     /**
      * Represents a result for an event.
@@ -66,9 +67,9 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         private static final ComponentResult ALLOWED = new ComponentResult(true, null);
 
         private final boolean allowed;
-        private final Component reason;
+        private final @Nullable Component reason;
 
-        private ComponentResult(boolean allowed, Component reason) {
+        private ComponentResult(boolean allowed, @Nullable Component reason) {
             this.allowed = allowed;
             this.reason = reason;
         }
@@ -79,7 +80,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         }
 
         public Optional<Component> getReason() {
-            return Optional.empty();
+            return Optional.ofNullable(reason);
         }
 
         @Override
@@ -97,7 +98,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
             return ALLOWED;
         }
 
-        public static ComponentResult denied(@Nonnull Component reason) {
+        public static ComponentResult denied(@NonNull Component reason) {
             Preconditions.checkNotNull(reason, "reason");
             return new ComponentResult(false, reason);
         }

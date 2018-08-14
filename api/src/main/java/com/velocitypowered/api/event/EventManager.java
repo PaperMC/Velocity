@@ -1,6 +1,7 @@
 package com.velocitypowered.api.event;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -12,7 +13,7 @@ public interface EventManager {
      * @param plugin the plugin to associate with the listener
      * @param listener the listener to register
      */
-    void register(@Nonnull Object plugin, @Nonnull Object listener);
+    void register(@NonNull Object plugin, @NonNull Object listener);
 
     /**
      * Requests that the specified {@code handler} listen for events and associate it with the {@code plugin}.
@@ -21,7 +22,7 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    <E> void register(@Nonnull Object plugin, @Nonnull Class<E> eventClass, @Nonnull EventHandler<E> handler);
+    <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler);
 
     /**
      * Fires the specified event to the event bus asynchronously. This allows Velocity to continue servicing connections
@@ -29,13 +30,13 @@ public interface EventManager {
      * @param event the event to fire
      * @return a {@link CompletableFuture} representing the posted event
      */
-    CompletableFuture<Object> fire(@Nonnull Object event);
+    @NonNull CompletableFuture<Object> fire(@NonNull Object event);
 
     /**
      * Posts the specified event to the event bus and discards the result.
      * @param event the event to fire
      */
-    default void fireAndForget(@Nonnull Object event) {
+    default void fireAndForget(@NonNull Object event) {
         fire(event);
     }
 
@@ -43,14 +44,14 @@ public interface EventManager {
      * Unregisters all listeners for the specified {@code plugin}.
      * @param plugin the plugin to deregister listeners for
      */
-    void unregisterListeners(@Nonnull Object plugin);
+    void unregisterListeners(@NonNull Object plugin);
 
     /**
      * Unregisters a specific listener for a specific plugin.
      * @param plugin the plugin associated with the listener
      * @param listener the listener to deregister
      */
-    void unregisterListener(@Nonnull Object plugin, @Nonnull Object listener);
+    void unregisterListener(@NonNull Object plugin, @NonNull Object listener);
 
     /**
      * Unregisters a specific event handler for a specific plugin.
@@ -58,5 +59,5 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    <E> void unregister(@Nonnull Object plugin, @Nonnull EventHandler<E> handler);
+    <E> void unregister(@NonNull Object plugin, @NonNull EventHandler<E> handler);
 }

@@ -1,8 +1,8 @@
 package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -15,7 +15,7 @@ public interface Command {
      * @param source the source of this command
      * @param args the arguments for this command
      */
-    void execute(@Nonnull CommandSource source, @Nonnull String[] args);
+    void execute(@NonNull CommandSource source, @NonNull String[] args);
 
     /**
      * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
@@ -23,7 +23,7 @@ public interface Command {
      * @param currentArgs the current, partial arguments for this command
      * @return tab complete suggestions
      */
-    default List<String> suggest(@Nonnull CommandSource source, @Nonnull String[] currentArgs) {
+    default List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
         return ImmutableList.of();
     }
 }

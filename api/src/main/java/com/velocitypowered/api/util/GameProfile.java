@@ -2,6 +2,7 @@ package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +12,7 @@ public class GameProfile {
     private final String name;
     private final List<Property> properties;
 
-    public GameProfile(String id, String name, List<Property> properties) {
+    public GameProfile(@NonNull String id, @NonNull String name, @NonNull List<Property> properties) {
         this.id = id;
         this.name = name;
         this.properties = ImmutableList.copyOf(properties);
@@ -33,7 +34,7 @@ public class GameProfile {
         return ImmutableList.copyOf(properties);
     }
 
-    public static GameProfile forOfflinePlayer(String username) {
+    public static GameProfile forOfflinePlayer(@NonNull String username) {
         Preconditions.checkNotNull(username, "username");
         String id = UuidUtils.toUndashed(UuidUtils.generateOfflinePlayerUuid(username));
         return new GameProfile(id, username, ImmutableList.of());
@@ -53,7 +54,7 @@ public class GameProfile {
         private final String value;
         private final String signature;
 
-        public Property(String name, String value, String signature) {
+        public Property(@NonNull String name, @NonNull String value, @NonNull String signature) {
             this.name = name;
             this.value = value;
             this.signature = signature;

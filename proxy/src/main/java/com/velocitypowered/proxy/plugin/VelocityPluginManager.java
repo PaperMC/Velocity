@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.plugin;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -9,6 +10,7 @@ import com.velocitypowered.proxy.plugin.loader.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -30,12 +32,12 @@ public class VelocityPluginManager implements PluginManager {
         this.server = checkNotNull(server, "server");
     }
 
-    private void registerPlugin(PluginContainer plugin) {
+    private void registerPlugin(@NonNull PluginContainer plugin) {
         plugins.put(plugin.getDescription().getId(), plugin);
         plugin.getInstance().ifPresent(instance -> pluginInstances.put(instance, plugin));
     }
 
-    public void loadPlugins(Path directory) throws IOException {
+    public void loadPlugins(@NonNull Path directory) throws IOException {
         checkNotNull(directory, "directory");
         checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
 
@@ -85,7 +87,7 @@ public class VelocityPluginManager implements PluginManager {
     }
 
     @Override
-    public Optional<PluginContainer> fromInstance(Object instance) {
+    public @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance) {
         checkNotNull(instance, "instance");
 
         if (instance instanceof PluginContainer) {
@@ -96,22 +98,23 @@ public class VelocityPluginManager implements PluginManager {
     }
 
     @Override
-    public Optional<PluginContainer> getPlugin(String id) {
+    public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
+        checkNotNull(id, "id");
         return Optional.ofNullable(plugins.get(id));
     }
 
     @Override
-    public Collection<PluginContainer> getPlugins() {
+    public @NonNull Collection<PluginContainer> getPlugins() {
         return Collections.unmodifiableCollection(plugins.values());
     }
 
     @Override
-    public boolean isLoaded(String id) {
+    public boolean isLoaded(@NonNull String id) {
         return plugins.containsKey(id);
     }
 
     @Override
-    public void addToClasspath(Object plugin, Path path) {
+    public void addToClasspath(@NonNull Object plugin, @NonNull Path path) {
         checkNotNull(plugin, "instance");
         checkNotNull(path, "path");
         checkArgument(pluginInstances.containsKey(plugin), "plugin is not loaded");

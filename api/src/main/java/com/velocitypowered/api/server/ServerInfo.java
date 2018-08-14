@@ -1,6 +1,7 @@
 package com.velocitypowered.api.server;
 
 import com.google.common.base.Preconditions;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.net.InetSocketAddress;
 import java.util.Objects;
@@ -9,24 +10,24 @@ import java.util.Objects;
  * ServerInfo represents a server that a player can connect to. This object is immutable and safe for concurrent access.
  */
 public final class ServerInfo {
-    private final String name;
-    private final InetSocketAddress address;
+    private final @NonNull String name;
+    private final @NonNull InetSocketAddress address;
 
     /**
      * Creates a new ServerInfo object.
      * @param name the name for the server
      * @param address the address of the server to connect to
      */
-    public ServerInfo(String name, InetSocketAddress address) {
+    public ServerInfo(@NonNull String name, @NonNull InetSocketAddress address) {
         this.name = Preconditions.checkNotNull(name, "name");
         this.address = Preconditions.checkNotNull(address, "address");
     }
 
-    public final String getName() {
+    public final @NonNull String getName() {
         return name;
     }
 
-    public final InetSocketAddress getAddress() {
+    public final @NonNull InetSocketAddress getAddress() {
         return address;
     }
 
