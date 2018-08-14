@@ -1,6 +1,10 @@
 package com.velocitypowered.api.server;
 
+import com.google.common.collect.ImmutableList;
 import net.kyori.text.Component;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Represents a 1.7 and above server list ping response. This class is immutable.
@@ -73,10 +77,12 @@ public class ServerPing {
     public static class Players {
         private final int online;
         private final int max;
+        private final List<SamplePlayer> sample;
 
-        public Players(int online, int max) {
+        public Players(int online, int max, List<SamplePlayer> sample) {
             this.online = online;
             this.max = max;
+            this.sample = ImmutableList.copyOf(sample);
         }
 
         public int getOnline() {
@@ -87,11 +93,42 @@ public class ServerPing {
             return max;
         }
 
+        public List<SamplePlayer> getSample() {
+            return sample;
+        }
+
         @Override
         public String toString() {
             return "Players{" +
                     "online=" + online +
                     ", max=" + max +
+                    ", sample=" + sample +
+                    '}';
+        }
+    }
+
+    public static class SamplePlayer {
+        private final String name;
+        private final UUID id;
+
+        public SamplePlayer(String name, UUID id) {
+            this.name = name;
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public UUID getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return "SamplePlayer{" +
+                    "name='" + name + '\'' +
+                    ", id=" + id +
                     '}';
         }
     }

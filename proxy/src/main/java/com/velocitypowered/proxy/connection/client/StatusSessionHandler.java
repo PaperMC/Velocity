@@ -43,7 +43,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 ProtocolConstants.MAXIMUM_GENERIC_VERSION;
         ServerPing initialPing = new ServerPing(
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers()),
+                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), sample),
                 configuration.getMotdComponent(),
                 configuration.getFavicon()
         );

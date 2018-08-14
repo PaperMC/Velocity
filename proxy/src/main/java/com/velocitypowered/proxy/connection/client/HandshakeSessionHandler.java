@@ -75,7 +75,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
             ServerPing ping = new ServerPing(
                     new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                    new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers()),
+                    new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), sample),
                     configuration.getMotdComponent(),
                     null
             );
