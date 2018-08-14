@@ -49,7 +49,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         );
 
         ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
-        VelocityServer.getServer().getEventManager().post(event)
+        VelocityServer.getServer().getEventManager().fire(event)
                 .thenRunAsync(() -> {
                     StatusResponse response = new StatusResponse();
                     response.setStatus(VelocityServer.GSON.toJson(event.getPing()));

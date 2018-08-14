@@ -80,7 +80,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     null
             );
             ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
-            VelocityServer.getServer().getEventManager().post(event)
+            VelocityServer.getServer().getEventManager().fire(event)
                     .thenRunAsync(() -> {
                         // The disconnect packet is the same as the server response one.
                         connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));

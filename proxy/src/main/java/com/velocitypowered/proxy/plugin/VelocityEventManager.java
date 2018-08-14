@@ -52,15 +52,15 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public <E> void register(@Nonnull Object plugin, @Nonnull Class<E> eventClass, @Nonnull EventHandler<E> listener) {
+    public <E> void register(@Nonnull Object plugin, @Nonnull Class<E> eventClass, @Nonnull EventHandler<E> handler) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(eventClass, "eventClass");
-        Preconditions.checkNotNull(listener, "listener");
-        bus.register(eventClass, new KyoriToVelocityHandler<>(listener));
+        Preconditions.checkNotNull(handler, "listener");
+        bus.register(eventClass, new KyoriToVelocityHandler<>(handler));
     }
 
     @Override
-    public CompletableFuture<Object> post(@Nonnull Object event) {
+    public CompletableFuture<Object> fire(@Nonnull Object event) {
         if (!bus.hasSubscribers(event.getClass())) {
             // Optimization: nobody's listening.
             return CompletableFuture.completedFuture(event);
@@ -81,7 +81,7 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public void unregisterPluginListeners(@Nonnull Object plugin) {
+    public void unregisterListeners(@Nonnull Object plugin) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
         Collection<Object> listeners = registeredListenersByPlugin.removeAll(plugin);
@@ -100,11 +100,11 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public <E> void unregister(@Nonnull Object plugin, @Nonnull EventHandler<E> listener) {
+    public <E> void unregister(@Nonnull Object plugin, @Nonnull EventHandler<E> handler) {
         Preconditions.checkNotNull(plugin, "plugin");
-        Preconditions.checkNotNull(listener, "listener");
-        registeredHandlersByPlugin.remove(plugin, listener);
-        bus.unregister(listener);
+        Preconditions.checkNotNull(handler, "listener");
+        registeredHandlersByPlugin.remove(plugin, handler);
+        bus.unregister(handler);
     }
 
     public void shutdown() throws InterruptedException {

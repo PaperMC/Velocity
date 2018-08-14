@@ -12,10 +12,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.Favicon;
 import com.velocitypowered.api.plugin.PluginManager;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.ServerInfo;
-import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -23,7 +20,6 @@ import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.command.CommandManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
@@ -143,7 +139,7 @@ public class VelocityServer implements ProxyServer {
             container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
         });
         try {
-            eventManager.post(new ProxyInitializeEvent()).get();
+            eventManager.fire(new ProxyInitializeEvent()).get();
         } catch (InterruptedException | ExecutionException e) {
             // Ignore, we don't care.
         }
@@ -200,7 +196,7 @@ public class VelocityServer implements ProxyServer {
 
         this.cm.shutdown();
 
-        eventManager.post(new ProxyShutdownEvent());
+        eventManager.fire(new ProxyShutdownEvent());
         try {
             eventManager.shutdown();
         } catch (InterruptedException e) {
