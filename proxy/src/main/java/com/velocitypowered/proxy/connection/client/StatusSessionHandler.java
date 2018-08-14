@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
@@ -43,7 +44,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 ProtocolConstants.MAXIMUM_GENERIC_VERSION;
         ServerPing initialPing = new ServerPing(
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), sample),
+                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                 configuration.getMotdComponent(),
                 configuration.getFavicon()
         );
