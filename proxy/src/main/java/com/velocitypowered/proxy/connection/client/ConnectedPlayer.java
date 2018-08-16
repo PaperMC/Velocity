@@ -2,6 +2,8 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.permission.PermissionFunction;
+import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
@@ -35,12 +37,14 @@ import java.util.concurrent.CompletableFuture;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
+    public static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
     private final GameProfile profile;
     private final MinecraftConnection connection;
     private final InetSocketAddress virtualHost;
+    private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
     private ServerConnection connectedServer;
     private ClientSettings clientSettings;
@@ -83,6 +87,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public Optional<InetSocketAddress> getVirtualHost() {
         return Optional.ofNullable(virtualHost);
+    }
+
+    public void setPermissionFunction(PermissionFunction permissionFunction) {
+        this.permissionFunction = permissionFunction;
     }
 
     @Override
@@ -230,7 +238,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     @Override
     public boolean hasPermission(@Nonnull String permission) {
-        return false; // TODO: Implement permissions.
+        return permissionFunction.getPermissionSetting(permission).asBoolean();
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

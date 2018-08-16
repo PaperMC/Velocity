@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.connection.VelocityConstants;
@@ -154,9 +155,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         // Initiate a regular connection and move over to it.
         ConnectedPlayer player = new ConnectedPlayer(profile, inbound, apiInbound.getVirtualHost().orElse(null));
 
-        LoginEvent event = new LoginEvent(player);
-        VelocityServer.getServer().getEventManager().fire(event)
-                .thenRunAsync(() -> {
+        // load permissions first
+        VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+                .thenComposeAsync(event -> {
+                    // wait for permissions to load, then set the players permission function
+                    player.setPermissionFunction(event.createFunction(player));
+                    // then call & wait for the login event
+                    return VelocityServer.getServer().getEventManager().fire(new LoginEvent(player));
+                })
+                // then complete the connection
+                .thenAcceptAsync(event -> {
                     if (!event.getResult().isAllowed()) {
                         // The component is guaranteed to be provided if the connection was denied.
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
