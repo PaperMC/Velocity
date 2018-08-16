@@ -11,4 +11,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Subscribe {
+
+    /**
+     * The order events will be posted to this listener.
+     *
+     * @return the order
+     */
+    PostOrder order() default PostOrder.NORMAL;
+
 }

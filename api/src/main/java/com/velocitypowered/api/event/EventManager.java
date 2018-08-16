@@ -22,7 +22,19 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler);
+    default <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler) {
+        register(plugin, eventClass, PostOrder.NORMAL, handler);
+    }
+
+    /**
+     * Requests that the specified {@code handler} listen for events and associate it with the {@code plugin}.
+     * @param plugin the plugin to associate with the handler
+     * @param eventClass the class for the event handler to register
+     * @param postOrder the order in which events should be posted to the handler
+     * @param handler the handler to register
+     * @param <E> the event type to handle
+     */
+    <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull PostOrder postOrder, @NonNull EventHandler<E> handler);
 
     /**
      * Fires the specified event to the event bus asynchronously. This allows Velocity to continue servicing connections
