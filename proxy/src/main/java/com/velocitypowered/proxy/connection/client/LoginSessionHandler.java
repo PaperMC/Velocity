@@ -59,7 +59,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                     ));
                 } else {
                     // Proceed with the regular login process.
-                    initiateLogin();
+                    beginPreLogin();
                 }
             }
         } else if (packet instanceof ServerLogin) {
@@ -73,7 +73,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 message.setData(Unpooled.EMPTY_BUFFER);
                 inbound.write(message);
             } else {
-                initiateLogin();
+                beginPreLogin();
             }
         } else if (packet instanceof EncryptionResponse) {
             try {
@@ -103,7 +103,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                             }
 
                             GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
-                            startProxyLogin(profile);
+                            initializePlayer(profile);
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
@@ -119,7 +119,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
     }
 
-    private void initiateLogin() {
+    private void beginPreLogin() {
         PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
         VelocityServer.getServer().getEventManager().fire(event)
                 .thenRunAsync(() -> {
@@ -136,7 +136,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         inbound.write(request);
                     } else {
                         // Offline-mode, don't try to request encryption.
-                        startProxyLogin(GameProfile.forOfflinePlayer(login.getUsername()));
+                        initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()));
                     }
                 }, inbound.getChannel().eventLoop());
     }
@@ -151,13 +151,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return request;
     }
 
-    private void startProxyLogin(GameProfile profile) {
+    private void initializePlayer(GameProfile profile) {
         // Initiate a regular connection and move over to it.
         ConnectedPlayer player = new ConnectedPlayer(profile, inbound, apiInbound.getVirtualHost().orElse(null));
 
         // load permissions first
         VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-                .thenComposeAsync(event -> {
+                .thenCompose(event -> {
                     // wait for permissions to load, then set the players permission function
                     player.setPermissionFunction(event.createFunction(player));
                     // then call & wait for the login event
