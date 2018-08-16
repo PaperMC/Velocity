@@ -36,99 +36,99 @@ public enum StateRegistry {
     PLAY {
         {
             SERVERBOUND.register(TabCompleteRequest.class, TabCompleteRequest::new,
-                    map(0x14, MINECRAFT_1_8, true),
-                    map(0x01, MINECRAFT_1_9, true),
-                    map(0x02, MINECRAFT_1_12, true),
-                    map(0x01, MINECRAFT_1_12_1, true),
-                    map(0x05, MINECRAFT_1_13, true));
+                    map(0x14, MINECRAFT_1_8, false),
+                    map(0x01, MINECRAFT_1_9, false),
+                    map(0x02, MINECRAFT_1_12, false),
+                    map(0x01, MINECRAFT_1_12_1, false),
+                    map(0x05, MINECRAFT_1_13, false));
             SERVERBOUND.register(Chat.class, Chat::new,
-                    map(0x01, MINECRAFT_1_8, true),
-                    map(0x02, MINECRAFT_1_9, true),
-                    map(0x03, MINECRAFT_1_12, true),
-                    map(0x02, MINECRAFT_1_12_2, true),
-                    map(0x02, MINECRAFT_1_13, true));
+                    map(0x01, MINECRAFT_1_8, false),
+                    map(0x02, MINECRAFT_1_9, false),
+                    map(0x03, MINECRAFT_1_12, false),
+                    map(0x02, MINECRAFT_1_12_2, false),
+                    map(0x02, MINECRAFT_1_13, false));
             SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
-                    map(0x15, MINECRAFT_1_8, true),
-                    map(0x04, MINECRAFT_1_9, true),
-                    map(0x05, MINECRAFT_1_12, true),
-                    map(0x04, MINECRAFT_1_12_1, true),
-                    map(0x04, MINECRAFT_1_13, true));
+                    map(0x15, MINECRAFT_1_8, false),
+                    map(0x04, MINECRAFT_1_9, false),
+                    map(0x05, MINECRAFT_1_12, false),
+                    map(0x04, MINECRAFT_1_12_1, false),
+                    map(0x04, MINECRAFT_1_13, false));
             SERVERBOUND.register(PluginMessage.class, PluginMessage::new,
-                    map(0x17, MINECRAFT_1_8, true),
-                    map(0x09, MINECRAFT_1_9, true),
-                    map(0x0A, MINECRAFT_1_12, true),
-                    map(0x09, MINECRAFT_1_12_1, true),
-                    map(0x0A, MINECRAFT_1_13, true));
+                    map(0x17, MINECRAFT_1_8, false),
+                    map(0x09, MINECRAFT_1_9, false),
+                    map(0x0A, MINECRAFT_1_12, false),
+                    map(0x09, MINECRAFT_1_12_1, false),
+                    map(0x0A, MINECRAFT_1_13, false));
             SERVERBOUND.register(KeepAlive.class, KeepAlive::new,
-                    map(0x00, MINECRAFT_1_8, true),
-                    map(0x0B, MINECRAFT_1_9, true),
-                    map(0x0C, MINECRAFT_1_12, true),
-                    map(0x0B, MINECRAFT_1_12_1, true),
-                    map(0x0E, MINECRAFT_1_13, true));
+                    map(0x00, MINECRAFT_1_8, false),
+                    map(0x0B, MINECRAFT_1_9, false),
+                    map(0x0C, MINECRAFT_1_12, false),
+                    map(0x0B, MINECRAFT_1_12_1, false),
+                    map(0x0E, MINECRAFT_1_13, false));
 
             CLIENTBOUND.register(BossBar.class, BossBar::new,
-                    map(0x0C, MINECRAFT_1_9, true),
-                    map(0x0C, MINECRAFT_1_12, true));
+                    map(0x0C, MINECRAFT_1_9, false),
+                    map(0x0C, MINECRAFT_1_12, false));
             CLIENTBOUND.register(Chat.class, Chat::new,
-                    map(0x02, MINECRAFT_1_8, false),
-                    map(0x0F, MINECRAFT_1_9, false),
-                    map(0x0F, MINECRAFT_1_12, false),
-                    map(0x0E, MINECRAFT_1_13, false));
+                    map(0x02, MINECRAFT_1_8, true),
+                    map(0x0F, MINECRAFT_1_9, true),
+                    map(0x0F, MINECRAFT_1_12, true),
+                    map(0x0E, MINECRAFT_1_13, true));
             CLIENTBOUND.register(TabCompleteResponse.class, TabCompleteResponse::new,
-                    map(0x3A, MINECRAFT_1_8, false),
-                    map(0x0E, MINECRAFT_1_9, false),
-                    map(0x0E, MINECRAFT_1_12, false),
-                    map(0x10, MINECRAFT_1_13, false));
+                    map(0x3A, MINECRAFT_1_8, true),
+                    map(0x0E, MINECRAFT_1_9, true),
+                    map(0x0E, MINECRAFT_1_12, true),
+                    map(0x10, MINECRAFT_1_13, true));
             CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
-                    map(0x3F, MINECRAFT_1_8, true),
-                    map(0x18, MINECRAFT_1_9, true),
-                    map(0x18, MINECRAFT_1_12, true),
-                    map(0x19, MINECRAFT_1_13, true));
+                    map(0x3F, MINECRAFT_1_8, false),
+                    map(0x18, MINECRAFT_1_9, false),
+                    map(0x18, MINECRAFT_1_12, false),
+                    map(0x19, MINECRAFT_1_13, false));
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
-                    map(0x40, MINECRAFT_1_8, true),
-                    map(0x1A, MINECRAFT_1_9, true),
-                    map(0x1A, MINECRAFT_1_12, true),
-                    map(0x1B, MINECRAFT_1_13, true));
+                    map(0x40, MINECRAFT_1_8, false),
+                    map(0x1A, MINECRAFT_1_9, false),
+                    map(0x1A, MINECRAFT_1_12, false),
+                    map(0x1B, MINECRAFT_1_13, false));
             CLIENTBOUND.register(KeepAlive.class, KeepAlive::new,
-                    map(0x00, MINECRAFT_1_8, true),
-                    map(0x1F, MINECRAFT_1_9, true),
-                    map(0x1F, MINECRAFT_1_12, true),
-                    map(0x21, MINECRAFT_1_13, true));
+                    map(0x00, MINECRAFT_1_8, false),
+                    map(0x1F, MINECRAFT_1_9, false),
+                    map(0x1F, MINECRAFT_1_12, false),
+                    map(0x21, MINECRAFT_1_13, false));
             CLIENTBOUND.register(JoinGame.class, JoinGame::new,
-                    map(0x01, MINECRAFT_1_8, true),
-                    map(0x23, MINECRAFT_1_9, true),
-                    map(0x23, MINECRAFT_1_12, true),
-                    map(0x25, MINECRAFT_1_13, true));
+                    map(0x01, MINECRAFT_1_8, false),
+                    map(0x23, MINECRAFT_1_9, false),
+                    map(0x23, MINECRAFT_1_12, false),
+                    map(0x25, MINECRAFT_1_13, false));
             CLIENTBOUND.register(Respawn.class, Respawn::new,
-                    map(0x07, MINECRAFT_1_8, false),
-                    map(0x33, MINECRAFT_1_9, false),
-                    map(0x34, MINECRAFT_1_12, false),
-                    map(0x35, MINECRAFT_1_12_2, false),
-                    map(0x38, MINECRAFT_1_13, false));
+                    map(0x07, MINECRAFT_1_8, true),
+                    map(0x33, MINECRAFT_1_9, true),
+                    map(0x34, MINECRAFT_1_12, true),
+                    map(0x35, MINECRAFT_1_12_2, true),
+                    map(0x38, MINECRAFT_1_13, true));
             CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
-                    map(0x3D, MINECRAFT_1_8, false),
-                    map(0x38, MINECRAFT_1_9, false),
-                    map(0x3A, MINECRAFT_1_12, false),
-                    map(0x3B, MINECRAFT_1_12_1, false),
-                    map(0x3E, MINECRAFT_1_13, false));
+                    map(0x3D, MINECRAFT_1_8, true),
+                    map(0x38, MINECRAFT_1_9, true),
+                    map(0x3A, MINECRAFT_1_12, true),
+                    map(0x3B, MINECRAFT_1_12_1, true),
+                    map(0x3E, MINECRAFT_1_13, true));
             CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
-                    map(0x3B, MINECRAFT_1_8, false),
-                    map(0x3F, MINECRAFT_1_9, false),
-                    map(0x41, MINECRAFT_1_12, false),
-                    map(0x42, MINECRAFT_1_12_1, false),
-                    map(0x45, MINECRAFT_1_13, false));
+                    map(0x3B, MINECRAFT_1_8, true),
+                    map(0x3F, MINECRAFT_1_9, true),
+                    map(0x41, MINECRAFT_1_12, true),
+                    map(0x42, MINECRAFT_1_12_1, true),
+                    map(0x45, MINECRAFT_1_13, true));
             CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
-                    map(0x3E, MINECRAFT_1_8, false),
-                    map(0x41, MINECRAFT_1_9, false),
-                    map(0x43, MINECRAFT_1_12, false),
-                    map(0x44, MINECRAFT_1_12_1, false),
-                    map(0x47, MINECRAFT_1_13, false));
+                    map(0x3E, MINECRAFT_1_8, true),
+                    map(0x41, MINECRAFT_1_9, true),
+                    map(0x43, MINECRAFT_1_12, true),
+                    map(0x44, MINECRAFT_1_12_1, true),
+                    map(0x47, MINECRAFT_1_13, true));
             CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
-                    map(0x3C, MINECRAFT_1_8, false),
-                    map(0x42, MINECRAFT_1_9, false),
-                    map(0x44, MINECRAFT_1_12, false),
-                    map(0x45, MINECRAFT_1_12_1, false),
-                    map(0x48, MINECRAFT_1_13, false));
+                    map(0x3C, MINECRAFT_1_8, true),
+                    map(0x42, MINECRAFT_1_9, true),
+                    map(0x44, MINECRAFT_1_12, true),
+                    map(0x45, MINECRAFT_1_12_1, true),
+                    map(0x48, MINECRAFT_1_13, true));
         }
     },
     LOGIN {
@@ -138,7 +138,7 @@ public enum StateRegistry {
             SERVERBOUND.register(EncryptionResponse.class, EncryptionResponse::new,
                     genericMappings(0x01));
             SERVERBOUND.register(LoginPluginResponse.class, LoginPluginResponse::new,
-                    map(0x02, MINECRAFT_1_13, true));
+                    map(0x02, MINECRAFT_1_13, false));
 
             CLIENTBOUND.register(Disconnect.class, Disconnect::new,
                     genericMappings(0x00));
@@ -149,7 +149,7 @@ public enum StateRegistry {
             CLIENTBOUND.register(SetCompression.class, SetCompression::new,
                     genericMappings(0x03));
             CLIENTBOUND.register(LoginPluginMessage.class, LoginPluginMessage::new,
-                    map(0x04, MINECRAFT_1_13, true));
+                    map(0x04, MINECRAFT_1_13, false));
         }
     };
 
@@ -200,7 +200,7 @@ public enum StateRegistry {
                 if (version == null) {
                     throw new IllegalArgumentException("Unknown protocol version " + mapping.protocolVersion);
                 }
-                if (mapping.packetDecoding) {
+                if (!mapping.encodeOnly) {
                     version.packetIdToSupplier.put(mapping.id, packetSupplier);
                 }
                 version.packetClassToId.put(clazz, mapping.id);
@@ -213,7 +213,7 @@ public enum StateRegistry {
                         for (PacketMapping m : mappings) {
                             if (linkedVersion == m.protocolVersion) continue links;
                         }
-                        register(clazz, packetSupplier, map(mapping.id, linkedVersion, mapping.packetDecoding));
+                        register(clazz, packetSupplier, map(mapping.id, linkedVersion, mapping.encodeOnly));
                     }
                 }
             }
@@ -261,12 +261,12 @@ public enum StateRegistry {
     public static class PacketMapping {
         private final int id;
         private final int protocolVersion;
-        private final boolean packetDecoding;
+        private final boolean encodeOnly;
         
         public PacketMapping(int id, int protocolVersion, boolean packetDecoding) {
             this.id = id;
             this.protocolVersion = protocolVersion;
-            this.packetDecoding = packetDecoding;
+            this.encodeOnly = packetDecoding;
         }
 
         @Override
@@ -274,7 +274,7 @@ public enum StateRegistry {
             return "PacketMapping{" +
                     "id=" + id +
                     ", protocolVersion=" + protocolVersion +
-                    ", packetDecoding=" + packetDecoding +
+                    ", encodeOnly=" + encodeOnly +
                     '}';
         }
 
@@ -285,25 +285,32 @@ public enum StateRegistry {
             PacketMapping that = (PacketMapping) o;
             return id == that.id &&
                     protocolVersion == that.protocolVersion &&
-                    packetDecoding == that.packetDecoding;
+                    encodeOnly == that.encodeOnly;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, protocolVersion, packetDecoding);
+            return Objects.hash(id, protocolVersion, encodeOnly);
         }
     }
 
-    private static PacketMapping map(int id, int version, boolean packetDecoding) {
-        return new PacketMapping(id, version, packetDecoding);
+    /**
+     * Creates a PacketMapping using the provided arguments
+     * @param id Packet Id
+     * @param version Protocol version
+     * @param encodeOnly When true packet decoding will be disabled
+     * @return PacketMapping with the provided arguments
+     */
+    private static PacketMapping map(int id, int version, boolean encodeOnly) {
+        return new PacketMapping(id, version, encodeOnly);
     }
     
     private static PacketMapping[] genericMappings(int id) {
         return new PacketMapping[]{
-                map(id, MINECRAFT_1_8, true),
-                map(id, MINECRAFT_1_9, true),
-                map(id, MINECRAFT_1_12, true),
-                map(id, MINECRAFT_1_13, true)
+                map(id, MINECRAFT_1_8, false),
+                map(id, MINECRAFT_1_9, false),
+                map(id, MINECRAFT_1_12, false),
+                map(id, MINECRAFT_1_13, false)
         };
     }
 }
