@@ -6,11 +6,12 @@ import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginManager;
 import net.kyori.event.EventSubscriber;
-import net.kyori.event.PostOrder;
 import net.kyori.event.PostResult;
+import net.kyori.event.SimpleEventBus;
 import net.kyori.event.method.*;
 import net.kyori.event.method.asm.ASMEventExecutorFactory;
 import org.apache.logging.log4j.LogManager;
@@ -51,11 +52,12 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler) {
+    public <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull PostOrder postOrder, @NonNull EventHandler<E> handler) {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(eventClass, "eventClass");
+        Preconditions.checkNotNull(postOrder, "postOrder");
         Preconditions.checkNotNull(handler, "listener");
-        bus.register(eventClass, new KyoriToVelocityHandler<>(handler));
+        bus.register(eventClass, new KyoriToVelocityHandler<>(handler, postOrder));
     }
 
     @Override
@@ -71,8 +73,9 @@ public class VelocityEventManager implements EventManager {
             PostResult result = bus.post(event);
             if (!result.exceptions().isEmpty()) {
                 logger.error("Some errors occurred whilst posting event {}.", event);
-                for (int i = 0; i < result.exceptions().size(); i++) {
-                    logger.error("#{}: \n", i + 1, result.exceptions().get(i));
+                int i = 0;
+                for (Throwable exception : result.exceptions().values()) {
+                    logger.error("#{}: \n", i++, exception);
                 }
             }
             eventFuture.complete(event);
@@ -112,13 +115,24 @@ public class VelocityEventManager implements EventManager {
         service.awaitTermination(10, TimeUnit.SECONDS);
     }
 
-    private static class VelocityEventBus extends SimpleMethodEventBus<Object, Object> {
-        public VelocityEventBus(EventExecutor.@NonNull Factory<Object, Object> factory, @NonNull MethodScanner<Object> methodScanner) {
-            super(factory, methodScanner);
+    private static class VelocityEventBus extends SimpleEventBus<Object> {
+        private final MethodSubscriptionAdapter<Object> methodAdapter;
+
+        VelocityEventBus(EventExecutor.@NonNull Factory<Object, Object> factory, @NonNull MethodScanner<Object> methodScanner) {
+            super(Object.class);
+            this.methodAdapter = new SimpleMethodSubscriptionAdapter<>(this, factory, methodScanner);
         }
 
-        public void unregister(EventHandler<?> handler) {
-            this.unregisterMatching(s -> s instanceof KyoriToVelocityHandler && ((KyoriToVelocityHandler<?>) s).getHandler().equals(handler));
+        void register(Object listener) {
+            this.methodAdapter.register(listener);
+        }
+
+        void unregister(Object listener) {
+            this.methodAdapter.unregister(listener);
+        }
+
+        void unregister(EventHandler<?> handler) {
+            this.unregister(s -> s instanceof KyoriToVelocityHandler && ((KyoriToVelocityHandler<?>) s).getHandler().equals(handler));
         }
     }
 
@@ -129,8 +143,8 @@ public class VelocityEventManager implements EventManager {
         }
 
         @Override
-        public @NonNull PostOrder postOrder(@NonNull Object listener, @NonNull Method method) {
-            return PostOrder.NORMAL; // TODO: Allow customizing his
+        public int postOrder(@NonNull Object listener, @NonNull Method method) {
+            return method.getAnnotation(Subscribe.class).order().ordinal();
         }
 
         @Override
@@ -141,14 +155,21 @@ public class VelocityEventManager implements EventManager {
 
     private static class KyoriToVelocityHandler<E> implements EventSubscriber<E> {
         private final EventHandler<E> handler;
+        private final int postOrder;
 
-        private KyoriToVelocityHandler(EventHandler<E> handler) {
+        private KyoriToVelocityHandler(EventHandler<E> handler, PostOrder postOrder) {
             this.handler = handler;
+            this.postOrder = postOrder.ordinal();
         }
 
         @Override
-        public void invoke(@NonNull E event) throws Throwable {
+        public void invoke(@NonNull E event) {
             handler.execute(event);
+        }
+
+        @Override
+        public int postOrder() {
+            return postOrder;
         }
 
         public EventHandler<E> getHandler() {
