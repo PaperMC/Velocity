@@ -61,14 +61,14 @@ public class VelocityEventManager implements EventManager {
     }
 
     @Override
-    public @NonNull CompletableFuture<Object> fire(@NonNull Object event) {
+    public <E> @NonNull CompletableFuture<E> fire(@NonNull E event) {
         Preconditions.checkNotNull(event, "event");
         if (!bus.hasSubscribers(event.getClass())) {
             // Optimization: nobody's listening.
             return CompletableFuture.completedFuture(event);
         }
 
-        CompletableFuture<Object> eventFuture = new CompletableFuture<>();
+        CompletableFuture<E> eventFuture = new CompletableFuture<>();
         service.execute(() -> {
             PostResult result = bus.post(event);
             if (!result.exceptions().isEmpty()) {

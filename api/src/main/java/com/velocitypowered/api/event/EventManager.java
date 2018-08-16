@@ -42,7 +42,7 @@ public interface EventManager {
      * @param event the event to fire
      * @return a {@link CompletableFuture} representing the posted event
      */
-    @NonNull CompletableFuture<Object> fire(@NonNull Object event);
+    @NonNull <E> CompletableFuture<E> fire(@NonNull E event);
 
     /**
      * Posts the specified event to the event bus and discards the result.
