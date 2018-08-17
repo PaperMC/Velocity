@@ -5,7 +5,8 @@ import com.velocitypowered.api.proxy.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * This event is fired when a player disconnects from the proxy.
+ * This event is fired when a player disconnects from the proxy. Operations on the provided player, aside from basic
+ * data retrieval operations, may behave in undefined ways.
  */
 public class DisconnectEvent {
     private @NonNull final Player player;

@@ -27,6 +27,7 @@ import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
@@ -104,7 +105,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position) {
+    public void sendMessage(@NonNull Component component, @NonNull MessagePosition position) {
         Preconditions.checkNotNull(component, "component");
         Preconditions.checkNotNull(position, "position");
 
@@ -127,7 +128,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public ConnectionRequestBuilder createConnectionRequest(@Nonnull ServerInfo info) {
+    public ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info) {
         return new ConnectionRequestBuilderImpl(info);
     }
 
@@ -244,7 +245,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
         private final ServerInfo info;
 
-        public ConnectionRequestBuilderImpl(ServerInfo info) {
+        ConnectionRequestBuilderImpl(ServerInfo info) {
             this.info = Preconditions.checkNotNull(info, "info");
         }
 
