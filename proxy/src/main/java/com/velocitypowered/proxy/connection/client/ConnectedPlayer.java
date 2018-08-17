@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
@@ -207,8 +208,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
 
         // Otherwise, initiate the connection.
-        ServerConnection connection = new ServerConnection(request.getServer(), this, VelocityServer.getServer());
-        return connection.connect();
+        ServerPreConnectEvent event = new ServerPreConnectEvent(this, ServerPreConnectEvent.ServerResult.allowed(request.getServer()));
+        return VelocityServer.getServer().getEventManager().fire(event)
+                .thenCompose((newEvent) -> {
+                    if (!newEvent.getResult().isAllowed()) {
+                        return CompletableFuture.completedFuture(
+                                ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
+                        );
+                    }
+
+                    return new ServerConnection(newEvent.getResult().getInfo().get(), this, VelocityServer.getServer()).connect();
+                });
     }
 
     public void setConnectedServer(ServerConnection serverConnection) {
