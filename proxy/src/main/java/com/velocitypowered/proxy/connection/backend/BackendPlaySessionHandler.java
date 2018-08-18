@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -13,6 +15,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     public BackendPlaySessionHandler(ServerConnection connection) {
         this.connection = connection;
+    }
+
+    @Override
+    public void activated() {
+        VelocityServer.getServer().getEventManager().fireAndForget(new ServerConnectedEvent(connection.getProxyPlayer(),
+                connection.getServerInfo()));
     }
 
     @Override
