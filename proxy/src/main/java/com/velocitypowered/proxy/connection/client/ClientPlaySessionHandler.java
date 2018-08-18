@@ -76,26 +76,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             int lastSpace = req.getCommand().indexOf(' ');
             if (!req.isAssumeCommand() && lastSpace != -1) {
                 String command = req.getCommand().substring(1);
+                TabCompleteResponse response = new TabCompleteResponse();
+                response.setTransactionId(req.getTransactionId());
+                response.setStart(lastSpace);
+                response.setLength(req.getCommand().length() - lastSpace);
                 try {
-                    Optional<List<String>> offers = VelocityServer.getServer().getCommandManager().offerSuggestions(player, command);
-                    if (offers.isPresent()) {
-                        TabCompleteResponse response = new TabCompleteResponse();
-                        response.setTransactionId(req.getTransactionId());
-                        response.setStart(lastSpace);
-                        response.setLength(req.getCommand().length() - lastSpace);
-                        for (String s : offers.get()) {
-                            response.getOffers().add(new TabCompleteResponse.Offer(s, null));
-                        }
-                        player.getConnection().write(response);
-                        return;
+                    List<String> offers = VelocityServer.getServer().getCommandManager().offerSuggestions(player, command);
+                    for (String s : offers) {
+                        response.getOffers().add(new TabCompleteResponse.Offer(s, null));
                     }
-                } catch (Exception e) {
-                    logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
-                    TabCompleteResponse response = new TabCompleteResponse();
-                    response.setTransactionId(req.getTransactionId());
                     player.getConnection().write(response);
                     return;
+                } catch (Exception e) {
+                    logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
                 }
+                player.getConnection().write(response);
+                return;
             }
         }
 
