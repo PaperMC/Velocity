@@ -9,6 +9,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Optional;
 
+/**
+ * This event is fired before the player connects to a server.
+ */
 public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEvent.ServerResult> {
     private final Player player;
     private ServerResult result;
@@ -32,6 +35,9 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
+    /**
+     * Represents the result of the {@link ServerPreConnectEvent}.
+     */
     public static class ServerResult implements ResultedEvent.Result {
         private static final ServerResult DENIED = new ServerResult(false, null);
 

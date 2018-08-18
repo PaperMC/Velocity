@@ -63,6 +63,9 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         }
     }
 
+    /**
+     * Represents an "allowed/denied" result with a reason allowed for denial.
+     */
     class ComponentResult implements Result {
         private static final ComponentResult ALLOWED = new ComponentResult(true, null);
 

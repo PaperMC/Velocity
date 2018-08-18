@@ -4,6 +4,10 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.server.ServerInfo;
 
+/**
+ * This event is fired once the player has successfully connected to the target server and the connection to the previous
+ * server has been de-established.
+ */
 public class ServerConnectedEvent {
     private final Player player;
     private final ServerInfo server;
