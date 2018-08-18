@@ -85,8 +85,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     for (String s : offers) {
                         response.getOffers().add(new TabCompleteResponse.Offer(s, null));
                     }
-                    player.getConnection().write(response);
-                    return;
                 } catch (Exception e) {
                     logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
                 }
