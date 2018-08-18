@@ -22,12 +22,10 @@ public final class VelocityConsole extends SimpleTerminalConsole {
         return super.buildReader(builder
                 .appName("Velocity")
                 .completer((reader, parsedLine, list) -> {
-                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandSource(), parsedLine.line());
-                    if (offers.isPresent()) {
-                        for (String offer : offers.get()) {
-                            if (offer.isEmpty()) continue;
-                            list.add(new Candidate(offer));
-                        }
+                    List<String> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandSource(), parsedLine.line());
+                    for (String offer : offers) {
+                        if (offer.isEmpty()) continue;
+                        list.add(new Candidate(offer));
                     }
                 })
         );
