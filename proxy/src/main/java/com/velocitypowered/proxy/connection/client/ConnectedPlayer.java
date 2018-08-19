@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
@@ -248,6 +249,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             connect()
                     .whenCompleteAsync((status, throwable) -> {
                         if (throwable != null) {
+                            if (throwable instanceof ConnectException && connectedServer == null) {
+                                Optional<ServerInfo> nextServer = getNextServerToTry();
+                                if (nextServer.isPresent()) {
+                                    createConnectionRequest(nextServer.get()).fireAndForget();
+                                    return;
+                                }
+                            }
                             handleConnectionException(info, throwable);
                             return;
                         }
