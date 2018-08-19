@@ -54,30 +54,30 @@ public class VelocityCommandManager implements CommandManager {
         }
     }
 
-    public List<String> offerSuggestions(CommandSource source, String cmdLine) {
+    public Optional<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
         Preconditions.checkNotNull(source, "source");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
         String[] split = cmdLine.split(" ", -1);
         if (split.length == 0) {
-            return ImmutableList.of();
+            return Optional.empty();
         }
 
         String command = split[0];
         if (split.length == 1) {
-            return commands.keySet().stream()
+            return Optional.of(commands.keySet().stream()
                     .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
         Command executor = commands.get(command);
         if (executor == null) {
-            return ImmutableList.of();
+            return Optional.empty();
         }
 
         try {
-            return executor.suggest(source, actualArgs);
+            return Optional.of(executor.suggest(source, actualArgs));
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + source, e);
         }
