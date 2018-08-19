@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.server.ServerInfo;
 
 import javax.annotation.Nonnull;
@@ -94,4 +95,10 @@ public interface ProxyServer {
      * @return the command manager
      */
     CommandManager getCommandManager();
+
+    /**
+     * Gets the {@link Scheduler} instance.
+     * @return the scheduler instance
+     */
+    Scheduler getScheduler();
 }
