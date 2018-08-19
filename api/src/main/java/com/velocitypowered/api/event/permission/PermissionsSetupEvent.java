@@ -52,4 +52,13 @@ public class PermissionsSetupEvent {
     public void setProvider(@Nullable PermissionProvider provider) {
         this.provider = provider == null ? this.defaultProvider : provider;
     }
+
+    @Override
+    public String toString() {
+        return "PermissionsSetupEvent{" +
+                "subject=" + subject +
+                ", defaultProvider=" + defaultProvider +
+                ", provider=" + provider +
+                '}';
+    }
 }

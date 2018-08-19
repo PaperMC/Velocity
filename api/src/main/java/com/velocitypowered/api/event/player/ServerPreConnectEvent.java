@@ -35,6 +35,14 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
+    @Override
+    public String toString() {
+        return "ServerPreConnectEvent{" +
+                "player=" + player +
+                ", result=" + result +
+                '}';
+    }
+
     /**
      * Represents the result of the {@link ServerPreConnectEvent}.
      */
