@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -82,19 +83,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                         response.setTransactionId(req.getTransactionId());
                         response.setStart(lastSpace);
                         response.setLength(req.getCommand().length() - lastSpace);
+
                         for (String s : offers.get()) {
                             response.getOffers().add(new TabCompleteResponse.Offer(s, null));
                         }
+
                         player.getConnection().write(response);
-                        return;
+                    } else {
+                        player.getConnectedServer().getMinecraftConnection().write(packet);
                     }
                 } catch (Exception e) {
                     logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
-                    TabCompleteResponse response = new TabCompleteResponse();
-                    response.setTransactionId(req.getTransactionId());
-                    player.getConnection().write(response);
-                    return;
                 }
+                return;
             }
         }
 
@@ -116,6 +117,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
+        VelocityServer.getServer().getEventManager().fireAndForget(new DisconnectEvent(player));
     }
 
     @Override

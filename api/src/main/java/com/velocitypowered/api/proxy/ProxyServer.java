@@ -1,6 +1,10 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.server.ServerInfo;
 
 import javax.annotation.Nonnull;
@@ -9,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Represents a Minecraft proxy server that follows the Velocity API.
+ * Represents a Minecraft proxy server that is compatible with the Velocity API.
  */
 public interface ProxyServer {
     /**
@@ -65,10 +69,36 @@ public interface ProxyServer {
     void unregisterServer(@Nonnull ServerInfo server);
 
     /**
-     * Returns an instance of {@link CommandInvoker} that can be used to determine if the command is being invoked by
+     * Returns an instance of {@link CommandSource} that can be used to determine if the command is being invoked by
      * the console or a console-like executor. Plugins that execute commands are strongly urged to implement their own
-     * {@link CommandInvoker} instead of using the console invoker.
+     * {@link CommandSource} instead of using the console invoker.
      * @return the console command invoker
      */
-    CommandInvoker getConsoleCommandInvoker();
+    CommandSource getConsoleCommandSource();
+
+    /**
+     * Gets the {@link PluginManager} instance.
+     *
+     * @return the plugin manager instance
+     */
+    PluginManager getPluginManager();
+
+    /**
+     * Gets the {@link EventManager} instance.
+     *
+     * @return the event manager instance
+     */
+    EventManager getEventManager();
+
+    /**
+     * Gets the {@link CommandManager} instance.
+     * @return the command manager
+     */
+    CommandManager getCommandManager();
+
+    /**
+     * Gets the {@link Scheduler} instance.
+     * @return the scheduler instance
+     */
+    Scheduler getScheduler();
 }

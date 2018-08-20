@@ -1,6 +1,7 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.regex.Pattern;
 
@@ -25,7 +26,7 @@ public class LegacyChatColorUtils {
      * @param text the text to translate
      * @return the translated text
      */
-    public static String translate(char originalChar, String text) {
+    public static String translate(char originalChar, @NonNull String text) {
         Preconditions.checkNotNull(text, "text");
         char[] textChars = text.toCharArray();
         int foundSectionIdx = -1;
@@ -58,7 +59,7 @@ public class LegacyChatColorUtils {
      * @param text the text to remove color codes from
      * @return a new String without Minecraft color codes
      */
-    public static String removeFormatting(String text) {
+    public static String removeFormatting(@NonNull String text) {
         Preconditions.checkNotNull(text, "text");
         return CHAT_COLOR_MATCHER.matcher(text).replaceAll("");
     }

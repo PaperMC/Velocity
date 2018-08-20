@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.command.CommandExecutor;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -14,15 +14,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ServerCommand implements CommandExecutor {
+public class ServerCommand implements Command {
     @Override
-    public void execute(@Nonnull CommandInvoker invoker, @Nonnull String[] args) {
-        if (!(invoker instanceof Player)) {
-            invoker.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
+    public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
+        if (!(source instanceof Player)) {
+            source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
             return;
         }
 
-        Player player = (Player) invoker;
+        Player player = (Player) source;
         if (args.length == 1) {
             // Trying to connect to a server.
             String serverName = args[0];
@@ -42,7 +42,7 @@ public class ServerCommand implements CommandExecutor {
     }
 
     @Override
-    public List<String> suggest(@Nonnull CommandInvoker invoker, @Nonnull String[] currentArgs) {
+    public List<String> suggest(@Nonnull CommandSource source, @Nonnull String[] currentArgs) {
         if (currentArgs.length == 0) {
             return VelocityServer.getServer().getAllServers().stream()
                     .map(ServerInfo::getName)

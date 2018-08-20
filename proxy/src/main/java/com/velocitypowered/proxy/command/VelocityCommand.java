@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.command;
 
-import com.velocitypowered.api.command.CommandExecutor;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
@@ -9,9 +9,9 @@ import net.kyori.text.format.TextColor;
 
 import javax.annotation.Nonnull;
 
-public class VelocityCommand implements CommandExecutor {
+public class VelocityCommand implements Command {
     @Override
-    public void execute(@Nonnull CommandInvoker invoker, @Nonnull String[] args) {
+    public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
         String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
         TextComponent thisIsVelocity = TextComponent.builder()
                 .content("This is ")
@@ -35,8 +35,8 @@ public class VelocityCommand implements CommandExecutor {
                         .build())
                 .build();
 
-        invoker.sendMessage(thisIsVelocity);
-        invoker.sendMessage(velocityInfo);
-        invoker.sendMessage(velocityWebsite);
+        source.sendMessage(thisIsVelocity);
+        source.sendMessage(velocityInfo);
+        source.sendMessage(velocityWebsite);
     }
 }

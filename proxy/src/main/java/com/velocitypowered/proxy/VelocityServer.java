@@ -4,11 +4,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.Favicon;
-import com.velocitypowered.natives.util.Natives;
+import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -16,9 +20,12 @@ import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.api.server.ServerInfo;
-import com.velocitypowered.proxy.command.CommandManager;
+import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
+import com.velocitypowered.proxy.plugin.VelocityPluginManager;
+import com.velocitypowered.proxy.scheduler.Sleeper;
+import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.Ratelimiter;
@@ -40,6 +47,7 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
@@ -55,13 +63,14 @@ public class VelocityServer implements ProxyServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap();
-    private final CommandManager commandManager = new CommandManager();
+    private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
+    private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-    private final CommandInvoker consoleCommandInvoker = new CommandInvoker() {
+    private final CommandSource consoleCommandSource = new CommandSource() {
         @Override
         public void sendMessage(@Nonnull Component component) {
             logger.info(ComponentSerializers.LEGACY.serialize(component));
@@ -73,11 +82,13 @@ public class VelocityServer implements ProxyServer {
         }
     };
     private Ratelimiter ipAttemptLimiter;
+    private VelocityEventManager eventManager;
+    private VelocityScheduler scheduler;
 
     private VelocityServer() {
-        commandManager.registerCommand("velocity", new VelocityCommand());
-        commandManager.registerCommand("server", new ServerCommand());
-        commandManager.registerCommand("shutdown", new ShutdownCommand());
+        commandManager.register(new VelocityCommand(), "velocity");
+        commandManager.register(new ServerCommand(), "server");
+        commandManager.register(new ShutdownCommand(), "shutdown");
     }
 
     public static VelocityServer getServer() {
@@ -92,7 +103,8 @@ public class VelocityServer implements ProxyServer {
         return configuration;
     }
 
-    public CommandManager getCommandManager() {
+    @Override
+    public VelocityCommandManager getCommandManager() {
         return commandManager;
     }
 
@@ -121,16 +133,50 @@ public class VelocityServer implements ProxyServer {
         }
 
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
-
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
-
         httpClient = new NettyHttpClient(this);
+        eventManager = new VelocityEventManager(pluginManager);
+        scheduler = new VelocityScheduler(pluginManager, Sleeper.SYSTEM);
+        loadPlugins();
+
+        // Post the first event
+        pluginManager.getPlugins().forEach(container -> {
+            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
+        });
+        try {
+            eventManager.fire(new ProxyInitializeEvent()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            // Ignore, we don't care.
+        }
 
         this.cm.bind(configuration.getBind());
 
         if (configuration.isQueryEnabled()) {
             this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
         }
+    }
+
+    private void loadPlugins() {
+        logger.info("Loading plugins...");
+
+        try {
+            Path pluginPath = Paths.get("plugins");
+
+            if (Files.notExists(pluginPath)) {
+                Files.createDirectory(pluginPath);
+            } else {
+                if (!Files.isDirectory(pluginPath)) {
+                    logger.warn("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
+                    return;
+                }
+
+                pluginManager.loadPlugins(pluginPath);
+            }
+        } catch (Exception e) {
+            logger.error("Couldn't load plugins", e);
+        }
+
+        logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }
 
     public ServerMap getServers() {
@@ -154,6 +200,14 @@ public class VelocityServer implements ProxyServer {
         }
 
         this.cm.shutdown();
+
+        eventManager.fire(new ProxyShutdownEvent());
+        try {
+            eventManager.shutdown();
+        } catch (InterruptedException e) {
+            logger.error("Your plugins took over 10 seconds to shut down.");
+        }
+
         shutdown = true;
     }
 
@@ -226,7 +280,22 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public CommandInvoker getConsoleCommandInvoker() {
-        return consoleCommandInvoker;
+    public CommandSource getConsoleCommandSource() {
+        return consoleCommandSource;
+    }
+
+    @Override
+    public PluginManager getPluginManager() {
+        return pluginManager;
+    }
+
+    @Override
+    public EventManager getEventManager() {
+        return eventManager;
+    }
+
+    @Override
+    public VelocityScheduler getScheduler() {
+        return scheduler;
     }
 }

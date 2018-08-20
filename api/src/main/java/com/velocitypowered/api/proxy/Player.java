@@ -1,18 +1,18 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.command.CommandInvoker;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface Player extends CommandInvoker, InboundConnection {
+public interface Player extends CommandSource, InboundConnection {
     /**
      * Returns the player's current username.
      * @return the username
@@ -35,7 +35,7 @@ public interface Player extends CommandInvoker, InboundConnection {
      * Sends a chat message to the player's client.
      * @param component the chat message to send
      */
-    default void sendMessage(@Nonnull Component component) {
+    default void sendMessage(@NonNull Component component) {
         sendMessage(component, MessagePosition.CHAT);
     }
 
@@ -44,12 +44,12 @@ public interface Player extends CommandInvoker, InboundConnection {
      * @param component the chat message to send
      * @param position the position for the message
      */
-    void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position);
+    void sendMessage(@NonNull Component component, @NonNull MessagePosition position);
 
     /**
      * Creates a new connection request so that the player can connect to another server.
      * @param info the server to connect to
      * @return a new connection request
      */
-    ConnectionRequestBuilder createConnectionRequest(@Nonnull ServerInfo info);
+    ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info);
 }

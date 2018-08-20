@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -16,7 +18,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {        
+    public void activated() {
+        VelocityServer.getServer().getEventManager().fireAndForget(new ServerConnectedEvent(connection.getProxyPlayer(),
+                connection.getServerInfo()));
+    }
+
+    @Override
+    public void handle(MinecraftPacket packet) {
         //Not handleable packets: Chat, TabCompleteResponse, Respawn, Scoreboard*
         if (!connection.getProxyPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"

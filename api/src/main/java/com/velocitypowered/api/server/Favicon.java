@@ -1,8 +1,8 @@
 package com.velocitypowered.api.server;
 
 import com.google.common.base.Preconditions;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -25,7 +25,7 @@ public final class Favicon {
      * of functions.
      * @param base64Url the url for use with this favicon
      */
-    public Favicon(@Nonnull String base64Url) {
+    public Favicon(@NonNull String base64Url) {
         this.base64Url = Preconditions.checkNotNull(base64Url, "base64Url");
     }
 
@@ -62,7 +62,7 @@ public final class Favicon {
      * @param image the image to use for the favicon
      * @return the created {@link Favicon} instance
      */
-    public static Favicon create(@Nonnull BufferedImage image) {
+    public static Favicon create(@NonNull BufferedImage image) {
         Preconditions.checkNotNull(image, "image");
         Preconditions.checkArgument(image.getWidth() == 64 && image.getHeight() == 64, "Image does not have" +
                 " 64x64 dimensions (found %sx%s)", image.getWidth(), image.getHeight());
@@ -79,8 +79,9 @@ public final class Favicon {
      * Creates a new {@code Favicon} by reading the image from the specified {@code path}.
      * @param path the path to the image to create a favicon for
      * @return the created {@link Favicon} instance
+     * @throws IOException if the file could not be read from the path
      */
-    public static Favicon create(@Nonnull Path path) throws IOException {
+    public static Favicon create(@NonNull Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path)) {
             return create(ImageIO.read(stream));
         }

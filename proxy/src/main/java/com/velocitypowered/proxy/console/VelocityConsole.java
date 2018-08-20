@@ -22,13 +22,12 @@ public final class VelocityConsole extends SimpleTerminalConsole {
         return super.buildReader(builder
                 .appName("Velocity")
                 .completer((reader, parsedLine, list) -> {
-                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(server.getConsoleCommandInvoker(), parsedLine.line());
-                    if (offers.isPresent()) {
-                        for (String offer : offers.get()) {
-                            if (offer.isEmpty()) continue;
+                    Optional<List<String>> o = server.getCommandManager().offerSuggestions(server.getConsoleCommandSource(), parsedLine.line());
+                    o.ifPresent(offers -> {
+                        for (String offer : offers) {
                             list.add(new Candidate(offer));
                         }
-                    }
+                    });
                 })
         );
     }
@@ -40,8 +39,8 @@ public final class VelocityConsole extends SimpleTerminalConsole {
 
     @Override
     protected void runCommand(String command) {
-        if (!this.server.getCommandManager().execute(this.server.getConsoleCommandInvoker(), command)) {
-            server.getConsoleCommandInvoker().sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+        if (!this.server.getCommandManager().execute(this.server.getConsoleCommandSource(), command)) {
+            server.getConsoleCommandSource().sendMessage(TextComponent.of("Command not found.", TextColor.RED));
         }
     }
 

@@ -1,6 +1,13 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'maven-publish'
+}
+
+sourceSets {
+    ap {
+        compileClasspath += main.compileClasspath + main.output
+    }
 }
 
 dependencies {
@@ -8,6 +15,10 @@ dependencies {
     compile "com.google.guava:guava:${guavaVersion}"
     compile 'net.kyori:text:1.12-1.6.4'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile 'com.google.inject:guice:4.2.0'
+    compile 'org.checkerframework:checker-qual:2.5.4'
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
@@ -20,10 +31,38 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource
+    from sourceSets.ap.output
+}
+
+jar {
+    from sourceSets.ap.output
+}
+
+shadowJar {
+    from sourceSets.ap.output
 }
 
 artifacts {
     archives javadocJar
     archives shadowJar
     archives sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+
+    // TODO: Set up a Maven repository on Velocity's infrastructure, preferably something lightweight.
+    /*repositories {
+        maven {
+            name = 'myRepo'
+            url = "file://${buildDir}/repo"
+        }
+    }*/
 }

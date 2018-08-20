@@ -2,6 +2,9 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.permission.PermissionFunction;
+import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
@@ -9,7 +12,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.data.GameProfile;
+import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.ServerConnection;
@@ -25,6 +28,7 @@ import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
@@ -35,19 +39,23 @@ import java.util.concurrent.CompletableFuture;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
+    public static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
     private final GameProfile profile;
     private final MinecraftConnection connection;
+    private final InetSocketAddress virtualHost;
+    private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
     private ServerConnection connectedServer;
     private ClientSettings clientSettings;
     private ServerConnection connectionInFlight;
 
-    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection) {
+    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.profile = profile;
         this.connection = connection;
+        this.virtualHost = virtualHost;
     }
 
     @Override
@@ -79,6 +87,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public Optional<InetSocketAddress> getVirtualHost() {
+        return Optional.ofNullable(virtualHost);
+    }
+
+    public void setPermissionFunction(PermissionFunction permissionFunction) {
+        this.permissionFunction = permissionFunction;
+    }
+
+    @Override
     public boolean isActive() {
         return connection.getChannel().isActive();
     }
@@ -89,7 +106,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public void sendMessage(@Nonnull Component component, @Nonnull MessagePosition position) {
+    public void sendMessage(@NonNull Component component, @NonNull MessagePosition position) {
         Preconditions.checkNotNull(component, "component");
         Preconditions.checkNotNull(position, "position");
 
@@ -112,7 +129,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public ConnectionRequestBuilder createConnectionRequest(@Nonnull ServerInfo info) {
+    public ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info) {
         return new ConnectionRequestBuilderImpl(info);
     }
 
@@ -191,8 +208,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
 
         // Otherwise, initiate the connection.
-        ServerConnection connection = new ServerConnection(request.getServer(), this, VelocityServer.getServer());
-        return connection.connect();
+        ServerPreConnectEvent event = new ServerPreConnectEvent(this, ServerPreConnectEvent.ServerResult.allowed(request.getServer()));
+        return VelocityServer.getServer().getEventManager().fire(event)
+                .thenCompose((newEvent) -> {
+                    if (!newEvent.getResult().isAllowed()) {
+                        return CompletableFuture.completedFuture(
+                                ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
+                        );
+                    }
+
+                    return new ServerConnection(newEvent.getResult().getInfo().get(), this, VelocityServer.getServer()).connect();
+                });
     }
 
     public void setConnectedServer(ServerConnection serverConnection) {
@@ -223,13 +249,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     @Override
     public boolean hasPermission(@Nonnull String permission) {
-        return false; // TODO: Implement permissions.
+        return permissionFunction.getPermissionSetting(permission).asBoolean();
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
         private final ServerInfo info;
 
-        public ConnectionRequestBuilderImpl(ServerInfo info) {
+        ConnectionRequestBuilderImpl(ServerInfo info) {
             this.info = Preconditions.checkNotNull(info, "info");
         }
 
