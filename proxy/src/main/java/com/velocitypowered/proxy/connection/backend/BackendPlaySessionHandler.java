@@ -25,6 +25,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        //Not handleable packets: Chat, TabCompleteResponse, Respawn, Scoreboard*
         if (!connection.getProxyPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
