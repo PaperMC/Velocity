@@ -5,6 +5,7 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -37,12 +38,12 @@ public interface PluginDescription {
     String getVersion();
 
     /**
-     * Gets the author of the {@link Plugin} within this container.
+     * Gets the authors of the {@link Plugin} within this container.
      *
-     * @return the plugin author
-     * @see Plugin#author()
+     * @return the plugin authors
+     * @see Plugin#authors()
      */
-    String getAuthor();
+    List<String> getAuthors();
 
     /**
      * Gets a {@link Collection} of all dependencies of the {@link Plugin} within

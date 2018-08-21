@@ -5,23 +5,25 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class SerializedPluginDescription {
     private final String id;
-    private final String author;
+    private final List<String> authors;
     private final String main;
     private final String version;
     private final List<Dependency> dependencies;
 
-    public SerializedPluginDescription(String id, String author, String main, String version) {
-        this(id, author, main, version, ImmutableList.of());
+    public SerializedPluginDescription(String id, List<String> authors, String main, String version) {
+        this(id, authors, main, version, ImmutableList.of());
     }
 
-    public SerializedPluginDescription(String id, String author, String main, String version, List<Dependency> dependencies) {
+    public SerializedPluginDescription(String id, List<String> authors, String main, String version, List<Dependency> dependencies) {
         this.id = Preconditions.checkNotNull(id, "id");
-        this.author = Preconditions.checkNotNull(author, "author");
+        this.authors = Preconditions.checkNotNull(authors, "author");
         this.main = Preconditions.checkNotNull(main, "main");
         this.version = Preconditions.checkNotNull(version, "version");
         this.dependencies = ImmutableList.copyOf(dependencies);
@@ -32,15 +34,15 @@ public class SerializedPluginDescription {
         for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
             dependencies.add(new Dependency(dependency.id(), dependency.optional()));
         }
-        return new SerializedPluginDescription(plugin.id(), plugin.author(), qualifiedName, plugin.version(), dependencies);
+        return new SerializedPluginDescription(plugin.id(), Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty()).collect(Collectors.toList()), qualifiedName, plugin.version(), dependencies);
     }
 
     public String getId() {
         return id;
     }
 
-    public String getAuthor() {
-        return author;
+    public List<String> getAuthors() {
+        return authors;
     }
 
     public String getMain() {
@@ -61,7 +63,7 @@ public class SerializedPluginDescription {
         if (o == null || getClass() != o.getClass()) return false;
         SerializedPluginDescription that = (SerializedPluginDescription) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(author, that.author) &&
+                Objects.equals(authors, that.authors) &&
                 Objects.equals(main, that.main) &&
                 Objects.equals(version, that.version) &&
                 Objects.equals(dependencies, that.dependencies);
@@ -69,14 +71,14 @@ public class SerializedPluginDescription {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, author, main, version, dependencies);
+        return Objects.hash(id, authors, main, version, dependencies);
     }
 
     @Override
     public String toString() {
         return "SerializedPluginDescription{" +
                 "id='" + id + '\'' +
-                ", author='" + author + '\'' +
+                ", authors='" + authors + '\'' +
                 ", main='" + main + '\'' +
                 ", version='" + version + '\'' +
                 ", dependencies=" + dependencies +

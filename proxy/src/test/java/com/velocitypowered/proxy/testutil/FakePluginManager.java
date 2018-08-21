@@ -8,6 +8,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class FakePluginManager implements PluginManager {
@@ -78,8 +80,8 @@ public class FakePluginManager implements PluginManager {
                 }
 
                 @Override
-                public String getAuthor() {
-                    return "";
+                public List<String> getAuthors() {
+                    return Collections.emptyList();
                 }
             };
         }
