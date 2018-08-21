@@ -108,6 +108,7 @@ public class JavaPluginLoader implements PluginLoader {
                 description.getId(),
                 description.getName(),
                 description.getVersion(),
+                description.getDescription(),
                 description.getUrl(),
                 description.getAuthors(),
                 dependencies,

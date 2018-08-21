@@ -16,15 +16,18 @@ public class SerializedPluginDescription {
     private final String id;
     private final @Nullable String name;
     private final @Nullable String version;
+    private final @Nullable String description;
     private final @Nullable String url;
     private final @Nullable List<String> authors;
     private final @Nullable List<Dependency> dependencies;
     private final String main;
 
-    public SerializedPluginDescription(String id, String name, String version, String url, List<String> authors, List<Dependency> dependencies, String main) {
+    public SerializedPluginDescription(String id, String name, String version, String description, String url,
+            List<String> authors, List<Dependency> dependencies, String main) {
         this.id = Preconditions.checkNotNull(id, "id");
         this.name = Strings.emptyToNull(name);
         this.version = Strings.emptyToNull(version);
+        this.description = Strings.emptyToNull(description);
         this.url = Strings.emptyToNull(url);
         this.authors = authors == null || authors.isEmpty() ? null : authors;
         this.dependencies = dependencies == null || dependencies.isEmpty() ? null : dependencies;
@@ -36,7 +39,7 @@ public class SerializedPluginDescription {
         for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
             dependencies.add(new Dependency(dependency.id(), dependency.optional()));
         }
-        return new SerializedPluginDescription(plugin.id(), plugin.name(), plugin.version(), plugin.url(),
+        return new SerializedPluginDescription(plugin.id(), plugin.name(), plugin.version(), plugin.description(), plugin.url(),
                 Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty()).collect(Collectors.toList()), dependencies, qualifiedName);
     }
 
@@ -50,6 +53,10 @@ public class SerializedPluginDescription {
 
     public @Nullable String getVersion() {
         return version;
+    }
+
+    public @Nullable String getDescription() {
+        return description;
     }
 
     public @Nullable String getUrl() {
@@ -76,6 +83,7 @@ public class SerializedPluginDescription {
         return Objects.equals(id, that.id) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(version, that.version) &&
+                Objects.equals(description, that.description) &&
                 Objects.equals(url, that.url) &&
                 Objects.equals(authors, that.authors) &&
                 Objects.equals(dependencies, that.dependencies) &&
@@ -84,14 +92,16 @@ public class SerializedPluginDescription {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, version, url, authors, dependencies);
+        return Objects.hash(id, name, version, description, url, authors, dependencies);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "SerializedPluginDescription{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", version='" + version + '\'' +
+                ", description='" + description + '\'' +
                 ", url='" + url + '\'' +
                 ", authors=" + authors +
                 ", dependencies=" + dependencies +

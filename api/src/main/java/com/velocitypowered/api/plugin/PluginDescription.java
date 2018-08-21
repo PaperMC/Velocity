@@ -50,6 +50,16 @@ public interface PluginDescription {
     }
 
     /**
+     * Gets the description of the {@link Plugin} within this container.
+     *
+     * @return an {@link Optional} with the plugin description, may be empty
+     * @see Plugin#description()
+     */
+    default Optional<String> getDescription() {
+        return Optional.empty();
+    }
+
+    /**
      * Gets the url or website of the {@link Plugin} within this container.
      *
      * @return an {@link Optional} with the plugin url, may be empty

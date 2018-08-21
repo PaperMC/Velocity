@@ -37,6 +37,13 @@ public @interface Plugin {
     String version() default "";
 
     /**
+     * The description of the plugin, explaining what it can be used for.
+     *
+     * @return The plugin description, or an empty string if unknown
+     */
+    String description() default "";
+
+    /**
      * The URL or website of the plugin.
      *
      * @return The plugin url, or an empty string if unknown
