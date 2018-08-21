@@ -177,7 +177,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         if (connectedServer == null || connectedServer.getServerInfo().equals(info)) {
             // The player isn't yet connected to a server or they are already connected to the server
             // they're disconnected from.
-            connection.closeWith(Disconnect.create(disconnectReason));
+            Optional<ServerInfo> nextServer = getNextServerToTry();
+            if (nextServer.isPresent()) {
+                createConnectionRequest(nextServer.get()).fireAndForget();
+            } else {
+                connection.closeWith(Disconnect.create(disconnectReason));
+            }
         } else {
             connection.write(Chat.create(disconnectReason));
         }
