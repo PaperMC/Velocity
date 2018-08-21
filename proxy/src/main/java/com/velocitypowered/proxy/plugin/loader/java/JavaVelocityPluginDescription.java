@@ -10,14 +10,15 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class JavaVelocityPluginDescription extends VelocityPluginDescription {
-    private final Class mainClass;
+    private final Class<?> mainClass;
 
-    public JavaVelocityPluginDescription(String id, String version, List<String> authors, Collection<PluginDependency> dependencies, Path source, Class mainClass) {
-        super(id, version, authors, dependencies, source);
+    public JavaVelocityPluginDescription(String id, String name, String version, String url, List<String> authors,
+            Collection<PluginDependency> dependencies, Path source, Class<?> mainClass) {
+        super(id, name, version, url, authors, dependencies, source);
         this.mainClass = checkNotNull(mainClass);
     }
 
-    public Class getMainClass() {
+    public Class<?> getMainClass() {
         return mainClass;
     }
 }

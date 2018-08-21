@@ -1,8 +1,9 @@
 package com.velocitypowered.proxy.plugin.loader.java;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Strings;
 import com.velocitypowered.api.plugin.Plugin;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,22 +12,23 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SerializedPluginDescription {
+    // @Nullable is used here to make GSON skip these in the serialized file
     private final String id;
-    private final List<String> authors;
+    private final @Nullable String name;
+    private final @Nullable String version;
+    private final @Nullable String url;
+    private final @Nullable List<String> authors;
+    private final @Nullable List<Dependency> dependencies;
     private final String main;
-    private final String version;
-    private final List<Dependency> dependencies;
 
-    public SerializedPluginDescription(String id, List<String> authors, String main, String version) {
-        this(id, authors, main, version, ImmutableList.of());
-    }
-
-    public SerializedPluginDescription(String id, List<String> authors, String main, String version, List<Dependency> dependencies) {
+    public SerializedPluginDescription(String id, String name, String version, String url, List<String> authors, List<Dependency> dependencies, String main) {
         this.id = Preconditions.checkNotNull(id, "id");
-        this.authors = Preconditions.checkNotNull(authors, "author");
+        this.name = Strings.emptyToNull(name);
+        this.version = Strings.emptyToNull(version);
+        this.url = Strings.emptyToNull(url);
+        this.authors = authors == null || authors.isEmpty() ? null : authors;
+        this.dependencies = dependencies == null || dependencies.isEmpty() ? null : dependencies;
         this.main = Preconditions.checkNotNull(main, "main");
-        this.version = Preconditions.checkNotNull(version, "version");
-        this.dependencies = ImmutableList.copyOf(dependencies);
     }
 
     public static SerializedPluginDescription from(Plugin plugin, String qualifiedName) {
@@ -34,27 +36,36 @@ public class SerializedPluginDescription {
         for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
             dependencies.add(new Dependency(dependency.id(), dependency.optional()));
         }
-        return new SerializedPluginDescription(plugin.id(), Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty()).collect(Collectors.toList()), qualifiedName, plugin.version(), dependencies);
+        return new SerializedPluginDescription(plugin.id(), plugin.name(), plugin.version(), plugin.url(),
+                Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty()).collect(Collectors.toList()), dependencies, qualifiedName);
     }
 
     public String getId() {
         return id;
     }
 
-    public List<String> getAuthors() {
+    public @Nullable String getName() {
+        return name;
+    }
+
+    public @Nullable String getVersion() {
+        return version;
+    }
+
+    public @Nullable String getUrl() {
+        return url;
+    }
+
+    public @Nullable List<String> getAuthors() {
         return authors;
+    }
+
+    public @Nullable List<Dependency> getDependencies() {
+        return dependencies;
     }
 
     public String getMain() {
         return main;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public List<Dependency> getDependencies() {
-        return dependencies;
     }
 
     @Override
@@ -63,25 +74,28 @@ public class SerializedPluginDescription {
         if (o == null || getClass() != o.getClass()) return false;
         SerializedPluginDescription that = (SerializedPluginDescription) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(authors, that.authors) &&
-                Objects.equals(main, that.main) &&
+                Objects.equals(name, that.name) &&
                 Objects.equals(version, that.version) &&
-                Objects.equals(dependencies, that.dependencies);
+                Objects.equals(url, that.url) &&
+                Objects.equals(authors, that.authors) &&
+                Objects.equals(dependencies, that.dependencies) &&
+                Objects.equals(main, that.main);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, authors, main, version, dependencies);
+        return Objects.hash(id, name, version, url, authors, dependencies);
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "SerializedPluginDescription{" +
                 "id='" + id + '\'' +
-                ", authors='" + authors + '\'' +
-                ", main='" + main + '\'' +
+                ", name='" + name + '\'' +
                 ", version='" + version + '\'' +
+                ", url='" + url + '\'' +
+                ", authors=" + authors +
                 ", dependencies=" + dependencies +
+                ", main='" + main + '\'' +
                 '}';
     }
 
