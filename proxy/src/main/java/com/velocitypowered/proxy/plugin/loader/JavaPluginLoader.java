@@ -80,7 +80,7 @@ public class JavaPluginLoader implements PluginLoader {
         return new VelocityPluginContainer(
                 description.getId(),
                 description.getVersion(),
-                description.getAuthor(),
+                description.getAuthors(),
                 description.getDependencies(),
                 source.get(),
                 instance
@@ -112,7 +112,7 @@ public class JavaPluginLoader implements PluginLoader {
         return new JavaVelocityPluginDescription(
                 description.getId(),
                 description.getVersion(),
-                description.getAuthor(),
+                description.getAuthors(),
                 dependencies,
                 source,
                 mainClass

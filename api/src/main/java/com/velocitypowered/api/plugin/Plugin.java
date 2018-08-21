@@ -33,7 +33,7 @@ public @interface Plugin {
      *
      * @return the plugin's author, or empty if unknown
      */
-    String author() default "";
+    String[] authors() default "";
 
     /**
      * The dependencies required to load before this plugin.

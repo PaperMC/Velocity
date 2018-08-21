@@ -6,13 +6,14 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public class VelocityPluginContainer extends VelocityPluginDescription implements PluginContainer {
     private final Object instance;
 
-    public VelocityPluginContainer(String id, String version, String author, Collection<PluginDependency> dependencies, Path source, Object instance) {
-        super(id, version, author, dependencies, source);
+    public VelocityPluginContainer(String id, String version, List<String> authors, Collection<PluginDependency> dependencies, Path source, Object instance) {
+        super(id, version, authors, dependencies, source);
         this.instance = instance;
     }
 

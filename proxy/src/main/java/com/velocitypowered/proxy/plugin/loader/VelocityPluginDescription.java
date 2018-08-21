@@ -6,6 +6,7 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,14 +15,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class VelocityPluginDescription implements PluginDescription {
     private final String id;
     private final String version;
-    private final String author;
+    private final List<String> authors;
     private final Map<String, PluginDependency> dependencies;
     private final Path source;
 
-    public VelocityPluginDescription(String id, String version, String author, Collection<PluginDependency> dependencies, Path source) {
+    public VelocityPluginDescription(String id, String version, List<String> authors, Collection<PluginDependency> dependencies, Path source) {
         this.id = checkNotNull(id, "id");
         this.version = checkNotNull(version, "version");
-        this.author = checkNotNull(author, "author");
+        this.authors = checkNotNull(authors, "authors");
         this.dependencies = Maps.uniqueIndex(dependencies, PluginDependency::getId);
         this.source = source;
     }
@@ -37,8 +38,8 @@ public class VelocityPluginDescription implements PluginDescription {
     }
 
     @Override
-    public String getAuthor() {
-        return author;
+    public List<String> getAuthors() {
+        return authors;
     }
 
     @Override
@@ -61,7 +62,7 @@ public class VelocityPluginDescription implements PluginDescription {
         return "VelocityPluginDescription{" +
                 "id='" + id + '\'' +
                 ", version='" + version + '\'' +
-                ", author='" + author + '\'' +
+                ", authors='" + authors + '\'' +
                 ", dependencies=" + dependencies +
                 ", source=" + source +
                 '}';

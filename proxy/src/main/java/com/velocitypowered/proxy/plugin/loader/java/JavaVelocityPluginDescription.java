@@ -5,14 +5,15 @@ import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class JavaVelocityPluginDescription extends VelocityPluginDescription {
     private final Class mainClass;
 
-    public JavaVelocityPluginDescription(String id, String version, String author, Collection<PluginDependency> dependencies, Path source, Class mainClass) {
-        super(id, version, author, dependencies, source);
+    public JavaVelocityPluginDescription(String id, String version, List<String> authors, Collection<PluginDependency> dependencies, Path source, Class mainClass) {
+        super(id, version, authors, dependencies, source);
         this.mainClass = checkNotNull(mainClass);
     }
 
