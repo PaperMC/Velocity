@@ -77,14 +77,7 @@ public class JavaPluginLoader implements PluginLoader {
         Injector injector = Guice.createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
         Object instance = injector.getInstance(javaDescription.getMainClass());
 
-        return new VelocityPluginContainer(
-                description.getId(),
-                description.getVersion(),
-                description.getAuthors(),
-                description.getDependencies(),
-                source.get(),
-                instance
-        );
+        return new VelocityPluginContainer(description, instance);
     }
 
     private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source) throws Exception {
@@ -105,13 +98,18 @@ public class JavaPluginLoader implements PluginLoader {
     private VelocityPluginDescription createDescription(SerializedPluginDescription description, Path source, Class mainClass) {
         Set<PluginDependency> dependencies = new HashSet<>();
 
-        for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
-            dependencies.add(toDependencyMeta(dependency));
+        if (description.getDependencies() != null) {
+            for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
+                dependencies.add(toDependencyMeta(dependency));
+            }
         }
 
         return new JavaVelocityPluginDescription(
                 description.getId(),
+                description.getName(),
                 description.getVersion(),
+                description.getDescription(),
+                description.getUrl(),
                 description.getAuthors(),
                 dependencies,
                 source,

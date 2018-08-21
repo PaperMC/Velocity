@@ -3,6 +3,7 @@ package com.velocitypowered.api.plugin.meta;
 import javax.annotation.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,11 +37,10 @@ public final class PluginDependency {
     /**
      * Returns the version this {@link PluginDependency} should match.
      *
-     * @return the plugin version, or {@code null} if unspecified
+     * @return an {@link Optional} with the plugin version, may be empty
      */
-    @Nullable
-    public String getVersion() {
-        return version;
+    public Optional<String> getVersion() {
+        return Optional.ofNullable(version);
     }
 
     /**

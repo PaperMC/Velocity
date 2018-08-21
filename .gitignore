@@ -131,3 +131,4 @@ logs/
 /velocity.toml
 server-icon.png
 /bin/
+run/

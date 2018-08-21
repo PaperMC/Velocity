@@ -22,11 +22,33 @@ public @interface Plugin {
     String id();
 
     /**
+     * The human readable name of the plugin as to be used in descriptions and
+     * similar things.
+     *
+     * @return The plugin name, or an empty string if unknown
+     */
+    String name() default "";
+
+    /**
      * The version of the plugin.
      *
      * @return the version of the plugin, or an empty string if unknown
      */
     String version() default "";
+
+    /**
+     * The description of the plugin, explaining what it can be used for.
+     *
+     * @return The plugin description, or an empty string if unknown
+     */
+    String description() default "";
+
+    /**
+     * The URL or website of the plugin.
+     *
+     * @return The plugin url, or an empty string if unknown
+     */
+    String url() default "";
 
     /**
      * The author of the plugin.
