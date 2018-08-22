@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.server.ServerInfo;
 
@@ -101,4 +102,10 @@ public interface ProxyServer {
      * @return the scheduler instance
      */
     Scheduler getScheduler();
+
+    /**
+     * Gets the {@link ChannelRegistrar} instance.
+     * @return the channel registrar
+     */
+    ChannelRegistrar getChannelRegistrar();
 }
