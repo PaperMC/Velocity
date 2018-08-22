@@ -14,6 +14,8 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
@@ -69,6 +71,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
+    }
+
+    @Override
+    public void handleUnknown(ByteBuf buf) {
+        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 
     private void handleLegacy(MinecraftPacket packet) {

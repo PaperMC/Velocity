@@ -40,11 +40,12 @@ public class VelocityScheduler implements Scheduler {
         return new TaskBuilderImpl(plugin, runnable);
     }
 
-    public void shutdown() {
+    public boolean shutdown() throws InterruptedException {
         for (ScheduledTask task : ImmutableList.copyOf(tasksByPlugin.values())) {
             task.cancel();
         }
         taskService.shutdown();
+        return taskService.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     private class TaskBuilderImpl implements TaskBuilder {

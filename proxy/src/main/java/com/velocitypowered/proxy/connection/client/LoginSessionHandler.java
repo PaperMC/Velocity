@@ -16,6 +16,8 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -203,5 +205,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
         player.createConnectionRequest(toTry.get()).fireAndForget();
+    }
+
+    @Override
+    public void handleUnknown(ByteBuf buf) {
+        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 }

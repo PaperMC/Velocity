@@ -139,14 +139,13 @@ public class VelocityServer implements ProxyServer {
         scheduler = new VelocityScheduler(pluginManager, Sleeper.SYSTEM);
         loadPlugins();
 
-        // Post the first event
-        pluginManager.getPlugins().forEach(container -> {
-            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
-        });
         try {
+            // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
+            // to fully initialize before we accept any connections to the server.
             eventManager.fire(new ProxyInitializeEvent()).get();
         } catch (InterruptedException | ExecutionException e) {
-            // Ignore, we don't care.
+            // Ignore, we don't care. InterruptedException is unlikely to happen (and if it does, you've got bigger
+            // issues) and there is almost no chance ExecutionException will be thrown.
         }
 
         this.cm.bind(configuration.getBind());
@@ -176,6 +175,11 @@ public class VelocityServer implements ProxyServer {
             logger.error("Couldn't load plugins", e);
         }
 
+        // Register the plugin main classes so that we may proceed with firing the proxy initialize event
+        pluginManager.getPlugins().forEach(container -> {
+            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
+        });
+
         logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }
 
@@ -203,9 +207,11 @@ public class VelocityServer implements ProxyServer {
 
         eventManager.fire(new ProxyShutdownEvent());
         try {
-            eventManager.shutdown();
+            if (!eventManager.shutdown() || scheduler.shutdown()) {
+                logger.error("Your plugins took over 10 seconds to shut down.");
+            }
         } catch (InterruptedException e) {
-            logger.error("Your plugins took over 10 seconds to shut down.");
+            // Not much we can do about this...
         }
 
         shutdown = true;

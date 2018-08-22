@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 
 /**
  * Represents a protocol-specific entity ID remapper for certain Minecraft packets. This is mostly required to support
- * old versions of Minecraft. For Minecraft 1.9 clients and above, Velocity can use a more efficient method based on
+ * old versions of Minecraft. For Minecraft 1.8 clients and above, Velocity can use a more efficient method based on
  * sending JoinGame packets multiple times.
  */
 public interface EntityIdRemapper {

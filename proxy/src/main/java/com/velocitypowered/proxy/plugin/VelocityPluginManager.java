@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.plugin;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;

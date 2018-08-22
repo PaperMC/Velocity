@@ -21,6 +21,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handles communication with the connected Minecraft client. This is effectively the primary nerve center that
+ * joins backend servers with players.
+ */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
     private static final int MAX_PLUGIN_CHANNELS = 128;
@@ -53,6 +57,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof Chat) {
+            // Try to handle any commands on the proxy. If that fails, send it onto the client.
             Chat chat = (Chat) packet;
             String msg = ((Chat) packet).getMessage();
             if (msg.startsWith("/")) {
@@ -137,14 +142,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().delayedWrite(joinGame);
             idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
-            // In order to handle switching to another server we will need send three packets:
+            // Ah, this is the meat and potatoes of the whole venture!
+            //
+            // In order to handle switching to another server, you will need to send three packets:
             //
             // - The join game packet from the backend server
             // - A respawn packet with a different dimension
             // - Another respawn with the correct dimension
             //
-            // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
-            // work.
+            // The two respawns with different dimensions are required, otherwise the client gets confused.
             //
             // Most notably, by having the client accept the join game packet, we can work around the need to perform
             // entity ID rewrites, eliminating potential issues from rewriting packets and improving compatibility with
@@ -197,7 +203,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (actuallyRegistered.size() > 0) {
-                logger.info("Rewritten register packet: {}", actuallyRegistered);
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                 player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }

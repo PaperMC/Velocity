@@ -28,7 +28,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
-        Preconditions.checkArgument(packet instanceof StatusPing|| packet instanceof StatusRequest,
+        Preconditions.checkArgument(packet instanceof StatusPing || packet instanceof StatusRequest,
                 "Unrecognized packet type " + packet.getClass().getName());
 
         if (packet instanceof StatusPing) {

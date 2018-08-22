@@ -2,19 +2,22 @@ package com.velocitypowered.proxy.util.concurrency;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.MapMaker;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Represents a {@link ThreadFactory} that records the threads it has spawned.
+ * A {@link ThreadFactory} that records the threads it has created. Once a thread terminates, it is automatically removed
+ * from the recorder.
  */
-public class ThreadRecorderThreadFactory implements ThreadFactory {
+public class RecordingThreadFactory implements ThreadFactory {
     private final ThreadFactory backing;
-    private final Set<Thread> threads = ConcurrentHashMap.newKeySet();
+    private final Set<Thread> threads = Collections.newSetFromMap(new MapMaker().weakKeys().makeMap());
 
-    public ThreadRecorderThreadFactory(ThreadFactory backing) {
+    public RecordingThreadFactory(ThreadFactory backing) {
         this.backing = Preconditions.checkNotNull(backing, "backing");
     }
 

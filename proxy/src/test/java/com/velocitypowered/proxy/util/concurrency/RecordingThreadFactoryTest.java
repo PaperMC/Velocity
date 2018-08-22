@@ -7,11 +7,11 @@ import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ThreadRecorderThreadFactoryTest {
+class RecordingThreadFactoryTest {
 
     @Test
     void newThread() throws Exception {
-        ThreadRecorderThreadFactory factory = new ThreadRecorderThreadFactory(Executors.defaultThreadFactory());
+        RecordingThreadFactory factory = new RecordingThreadFactory(Executors.defaultThreadFactory());
         CountDownLatch started = new CountDownLatch(1);
         CountDownLatch endThread = new CountDownLatch(1);
         factory.newThread(() -> {

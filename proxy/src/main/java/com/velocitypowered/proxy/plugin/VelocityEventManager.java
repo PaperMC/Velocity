@@ -9,7 +9,7 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginManager;
-import com.velocitypowered.proxy.util.concurrency.ThreadRecorderThreadFactory;
+import com.velocitypowered.proxy.util.concurrency.RecordingThreadFactory;
 import net.kyori.event.EventSubscriber;
 import net.kyori.event.PostResult;
 import net.kyori.event.SimpleEventBus;
@@ -35,12 +35,12 @@ public class VelocityEventManager implements EventManager {
             new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
             new VelocityMethodScanner());
     private final ExecutorService service;
-    private final ThreadRecorderThreadFactory recordingThreadFactory;
+    private final RecordingThreadFactory recordingThreadFactory;
     private final PluginManager pluginManager;
 
     public VelocityEventManager(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
-        this.recordingThreadFactory = new ThreadRecorderThreadFactory(new ThreadFactoryBuilder()
+        this.recordingThreadFactory = new RecordingThreadFactory(new ThreadFactoryBuilder()
                 .setNameFormat("Velocity Event Executor - #%d").setDaemon(true).build());
         this.service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), recordingThreadFactory);
     }
@@ -123,9 +123,9 @@ public class VelocityEventManager implements EventManager {
         bus.unregister(handler);
     }
 
-    public void shutdown() throws InterruptedException {
+    public boolean shutdown() throws InterruptedException {
         service.shutdown();
-        service.awaitTermination(10, TimeUnit.SECONDS);
+        return service.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     private static class VelocityEventBus extends SimpleEventBus<Object> {
