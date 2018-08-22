@@ -58,19 +58,13 @@ publishing {
         }
     }
 
-    println "maven deployment: ${System.getenv("MAVEN_DEPLOYMENT")}"
-    println "on branch ${project.ext.getCurrentBranchName()}"
-
-    if (System.getenv("MAVEN_DEPLOYMENT") != null && project.ext.getCurrentBranchName() == "master") {
-        repositories {
-            maven {
-                name = 'myRepo'
-                if (project.version.toString().endsWith("-SNAPSHOT")) {
-                    url = "file:///maven-repo/snapshots"
-                } else {
-                    url = "file:///maven-repo/releases"
-                }
-            }
+    repositories {
+        maven {
+            name = 'myRepo'
+            def base = project.ext.getCurrentBranchName() == "master" ? File.createTempDir().toURI().toURL().toString() : 'file:///maven-repo'
+            def releasesRepoUrl = "$base/releases"
+            def snapshotsRepoUrl = "$base/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
         }
     }
 }
