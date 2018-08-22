@@ -8,23 +8,23 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.server.Favicon;
-import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.network.ConnectionManager;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
+import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
-import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
+import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.scheduler.Sleeper;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -41,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -110,7 +111,7 @@ public class VelocityServer implements ProxyServer {
         return commandManager;
     }
 
-    public void start() {
+    public void start(String... args) {
         try {
             Path configPath = Paths.get("velocity.toml");
             try {
@@ -150,8 +151,17 @@ public class VelocityServer implements ProxyServer {
             // Ignore, we don't care. InterruptedException is unlikely to happen (and if it does, you've got bigger
             // issues) and there is almost no chance ExecutionException will be thrown.
         }
+        InetSocketAddress bindAddress = configuration.getBind();
+        if (args.length > 0) {
+            try {
+                int port = Integer.valueOf(args[0]);
+                bindAddress = new InetSocketAddress(bindAddress.getHostString(), port);
+            } catch (NumberFormatException ex) {
+                logger.fatal("Invalid port given via commandline argument.");
+            }
+        }
 
-        this.cm.bind(configuration.getBind());
+        this.cm.bind(bindAddress);
 
         if (configuration.isQueryEnabled()) {
             this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());

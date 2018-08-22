@@ -22,7 +22,7 @@ public class Velocity {
         logger.info("Booting up Velocity...");
 
         final VelocityServer server = VelocityServer.getServer();
-        server.start();
+        server.start(args);
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown, "Shutdown thread"));
 
