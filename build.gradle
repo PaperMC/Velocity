@@ -24,7 +24,7 @@ allprojects {
                     args = ["rev-parse", "--abbrev-ref", "HEAD"]
                     standardOutput = os
                 }
-                return os.toString()
+                return os.toString().trim()
             }
         }
     }
