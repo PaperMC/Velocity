@@ -40,4 +40,9 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
     public int hashCode() {
         return Objects.hash(name);
     }
+
+    @Override
+    public String getId() {
+        return name;
+    }
 }

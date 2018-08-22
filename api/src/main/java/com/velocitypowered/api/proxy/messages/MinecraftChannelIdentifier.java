@@ -61,4 +61,9 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
     public int hashCode() {
         return Objects.hash(namespace, name);
     }
+
+    @Override
+    public String getId() {
+        return namespace + ":" + name;
+    }
 }

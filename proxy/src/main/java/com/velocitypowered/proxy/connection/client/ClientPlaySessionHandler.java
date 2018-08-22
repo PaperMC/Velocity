@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.proxy.messages.ChannelSide;
+import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -220,8 +222,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        // We're going to forward on the original packet.
-        player.getConnectedServer().getMinecraftConnection().write(packet);
+        MessageHandler.ForwardStatus status = VelocityServer.getServer().getChannelRegistrar().handlePluginMessage(
+                player, ChannelSide.FROM_CLIENT, packet);
+        if (status == MessageHandler.ForwardStatus.FORWARD) {
+            // We're going to forward on the original packet.
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        }
     }
 
     public Set<String> getClientPluginMsgChannels() {
