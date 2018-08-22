@@ -53,4 +53,6 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @return a new connection request
      */
     ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info);
+
+    void disconnect(Component reason);
 }

@@ -134,6 +134,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return new ConnectionRequestBuilderImpl(info);
     }
 
+    @Override
+    public void disconnect(Component reason) {
+        connection.closeWith(Disconnect.create(reason));
+    }
+
     public VelocityServerConnection getConnectedServer() {
         return connectedServer;
     }
