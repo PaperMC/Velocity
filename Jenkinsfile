@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'openjdk:8-jdk-slim'
-      args '-v gradle-cache:/root/.gradle:rw'
+      args '-v gradle-cache:/root/.gradle:rw -v maven-repo:/maven-repo:rw'
     }
 
   }
@@ -16,6 +16,11 @@ pipeline {
     stage('Test') {
       steps {
         sh './gradlew test'
+      }
+    }
+    stage('Deploy Artifacts') {
+      steps {
+        sh './gradlew publish'
       }
     }
   }
