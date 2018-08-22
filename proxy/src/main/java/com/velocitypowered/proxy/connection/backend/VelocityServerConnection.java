@@ -1,8 +1,10 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -11,6 +13,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -140,5 +143,15 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     @Override
     public String toString() {
         return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + serverInfo.getName();
+    }
+
+    @Override
+    public void sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+        Preconditions.checkNotNull(identifier, "identifier");
+        Preconditions.checkNotNull(data, "data");
+        PluginMessage message = new PluginMessage();
+        message.setChannel(identifier.getId());
+        message.setData(data);
+        minecraftConnection.write(message);
     }
 }

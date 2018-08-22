@@ -7,6 +7,7 @@ import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
@@ -18,6 +19,7 @@ import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -261,6 +263,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public boolean hasPermission(@Nonnull String permission) {
         return permissionFunction.getPermissionSetting(permission).asBoolean();
+    }
+
+    @Override
+    public void sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+        Preconditions.checkNotNull(identifier, "identifier");
+        Preconditions.checkNotNull(data, "data");
+        PluginMessage message = new PluginMessage();
+        message.setChannel(identifier.getId());
+        message.setData(data);
+        connection.write(message);
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
