@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Represents a Minecraft 1.13+ channel identifier.
+ * Represents a Minecraft 1.13+ channel identifier. This class is immutable and safe for multi-threaded use.
  */
-public class MinecraftChannelIdentifier implements ChannelIdentifier {
+public final class MinecraftChannelIdentifier implements ChannelIdentifier {
     private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]+");
 
     private final String namespace;

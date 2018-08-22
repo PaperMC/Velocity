@@ -7,9 +7,9 @@ import java.util.Objects;
 
 /**
  * Reperesents a legacy channel identifier (for Minecraft 1.12 and below). For modern 1.13 plugin messages, please see
- * {@link MinecraftChannelIdentifier}.
+ * {@link MinecraftChannelIdentifier}. This class is immutable and safe for multi-threaded use.
  */
-public class LegacyChannelIdentifier implements ChannelIdentifier {
+public final class LegacyChannelIdentifier implements ChannelIdentifier {
     private final String name;
 
     public LegacyChannelIdentifier(String name) {
