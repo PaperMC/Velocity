@@ -103,10 +103,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
         if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             return message.getChannel().startsWith("MC|") ||
-                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
+                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+                    VelocityServer.getServer().getChannelRegistrar().registered(message.getChannel());
         } else {
             return message.getChannel().startsWith("minecraft:") ||
-                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel());
+                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+                    VelocityServer.getServer().getChannelRegistrar().registered(message.getChannel());
         }
     }
 }

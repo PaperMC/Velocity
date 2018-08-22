@@ -6,8 +6,10 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class VelocityChannelRegistrar implements ChannelRegistrar {
     private static final Logger logger = LogManager.getLogger(VelocityChannelRegistrar.class);
@@ -54,5 +56,23 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
             handlers.remove(identifier.getId());
             identifierMap.remove(identifier.getId());
         }
+    }
+
+    public Collection<String> getLegacyChannelIds() {
+        return identifierMap.values().stream()
+                .filter(i -> i instanceof LegacyChannelIdentifier)
+                .map(ChannelIdentifier::getId)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<String> getModernChannelIds() {
+        return identifierMap.values().stream()
+                .filter(i -> i instanceof MinecraftChannelIdentifier)
+                .map(ChannelIdentifier::getId)
+                .collect(Collectors.toList());
+    }
+
+    public boolean registered(String id) {
+        return identifierMap.containsKey(id);
     }
 }

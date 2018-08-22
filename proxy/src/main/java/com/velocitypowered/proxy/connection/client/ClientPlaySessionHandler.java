@@ -43,6 +43,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
+    public void activated() {
+        PluginMessage message;
+        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            message = PluginMessageUtil.constructChannelsPacket("minecraft:register", VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+        } else {
+            message = PluginMessageUtil.constructChannelsPacket("REGISTER", VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+        }
+        player.getConnection().write(message);
+    }
+
+    @Override
     public void handle(MinecraftPacket packet) {
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
@@ -174,11 +185,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         serverBossBars.clear();
 
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
-        if (!clientPluginMsgChannels.isEmpty()) {
+        Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
+        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+        } else {
+            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+        }
+        if (!toRegister.isEmpty()) {
             String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
                     "minecraft:register" : "REGISTER";
-            player.getConnectedServer().getMinecraftConnection().delayedWrite(
-                    PluginMessageUtil.constructChannelsPacket(channel, clientPluginMsgChannels));
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
+                    channel, toRegister));
         }
 
         // Flush everything
