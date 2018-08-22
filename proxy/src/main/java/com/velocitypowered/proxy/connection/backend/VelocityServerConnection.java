@@ -1,9 +1,10 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
-import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -31,7 +32,7 @@ import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.network.Connections.READ_TIMEOUT;
 import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
-public class ServerConnection implements MinecraftConnectionAssociation {
+public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
     static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
             AttributeKey.newInstance("connection-notification-result");
 
@@ -40,7 +41,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
     private final VelocityServer server;
     private MinecraftConnection minecraftConnection;
 
-    public ServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
+    public VelocityServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
         this.serverInfo = target;
         this.proxyPlayer = proxyPlayer;
         this.server = server;
@@ -62,7 +63,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                         ch.attr(CONNECTION_NOTIFIER).set(result);
                         MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
-                        connection.setAssociation(ServerConnection.this);
+                        connection.setAssociation(VelocityServerConnection.this);
                         ch.pipeline().addLast(HANDLER, connection);
                     }
                 })
@@ -74,7 +75,7 @@ public class ServerConnection implements MinecraftConnectionAssociation {
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             // Kick off the connection process
-                            minecraftConnection.setSessionHandler(new LoginSessionHandler(ServerConnection.this));
+                            minecraftConnection.setSessionHandler(new LoginSessionHandler(VelocityServerConnection.this));
                             startHandshake();
                         } else {
                             result.completeExceptionally(future.cause());
@@ -118,16 +119,17 @@ public class ServerConnection implements MinecraftConnectionAssociation {
         minecraftConnection.write(login);
     }
 
-    public ConnectedPlayer getProxyPlayer() {
-        return proxyPlayer;
-    }
-
     public MinecraftConnection getMinecraftConnection() {
         return minecraftConnection;
     }
 
     public ServerInfo getServerInfo() {
         return serverInfo;
+    }
+
+    @Override
+    public ConnectedPlayer getPlayer() {
+        return proxyPlayer;
     }
 
     public void disconnect() {

@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
@@ -15,7 +16,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.connection.backend.ServerConnection;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.api.server.ServerInfo;
@@ -48,9 +49,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private final InetSocketAddress virtualHost;
     private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
-    private ServerConnection connectedServer;
+    private VelocityServerConnection connectedServer;
     private ClientSettings clientSettings;
-    private ServerConnection connectionInFlight;
+    private VelocityServerConnection connectionInFlight;
 
     public ConnectedPlayer(GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.profile = profile;
@@ -69,8 +70,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public Optional<ServerInfo> getCurrentServer() {
-        return connectedServer != null ? Optional.of(connectedServer.getServerInfo()) : Optional.empty();
+    public Optional<ServerConnection> getCurrentServer() {
+        return Optional.ofNullable(connectedServer);
     }
 
     public GameProfile getProfile() {
@@ -133,7 +134,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return new ConnectionRequestBuilderImpl(info);
     }
 
-    public ServerConnection getConnectedServer() {
+    public VelocityServerConnection getConnectedServer() {
         return connectedServer;
     }
 
@@ -222,11 +223,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                         );
                     }
 
-                    return new ServerConnection(newEvent.getResult().getInfo().get(), this, VelocityServer.getServer()).connect();
+                    return new VelocityServerConnection(newEvent.getResult().getInfo().get(), this, VelocityServer.getServer()).connect();
                 });
     }
 
-    public void setConnectedServer(ServerConnection serverConnection) {
+    public void setConnectedServer(VelocityServerConnection serverConnection) {
         if (this.connectedServer != null && !serverConnection.getServerInfo().equals(connectedServer.getServerInfo())) {
             this.tryIndex = 0;
         }

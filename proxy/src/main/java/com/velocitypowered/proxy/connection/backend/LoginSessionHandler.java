@@ -25,10 +25,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
-    private final ServerConnection connection;
+    private final VelocityServerConnection connection;
     private boolean informationForwarded;
 
-    public LoginSessionHandler(ServerConnection connection) {
+    public LoginSessionHandler(VelocityServerConnection connection) {
         this.connection = connection;
     }
 
@@ -45,8 +45,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 response.setSuccess(true);
                 response.setId(message.getId());
                 response.setData(createForwardingData(configuration.getForwardingSecret(),
-                        connection.getProxyPlayer().getRemoteAddress().getHostString(),
-                        connection.getProxyPlayer().getProfile()));
+                        connection.getPlayer().getRemoteAddress().getHostString(),
+                        connection.getPlayer().getProfile()));
                 connection.getMinecraftConnection().write(response);
                 informationForwarded = true;
             } else {
@@ -76,10 +76,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             // The player has been logged on to the backend server.
             connection.getMinecraftConnection().setState(StateRegistry.PLAY);
-            ServerConnection existingConnection = connection.getProxyPlayer().getConnectedServer();
+            VelocityServerConnection existingConnection = connection.getPlayer().getConnectedServer();
             if (existingConnection == null) {
                 // Strap on the play session handler
-                connection.getProxyPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(connection.getProxyPlayer()));
+                connection.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(connection.getPlayer()));
             } else {
                 // The previous server connection should become obsolete.
                 existingConnection.disconnect();
@@ -87,14 +87,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             doNotify(ConnectionRequestResults.SUCCESSFUL);
             connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(connection));
-            connection.getProxyPlayer().setConnectedServer(connection);
+            connection.getPlayer().setConnectedServer(connection);
         }
     }
 
     @Override
     public void exception(Throwable throwable) {
         CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
-                .attr(ServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
+                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.completeExceptionally(throwable);
         }
@@ -102,7 +102,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private void doNotify(ConnectionRequestBuilder.Result result) {
         CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
-                .attr(ServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
+                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.complete(result);
         }

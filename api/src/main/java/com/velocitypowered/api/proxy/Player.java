@@ -29,7 +29,7 @@ public interface Player extends CommandSource, InboundConnection {
      * Returns the server that the player is currently connected to.
      * @return an {@link Optional} the server that the player is connected to, which may be empty
      */
-    Optional<ServerInfo> getCurrentServer();
+    Optional<ServerConnection> getCurrentServer();
     
     /**
      * Sends a chat message to the player's client.
