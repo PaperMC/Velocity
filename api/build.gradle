@@ -58,6 +58,9 @@ publishing {
         }
     }
 
+    println "maven deployment: ${System.getenv("MAVEN_DEPLOYMENT")}"
+    println "on branch ${project.ext.getCurrentBranchName()}"
+
     if (System.getenv("MAVEN_DEPLOYMENT") != null && project.ext.getCurrentBranchName() == "master") {
         repositories {
             maven {
