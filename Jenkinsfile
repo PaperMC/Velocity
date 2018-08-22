@@ -1,7 +1,7 @@
 pipeline {
   agent {
     docker {
-      image 'openjdk:8-jdk-slim'
+      image 'velocitypowered/openjdk8-plus-git:slim'
       args '-v gradle-cache:/root/.gradle:rw -v maven-repo:/maven-repo:rw'
     }
 
