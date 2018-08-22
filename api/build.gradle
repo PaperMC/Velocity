@@ -58,11 +58,16 @@ publishing {
         }
     }
 
-    // TODO: Set up a Maven repository on Velocity's infrastructure, preferably something lightweight.
-    /*repositories {
-        maven {
-            name = 'myRepo'
-            url = "file://${buildDir}/repo"
+    if (System.getenv("MAVEN_DEPLOYMENT") != null && project.ext.getCurrentBranchName() == "master") {
+        repositories {
+            maven {
+                name = 'myRepo'
+                if (project.version.toString().endsWith("-SNAPSHOT")) {
+                    url = "file:///maven-repo/snapshots"
+                } else {
+                    url = "file:///maven-repo/releases"
+                }
+            }
         }
-    }*/
+    }
 }

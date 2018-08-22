@@ -16,6 +16,17 @@ allprojects {
         log4jVersion = '2.11.0'
         nettyVersion = '4.1.28.Final'
         guavaVersion = '25.1-jre'
+
+        getCurrentBranchName = {
+            new ByteArrayOutputStream().withStream { os ->
+                exec {
+                    executable = "git"
+                    args = ["rev-parse", "--abbrev-ref", "HEAD"]
+                    standardOutput = os
+                }
+                return os.toString()
+            }
+        }
     }
 
     repositories {

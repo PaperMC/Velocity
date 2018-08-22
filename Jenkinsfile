@@ -20,7 +20,7 @@ pipeline {
     }
     stage('Deploy Artifacts') {
       steps {
-        sh './gradlew publish'
+        sh 'export MAVEN_DEPLOYMENT=true; ./gradlew publish'
       }
     }
   }
