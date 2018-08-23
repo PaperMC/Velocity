@@ -17,11 +17,12 @@ public enum ProtocolConstants { ;
     public static final int MINECRAFT_1_12_1 = 338;
     public static final int MINECRAFT_1_12_2 = 340;
     public static final int MINECRAFT_1_13 = 393;
+    public static final int MINECRAFT_1_13_1 = 401;
 
     public static final int MINIMUM_GENERIC_VERSION = MINECRAFT_1_8;
-    public static final int MAXIMUM_GENERIC_VERSION = MINECRAFT_1_13;
+    public static final int MAXIMUM_GENERIC_VERSION = MINECRAFT_1_13_1;
 
-    public static final String SUPPORTED_GENERIC_VERSION_STRING = "1.8-1.13";
+    public static final String SUPPORTED_GENERIC_VERSION_STRING = "1.8-1.13.1";
 
     public static final ImmutableIntArray SUPPORTED_VERSIONS = ImmutableIntArray.of(
             MINECRAFT_1_8,
@@ -35,7 +36,8 @@ public enum ProtocolConstants { ;
             MINECRAFT_1_12,
             MINECRAFT_1_12_1,
             MINECRAFT_1_12_2,
-            MINECRAFT_1_13
+            MINECRAFT_1_13,
+            MINECRAFT_1_13_1
     );
 
     public static boolean isSupported(int version) {
