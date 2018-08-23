@@ -4,8 +4,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.server.ServerPing;
 
-import javax.annotation.Nonnull;
-
 public class ProxyPingEvent {
     private final InboundConnection connection;
     private ServerPing ping;
@@ -23,7 +21,7 @@ public class ProxyPingEvent {
         return ping;
     }
 
-    public void setPing(@Nonnull ServerPing ping) {
+    public void setPing(ServerPing ping) {
         this.ping = Preconditions.checkNotNull(ping, "ping");
     }
 

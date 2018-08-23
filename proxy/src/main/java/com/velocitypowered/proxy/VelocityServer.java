@@ -39,7 +39,6 @@ import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -73,12 +72,12 @@ public class VelocityServer implements ProxyServer {
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
     private final CommandSource consoleCommandSource = new CommandSource() {
         @Override
-        public void sendMessage(@Nonnull Component component) {
+        public void sendMessage(Component component) {
             logger.info(ComponentSerializers.LEGACY.serialize(component));
         }
 
         @Override
-        public boolean hasPermission(@Nonnull String permission) {
+        public boolean hasPermission(String permission) {
             return true;
         }
     };
@@ -246,13 +245,13 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public Optional<Player> getPlayer(@Nonnull String username) {
+    public Optional<Player> getPlayer(String username) {
         Preconditions.checkNotNull(username, "username");
         return Optional.ofNullable(connectionsByName.get(username.toLowerCase(Locale.US)));
     }
 
     @Override
-    public Optional<Player> getPlayer(@Nonnull UUID uuid) {
+    public Optional<Player> getPlayer(UUID uuid) {
         Preconditions.checkNotNull(uuid, "uuid");
         return Optional.ofNullable(connectionsByUuid.get(uuid));
     }
@@ -268,7 +267,7 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public Optional<ServerInfo> getServerInfo(@Nonnull String name) {
+    public Optional<ServerInfo> getServerInfo(String name) {
         Preconditions.checkNotNull(name, "name");
         return servers.getServer(name);
     }
@@ -279,12 +278,12 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public void registerServer(@Nonnull ServerInfo server) {
+    public void registerServer(ServerInfo server) {
         servers.register(server);
     }
 
     @Override
-    public void unregisterServer(@Nonnull ServerInfo server) {
+    public void unregisterServer(ServerInfo server) {
         servers.unregister(server);
     }
 

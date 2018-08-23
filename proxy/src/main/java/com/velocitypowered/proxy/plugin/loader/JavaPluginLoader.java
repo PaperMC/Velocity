@@ -11,7 +11,6 @@ import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescriptio
 import com.velocitypowered.proxy.plugin.loader.java.SerializedPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -34,7 +33,6 @@ public class JavaPluginLoader implements PluginLoader {
         this.baseDirectory = baseDirectory;
     }
 
-    @Nonnull
     @Override
     public PluginDescription loadPlugin(Path source) throws Exception {
         Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
@@ -60,7 +58,6 @@ public class JavaPluginLoader implements PluginLoader {
         return description;
     }
 
-    @Nonnull
     @Override
     public PluginContainer createPlugin(PluginDescription description) throws Exception {
         if (!(description instanceof JavaVelocityPluginDescription)) {

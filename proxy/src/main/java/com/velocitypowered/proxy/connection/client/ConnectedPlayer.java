@@ -33,7 +33,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
@@ -264,7 +263,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public boolean hasPermission(@Nonnull String permission) {
+    public boolean hasPermission(String permission) {
         return permissionFunction.getPermissionSetting(permission).asBoolean();
     }
 

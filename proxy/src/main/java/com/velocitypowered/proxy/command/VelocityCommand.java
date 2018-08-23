@@ -7,11 +7,9 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
 
-import javax.annotation.Nonnull;
-
 public class VelocityCommand implements Command {
     @Override
-    public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
+    public void execute(CommandSource source, String[] args) {
         String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
         TextComponent thisIsVelocity = TextComponent.builder()
                 .content("This is ")

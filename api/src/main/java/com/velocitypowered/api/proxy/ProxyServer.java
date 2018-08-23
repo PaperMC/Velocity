@@ -8,7 +8,6 @@ import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.server.ServerInfo;
 
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,14 +21,14 @@ public interface ProxyServer {
      * @param username the username
      * @return an {@link Optional} with the player
      */
-    Optional<Player> getPlayer(@Nonnull String username);
+    Optional<Player> getPlayer(String username);
 
     /**
      * Retrieves the player currently connected to this proxy by their Minecraft UUID.
      * @param uuid the UUID
      * @return an {@link Optional} with the player
      */
-    Optional<Player> getPlayer(@Nonnull UUID uuid);
+    Optional<Player> getPlayer(UUID uuid);
 
     /**
      * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot of all players
@@ -49,7 +48,7 @@ public interface ProxyServer {
      * @param name the name of the server
      * @return the server
      */
-    Optional<ServerInfo> getServerInfo(@Nonnull String name);
+    Optional<ServerInfo> getServerInfo(String name);
 
     /**
      * Retrieves all {@link ServerInfo}s registered with this proxy.
@@ -61,13 +60,13 @@ public interface ProxyServer {
      * Registers a server with this proxy. A server with this name should not already exist.
      * @param server the server to register
      */
-    void registerServer(@Nonnull ServerInfo server);
+    void registerServer(ServerInfo server);
 
     /**
      * Unregisters this server from the proxy.
      * @param server the server to unregister
      */
-    void unregisterServer(@Nonnull ServerInfo server);
+    void unregisterServer(ServerInfo server);
 
     /**
      * Returns an instance of {@link CommandSource} that can be used to determine if the command is being invoked by

@@ -9,14 +9,13 @@ import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ServerCommand implements Command {
     @Override
-    public void execute(@Nonnull CommandSource source, @Nonnull String[] args) {
+    public void execute(CommandSource source, String[] args) {
         if (!(source instanceof Player)) {
             source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
             return;
@@ -42,7 +41,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public List<String> suggest(@Nonnull CommandSource source, @Nonnull String[] currentArgs) {
+    public List<String> suggest(CommandSource source, String[] currentArgs) {
         if (currentArgs.length == 0) {
             return VelocityServer.getServer().getAllServers().stream()
                     .map(ServerInfo::getName)
