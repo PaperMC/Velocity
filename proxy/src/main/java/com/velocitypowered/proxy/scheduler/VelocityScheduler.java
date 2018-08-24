@@ -151,7 +151,7 @@ public class VelocityScheduler implements Scheduler {
 
                 if (repeat > 0) {
                     try {
-                        sleeper.sleep(delay);
+                        sleeper.sleep(repeat);
                     } catch (InterruptedException e) {
                         if (status == TaskStatus.CANCELLED) {
                             break;
