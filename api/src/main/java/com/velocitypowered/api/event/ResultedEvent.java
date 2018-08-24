@@ -1,6 +1,7 @@
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
+
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -104,6 +105,57 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         public static ComponentResult denied(@NonNull Component reason) {
             Preconditions.checkNotNull(reason, "reason");
             return new ComponentResult(false, reason);
+        }
+    }
+    /**
+     * Represents an "allowed/allowed with online mode/denied" result with a reason allowed for denial.
+     */
+    class PreLoginComponentResult extends ComponentResult {
+
+        private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult(true, null);
+        private static final PreLoginComponentResult ALLOWED_ONLINEMODE = new PreLoginComponentResult(true);
+
+        private final boolean onlineMode;
+        
+        /**
+         * Allows to enable a online mode for the player connection, when velocity running in offline mode
+         * Does not have any sense if velocity running in onlineMode;
+         * @param onlineMode if true, offline uuid will be used for player connection to avoid collision
+         */
+        private PreLoginComponentResult(boolean onlineMode) {
+            super(true, null);
+            this.onlineMode = onlineMode;
+        }
+
+        private PreLoginComponentResult(boolean allowed, @Nullable Component reason) {
+            super(allowed, reason);
+            // Don't care about this
+            this.onlineMode = false;
+        }
+
+        public boolean isOnlineMode() {
+            return this.onlineMode;
+        }
+
+        @Override
+        public String toString() {
+            if (isOnlineMode()) {
+                return "allowed with online mode and offline uuid";
+            }
+            return super.toString();
+        }
+
+        public static PreLoginComponentResult allowed() {
+            return ALLOWED;
+        }
+
+        public static PreLoginComponentResult allowedOnlineMode() {
+            return ALLOWED_ONLINEMODE;
+        }
+        
+        public static PreLoginComponentResult denied(@NonNull Component reason) {
+            Preconditions.checkNotNull(reason, "reason");
+            return new PreLoginComponentResult(false, reason);
         }
     }
 }

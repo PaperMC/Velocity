@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GameProfile {
-    private String id;
+    private final String id;
     private final String name;
     private final List<Property> properties;
 
@@ -25,10 +25,6 @@ public class GameProfile {
     public UUID idAsUuid() {
         return UuidUtils.fromUndashed(id);
     }
-
-    public void setUuid(UUID uuid) {
-        id = UuidUtils.toUndashed(uuid);
-    }
     
     public String getName() {
         return name;
@@ -44,6 +40,10 @@ public class GameProfile {
         return new GameProfile(id, username, ImmutableList.of());
     }
 
+    public static String createOfflineUUID(@NonNull String username) {
+        Preconditions.checkNotNull(username, "username");
+        return UuidUtils.toUndashed(UuidUtils.generateOfflinePlayerUuid(username));
+    }
     @Override
     public String toString() {
         return "GameProfile{" +

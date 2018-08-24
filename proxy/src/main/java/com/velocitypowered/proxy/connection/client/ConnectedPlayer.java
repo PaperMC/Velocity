@@ -45,11 +45,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
-    private final GameProfile profile;
     private final MinecraftConnection connection;
     private final InetSocketAddress virtualHost;
     private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
+    private GameProfile profile;
     private VelocityServerConnection connectedServer;
     private ClientSettings clientSettings;
     private VelocityServerConnection connectionInFlight;
@@ -68,14 +68,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public UUID getUniqueId() {
         return profile.idAsUuid();
-    }
-
-    @Override
-    public void setUniqueId(UUID uuid) {
-        if (!(connection.getSessionHandler() instanceof LoginSessionHandler)) {
-            throw new IllegalStateException("Not in Login state");
-        }
-        profile.setUuid(uuid);
     }
     
     @Override

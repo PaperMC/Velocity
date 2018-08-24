@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.server.ServerInfo;
@@ -26,13 +27,6 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @return the UUID
      */
     UUID getUniqueId();
-
-    /**
-     * Sets the player's UUID.
-     * Can be set only in Login state
-     * @param uuid
-     */
-    void setUniqueId(UUID uuid);
     
     /**
      * Returns the server that the player is currently connected to.

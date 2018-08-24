@@ -1,6 +1,9 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
@@ -37,10 +40,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
-
+    private static final JsonParser parser = new JsonParser();
+    
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private ServerLogin login;
+    private boolean useOfflineUUID;
     private byte[] verify;
     private int playerInfoId;
 
@@ -97,15 +102,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player disconnected after we authenticated them.
                                 return;
                             }
-
                             try {
                                 inbound.enableEncryption(decryptedSharedSecret);
-                            } catch (GeneralSecurityException e) {
+                                
+                                JsonObject json = parser.parse(profileResponse).getAsJsonObject();
+                                if (useOfflineUUID) {
+                                    json.addProperty("id", GameProfile.createOfflineUUID(login.getUsername()));
+                                } 
+                                GameProfile profile = VelocityServer.GSON.fromJson(json, GameProfile.class);
+                                initializePlayer(profile);
+                            } catch (GeneralSecurityException | JsonSyntaxException e) {
                                 throw new RuntimeException(e);
                             }
-
-                            GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
-                            initializePlayer(profile);
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
@@ -122,7 +130,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void beginPreLogin() {
-        PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername(), VelocityServer.getServer().getConfiguration().isOnlineMode());
+        PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
         VelocityServer.getServer().getEventManager().fire(event)
                 .thenRunAsync(() -> {
                     if (inbound.isClosed()) {
@@ -135,8 +143,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
 
-                    if (event.isOnlineMode()) {
+                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || event.getResult().isOnlineMode()) {
                         // Request encryption.
+                        useOfflineUUID = !VelocityServer.getServer().getConfiguration().isOnlineMode() && event.getResult().isOnlineMode();
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
                         inbound.write(request);

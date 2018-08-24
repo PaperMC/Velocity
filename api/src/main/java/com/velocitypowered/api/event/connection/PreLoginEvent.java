@@ -9,17 +9,15 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * This event is fired when a player has initiated a connection with the proxy but before the proxy authenticates the
  * player with Mojang or before the player's proxy connection is fully established (for offline mode).
  */
-public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
+public class PreLoginEvent implements ResultedEvent<ResultedEvent.PreLoginComponentResult> {
     private final InboundConnection connection;
     private final String username;
-    private boolean onlineMode;
-    private ComponentResult result;
+    private PreLoginComponentResult result;
 
-    public PreLoginEvent(InboundConnection connection, String username, boolean onlineMode) {
+    public PreLoginEvent(InboundConnection connection, String username) {
         this.connection = Preconditions.checkNotNull(connection, "connection");
         this.username = Preconditions.checkNotNull(username, "username");
-        this.onlineMode = onlineMode;
-        this.result = ComponentResult.allowed();
+        this.result = PreLoginComponentResult.allowed();
     }
 
     public InboundConnection getConnection() {
@@ -29,22 +27,14 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
     public String getUsername() {
         return username;
     }
-
-    public boolean isOnlineMode() {
-        return onlineMode;
-    }
-    
-    public void setOnlineMode(boolean onlineMode) {
-        this.onlineMode = onlineMode;
-    }
     
     @Override
-    public ComponentResult getResult() {
+    public PreLoginComponentResult getResult() {
         return result;
     }
 
     @Override
-    public void setResult(@NonNull ComponentResult result) {
+    public void setResult(@NonNull PreLoginComponentResult result) {
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
@@ -53,7 +43,6 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
         return "PreLoginEvent{" +
                 "connection=" + connection +
                 ", username='" + username + '\'' +
-                ", onlineMode=" + onlineMode +
                 ", result=" + result +
                 '}';
     }
