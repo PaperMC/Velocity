@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.server.ServerInfo;
@@ -45,6 +46,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private ServerLogin login;
+    private GameProfile gameProfile;
     private boolean useOfflineUUID;
     private byte[] verify;
     private int playerInfoId;
@@ -109,7 +111,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 if (useOfflineUUID) {
                                     json.addProperty("id", GameProfile.createOfflineUUID(login.getUsername()));
                                 } 
-                                GameProfile profile = VelocityServer.GSON.fromJson(json, GameProfile.class);
+                                GameProfile profile = this.gameProfile != null ? this.gameProfile : VelocityServer.GSON.fromJson(json, GameProfile.class);
                                 initializePlayer(profile);
                             } catch (GeneralSecurityException | JsonSyntaxException e) {
                                 throw new RuntimeException(e);
@@ -137,21 +139,22 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         // The player was disconnected
                         return;
                     }
-                    if (!event.getResult().isAllowed()) {
+                    PreLoginComponentResult result = event.getResult();
+                    if (!result.isAllowed()) {
                         // The component is guaranteed to be provided if the connection was denied.
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
                         return;
                     }
-
-                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || event.getResult().isOnlineMode()) {
+                    boolean velocityOnlineMode = VelocityServer.getServer().getConfiguration().isOnlineMode();
+                    this.gameProfile = result.getGameProfile().orElse(null);
+                    if (velocityOnlineMode || result.isOnlineMode()) {
                         // Request encryption.
-                        useOfflineUUID = !VelocityServer.getServer().getConfiguration().isOnlineMode() && event.getResult().isOnlineMode();
+                        useOfflineUUID = !velocityOnlineMode && this.gameProfile == null; // velocity is running in offline mode and custom game profile is not present
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
                         inbound.write(request);
                     } else {
-                        // Offline-mode, don't try to request encryption.
-                        initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()));
+                        initializePlayer(this.gameProfile != null ? this.gameProfile : GameProfile.forOfflinePlayer(login.getUsername()));
                     }
                 }, inbound.getChannel().eventLoop());
     }
