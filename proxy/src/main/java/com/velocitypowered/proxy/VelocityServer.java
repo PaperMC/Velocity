@@ -209,7 +209,7 @@ public class VelocityServer implements ProxyServer {
 
         eventManager.fire(new ProxyShutdownEvent());
         try {
-            if (!eventManager.shutdown() || scheduler.shutdown()) {
+            if (!eventManager.shutdown() || !scheduler.shutdown()) {
                 logger.error("Your plugins took over 10 seconds to shut down.");
             }
         } catch (InterruptedException e) {
