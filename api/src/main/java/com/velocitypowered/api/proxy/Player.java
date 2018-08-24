@@ -5,10 +5,12 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +29,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @return the UUID
      */
     UUID getUniqueId();
-    
+
     /**
      * Returns the server that the player is currently connected to.
      * @return an {@link Optional} the server that the player is connected to, which may be empty

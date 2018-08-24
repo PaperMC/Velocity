@@ -9,12 +9,14 @@ import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -69,7 +71,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     public UUID getUniqueId() {
         return profile.idAsUuid();
     }
-    
+
     @Override
     public Optional<ServerConnection> getCurrentServer() {
         return Optional.ofNullable(connectedServer);
