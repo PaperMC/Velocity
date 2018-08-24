@@ -12,11 +12,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
     private final InboundConnection connection;
     private final String username;
+    private boolean onlineMode;
     private ComponentResult result;
 
-    public PreLoginEvent(InboundConnection connection, String username) {
+    public PreLoginEvent(InboundConnection connection, String username, boolean onlineMode) {
         this.connection = Preconditions.checkNotNull(connection, "connection");
         this.username = Preconditions.checkNotNull(username, "username");
+        this.onlineMode = onlineMode;
         this.result = ComponentResult.allowed();
     }
 
@@ -28,6 +30,14 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
         return username;
     }
 
+    public boolean isOnlineMode() {
+        return onlineMode;
+    }
+    
+    public void setOnlineMode(boolean onlineMode) {
+        this.onlineMode = onlineMode;
+    }
+    
     @Override
     public ComponentResult getResult() {
         return result;
@@ -43,6 +53,7 @@ public class PreLoginEvent implements ResultedEvent<ResultedEvent.ComponentResul
         return "PreLoginEvent{" +
                 "connection=" + connection +
                 ", username='" + username + '\'' +
+                ", onlineMode=" + onlineMode +
                 ", result=" + result +
                 '}';
     }

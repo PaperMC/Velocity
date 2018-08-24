@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GameProfile {
-    private final String id;
+    private String id;
     private final String name;
     private final List<Property> properties;
 
@@ -26,6 +26,10 @@ public class GameProfile {
         return UuidUtils.fromUndashed(id);
     }
 
+    public void setUuid(UUID uuid) {
+        id = UuidUtils.toUndashed(uuid);
+    }
+    
     public String getName() {
         return name;
     }

@@ -28,6 +28,13 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
     UUID getUniqueId();
 
     /**
+     * Sets the player's UUID.
+     * Can be set only in Login state
+     * @param uuid
+     */
+    void setUniqueId(UUID uuid);
+    
+    /**
      * Returns the server that the player is currently connected to.
      * @return an {@link Optional} the server that the player is connected to, which may be empty
      */

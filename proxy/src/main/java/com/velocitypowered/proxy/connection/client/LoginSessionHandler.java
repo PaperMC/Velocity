@@ -122,16 +122,20 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void beginPreLogin() {
-        PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
+        PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername(), VelocityServer.getServer().getConfiguration().isOnlineMode());
         VelocityServer.getServer().getEventManager().fire(event)
                 .thenRunAsync(() -> {
+                    if (inbound.isClosed()) {
+                        // The player was disconnected
+                        return;
+                    }
                     if (!event.getResult().isAllowed()) {
                         // The component is guaranteed to be provided if the connection was denied.
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
                         return;
                     }
 
-                    if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
+                    if (event.isOnlineMode()) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -167,6 +171,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 })
                 // then complete the connection
                 .thenAcceptAsync(event -> {
+                    if (inbound.isClosed()) {
+                        // The player was disconnected
+                        return;
+                    }
                     if (!event.getResult().isAllowed()) {
                         // The component is guaranteed to be provided if the connection was denied.
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));

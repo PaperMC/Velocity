@@ -92,6 +92,9 @@ modules.xml
 **/.settings/
 **/bin/
 
+# NetBeans Gradle#
+.nb-gradle/
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 

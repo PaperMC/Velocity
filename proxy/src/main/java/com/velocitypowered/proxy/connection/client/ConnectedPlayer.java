@@ -71,6 +71,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public void setUniqueId(UUID uuid) {
+        if (!(connection.getSessionHandler() instanceof LoginSessionHandler)) {
+            throw new IllegalStateException("Not in Login state");
+        }
+        profile.setUuid(uuid);
+    }
+    
+    @Override
     public Optional<ServerConnection> getCurrentServer() {
         return Optional.ofNullable(connectedServer);
     }
