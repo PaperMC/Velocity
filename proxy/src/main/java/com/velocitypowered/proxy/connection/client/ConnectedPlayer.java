@@ -2,9 +2,11 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
+import com.velocitypowered.api.playersettings.PlayerSettings;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -55,7 +57,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private VelocityServerConnection connectedServer;
     private ClientSettings clientSettings;
     private VelocityServerConnection connectionInFlight;
-
+    private PlayerSettings settings;
+    
     public ConnectedPlayer(GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.profile = profile;
         this.connection = connection;
@@ -83,6 +86,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public MinecraftConnection getConnection() {
         return connection;
+    }
+
+    @Override
+    public PlayerSettings getPlayerSettings() {
+        return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
+    }
+
+    public void setPlayerSettings(ClientSettings settings) {
+        this.settings = new ClientSettingsWrapper(settings);
+        VelocityServer.getServer().getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
     }
 
     @Override
@@ -160,10 +173,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public ClientSettings getClientSettings() {
         return clientSettings;
-    }
-
-    public void setClientSettings(ClientSettings clientSettings) {
-        this.clientSettings = clientSettings;
     }
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {
