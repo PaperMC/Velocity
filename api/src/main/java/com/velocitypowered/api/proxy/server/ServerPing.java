@@ -18,9 +18,9 @@ public class ServerPing {
     private final Component description;
     private final @Nullable Favicon favicon;
 
-    public ServerPing(@NonNull Version version, @NonNull Players players, @NonNull Component description, @Nullable Favicon favicon) {
+    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon) {
         this.version = Preconditions.checkNotNull(version, "version");
-        this.players = Preconditions.checkNotNull(players, "players");
+        this.players = players;
         this.description = Preconditions.checkNotNull(description, "description");
         this.favicon = favicon;
     }
@@ -29,8 +29,8 @@ public class ServerPing {
         return version;
     }
 
-    public Players getPlayers() {
-        return players;
+    public Optional<Players> getPlayers() {
+        return Optional.ofNullable(players);
     }
 
     public Component getDescription() {
@@ -76,6 +76,7 @@ public class ServerPing {
         private final List<SamplePlayer> samplePlayers = new ArrayList<>();
         private Component description;
         private Favicon favicon;
+        private boolean nullOutPlayers;
 
         private Builder() {
 
@@ -106,6 +107,11 @@ public class ServerPing {
             return this;
         }
 
+        public Builder nullPlayers() {
+            this.nullOutPlayers = true;
+            return this;
+        }
+
         public Builder description(Component description) {
             this.description = Preconditions.checkNotNull(description, "description");
             return this;
@@ -117,7 +123,7 @@ public class ServerPing {
         }
 
         public ServerPing build() {
-            return new ServerPing(version, new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon);
+            return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon);
         }
 
         public Version getVersion() {
