@@ -1,9 +1,11 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class LegacyPingResponse {
+    private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0, ImmutableList.of());
     private int protocolVersion;
     private String serverVersion;
     private String motd;
@@ -76,7 +78,7 @@ public class LegacyPingResponse {
         return new LegacyPingResponse(ping.getVersion().getProtocol(),
                 ping.getVersion().getName(),
                 ComponentSerializers.LEGACY.serialize(ping.getDescription()),
-                ping.getPlayers().getOnline(),
-                ping.getPlayers().getMax());
+                ping.getPlayers().orElse(FAKE_PLAYERS).getOnline(),
+                ping.getPlayers().orElse(FAKE_PLAYERS).getMax());
     }
 }
