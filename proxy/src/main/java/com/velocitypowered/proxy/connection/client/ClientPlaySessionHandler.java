@@ -12,16 +12,12 @@ import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.EventLoop;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Handles communication with the connected Minecraft client. This is effectively the primary nerve center that
@@ -65,7 +61,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof ClientSettings) {
-            player.setClientSettings((ClientSettings) packet);
+            player.setPlayerSettings((ClientSettings) packet);
             // forward it on
         }
 

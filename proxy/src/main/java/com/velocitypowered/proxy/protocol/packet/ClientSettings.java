@@ -6,12 +6,25 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class ClientSettings implements MinecraftPacket {
+
     private String locale;
     private byte viewDistance;
     private int chatVisibility;
     private boolean chatColors;
     private short skinParts;
     private int mainHand;
+
+    public ClientSettings() {
+    }
+
+    public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors, short skinParts, int mainHand) {
+        this.locale = locale;
+        this.viewDistance = viewDistance;
+        this.chatVisibility = chatVisibility;
+        this.chatColors = chatColors;
+        this.skinParts = skinParts;
+        this.mainHand = mainHand;
+    }
 
     public String getLocale() {
         return locale;
@@ -63,14 +76,14 @@ public class ClientSettings implements MinecraftPacket {
 
     @Override
     public String toString() {
-        return "ClientSettings{" +
-                "locale='" + locale + '\'' +
-                ", viewDistance=" + viewDistance +
-                ", chatVisibility=" + chatVisibility +
-                ", chatColors=" + chatColors +
-                ", skinParts=" + skinParts +
-                ", mainHand=" + mainHand +
-                '}';
+        return "ClientSettings{"
+                + "locale='" + locale + '\''
+                + ", viewDistance=" + viewDistance
+                + ", chatVisibility=" + chatVisibility
+                + ", chatColors=" + chatColors
+                + ", skinParts=" + skinParts
+                + ", mainHand=" + mainHand
+                + '}';
     }
 
     @Override
