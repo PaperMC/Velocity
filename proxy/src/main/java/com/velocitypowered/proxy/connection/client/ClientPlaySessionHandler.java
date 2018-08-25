@@ -32,7 +32,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final int MAX_PLUGIN_CHANNELS = 128;
 
     private final ConnectedPlayer player;
-    private long lastPing = -1;
+    private long lastPingID = -1;
+    private long lastPingSent = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
@@ -57,11 +58,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public void handle(MinecraftPacket packet) {
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
-            if (keepAlive.getRandomId() != lastPing) {
+            if (keepAlive.getRandomId() != lastPingID) {
                 // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
                 // ping is alright.
                 return;
             }
+            player.setPing(System.currentTimeMillis() - lastPingSent);
+            resetPingData();
         }
 
         if (packet instanceof ClientSettings) {
@@ -148,7 +151,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
-        lastPing = Long.MIN_VALUE; // reset last ping
+        resetPingData(); // reset ping data;
         if (!spawned) {
             // nothing special to do here
             spawned = true;
@@ -256,6 +259,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void setLastPing(long lastPing) {
-        this.lastPing = lastPing;
+        this.lastPingID = lastPing;
+        this.lastPingSent = System.currentTimeMillis();
+    }
+    
+    private void resetPingData() {
+        this.lastPingID = -1;
+        this.lastPingSent = -1;
     }
 }
