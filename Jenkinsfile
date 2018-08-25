@@ -25,7 +25,7 @@ pipeline {
     }
     stage('Deploy Javadoc') {
       steps {
-        sh 'rsync -av ./api/build/docs/javadoc/ /javadoc'
+        sh 'rsync -av --delete ./api/build/docs/javadoc/ /javadoc'
       }
     }
   }
