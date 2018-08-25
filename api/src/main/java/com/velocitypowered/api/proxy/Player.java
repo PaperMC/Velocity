@@ -1,7 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.playersettings.PlayerSettings;
+import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.ServerInfo;

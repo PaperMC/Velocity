@@ -1,4 +1,4 @@
-package com.velocitypowered.api.playersettings;
+package com.velocitypowered.api.proxy.player;
 
 public class SkinParts {
 
