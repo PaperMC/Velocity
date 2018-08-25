@@ -6,7 +6,6 @@ import com.velocitypowered.api.proxy.InboundConnection;
 
 import net.kyori.text.Component;
 
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -55,7 +54,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     /**
      * Represents an "allowed/allowed with online mode/denied" result with a reason allowed for denial.
      */
-    public static class PreLoginComponentResult extends ComponentResult {
+    public static class PreLoginComponentResult extends ResultedEvent.ComponentResult {
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
         private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true);
 
