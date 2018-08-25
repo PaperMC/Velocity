@@ -17,11 +17,11 @@ public class GameProfileRequestEvent {
     private final boolean onlineMode;
     private GameProfile gameProfile;
 
-    public GameProfileRequestEvent(InboundConnection connection, GameProfile originalProfile, boolean onlinemode) {
-        this.connection = connection;
-        this.originalProfile = Preconditions.checkNotNull(originalProfile, "profile");
+    public GameProfileRequestEvent(InboundConnection connection, GameProfile originalProfile, boolean onlineMode) {
+        this.connection = Preconditions.checkNotNull(connection, "connection");
+        this.originalProfile = Preconditions.checkNotNull(originalProfile, "originalProfile");
         this.username = originalProfile.getName();
-        this.onlineMode = onlinemode;
+        this.onlineMode = onlineMode;
     }
 
     public InboundConnection getConnection() {
