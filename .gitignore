@@ -11,6 +11,7 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/**/compiler.xml
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
@@ -85,6 +86,15 @@ modules.xml
 # BlueJ files
 *.ctxt
 
+# Eclipse #
+**/.classpath
+**/.project
+**/.settings/
+**/bin/
+
+# NetBeans Gradle#
+.nb-gradle/
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -102,7 +112,7 @@ hs_err_pid*
 
 ### Gradle ###
 .gradle
-/build/
+build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -121,4 +131,7 @@ gradle-app.setting
 
 # Other trash
 logs/
-velocity.toml
+/velocity.toml
+server-icon.png
+/bin/
+run/

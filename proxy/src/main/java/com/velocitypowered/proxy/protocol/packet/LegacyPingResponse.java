@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.velocitypowered.proxy.data.ServerPing;
+import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class LegacyPingResponse {

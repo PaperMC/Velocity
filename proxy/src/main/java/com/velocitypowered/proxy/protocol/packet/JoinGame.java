@@ -87,7 +87,11 @@ public class JoinGame implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.entityId = buf.readInt();
         this.gamemode = buf.readUnsignedByte();
-        this.dimension = buf.readInt();
+        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
+            this.dimension = buf.readInt();
+        } else {
+            this.dimension = buf.readByte();
+        }
         this.difficulty = buf.readUnsignedByte();
         this.maxPlayers = buf.readUnsignedByte();
         this.levelType = ProtocolUtils.readString(buf, 16);
@@ -98,7 +102,11 @@ public class JoinGame implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         buf.writeInt(entityId);
         buf.writeByte(gamemode);
-        buf.writeInt(dimension);
+        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
+            buf.writeInt(dimension);
+        } else {
+            buf.writeByte(dimension);
+        }
         buf.writeByte(difficulty);
         buf.writeByte(maxPlayers);
         ProtocolUtils.writeString(buf, levelType);

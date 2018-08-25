@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.netty;
 
+import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,8 +20,11 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
         if (first == 0xfe && second == 0x01) {
             in.skipBytes(in.readableBytes());
             out.add(new LegacyPing());
+        } else if (first == 0x02) {
+            in.skipBytes(in.readableBytes());
+            out.add(new LegacyHandshake());
+        } else {
+            ctx.pipeline().remove(this);
         }
-
-        ctx.pipeline().remove(this);
     }
 }

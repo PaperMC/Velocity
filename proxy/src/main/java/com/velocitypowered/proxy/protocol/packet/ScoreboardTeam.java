@@ -138,7 +138,9 @@ public class ScoreboardTeam implements MinecraftPacket {
                 }
                 this.flags = buf.readByte();
                 this.nameTagVisibility = ProtocolUtils.readString(buf, 32);
-                this.collisionRule = ProtocolUtils.readString(buf, 32);
+                if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9) {
+                    this.collisionRule = ProtocolUtils.readString(buf, 32);
+                }
                 this.color = protocolVersion <= ProtocolConstants.MINECRAFT_1_12_2 ? buf.readByte() :
                         ProtocolUtils.readVarInt(buf);
                 if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
@@ -172,7 +174,9 @@ public class ScoreboardTeam implements MinecraftPacket {
                 }
                 buf.writeByte(flags);
                 ProtocolUtils.writeString(buf, nameTagVisibility);
-                ProtocolUtils.writeString(buf, collisionRule);
+                if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9) {
+                    ProtocolUtils.writeString(buf, collisionRule);
+                }
                 if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
                     ProtocolUtils.writeVarInt(buf, color);
                     ProtocolUtils.writeScoreboardTextComponent(buf, protocolVersion, prefix);

@@ -1,47 +1,41 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.proxy.messages.ChannelSide;
+import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.backend.ServerConnection;
-import com.velocitypowered.api.server.ServerInfo;
-import com.velocitypowered.proxy.data.scoreboard.Objective;
-import com.velocitypowered.proxy.data.scoreboard.Score;
-import com.velocitypowered.proxy.data.scoreboard.Scoreboard;
-import com.velocitypowered.proxy.data.scoreboard.Team;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
-import io.netty.util.ReferenceCountUtil;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handles communication with the connected Minecraft client. This is effectively the primary nerve center that
+ * joins backend servers with players.
+ */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
     private static final int MAX_PLUGIN_CHANNELS = 128;
 
     private final ConnectedPlayer player;
-    private ScheduledFuture<?> pingTask;
     private long lastPing = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
-    private int currentDimension;
-    private Scoreboard serverScoreboard = new Scoreboard();
     private EntityIdRemapper idRemapper;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
@@ -50,16 +44,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        EventLoop loop = player.getConnection().getChannel().eventLoop();
-        pingTask = loop.scheduleAtFixedRate(this::ping, 5, 15, TimeUnit.SECONDS);
-    }
-
-    private void ping() {
-        long randomId = ThreadLocalRandom.current().nextInt();
-        lastPing = randomId;
-        KeepAlive keepAlive = new KeepAlive();
-        keepAlive.setRandomId(randomId);
-        player.getConnection().write(keepAlive);
+        PluginMessage message;
+        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            message = PluginMessageUtil.constructChannelsPacket("minecraft:register", VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+        } else {
+            message = PluginMessageUtil.constructChannelsPacket("REGISTER", VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+        }
+        player.getConnection().write(message);
     }
 
     @Override
@@ -67,11 +58,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
             if (keepAlive.getRandomId() != lastPing) {
-                throw new IllegalStateException("Client sent invalid keepAlive; expected " + lastPing + ", got " + keepAlive.getRandomId());
+                // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
+                // ping is alright.
+                return;
             }
-
-            // Do not forward the packet to the player's server, because we handle pings for all servers already.
-            return;
         }
 
         if (packet instanceof ClientSettings) {
@@ -80,10 +70,49 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof Chat) {
+            // Try to handle any commands on the proxy. If that fails, send it onto the client.
             Chat chat = (Chat) packet;
-            if (chat.getMessage().equals("/connect")) {
-                ServerInfo info = new ServerInfo("test", new InetSocketAddress("localhost", 25566));
-                player.createConnectionRequest(info).fireAndForget();
+            String msg = ((Chat) packet).getMessage();
+            if (msg.startsWith("/")) {
+                try {
+                    if (!VelocityServer.getServer().getCommandManager().execute(player, msg.substring(1))) {
+                        player.getConnectedServer().getMinecraftConnection().write(chat);
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
+                    player.sendMessage(TextComponent.of("An error occurred while running this command.", TextColor.RED));
+                    return;
+                }
+            } else {
+                player.getConnectedServer().getMinecraftConnection().write(chat);
+            }
+            return;
+        }
+
+        if (packet instanceof TabCompleteRequest) {
+            TabCompleteRequest req = (TabCompleteRequest) packet;
+            int lastSpace = req.getCommand().indexOf(' ');
+            if (!req.isAssumeCommand() && lastSpace != -1) {
+                String command = req.getCommand().substring(1);
+                try {
+                    Optional<List<String>> offers = VelocityServer.getServer().getCommandManager().offerSuggestions(player, command);
+                    if (offers.isPresent()) {
+                        TabCompleteResponse response = new TabCompleteResponse();
+                        response.setTransactionId(req.getTransactionId());
+                        response.setStart(lastSpace);
+                        response.setLength(req.getCommand().length() - lastSpace);
+
+                        for (String s : offers.get()) {
+                            response.getOffers().add(new TabCompleteResponse.Offer(s, null));
+                        }
+
+                        player.getConnection().write(response);
+                    } else {
+                        player.getConnectedServer().getMinecraftConnection().write(packet);
+                    }
+                } catch (Exception e) {
+                    logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
+                }
                 return;
             }
         }
@@ -106,11 +135,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
-
-        if (pingTask != null && !pingTask.isCancelled()) {
-            pingTask.cancel(false);
-            pingTask = null;
-        }
+        VelocityServer.getServer().getEventManager().fireAndForget(new DisconnectEvent(player));
     }
 
     @Override
@@ -123,21 +148,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
+        lastPing = Long.MIN_VALUE; // reset last ping
         if (!spawned) {
             // nothing special to do here
             spawned = true;
-            currentDimension = joinGame.getDimension();
             player.getConnection().delayedWrite(joinGame);
             idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
-            // In order to handle switching to another server we will need send three packets:
+            // Ah, this is the meat and potatoes of the whole venture!
+            //
+            // In order to handle switching to another server, you will need to send three packets:
             //
             // - The join game packet from the backend server
             // - A respawn packet with a different dimension
             // - Another respawn with the correct dimension
             //
-            // We can't simply ignore the packet with the different dimension. If you try to be smart about it it doesn't
-            // work.
+            // The two respawns with different dimensions are required, otherwise the client gets confused.
             //
             // Most notably, by having the client accept the join game packet, we can work around the need to perform
             // entity ID rewrites, eliminating potential issues from rewriting packets and improving compatibility with
@@ -147,13 +173,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
             player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
             player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
-            currentDimension = joinGame.getDimension();
-        }
-
-        // Resend client settings packet to remote server if we have it, this preserves client settings across
-        // transitions.
-        if (player.getClientSettings() != null) {
-            player.getConnectedServer().getMinecraftConnection().delayedWrite(player.getClientSettings());
         }
 
         // Remove old boss bars.
@@ -165,24 +184,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
         serverBossBars.clear();
 
-        // Remove scoreboard junk.
-        clearServerScoreboard();
-
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
-        if (!clientPluginMsgChannels.isEmpty()) {
+        Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
+        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+        } else {
+            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+        }
+        if (!toRegister.isEmpty()) {
             String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
                     "minecraft:register" : "REGISTER";
-            player.getConnectedServer().getMinecraftConnection().delayedWrite(
-                    PluginMessageUtil.constructChannelsPacket(channel, clientPluginMsgChannels));
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
+                    channel, toRegister));
         }
 
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
-    }
-
-    public void setCurrentDimension(int currentDimension) {
-        this.currentDimension = currentDimension;
     }
 
     public List<UUID> getServerBossBars() {
@@ -204,7 +222,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (actuallyRegistered.size() > 0) {
-                logger.info("Rewritten register packet: {}", actuallyRegistered);
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                 player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }
@@ -222,88 +239,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        // We're going to forward on the original packet.
-        player.getConnectedServer().getMinecraftConnection().write(packet);
-    }
-
-    public void handleServerScoreboardPacket(MinecraftPacket packet) {
-        if (packet instanceof ScoreboardDisplay) {
-            ScoreboardDisplay sd = (ScoreboardDisplay) packet;
-            serverScoreboard.setPosition(sd.getPosition());
-            serverScoreboard.setDisplayName(sd.getDisplayName());
+        MessageHandler.ForwardStatus status = VelocityServer.getServer().getChannelRegistrar().handlePluginMessage(
+                player, ChannelSide.FROM_CLIENT, packet);
+        if (status == MessageHandler.ForwardStatus.FORWARD) {
+            // We're going to forward on the original packet.
+            player.getConnectedServer().getMinecraftConnection().write(packet);
         }
-
-        if (packet instanceof ScoreboardObjective) {
-            ScoreboardObjective so = (ScoreboardObjective) packet;
-            switch (so.getMode()) {
-                case ScoreboardObjective.ADD:
-                    Objective o = new Objective(so.getId());
-                    o.setDisplayName(so.getDisplayName());
-                    o.setType(so.getType());
-                    serverScoreboard.getObjectives().put(so.getId(), o);
-                    break;
-                case ScoreboardObjective.REMOVE:
-                    serverScoreboard.getObjectives().remove(so.getId());
-                    break;
-            }
-        }
-
-        if (packet instanceof ScoreboardSetScore) {
-            ScoreboardSetScore sss = (ScoreboardSetScore) packet;
-            Objective objective = serverScoreboard.getObjectives().get(sss.getObjective());
-            if (objective == null) {
-                return;
-            }
-            switch (sss.getAction()) {
-                case ScoreboardSetScore.CHANGE:
-                    Score score = new Score(sss.getEntity(), sss.getValue());
-                    objective.getScores().put(sss.getEntity(), score);
-                    break;
-                case ScoreboardSetScore.REMOVE:
-                    objective.getScores().remove(sss.getEntity());
-                    break;
-            }
-        }
-
-        if (packet instanceof ScoreboardTeam) {
-            ScoreboardTeam st = (ScoreboardTeam) packet;
-            switch (st.getMode()) {
-                case ScoreboardTeam.ADD:
-                    // TODO: Preserve other team information? We might not need to...
-                    Team team = new Team(st.getId());
-                    serverScoreboard.getTeams().put(st.getId(), team);
-                    break;
-                case ScoreboardTeam.REMOVE:
-                    serverScoreboard.getTeams().remove(st.getId());
-                    break;
-            }
-        }
-    }
-
-    private void clearServerScoreboard() {
-        for (Objective objective : serverScoreboard.getObjectives().values()) {
-            for (Score score : objective.getScores().values()) {
-                ScoreboardSetScore sss = new ScoreboardSetScore();
-                sss.setObjective(objective.getId());
-                sss.setAction(ScoreboardSetScore.REMOVE);
-                sss.setEntity(score.getTarget());
-                player.getConnection().delayedWrite(sss);
-            }
-
-            ScoreboardObjective so = new ScoreboardObjective();
-            so.setId(objective.getId());
-            so.setMode(ScoreboardObjective.REMOVE);
-            player.getConnection().delayedWrite(so);
-        }
-
-        for (Team team : serverScoreboard.getTeams().values()) {
-            ScoreboardTeam st = new ScoreboardTeam();
-            st.setId(team.getId());
-            st.setMode(ScoreboardTeam.REMOVE);
-            player.getConnection().delayedWrite(st);
-        }
-
-        serverScoreboard = new Scoreboard();
     }
 
     public Set<String> getClientPluginMsgChannels() {
@@ -312,5 +253,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public EntityIdRemapper getIdRemapper() {
         return idRemapper;
+    }
+
+    public void setLastPing(long lastPing) {
+        this.lastPing = lastPing;
     }
 }

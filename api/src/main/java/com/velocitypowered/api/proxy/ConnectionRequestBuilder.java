@@ -1,28 +1,29 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Represents a connection request. A connection request is created using {@link Player#createConnectionRequest(ServerInfo)}
- * and is used to allow a plugin to compose and request a connection to another Minecraft server using a fluent API.
+ * Provides a fluent interface to compose and send a connection request to another server behind the proxy. A connection
+ * request is created using {@link Player#createConnectionRequest(ServerInfo)}.
  */
 public interface ConnectionRequestBuilder {
     /**
      * Returns the server that this connection request represents.
      * @return the server this request will connect to
      */
-    ServerInfo getServer();
+    @NonNull ServerInfo getServer();
 
     /**
      * Initiates the connection to the remote server and emits a result on the {@link CompletableFuture} after the user
      * has logged on. No messages will be communicated to the client: the user is responsible for all error handling.
      * @return a {@link CompletableFuture} representing the status of this connection
      */
-    CompletableFuture<Result> connect();
+    @NonNull CompletableFuture<Result> connect();
 
     /**
      * Initiates the connection to the remote server without waiting for a result. Velocity will use generic error
@@ -49,7 +50,7 @@ public interface ConnectionRequestBuilder {
         Status getStatus();
 
         /**
-         * Returns a reason for the failure to connect to the server. None may be provided.
+         * Returns an (optional) textual reason for the failure to connect to the server.
          * @return the reason why the user could not connect to the server
          */
         Optional<Component> getReason();

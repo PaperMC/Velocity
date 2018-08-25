@@ -1,13 +1,24 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'maven-publish'
+}
+
+sourceSets {
+    ap {
+        compileClasspath += main.compileClasspath + main.output
+    }
 }
 
 dependencies {
     compile 'com.google.code.gson:gson:2.8.5'
     compile "com.google.guava:guava:${guavaVersion}"
-    compile 'net.kyori:text:1.12-1.6.0-SNAPSHOT'
+    compile 'net.kyori:text:1.12-1.6.4'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile 'com.google.inject:guice:4.2.0'
+    compile 'org.checkerframework:checker-qual:2.5.4'
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
@@ -20,10 +31,55 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource
+    from sourceSets.ap.output
+}
+
+jar {
+    from sourceSets.ap.output
+}
+
+shadowJar {
+    from sourceSets.ap.output
 }
 
 artifacts {
     archives javadocJar
     archives shadowJar
     archives sourcesJar
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.links(
+            'http://www.slf4j.org/apidocs/',
+            'https://google.github.io/guava/releases/25.1-jre/api/docs/',
+            'https://google.github.io/guice/api-docs/4.2/javadoc/',
+            'https://jd.kyori.net/text/1.12-1.6.4/',
+            'https://docs.oracle.com/javase/8/docs/api/'
+    )
+
+    // Disable the crazy super-strict doclint tool in Java 8
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'myRepo'
+            def base = project.ext.getCurrentBranchName() == "master" ? 'file:///maven-repo' : File.createTempDir().toURI().toURL().toString()
+            def releasesRepoUrl = "$base/releases"
+            def snapshotsRepoUrl = "$base/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
 }

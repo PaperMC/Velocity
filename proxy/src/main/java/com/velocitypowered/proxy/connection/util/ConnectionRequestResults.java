@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.ComponentSerializers;
 
 import java.util.Optional;
@@ -39,6 +40,20 @@ public class ConnectionRequestResults {
             @Override
             public Optional<Component> getReason() {
                 return Optional.of(deserialized);
+            }
+        };
+    }
+
+    public static ConnectionRequestBuilder.Result forDisconnect(TextComponent component) {
+        return new ConnectionRequestBuilder.Result() {
+            @Override
+            public ConnectionRequestBuilder.Status getStatus() {
+                return ConnectionRequestBuilder.Status.SERVER_DISCONNECTED;
+            }
+
+            @Override
+            public Optional<Component> getReason() {
+                return Optional.of(component);
             }
         };
     }

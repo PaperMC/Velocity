@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PacketRegistryTest {
     private StateRegistry.PacketRegistry setupRegistry() {
         StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, StateRegistry.HANDSHAKE);
-        registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12));
+        registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12, false));
         return registry;
     }
 
@@ -44,8 +44,8 @@ class PacketRegistryTest {
     @Test
     void registrySuppliesCorrectPacketsByProtocol() {
         StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, StateRegistry.HANDSHAKE);
-        registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12),
-                new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12_1));
+        registry.register(Handshake.class, Handshake::new, new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12, false),
+                new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12_1, false));
         assertEquals(Handshake.class, registry.getVersion(MINECRAFT_1_12).createPacket(0x00).getClass());
         assertEquals(Handshake.class, registry.getVersion(MINECRAFT_1_12_1).createPacket(0x01).getClass());
         assertEquals(Handshake.class, registry.getVersion(MINECRAFT_1_12_2).createPacket(0x01).getClass());

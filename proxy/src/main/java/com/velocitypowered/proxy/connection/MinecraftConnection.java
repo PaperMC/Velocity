@@ -5,11 +5,12 @@ import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.protocol.PacketWrapper;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,14 +24,14 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.security.GeneralSecurityException;
 
-import static com.velocitypowered.network.Connections.CIPHER_DECODER;
-import static com.velocitypowered.network.Connections.CIPHER_ENCODER;
-import static com.velocitypowered.network.Connections.COMPRESSION_DECODER;
-import static com.velocitypowered.network.Connections.COMPRESSION_ENCODER;
-import static com.velocitypowered.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.CIPHER_DECODER;
+import static com.velocitypowered.proxy.network.Connections.CIPHER_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.COMPRESSION_DECODER;
+import static com.velocitypowered.proxy.network.Connections.COMPRESSION_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
+import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft
@@ -40,7 +41,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
     private final Channel channel;
-    private boolean closed;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
@@ -48,7 +48,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public MinecraftConnection(Channel channel) {
         this.channel = channel;
-        this.closed = false;
         this.state = StateRegistry.HANDSHAKE;
     }
 
@@ -72,24 +71,17 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (association != null) {
             logger.info("{} has disconnected", association);
         }
-
-        teardown();
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof PacketWrapper) {
-            PacketWrapper pw = (PacketWrapper) msg;
+        if (msg instanceof MinecraftPacket) {
+            sessionHandler.handle((MinecraftPacket) msg);
+        } else if (msg instanceof ByteBuf) {
             try {
-                if (sessionHandler != null) {
-                    if (pw.getPacket() == null) {
-                        sessionHandler.handleUnknown(pw.getBuffer());
-                    } else {
-                        sessionHandler.handle(pw.getPacket());
-                    }
-                }
+                sessionHandler.handleUnknown((ByteBuf) msg);
             } finally {
-                ReferenceCountUtil.release(pw.getBuffer());
+                ReferenceCountUtil.release(msg);
             }
         }
     }
@@ -107,40 +99,38 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
                 logger.error("{} encountered an exception", ctx.channel().remoteAddress(), cause);
             }
 
-            closed = true;
             ctx.close();
         }
     }
 
     public void write(Object msg) {
-        ensureOpen();
-        channel.writeAndFlush(msg, channel.voidPromise());
+        if (channel.isActive()) {
+            channel.writeAndFlush(msg, channel.voidPromise());
+        }
     }
 
     public void delayedWrite(Object msg) {
-        ensureOpen();
-        channel.write(msg, channel.voidPromise());
+        if (channel.isActive()) {
+            channel.write(msg, channel.voidPromise());
+        }
     }
 
     public void flush() {
-        ensureOpen();
-        channel.flush();
+        if (channel.isActive()) {
+            channel.flush();
+        }
     }
 
     public void closeWith(Object msg) {
-        ensureOpen();
-        teardown();
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        if (channel.isActive()) {
+            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     public void close() {
-        ensureOpen();
-        teardown();
-        channel.close();
-    }
-
-    public void teardown() {
-        closed = true;
+        if (channel.isActive()) {
+            channel.close();
+        }
     }
 
     public Channel getChannel() {
@@ -148,7 +138,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public boolean isClosed() {
-        return closed;
+        return !channel.isActive();
     }
 
     public StateRegistry getState() {
@@ -167,8 +157,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
-        this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
-        this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
+        if (protocolVersion != ProtocolConstants.LEGACY) {
+            this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
+            this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
+        } else {
+            // Legacy handshake handling
+            this.channel.pipeline().remove(MINECRAFT_ENCODER);
+            this.channel.pipeline().remove(MINECRAFT_DECODER);
+        }
     }
 
     public MinecraftSessionHandler getSessionHandler() {
@@ -184,10 +180,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     private void ensureOpen() {
-        Preconditions.checkState(!closed, "Connection is closed.");
+        Preconditions.checkState(!isClosed(), "Connection is closed.");
     }
 
     public void setCompressionThreshold(int threshold) {
+        ensureOpen();
+
         if (threshold == -1) {
             channel.pipeline().remove(COMPRESSION_DECODER);
             channel.pipeline().remove(COMPRESSION_ENCODER);
@@ -204,6 +202,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void enableEncryption(byte[] secret) throws GeneralSecurityException {
+        ensureOpen();
+
         SecretKey key = new SecretKeySpec(secret, "AES");
 
         VelocityCipherFactory factory = Natives.cipher.get();

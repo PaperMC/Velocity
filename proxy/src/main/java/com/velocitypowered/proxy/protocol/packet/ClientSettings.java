@@ -80,7 +80,10 @@ public class ClientSettings implements MinecraftPacket {
         this.chatVisibility = ProtocolUtils.readVarInt(buf);
         this.chatColors = buf.readBoolean();
         this.skinParts = buf.readUnsignedByte();
-        this.mainHand = ProtocolUtils.readVarInt(buf);
+
+        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9) {
+            this.mainHand = ProtocolUtils.readVarInt(buf);
+        }
     }
 
     @Override
@@ -90,6 +93,9 @@ public class ClientSettings implements MinecraftPacket {
         ProtocolUtils.writeVarInt(buf, chatVisibility);
         buf.writeBoolean(chatColors);
         buf.writeByte(skinParts);
-        ProtocolUtils.writeVarInt(buf, mainHand);
+
+        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9) {
+            ProtocolUtils.writeVarInt(buf, mainHand);
+        }
     }
 }

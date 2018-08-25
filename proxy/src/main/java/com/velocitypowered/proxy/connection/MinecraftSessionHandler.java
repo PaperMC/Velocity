@@ -4,7 +4,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.buffer.ByteBuf;
 
 public interface MinecraftSessionHandler {
-    void handle(MinecraftPacket packet) throws Exception;
+    void handle(MinecraftPacket packet);
 
     default void handleUnknown(ByteBuf buf) {
         // No-op: we'll release the buffer later.
