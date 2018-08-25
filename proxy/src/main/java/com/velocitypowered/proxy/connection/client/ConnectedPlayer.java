@@ -145,6 +145,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public void clearHeaderAndFooter() {
+        connection.write(HeaderAndFooter.reset());
+    }
+    
+    @Override
     public void disconnect(Component reason) {
         connection.closeWith(Disconnect.create(reason));
     }

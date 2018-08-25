@@ -60,8 +60,13 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @param header component with header
      * @param footer component with footer
      */
-    void setHeaderAndFooter(@NonNull Component header, @NonNull Component footer);
-    
+    void setHeaderAndFooter(Component header, Component footer);
+
+    /**
+     * Clears a header and footer for the player
+     */
+    void clearHeaderAndFooter();
+
     /**
      * Disconnects the player with the reason
      * @param reason component with the reason

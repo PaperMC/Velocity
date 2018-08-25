@@ -11,6 +11,8 @@ import net.kyori.text.serializer.ComponentSerializers;
 
 public class HeaderAndFooter implements MinecraftPacket {
 
+    private static final HeaderAndFooter RESET = new HeaderAndFooter("{\"translate\":\"\"}", "{\"translate\":\"\"}");
+    
     private String header;
     private String footer;
 
@@ -40,7 +42,7 @@ public class HeaderAndFooter implements MinecraftPacket {
 
     @Override
     public void decode(ByteBuf buf, Direction direction, int protocolVersion) {
-        // We dont handle this packet from backend
+        throw new UnsupportedOperationException("Decode is not implemented");
     }
 
     @Override
@@ -54,4 +56,7 @@ public class HeaderAndFooter implements MinecraftPacket {
         return new HeaderAndFooter(json.serialize(header), json.serialize(footer));
     }
     
+    public static HeaderAndFooter reset() {
+        return RESET;
+    }
 }
