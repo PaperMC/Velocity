@@ -12,6 +12,7 @@
 .idea/**/dictionaries
 .idea/**/shelf
 .idea/**/compiler.xml
+.idea/**/encodings.xml
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
