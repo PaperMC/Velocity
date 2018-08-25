@@ -1,13 +1,16 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

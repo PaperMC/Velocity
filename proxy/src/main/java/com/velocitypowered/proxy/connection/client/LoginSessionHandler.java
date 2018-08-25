@@ -3,11 +3,14 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
+import com.velocitypowered.api.event.player.gameprofile.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -37,7 +40,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
-
+    
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private ServerLogin login;
@@ -97,15 +100,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player disconnected after we authenticated them.
                                 return;
                             }
-
                             try {
                                 inbound.enableEncryption(decryptedSharedSecret);
                             } catch (GeneralSecurityException e) {
                                 throw new RuntimeException(e);
                             }
-
-                            GameProfile profile = VelocityServer.GSON.fromJson(profileResponse, GameProfile.class);
-                            initializePlayer(profile);
+                            
+                            initializePlayer(VelocityServer.GSON.fromJson(profileResponse, GameProfile.class), true);
+                            
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
@@ -125,20 +127,24 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
         VelocityServer.getServer().getEventManager().fire(event)
                 .thenRunAsync(() -> {
-                    if (!event.getResult().isAllowed()) {
+                    if (inbound.isClosed()) {
+                        // The player was disconnected
+                        return;
+                    }
+                    PreLoginComponentResult result = event.getResult();
+                    if (!result.isAllowed()) {
                         // The component is guaranteed to be provided if the connection was denied.
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
                         return;
                     }
-
-                    if (VelocityServer.getServer().getConfiguration().isOnlineMode()) {
+                    
+                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
                         inbound.write(request);
                     } else {
-                        // Offline-mode, don't try to request encryption.
-                        initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()));
+                        initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
                     }
                 }, inbound.getChannel().eventLoop());
     }
@@ -153,28 +159,38 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return request;
     }
 
-    private void initializePlayer(GameProfile profile) {
-        // Initiate a regular connection and move over to it.
-        ConnectedPlayer player = new ConnectedPlayer(profile, inbound, apiInbound.getVirtualHost().orElse(null));
+    private void initializePlayer(GameProfile profile, boolean onlineMode) {
 
-        // load permissions first
-        VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-                .thenCompose(event -> {
-                    // wait for permissions to load, then set the players permission function
-                    player.setPermissionFunction(event.createFunction(player));
-                    // then call & wait for the login event
-                    return VelocityServer.getServer().getEventManager().fire(new LoginEvent(player));
-                })
-                // then complete the connection
-                .thenAcceptAsync(event -> {
-                    if (!event.getResult().isAllowed()) {
-                        // The component is guaranteed to be provided if the connection was denied.
-                        inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
-                        return;
-                    }
+        GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(profile, onlineMode);
 
-                    handleProxyLogin(player);
-                }, inbound.getChannel().eventLoop());
+        VelocityServer.getServer().getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
+            // Initiate a regular connection and move over to it.
+            ConnectedPlayer player = new ConnectedPlayer(profileEvent.getGameProfile() == null ? profile : profileEvent.getGameProfile(),
+                        inbound, apiInbound.getVirtualHost().orElse(null));
+
+            return VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+                        .thenCompose(event -> {
+                            // wait for permissions to load, then set the players permission function
+                            player.setPermissionFunction(event.createFunction(player));
+                            // then call & wait for the login event
+                            return VelocityServer.getServer().getEventManager().fire(new LoginEvent(player));
+                        })
+                        // then complete the connection
+                        .thenAcceptAsync(event -> {
+                            if (inbound.isClosed()) {
+                                // The player was disconnected
+                                return;
+                            }
+                            if (!event.getResult().isAllowed()) {
+                                // The component is guaranteed to be provided if the connection was denied.
+                                inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                                return;
+                            }
+
+                            handleProxyLogin(player);
+                        }, inbound.getChannel().eventLoop());
+        });
+
     }
 
     private void handleProxyLogin(ConnectedPlayer player) {

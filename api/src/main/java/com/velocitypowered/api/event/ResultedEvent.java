@@ -1,6 +1,7 @@
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
+
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -72,7 +73,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         private final boolean allowed;
         private final @Nullable Component reason;
 
-        private ComponentResult(boolean allowed, @Nullable Component reason) {
+        protected ComponentResult(boolean allowed, @Nullable Component reason) {
             this.allowed = allowed;
             this.reason = reason;
         }
