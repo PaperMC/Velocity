@@ -25,7 +25,7 @@ public class GameProfile {
     public UUID idAsUuid() {
         return UuidUtils.fromUndashed(id);
     }
-    
+
     public String getName() {
         return name;
     }

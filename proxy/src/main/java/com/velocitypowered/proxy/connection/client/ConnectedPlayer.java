@@ -9,14 +9,12 @@ import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.MessagePosition;
-import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -25,6 +23,8 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -137,6 +137,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return new ConnectionRequestBuilderImpl(info);
     }
 
+    @Override
+    public void setHeaderAndFooter(@NonNull Component header, @NonNull Component footer) {
+        Preconditions.checkNotNull(header, "header");
+        Preconditions.checkNotNull(footer, "footer");
+        connection.write(HeaderAndFooter.create(header, footer));
+    }
+
+    @Override
+    public void clearHeaderAndFooter() {
+        connection.write(HeaderAndFooter.reset());
+    }
+    
     @Override
     public void disconnect(Component reason) {
         connection.closeWith(Disconnect.create(reason));

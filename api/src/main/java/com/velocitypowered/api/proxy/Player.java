@@ -1,16 +1,13 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.server.ServerInfo;
-import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.api.util.MessagePosition;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,5 +55,21 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      */
     ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info);
 
+    /**
+     * Sets a header and footer to the player
+     * @param header component with header
+     * @param footer component with footer
+     */
+    void setHeaderAndFooter(Component header, Component footer);
+
+    /**
+     * Clears a header and footer for the player
+     */
+    void clearHeaderAndFooter();
+
+    /**
+     * Disconnects the player with the reason
+     * @param reason component with the reason
+     */
     void disconnect(Component reason);
 }
