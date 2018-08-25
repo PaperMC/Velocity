@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.playersettings.PlayerSettings;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -32,7 +33,9 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @return an {@link Optional} the server that the player is connected to, which may be empty
      */
     Optional<ServerConnection> getCurrentServer();
-    
+
+    PlayerSettings getPlayerSettings();
+
     /**
      * Returns the current player's ping
      * @return the player's ping or -1 if ping information is currently unknown
