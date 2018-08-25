@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'velocitypowered/openjdk8-plus-git:slim'
-      args '-v gradle-cache:/root/.gradle:rw -v maven-repo:/maven-repo:rw'
+      args '-v gradle-cache:/root/.gradle:rw -v maven-repo:/maven-repo:rw -v javadoc:/javadoc'
     }
 
   }
@@ -21,6 +21,11 @@ pipeline {
     stage('Deploy Artifacts') {
       steps {
         sh 'export MAVEN_DEPLOYMENT=true; ./gradlew publish'
+      }
+    }
+    stage('Deploy Javadoc') {
+      steps {
+        sh 'rsync -av ./api/build/docs/javadoc/ /javadoc'
       }
     }
   }
