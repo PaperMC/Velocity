@@ -40,10 +40,6 @@ public class GameProfile {
         return new GameProfile(id, username, ImmutableList.of());
     }
 
-    public static String createOfflineUUID(@NonNull String username) {
-        Preconditions.checkNotNull(username, "username");
-        return UuidUtils.toUndashed(UuidUtils.generateOfflinePlayerUuid(username));
-    }
     @Override
     public String toString() {
         return "GameProfile{" +

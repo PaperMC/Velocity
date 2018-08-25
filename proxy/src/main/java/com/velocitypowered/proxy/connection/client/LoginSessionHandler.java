@@ -138,7 +138,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
                     
-                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || result.isOnlineMode()) {
+                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -159,9 +159,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return request;
     }
 
-    private void initializePlayer(GameProfile profile, boolean onlinemode) {
+    private void initializePlayer(GameProfile profile, boolean onlineMode) {
 
-        GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(profile, onlinemode);
+        GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(profile, onlineMode);
 
         VelocityServer.getServer().getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
             // Initiate a regular connection and move over to it.

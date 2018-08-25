@@ -49,9 +49,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     private final MinecraftConnection connection;
     private final InetSocketAddress virtualHost;
+    private final GameProfile profile;
     private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
-    private GameProfile profile;
     private VelocityServerConnection connectedServer;
     private ClientSettings clientSettings;
     private VelocityServerConnection connectionInFlight;

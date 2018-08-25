@@ -33,7 +33,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     public String getUsername() {
         return username;
     }
-    
+
     @Override
     public PreLoginComponentResult getResult() {
         return result;
@@ -52,40 +52,39 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
                 ", result=" + result +
                 '}';
     }
-    
+
     /**
      * Represents an "allowed/allowed with online mode/denied" result with a reason allowed for denial.
      */
     public static class PreLoginComponentResult extends ComponentResult {
 
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
-        private static final PreLoginComponentResult ALLOWED_ONLINEMODE = new PreLoginComponentResult(true);
+        private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true);
 
         private final boolean onlineMode;
         /**
          * Allows to enable a online mode for the player connection, when Velocity running in offline mode
          * Does not have any sense if velocity running in onlineMode;
-         * @param onlineMode if true, offline uuid will be used for player connection if Velocity run in offlineMode
+         * @param allowedOnlineMode if true, offline uuid will be used for player connection if Velocity run in offlineMode
          */
-        private PreLoginComponentResult(boolean onlineMode) {
+        private PreLoginComponentResult(boolean allowedOnlineMode) {
             super(true, null);
-            this.onlineMode = onlineMode;
+            this.onlineMode = allowedOnlineMode;
         }
-        
+
         private PreLoginComponentResult(@Nullable Component reason) {
             super(reason == null, reason);
             // Don't care about this
             this.onlineMode = false;
         }
 
-        public boolean isOnlineMode() {
+        public boolean isOnlineModeAllowed() {
             return this.onlineMode;
         }
 
-        
         @Override
         public String toString() {
-            if (isOnlineMode()) {
+            if (isOnlineModeAllowed()) {
                 return "allowed with online mode";
             }
             
@@ -96,10 +95,10 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
             return ALLOWED;
         }
 
-        public static PreLoginComponentResult allowedOnlineMode() {
-            return ALLOWED_ONLINEMODE;
+        public static PreLoginComponentResult forceOnlineMode() {
+            return FORCE_ONLINEMODE;
         }
-        
+
         public static PreLoginComponentResult denied(@NonNull Component reason) {
             Preconditions.checkNotNull(reason, "reason");
             return new PreLoginComponentResult(reason);
