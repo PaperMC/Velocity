@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Represents a Mojang game profile.
+ * Represents a Mojang game profile. This class is immutable.
  */
-public class GameProfile {
+public final class GameProfile {
     private final String id;
     private final String name;
     private final List<Property> properties;
@@ -37,6 +37,11 @@ public class GameProfile {
         return properties;
     }
 
+    /**
+     * Creates a game profile suitable for use in offline-mode.
+     * @param username the username to use
+     * @return the new offline-mode game profile
+     */
     public static GameProfile forOfflinePlayer(@NonNull String username) {
         Preconditions.checkNotNull(username, "username");
         String id = UuidUtils.toUndashed(UuidUtils.generateOfflinePlayerUuid(username));
@@ -52,7 +57,7 @@ public class GameProfile {
                 '}';
     }
 
-    public class Property {
+    public final class Property {
         private final String name;
         private final String value;
         private final String signature;

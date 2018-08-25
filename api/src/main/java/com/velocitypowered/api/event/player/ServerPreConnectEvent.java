@@ -3,7 +3,7 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

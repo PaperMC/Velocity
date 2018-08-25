@@ -24,14 +24,14 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.security.GeneralSecurityException;
 
-import static com.velocitypowered.network.Connections.CIPHER_DECODER;
-import static com.velocitypowered.network.Connections.CIPHER_ENCODER;
-import static com.velocitypowered.network.Connections.COMPRESSION_DECODER;
-import static com.velocitypowered.network.Connections.COMPRESSION_ENCODER;
-import static com.velocitypowered.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.CIPHER_DECODER;
+import static com.velocitypowered.proxy.network.Connections.CIPHER_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.COMPRESSION_DECODER;
+import static com.velocitypowered.proxy.network.Connections.COMPRESSION_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
+import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft

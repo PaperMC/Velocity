@@ -12,7 +12,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.api.server.ServerPing;
+import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;

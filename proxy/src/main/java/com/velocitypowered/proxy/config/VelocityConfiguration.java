@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.config;
 
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
-import com.velocitypowered.api.server.Favicon;
+import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.api.util.LegacyChatColorUtils;
 import io.netty.buffer.ByteBufUtil;

@@ -4,7 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 
 /**
- * Represents a connection to the proxy. There is no guarantee that the connection has been fully initialized.
+ * Represents an incoming connection to the proxy.
  */
 public interface InboundConnection {
     /**

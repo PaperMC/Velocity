@@ -21,7 +21,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.util.ThrowableUtils;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 

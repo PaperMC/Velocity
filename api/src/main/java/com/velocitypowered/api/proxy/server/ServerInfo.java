@@ -1,4 +1,4 @@
-package com.velocitypowered.api.server;
+package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
 import org.checkerframework.checker.nullness.qual.NonNull;

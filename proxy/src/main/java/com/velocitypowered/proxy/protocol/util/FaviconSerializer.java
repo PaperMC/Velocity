@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.protocol.util;
 
 import com.google.gson.*;
-import com.velocitypowered.api.server.Favicon;
+import com.velocitypowered.api.util.Favicon;
 
 import java.lang.reflect.Type;
 

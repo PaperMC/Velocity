@@ -19,7 +19,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     R getResult();
 
     /**
-     * Sets the result of this event.
+     * Sets the result of this event. The result must be non-null.
      * @param result the new result
      */
     void setResult(@NonNull R result);
@@ -28,6 +28,11 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
      * Represents a result for an event.
      */
     interface Result {
+        /**
+         * Returns whether or not the event is allowed to proceed. Plugins may choose to skip denied events, and the
+         * proxy will respect the result of this method.
+         * @return whether or not the event is allowed to proceed
+         */
         boolean isAllowed();
     }
 

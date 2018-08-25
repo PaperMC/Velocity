@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;

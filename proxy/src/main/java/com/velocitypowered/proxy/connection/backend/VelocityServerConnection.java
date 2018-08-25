@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -17,7 +16,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.channel.*;
@@ -27,13 +26,13 @@ import io.netty.util.AttributeKey;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.velocitypowered.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.network.Connections.HANDLER;
-import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
-import static com.velocitypowered.network.Connections.READ_TIMEOUT;
-import static com.velocitypowered.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
+import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
+import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.HANDLER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
     static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =

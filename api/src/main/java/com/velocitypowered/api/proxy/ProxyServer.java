@@ -6,27 +6,27 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.scheduler.Scheduler;
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Represents a Minecraft proxy server that is compatible with the Velocity API.
+ * Provides an interface to a Minecraft server proxy.
  */
 public interface ProxyServer {
     /**
-     * Retrieves the player currently connected to this proxy by their Minecraft username.
-     * @param username the username
-     * @return an {@link Optional} with the player
+     * Retrieves the player currently connected to this proxy by their Minecraft username. The search is case-insensitive.
+     * @param username the username to search for
+     * @return an {@link Optional} with the player, which may be empty
      */
     Optional<Player> getPlayer(String username);
 
     /**
      * Retrieves the player currently connected to this proxy by their Minecraft UUID.
      * @param uuid the UUID
-     * @return an {@link Optional} with the player
+     * @return an {@link Optional} with the player, which may be empty
      */
     Optional<Player> getPlayer(UUID uuid);
 
@@ -44,9 +44,9 @@ public interface ProxyServer {
     int getPlayerCount();
 
     /**
-     * Retrieves a registered {@link ServerInfo} instance by its name.
+     * Retrieves a registered {@link ServerInfo} instance by its name. The search is case-insensitive.
      * @param name the name of the server
-     * @return the server
+     * @return the registered server, which may be empty
      */
     Optional<ServerInfo> getServerInfo(String name);
 

@@ -1,4 +1,4 @@
-package com.velocitypowered.network;
+package com.velocitypowered.proxy.network;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.natives.util.Natives;
@@ -44,14 +44,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import static com.velocitypowered.network.Connections.CLIENT_READ_TIMEOUT_SECONDS;
-import static com.velocitypowered.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.network.Connections.LEGACY_PING_DECODER;
-import static com.velocitypowered.network.Connections.LEGACY_PING_ENCODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.network.Connections.MINECRAFT_ENCODER;
-import static com.velocitypowered.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.Connections.*;
 
 public final class ConnectionManager {
     private static final Logger logger = LogManager.getLogger(ConnectionManager.class);

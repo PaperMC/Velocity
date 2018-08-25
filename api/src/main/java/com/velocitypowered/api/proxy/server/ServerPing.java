@@ -1,7 +1,8 @@
-package com.velocitypowered.api.server;
+package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.util.Favicon;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -65,6 +66,9 @@ public class ServerPing {
         return new Builder();
     }
 
+    /**
+     * A builder for {@link ServerPing} objects.
+     */
     public static class Builder {
         private Version version;
         private int onlinePlayers;

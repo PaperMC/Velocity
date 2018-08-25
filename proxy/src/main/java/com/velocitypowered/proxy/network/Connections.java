@@ -1,4 +1,4 @@
-package com.velocitypowered.network;
+package com.velocitypowered.proxy.network;
 
 public interface Connections {
     String CIPHER_DECODER = "cipher-decoder";

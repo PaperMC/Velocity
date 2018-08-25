@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.util;
 
-import com.velocitypowered.api.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;

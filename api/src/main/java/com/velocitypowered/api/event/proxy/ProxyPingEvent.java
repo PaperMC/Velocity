@@ -2,8 +2,11 @@ package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.api.server.ServerPing;
+import com.velocitypowered.api.proxy.server.ServerPing;
 
+/**
+ * This event is fired when a server list ping request is sent by a remote client.
+ */
 public class ProxyPingEvent {
     private final InboundConnection connection;
     private ServerPing ping;
