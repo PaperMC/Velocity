@@ -160,8 +160,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void initializePlayer(GameProfile profile, boolean onlineMode) {
-
-        GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(profile, onlineMode);
+        GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile, onlineMode);
 
         VelocityServer.getServer().getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
             // Initiate a regular connection and move over to it.

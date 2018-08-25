@@ -2,7 +2,6 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
-import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.proxy.InboundConnection;
 
 import net.kyori.text.Component;
@@ -57,15 +56,14 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
      * Represents an "allowed/allowed with online mode/denied" result with a reason allowed for denial.
      */
     public static class PreLoginComponentResult extends ComponentResult {
-
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
         private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true);
 
         private final boolean onlineMode;
+
         /**
-         * Allows to enable a online mode for the player connection, when Velocity running in offline mode
-         * Does not have any sense if velocity running in onlineMode;
-         * @param allowedOnlineMode if true, offline uuid will be used for player connection if Velocity run in offlineMode
+         * Allows online mode to be enabled for the player connection, if Velocity is running in offline mode.
+         * @param allowedOnlineMode if true, online mode will be used for the connection
          */
         private PreLoginComponentResult(boolean allowedOnlineMode) {
             super(true, null);
@@ -91,14 +89,29 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
             return super.toString();
         }
 
+        /**
+         * Returns a result indicating the connection will be allowed through the proxy.
+         * @return the allowed result
+         */
         public static PreLoginComponentResult allowed() {
             return ALLOWED;
         }
 
+        /**
+         * Returns a result indicating the connection will be allowed through the proxy, but the connection will be
+         * forced to use online mode provided that the proxy is in offline mode. This acts similarly to {@link #allowed()}
+         * on an online-mode proxy.
+         * @return the result
+         */
         public static PreLoginComponentResult forceOnlineMode() {
             return FORCE_ONLINEMODE;
         }
 
+        /**
+         * Denies the login with the specified reason.
+         * @param reason the reason for disallowing the connection
+         * @return a new result
+         */
         public static PreLoginComponentResult denied(@NonNull Component reason) {
             Preconditions.checkNotNull(reason, "reason");
             return new PreLoginComponentResult(reason);
