@@ -22,9 +22,9 @@ public class ServerCommand implements Command {
         }
 
         Player player = (Player) source;
-        if (args.length == 1) {
+        if (args.length >= 1) {
             // Trying to connect to a server.
-            String serverName = args[0];
+            String serverName = String.join(" ", args);
             Optional<ServerInfo> server = VelocityServer.getServer().getServerInfo(serverName);
             if (!server.isPresent()) {
                 player.sendMessage(TextComponent.of("Server " + serverName + " doesn't exist.", TextColor.RED));
