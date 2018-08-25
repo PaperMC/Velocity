@@ -164,8 +164,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
         VelocityServer.getServer().getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
             // Initiate a regular connection and move over to it.
-            ConnectedPlayer player = new ConnectedPlayer(profileEvent.getGameProfile() == null ? profile : profileEvent.getGameProfile(),
-                        inbound, apiInbound.getVirtualHost().orElse(null));
+            ConnectedPlayer player = new ConnectedPlayer(profileEvent.getGameProfile(), inbound,
+                    apiInbound.getVirtualHost().orElse(null));
 
             return VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
                         .thenCompose(event -> {
