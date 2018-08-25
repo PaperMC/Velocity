@@ -1,7 +1,6 @@
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
-
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.NonNull;

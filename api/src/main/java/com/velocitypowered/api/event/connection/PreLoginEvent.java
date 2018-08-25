@@ -7,7 +7,6 @@ import com.velocitypowered.api.proxy.InboundConnection;
 
 import net.kyori.text.Component;
 
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

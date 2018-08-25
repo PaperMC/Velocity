@@ -106,6 +106,13 @@ public enum StateRegistry {
                     map(0x34, MINECRAFT_1_12, true),
                     map(0x35, MINECRAFT_1_12_2, true),
                     map(0x38, MINECRAFT_1_13, true));
+            CLIENTBOUND.register(HeaderAndFooter.class, HeaderAndFooter::new,
+                    map(0x47, MINECRAFT_1_8, true),
+                    map(0x48, MINECRAFT_1_9, true),
+                    map(0x47, MINECRAFT_1_9_4, true),
+                    map(0x49, MINECRAFT_1_12, true),
+                    map(0x4A, MINECRAFT_1_12_1, true),
+                    map(0x4E, MINECRAFT_1_13, true));
             CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
                     map(0x3D, MINECRAFT_1_8, true),
                     map(0x38, MINECRAFT_1_9, true),

@@ -10,7 +10,6 @@ import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.server.ServerInfo;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -100,14 +99,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player disconnected after we authenticated them.
                                 return;
                             }
+                            
                             try {
                                 inbound.enableEncryption(decryptedSharedSecret);
                             } catch (GeneralSecurityException e) {
                                 throw new RuntimeException(e);
                             }
-                            
+
                             initializePlayer(VelocityServer.GSON.fromJson(profileResponse, GameProfile.class), true);
-                            
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
@@ -137,7 +136,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
                         return;
                     }
-                    
+
                     if (VelocityServer.getServer().getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
