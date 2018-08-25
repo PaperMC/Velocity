@@ -19,7 +19,7 @@ public class ClientSettingsWrapper implements PlayerSettings {
     }
 
     @Override
-    public Locale getLocate() {
+    public Locale getLocale() {
         return locale == null ? locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-")) : locale; //Will throw error if locale not found
     }
 

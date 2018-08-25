@@ -4,7 +4,7 @@ import java.util.Locale;
 
 public interface PlayerSettings {
 
-    Locale getLocate();
+    Locale getLocale();
 
     byte getViewDistance();
 
