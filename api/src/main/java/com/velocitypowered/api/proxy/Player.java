@@ -37,6 +37,12 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
     PlayerSettings getPlayerSettings();
 
     /**
+     * Returns the current player's ping
+     * @return the player's ping or -1 if ping information is currently unknown
+     */
+    long getPing();
+    
+    /**
      * Sends a chat message to the player's client.
      * @param component the chat message to send
      */

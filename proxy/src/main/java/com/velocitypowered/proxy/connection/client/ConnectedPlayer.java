@@ -54,6 +54,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private final GameProfile profile;
     private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
+    private long ping = -1;
     private VelocityServerConnection connectedServer;
     private ClientSettings clientSettings;
     private VelocityServerConnection connectionInFlight;
@@ -89,6 +90,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public long getPing() {
+        return this.ping;
+    }
+    
+    public void setPing(long ping) {
+        this.ping = ping;
+    }
+    
     public PlayerSettings getPlayerSettings() {
         return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
     }
