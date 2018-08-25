@@ -41,7 +41,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
      */
     class GenericResult implements Result {
         private static final GenericResult ALLOWED = new GenericResult(true);
-        private static final GenericResult DENIED = new GenericResult(true);
+        private static final GenericResult DENIED = new GenericResult(false);
 
         private final boolean allowed;
 
