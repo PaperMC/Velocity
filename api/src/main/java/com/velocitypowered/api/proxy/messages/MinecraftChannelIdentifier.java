@@ -20,10 +20,22 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
         this.name = name;
     }
 
+    /**
+     * Creates an identifier in the default namespace ({@code minecraft}). Plugins are strongly encouraged to provide
+     * their own namespace.
+     * @param name the name in the default namespace to use
+     * @return a new channel identifier
+     */
     public static MinecraftChannelIdentifier forDefaultNamespace(String name) {
         return new MinecraftChannelIdentifier("minecraft", name);
     }
 
+    /**
+     * Creates an identifier in the specified namespace.
+     * @param namespace the namespace to use
+     * @param name the channel name inside the specified namespace
+     * @return a new channel identifier
+     */
     public static MinecraftChannelIdentifier create(String namespace, String name) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "namespace is null or empty");

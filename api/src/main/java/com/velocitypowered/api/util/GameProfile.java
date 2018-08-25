@@ -7,14 +7,17 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a Mojang game profile.
+ */
 public class GameProfile {
     private final String id;
     private final String name;
     private final List<Property> properties;
 
     public GameProfile(@NonNull String id, @NonNull String name, @NonNull List<Property> properties) {
-        this.id = id;
-        this.name = name;
+        this.id = Preconditions.checkNotNull(id, "id");
+        this.name = Preconditions.checkNotNull(name, "name");
         this.properties = ImmutableList.copyOf(properties);
     }
 
@@ -31,7 +34,7 @@ public class GameProfile {
     }
 
     public List<Property> getProperties() {
-        return ImmutableList.copyOf(properties);
+        return properties;
     }
 
     public static GameProfile forOfflinePlayer(@NonNull String username) {
@@ -55,9 +58,9 @@ public class GameProfile {
         private final String signature;
 
         public Property(@NonNull String name, @NonNull String value, @NonNull String signature) {
-            this.name = name;
-            this.value = value;
-            this.signature = signature;
+            this.name = Preconditions.checkNotNull(name, "name");
+            this.value = Preconditions.checkNotNull(value, "value");
+            this.signature = Preconditions.checkNotNull(signature, "signature");
         }
 
         public String getName() {
