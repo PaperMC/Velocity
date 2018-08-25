@@ -53,12 +53,12 @@ public class Natives {
     public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
             ImmutableList.of(
                     /*new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
-                            copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS cipher (macOS)",
+                            copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
                             NativeVelocityCipher.FACTORY),
                     new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
-                            copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS cipher (Linux amd64)",
+                            copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
                             NativeVelocityCipher.FACTORY),*/
-                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java cipher", JavaVelocityCipher.FACTORY)
+                    new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {}, "Java", JavaVelocityCipher.FACTORY)
             )
     );
 }
