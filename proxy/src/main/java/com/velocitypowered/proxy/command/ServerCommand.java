@@ -4,9 +4,12 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
 import java.util.List;
@@ -33,10 +36,31 @@ public class ServerCommand implements Command {
 
             player.createConnectionRequest(server.get()).fireAndForget();
         } else {
-            String serverList = VelocityServer.getServer().getAllServers().stream()
-                    .map(ServerInfo::getName)
-                    .collect(Collectors.joining(", "));
-            player.sendMessage(TextComponent.of("Available servers: " + serverList, TextColor.YELLOW));
+            String currentServer = ((Player) source).getCurrentServer().map(ServerConnection::getServerInfo)
+                    .map(ServerInfo::getName).orElse("<unknown>");
+            player.sendMessage(TextComponent.of("You are currently connected to " + currentServer + ".", TextColor.YELLOW));
+
+            // Assemble the list of servers as components
+            TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ").color(TextColor.YELLOW);
+            List<ServerInfo> infos = ImmutableList.copyOf(VelocityServer.getServer().getAllServers());
+            for (int i = 0; i < infos.size(); i++) {
+                ServerInfo serverInfo = infos.get(i);
+                TextComponent infoComponent = TextComponent.of(serverInfo.getName());
+                if (serverInfo.getName().equals(currentServer)) {
+                    infoComponent = infoComponent.color(TextColor.GREEN)
+                            .hoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.of("Currently connected to this server")));
+                } else {
+                    infoComponent = infoComponent.color(TextColor.GRAY)
+                            .clickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/server " + serverInfo.getName()))
+                            .hoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.of("Click to connect to this server")));
+                }
+                serverListBuilder.append(infoComponent);
+                if (i != infos.size() - 1) {
+                    serverListBuilder.append(TextComponent.of(", ", TextColor.GRAY));
+                }
+            }
+
+            player.sendMessage(serverListBuilder.build());
         }
     }
 
