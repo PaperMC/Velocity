@@ -88,7 +88,7 @@ public class VelocityServer implements ProxyServer {
     private VelocityServer() {
         commandManager.register(new VelocityCommand(), "velocity");
         commandManager.register(new ServerCommand(), "server");
-        commandManager.register(new ShutdownCommand(), "shutdown");
+        commandManager.register(new ShutdownCommand(), "shutdown", "end");
     }
 
     public static VelocityServer getServer() {
