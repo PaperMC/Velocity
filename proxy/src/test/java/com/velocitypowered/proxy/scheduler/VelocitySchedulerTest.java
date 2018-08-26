@@ -16,7 +16,7 @@ class VelocitySchedulerTest {
 
     @Test
     void buildTask() throws Exception {
-        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), Sleeper.SYSTEM);
+        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
         CountDownLatch latch = new CountDownLatch(1);
         ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown).schedule();
         latch.await();
@@ -25,7 +25,7 @@ class VelocitySchedulerTest {
 
     @Test
     void cancelWorks() throws Exception {
-        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), Sleeper.SYSTEM);
+        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
         AtomicInteger i = new AtomicInteger(3);
         ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, i::decrementAndGet)
                 .delay(100, TimeUnit.SECONDS)
@@ -38,7 +38,7 @@ class VelocitySchedulerTest {
 
     @Test
     void repeatTaskWorks() throws Exception {
-        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), Sleeper.SYSTEM);
+        VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
         CountDownLatch latch = new CountDownLatch(3);
         ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
                 .delay(100, TimeUnit.MILLISECONDS)

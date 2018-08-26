@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
-import com.velocitypowered.proxy.scheduler.Sleeper;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
@@ -137,7 +136,7 @@ public class VelocityServer implements ProxyServer {
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
         httpClient = new NettyHttpClient(this);
         eventManager = new VelocityEventManager(pluginManager);
-        scheduler = new VelocityScheduler(pluginManager, Sleeper.SYSTEM);
+        scheduler = new VelocityScheduler(pluginManager);
         channelRegistrar = new VelocityChannelRegistrar();
         loadPlugins();
 
