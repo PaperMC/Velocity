@@ -36,8 +36,8 @@ public class ServerCommand implements Command {
 
             player.createConnectionRequest(server.get()).fireAndForget();
         } else {
-            String currentServer = ((Player) source).getCurrentServer().map(ServerConnection::getServerInfo)
-                    .map(ServerInfo::getName).orElse("<unknown>");
+            String currentServer = player.getCurrentServer().map(ServerConnection::getServerInfo).map(ServerInfo::getName)
+                    .orElse("<unknown>");
             player.sendMessage(TextComponent.of("You are currently connected to " + currentServer + ".", TextColor.YELLOW));
 
             // Assemble the list of servers as components
