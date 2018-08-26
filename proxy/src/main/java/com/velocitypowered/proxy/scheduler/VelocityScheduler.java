@@ -185,23 +185,25 @@ public class VelocityScheduler implements Scheduler {
         @Override
         public void cancel() {
             if (future != null) {
-                future.cancel(true);
+                future.cancel(false);
                 onFinish();
             }
         }
 
         @Override
         public void run() {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                // Since we can't catch InterruptedException separately...
-                if (e instanceof InterruptedException) {
-                    onFinish();
-                } else {
-                    Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
+            taskService.execute(() -> {
+                try {
+                    runnable.run();
+                } catch (Exception e) {
+                    // Since we can't catch InterruptedException separately...
+                    if (e instanceof InterruptedException) {
+                        onFinish();
+                    } else {
+                        Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
+                    }
                 }
-            }
+            });
         }
 
         private void onFinish() {
