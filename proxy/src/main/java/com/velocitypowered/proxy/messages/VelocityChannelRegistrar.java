@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.messages;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.messages.*;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import org.apache.logging.log4j.LogManager;
@@ -58,11 +59,8 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
         }
     }
 
-    public Collection<String> getLegacyChannelIds() {
-        return identifierMap.values().stream()
-                .filter(i -> i instanceof LegacyChannelIdentifier)
-                .map(ChannelIdentifier::getId)
-                .collect(Collectors.toList());
+    public Collection<String> getIdsForLegacyConnections() {
+        return ImmutableList.copyOf(identifierMap.keySet());
     }
 
     public Collection<String> getModernChannelIds() {

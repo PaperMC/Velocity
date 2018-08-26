@@ -45,7 +45,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
             message = PluginMessageUtil.constructChannelsPacket("minecraft:register", VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
         } else {
-            message = PluginMessageUtil.constructChannelsPacket("REGISTER", VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+            message = PluginMessageUtil.constructChannelsPacket("REGISTER", VelocityServer.getServer().getChannelRegistrar().getIdsForLegacyConnections());
         }
         player.getConnection().write(message);
     }
@@ -188,7 +188,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
             toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
         } else {
-            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getLegacyChannelIds());
+            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getIdsForLegacyConnections());
         }
         if (!toRegister.isEmpty()) {
             String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
