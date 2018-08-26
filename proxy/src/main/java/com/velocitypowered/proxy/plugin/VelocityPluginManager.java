@@ -76,7 +76,7 @@ public class VelocityPluginManager implements PluginManager {
 
             try {
                 pluginObject = loader.createPlugin(plugin);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.error("Can't create plugin {}", plugin.getId(), e);
                 continue;
             }
