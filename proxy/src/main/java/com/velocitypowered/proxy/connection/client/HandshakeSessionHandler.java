@@ -55,18 +55,27 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             case StateRegistry.LOGIN_ID:
                 connection.setState(StateRegistry.LOGIN);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
+
                 if (!ProtocolConstants.isSupported(handshake.getProtocolVersion())) {
                     connection.closeWith(Disconnect.create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
                     return;
-                } else {
-                    InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
-                    if (!VelocityServer.getServer().getIpAttemptLimiter().attempt(address)) {
-                        connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
-                        return;
-                    }
-                    VelocityServer.getServer().getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
-                    connection.setSessionHandler(new LoginSessionHandler(connection, ic));
                 }
+
+                InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
+                if (!VelocityServer.getServer().getIpAttemptLimiter().attempt(address)) {
+                    connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
+                    return;
+                }
+
+                // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge,
+                // although Velocity does not yet support Forge.
+                if (handshake.getServerAddress().contains("\0") && !handshake.getServerAddress().endsWith("\0FML\0")) {
+                    connection.closeWith(Disconnect.create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
+                    return;
+                }
+
+                VelocityServer.getServer().getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+                connection.setSessionHandler(new LoginSessionHandler(connection, ic));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());

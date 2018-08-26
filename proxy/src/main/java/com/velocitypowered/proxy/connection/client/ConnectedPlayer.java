@@ -208,7 +208,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         } else {
             logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), plainTextReason);
         }
-        handleConnectionException(info, disconnectReason);
+        handleConnectionException(info, TextComponent.builder()
+                .content("Unable to connect to " + info.getName() + ": ")
+                .color(TextColor.RED)
+                .append(disconnectReason)
+                .build());
     }
 
     public void handleConnectionException(ServerInfo info, Component disconnectReason) {

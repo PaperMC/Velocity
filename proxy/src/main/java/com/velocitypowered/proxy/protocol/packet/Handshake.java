@@ -56,7 +56,7 @@ public class Handshake implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         this.protocolVersion = ProtocolUtils.readVarInt(buf);
-        this.serverAddress = ProtocolUtils.readString(buf, 255);
+        this.serverAddress = ProtocolUtils.readString(buf);
         this.port = buf.readUnsignedShort();
         this.nextStatus = ProtocolUtils.readVarInt(buf);
     }
