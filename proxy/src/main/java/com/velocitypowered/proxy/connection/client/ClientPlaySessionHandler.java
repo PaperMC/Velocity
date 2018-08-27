@@ -169,11 +169,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().delayedWrite(new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
         }
 
-        // Remove old boss bars.
+        // Remove old boss bars. These don't get cleared when sending JoinGame so we need to track these.
         for (UUID serverBossBar : serverBossBars) {
             BossBar deletePacket = new BossBar();
             deletePacket.setUuid(serverBossBar);
-            deletePacket.setAction(1); // remove
+            deletePacket.setAction(BossBar.REMOVE);
             player.getConnection().delayedWrite(deletePacket);
         }
         serverBossBars.clear();
