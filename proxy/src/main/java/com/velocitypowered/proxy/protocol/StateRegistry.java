@@ -45,7 +45,7 @@ public enum StateRegistry {
                     map(0x01, MINECRAFT_1_8, false),
                     map(0x02, MINECRAFT_1_9, false),
                     map(0x03, MINECRAFT_1_12, false),
-                    map(0x02, MINECRAFT_1_12_2, false),
+                    map(0x02, MINECRAFT_1_12_1, false),
                     map(0x02, MINECRAFT_1_13, false));
             SERVERBOUND.register(ClientSettings.class, ClientSettings::new,
                     map(0x15, MINECRAFT_1_8, false),
@@ -198,7 +198,6 @@ public enum StateRegistry {
             return result;
         }
 
-        
         public <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier, PacketMapping... mappings) {
             if (mappings.length == 0) {
                 throw new IllegalArgumentException("At least one mapping must be provided.");
