@@ -20,6 +20,7 @@ import net.kyori.text.TextComponent;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
@@ -97,6 +98,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.completeExceptionally(throwable);
+        }
+    }
+
+    @Override
+    public void disconnected() {
+        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
+        if (future != null) {
+            future.completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
         }
     }
 
