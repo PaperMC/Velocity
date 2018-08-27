@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.network;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.natives.util.Natives;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -53,8 +54,10 @@ public final class ConnectionManager {
     private final TransportType transportType;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
+    private final VelocityServer server;
 
-    public ConnectionManager() {
+    public ConnectionManager(VelocityServer server) {
+        this.server = server;
         this.transportType = TransportType.bestType();
         this.bossGroup = transportType.createEventLoopGroup(true);
         this.workerGroup = transportType.createEventLoopGroup(false);
@@ -83,7 +86,7 @@ public final class ConnectionManager {
 
                         final MinecraftConnection connection = new MinecraftConnection(ch);
                         connection.setState(StateRegistry.HANDSHAKE);
-                        connection.setSessionHandler(new HandshakeSessionHandler(connection));
+                        connection.setSessionHandler(new HandshakeSessionHandler(connection, server));
                         ch.pipeline().addLast(Connections.HANDLER, connection);
                     }
                 })

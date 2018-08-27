@@ -57,7 +57,7 @@ public class VelocityServer implements ProxyServer {
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
-    private final ConnectionManager cm = new ConnectionManager();
+    private final ConnectionManager cm = new ConnectionManager(this);
     private VelocityConfiguration configuration;
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;

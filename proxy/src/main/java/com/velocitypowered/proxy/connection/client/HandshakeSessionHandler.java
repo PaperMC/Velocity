@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -26,9 +27,11 @@ import java.util.Optional;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
+    private final VelocityServer server;
 
-    public HandshakeSessionHandler(MinecraftConnection connection) {
+    public HandshakeSessionHandler(MinecraftConnection connection, VelocityServer server) {
         this.connection = Preconditions.checkNotNull(connection, "connection");
+        this.server = server;
     }
 
     @Override
@@ -71,6 +74,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 // although Velocity does not yet support Forge.
                 if (handshake.getServerAddress().contains("\0") && !handshake.getServerAddress().endsWith("\0FML\0")) {
                     connection.closeWith(Disconnect.create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
+                    return;
+                }
+
+                // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2 and lower,
+                // otherwise IP information will never get forwarded.
+                if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && handshake.getProtocolVersion() <
+                        ProtocolConstants.MINECRAFT_1_13) {
+                    connection.closeWith(Disconnect.create(TextComponent.of("This server is only compatible with 1.13 and above.")));
                     return;
                 }
 
