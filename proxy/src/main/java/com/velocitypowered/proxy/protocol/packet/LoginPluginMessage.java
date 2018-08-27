@@ -49,7 +49,7 @@ public class LoginPluginMessage implements MinecraftPacket {
         this.id = ProtocolUtils.readVarInt(buf);
         this.channel = ProtocolUtils.readString(buf);
         if (buf.isReadable()) {
-            this.data = buf.readRetainedSlice(buf.readableBytes());
+            this.data = buf.readSlice(buf.readableBytes());
         } else {
             this.data = Unpooled.EMPTY_BUFFER;
         }

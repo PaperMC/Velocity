@@ -5,8 +5,8 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +104,7 @@ public class TabCompleteResponse implements MinecraftPacket {
         private final String entry;
         private final Component tooltip;
 
-        public Offer(String entry, Component tooltip) {
+        public Offer(String entry, @Nullable Component tooltip) {
             this.entry = entry;
             this.tooltip = tooltip;
         }
@@ -113,7 +113,7 @@ public class TabCompleteResponse implements MinecraftPacket {
             return entry;
         }
 
-        public Component getTooltip() {
+        public @Nullable Component getTooltip() {
             return tooltip;
         }
 

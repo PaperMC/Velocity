@@ -49,7 +49,7 @@ public class LoginPluginResponse implements MinecraftPacket {
         this.id = ProtocolUtils.readVarInt(buf);
         this.success = buf.readBoolean();
         if (buf.isReadable()) {
-            this.data = buf.readRetainedSlice(buf.readableBytes());
+            this.data = buf.readSlice(buf.readableBytes());
         } else {
             this.data = Unpooled.EMPTY_BUFFER;
         }
