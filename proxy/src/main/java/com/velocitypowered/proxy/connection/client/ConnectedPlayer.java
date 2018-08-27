@@ -56,7 +56,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private int tryIndex = 0;
     private long ping = -1;
     private VelocityServerConnection connectedServer;
-    private ClientSettings clientSettings;
     private VelocityServerConnection connectionInFlight;
     private PlayerSettings settings;
     
@@ -178,10 +177,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public VelocityServerConnection getConnectedServer() {
         return connectedServer;
-    }
-
-    public ClientSettings getClientSettings() {
-        return clientSettings;
     }
 
     public void handleConnectionException(ServerInfo info, Throwable throwable) {
