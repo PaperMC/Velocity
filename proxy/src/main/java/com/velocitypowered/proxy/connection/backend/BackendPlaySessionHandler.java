@@ -86,11 +86,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getMinecraftConnection().close();
             return;
         }
-
-        ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
-        ByteBuf remapped = playerHandler.getIdRemapper().remap(buf, ProtocolConstants.Direction.CLIENTBOUND);
-        connection.getPlayer().getConnection().write(remapped);
+        connection.getPlayer().getConnection().write(buf.retain());
     }
 
     @Override

@@ -8,7 +8,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.remap.EntityIdRemapper;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
@@ -33,7 +32,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
-    private EntityIdRemapper idRemapper;
 
     public ClientPlaySessionHandler(ConnectedPlayer player) {
         this.player = player;
@@ -127,8 +125,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        ByteBuf remapped = idRemapper.remap(buf, ProtocolConstants.Direction.SERVERBOUND);
-        player.getConnectedServer().getMinecraftConnection().write(remapped);
+        player.getConnectedServer().getMinecraftConnection().write(buf.retain());
     }
 
     @Override
@@ -152,7 +149,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // nothing special to do here
             spawned = true;
             player.getConnection().delayedWrite(joinGame);
-            idRemapper = EntityIdRemapper.getMapper(joinGame.getEntityId(), player.getConnection().getProtocolVersion());
         } else {
             // Ah, this is the meat and potatoes of the whole venture!
             //
@@ -167,7 +163,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // Most notably, by having the client accept the join game packet, we can work around the need to perform
             // entity ID rewrites, eliminating potential issues from rewriting packets and improving compatibility with
             // mods.
-            idRemapper.setServerEntityId(joinGame.getEntityId());
             player.getConnection().delayedWrite(joinGame);
             int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
             player.getConnection().delayedWrite(new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType()));
@@ -248,10 +243,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public Set<String> getClientPluginMsgChannels() {
         return clientPluginMsgChannels;
-    }
-
-    public EntityIdRemapper getIdRemapper() {
-        return idRemapper;
     }
 
     public void setLastPing(long lastPing) {
