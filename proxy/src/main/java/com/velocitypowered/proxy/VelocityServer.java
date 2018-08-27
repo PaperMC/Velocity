@@ -21,7 +21,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
-import com.velocitypowered.proxy.config.AnnotationConfig;
+import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
@@ -115,9 +115,9 @@ public class VelocityServer implements ProxyServer {
                 System.exit(1);
             }
 
-            AnnotationConfig.saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
-
-        } catch (IOException | NullPointerException e) {
+            AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
+            
+        } catch (IOException | RuntimeException e) {
             logger.error("Unable to load your velocity.toml. The server will shut down.", e);
             System.exit(1);
         }

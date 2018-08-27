@@ -22,19 +22,23 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.Logger;
 
-public class VelocityConfiguration extends AnnotationConfig {
+public class VelocityConfiguration extends AnnotatedConfig {
+
+    @Comment("Config version. Do not change this")
+    @CfgKey("config-version")
+    private final String configVersion = "1.0";
 
     @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
-    private final String bind;
+    private String bind;
     @Comment("What should be the MOTD? Legacy color codes and JSON are accepted.")
-    private final String motd;
+    private String motd;
     @Comment({"What should we display for the maximum number of players? (Velocity does not support a cap",
         "on the number of players online.)"})
     @CfgKey("show-max-players")
-    private final int showMaxPlayers;
+    private int showMaxPlayers;
     @Comment("Should we authenticate players with Mojang? By default, this is on.")
     @CfgKey("online-mode")
-    private final boolean onlineMode;
+    private boolean onlineMode;
     @Comment({"Should we forward IP addresses and other data to backend servers?",
         "Available options:",
         "- \"none\":   No forwarding will be done. All players will appear to be Should we forward IP addresses and other data to backend servers?connecting from the proxy",
@@ -44,94 +48,21 @@ public class VelocityConfiguration extends AnnotationConfig {
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
         "            forwarding. Only applicable for Minecraft 1.13 or higher."})
     @CfgKey("player-info-forwarding-mode")
-    private final PlayerInfoForwarding playerInfoForwardingMode;
+    private PlayerInfoForwarding playerInfoForwardingMode;
 
-    @AsBytes
+    @StringAsBytes
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
     @CfgKey("forwarding-secret")
-    private final byte[] forwardingSecret;
-
+    private byte[] forwardingSecret;
     @Table("[servers]")
     private final Servers servers;
-
-    private static class Servers {
-
-        @AsMap
-        @Comment("Configure your servers here.")
-        public final Map<String, String> servers;
-
-        @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
-        @CfgKey("try")
-        public final List<String> attemptConnectionOrder;
-
-        public Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
-            this.servers = servers;
-            this.attemptConnectionOrder = attemptConnectionOrder;
-        }
-
-        @Override
-        public String toString() {
-            return "Servers{" + "servers=" + servers + ", attemptConnectionOrder=" + attemptConnectionOrder + '}';
-        }
-
-    }
 
     @Table("[advanced]")
     private final Advanced advanced;
 
-    private static class Advanced {
-
-        @Comment({"How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
-            "setting it to -1 will disable compression entirely."})
-        @CfgKey("compression-threshold")
-        public final int compressionThreshold;
-        @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
-        @CfgKey("compression-level")
-        public final int compressionLevel;
-        @Comment({"How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
-            "Disable by setting to 0"})
-        @CfgKey("login-ratelimit")
-        public final int loginRatelimit;
-
-        public Advanced(Toml toml) {
-            this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
-            this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
-            this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
-        }
-
-        @Override
-        public String toString() {
-            return "Advanced{" + "compressionThreshold=" + compressionThreshold + ", compressionLevel=" + compressionLevel + ", loginRatelimit=" + loginRatelimit + '}';
-        }
-    }
-
     @Table("[query]")
     private final Query query;
 
-    private static class Query {
-
-        @Comment("Whether to enable responding to GameSpy 4 query responses or not")
-        @CfgKey("enabled")
-        public final boolean queryEnabled;
-        @Comment("If query responding is enabled, on what port should query response listener listen on?")
-        @CfgKey("port")
-        public final int queryPort;
-
-        public Query(boolean queryEnabled, int queryPort) {
-            this.queryEnabled = queryEnabled;
-            this.queryPort = queryPort;
-        }
-
-        private Query(Toml toml) {
-            this.queryEnabled = toml.getBoolean("enabled", false);
-            this.queryPort = toml.getLong("port", 25577L).intValue();
-        }
-
-        @Override
-        public String toString() {
-            return "Query{" + "queryEnabled=" + queryEnabled + ", queryPort=" + queryPort + '}';
-        }
-    }
     @Ignore
     private Component motdAsComponent;
     @Ignore
@@ -153,7 +84,7 @@ public class VelocityConfiguration extends AnnotationConfig {
 
     public boolean validate() {
         boolean valid = true;
-        Logger logger = AnnotationConfig.getLogger();
+        Logger logger = AnnotatedConfig.getLogger();
 
         if (bind.isEmpty()) {
             logger.error("'bind' option is empty.");
@@ -183,16 +114,16 @@ public class VelocityConfiguration extends AnnotationConfig {
                 break;
         }
 
-        if (servers.servers.isEmpty()) {
+        if (servers.getServers().isEmpty()) {
             logger.error("You have no servers configured. :(");
             valid = false;
         } else {
-            if (servers.attemptConnectionOrder.isEmpty()) {
+            if (servers.getAttemptConnectionOrder().isEmpty()) {
                 logger.error("No fallback servers are configured!");
                 valid = false;
             }
 
-            for (Map.Entry<String, String> entry : servers.servers.entrySet()) {
+            for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
                 try {
                     AddressUtil.parseAddress(entry.getValue());
                 } catch (IllegalArgumentException e) {
@@ -201,8 +132,8 @@ public class VelocityConfiguration extends AnnotationConfig {
                 }
             }
 
-            for (String s : servers.attemptConnectionOrder) {
-                if (!servers.servers.containsKey(s)) {
+            for (String s : servers.getAttemptConnectionOrder()) {
+                if (!servers.getServers().containsKey(s)) {
                     logger.error("Fallback server " + s + " doesn't exist!");
                     valid = false;
                 }
@@ -256,11 +187,11 @@ public class VelocityConfiguration extends AnnotationConfig {
     }
 
     public boolean isQueryEnabled() {
-        return query.queryEnabled;
+        return query.isQueryEnabled();
     }
 
     public int getQueryPort() {
-        return query.queryPort;
+        return query.getQueryPort();
     }
 
     public String getMotd() {
@@ -290,32 +221,64 @@ public class VelocityConfiguration extends AnnotationConfig {
         return playerInfoForwardingMode;
     }
 
+    public byte[] getForwardingSecret() {
+        return forwardingSecret;
+    }
+
     public Map<String, String> getServers() {
-        return servers.servers;
+        return servers.getServers();
     }
 
     public List<String> getAttemptConnectionOrder() {
-        return servers.attemptConnectionOrder;
+        return servers.getAttemptConnectionOrder();
     }
 
     public int getCompressionThreshold() {
-        return advanced.compressionThreshold;
+        return advanced.getCompressionThreshold();
     }
 
     public int getCompressionLevel() {
-        return advanced.compressionLevel;
+        return advanced.getCompressionLevel();
     }
 
     public int getLoginRatelimit() {
-        return advanced.loginRatelimit;
+        return advanced.getLoginRatelimit();
     }
 
     public Favicon getFavicon() {
         return favicon;
     }
 
-    public byte[] getForwardingSecret() {
-        return forwardingSecret;
+    private void setBind(String bind) {
+        this.bind = bind;
+    }
+
+    private void setMotd(String motd) {
+        this.motd = motd;
+    }
+
+    private void setShowMaxPlayers(int showMaxPlayers) {
+        this.showMaxPlayers = showMaxPlayers;
+    }
+
+    private void setOnlineMode(boolean onlineMode) {
+        this.onlineMode = onlineMode;
+    }
+
+    private void setPlayerInfoForwardingMode(PlayerInfoForwarding playerInfoForwardingMode) {
+        this.playerInfoForwardingMode = playerInfoForwardingMode;
+    }
+
+    private void setForwardingSecret(byte[] forwardingSecret) {
+        this.forwardingSecret = forwardingSecret;
+    }
+
+    private void setMotdAsComponent(Component motdAsComponent) {
+        this.motdAsComponent = motdAsComponent;
+    }
+
+    private void setFavicon(Favicon favicon) {
+        this.favicon = favicon;
     }
 
     @Override
@@ -327,12 +290,12 @@ public class VelocityConfiguration extends AnnotationConfig {
                 + ", showMaxPlayers=" + showMaxPlayers
                 + ", onlineMode=" + onlineMode
                 + ", playerInfoForwardingMode=" + playerInfoForwardingMode
+                + ", forwardingSecret=" + ByteBufUtil.hexDump(forwardingSecret)
                 + ", servers=" + servers
                 + ", advanced=" + advanced
                 + ", query=" + query
                 + ", motdAsComponent=" + motdAsComponent
                 + ", favicon=" + favicon
-                + ", forwardingSecret=" + ByteBufUtil.hexDump(forwardingSecret)
                 + '}';
     }
 
@@ -347,7 +310,7 @@ public class VelocityConfiguration extends AnnotationConfig {
             }
         }
 
-        // TODO: Upgrdate old values to new, when config will be changed in future
+        // If config will be changed in future, do not forget to migrate old values if needed
         Map<String, String> servers = new HashMap<>();
         for (Map.Entry<String, Object> entry : toml.getTable("servers").entrySet()) {
             if (entry.getValue() instanceof String) {
@@ -365,7 +328,7 @@ public class VelocityConfiguration extends AnnotationConfig {
         byte[] forwardingSecret = toml.getString("player-info-forwarding-secret", "5up3r53cr3t")
                 .getBytes(StandardCharsets.UTF_8);
 
-        return new VelocityConfiguration(
+        VelocityConfiguration configuration = new VelocityConfiguration(
                 toml.getString("bind", "0.0.0.0:25577"),
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
@@ -376,6 +339,152 @@ public class VelocityConfiguration extends AnnotationConfig {
                 advanced,
                 query
         );
+        upgradeConfig(configuration, toml);
+        return configuration;
     }
 
+    private static void upgradeConfig(VelocityConfiguration configuration, Toml toml) {
+        switch (toml.getString("config-version", configuration.configVersion)) {
+            case "1.0":
+                //TODO: Upgrade a 1.0 config to a new version. Maybe add a recursive support in future.
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static class Servers {
+
+        @IsMap
+        @Comment("Configure your servers here.")
+        private Map<String, String> servers;
+
+        @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
+        @CfgKey("try")
+        private List<String> attemptConnectionOrder;
+
+        private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
+            this.servers = servers;
+            this.attemptConnectionOrder = attemptConnectionOrder;
+        }
+
+        private Map<String, String> getServers() {
+            return servers;
+        }
+
+        public void setServers(Map<String, String> servers) {
+            this.servers = servers;
+        }
+
+        public List<String> getAttemptConnectionOrder() {
+            return attemptConnectionOrder;
+        }
+
+        public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
+            this.attemptConnectionOrder = attemptConnectionOrder;
+        }
+
+        @Override
+        public String toString() {
+            return "Servers{" + "servers=" + servers + ", attemptConnectionOrder=" + attemptConnectionOrder + '}';
+        }
+
+    }
+
+    private static class Advanced {
+
+        @Comment({"How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
+            "setting it to -1 will disable compression entirely."})
+        @CfgKey("compression-threshold")
+        private int compressionThreshold;
+        @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
+        @CfgKey("compression-level")
+        private int compressionLevel;
+        @Comment({"How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
+            "Disable by setting to 0"})
+        @CfgKey("login-ratelimit")
+        private int loginRatelimit;
+
+        private Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit) {
+            this.compressionThreshold = compressionThreshold;
+            this.compressionLevel = compressionLevel;
+            this.loginRatelimit = loginRatelimit;
+        }
+
+        private Advanced(Toml toml) {
+            this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
+            this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
+            this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
+        }
+
+        public int getCompressionThreshold() {
+            return compressionThreshold;
+        }
+
+        public void setCompressionThreshold(int compressionThreshold) {
+            this.compressionThreshold = compressionThreshold;
+        }
+
+        public int getCompressionLevel() {
+            return compressionLevel;
+        }
+
+        public void setCompressionLevel(int compressionLevel) {
+            this.compressionLevel = compressionLevel;
+        }
+
+        public int getLoginRatelimit() {
+            return loginRatelimit;
+        }
+
+        public void setLoginRatelimit(int loginRatelimit) {
+            this.loginRatelimit = loginRatelimit;
+        }
+
+        @Override
+        public String toString() {
+            return "Advanced{" + "compressionThreshold=" + compressionThreshold + ", compressionLevel=" + compressionLevel + ", loginRatelimit=" + loginRatelimit + '}';
+        }
+    }
+
+    private static class Query {
+
+        @Comment("Whether to enable responding to GameSpy 4 query responses or not")
+        @CfgKey("enabled")
+        private boolean queryEnabled;
+        @Comment("If query responding is enabled, on what port should query response listener listen on?")
+        @CfgKey("port")
+        private int queryPort;
+
+        private Query(boolean queryEnabled, int queryPort) {
+            this.queryEnabled = queryEnabled;
+            this.queryPort = queryPort;
+        }
+
+        private Query(Toml toml) {
+            this.queryEnabled = toml.getBoolean("enabled", false);
+            this.queryPort = toml.getLong("port", 25577L).intValue();
+        }
+
+        public boolean isQueryEnabled() {
+            return queryEnabled;
+        }
+
+        public void setQueryEnabled(boolean queryEnabled) {
+            this.queryEnabled = queryEnabled;
+        }
+
+        public int getQueryPort() {
+            return queryPort;
+        }
+
+        public void setQueryPort(int queryPort) {
+            this.queryPort = queryPort;
+        }
+
+        @Override
+        public String toString() {
+            return "Query{" + "queryEnabled=" + queryEnabled + ", queryPort=" + queryPort + '}';
+        }
+    }
 }
