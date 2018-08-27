@@ -18,10 +18,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
+    private final VelocityServer server;
     private final MinecraftConnection connection;
     private final InboundConnection inboundWrapper;
 
-    public StatusSessionHandler(MinecraftConnection connection, InboundConnection inboundWrapper) {
+    public StatusSessionHandler(VelocityServer server, MinecraftConnection connection, InboundConnection inboundWrapper) {
+        this.server = server;
         this.connection = connection;
         this.inboundWrapper = inboundWrapper;
     }
@@ -37,20 +39,20 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+        VelocityConfiguration configuration = server.getConfiguration();
 
         // Status request
         int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection.getProtocolVersion() :
                 ProtocolConstants.MAXIMUM_GENERIC_VERSION;
         ServerPing initialPing = new ServerPing(
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
+                new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                 configuration.getMotdComponent(),
                 configuration.getFavicon()
         );
 
         ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
-        VelocityServer.getServer().getEventManager().fire(event)
+        server.getEventManager().fire(event)
                 .thenRunAsync(() -> {
                     StatusResponse response = new StatusResponse();
                     response.setStatus(VelocityServer.GSON.toJson(event.getPing()));

@@ -39,14 +39,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
-    
+
+    private final VelocityServer server;
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private ServerLogin login;
     private byte[] verify;
     private int playerInfoId;
 
-    public LoginSessionHandler(MinecraftConnection inbound, InboundConnection apiInbound) {
+    public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound, InboundConnection apiInbound) {
+        this.server = Preconditions.checkNotNull(server, "server");
         this.inbound = Preconditions.checkNotNull(inbound, "inbound");
         this.apiInbound = Preconditions.checkNotNull(apiInbound, "apiInbound");
     }
@@ -81,7 +83,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             }
         } else if (packet instanceof EncryptionResponse) {
             try {
-                KeyPair serverKeyPair = VelocityServer.getServer().getServerKeyPair();
+                KeyPair serverKeyPair = server.getServerKeyPair();
                 EncryptionResponse response = (EncryptionResponse) packet;
                 byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
                 if (!Arrays.equals(verify, decryptedVerifyToken)) {
@@ -92,7 +94,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
                 String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
-                VelocityServer.getServer().getHttpClient()
+                server.getHttpClient()
                         .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
                         .thenAcceptAsync(profileResponse -> {
                             if (inbound.isClosed()) {
@@ -124,7 +126,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private void beginPreLogin() {
         PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
-        VelocityServer.getServer().getEventManager().fire(event)
+        server.getEventManager().fire(event)
                 .thenRunAsync(() -> {
                     if (inbound.isClosed()) {
                         // The player was disconnected
@@ -137,7 +139,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
 
-                    if (VelocityServer.getServer().getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
+                    if (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -153,7 +155,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         ThreadLocalRandom.current().nextBytes(verify);
 
         EncryptionRequest request = new EncryptionRequest();
-        request.setPublicKey(VelocityServer.getServer().getServerKeyPair().getPublic().getEncoded());
+        request.setPublicKey(server.getServerKeyPair().getPublic().getEncoded());
         request.setVerifyToken(verify);
         return request;
     }
@@ -161,17 +163,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private void initializePlayer(GameProfile profile, boolean onlineMode) {
         GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile, onlineMode);
 
-        VelocityServer.getServer().getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
+        server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
             // Initiate a regular connection and move over to it.
-            ConnectedPlayer player = new ConnectedPlayer(profileEvent.getGameProfile(), inbound,
+            ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(), inbound,
                     apiInbound.getVirtualHost().orElse(null));
 
-            return VelocityServer.getServer().getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+            return server.getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
                         .thenCompose(event -> {
                             // wait for permissions to load, then set the players permission function
                             player.setPermissionFunction(event.createFunction(player));
                             // then call & wait for the login event
-                            return VelocityServer.getServer().getEventManager().fire(new LoginEvent(player));
+                            return server.getEventManager().fire(new LoginEvent(player));
                         })
                         // then complete the connection
                         .thenAcceptAsync(event -> {
@@ -198,7 +200,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        int threshold = VelocityServer.getServer().getConfiguration().getCompressionThreshold();
+        int threshold = server.getConfiguration().getCompressionThreshold();
         if (threshold >= 0) {
             inbound.write(new SetCompression(threshold));
             inbound.setCompressionThreshold(threshold);
@@ -212,7 +214,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         inbound.setAssociation(player);
         inbound.setState(StateRegistry.PLAY);
 
-        if (!VelocityServer.getServer().registerConnection(player)) {
+        if (!server.registerConnection(player)) {
             inbound.closeWith(Disconnect.create(TextComponent.of("You are already on this proxy!", TextColor.RED)));
         }
 

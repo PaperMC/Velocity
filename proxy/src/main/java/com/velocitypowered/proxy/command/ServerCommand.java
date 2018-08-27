@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
@@ -17,6 +17,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ServerCommand implements Command {
+    private final ProxyServer server;
+
+    public ServerCommand(ProxyServer server) {
+        this.server = server;
+    }
+
     @Override
     public void execute(CommandSource source, String[] args) {
         if (!(source instanceof Player)) {
@@ -28,13 +34,13 @@ public class ServerCommand implements Command {
         if (args.length == 1) {
             // Trying to connect to a server.
             String serverName = args[0];
-            Optional<ServerInfo> server = VelocityServer.getServer().getServerInfo(serverName);
-            if (!server.isPresent()) {
+            Optional<ServerInfo> toConnect = server.getServerInfo(serverName);
+            if (!toConnect.isPresent()) {
                 player.sendMessage(TextComponent.of("Server " + serverName + " doesn't exist.", TextColor.RED));
                 return;
             }
 
-            player.createConnectionRequest(server.get()).fireAndForget();
+            player.createConnectionRequest(toConnect.get()).fireAndForget();
         } else {
             String currentServer = player.getCurrentServer().map(ServerConnection::getServerInfo).map(ServerInfo::getName)
                     .orElse("<unknown>");
@@ -42,7 +48,7 @@ public class ServerCommand implements Command {
 
             // Assemble the list of servers as components
             TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ").color(TextColor.YELLOW);
-            List<ServerInfo> infos = ImmutableList.copyOf(VelocityServer.getServer().getAllServers());
+            List<ServerInfo> infos = ImmutableList.copyOf(server.getAllServers());
             for (int i = 0; i < infos.size(); i++) {
                 ServerInfo serverInfo = infos.get(i);
                 TextComponent infoComponent = TextComponent.of(serverInfo.getName());
@@ -67,11 +73,11 @@ public class ServerCommand implements Command {
     @Override
     public List<String> suggest(CommandSource source, String[] currentArgs) {
         if (currentArgs.length == 0) {
-            return VelocityServer.getServer().getAllServers().stream()
+            return server.getAllServers().stream()
                     .map(ServerInfo::getName)
                     .collect(Collectors.toList());
         } else if (currentArgs.length == 1) {
-            return VelocityServer.getServer().getAllServers().stream()
+            return server.getAllServers().stream()
                     .map(ServerInfo::getName)
                     .filter(name -> name.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
                     .collect(Collectors.toList());

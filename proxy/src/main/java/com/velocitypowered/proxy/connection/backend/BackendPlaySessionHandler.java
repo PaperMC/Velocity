@@ -13,16 +13,17 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
+    private final VelocityServer server;
     private final VelocityServerConnection connection;
 
-    public BackendPlaySessionHandler(VelocityServerConnection connection) {
+    public BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection connection) {
+        this.server = server;
         this.connection = connection;
     }
 
     @Override
     public void activated() {
-        VelocityServer.getServer().getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(),
-                connection.getServerInfo()));
+        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServerInfo()));
     }
 
     @Override
@@ -67,8 +68,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
 
-            MessageHandler.ForwardStatus status = VelocityServer.getServer().getChannelRegistrar().handlePluginMessage(
-                    connection, ChannelSide.FROM_SERVER, pm);
+            MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(connection,
+                    ChannelSide.FROM_SERVER, pm);
             if (status == MessageHandler.ForwardStatus.FORWARD) {
                 connection.getPlayer().getConnection().write(pm);
             }
@@ -97,14 +98,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private boolean canForwardPluginMessage(PluginMessage message) {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
+        boolean isMCMessage;
         if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
-            return message.getChannel().startsWith("MC|") ||
-                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
-                    VelocityServer.getServer().getChannelRegistrar().registered(message.getChannel());
+            isMCMessage = message.getChannel().startsWith("MC|");
         } else {
-            return message.getChannel().startsWith("minecraft:") ||
-                    playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
-                    VelocityServer.getServer().getChannelRegistrar().registered(message.getChannel());
+            isMCMessage = message.getChannel().startsWith("minecraft:");
         }
+        return isMCMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+                server.getChannelRegistrar().registered(message.getChannel());
     }
 }

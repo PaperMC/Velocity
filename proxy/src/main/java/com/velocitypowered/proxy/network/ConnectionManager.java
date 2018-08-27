@@ -84,7 +84,7 @@ public final class ConnectionManager {
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.SERVERBOUND))
                                 .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.CLIENTBOUND));
 
-                        final MinecraftConnection connection = new MinecraftConnection(ch);
+                        final MinecraftConnection connection = new MinecraftConnection(ch, server);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new HandshakeSessionHandler(connection, server));
                         ch.pipeline().addLast(Connections.HANDLER, connection);
@@ -109,7 +109,7 @@ public final class ConnectionManager {
         Bootstrap bootstrap = new Bootstrap()
                 .channel(transportType.datagramChannelClass)
                 .group(this.workerGroup)
-                .handler(new GS4QueryHandler())
+                .handler(new GS4QueryHandler(server))
                 .localAddress(hostname, port);
         bootstrap.bind()
                 .addListener((ChannelFutureListener) future -> {

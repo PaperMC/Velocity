@@ -6,8 +6,7 @@ import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import java.util.Locale;
 
 public class ClientSettingsWrapper implements PlayerSettings {
-
-    public static PlayerSettings DEFAULT = new ClientSettingsWrapper(new ClientSettings("en_US", (byte) 10, 0, true, (short)127, 1));
+    static PlayerSettings DEFAULT = new ClientSettingsWrapper(new ClientSettings("en_US", (byte) 10, 0, true, (short)127, 1));
     
     private final ClientSettings settings;
     private final SkinParts parts;

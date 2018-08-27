@@ -32,18 +32,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
+    private final VelocityServer server;
 
-    public ClientPlaySessionHandler(ConnectedPlayer player) {
+    public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
         this.player = player;
+        this.server = server;
     }
 
     @Override
     public void activated() {
         PluginMessage message;
         if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            message = PluginMessageUtil.constructChannelsPacket("minecraft:register", VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+            message = PluginMessageUtil.constructChannelsPacket("minecraft:register", server.getChannelRegistrar().getModernChannelIds());
         } else {
-            message = PluginMessageUtil.constructChannelsPacket("REGISTER", VelocityServer.getServer().getChannelRegistrar().getIdsForLegacyConnections());
+            message = PluginMessageUtil.constructChannelsPacket("REGISTER", server.getChannelRegistrar().getIdsForLegacyConnections());
         }
         player.getConnection().write(message);
     }
@@ -72,7 +74,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             String msg = ((Chat) packet).getMessage();
             if (msg.startsWith("/")) {
                 try {
-                    if (!VelocityServer.getServer().getCommandManager().execute(player, msg.substring(1))) {
+                    if (!server.getCommandManager().execute(player, msg.substring(1))) {
                         player.getConnectedServer().getMinecraftConnection().write(chat);
                     }
                 } catch (Exception e) {
@@ -92,7 +94,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (!req.isAssumeCommand() && lastSpace != -1) {
                 String command = req.getCommand().substring(1);
                 try {
-                    Optional<List<String>> offers = VelocityServer.getServer().getCommandManager().offerSuggestions(player, command);
+                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
                     if (offers.isPresent()) {
                         TabCompleteResponse response = new TabCompleteResponse();
                         response.setTransactionId(req.getTransactionId());
@@ -131,7 +133,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
-        VelocityServer.getServer().getEventManager().fireAndForget(new DisconnectEvent(player));
+        server.getEventManager().fireAndForget(new DisconnectEvent(player));
     }
 
     @Override
@@ -181,9 +183,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
         Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
         if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getModernChannelIds());
+            toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
         } else {
-            toRegister.addAll(VelocityServer.getServer().getChannelRegistrar().getIdsForLegacyConnections());
+            toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
         }
         if (!toRegister.isEmpty()) {
             String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
@@ -233,8 +235,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        MessageHandler.ForwardStatus status = VelocityServer.getServer().getChannelRegistrar().handlePluginMessage(
-                player, ChannelSide.FROM_CLIENT, packet);
+        MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
+                ChannelSide.FROM_CLIENT, packet);
         if (status == MessageHandler.ForwardStatus.FORWARD) {
             // We're going to forward on the original packet.
             player.getConnectedServer().getMinecraftConnection().write(packet);

@@ -45,9 +45,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
     private MinecraftConnectionAssociation association;
+    private final VelocityServer server;
 
-    public MinecraftConnection(Channel channel) {
+    public MinecraftConnection(Channel channel, VelocityServer server) {
         this.channel = channel;
+        this.server = server;
         this.state = StateRegistry.HANDSHAKE;
     }
 
@@ -192,7 +194,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        int level = VelocityServer.getServer().getConfiguration().getCompressionLevel();
+        int level = server.getConfiguration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compressor.get().create(level);
         MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
         MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);

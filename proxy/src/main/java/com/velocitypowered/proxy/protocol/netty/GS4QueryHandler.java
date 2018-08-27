@@ -42,9 +42,15 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             "hostip"
     );
 
-    private final static Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
+    private final Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .build();
+
+    private final VelocityServer server;
+
+    public GS4QueryHandler(VelocityServer server) {
+        this.server = server;
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
@@ -96,7 +102,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                     queryResponse.writeInt(sessionId);
 
                     // Fetch information
-                    VelocityServer server = VelocityServer.getServer();
                     Collection<Player> players = server.getAllPlayers();
 
                     // Start writing the response

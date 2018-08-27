@@ -51,7 +51,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
     private static final Logger logger = LogManager.getLogger(VelocityServer.class);
-    private static final VelocityServer INSTANCE = new VelocityServer();
     public static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
@@ -85,14 +84,10 @@ public class VelocityServer implements ProxyServer {
     private VelocityScheduler scheduler;
     private VelocityChannelRegistrar channelRegistrar;
 
-    private VelocityServer() {
+    VelocityServer() {
         commandManager.register(new VelocityCommand(), "velocity");
-        commandManager.register(new ServerCommand(), "server");
-        commandManager.register(new ShutdownCommand(), "shutdown", "end");
-    }
-
-    public static VelocityServer getServer() {
-        return INSTANCE;
+        commandManager.register(new ServerCommand(this), "server");
+        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
     }
 
     public KeyPair getServerKeyPair() {

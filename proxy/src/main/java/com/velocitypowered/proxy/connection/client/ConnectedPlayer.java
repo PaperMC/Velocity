@@ -58,8 +58,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private VelocityServerConnection connectedServer;
     private VelocityServerConnection connectionInFlight;
     private PlayerSettings settings;
+    private final VelocityServer server;
     
-    public ConnectedPlayer(GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
+    public ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
+        this.server = server;
         this.profile = profile;
         this.connection = connection;
         this.virtualHost = virtualHost;
@@ -103,7 +105,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public void setPlayerSettings(ClientSettings settings) {
         this.settings = new ClientSettingsWrapper(settings);
-        VelocityServer.getServer().getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
+        server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
     }
 
     @Override
@@ -230,14 +232,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     Optional<ServerInfo> getNextServerToTry() {
-        List<String> serversToTry = VelocityServer.getServer().getConfiguration().getAttemptConnectionOrder();
+        List<String> serversToTry = server.getConfiguration().getAttemptConnectionOrder();
         if (tryIndex >= serversToTry.size()) {
             return Optional.empty();
         }
 
         String toTryName = serversToTry.get(tryIndex);
         tryIndex++;
-        return VelocityServer.getServer().getServers().getServer(toTryName);
+        return server.getServers().getServer(toTryName);
     }
 
     private CompletableFuture<ConnectionRequestBuilder.Result> connect(ConnectionRequestBuilderImpl request) {
@@ -255,7 +257,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
         // Otherwise, initiate the connection.
         ServerPreConnectEvent event = new ServerPreConnectEvent(this, ServerPreConnectEvent.ServerResult.allowed(request.getServer()));
-        return VelocityServer.getServer().getEventManager().fire(event)
+        return server.getEventManager().fire(event)
                 .thenCompose((newEvent) -> {
                     if (!newEvent.getResult().isAllowed()) {
                         return CompletableFuture.completedFuture(
@@ -263,7 +265,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                         );
                     }
 
-                    return new VelocityServerConnection(newEvent.getResult().getInfo().get(), this, VelocityServer.getServer()).connect();
+                    return new VelocityServerConnection(newEvent.getResult().getInfo().get(), this, server).connect();
                 });
     }
 
@@ -285,7 +287,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         if (connectedServer != null) {
             connectedServer.disconnect();
         }
-        VelocityServer.getServer().unregisterConnection(this);
+        server.unregisterConnection(this);
     }
 
     @Override

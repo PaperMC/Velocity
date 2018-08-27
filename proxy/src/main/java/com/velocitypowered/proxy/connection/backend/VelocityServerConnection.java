@@ -26,6 +26,7 @@ import io.netty.util.AttributeKey;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
@@ -63,7 +64,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                                 .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
 
                         ch.attr(CONNECTION_NOTIFIER).set(result);
-                        MinecraftConnection connection = new MinecraftConnection(ch);
+                        MinecraftConnection connection = new MinecraftConnection(ch, server);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setAssociation(VelocityServerConnection.this);
                         ch.pipeline().addLast(HANDLER, connection);
@@ -77,7 +78,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             // Kick off the connection process
-                            minecraftConnection.setSessionHandler(new LoginSessionHandler(VelocityServerConnection.this));
+                            minecraftConnection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
                             startHandshake();
                         } else {
                             result.completeExceptionally(future.cause());
@@ -94,11 +95,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         return serverInfo.getAddress().getHostString() + "\0" +
                 proxyPlayer.getRemoteAddress().getHostString() + "\0" +
                 proxyPlayer.getProfile().getId() + "\0" +
-                VelocityServer.GSON.toJson(proxyPlayer.getProfile().getProperties());
+                GSON.toJson(proxyPlayer.getProfile().getProperties());
     }
 
     private void startHandshake() {
-        PlayerInfoForwarding forwardingMode = VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode();
+        PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
         // Initiate a handshake.
         Handshake handshake = new Handshake();

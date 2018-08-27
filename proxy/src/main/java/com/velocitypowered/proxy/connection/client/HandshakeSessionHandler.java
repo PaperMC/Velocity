@@ -31,7 +31,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     public HandshakeSessionHandler(MinecraftConnection connection, VelocityServer server) {
         this.connection = Preconditions.checkNotNull(connection, "connection");
-        this.server = server;
+        this.server = Preconditions.checkNotNull(server, "server");
     }
 
     @Override
@@ -53,7 +53,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             case StateRegistry.STATUS_ID:
                 connection.setState(StateRegistry.STATUS);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
-                connection.setSessionHandler(new StatusSessionHandler(connection, ic));
+                connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
                 break;
             case StateRegistry.LOGIN_ID:
                 connection.setState(StateRegistry.LOGIN);
@@ -65,7 +65,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 }
 
                 InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
-                if (!VelocityServer.getServer().getIpAttemptLimiter().attempt(address)) {
+                if (!server.getIpAttemptLimiter().attempt(address)) {
                     connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
                     return;
                 }
@@ -85,8 +85,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     return;
                 }
 
-                VelocityServer.getServer().getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
-                connection.setSessionHandler(new LoginSessionHandler(connection, ic));
+                server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+                connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
@@ -100,15 +100,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     private void handleLegacy(MinecraftPacket packet) {
         if (packet instanceof LegacyPing) {
-            VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+            VelocityConfiguration configuration = server.getConfiguration();
             ServerPing ping = new ServerPing(
                     new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                    new ServerPing.Players(VelocityServer.getServer().getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
+                    new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                     configuration.getMotdComponent(),
                     null
             );
             ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
-            VelocityServer.getServer().getEventManager().fire(event)
+            server.getEventManager().fire(event)
                     .thenRunAsync(() -> {
                         // The disconnect packet is the same as the server response one.
                         connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));

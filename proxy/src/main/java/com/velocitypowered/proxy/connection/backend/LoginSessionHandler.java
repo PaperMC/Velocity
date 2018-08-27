@@ -26,10 +26,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+    private final VelocityServer server;
     private final VelocityServerConnection connection;
     private boolean informationForwarded;
 
-    public LoginSessionHandler(VelocityServerConnection connection) {
+    public LoginSessionHandler(VelocityServer server, VelocityServerConnection connection) {
+        this.server = server;
         this.connection = connection;
     }
 
@@ -39,7 +41,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             throw new IllegalStateException("Backend server is online-mode!");
         } else if (packet instanceof LoginPluginMessage) {
             LoginPluginMessage message = (LoginPluginMessage) packet;
-            VelocityConfiguration configuration = VelocityServer.getServer().getConfiguration();
+            VelocityConfiguration configuration = server.getConfiguration();
             if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN &&
                     message.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
                 LoginPluginResponse response = new LoginPluginResponse();
@@ -67,8 +69,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             SetCompression sc = (SetCompression) packet;
             connection.getMinecraftConnection().setCompressionThreshold(sc.getThreshold());
         } else if (packet instanceof ServerLoginSuccess) {
-            if (VelocityServer.getServer().getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN &&
-                    !informationForwarded) {
+            if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
                 doNotify(ConnectionRequestResults.forDisconnect(
                         TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
                 connection.disconnect();
@@ -80,14 +81,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             VelocityServerConnection existingConnection = connection.getPlayer().getConnectedServer();
             if (existingConnection == null) {
                 // Strap on the play session handler
-                connection.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(connection.getPlayer()));
+                connection.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, connection.getPlayer()));
             } else {
                 // The previous server connection should become obsolete.
                 existingConnection.disconnect();
             }
 
             doNotify(ConnectionRequestResults.SUCCESSFUL);
-            connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(connection));
+            connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(server, connection));
             connection.getPlayer().setConnectedServer(connection);
         }
     }
