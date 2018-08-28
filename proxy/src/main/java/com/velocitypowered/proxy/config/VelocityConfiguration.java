@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 public class VelocityConfiguration extends AnnotatedConfig {
 
     @Comment("Config version. Do not change this")
-    @CfgKey("config-version")
+    @ConfigKey("config-version")
     private final String configVersion = "1.0";
 
     @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
@@ -34,10 +34,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
     private String motd;
     @Comment({"What should we display for the maximum number of players? (Velocity does not support a cap",
         "on the number of players online.)"})
-    @CfgKey("show-max-players")
+    @ConfigKey("show-max-players")
     private int showMaxPlayers;
     @Comment("Should we authenticate players with Mojang? By default, this is on.")
-    @CfgKey("online-mode")
+    @ConfigKey("online-mode")
     private boolean onlineMode;
     @Comment({"Should we forward IP addresses and other data to backend servers?",
         "Available options:",
@@ -47,12 +47,12 @@ public class VelocityConfiguration extends AnnotatedConfig {
         "            servers using Minecraft 1.12 or lower.",
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
         "            forwarding. Only applicable for Minecraft 1.13 or higher."})
-    @CfgKey("player-info-forwarding-mode")
+    @ConfigKey("player-info-forwarding-mode")
     private PlayerInfoForwarding playerInfoForwardingMode;
 
     @StringAsBytes
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
-    @CfgKey("forwarding-secret")
+    @ConfigKey("forwarding-secret")
     private byte[] forwardingSecret;
     @Table("[servers]")
     private final Servers servers;
@@ -360,7 +360,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
         private Map<String, String> servers;
 
         @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
-        @CfgKey("try")
+        @ConfigKey("try")
         private List<String> attemptConnectionOrder;
 
         private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
@@ -395,14 +395,14 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @Comment({"How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
             "setting it to -1 will disable compression entirely."})
-        @CfgKey("compression-threshold")
+        @ConfigKey("compression-threshold")
         private int compressionThreshold;
         @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
-        @CfgKey("compression-level")
+        @ConfigKey("compression-level")
         private int compressionLevel;
         @Comment({"How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
             "Disable by setting to 0"})
-        @CfgKey("login-ratelimit")
+        @ConfigKey("login-ratelimit")
         private int loginRatelimit;
 
         private Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit) {
@@ -450,10 +450,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
     private static class Query {
 
         @Comment("Whether to enable responding to GameSpy 4 query responses or not")
-        @CfgKey("enabled")
+        @ConfigKey("enabled")
         private boolean queryEnabled;
         @Comment("If query responding is enabled, on what port should query response listener listen on?")
-        @CfgKey("port")
+        @ConfigKey("port")
         private int queryPort;
 
         private Query(boolean queryEnabled, int queryPort) {

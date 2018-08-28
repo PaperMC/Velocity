@@ -58,7 +58,7 @@ public class AnnotatedConfig {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
-    public @interface CfgKey {
+    public @interface ConfigKey {
 
         String value();
     }
@@ -115,7 +115,7 @@ public class AnnotatedConfig {
                         lines.add("# " + line);
                     }
                 }
-                CfgKey key = field.getAnnotation(CfgKey.class); //Get a key name for config
+                ConfigKey key = field.getAnnotation(ConfigKey.class); //Get a key name for config
                 String name = key == null ? field.getName() : key.value(); // Use a field name if name in annotation is not present
                 field.setAccessible(true); // Make field accessible
                 Table table = field.getAnnotation(Table.class);
