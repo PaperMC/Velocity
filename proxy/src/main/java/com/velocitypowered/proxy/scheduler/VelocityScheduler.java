@@ -12,6 +12,7 @@ import com.velocitypowered.api.scheduler.TaskStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.concurrent.*;
@@ -41,7 +42,11 @@ public class VelocityScheduler implements Scheduler {
     }
 
     public boolean shutdown() throws InterruptedException {
-        for (ScheduledTask task : ImmutableList.copyOf(tasksByPlugin.values())) {
+        Collection<ScheduledTask> terminating;
+        synchronized (tasksByPlugin) {
+            terminating = ImmutableList.copyOf(tasksByPlugin.values());
+        }
+        for (ScheduledTask task : terminating) {
             task.cancel();
         }
         timerExecutionService.shutdown();
