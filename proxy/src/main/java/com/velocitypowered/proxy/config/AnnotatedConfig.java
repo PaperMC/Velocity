@@ -81,7 +81,7 @@ public class AnnotatedConfig {
     }
 
     /**
-     * Indicates that a filed should be skiped
+     * Indicates that a field should be skiped
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})

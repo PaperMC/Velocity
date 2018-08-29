@@ -17,9 +17,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import org.apache.logging.log4j.Logger;
 
 public class VelocityConfiguration extends AnnotatedConfig {
@@ -29,16 +31,16 @@ public class VelocityConfiguration extends AnnotatedConfig {
     private final String configVersion = "1.0";
 
     @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
-    private String bind;
+    private String bind = "0.0.0.0:25577";
     @Comment("What should be the MOTD? Legacy color codes and JSON are accepted.")
-    private String motd;
+    private String motd = "&3A Velocity Server";
     @Comment({"What should we display for the maximum number of players? (Velocity does not support a cap",
         "on the number of players online.)"})
     @ConfigKey("show-max-players")
-    private int showMaxPlayers;
+    private int showMaxPlayers = 500;
     @Comment("Should we authenticate players with Mojang? By default, this is on.")
     @ConfigKey("online-mode")
-    private boolean onlineMode;
+    private boolean onlineMode = true;
     @Comment({"Should we forward IP addresses and other data to backend servers?",
         "Available options:",
         "- \"none\":   No forwarding will be done. All players will appear to be Should we forward IP addresses and other data to backend servers?connecting from the proxy",
@@ -48,12 +50,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
         "            forwarding. Only applicable for Minecraft 1.13 or higher."})
     @ConfigKey("player-info-forwarding-mode")
-    private PlayerInfoForwarding playerInfoForwardingMode;
+    private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.MODERN;
 
     @StringAsBytes
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
     @ConfigKey("forwarding-secret")
-    private byte[] forwardingSecret;
+    private byte[] forwardingSecret = new Random().ints(48, 123).filter(i -> (i < 58) || (i > 64 && i < 91) || (i > 96)).limit(12)
+            .collect(StringBuilder::new, (sb, i) -> sb.append((char) i), StringBuilder::append).toString().getBytes(StandardCharsets.UTF_8); //One line string generation
     @Table("[servers]")
     private final Servers servers;
 
@@ -67,6 +70,12 @@ public class VelocityConfiguration extends AnnotatedConfig {
     private Component motdAsComponent;
     @Ignore
     private Favicon favicon;
+
+    public VelocityConfiguration(Servers servers, Advanced advanced, Query query) {
+        this.servers = servers;
+        this.advanced = advanced;
+        this.query = query;
+    }
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
             PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret, Servers servers,
@@ -300,29 +309,17 @@ public class VelocityConfiguration extends AnnotatedConfig {
     }
 
     public static VelocityConfiguration read(Path path) throws IOException {
-        Toml def = new Toml().read(VelocityServer.class.getResourceAsStream("/velocity.toml"));
         Toml toml;
         if (!path.toFile().exists()) {
-            toml = def;
+            getLogger().info("No velocity.toml found, creating one for you...");
+            return new VelocityConfiguration(new Servers(), new Advanced(), new Query());
         } else {
             try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-                toml = new Toml(def).read(reader);
+                toml = new Toml().read(reader);
             }
         }
 
-        // If config will be changed in future, do not forget to migrate old values if needed
-        Map<String, String> servers = new HashMap<>();
-        for (Map.Entry<String, Object> entry : toml.getTable("servers").entrySet()) {
-            if (entry.getValue() instanceof String) {
-                servers.put(entry.getKey(), (String) entry.getValue());
-            } else {
-                if (!entry.getKey().equalsIgnoreCase("try")) {
-                    throw new IllegalArgumentException("Server entry " + entry.getKey() + " is not a string!");
-                }
-            }
-        }
-
-        Servers serversTables = new Servers(ImmutableMap.copyOf(servers), toml.getTable("servers").getList("try"));
+        Servers servers = new Servers(toml.getTable("servers"));
         Advanced advanced = new Advanced(toml.getTable("advanced"));
         Query query = new Query(toml.getTable("query"));
         byte[] forwardingSecret = toml.getString("player-info-forwarding-secret", "5up3r53cr3t")
@@ -335,7 +332,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 toml.getBoolean("online-mode", true),
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding", "MODERN").toUpperCase()),
                 forwardingSecret,
-                serversTables,
+                servers,
                 advanced,
                 query
         );
@@ -357,11 +354,31 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @IsMap
         @Comment("Configure your servers here.")
-        private Map<String, String> servers;
+        private Map<String, String> servers = ImmutableMap.of("lobby", "127.0.0.1:30066", "factions", "127.0.0.1:30067", "minigames", "127.0.0.1:30068");
 
         @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
         @ConfigKey("try")
-        private List<String> attemptConnectionOrder;
+        private List<String> attemptConnectionOrder = Arrays.asList("lobby");
+
+        private Servers() {
+        }
+
+        private Servers(Toml toml) {
+            if (toml != null) {
+                Map<String, String> servers = new HashMap<>();
+                for (Map.Entry<String, Object> entry : toml.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        servers.put(entry.getKey(), (String) entry.getValue());
+                    } else {
+                        if (!entry.getKey().equalsIgnoreCase("try")) {
+                            throw new IllegalArgumentException("Server entry " + entry.getKey() + " is not a string!");
+                        }
+                    }
+                }
+                this.servers = ImmutableMap.copyOf(servers);
+                this.attemptConnectionOrder = toml.getList("try", attemptConnectionOrder);
+            }
+        }
 
         private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
             this.servers = servers;
@@ -396,14 +413,17 @@ public class VelocityConfiguration extends AnnotatedConfig {
         @Comment({"How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
             "setting it to -1 will disable compression entirely."})
         @ConfigKey("compression-threshold")
-        private int compressionThreshold;
+        private int compressionThreshold = 1024;
         @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
         @ConfigKey("compression-level")
-        private int compressionLevel;
+        private int compressionLevel = -1;
         @Comment({"How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
             "Disable by setting to 0"})
         @ConfigKey("login-ratelimit")
-        private int loginRatelimit;
+        private int loginRatelimit = 3000;
+
+        private Advanced() {
+        }
 
         private Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit) {
             this.compressionThreshold = compressionThreshold;
@@ -412,9 +432,11 @@ public class VelocityConfiguration extends AnnotatedConfig {
         }
 
         private Advanced(Toml toml) {
-            this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
-            this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
-            this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
+            if (toml != null) {
+                this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
+                this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
+                this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
+            }
         }
 
         public int getCompressionThreshold() {
@@ -451,10 +473,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @Comment("Whether to enable responding to GameSpy 4 query responses or not")
         @ConfigKey("enabled")
-        private boolean queryEnabled;
+        private boolean queryEnabled = false;
         @Comment("If query responding is enabled, on what port should query response listener listen on?")
         @ConfigKey("port")
-        private int queryPort;
+        private int queryPort = 25577;
+
+        private Query() {
+        }
 
         private Query(boolean queryEnabled, int queryPort) {
             this.queryEnabled = queryEnabled;
@@ -462,8 +487,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
         }
 
         private Query(Toml toml) {
-            this.queryEnabled = toml.getBoolean("enabled", false);
-            this.queryPort = toml.getLong("port", 25577L).intValue();
+            if (toml != null) {
+                this.queryEnabled = toml.getBoolean("enabled", false);
+                this.queryPort = toml.getLong("port", 25577L).intValue();
+            }
         }
 
         public boolean isQueryEnabled() {
