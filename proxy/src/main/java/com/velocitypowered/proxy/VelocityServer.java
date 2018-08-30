@@ -50,6 +50,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
+
     private static final Logger logger = LogManager.getLogger(VelocityServer.class);
     public static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
@@ -116,10 +117,12 @@ public class VelocityServer implements ProxyServer {
 
             if (!configuration.validate()) {
                 logger.error("Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
+                LogManager.shutdown();
                 System.exit(1);
             }
         } catch (IOException e) {
             logger.error("Unable to load your velocity.toml. The server will shut down.", e);
+            LogManager.shutdown();
             System.exit(1);
         }
 
@@ -192,7 +195,9 @@ public class VelocityServer implements ProxyServer {
     }
 
     public void shutdown() {
-        if (!shutdownInProgress.compareAndSet(false, true)) return;
+        if (!shutdownInProgress.compareAndSet(false, true)) {
+            return;
+        }
         logger.info("Shutting down the proxy...");
 
         for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
