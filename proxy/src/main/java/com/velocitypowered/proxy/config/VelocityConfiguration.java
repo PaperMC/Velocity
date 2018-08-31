@@ -335,7 +335,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
                 toml.getBoolean("online-mode", true),
-                PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding", "MODERN").toUpperCase()),
+                PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
                 servers,
                 advanced,
