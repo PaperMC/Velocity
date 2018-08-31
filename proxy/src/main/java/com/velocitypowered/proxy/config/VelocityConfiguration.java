@@ -32,16 +32,22 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
     @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
     private String bind = "0.0.0.0:25577";
+
     @Comment("What should be the MOTD? Legacy color codes and JSON are accepted.")
     private String motd = "&3A Velocity Server";
-    @Comment({"What should we display for the maximum number of players? (Velocity does not support a cap",
+
+    @Comment({
+        "What should we display for the maximum number of players? (Velocity does not support a cap",
         "on the number of players online.)"})
     @ConfigKey("show-max-players")
     private int showMaxPlayers = 500;
+
     @Comment("Should we authenticate players with Mojang? By default, this is on.")
     @ConfigKey("online-mode")
     private boolean onlineMode = true;
-    @Comment({"Should we forward IP addresses and other data to backend servers?",
+
+    @Comment({
+        "Should we forward IP addresses and other data to backend servers?",
         "Available options:",
         "- \"none\":   No forwarding will be done. All players will appear to be Should we forward IP addresses and other data to backend servers?connecting from the proxy",
         "            and will have offline-mode UUIDs.",
@@ -57,6 +63,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @ConfigKey("forwarding-secret")
     private byte[] forwardingSecret = new Random().ints(48, 123).filter(i -> (i < 58) || (i > 64 && i < 91) || (i > 96)).limit(12)
             .collect(StringBuilder::new, (sb, i) -> sb.append((char) i), StringBuilder::append).toString().getBytes(StandardCharsets.UTF_8); //One line string generation
+
     @Table("[servers]")
     private final Servers servers;
 
@@ -403,21 +410,26 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @Override
         public String toString() {
-            return "Servers{" + "servers=" + servers + ", attemptConnectionOrder=" + attemptConnectionOrder + '}';
+            return "Servers{"
+                    + "servers=" + servers
+                    + ", attemptConnectionOrder=" + attemptConnectionOrder
+                    + '}';
         }
 
     }
 
     private static class Advanced {
 
-        @Comment({"How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
+        @Comment({
+            "How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
             "setting it to -1 will disable compression entirely."})
         @ConfigKey("compression-threshold")
         private int compressionThreshold = 1024;
         @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
         @ConfigKey("compression-level")
         private int compressionLevel = -1;
-        @Comment({"How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
+        @Comment({
+            "How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
             "Disable by setting to 0"})
         @ConfigKey("login-ratelimit")
         private int loginRatelimit = 3000;
@@ -465,7 +477,11 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @Override
         public String toString() {
-            return "Advanced{" + "compressionThreshold=" + compressionThreshold + ", compressionLevel=" + compressionLevel + ", loginRatelimit=" + loginRatelimit + '}';
+            return "Advanced{"
+                    + "compressionThreshold=" + compressionThreshold
+                    + ", compressionLevel=" + compressionLevel
+                    + ", loginRatelimit=" + loginRatelimit
+                    + '}';
         }
     }
 
@@ -511,7 +527,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         @Override
         public String toString() {
-            return "Query{" + "queryEnabled=" + queryEnabled + ", queryPort=" + queryPort + '}';
+            return "Query{"
+                    + "queryEnabled=" + queryEnabled
+                    + ", queryPort=" + queryPort
+                    + '}';
         }
     }
 }

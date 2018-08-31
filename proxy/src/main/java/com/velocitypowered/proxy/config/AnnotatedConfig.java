@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,9 +89,7 @@ public class AnnotatedConfig {
 
     public List<String> dumpConfig() {
         List<String> lines = new ArrayList<>();
-        if (!dumpFields(this, lines)) {
-            throw new RuntimeException("can not dump config");
-        }
+        dumpFields(this, lines);
         return lines;
     }
 
@@ -102,7 +99,7 @@ public class AnnotatedConfig {
      * @param toSave object those we need to dump
      * @param lines a list where store dumped lines
      */
-    private boolean dumpFields(Object toSave, List<String> lines) {
+    private void dumpFields(Object toSave, List<String> lines) {
 
         try {
             for (Field field : toSave.getClass().getDeclaredFields()) {
@@ -140,11 +137,8 @@ public class AnnotatedConfig {
                 }
             }
         } catch (IllegalAccessException | IllegalArgumentException | SecurityException e) {
-            logger.log(Level.ERROR, "Unexpected error while dumping fields", e);
-            lines.clear();
-            return false;
+            throw new RuntimeException("Can not dump config", e);
         }
-        return true;
     }
 
     private String toString(Object value) {

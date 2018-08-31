@@ -118,8 +118,8 @@ public class VelocityServer implements ProxyServer {
 
             AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
 
-        } catch (IOException | RuntimeException e) {
-            logger.error("Unable to load your velocity.toml. The server will shut down.", e);
+        } catch (Throwable e) {
+            logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
             LogManager.shutdown();
             System.exit(1);
         }
