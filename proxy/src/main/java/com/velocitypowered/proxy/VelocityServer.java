@@ -112,6 +112,7 @@ public class VelocityServer implements ProxyServer {
 
             if (!configuration.validate()) {
                 logger.error("Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
+                LogManager.shutdown();
                 System.exit(1);
             }
 
@@ -119,6 +120,7 @@ public class VelocityServer implements ProxyServer {
 
         } catch (IOException | RuntimeException e) {
             logger.error("Unable to load your velocity.toml. The server will shut down.", e);
+            LogManager.shutdown();
             System.exit(1);
         }
 

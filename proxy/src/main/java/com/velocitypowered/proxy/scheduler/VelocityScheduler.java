@@ -12,7 +12,8 @@ import com.velocitypowered.api.scheduler.TaskStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,8 +22,8 @@ public class VelocityScheduler implements Scheduler {
     private final PluginManager pluginManager;
     private final ExecutorService taskService;
     private final ScheduledExecutorService timerExecutionService;
-    private final Multimap<Object, ScheduledTask> tasksByPlugin = Multimaps.synchronizedListMultimap(
-            Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
+    private final Multimap<Object, ScheduledTask> tasksByPlugin = Multimaps.synchronizedMultimap(
+            Multimaps.newSetMultimap(new IdentityHashMap<>(), HashSet::new));
 
     public VelocityScheduler(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
@@ -41,7 +42,11 @@ public class VelocityScheduler implements Scheduler {
     }
 
     public boolean shutdown() throws InterruptedException {
-        for (ScheduledTask task : ImmutableList.copyOf(tasksByPlugin.values())) {
+        Collection<ScheduledTask> terminating;
+        synchronized (tasksByPlugin) {
+            terminating = ImmutableList.copyOf(tasksByPlugin.values());
+        }
+        for (ScheduledTask task : terminating) {
             task.cancel();
         }
         timerExecutionService.shutdown();
