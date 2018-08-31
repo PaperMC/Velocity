@@ -4,7 +4,6 @@ pipeline {
       image 'velocitypowered/openjdk8-plus-git:slim'
       args '-v gradle-cache:/root/.gradle:rw -v maven-repo:/maven-repo:rw -v javadoc:/javadoc'
     }
-
   }
   stages {
     stage('Build') {
@@ -19,11 +18,23 @@ pipeline {
       }
     }
     stage('Deploy Artifacts') {
+      when {
+        expression {
+          GIT_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          return GIT_BRANCH == 'origin/master'
+        }
+      }
       steps {
         sh 'export MAVEN_DEPLOYMENT=true; ./gradlew publish'
       }
     }
     stage('Deploy Javadoc') {
+      when {
+        expression {
+          GIT_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          return GIT_BRANCH == 'origin/master'
+        }
+      }
       steps {
         sh 'rsync -av --delete ./api/build/docs/javadoc/ /javadoc'
       }
