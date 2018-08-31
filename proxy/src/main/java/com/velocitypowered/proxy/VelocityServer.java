@@ -21,6 +21,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.http.NettyHttpClient;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
@@ -107,21 +108,18 @@ public class VelocityServer implements ProxyServer {
     public void start() {
         try {
             Path configPath = Paths.get("velocity.toml");
-            try {
-                configuration = VelocityConfiguration.read(configPath);
-            } catch (NoSuchFileException e) {
-                logger.info("No velocity.toml found, creating one for you...");
-                Files.copy(VelocityServer.class.getResourceAsStream("/velocity.toml"), configPath);
-                configuration = VelocityConfiguration.read(configPath);
-            }
+            configuration = VelocityConfiguration.read(configPath);
 
             if (!configuration.validate()) {
                 logger.error("Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
                 LogManager.shutdown();
                 System.exit(1);
             }
-        } catch (IOException e) {
-            logger.error("Unable to load your velocity.toml. The server will shut down.", e);
+
+            AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
+
+        } catch (Throwable e) {
+            logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
             LogManager.shutdown();
             System.exit(1);
         }
