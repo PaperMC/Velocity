@@ -5,7 +5,6 @@ import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.api.util.LegacyChatColorUtils;
-import com.velocitypowered.proxy.VelocityServer;
 import io.netty.buffer.ByteBufUtil;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
@@ -61,8 +60,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @StringAsBytes
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
     @ConfigKey("forwarding-secret")
-    private byte[] forwardingSecret = new Random().ints(48, 123).filter(i -> (i < 58) || (i > 64 && i < 91) || (i > 96)).limit(12)
-            .collect(StringBuilder::new, (sb, i) -> sb.append((char) i), StringBuilder::append).toString().getBytes(StandardCharsets.UTF_8); //One line string generation
+    private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
 
     @Table("[servers]")
     private final Servers servers;
@@ -355,6 +353,16 @@ public class VelocityConfiguration extends AnnotatedConfig {
             default:
                 break;
         }
+    }
+
+    private static String generateRandomString(int lenght) {
+        String chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+        StringBuilder builder = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < lenght; i++) {
+            builder.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return builder.toString();
     }
 
     private static class Servers {

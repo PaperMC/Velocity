@@ -163,7 +163,7 @@ public class AnnotatedConfig {
             if (stringValue.isEmpty()) {
                 return "\"\"";
             }
-            return "\"" + stringValue + "\"";
+            return "\"" + stringValue.replace("\n", "\\n") + "\"";
         }
         return value != null ? value.toString() : "null";
     }
