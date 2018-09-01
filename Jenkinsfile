@@ -8,13 +8,8 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        sh './gradlew shadowJar'
+        sh './gradlew build'
         archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
-      }
-    }
-    stage('Test') {
-      steps {
-        sh './gradlew test'
       }
     }
     stage('Deploy Artifacts') {
