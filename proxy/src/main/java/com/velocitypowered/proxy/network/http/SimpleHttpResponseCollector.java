@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.connection.http;
+package com.velocitypowered.proxy.network.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -10,10 +10,11 @@ import java.util.concurrent.CompletableFuture;
 
 class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
     private final StringBuilder buffer = new StringBuilder(1024);
-    private final CompletableFuture<String> reply;
+    private final CompletableFuture<SimpleHttpResponse> reply;
+    private int httpCode;
     private boolean canKeepAlive;
 
-    SimpleHttpResponseCollector(CompletableFuture<String> reply) {
+    SimpleHttpResponseCollector(CompletableFuture<SimpleHttpResponse> reply) {
         this.reply = reply;
     }
 
@@ -23,11 +24,7 @@ class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
             if (msg instanceof HttpResponse) {
                 HttpResponse response = (HttpResponse) msg;
                 HttpResponseStatus status = response.status();
-                if (status != HttpResponseStatus.OK) {
-                    reply.completeExceptionally(new RuntimeException("Unexpected status code " + status.code()));
-                    return;
-                }
-
+                this.httpCode = status.code();
                 this.canKeepAlive = HttpUtil.isKeepAlive(response);
             }
 
@@ -38,7 +35,7 @@ class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
                     if (!canKeepAlive) {
                         ctx.close();
                     }
-                    reply.complete(buffer.toString());
+                    reply.complete(new SimpleHttpResponse(httpCode, buffer.toString()));
                 }
             }
         } finally {

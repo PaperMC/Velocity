@@ -101,14 +101,29 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player disconnected after we authenticated them.
                                 return;
                             }
-                            
+
+                            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption is
+                            // enabled.
                             try {
                                 inbound.enableEncryption(decryptedSharedSecret);
                             } catch (GeneralSecurityException e) {
                                 throw new RuntimeException(e);
                             }
 
-                            initializePlayer(VelocityServer.GSON.fromJson(profileResponse, GameProfile.class), true);
+                            if (profileResponse.getCode() == 200) {
+                                // All went well, initialize the session.
+                                initializePlayer(VelocityServer.GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
+                            } else if (profileResponse.getCode() == 204) {
+                                // Apparently an offline-mode user logged onto this online-mode proxy. The client has enabled
+                                // encryption, so we need to do that as well.
+                                logger.warn("An offline-mode client ({} from {}) tried to connect!", login.getUsername(), playerIp);
+                                inbound.closeWith(Disconnect.create(TextComponent.of("This server only accepts connections from online-mode clients.")));
+                            } else {
+                                // Something else went wrong
+                                logger.error("Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                                        profileResponse.getCode(), login.getUsername(), playerIp);
+                                inbound.close();
+                            }
                         }, inbound.getChannel().eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);

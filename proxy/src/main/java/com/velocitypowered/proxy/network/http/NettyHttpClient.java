@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.connection.http;
+package com.velocitypowered.proxy.network.http;
 
 import com.velocitypowered.proxy.VelocityServer;
 import io.netty.bootstrap.Bootstrap;
@@ -46,7 +46,7 @@ public class NettyHttpClient {
         };
     }
 
-    public CompletableFuture<String> get(URL url) {
+    public CompletableFuture<SimpleHttpResponse> get(URL url) {
         String host = url.getHost();
         int port = url.getPort();
         boolean ssl = url.getProtocol().equals("https");
@@ -54,7 +54,7 @@ public class NettyHttpClient {
             port = ssl ? 443 : 80;
         }
 
-        CompletableFuture<String> reply = new CompletableFuture<>();
+        CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
         InetSocketAddress address = new InetSocketAddress(host, port);
         poolMap.get(address)
                 .acquire()

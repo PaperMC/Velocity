@@ -19,7 +19,7 @@ import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.http.NettyHttpClient;
+import com.velocitypowered.proxy.network.http.NettyHttpClient;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
@@ -39,9 +39,7 @@ import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
