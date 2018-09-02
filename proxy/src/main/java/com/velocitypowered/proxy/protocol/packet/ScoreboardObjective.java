@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.velocitypowered.proxy.data.scoreboard.ObjectiveMode;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -85,5 +84,10 @@ public class ScoreboardObjective implements MinecraftPacket {
                 ProtocolUtils.writeString(buf, type.name().toLowerCase());
             }
         }
+    }
+
+    public enum ObjectiveMode {
+        INTEGER,
+        HEARTS
     }
 }
