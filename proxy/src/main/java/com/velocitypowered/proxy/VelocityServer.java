@@ -39,6 +39,7 @@ import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -305,5 +306,10 @@ public class VelocityServer implements ProxyServer {
     @Override
     public VelocityChannelRegistrar getChannelRegistrar() {
         return channelRegistrar;
+    }
+
+    @Override
+    public InetSocketAddress getBoundAddress() {
+        return configuration.getBind();
     }
 }

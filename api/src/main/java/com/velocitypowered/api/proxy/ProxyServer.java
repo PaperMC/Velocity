@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -107,4 +108,11 @@ public interface ProxyServer {
      * @return the channel registrar
      */
     ChannelRegistrar getChannelRegistrar();
+
+    /**
+     * Gets the address that this proxy is bound to. This does not necessarily indicate the external IP address of the
+     * proxy.
+     * @return the address the proxy is bound to
+     */
+    InetSocketAddress getBoundAddress();
 }
