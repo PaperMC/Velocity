@@ -1,8 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.proxy.messages.ChannelSide;
-import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -68,11 +67,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
 
-            MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(connection,
-                    ChannelSide.FROM_SERVER, pm);
-            if (status == MessageHandler.ForwardStatus.FORWARD) {
-                connection.getPlayer().getConnection().write(pm);
-            }
+            PluginMessageEvent event = new PluginMessageEvent(connection, connection.getPlayer(), server.getChannelRegistrar().getFromId(pm.getChannel()),
+                    pm.getData());
+            server.getEventManager().fire(event)
+                    .thenAcceptAsync(pme -> {
+                        if (pme.getResult().isAllowed()) {
+                            connection.getPlayer().getConnection().write(pm);
+                        }
+                    }, connection.getMinecraftConnection().getChannel().eventLoop());
         } else {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
