@@ -103,13 +103,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
         if (bind.isEmpty()) {
             logger.error("'bind' option is empty.");
             valid = false;
-        }
-
-        try {
-            AddressUtil.parseAddress(bind);
-        } catch (IllegalArgumentException e) {
-            logger.error("'bind' option does not specify a valid IP address.", e);
-            valid = false;
+        } else {
+            try {
+                AddressUtil.parseAddress(bind);
+            } catch (IllegalArgumentException e) {
+                logger.error("'bind' option does not specify a valid IP address.", e);
+                valid = false;
+            }
         }
 
         if (!onlineMode) {
@@ -118,11 +118,11 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         switch (playerInfoForwardingMode) {
             case NONE:
-                logger.info("Player info forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
+                logger.warn("Player info forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
                 break;
             case MODERN:
-                if (forwardingSecret.length == 0) {
-                    logger.error("You don't have a forwarding secret set.");
+                if (forwardingSecret == null || forwardingSecret.length == 0) {
+                    logger.error("You don't have a forwarding secret set. This is required for security.");
                     valid = false;
                 }
                 break;
@@ -148,7 +148,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
             for (String s : servers.getAttemptConnectionOrder()) {
                 if (!servers.getServers().containsKey(s)) {
-                    logger.error("Fallback server " + s + " doesn't exist!");
+                    logger.error("Fallback server " + s + " is not registered in your configuration!");
                     valid = false;
                 }
             }
@@ -165,18 +165,18 @@ public class VelocityConfiguration extends AnnotatedConfig {
             logger.error("Invalid compression level {}", advanced.compressionLevel);
             valid = false;
         } else if (advanced.compressionLevel == 0) {
-            logger.warn("ALL packets going through the proxy are going to be uncompressed. This will increase bandwidth usage.");
+            logger.warn("ALL packets going through the proxy will be uncompressed. This will increase bandwidth usage.");
         }
 
         if (advanced.compressionThreshold < -1) {
             logger.error("Invalid compression threshold {}", advanced.compressionLevel);
             valid = false;
         } else if (advanced.compressionThreshold == 0) {
-            logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
+            logger.warn("ALL packets going through the proxy will be compressed. This will compromise throughput and increase CPU usage!");
         }
 
         if (advanced.loginRatelimit < 0) {
-            logger.error("Invalid login ratelimit {}", advanced.loginRatelimit);
+            logger.error("Invalid login ratelimit {}ms", advanced.loginRatelimit);
             valid = false;
         }
 
@@ -217,7 +217,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
             if (motd.startsWith("{")) {
                 motdAsComponent = ComponentSerializers.JSON.deserialize(motd);
             } else {
-                motdAsComponent = ComponentSerializers.LEGACY.deserialize(LegacyChatColorUtils.translate('&', motd));
+                motdAsComponent = ComponentSerializers.LEGACY.deserialize(motd, '&');
             }
         }
         return motdAsComponent;
