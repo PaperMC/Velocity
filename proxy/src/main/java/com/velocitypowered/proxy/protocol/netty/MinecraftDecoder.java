@@ -38,11 +38,11 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
                 packet.decode(msg, direction, protocolVersion.id);
             } catch (Exception e) {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
-                        + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId), e);
+                        + " Protocol " + protocolVersion.id + " State " + state + " ID " + Integer.toHexString(packetId), e);
             }
             if (msg.isReadable()) {
                 throw new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " Direction " + direction
-                        + " Protocol " + protocolVersion + " State " + state + " ID " + Integer.toHexString(packetId));
+                        + " Protocol " + protocolVersion.id + " State " + state + " ID " + Integer.toHexString(packetId));
             }
             out.add(packet);
         }
