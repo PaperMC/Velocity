@@ -27,6 +27,17 @@ allprojects {
                 return os.toString().trim()
             }
         }
+
+        getCurrentShortRevision = {
+            new ByteArrayOutputStream().withStream { os ->
+                exec {
+                    executable = "git"
+                    args = ["rev-parse", "HEAD"]
+                    standardOutput = os
+                }
+                return os.toString().trim().substring(0, 8)
+            }
+        }
     }
 
     repositories {
