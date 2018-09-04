@@ -241,6 +241,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 connection.closeWith(Disconnect.create(friendlyReason));
                             }
                         }, connection.getChannel().eventLoop());
+            } else {
+                connection.closeWith(Disconnect.create(friendlyReason));
             }
         } else {
             connection.write(Chat.create(friendlyReason));
