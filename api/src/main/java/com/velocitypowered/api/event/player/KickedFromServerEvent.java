@@ -52,8 +52,14 @@ public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEven
         return duringLogin;
     }
 
+    /**
+     * Represents the base interface for {@link KickedFromServerEvent} results.
+     */
     public interface ServerKickResult extends ResultedEvent.Result {}
 
+    /**
+     * Tells the proxy to disconnect the player with the specified reason.
+     */
     public static class DisconnectPlayer implements ServerKickResult {
         private final Component component;
 
@@ -70,11 +76,20 @@ public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEven
             return component;
         }
 
-        public static DisconnectPlayer create(Component component) {
-            return new DisconnectPlayer(component);
+        /**
+         * Creates a new {@link DisconnectPlayer} with the specified reason.
+         * @param reason the reason to use when disconnecting the player
+         * @return the disconnect result
+         */
+        public static DisconnectPlayer create(Component reason) {
+            return new DisconnectPlayer(reason);
         }
     }
 
+    /**
+     * Tells the proxy to redirect the player to another server. No messages will be sent from the proxy
+     * when this result is used.
+     */
     public static class RedirectPlayer implements ServerKickResult {
         private final ServerInfo server;
 
@@ -91,8 +106,13 @@ public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEven
             return server;
         }
 
-        public static RedirectPlayer create(ServerInfo info) {
-            return new RedirectPlayer(info);
+        /**
+         * Creates a new redirect result to forward the player to the specified {@code server}.
+         * @param server the server to send the player to
+         * @return the redirect result
+         */
+        public static RedirectPlayer create(ServerInfo server) {
+            return new RedirectPlayer(server);
         }
     }
 }
