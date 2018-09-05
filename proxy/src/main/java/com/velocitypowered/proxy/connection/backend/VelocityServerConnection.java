@@ -43,6 +43,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
     private MinecraftConnection minecraftConnection;
+    private boolean isModded = false;
+    private boolean hasCompletedJoin = false;
 
     public VelocityServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
         this.serverInfo = target;
@@ -153,5 +155,21 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         message.setChannel(identifier.getId());
         message.setData(data);
         minecraftConnection.write(message);
+    }
+
+    public boolean isModded() {
+        return isModded;
+    }
+
+    public void setModded(boolean modded) {
+        isModded = modded;
+    }
+
+    public boolean hasCompletedJoin() {
+        return hasCompletedJoin;
+    }
+
+    public void setHasCompletedJoin(boolean hasCompletedJoin) {
+        this.hasCompletedJoin = hasCompletedJoin;
     }
 }

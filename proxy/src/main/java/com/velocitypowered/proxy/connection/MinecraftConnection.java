@@ -45,6 +45,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
     private MinecraftConnectionAssociation association;
+    private boolean isLegacyForge;
     private final VelocityServer server;
 
     public MinecraftConnection(Channel channel, VelocityServer server) {
@@ -221,5 +222,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setAssociation(MinecraftConnectionAssociation association) {
         this.association = association;
+    }
+
+    public boolean isLegacyForge() {
+        return isLegacyForge;
+    }
+
+    public void setLegacyForge(boolean isForge) {
+        this.isLegacyForge = isForge;
     }
 }

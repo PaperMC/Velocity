@@ -235,6 +235,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
+        if (player.getConnectedServer().isModded() && !player.getConnectedServer().hasCompletedJoin()) {
+            // Ensure that the messages are forwarded
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+            return;
+        }
+
         MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
                 ChannelSide.FROM_CLIENT, packet);
         if (status == MessageHandler.ForwardStatus.FORWARD) {

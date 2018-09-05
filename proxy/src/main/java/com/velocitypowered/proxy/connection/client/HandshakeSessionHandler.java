@@ -70,9 +70,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     return;
                 }
 
-                // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge,
-                // although Velocity does not yet support Forge.
-                if (handshake.getServerAddress().contains("\0") && !handshake.getServerAddress().endsWith("\0FML\0")) {
+                // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13) and store that in the connection
+                boolean isForge = handshake.getServerAddress().endsWith("\0FML\0");
+                connection.setLegacyForge(isForge);
+
+                // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge
+                if (handshake.getServerAddress().contains("\0") && !isForge) {
                     connection.closeWith(Disconnect.create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
                     return;
                 }

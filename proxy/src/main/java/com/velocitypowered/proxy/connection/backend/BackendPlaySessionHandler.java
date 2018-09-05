@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.messages.ChannelSide;
 import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -46,6 +47,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
+            connection.setHasCompletedJoin(true);
         } else if (packet instanceof BossBar) {
             BossBar bossBar = (BossBar) packet;
             switch (bossBar.getAction()) {
@@ -65,6 +67,19 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
             if (PluginMessageUtil.isMCBrand(pm)) {
                 connection.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
+                return;
+            }
+
+            if (!connection.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                if (!connection.isModded()) {
+                    connection.setModded(true);
+
+                    // We must always reset the handshake before a modded connection is established.
+                    connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
+                }
+
+                // Always forward these messages during login
+                connection.getPlayer().getConnection().write(pm);
                 return;
             }
 
