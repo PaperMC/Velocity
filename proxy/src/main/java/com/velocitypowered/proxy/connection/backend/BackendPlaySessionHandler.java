@@ -102,7 +102,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getMinecraftConnection().close();
             return;
         }
-        connection.getPlayer().getConnection().write(buf.retain());
+
+        if (connection.hasCompletedJoin()) {
+            connection.getPlayer().getConnection().write(buf.retain());
+        }
     }
 
     @Override
