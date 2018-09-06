@@ -122,12 +122,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        player.getConnectedServer().getMinecraftConnection().write(packet);
+        if (player.getConnectedServer().hasCompletedJoin()) {
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        if (player.getConnectedServer().hasCompletedJoin()) {
+            player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        }
     }
 
     @Override
