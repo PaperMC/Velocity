@@ -296,10 +296,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     public void sendLegacyForgeHandshakeResetPacket() {
-        PluginMessage resetPacket = new PluginMessage();
-        resetPacket.setChannel(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-        resetPacket.setData(VelocityConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
-        connection.write(resetPacket);
+        if (connection.canSendLegacyFMLResetPacket()) {
+            PluginMessage resetPacket = new PluginMessage();
+            resetPacket.setChannel(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+            resetPacket.setData(VelocityConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
+            connection.write(resetPacket);
+            connection.setCanSendLegacyFMLResetPacket(false);
+        }
     }
 
     public void close(TextComponent reason) {

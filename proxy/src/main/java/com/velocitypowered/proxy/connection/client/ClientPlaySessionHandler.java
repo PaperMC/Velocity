@@ -197,6 +197,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
+        player.getConnectedServer().setHasCompletedJoin(true);
+        player.getConnection().setCanSendLegacyFMLResetPacket(true);
     }
 
     public List<UUID> getServerBossBars() {

@@ -47,7 +47,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
-            connection.setHasCompletedJoin(true);
         } else if (packet instanceof BossBar) {
             BossBar bossBar = (BossBar) packet;
             switch (bossBar.getAction()) {
@@ -74,7 +73,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 if (!connection.isModded()) {
                     connection.setModded(true);
 
-                    // We must always reset the handshake before a modded connection is established.
+                    // We must always reset the handshake before a modded connection is established if
+                    // we haven't done so already.
                     connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
                 }
 
@@ -113,13 +113,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private boolean canForwardPluginMessage(PluginMessage message) {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
-        boolean isMCMessage;
+        boolean isMCOrFMLMessage;
         if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
-            isMCMessage = message.getChannel().startsWith("MC|");
+            String channel = message.getChannel();
+            isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
-            isMCMessage = message.getChannel().startsWith("minecraft:");
+            isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
         }
-        return isMCMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+        return isMCOrFMLMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
                 server.getChannelRegistrar().registered(message.getChannel());
     }
 }
