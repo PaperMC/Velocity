@@ -88,7 +88,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             if (status == MessageHandler.ForwardStatus.FORWARD) {
                 connection.getPlayer().getConnection().write(pm);
             }
-        } else {
+        } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
         }
