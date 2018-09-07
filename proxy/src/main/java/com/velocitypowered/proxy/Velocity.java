@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.console.VelocityConsole;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.*;
 import java.text.DecimalFormat;
 
 public class Velocity {
@@ -20,6 +21,17 @@ public class Velocity {
     public static void main(String... args) {
         startTime = System.currentTimeMillis();
         logger.info("Booting up Velocity {}...", Velocity.class.getPackage().getImplementationVersion());
+        if (args.length > 0 && args[0].equals("highvelocity")) {
+            try (InputStream stream = ClassLoader.getSystemResourceAsStream("motd.txt")) {
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(stream))) {
+                    String s;
+                    while ((s = r.readLine()) != null) {
+                        logger.info(s);
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+        }
 
         VelocityServer server = new VelocityServer();
         server.start();
