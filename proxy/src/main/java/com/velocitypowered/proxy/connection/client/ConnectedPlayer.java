@@ -15,6 +15,7 @@ import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.api.util.GameProfile;
@@ -292,6 +293,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             this.tryIndex = 0;
         }
         this.connectedServer = serverConnection;
+    }
+
+    public void sendLegacyForgeHandshakeResetPacket() {
+        if (connection.canSendLegacyFMLResetPacket()) {
+            PluginMessage resetPacket = new PluginMessage();
+            resetPacket.setChannel(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+            resetPacket.setData(VelocityConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
+            connection.write(resetPacket);
+            connection.setCanSendLegacyFMLResetPacket(false);
+        }
     }
 
     public void close(TextComponent reason) {

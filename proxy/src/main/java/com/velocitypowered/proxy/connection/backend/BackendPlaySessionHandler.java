@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.messages.ChannelSide;
 import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -68,12 +69,26 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
 
+            if (!connection.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                if (!connection.isModded()) {
+                    connection.setModded(true);
+
+                    // We must always reset the handshake before a modded connection is established if
+                    // we haven't done so already.
+                    connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
+                }
+
+                // Always forward these messages during login
+                connection.getPlayer().getConnection().write(pm);
+                return;
+            }
+
             MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(connection,
                     ChannelSide.FROM_SERVER, pm);
             if (status == MessageHandler.ForwardStatus.FORWARD) {
                 connection.getPlayer().getConnection().write(pm);
             }
-        } else {
+        } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
         }
@@ -87,7 +102,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getMinecraftConnection().close();
             return;
         }
-        connection.getPlayer().getConnection().write(buf.retain());
+
+        if (connection.hasCompletedJoin()) {
+            connection.getPlayer().getConnection().write(buf.retain());
+        }
     }
 
     @Override
@@ -98,13 +116,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private boolean canForwardPluginMessage(PluginMessage message) {
         ClientPlaySessionHandler playerHandler =
                 (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
-        boolean isMCMessage;
+        boolean isMCOrFMLMessage;
         if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
-            isMCMessage = message.getChannel().startsWith("MC|");
+            String channel = message.getChannel();
+            isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
-            isMCMessage = message.getChannel().startsWith("minecraft:");
+            isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
         }
-        return isMCMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+        return isMCOrFMLMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
                 server.getChannelRegistrar().registered(message.getChannel());
     }
 }

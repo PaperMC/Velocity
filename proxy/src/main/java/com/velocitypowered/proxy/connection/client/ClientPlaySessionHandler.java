@@ -61,6 +61,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
             player.setPing(System.currentTimeMillis() - lastPingSent);
             resetPingData();
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+            return;
         }
 
         if (packet instanceof ClientSettings) {
@@ -122,12 +124,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        player.getConnectedServer().getMinecraftConnection().write(packet);
+        if (player.getConnectedServer().hasCompletedJoin()) {
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        if (player.getConnectedServer().hasCompletedJoin()) {
+            player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        }
     }
 
     @Override
@@ -197,6 +203,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
+        player.getConnectedServer().setHasCompletedJoin(true);
+        player.getConnection().setCanSendLegacyFMLResetPacket(true);
     }
 
     public List<UUID> getServerBossBars() {
@@ -232,6 +240,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (PluginMessageUtil.isMCBrand(packet)) {
             player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
+            return;
+        }
+
+        if (player.getConnectedServer().isModded() && !player.getConnectedServer().hasCompletedJoin()) {
+            // Ensure that the messages are forwarded
+            player.getConnectedServer().getMinecraftConnection().write(packet);
             return;
         }
 

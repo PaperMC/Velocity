@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -31,7 +32,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -176,6 +179,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void initializePlayer(GameProfile profile, boolean onlineMode) {
+        if (inbound.isLegacyForge() && server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+            // We want to add the FML token to the properties
+            List<GameProfile.Property> properties = new ArrayList<>(profile.getProperties());
+            properties.add(new GameProfile.Property("forgeClient", "true", ""));
+            profile = new GameProfile(profile.getId(), profile.getName(), properties);
+        }
         GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile, onlineMode);
 
         server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {

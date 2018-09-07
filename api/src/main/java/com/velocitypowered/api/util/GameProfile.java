@@ -57,7 +57,7 @@ public final class GameProfile {
                 '}';
     }
 
-    public final class Property {
+    public final static class Property {
         private final String name;
         private final String value;
         private final String signature;
