@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
@@ -17,12 +16,18 @@ public class ServerPing {
     private final Players players;
     private final Component description;
     private final @Nullable Favicon favicon;
+    private final Modinfo modinfo;
 
     public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon) {
+        this(version, players, description, favicon, Modinfo.DEFAULT);
+    }
+
+    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, Modinfo modinfo) {
         this.version = Preconditions.checkNotNull(version, "version");
         this.players = players;
         this.description = Preconditions.checkNotNull(description, "description");
         this.favicon = favicon;
+        this.modinfo = modinfo;
     }
 
     public Version getVersion() {
@@ -74,6 +79,7 @@ public class ServerPing {
         private int onlinePlayers;
         private int maximumPlayers;
         private final List<SamplePlayer> samplePlayers = new ArrayList<>();
+        private final List<Mod> mods = new ArrayList<>();
         private Component description;
         private Favicon favicon;
         private boolean nullOutPlayers;
@@ -102,6 +108,16 @@ public class ServerPing {
             return this;
         }
 
+        public Builder mods(Mod... mods) {
+            this.mods.addAll(Arrays.asList(mods));
+            return this;
+        }
+
+        public Builder clearMods() {
+            this.mods.clear();
+            return this;
+        }
+
         public Builder clearSamplePlayers() {
             this.samplePlayers.clear();
             return this;
@@ -123,7 +139,8 @@ public class ServerPing {
         }
 
         public ServerPing build() {
-            return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon);
+            return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon,
+                    new Modinfo(mods));
         }
 
         public Version getVersion() {
@@ -150,6 +167,10 @@ public class ServerPing {
             return favicon;
         }
 
+        public List<Mod> getMods() {
+            return mods;
+        }
+
         @Override
         public String toString() {
             return "Builder{" +
@@ -157,8 +178,10 @@ public class ServerPing {
                     ", onlinePlayers=" + onlinePlayers +
                     ", maximumPlayers=" + maximumPlayers +
                     ", samplePlayers=" + samplePlayers +
+                    ", mods=" + mods +
                     ", description=" + description +
                     ", favicon=" + favicon +
+                    ", nullOutPlayers=" + nullOutPlayers +
                     '}';
         }
     }
@@ -245,6 +268,27 @@ public class ServerPing {
                     "name='" + name + '\'' +
                     ", id=" + id +
                     '}';
+        }
+    }
+
+    public static class Modinfo {
+        public static final Modinfo DEFAULT = new Modinfo(ImmutableList.of());
+
+        private final String type = "FML";
+        private final List<Mod> modList;
+
+        public Modinfo(List<Mod> modList) {
+            this.modList = ImmutableList.copyOf(modList);
+        }
+    }
+
+    public static class Mod {
+        private final String id;
+        private final String version;
+
+        public Mod(String id, String version) {
+            this.id = Preconditions.checkNotNull(id, "id");
+            this.version = Preconditions.checkNotNull(version, "version");
         }
     }
 }
