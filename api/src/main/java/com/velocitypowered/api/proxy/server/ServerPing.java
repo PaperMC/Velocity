@@ -22,7 +22,7 @@ public class ServerPing {
         this(version, players, description, favicon, Modinfo.DEFAULT);
     }
 
-    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, Modinfo modinfo) {
+    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, @Nullable Modinfo modinfo) {
         this.version = Preconditions.checkNotNull(version, "version");
         this.players = players;
         this.description = Preconditions.checkNotNull(description, "description");
@@ -46,6 +46,10 @@ public class ServerPing {
         return Optional.ofNullable(favicon);
     }
 
+    public Optional<Modinfo> getModinfo() {
+        return Optional.ofNullable(modinfo);
+    }
+
     @Override
     public String toString() {
         return "ServerPing{" +
@@ -59,11 +63,16 @@ public class ServerPing {
     public Builder asBuilder() {
         Builder builder = new Builder();
         builder.version = version;
-        builder.onlinePlayers = players.online;
-        builder.maximumPlayers = players.max;
-        builder.samplePlayers.addAll(players.sample);
+        if (players != null) {
+            builder.onlinePlayers = players.online;
+            builder.maximumPlayers = players.max;
+            builder.samplePlayers.addAll(players.sample);
+        } else {
+            builder.nullOutPlayers = true;
+        }
         builder.description = description;
         builder.favicon = favicon;
+        builder.nullOutModinfo = modinfo == null;
         return builder;
     }
 
@@ -83,6 +92,7 @@ public class ServerPing {
         private Component description;
         private Favicon favicon;
         private boolean nullOutPlayers;
+        private boolean nullOutModinfo;
 
         private Builder() {
 
@@ -123,6 +133,11 @@ public class ServerPing {
             return this;
         }
 
+        public Builder notModCompatible() {
+            this.nullOutModinfo = true;
+            return this;
+        }
+
         public Builder nullPlayers() {
             this.nullOutPlayers = true;
             return this;
@@ -140,7 +155,7 @@ public class ServerPing {
 
         public ServerPing build() {
             return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon,
-                    new Modinfo(mods));
+                    nullOutModinfo ? null : new Modinfo(mods));
         }
 
         public Version getVersion() {
@@ -182,6 +197,7 @@ public class ServerPing {
                     ", description=" + description +
                     ", favicon=" + favicon +
                     ", nullOutPlayers=" + nullOutPlayers +
+                    ", nullOutModinfo=" + nullOutModinfo +
                     '}';
         }
     }

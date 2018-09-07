@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.config;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.util.Favicon;
@@ -48,7 +49,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @Comment({
         "Should we forward IP addresses and other data to backend servers?",
         "Available options:",
-        "- \"none\":   No forwarding will be done. All players will appear to be Should we forward IP addresses and other data to backend servers?connecting from the proxy",
+        "- \"none\":   No forwarding will be done. All players will appear to be connecting from the proxy",
         "            and will have offline-mode UUIDs.",
         "- \"legacy\": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run",
         "            servers using Minecraft 1.12 or lower.",
@@ -61,6 +62,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
     @ConfigKey("forwarding-secret")
     private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
+
+    @Comment("Announce whether or not your server supports Forge/FML. If you run a modded server, we suggest turning this on.")
+    @ConfigKey("announce-forge")
+    private boolean announceForge = false;
 
     @Table("[servers]")
     private final Servers servers;
@@ -83,12 +88,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
     }
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
-            PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret, Servers servers,
-            Advanced advanced, Query query) {
+            boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
+            Servers servers, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
         this.onlineMode = onlineMode;
+        this.announceForge = announceForge;
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
         this.servers = servers;
@@ -263,54 +269,26 @@ public class VelocityConfiguration extends AnnotatedConfig {
         return favicon;
     }
 
-    private void setBind(String bind) {
-        this.bind = bind;
-    }
-
-    private void setMotd(String motd) {
-        this.motd = motd;
-    }
-
-    private void setShowMaxPlayers(int showMaxPlayers) {
-        this.showMaxPlayers = showMaxPlayers;
-    }
-
-    private void setOnlineMode(boolean onlineMode) {
-        this.onlineMode = onlineMode;
-    }
-
-    private void setPlayerInfoForwardingMode(PlayerInfoForwarding playerInfoForwardingMode) {
-        this.playerInfoForwardingMode = playerInfoForwardingMode;
-    }
-
-    private void setForwardingSecret(byte[] forwardingSecret) {
-        this.forwardingSecret = forwardingSecret;
-    }
-
-    private void setMotdAsComponent(Component motdAsComponent) {
-        this.motdAsComponent = motdAsComponent;
-    }
-
-    private void setFavicon(Favicon favicon) {
-        this.favicon = favicon;
+    public boolean isAnnounceForge() {
+        return announceForge;
     }
 
     @Override
     public String toString() {
-
-        return "VelocityConfiguration{"
-                + "bind='" + bind + '\''
-                + ", motd='" + motd + '\''
-                + ", showMaxPlayers=" + showMaxPlayers
-                + ", onlineMode=" + onlineMode
-                + ", playerInfoForwardingMode=" + playerInfoForwardingMode
-                + ", forwardingSecret=" + ByteBufUtil.hexDump(forwardingSecret)
-                + ", servers=" + servers
-                + ", advanced=" + advanced
-                + ", query=" + query
-                + ", motdAsComponent=" + motdAsComponent
-                + ", favicon=" + favicon
-                + '}';
+        return MoreObjects.toStringHelper(this)
+                .add("configVersion", configVersion)
+                .add("bind", bind)
+                .add("motd", motd)
+                .add("showMaxPlayers", showMaxPlayers)
+                .add("onlineMode", onlineMode)
+                .add("playerInfoForwardingMode", playerInfoForwardingMode)
+                .add("forwardingSecret", forwardingSecret)
+                .add("announceForge", announceForge)
+                .add("servers", servers)
+                .add("advanced", advanced)
+                .add("query", query)
+                .add("favicon", favicon)
+                .toString();
     }
 
     public static VelocityConfiguration read(Path path) throws IOException {
@@ -335,6 +313,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
                 toml.getBoolean("online-mode", true),
+                toml.getBoolean("announce-forge", false),
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
                 servers,

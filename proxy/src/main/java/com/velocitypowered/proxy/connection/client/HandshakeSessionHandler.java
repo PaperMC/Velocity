@@ -108,6 +108,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                     new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                     configuration.getMotdComponent(),
+                    null,
                     null
             );
             ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
