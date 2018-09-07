@@ -20,6 +20,13 @@ public class Velocity {
     public static void main(String... args) {
         startTime = System.currentTimeMillis();
         logger.info("Booting up Velocity {}...", Velocity.class.getPackage().getImplementationVersion());
+        logger.info("");
+        logger.info("           _            _ _         \n" +
+                    "__   _____| | ___   ___(_) |_ _   _ \n" +
+                    "\\ \\ / / _ \\ |/ _ \\ / __| | __| | | |\n" +
+                    " \\ V /  __/ | (_) | (__| | |_| |_| |\n" +
+                    "  \\_/ \\___|_|\\___/ \\___|_|\\__|\\__, |\n" +
+                    "                              |___/");
 
         VelocityServer server = new VelocityServer();
         server.start();
