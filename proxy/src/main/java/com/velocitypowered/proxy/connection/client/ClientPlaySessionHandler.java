@@ -61,6 +61,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
             player.setPing(System.currentTimeMillis() - lastPingSent);
             resetPingData();
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+            return;
         }
 
         if (packet instanceof ClientSettings) {
