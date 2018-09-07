@@ -243,7 +243,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (player.getConnectedServer().isModded() && !player.getConnectedServer().hasCompletedJoin()) {
+        if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
             // Ensure that the messages are forwarded
             player.getConnectedServer().getMinecraftConnection().write(packet);
             return;

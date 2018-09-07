@@ -43,7 +43,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
     private MinecraftConnection minecraftConnection;
-    private boolean isModded = false;
+    private boolean legacyForge = false;
     private boolean hasCompletedJoin = false;
 
     public VelocityServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
@@ -159,12 +159,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         minecraftConnection.write(message);
     }
 
-    public boolean isModded() {
-        return isModded;
+    public boolean isLegacyForge() {
+        return legacyForge;
     }
 
-    public void setModded(boolean modded) {
-        isModded = modded;
+    public void setLegacyForge(boolean modded) {
+        legacyForge = modded;
     }
 
     public boolean hasCompletedJoin() {

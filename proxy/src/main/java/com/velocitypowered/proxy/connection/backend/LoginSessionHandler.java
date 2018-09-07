@@ -85,7 +85,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             } else {
                 // The previous server connection should become obsolete.
                 // Before we remove it, if the server we are departing is modded, we must always reset the client state.
-                if (existingConnection.isModded()) {
+                if (existingConnection.isLegacyForge()) {
                     connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
                 }
                 existingConnection.disconnect();
@@ -123,7 +123,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
     }
 
-    static ByteBuf createForwardingData(byte[] hmacSecret, String address, GameProfile profile) {
+    private static ByteBuf createForwardingData(byte[] hmacSecret, String address, GameProfile profile) {
         ByteBuf dataToForward = Unpooled.buffer();
         ByteBuf finalData = Unpooled.buffer();
         try {

@@ -70,8 +70,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (!connection.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-                if (!connection.isModded()) {
-                    connection.setModded(true);
+                if (!connection.isLegacyForge()) {
+                    connection.setLegacyForge(true);
 
                     // We must always reset the handshake before a modded connection is established if
                     // we haven't done so already.
