@@ -55,6 +55,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
         CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
         server.initializeGenericBootstrap()
+                .option(ChannelOption.TCP_NODELAY, true)
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
