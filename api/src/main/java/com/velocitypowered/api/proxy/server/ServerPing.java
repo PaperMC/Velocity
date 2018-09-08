@@ -73,6 +73,9 @@ public class ServerPing {
         builder.description = description;
         builder.favicon = favicon;
         builder.nullOutModinfo = modinfo == null;
+        if (modinfo != null) {
+            builder.mods.addAll(modinfo.modList);
+        }
         return builder;
     }
 
