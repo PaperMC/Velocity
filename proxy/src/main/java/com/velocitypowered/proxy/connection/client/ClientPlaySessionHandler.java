@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.messages.ChannelSide;
 import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
@@ -149,6 +150,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 .color(TextColor.RED)
                 .append(TextComponent.of(ThrowableUtils.briefDescription(throwable), TextColor.WHITE))
                 .build());
+    }
+
+    @Override
+    public void writabilityChanged() {
+        VelocityServerConnection server = player.getConnectedServer();
+        if (server != null) {
+            boolean writable = player.getConnection().getChannel().isWritable();
+            server.getMinecraftConnection().getChannel().config().setAutoRead(writable);
+        }
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {

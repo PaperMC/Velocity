@@ -107,6 +107,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
     }
 
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        if (sessionHandler != null) {
+            sessionHandler.writabilityChanged();
+        }
+    }
+
     public void write(Object msg) {
         if (channel.isActive()) {
             channel.writeAndFlush(msg, channel.voidPromise());

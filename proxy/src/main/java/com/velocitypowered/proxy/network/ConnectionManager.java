@@ -16,11 +16,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -48,6 +44,8 @@ import java.util.concurrent.TimeUnit;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public final class ConnectionManager {
+    private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 16, 1 << 18);
+
     private static final Logger logger = LogManager.getLogger(ConnectionManager.class);
 
     private final Set<Channel> endpoints = new HashSet<>();
@@ -72,6 +70,7 @@ public final class ConnectionManager {
         final ServerBootstrap bootstrap = new ServerBootstrap()
                 .channel(this.transportType.serverSocketChannelClass)
                 .group(this.bossGroup, this.workerGroup)
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
                 .childHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(final Channel ch) {
