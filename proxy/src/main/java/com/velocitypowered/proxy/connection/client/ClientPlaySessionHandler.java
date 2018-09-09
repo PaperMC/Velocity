@@ -25,7 +25,7 @@ import java.util.*;
  */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
-    private static final int MAX_PLUGIN_CHANNELS = 128;
+    private static final int MAX_PLUGIN_CHANNELS = 1024;
 
     private final ConnectedPlayer player;
     private long lastPingID = -1;
