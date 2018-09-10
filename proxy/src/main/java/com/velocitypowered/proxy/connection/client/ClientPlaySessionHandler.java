@@ -214,7 +214,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
         player.getConnectedServer().setHasCompletedJoin(true);
-        player.getConnection().setCanSendLegacyFMLResetPacket(true);
+        if (player.getConnectedServer().isLegacyForge()) {
+            // We only need to indicate we can send a reset packet if we complete a handshake, that is,
+            // logged onto a Forge server.
+            //
+            // The special case is if we log onto a Vanilla server as our first server, FML will treat this
+            // as complete and **will** need a reset packet sending at some point. We will handle this
+            // during initial player connection if the player is detected to be forge.
+            //
+            // This is why we use an if statement rather than the result of VelocityServerConnection#isLegacyForge()
+            // because we don't want to set it false if this is a first connection to a Vanilla server.
+            //
+            // See LoginSessionHandler#handle for where the counterpart to this method is
+            player.getConnection().setCanSendLegacyFMLResetPacket(true);
+        }
     }
 
     public List<UUID> getServerBossBars() {
