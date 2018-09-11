@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
@@ -244,7 +246,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
         logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        player.createConnectionRequest(toTry.get()).fireAndForget();
+        server.getEventManager().fire(new PostLoginEvent(player)).thenRun(() -> {
+            player.createConnectionRequest(toTry.get()).fireAndForget();
+        });
     }
 
     @Override
