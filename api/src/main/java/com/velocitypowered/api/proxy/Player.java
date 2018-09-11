@@ -5,7 +5,9 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
+import java.util.List;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -34,6 +36,10 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      */
     Optional<ServerConnection> getCurrentServer();
 
+    /**
+     * Returns the player settings
+     * @return the settings
+     */
     PlayerSettings getPlayerSettings();
 
     /**
@@ -64,6 +70,18 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      */
     ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info);
 
+    /**
+     * Gets a game profile properties of player
+     * @return a immutable list of properties
+     */
+    List<GameProfile.Property> getGameProfileProperties();
+    
+    /**
+     * Sets a GameProfile properties({@link GameProfile.Property)
+     * @param properties a properties to set
+     */
+    void setGameProfileProperties(List<GameProfile.Property> properties);
+    
     /**
      * Sets the tab list header and footer for the player.
      * @param header the header component
