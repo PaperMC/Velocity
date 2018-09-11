@@ -2,7 +2,6 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * This event is fired once the player has been successfully authenticated and
@@ -12,7 +11,7 @@ public class PostLoginEvent {
 
     private final Player player;
 
-    public PostLoginEvent(@NonNull Player player) {
+    public PostLoginEvent(Player player) {
         this.player = Preconditions.checkNotNull(player, "player");
     }
 

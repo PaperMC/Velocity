@@ -42,8 +42,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
-    private static final String MOJANG_SERVER_AUTH_URL
-            = "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+    private static final String MOJANG_SERVER_AUTH_URL =
+            "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
     private final VelocityServer server;
     private final MinecraftConnection inbound;
@@ -195,26 +195,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                     apiInbound.getVirtualHost().orElse(null));
 
             return server.getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-                    .thenCompose(event -> {
-                        // wait for permissions to load, then set the players permission function
-                        player.setPermissionFunction(event.createFunction(player));
-                        // then call & wait for the login event
-                        return server.getEventManager().fire(new LoginEvent(player));
-                    })
-                    // then complete the connection
-                    .thenAcceptAsync(event -> {
-                        if (inbound.isClosed()) {
-                            // The player was disconnected
-                            return;
-                        }
-                        if (!event.getResult().isAllowed()) {
-                            // The component is guaranteed to be provided if the connection was denied.
-                            inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
-                            return;
-                        }
+                        .thenCompose(event -> {
+                            // wait for permissions to load, then set the players permission function
+                            player.setPermissionFunction(event.createFunction(player));
+                            // then call & wait for the login event
+                            return server.getEventManager().fire(new LoginEvent(player));
+                        })
+                        // then complete the connection
+                        .thenAcceptAsync(event -> {
+                            if (inbound.isClosed()) {
+                                // The player was disconnected
+                                return;
+                            }
+                            if (!event.getResult().isAllowed()) {
+                                // The component is guaranteed to be provided if the connection was denied.
+                                inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                                return;
+                            }
 
-                        handleProxyLogin(player);
-                    }, inbound.getChannel().eventLoop());
+                            handleProxyLogin(player);
+                        }, inbound.getChannel().eventLoop());
         });
 
     }
