@@ -164,9 +164,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public void handleBackendJoinGame(JoinGame joinGame) {
         resetPingData(); // reset ping data;
         if (!spawned) {
-            // nothing special to do here
+            // Nothing special to do with regards to spawning the player
             spawned = true;
             player.getConnection().delayedWrite(joinGame);
+
+            // We have something special to do for legacy Forge servers - during first connection the FML handshake
+            // will transition to complete regardless. Thus, we need to ensure that a reset packet is ALWAYS sent on
+            // first switch.
+            //
+            // As we know that calling this branch only happens on first join, we set that if we are a Forge
+            // client that we must reset on the next switch.
+            //
+            // The call will handle if the player is not a Forge player appropriately.
+            player.getConnection().setCanSendLegacyFMLResetPacket(true);
         } else {
             // Ah, this is the meat and potatoes of the whole venture!
             //
