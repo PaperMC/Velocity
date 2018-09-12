@@ -52,7 +52,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     }
 
     /**
-     * Represents an "allowed/allowed with online mode/denied" result with a reason allowed for denial.
+     * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason allowed for denial.
      */
     public static class PreLoginComponentResult extends ResultedEvent.ComponentResult {
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
@@ -61,10 +61,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
 
         private final boolean onlineMode;
         private final boolean forceOfflineMode;
-        /**
-         * Allows online mode to be enabled for the player connection, if Velocity is running in offline mode.
-         * @param allowedOnlineMode if true, online mode will be used for the connection
-         */
+
         private PreLoginComponentResult(boolean allowedOnlineMode, boolean forceOfflineMode) {
             super(true, null);
             this.onlineMode = allowedOnlineMode;
