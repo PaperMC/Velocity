@@ -56,31 +56,41 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
      */
     public static class PreLoginComponentResult extends ResultedEvent.ComponentResult {
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
-        private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true);
+        private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true, false);
+        private static final PreLoginComponentResult FORCE_OFFLINEMODE = new PreLoginComponentResult(false, true);
 
         private final boolean onlineMode;
-
+        private final boolean forceOfflineMode;
         /**
          * Allows online mode to be enabled for the player connection, if Velocity is running in offline mode.
          * @param allowedOnlineMode if true, online mode will be used for the connection
          */
-        private PreLoginComponentResult(boolean allowedOnlineMode) {
+        private PreLoginComponentResult(boolean allowedOnlineMode, boolean forceOfflineMode) {
             super(true, null);
             this.onlineMode = allowedOnlineMode;
+            this.forceOfflineMode = forceOfflineMode;
         }
 
         private PreLoginComponentResult(@Nullable Component reason) {
             super(reason == null, reason);
             // Don't care about this
             this.onlineMode = false;
+            this.forceOfflineMode = false;
         }
 
         public boolean isOnlineModeAllowed() {
             return this.onlineMode;
         }
 
+        public boolean isForceOfflineMode() {
+            return forceOfflineMode;
+        }
+
         @Override
         public String toString() {
+            if (isForceOfflineMode()) {
+                return "allowed with force offline mode";
+            }
             if (isOnlineModeAllowed()) {
                 return "allowed with online mode";
             }
@@ -104,6 +114,15 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
          */
         public static PreLoginComponentResult forceOnlineMode() {
             return FORCE_ONLINEMODE;
+        }
+
+        /**
+         * Returns a result indicating the connection will be allowed through the proxy, but the connection will be
+         * forced to use offline mode even when proxy running in online mode
+         * @return the result
+         */
+        public static PreLoginComponentResult forceOfflineMode() {
+            return FORCE_OFFLINEMODE;
         }
 
         /**
