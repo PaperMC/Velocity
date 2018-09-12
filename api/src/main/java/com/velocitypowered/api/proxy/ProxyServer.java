@@ -45,6 +45,19 @@ public interface ProxyServer {
     int getPlayerCount();
 
     /**
+     * Returns the maximum number of players allowed on the server
+     * @return the maximum player count
+     */
+    int getMaxPlayerCount();
+
+    /**
+     * Returns the Message of the Day for the server.
+     * @return the motd
+     * @return
+     */
+    String getMotd();
+
+    /**
      * Retrieves a registered {@link ServerInfo} instance by its name. The search is case-insensitive.
      * @param name the name of the server
      * @return the registered server, which may be empty
