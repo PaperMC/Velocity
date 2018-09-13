@@ -3,8 +3,10 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
+import java.util.Optional;
 
 import net.kyori.text.Component;
+import net.kyori.text.serializer.ComponentSerializers;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -54,33 +56,35 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     /**
      * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason allowed for denial.
      */
-    public static class PreLoginComponentResult extends ResultedEvent.ComponentResult {
-        private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult((Component) null);
-        private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(true, false);
-        private static final PreLoginComponentResult FORCE_OFFLINEMODE = new PreLoginComponentResult(false, true);
+    public static class PreLoginComponentResult implements Result {
 
-        private final boolean onlineMode;
-        private final boolean forceOfflineMode;
+        private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult(Result.ALLOWED, null);
+        private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(Result.FORCE_ONLINE, null);
+        private static final PreLoginComponentResult FORCE_OFFLINEMODE = new PreLoginComponentResult(Result.FORCE_OFFLINE, null);
 
-        private PreLoginComponentResult(boolean allowedOnlineMode, boolean forceOfflineMode) {
-            super(true, null);
-            this.onlineMode = allowedOnlineMode;
-            this.forceOfflineMode = forceOfflineMode;
+        private final Result result;
+        private final Optional<Component> reason;
+
+        private PreLoginComponentResult(Result result, @Nullable Component reason) {
+            this.result = result;
+            this.reason = Optional.ofNullable(reason);
         }
 
-        private PreLoginComponentResult(@Nullable Component reason) {
-            super(reason == null, reason);
-            // Don't care about this
-            this.onlineMode = false;
-            this.forceOfflineMode = false;
+        @Override
+        public boolean isAllowed() {
+            return result != Result.DISALLOWED;
+        }
+
+        public Optional<Component> getReason() {
+            return reason;
         }
 
         public boolean isOnlineModeAllowed() {
-            return this.onlineMode;
+            return result == Result.FORCE_ONLINE;
         }
 
         public boolean isForceOfflineMode() {
-            return forceOfflineMode;
+            return result == Result.FORCE_OFFLINE;
         }
 
         @Override
@@ -91,12 +95,18 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
             if (isOnlineModeAllowed()) {
                 return "allowed with online mode";
             }
-            
-            return super.toString();
+            if (isAllowed()) {
+                return "allowed";
+            }
+            if (reason.isPresent()) {
+                return "denied: " + ComponentSerializers.PLAIN.serialize(reason.get());
+            }
+            return "denied";
         }
 
         /**
-         * Returns a result indicating the connection will be allowed through the proxy.
+         * Returns a result indicating the connection will be allowed through
+         * the proxy.
          * @return the allowed result
          */
         public static PreLoginComponentResult allowed() {
@@ -104,9 +114,10 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
         }
 
         /**
-         * Returns a result indicating the connection will be allowed through the proxy, but the connection will be
-         * forced to use online mode provided that the proxy is in offline mode. This acts similarly to {@link #allowed()}
-         * on an online-mode proxy.
+         * Returns a result indicating the connection will be allowed through
+         * the proxy, but the connection will be forced to use online mode
+         * provided that the proxy is in offline mode. This acts similarly to
+         * {@link #allowed()} on an online-mode proxy.
          * @return the result
          */
         public static PreLoginComponentResult forceOnlineMode() {
@@ -114,8 +125,9 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
         }
 
         /**
-         * Returns a result indicating the connection will be allowed through the proxy, but the connection will be
-         * forced to use offline mode even when proxy running in online mode
+         * Returns a result indicating the connection will be allowed through
+         * the proxy, but the connection will be forced to use offline mode even
+         * when proxy running in online mode
          * @return the result
          */
         public static PreLoginComponentResult forceOfflineMode() {
@@ -127,9 +139,16 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
          * @param reason the reason for disallowing the connection
          * @return a new result
          */
-        public static PreLoginComponentResult denied(@NonNull Component reason) {
+        public static PreLoginComponentResult denied(Component reason) {
             Preconditions.checkNotNull(reason, "reason");
-            return new PreLoginComponentResult(reason);
+            return new PreLoginComponentResult(Result.DISALLOWED, reason);
+        }
+
+        private enum Result {
+            ALLOWED,
+            FORCE_ONLINE,
+            FORCE_OFFLINE,
+            DISALLOWED
         }
     }
 }
