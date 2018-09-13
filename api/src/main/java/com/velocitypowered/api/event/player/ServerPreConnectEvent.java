@@ -50,11 +50,11 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         private static final ServerResult DENIED = new ServerResult(false, null);
 
         private final boolean allowed;
-        private final ServerInfo info;
+        private final ServerInfo server;
 
-        private ServerResult(boolean allowed, @Nullable ServerInfo info) {
+        private ServerResult(boolean allowed, @Nullable ServerInfo server) {
             this.allowed = allowed;
-            this.info = info;
+            this.server = server;
         }
 
         @Override
@@ -62,8 +62,8 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
             return allowed;
         }
 
-        public Optional<ServerInfo> getInfo() {
-            return Optional.ofNullable(info);
+        public Optional<ServerInfo> getServer() {
+            return Optional.ofNullable(server);
         }
 
         @Override
@@ -71,7 +71,7 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
             if (!allowed) {
                 return "denied";
             }
-            return "allowed: connect to " + info.getName();
+            return "allowed: connect to " + server.getName();
         }
 
         public static ServerResult denied() {
