@@ -159,7 +159,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
 
-                    if (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
+                    if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
