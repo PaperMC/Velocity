@@ -127,6 +127,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         minecraftConnection.write(login);
     }
 
+    public void writeIfJoined(PluginMessage message) {
+        if (hasCompletedJoin) {
+            minecraftConnection.write(message);
+        }
+    }
+
     public MinecraftConnection getMinecraftConnection() {
         return minecraftConnection;
     }
