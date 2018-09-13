@@ -56,7 +56,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     /**
      * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason allowed for denial.
      */
-    public static class PreLoginComponentResult implements Result {
+    public static class PreLoginComponentResult implements ResultedEvent.Result {
 
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult(Result.ALLOWED, null);
         private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(Result.FORCE_ONLINE, null);
