@@ -16,4 +16,5 @@ public interface Connections {
 
     int CLIENT_READ_TIMEOUT_SECONDS = 30; // client -> proxy
     int SERVER_READ_TIMEOUT_SECONDS = 30; // proxy -> server
+    int CONNECTION_TIMEOUT_SECONDS = 5;
 }

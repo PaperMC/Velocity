@@ -33,6 +33,7 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.Connections.CONNECTION_TIMEOUT_SECONDS;
 import static com.velocitypowered.proxy.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
@@ -56,7 +57,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
         server.initializeGenericBootstrap()
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, SERVER_READ_TIMEOUT_SECONDS * 1000)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_SECONDS * 1000)
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {

@@ -89,7 +89,7 @@ public final class ConnectionManager {
                         ch.pipeline().addLast(Connections.HANDLER, connection);
                     }
                 })
-                .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CLIENT_READ_TIMEOUT_SECONDS * 1000)
+                .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_SECONDS * 1000)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.IP_TOS, 0x18)
                 .localAddress(address);
