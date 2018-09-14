@@ -149,8 +149,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     }
 
     public void disconnect() {
-        minecraftConnection.close();
-        minecraftConnection = null;
+        if (minecraftConnection != null) {
+            minecraftConnection.close();
+            minecraftConnection = null;
+        }
     }
 
     @Override

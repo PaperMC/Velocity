@@ -32,7 +32,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.getMinecraftConnection().close();
+            connection.disconnect();
             return;
         }
 
@@ -99,7 +99,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.getMinecraftConnection().close();
+            connection.disconnect();
             return;
         }
 
