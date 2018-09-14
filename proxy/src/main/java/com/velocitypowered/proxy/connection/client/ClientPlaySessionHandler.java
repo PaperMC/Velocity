@@ -278,8 +278,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
-            // Ensure that the messages are forwarded
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+            // Ensure that the FML handshake is forwarded. Do not try to forward other client-side plugin messages, as
+            // some mods are poorly coded and will crash if mod packets are sent during the handshake/join game process.
+            if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                player.getConnectedServer().getMinecraftConnection().write(packet);
+            }
             return;
         }
 
