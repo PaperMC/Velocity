@@ -284,7 +284,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                         );
                     }
 
-                    return new VelocityServerConnection(newEvent.getResult().getInfo().get(), this, server).connect();
+                    return new VelocityServerConnection(newEvent.getResult().getServer().get(), this, server).connect();
                 });
     }
 
