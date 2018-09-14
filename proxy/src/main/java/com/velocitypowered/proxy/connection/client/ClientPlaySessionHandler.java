@@ -300,18 +300,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
                 ChannelSide.FROM_CLIENT, packet);
         if (status == MessageHandler.ForwardStatus.FORWARD) {
-            String channel = packet.getChannel();
-
-            // We're going to forward on the original packet.
-            //
-            // If we have Forge messages, we may need to drop them if the server switch has
-            // not completed yet.
-            if (channel.equals(VelocityConstants.FORGE_LEGACY_CHANNEL)
-                || channel.equals(VelocityConstants.FORGE_MULTIPART_LEGACY_CHANNEL)) {
-                player.getConnectedServer().writeIfJoined(packet);
-            } else {
-                player.getConnectedServer().getMinecraftConnection().write(packet);
-            }
+            player.getConnectedServer().writeIfJoined(packet);
         }
     }
 
