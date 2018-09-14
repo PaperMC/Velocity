@@ -34,6 +34,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
+    private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
     private final VelocityServer server;
 
     public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
@@ -163,7 +164,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
-        resetPingData(); // reset ping data;
+        resetPingData(); // reset ping data
         if (!spawned) {
             // Nothing special to do with regards to spawning the player
             spawned = true;
@@ -219,6 +220,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     "minecraft:register" : "REGISTER";
             player.getConnectedServer().getMinecraftConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
                     channel, toRegister));
+        }
+
+        // If we had plugin messages queued during login/FML handshake, send them now.
+        PluginMessage pm;
+        while ((pm = loginPluginMessages.poll()) != null) {
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(pm);
         }
 
         // Flush everything
@@ -278,10 +285,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
-            // Ensure that the FML handshake is forwarded. Do not try to forward other client-side plugin messages, as
-            // some mods are poorly coded and will crash if mod packets are sent during the handshake/join game process.
             if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                // Always forward the FML handshake to the remote server.
                 player.getConnectedServer().getMinecraftConnection().write(packet);
+            } else {
+                // The client is trying to send messages too early. This is primarily caused by mods, but it's further
+                // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
+                // be sent once the JoinGame packet has been received by the proxy.
+                loginPluginMessages.add(packet);
             }
             return;
         }
