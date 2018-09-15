@@ -55,6 +55,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
             if (keepAlive.getRandomId() != lastPingID) {
@@ -64,7 +70,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
             player.setPing(System.currentTimeMillis() - lastPingSent);
             resetPingData();
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+            serverConnection.getMinecraftConnection().write(packet);
             return;
         }
 
@@ -112,7 +118,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
                         player.getConnection().write(response);
                     } else {
-                        player.getConnectedServer().getMinecraftConnection().write(packet);
+                        serverConnection.getMinecraftConnection().write(packet);
                     }
                 } catch (Exception e) {
                     logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
@@ -127,15 +133,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        if (player.getConnectedServer().hasCompletedJoin()) {
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(packet);
         }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        if (player.getConnectedServer().hasCompletedJoin()) {
-            player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(buf.retain());
         }
     }
 
