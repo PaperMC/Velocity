@@ -14,11 +14,13 @@ import java.util.Optional;
  */
 public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEvent.ServerResult> {
     private final Player player;
+    private final ServerInfo originalServer;
     private ServerResult result;
 
-    public ServerPreConnectEvent(Player player, ServerResult result) {
+    public ServerPreConnectEvent(Player player, ServerInfo originalServer) {
         this.player = Preconditions.checkNotNull(player, "player");
-        this.result = Preconditions.checkNotNull(result, "result");
+        this.originalServer = Preconditions.checkNotNull(originalServer, "originalServer");
+        this.result = ServerResult.allowed(originalServer);
     }
 
     public Player getPlayer() {
@@ -35,10 +37,15 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
+    public ServerInfo getOriginalServer() {
+        return originalServer;
+    }
+
     @Override
     public String toString() {
         return "ServerPreConnectEvent{" +
                 "player=" + player +
+                ", originalServer=" + originalServer +
                 ", result=" + result +
                 '}';
     }

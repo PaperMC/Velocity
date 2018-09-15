@@ -275,7 +275,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
 
         // Otherwise, initiate the connection.
-        ServerPreConnectEvent event = new ServerPreConnectEvent(this, ServerPreConnectEvent.ServerResult.allowed(request.getServer()));
+        ServerPreConnectEvent event = new ServerPreConnectEvent(this, request.getServer());
         return server.getEventManager().fire(event)
                 .thenCompose((newEvent) -> {
                     if (!newEvent.getResult().isAllowed()) {
