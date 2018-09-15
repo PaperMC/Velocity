@@ -252,8 +252,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return serverBossBars;
     }
 
-    public void handleClientPluginMessage(PluginMessage packet) {
-        if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
+    private void handleClientPluginMessage(PluginMessage packet) {
+        if (PluginMessageUtil.isMCRegister(packet)) {
             List<String> actuallyRegistered = new ArrayList<>();
             List<String> channels = PluginMessageUtil.getChannels(packet);
             for (String channel : channels) {
@@ -270,21 +270,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                 player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }
-
-            return;
-        }
-
-        if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
+        } else if (PluginMessageUtil.isMCUnregister(packet)) {
             List<String> channels = PluginMessageUtil.getChannels(packet);
             clientPluginMsgChannels.removeAll(channels);
-        }
-
-        if (PluginMessageUtil.isMCBrand(packet)) {
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        } else if (PluginMessageUtil.isMCBrand(packet)) {
             player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-            return;
-        }
-
-        if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
+        } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
             if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
                 // Always forward the FML handshake to the remote server.
                 player.getConnectedServer().getMinecraftConnection().write(packet);
@@ -294,13 +286,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 // be sent once the JoinGame packet has been received by the proxy.
                 loginPluginMessages.add(packet);
             }
-            return;
-        }
-
-        MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
-                ChannelSide.FROM_CLIENT, packet);
-        if (status == MessageHandler.ForwardStatus.FORWARD) {
-            player.getConnectedServer().writeIfJoined(packet);
+        } else {
+            MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
+                    ChannelSide.FROM_CLIENT, packet);
+            if (status == MessageHandler.ForwardStatus.FORWARD) {
+                player.getConnectedServer().writeIfJoined(packet);
+            }
         }
     }
 
