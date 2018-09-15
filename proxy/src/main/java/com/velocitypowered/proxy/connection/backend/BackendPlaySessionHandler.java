@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.MessageHandler;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
@@ -44,6 +45,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             connection.getPlayer().getConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
+            connection.disconnect();
             connection.getPlayer().handleConnectionException(connection.getServerInfo(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
@@ -111,6 +113,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void exception(Throwable throwable) {
         connection.getPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+    }
+
+    public VelocityServer getServer() {
+        return server;
+    }
+
+    @Override
+    public void disconnected() {
+        if (connection.isGracefulDisconnect()) {
+            return;
+        }
+        connection.getPlayer().handleConnectionException(connection.getServerInfo(), Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT));
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {

@@ -205,14 +205,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
         if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
             logger.error("{}: kicked from server {}: {}", this, info.getName(), plainTextReason);
+            handleConnectionException(info, disconnectReason, TextComponent.builder()
+                    .content("Kicked from " + info.getName() + ": ")
+                    .color(TextColor.RED)
+                    .append(disconnectReason)
+                    .build());
         } else {
             logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), plainTextReason);
+            handleConnectionException(info, disconnectReason, TextComponent.builder()
+                    .content("Unable to connect to " + info.getName() + ": ")
+                    .color(TextColor.RED)
+                    .append(disconnectReason)
+                    .build());
         }
-        handleConnectionException(info, disconnectReason, TextComponent.builder()
-                .content("Unable to connect to " + info.getName() + ": ")
-                .color(TextColor.RED)
-                .append(disconnectReason)
-                .build());
     }
 
     private void handleConnectionException(ServerInfo info, @Nullable Component kickReason, Component friendlyReason) {

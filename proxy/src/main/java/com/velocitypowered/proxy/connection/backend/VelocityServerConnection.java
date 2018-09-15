@@ -44,6 +44,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     private MinecraftConnection minecraftConnection;
     private boolean legacyForge = false;
     private boolean hasCompletedJoin = false;
+    private boolean gracefulDisconnect = false;
 
     public VelocityServerConnection(ServerInfo target, ConnectedPlayer proxyPlayer, VelocityServer server) {
         this.serverInfo = target;
@@ -148,6 +149,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         if (minecraftConnection != null) {
             minecraftConnection.close();
             minecraftConnection = null;
+            gracefulDisconnect = true;
         }
     }
 
@@ -180,5 +182,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     public void setHasCompletedJoin(boolean hasCompletedJoin) {
         this.hasCompletedJoin = hasCompletedJoin;
+    }
+
+    public boolean isGracefulDisconnect() {
+        return gracefulDisconnect;
     }
 }
