@@ -273,6 +273,14 @@ public class VelocityConfiguration extends AnnotatedConfig {
         return announceForge;
     }
 
+    public int getConnectTimeout() {
+        return advanced.getConnectionTimeout();
+    }
+
+    public int getReadTimeout() {
+        return advanced.getReadTimeout();
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -420,14 +428,14 @@ public class VelocityConfiguration extends AnnotatedConfig {
             "Disable by setting to 0"})
         @ConfigKey("login-ratelimit")
         private int loginRatelimit = 3000;
+        @Comment({"Specify a custom timeout for connection timeouts here. The default is five seconds."})
+        @ConfigKey("connection-timeout")
+        private int connectionTimeout = 5000;
+        @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
+        @ConfigKey("read-timeout")
+        private int readTimeout = 30000;
 
         private Advanced() {
-        }
-
-        private Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit) {
-            this.compressionThreshold = compressionThreshold;
-            this.compressionLevel = compressionLevel;
-            this.loginRatelimit = loginRatelimit;
         }
 
         private Advanced(Toml toml) {
@@ -435,6 +443,8 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
                 this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
                 this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
+                this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
+                this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
             }
         }
 
@@ -442,33 +452,31 @@ public class VelocityConfiguration extends AnnotatedConfig {
             return compressionThreshold;
         }
 
-        public void setCompressionThreshold(int compressionThreshold) {
-            this.compressionThreshold = compressionThreshold;
-        }
-
         public int getCompressionLevel() {
             return compressionLevel;
-        }
-
-        public void setCompressionLevel(int compressionLevel) {
-            this.compressionLevel = compressionLevel;
         }
 
         public int getLoginRatelimit() {
             return loginRatelimit;
         }
 
-        public void setLoginRatelimit(int loginRatelimit) {
-            this.loginRatelimit = loginRatelimit;
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public int getReadTimeout() {
+            return readTimeout;
         }
 
         @Override
         public String toString() {
-            return "Advanced{"
-                    + "compressionThreshold=" + compressionThreshold
-                    + ", compressionLevel=" + compressionLevel
-                    + ", loginRatelimit=" + loginRatelimit
-                    + '}';
+            return "Advanced{" +
+                    "compressionThreshold=" + compressionThreshold +
+                    ", compressionLevel=" + compressionLevel +
+                    ", loginRatelimit=" + loginRatelimit +
+                    ", connectionTimeout=" + connectionTimeout +
+                    ", readTimeout=" + readTimeout +
+                    '}';
         }
     }
 
@@ -500,16 +508,8 @@ public class VelocityConfiguration extends AnnotatedConfig {
             return queryEnabled;
         }
 
-        public void setQueryEnabled(boolean queryEnabled) {
-            this.queryEnabled = queryEnabled;
-        }
-
         public int getQueryPort() {
             return queryPort;
-        }
-
-        public void setQueryPort(int queryPort) {
-            this.queryPort = queryPort;
         }
 
         @Override

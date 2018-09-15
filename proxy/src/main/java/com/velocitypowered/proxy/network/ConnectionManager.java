@@ -75,7 +75,7 @@ public final class ConnectionManager {
                     @Override
                     protected void initChannel(final Channel ch) {
                         ch.pipeline()
-                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(CLIENT_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(), TimeUnit.SECONDS))
                                 .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
@@ -89,7 +89,6 @@ public final class ConnectionManager {
                         ch.pipeline().addLast(Connections.HANDLER, connection);
                     }
                 })
-                .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_SECONDS * 1000)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.IP_TOS, 0x18)
                 .localAddress(address);
@@ -126,7 +125,9 @@ public final class ConnectionManager {
     public Bootstrap createWorker() {
         return new Bootstrap()
                 .channel(this.transportType.socketChannelClass)
-                .group(this.workerGroup);
+                .group(this.workerGroup)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, server.getConfiguration().getConnectTimeout());
     }
 
     public void shutdown() {

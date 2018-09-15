@@ -33,8 +33,6 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
-import static com.velocitypowered.proxy.network.Connections.CONNECTION_TIMEOUT_SECONDS;
-import static com.velocitypowered.proxy.network.Connections.SERVER_READ_TIMEOUT_SECONDS;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
     static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
@@ -56,13 +54,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
         CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
         server.initializeGenericBootstrap()
-                .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_SECONDS * 1000)
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
                         ch.pipeline()
-                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(SERVER_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(), TimeUnit.SECONDS))
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
