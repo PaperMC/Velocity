@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol;
 
+import com.google.common.base.Strings;
 import com.google.common.primitives.ImmutableIntArray;
 import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
@@ -258,9 +259,18 @@ public enum StateRegistry {
 
             @Override
             public String toString() {
+                StringBuilder mappingAsString = new StringBuilder("{");
+                for (Object2IntMap.Entry<Class<? extends MinecraftPacket>> entry : packetClassToId.object2IntEntrySet()) {
+                    mappingAsString.append(entry.getKey().getSimpleName()).append(" -> ")
+                            .append("0x")
+                            .append(Strings.padStart(Integer.toHexString(entry.getIntValue()), 2, '0'))
+                            .append(", ");
+                }
+                mappingAsString.setLength(mappingAsString.length() - 2);
+                mappingAsString.append("}");
                 return "ProtocolVersion{" +
                         "id=" + id +
-                        ", packetClassToId=" + packetClassToId +
+                        ", packetClassToId=" + mappingAsString.toString() +
                         '}';
             }
         }

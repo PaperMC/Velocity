@@ -14,8 +14,11 @@ compileTestJava {
 
 jar {
     manifest {
+        def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"
+        def version = "${project.version} (git-${project.ext.getCurrentShortRevision()}, build ${buildNumber})"
+
         attributes 'Main-Class': 'com.velocitypowered.proxy.Velocity'
-        attributes 'Implementation-Version': project.version
+        attributes 'Implementation-Version': version
     }
 }
 

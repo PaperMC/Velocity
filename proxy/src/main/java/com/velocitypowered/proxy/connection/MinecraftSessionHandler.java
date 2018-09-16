@@ -29,4 +29,8 @@ public interface MinecraftSessionHandler {
     default void exception(Throwable throwable) {
 
     }
+
+    default void writabilityChanged() {
+
+    }
 }

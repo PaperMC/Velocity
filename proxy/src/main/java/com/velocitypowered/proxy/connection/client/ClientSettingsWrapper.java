@@ -12,7 +12,7 @@ public class ClientSettingsWrapper implements PlayerSettings {
     private final SkinParts parts;
     private Locale locale = null;
 
-    public ClientSettingsWrapper(ClientSettings settings) {
+    ClientSettingsWrapper(ClientSettings settings) {
         this.settings = settings;
         this.parts = new SkinParts((byte) settings.getSkinParts());
     }

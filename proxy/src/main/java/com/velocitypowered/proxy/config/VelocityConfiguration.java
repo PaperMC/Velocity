@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.config;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.util.Favicon;
@@ -48,7 +49,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @Comment({
         "Should we forward IP addresses and other data to backend servers?",
         "Available options:",
-        "- \"none\":   No forwarding will be done. All players will appear to be Should we forward IP addresses and other data to backend servers?connecting from the proxy",
+        "- \"none\":   No forwarding will be done. All players will appear to be connecting from the proxy",
         "            and will have offline-mode UUIDs.",
         "- \"legacy\": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run",
         "            servers using Minecraft 1.12 or lower.",
@@ -61,6 +62,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
     @ConfigKey("forwarding-secret")
     private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
+
+    @Comment("Announce whether or not your server supports Forge/FML. If you run a modded server, we suggest turning this on.")
+    @ConfigKey("announce-forge")
+    private boolean announceForge = false;
 
     @Table("[servers]")
     private final Servers servers;
@@ -83,12 +88,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
     }
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
-            PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret, Servers servers,
-            Advanced advanced, Query query) {
+            boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
+            Servers servers, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
         this.onlineMode = onlineMode;
+        this.announceForge = announceForge;
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
         this.servers = servers;
@@ -103,13 +109,13 @@ public class VelocityConfiguration extends AnnotatedConfig {
         if (bind.isEmpty()) {
             logger.error("'bind' option is empty.");
             valid = false;
-        }
-
-        try {
-            AddressUtil.parseAddress(bind);
-        } catch (IllegalArgumentException e) {
-            logger.error("'bind' option does not specify a valid IP address.", e);
-            valid = false;
+        } else {
+            try {
+                AddressUtil.parseAddress(bind);
+            } catch (IllegalArgumentException e) {
+                logger.error("'bind' option does not specify a valid IP address.", e);
+                valid = false;
+            }
         }
 
         if (!onlineMode) {
@@ -118,11 +124,11 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
         switch (playerInfoForwardingMode) {
             case NONE:
-                logger.info("Player info forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
+                logger.warn("Player info forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
                 break;
             case MODERN:
-                if (forwardingSecret.length == 0) {
-                    logger.error("You don't have a forwarding secret set.");
+                if (forwardingSecret == null || forwardingSecret.length == 0) {
+                    logger.error("You don't have a forwarding secret set. This is required for security.");
                     valid = false;
                 }
                 break;
@@ -148,7 +154,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
 
             for (String s : servers.getAttemptConnectionOrder()) {
                 if (!servers.getServers().containsKey(s)) {
-                    logger.error("Fallback server " + s + " doesn't exist!");
+                    logger.error("Fallback server " + s + " is not registered in your configuration!");
                     valid = false;
                 }
             }
@@ -165,18 +171,18 @@ public class VelocityConfiguration extends AnnotatedConfig {
             logger.error("Invalid compression level {}", advanced.compressionLevel);
             valid = false;
         } else if (advanced.compressionLevel == 0) {
-            logger.warn("ALL packets going through the proxy are going to be uncompressed. This will increase bandwidth usage.");
+            logger.warn("ALL packets going through the proxy will be uncompressed. This will increase bandwidth usage.");
         }
 
         if (advanced.compressionThreshold < -1) {
             logger.error("Invalid compression threshold {}", advanced.compressionLevel);
             valid = false;
         } else if (advanced.compressionThreshold == 0) {
-            logger.warn("ALL packets going through the proxy are going to be compressed. This may hurt performance.");
+            logger.warn("ALL packets going through the proxy will be compressed. This will compromise throughput and increase CPU usage!");
         }
 
         if (advanced.loginRatelimit < 0) {
-            logger.error("Invalid login ratelimit {}", advanced.loginRatelimit);
+            logger.error("Invalid login ratelimit {}ms", advanced.loginRatelimit);
             valid = false;
         }
 
@@ -217,7 +223,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
             if (motd.startsWith("{")) {
                 motdAsComponent = ComponentSerializers.JSON.deserialize(motd);
             } else {
-                motdAsComponent = ComponentSerializers.LEGACY.deserialize(LegacyChatColorUtils.translate('&', motd));
+                motdAsComponent = ComponentSerializers.LEGACY.deserialize(motd, '&');
             }
         }
         return motdAsComponent;
@@ -263,54 +269,34 @@ public class VelocityConfiguration extends AnnotatedConfig {
         return favicon;
     }
 
-    private void setBind(String bind) {
-        this.bind = bind;
+    public boolean isAnnounceForge() {
+        return announceForge;
     }
 
-    private void setMotd(String motd) {
-        this.motd = motd;
+    public int getConnectTimeout() {
+        return advanced.getConnectionTimeout();
     }
 
-    private void setShowMaxPlayers(int showMaxPlayers) {
-        this.showMaxPlayers = showMaxPlayers;
-    }
-
-    private void setOnlineMode(boolean onlineMode) {
-        this.onlineMode = onlineMode;
-    }
-
-    private void setPlayerInfoForwardingMode(PlayerInfoForwarding playerInfoForwardingMode) {
-        this.playerInfoForwardingMode = playerInfoForwardingMode;
-    }
-
-    private void setForwardingSecret(byte[] forwardingSecret) {
-        this.forwardingSecret = forwardingSecret;
-    }
-
-    private void setMotdAsComponent(Component motdAsComponent) {
-        this.motdAsComponent = motdAsComponent;
-    }
-
-    private void setFavicon(Favicon favicon) {
-        this.favicon = favicon;
+    public int getReadTimeout() {
+        return advanced.getReadTimeout();
     }
 
     @Override
     public String toString() {
-
-        return "VelocityConfiguration{"
-                + "bind='" + bind + '\''
-                + ", motd='" + motd + '\''
-                + ", showMaxPlayers=" + showMaxPlayers
-                + ", onlineMode=" + onlineMode
-                + ", playerInfoForwardingMode=" + playerInfoForwardingMode
-                + ", forwardingSecret=" + ByteBufUtil.hexDump(forwardingSecret)
-                + ", servers=" + servers
-                + ", advanced=" + advanced
-                + ", query=" + query
-                + ", motdAsComponent=" + motdAsComponent
-                + ", favicon=" + favicon
-                + '}';
+        return MoreObjects.toStringHelper(this)
+                .add("configVersion", configVersion)
+                .add("bind", bind)
+                .add("motd", motd)
+                .add("showMaxPlayers", showMaxPlayers)
+                .add("onlineMode", onlineMode)
+                .add("playerInfoForwardingMode", playerInfoForwardingMode)
+                .add("forwardingSecret", forwardingSecret)
+                .add("announceForge", announceForge)
+                .add("servers", servers)
+                .add("advanced", advanced)
+                .add("query", query)
+                .add("favicon", favicon)
+                .toString();
     }
 
     public static VelocityConfiguration read(Path path) throws IOException {
@@ -335,6 +321,7 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
                 toml.getBoolean("online-mode", true),
+                toml.getBoolean("announce-forge", false),
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
                 servers,
@@ -441,14 +428,14 @@ public class VelocityConfiguration extends AnnotatedConfig {
             "Disable by setting to 0"})
         @ConfigKey("login-ratelimit")
         private int loginRatelimit = 3000;
+        @Comment({"Specify a custom timeout for connection timeouts here. The default is five seconds."})
+        @ConfigKey("connection-timeout")
+        private int connectionTimeout = 5000;
+        @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
+        @ConfigKey("read-timeout")
+        private int readTimeout = 30000;
 
         private Advanced() {
-        }
-
-        private Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit) {
-            this.compressionThreshold = compressionThreshold;
-            this.compressionLevel = compressionLevel;
-            this.loginRatelimit = loginRatelimit;
         }
 
         private Advanced(Toml toml) {
@@ -456,6 +443,8 @@ public class VelocityConfiguration extends AnnotatedConfig {
                 this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
                 this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
                 this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
+                this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
+                this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
             }
         }
 
@@ -463,33 +452,31 @@ public class VelocityConfiguration extends AnnotatedConfig {
             return compressionThreshold;
         }
 
-        public void setCompressionThreshold(int compressionThreshold) {
-            this.compressionThreshold = compressionThreshold;
-        }
-
         public int getCompressionLevel() {
             return compressionLevel;
-        }
-
-        public void setCompressionLevel(int compressionLevel) {
-            this.compressionLevel = compressionLevel;
         }
 
         public int getLoginRatelimit() {
             return loginRatelimit;
         }
 
-        public void setLoginRatelimit(int loginRatelimit) {
-            this.loginRatelimit = loginRatelimit;
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public int getReadTimeout() {
+            return readTimeout;
         }
 
         @Override
         public String toString() {
-            return "Advanced{"
-                    + "compressionThreshold=" + compressionThreshold
-                    + ", compressionLevel=" + compressionLevel
-                    + ", loginRatelimit=" + loginRatelimit
-                    + '}';
+            return "Advanced{" +
+                    "compressionThreshold=" + compressionThreshold +
+                    ", compressionLevel=" + compressionLevel +
+                    ", loginRatelimit=" + loginRatelimit +
+                    ", connectionTimeout=" + connectionTimeout +
+                    ", readTimeout=" + readTimeout +
+                    '}';
         }
     }
 
@@ -521,16 +508,8 @@ public class VelocityConfiguration extends AnnotatedConfig {
             return queryEnabled;
         }
 
-        public void setQueryEnabled(boolean queryEnabled) {
-            this.queryEnabled = queryEnabled;
-        }
-
         public int getQueryPort() {
             return queryPort;
-        }
-
-        public void setQueryPort(int queryPort) {
-            this.queryPort = queryPort;
         }
 
         @Override

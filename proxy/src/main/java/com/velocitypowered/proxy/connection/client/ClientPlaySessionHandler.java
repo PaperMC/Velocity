@@ -3,6 +3,8 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
@@ -23,7 +25,7 @@ import java.util.*;
  */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
-    private static final int MAX_PLUGIN_CHANNELS = 128;
+    private static final int MAX_PLUGIN_CHANNELS = 1024;
 
     private final ConnectedPlayer player;
     private long lastPingID = -1;
@@ -31,6 +33,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
+    private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
     private final VelocityServer server;
 
     public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
@@ -51,6 +54,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
             if (keepAlive.getRandomId() != lastPingID) {
@@ -60,6 +69,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
             player.setPing(System.currentTimeMillis() - lastPingSent);
             resetPingData();
+            serverConnection.getMinecraftConnection().write(packet);
+            return;
         }
 
         if (packet instanceof ClientSettings) {
@@ -106,7 +117,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
                         player.getConnection().write(response);
                     } else {
-                        player.getConnectedServer().getMinecraftConnection().write(packet);
+                        serverConnection.getMinecraftConnection().write(packet);
                     }
                 } catch (Exception e) {
                     logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
@@ -121,12 +132,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        player.getConnectedServer().getMinecraftConnection().write(packet);
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(packet);
+        }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(buf.retain());
+        }
     }
 
     @Override
@@ -144,12 +165,31 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 .build());
     }
 
+    @Override
+    public void writabilityChanged() {
+        VelocityServerConnection server = player.getConnectedServer();
+        if (server != null) {
+            boolean writable = player.getConnection().getChannel().isWritable();
+            server.getMinecraftConnection().getChannel().config().setAutoRead(writable);
+        }
+    }
+
     public void handleBackendJoinGame(JoinGame joinGame) {
-        resetPingData(); // reset ping data;
+        resetPingData(); // reset ping data
         if (!spawned) {
-            // nothing special to do here
+            // Nothing special to do with regards to spawning the player
             spawned = true;
             player.getConnection().delayedWrite(joinGame);
+
+            // We have something special to do for legacy Forge servers - during first connection the FML handshake
+            // will transition to complete regardless. Thus, we need to ensure that a reset packet is ALWAYS sent on
+            // first switch.
+            //
+            // As we know that calling this branch only happens on first join, we set that if we are a Forge
+            // client that we must reset on the next switch.
+            //
+            // The call will handle if the player is not a Forge player appropriately.
+            player.getConnection().setCanSendLegacyFMLResetPacket(true);
         } else {
             // Ah, this is the meat and potatoes of the whole venture!
             //
@@ -193,17 +233,38 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     channel, toRegister));
         }
 
+        // If we had plugin messages queued during login/FML handshake, send them now.
+        PluginMessage pm;
+        while ((pm = loginPluginMessages.poll()) != null) {
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(pm);
+        }
+
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
+        player.getConnectedServer().setHasCompletedJoin(true);
+        if (player.getConnectedServer().isLegacyForge()) {
+            // We only need to indicate we can send a reset packet if we complete a handshake, that is,
+            // logged onto a Forge server.
+            //
+            // The special case is if we log onto a Vanilla server as our first server, FML will treat this
+            // as complete and **will** need a reset packet sending at some point. We will handle this
+            // during initial player connection if the player is detected to be forge.
+            //
+            // This is why we use an if statement rather than the result of VelocityServerConnection#isLegacyForge()
+            // because we don't want to set it false if this is a first connection to a Vanilla server.
+            //
+            // See LoginSessionHandler#handle for where the counterpart to this method is
+            player.getConnection().setCanSendLegacyFMLResetPacket(true);
+        }
     }
 
     public List<UUID> getServerBossBars() {
         return serverBossBars;
     }
 
-    public void handleClientPluginMessage(PluginMessage packet) {
-        if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
+    private void handleClientPluginMessage(PluginMessage packet) {
+        if (PluginMessageUtil.isMCRegister(packet)) {
             List<String> actuallyRegistered = new ArrayList<>();
             List<String> channels = PluginMessageUtil.getChannels(packet);
             for (String channel : channels) {
@@ -220,28 +281,32 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                 player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }
-
-            return;
-        }
-
-        if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
+        } else if (PluginMessageUtil.isMCUnregister(packet)) {
             List<String> channels = PluginMessageUtil.getChannels(packet);
             clientPluginMsgChannels.removeAll(channels);
-        }
-
-        if (PluginMessageUtil.isMCBrand(packet)) {
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        } else if (PluginMessageUtil.isMCBrand(packet)) {
             player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-            return;
+        } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
+            if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                // Always forward the FML handshake to the remote server.
+                player.getConnectedServer().getMinecraftConnection().write(packet);
+            } else {
+                // The client is trying to send messages too early. This is primarily caused by mods, but it's further
+                // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
+                // be sent once the JoinGame packet has been received by the proxy.
+                loginPluginMessages.add(packet);
+            }
+        } else {
+            PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(),
+                    server.getChannelRegistrar().getFromId(packet.getChannel()), packet.getData());
+            server.getEventManager().fire(event)
+                    .thenAcceptAsync(pme -> {
+                        if (pme.getResult().isAllowed()) {
+                            player.getConnectedServer().getMinecraftConnection().write(packet);
+                        }
+                    }, player.getConnectedServer().getMinecraftConnection().getChannel().eventLoop());
         }
-
-        PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(),
-                server.getChannelRegistrar().getFromId(packet.getChannel()), packet.getData());
-        server.getEventManager().fire(event)
-                .thenAcceptAsync(pme -> {
-                    if (pme.getResult().isAllowed()) {
-                        player.getConnectedServer().getMinecraftConnection().write(packet);
-                    }
-                }, player.getConnectedServer().getMinecraftConnection().getChannel().eventLoop());
     }
 
     public Set<String> getClientPluginMsgChannels() {

@@ -2,12 +2,14 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -31,11 +33,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
     private static final String MOJANG_SERVER_AUTH_URL =
             "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
@@ -154,7 +159,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
 
-                    if (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed()) {
+                    if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
                         // Request encryption.
                         EncryptionRequest request = generateRequest();
                         this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -176,6 +181,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void initializePlayer(GameProfile profile, boolean onlineMode) {
+        if (inbound.isLegacyForge() && server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+            // We want to add the FML token to the properties
+            List<GameProfile.Property> properties = new ArrayList<>(profile.getProperties());
+            properties.add(new GameProfile.Property("forgeClient", "true", ""));
+            profile = new GameProfile(profile.getId(), profile.getName(), properties);
+        }
         GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile, onlineMode);
 
         server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
@@ -235,7 +246,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
         logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        player.createConnectionRequest(toTry.get()).fireAndForget();
+        server.getEventManager().fire(new PostLoginEvent(player)).thenRun(() -> {
+            player.createConnectionRequest(toTry.get()).fireAndForget();
+        });
     }
 
     @Override

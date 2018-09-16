@@ -13,7 +13,4 @@ public interface Connections {
     String MINECRAFT_DECODER = "minecraft-decoder";
     String MINECRAFT_ENCODER = "minecraft-encoder";
     String READ_TIMEOUT = "read-timeout";
-
-    int CLIENT_READ_TIMEOUT_SECONDS = 30; // client -> proxy
-    int SERVER_READ_TIMEOUT_SECONDS = 30; // proxy -> server
 }

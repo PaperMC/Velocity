@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
@@ -14,6 +15,7 @@ import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.api.util.GameProfile;
@@ -36,6 +38,7 @@ import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -190,7 +193,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             logger.error("{}: unable to connect to server {}", this, info.getName(), throwable);
             userMessage = "Exception connecting to server " + info.getName();
         }
-        handleConnectionException(info, TextComponent.builder()
+        handleConnectionException(info, null, TextComponent.builder()
                 .content(userMessage + ": ")
                 .color(TextColor.RED)
                 .append(TextComponent.of(error, TextColor.WHITE))
@@ -202,17 +205,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
         if (connectedServer != null && connectedServer.getServerInfo().equals(info)) {
             logger.error("{}: kicked from server {}: {}", this, info.getName(), plainTextReason);
+            handleConnectionException(info, disconnectReason, TextComponent.builder()
+                    .content("Kicked from " + info.getName() + ": ")
+                    .color(TextColor.RED)
+                    .append(disconnectReason)
+                    .build());
         } else {
             logger.error("{}: disconnected while connecting to {}: {}", this, info.getName(), plainTextReason);
+            handleConnectionException(info, disconnectReason, TextComponent.builder()
+                    .content("Unable to connect to " + info.getName() + ": ")
+                    .color(TextColor.RED)
+                    .append(disconnectReason)
+                    .build());
         }
-        handleConnectionException(info, TextComponent.builder()
-                .content("Unable to connect to " + info.getName() + ": ")
-                .color(TextColor.RED)
-                .append(disconnectReason)
-                .build());
     }
 
-    public void handleConnectionException(ServerInfo info, Component disconnectReason) {
+    private void handleConnectionException(ServerInfo info, @Nullable Component kickReason, Component friendlyReason) {
+        boolean alreadyConnected = connectedServer != null && connectedServer.getServerInfo().equals(info);;
         connectionInFlight = null;
         if (connectedServer == null) {
             // The player isn't yet connected to a server.
@@ -220,14 +229,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (nextServer.isPresent()) {
                 createConnectionRequest(nextServer.get()).fireAndForget();
             } else {
-                connection.closeWith(Disconnect.create(disconnectReason));
+                connection.closeWith(Disconnect.create(friendlyReason));
             }
         } else if (connectedServer.getServerInfo().equals(info)) {
             // Already connected to the server being disconnected from.
-            // TODO: ServerKickEvent
-            connection.closeWith(Disconnect.create(disconnectReason));
+            if (kickReason != null) {
+                server.getEventManager().fire(new KickedFromServerEvent(this, info, kickReason, !alreadyConnected, friendlyReason))
+                        .thenAcceptAsync(event -> {
+                            if (event.getResult() instanceof KickedFromServerEvent.DisconnectPlayer) {
+                                KickedFromServerEvent.DisconnectPlayer res = (KickedFromServerEvent.DisconnectPlayer) event.getResult();
+                                connection.closeWith(Disconnect.create(res.getReason()));
+                            } else if (event.getResult() instanceof KickedFromServerEvent.RedirectPlayer) {
+                                KickedFromServerEvent.RedirectPlayer res = (KickedFromServerEvent.RedirectPlayer) event.getResult();
+                                createConnectionRequest(res.getServer()).fireAndForget();
+                            } else {
+                                // In case someone gets creative, assume we want to disconnect the player.
+                                connection.closeWith(Disconnect.create(friendlyReason));
+                            }
+                        }, connection.getChannel().eventLoop());
+            } else {
+                connection.closeWith(Disconnect.create(friendlyReason));
+            }
         } else {
-            connection.write(Chat.create(disconnectReason));
+            connection.write(Chat.create(friendlyReason));
         }
     }
 
@@ -256,7 +280,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
 
         // Otherwise, initiate the connection.
-        ServerPreConnectEvent event = new ServerPreConnectEvent(this, ServerPreConnectEvent.ServerResult.allowed(request.getServer()));
+        ServerPreConnectEvent event = new ServerPreConnectEvent(this, request.getServer());
         return server.getEventManager().fire(event)
                 .thenCompose((newEvent) -> {
                     if (!newEvent.getResult().isAllowed()) {
@@ -265,7 +289,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                         );
                     }
 
-                    return new VelocityServerConnection(newEvent.getResult().getInfo().get(), this, server).connect();
+                    return new VelocityServerConnection(newEvent.getResult().getServer().get(), this, server).connect();
                 });
     }
 
@@ -274,6 +298,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             this.tryIndex = 0;
         }
         this.connectedServer = serverConnection;
+    }
+
+    public void sendLegacyForgeHandshakeResetPacket() {
+        if (connection.canSendLegacyFMLResetPacket()) {
+            PluginMessage resetPacket = new PluginMessage();
+            resetPacket.setChannel(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+            resetPacket.setData(VelocityConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
+            connection.write(resetPacket);
+            connection.setCanSendLegacyFMLResetPacket(false);
+        }
     }
 
     public void close(TextComponent reason) {

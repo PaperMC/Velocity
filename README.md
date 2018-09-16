@@ -44,5 +44,4 @@ is not currently suitable for production usage. For development and testing
 purposes, however, Velocity is fully-fledged and ready to go.
 
 Velocity supports Minecraft 1.8-1.13.1, and has full support for Paper and Sponge.
-Forge support is currently not implemented, but Velocity will work with Forge's
-vanilla fallback mode.
+Forge is fully supported but mod compatibility may vary.

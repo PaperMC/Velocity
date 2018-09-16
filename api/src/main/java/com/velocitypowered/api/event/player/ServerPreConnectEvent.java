@@ -14,11 +14,13 @@ import java.util.Optional;
  */
 public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEvent.ServerResult> {
     private final Player player;
+    private final ServerInfo originalServer;
     private ServerResult result;
 
-    public ServerPreConnectEvent(Player player, ServerResult result) {
+    public ServerPreConnectEvent(Player player, ServerInfo originalServer) {
         this.player = Preconditions.checkNotNull(player, "player");
-        this.result = Preconditions.checkNotNull(result, "result");
+        this.originalServer = Preconditions.checkNotNull(originalServer, "originalServer");
+        this.result = ServerResult.allowed(originalServer);
     }
 
     public Player getPlayer() {
@@ -35,10 +37,15 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
+    public ServerInfo getOriginalServer() {
+        return originalServer;
+    }
+
     @Override
     public String toString() {
         return "ServerPreConnectEvent{" +
                 "player=" + player +
+                ", originalServer=" + originalServer +
                 ", result=" + result +
                 '}';
     }
@@ -50,11 +57,11 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
         private static final ServerResult DENIED = new ServerResult(false, null);
 
         private final boolean allowed;
-        private final ServerInfo info;
+        private final ServerInfo server;
 
-        private ServerResult(boolean allowed, @Nullable ServerInfo info) {
+        private ServerResult(boolean allowed, @Nullable ServerInfo server) {
             this.allowed = allowed;
-            this.info = info;
+            this.server = server;
         }
 
         @Override
@@ -62,8 +69,8 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
             return allowed;
         }
 
-        public Optional<ServerInfo> getInfo() {
-            return Optional.ofNullable(info);
+        public Optional<ServerInfo> getServer() {
+            return Optional.ofNullable(server);
         }
 
         @Override
@@ -71,7 +78,7 @@ public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEven
             if (!allowed) {
                 return "denied";
             }
-            return "allowed: connect to " + info.getName();
+            return "allowed: connect to " + server.getName();
         }
 
         public static ServerResult denied() {

@@ -45,7 +45,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
     private MinecraftConnectionAssociation association;
+    private boolean isLegacyForge;
     private final VelocityServer server;
+    private boolean canSendLegacyFMLResetPacket = false;
 
     public MinecraftConnection(Channel channel, VelocityServer server) {
         this.channel = channel;
@@ -102,6 +104,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             }
 
             ctx.close();
+        }
+    }
+
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        if (sessionHandler != null) {
+            sessionHandler.writabilityChanged();
         }
     }
 
@@ -221,5 +230,21 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setAssociation(MinecraftConnectionAssociation association) {
         this.association = association;
+    }
+
+    public boolean isLegacyForge() {
+        return isLegacyForge;
+    }
+
+    public void setLegacyForge(boolean isForge) {
+        this.isLegacyForge = isForge;
+    }
+
+    public boolean canSendLegacyFMLResetPacket() {
+        return canSendLegacyFMLResetPacket;
+    }
+
+    public void setCanSendLegacyFMLResetPacket(boolean canSendLegacyFMLResetPacket) {
+        this.canSendLegacyFMLResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
     }
 }

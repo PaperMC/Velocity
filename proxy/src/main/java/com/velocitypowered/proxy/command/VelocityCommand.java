@@ -29,7 +29,7 @@ public class VelocityCommand implements Command {
                 .append(TextComponent.of(" or the ").resetStyle())
                 .append(TextComponent.builder("Velocity GitHub")
                         .color(TextColor.GREEN)
-                        .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/astei/velocity"))
+                        .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/VelocityPowered/Velocity"))
                         .build())
                 .build();
 

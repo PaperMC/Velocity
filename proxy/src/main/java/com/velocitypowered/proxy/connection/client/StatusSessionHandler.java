@@ -48,7 +48,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                 new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                 configuration.getMotdComponent(),
-                configuration.getFavicon()
+                configuration.getFavicon(),
+                configuration.isAnnounceForge() ? ServerPing.Modinfo.DEFAULT : null
         );
 
         ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
