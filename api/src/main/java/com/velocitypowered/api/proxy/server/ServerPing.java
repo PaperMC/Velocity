@@ -74,6 +74,7 @@ public class ServerPing {
         builder.favicon = favicon;
         builder.nullOutModinfo = modinfo == null;
         if (modinfo != null) {
+            builder.modType = modinfo.type;
             builder.mods.addAll(modinfo.modList);
         }
         return builder;
@@ -91,6 +92,7 @@ public class ServerPing {
         private int onlinePlayers;
         private int maximumPlayers;
         private final List<SamplePlayer> samplePlayers = new ArrayList<>();
+        private String modType;
         private final List<Mod> mods = new ArrayList<>();
         private Component description;
         private Favicon favicon;
@@ -118,6 +120,11 @@ public class ServerPing {
 
         public Builder samplePlayers(SamplePlayer... players) {
             this.samplePlayers.addAll(Arrays.asList(players));
+            return this;
+        }
+
+        public Builder modType(String modType) {
+            this.modType = Preconditions.checkNotNull(modType, "modType");
             return this;
         }
 
@@ -158,7 +165,7 @@ public class ServerPing {
 
         public ServerPing build() {
             return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon,
-                    nullOutModinfo ? null : new Modinfo(mods));
+                    nullOutModinfo ? null : new Modinfo(modType, mods));
         }
 
         public Version getVersion() {
@@ -185,6 +192,10 @@ public class ServerPing {
             return favicon;
         }
 
+        public String getModType() {
+            return modType;
+        }
+
         public List<Mod> getMods() {
             return mods;
         }
@@ -196,6 +207,7 @@ public class ServerPing {
                     ", onlinePlayers=" + onlinePlayers +
                     ", maximumPlayers=" + maximumPlayers +
                     ", samplePlayers=" + samplePlayers +
+                    ", modType=" + modType +
                     ", mods=" + mods +
                     ", description=" + description +
                     ", favicon=" + favicon +
@@ -291,12 +303,13 @@ public class ServerPing {
     }
 
     public static class Modinfo {
-        public static final Modinfo DEFAULT = new Modinfo(ImmutableList.of());
+        public static final Modinfo DEFAULT = new Modinfo("FML", ImmutableList.of());
 
-        private final String type = "FML";
+        private final String type;
         private final List<Mod> modList;
 
-        public Modinfo(List<Mod> modList) {
+        public Modinfo(String type, List<Mod> modList) {
+            this.type = Preconditions.checkNotNull(type, "type");
             this.modList = ImmutableList.copyOf(modList);
         }
     }
