@@ -99,8 +99,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
             if (association != null) {
                 logger.error("{}: exception encountered", association, cause);
-            } else {
-                logger.error("{} encountered an exception", ctx.channel().remoteAddress(), cause);
             }
 
             ctx.close();
