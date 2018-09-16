@@ -62,6 +62,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void exception(Throwable throwable) {
+        completed = true;
         result.completeExceptionally(throwable);
     }
 }
