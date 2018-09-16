@@ -92,7 +92,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                             connection.getPlayer().getConnection().write(pm);
                         }
                     }, connection.getMinecraftConnection().getChannel().eventLoop());
-        } else {
+        } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
         }
