@@ -25,7 +25,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServerInfo()));
+        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServer()));
+        connection.getServer().addPlayer(connection.getPlayer());
     }
 
     @Override
@@ -46,7 +47,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
             connection.disconnect();
-            connection.getPlayer().handleConnectionException(connection.getServerInfo(), original);
+            connection.getPlayer().handleConnectionException(connection.getServer(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else if (packet instanceof BossBar) {
@@ -112,7 +113,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void exception(Throwable throwable) {
-        connection.getPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+        connection.getPlayer().handleConnectionException(connection.getServer(), throwable);
     }
 
     public VelocityServer getServer() {
@@ -121,10 +122,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void disconnected() {
-        if (connection.isGracefulDisconnect()) {
-            return;
+        connection.getServer().removePlayer(connection.getPlayer());
+        if (!connection.isGracefulDisconnect()) {
+            connection.getPlayer().handleConnectionException(connection.getServer(), Disconnect.create(
+                    ConnectionMessages.UNEXPECTED_DISCONNECT));
         }
-        connection.getPlayer().handleConnectionException(connection.getServerInfo(), Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT));
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {

@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentR
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.VelocityConstants;
@@ -220,7 +221,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void handleProxyLogin(ConnectedPlayer player) {
-        Optional<ServerInfo> toTry = player.getNextServerToTry();
+        Optional<RegisteredServer> toTry = player.getNextServerToTry();
         if (!toTry.isPresent()) {
             player.close(TextComponent.of("No available servers", TextColor.RED));
             return;
@@ -246,9 +247,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
         logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
-        server.getEventManager().fire(new PostLoginEvent(player)).thenRun(() -> {
-            player.createConnectionRequest(toTry.get()).fireAndForget();
-        });
+        server.getEventManager().fire(new PostLoginEvent(player)).thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
     }
 
     @Override

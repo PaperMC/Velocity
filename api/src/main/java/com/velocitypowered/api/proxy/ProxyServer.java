@@ -5,6 +5,7 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
@@ -45,23 +46,24 @@ public interface ProxyServer {
     int getPlayerCount();
 
     /**
-     * Retrieves a registered {@link ServerInfo} instance by its name. The search is case-insensitive.
+     * Retrieves a registered {@link RegisteredServer} instance by its name. The search is case-insensitive.
      * @param name the name of the server
      * @return the registered server, which may be empty
      */
-    Optional<ServerInfo> getServerInfo(String name);
+    Optional<RegisteredServer> getServerInfo(String name);
 
     /**
-     * Retrieves all {@link ServerInfo}s registered with this proxy.
+     * Retrieves all {@link RegisteredServer}s registered with this proxy.
      * @return the servers registered with this proxy
      */
-    Collection<ServerInfo> getAllServers();
+    Collection<RegisteredServer> getAllServers();
 
     /**
      * Registers a server with this proxy. A server with this name should not already exist.
      * @param server the server to register
+     * @return the newly registered server
      */
-    void registerServer(ServerInfo server);
+    RegisteredServer registerServer(ServerInfo server);
 
     /**
      * Unregisters this server from the proxy.

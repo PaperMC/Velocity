@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.util;
 
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.proxy.server.ServerMap;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
@@ -14,18 +16,18 @@ class ServerMapTest {
 
     @Test
     void respectsCaseInsensitivity() {
-        ServerMap map = new ServerMap();
+        ServerMap map = new ServerMap(null);
         ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
-        map.register(info);
+        RegisteredServer connection = map.register(info);
 
-        assertEquals(Optional.of(info), map.getServer("TestServer"));
-        assertEquals(Optional.of(info), map.getServer("testserver"));
-        assertEquals(Optional.of(info), map.getServer("TESTSERVER"));
+        assertEquals(Optional.of(connection), map.getServer("TestServer"));
+        assertEquals(Optional.of(connection), map.getServer("testserver"));
+        assertEquals(Optional.of(connection), map.getServer("TESTSERVER"));
     }
 
     @Test
     void rejectsRepeatedRegisterAttempts() {
-        ServerMap map = new ServerMap();
+        ServerMap map = new ServerMap(null);
         ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
         map.register(info);
 

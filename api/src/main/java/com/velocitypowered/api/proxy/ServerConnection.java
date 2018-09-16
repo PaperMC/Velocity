@@ -2,6 +2,7 @@ package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
 /**
@@ -11,6 +12,12 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
     /**
      * Returns the server that this connection is connected to.
      * @return the server this connection is connected to
+     */
+    RegisteredServer getServer();
+
+    /**
+     * Returns the server info for this connection.
+     * @return the server info for this connection
      */
     ServerInfo getServerInfo();
 

@@ -10,6 +10,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -30,7 +31,7 @@ import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.Ratelimiter;
-import com.velocitypowered.proxy.util.ServerMap;
+import com.velocitypowered.proxy.server.ServerMap;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -61,7 +62,7 @@ public class VelocityServer implements ProxyServer {
     private VelocityConfiguration configuration;
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
-    private final ServerMap servers = new ServerMap();
+    private final ServerMap servers = new ServerMap(this);
     private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
@@ -263,19 +264,19 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public Optional<ServerInfo> getServerInfo(String name) {
+    public Optional<RegisteredServer> getServerInfo(String name) {
         Preconditions.checkNotNull(name, "name");
         return servers.getServer(name);
     }
 
     @Override
-    public Collection<ServerInfo> getAllServers() {
+    public Collection<RegisteredServer> getAllServers() {
         return servers.getAllServers();
     }
 
     @Override
-    public void registerServer(ServerInfo server) {
-        servers.register(server);
+    public RegisteredServer registerServer(ServerInfo server) {
+        return servers.register(server);
     }
 
     @Override
