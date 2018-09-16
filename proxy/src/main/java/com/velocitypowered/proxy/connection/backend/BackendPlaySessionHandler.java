@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -84,14 +85,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
 
-            PluginMessageEvent event = new PluginMessageEvent(connection, connection.getPlayer(), server.getChannelRegistrar().getFromId(pm.getChannel()),
-                    pm.getData());
-            server.getEventManager().fire(event)
-                    .thenAcceptAsync(pme -> {
-                        if (pme.getResult().isAllowed()) {
-                            connection.getPlayer().getConnection().write(pm);
-                        }
-                    }, connection.getMinecraftConnection().getChannel().eventLoop());
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(pm.getChannel());
+            if (id == null) {
+                connection.getPlayer().getConnection().write(pm);
+            } else {
+                PluginMessageEvent event = new PluginMessageEvent(connection, connection.getPlayer(), id, pm.getData());
+                server.getEventManager().fire(event)
+                        .thenAcceptAsync(pme -> {
+                            if (pme.getResult().isAllowed()) {
+                                connection.getPlayer().getConnection().write(pm);
+                            }
+                        }, connection.getMinecraftConnection().getChannel().eventLoop());
+            }
         } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
