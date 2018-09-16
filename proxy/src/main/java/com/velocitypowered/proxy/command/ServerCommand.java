@@ -35,7 +35,7 @@ public class ServerCommand implements Command {
         if (args.length == 1) {
             // Trying to connect to a server.
             String serverName = args[0];
-            Optional<RegisteredServer> toConnect = server.getServerInfo(serverName);
+            Optional<RegisteredServer> toConnect = server.getServer(serverName);
             if (!toConnect.isPresent()) {
                 player.sendMessage(TextComponent.of("Server " + serverName + " doesn't exist.", TextColor.RED));
                 return;

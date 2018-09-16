@@ -264,7 +264,7 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public Optional<RegisteredServer> getServerInfo(String name) {
+    public Optional<RegisteredServer> getServer(String name) {
         Preconditions.checkNotNull(name, "name");
         return servers.getServer(name);
     }

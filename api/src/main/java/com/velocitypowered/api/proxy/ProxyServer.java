@@ -50,7 +50,7 @@ public interface ProxyServer {
      * @param name the name of the server
      * @return the registered server, which may be empty
      */
-    Optional<RegisteredServer> getServerInfo(String name);
+    Optional<RegisteredServer> getServer(String name);
 
     /**
      * Retrieves all {@link RegisteredServer}s registered with this proxy.
