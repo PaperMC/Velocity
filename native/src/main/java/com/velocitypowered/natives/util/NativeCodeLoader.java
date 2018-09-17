@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 public class NativeCodeLoader<T> implements Supplier<T> {
     private final List<Variant<T>> variants;
-    private Variant<T> selected;
+    private volatile Variant<T> selected;
 
     public NativeCodeLoader(List<Variant<T>> variants) {
         this.variants = ImmutableList.copyOf(variants);
@@ -17,25 +17,32 @@ public class NativeCodeLoader<T> implements Supplier<T> {
     @Override
     public T get() {
         if (selected == null) {
-            selected = select();
+            selected = tryLoad();
         }
         return selected.object;
     }
 
-    private Variant<T> select() {
-        for (Variant<T> variant : variants) {
-            T got = variant.get();
-            if (got == null) {
-                continue;
+    private Variant<T> tryLoad() {
+        synchronized (this) {
+            if (selected != null) {
+                return selected;
             }
-            return variant;
+
+            for (Variant<T> variant : variants) {
+                T got = variant.get();
+                if (got == null) {
+                    continue;
+                }
+                selected = variant;
+                return selected;
+            }
+            throw new IllegalArgumentException("Can't find any suitable variants");
         }
-        throw new IllegalArgumentException("Can't find any suitable variants");
     }
 
     public String getLoadedVariant() {
         if (selected == null) {
-            selected = select();
+            selected = tryLoad();
         }
         return selected.name;
     }
