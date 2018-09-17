@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.api.util.LegacyChatColorUtils;
-import io.netty.buffer.ByteBufUtil;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 
