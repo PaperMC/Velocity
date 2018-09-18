@@ -7,10 +7,11 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerMap {
     private final VelocityServer server;
-    private final Map<String, RegisteredServer> servers = new HashMap<>();
+    private final Map<String, RegisteredServer> servers = new ConcurrentHashMap<>();
 
     public ServerMap(VelocityServer server) {
         this.server = server;
