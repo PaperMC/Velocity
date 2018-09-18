@@ -25,6 +25,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -36,8 +37,7 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 public class VelocityRegisteredServer implements RegisteredServer {
     private final VelocityServer server;
     private final ServerInfo serverInfo;
-    private final Set<ConnectedPlayer> players = new HashSet<>();
-    private final ReadWriteLock playersLock = new ReentrantReadWriteLock();
+    private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
 
     public VelocityRegisteredServer(VelocityServer server, ServerInfo serverInfo) {
         this.server = server;
@@ -51,12 +51,7 @@ public class VelocityRegisteredServer implements RegisteredServer {
 
     @Override
     public Collection<Player> getPlayersConnected() {
-        playersLock.readLock().lock();
-        try {
-            return ImmutableList.copyOf(players);
-        } finally {
-            playersLock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(players);
     }
 
     @Override
@@ -94,43 +89,23 @@ public class VelocityRegisteredServer implements RegisteredServer {
     }
 
     public void addPlayer(ConnectedPlayer player) {
-        playersLock.writeLock().lock();
-        try {
-            players.add(player);
-        } finally {
-            playersLock.writeLock().unlock();
-        }
+        players.add(player);
     }
 
     public void removePlayer(ConnectedPlayer player) {
-        playersLock.writeLock().lock();
-        try {
-            players.remove(player);
-        } finally {
-            playersLock.writeLock().unlock();
-        }
+        players.remove(player);
     }
 
     @Override
     public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
-        ServerConnection backendConnection = null;
-        playersLock.readLock().lock();
-        try {
-            for (ConnectedPlayer player : players) {
-                if (player.getConnectedServer() != null && player.getConnectedServer().getServerInfo().equals(serverInfo)) {
-                    backendConnection = player.getConnectedServer();
-                    break;
-                }
+        for (ConnectedPlayer player : players) {
+            if (player.getConnectedServer() != null && player.getConnectedServer().getServerInfo().equals(serverInfo)) {
+                ServerConnection connection = player.getConnectedServer();
+                return connection.sendPluginMessage(identifier, data);
             }
-
-            if (backendConnection == null) {
-                return false;
-            }
-        } finally {
-            playersLock.readLock().unlock();
         }
 
-        return backendConnection.sendPluginMessage(identifier, data);
+        return false;
     }
 
     @Override
