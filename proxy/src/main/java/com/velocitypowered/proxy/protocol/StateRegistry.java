@@ -23,7 +23,7 @@ public enum StateRegistry {
     },
     STATUS {
         {
-            SERVERBOUND.register(StatusRequest.class, StatusRequest::new,
+            SERVERBOUND.register(StatusRequest.class, () -> StatusRequest.INSTANCE,
                     genericMappings(0x00));
             SERVERBOUND.register(StatusPing.class, StatusPing::new,
                     genericMappings(0x01));

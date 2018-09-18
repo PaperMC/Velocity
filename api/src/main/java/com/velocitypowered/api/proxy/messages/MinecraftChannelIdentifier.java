@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  * Represents a Minecraft 1.13+ channel identifier. This class is immutable and safe for multi-threaded use.
  */
 public final class MinecraftChannelIdentifier implements ChannelIdentifier {
-    private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]+");
 
     private final String namespace;
     private final String name;
