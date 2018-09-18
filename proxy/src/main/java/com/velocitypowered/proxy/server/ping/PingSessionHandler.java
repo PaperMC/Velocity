@@ -38,7 +38,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
         connection.write(handshake);
 
         connection.setState(StateRegistry.STATUS);
-        connection.write(new StatusRequest());
+        connection.write(StatusRequest.INSTANCE);
     }
 
     @Override
