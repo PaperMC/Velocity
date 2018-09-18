@@ -263,6 +263,16 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
+    public int getMaxPlayerCount() {
+        return this.getConfiguration().getShowMaxPlayers();
+    }
+
+    @Override
+    public String getMotd() {
+        return this.getConfiguration().getMotd();
+    }
+
+    @Override
     public Optional<ServerInfo> getServerInfo(String name) {
         Preconditions.checkNotNull(name, "name");
         return servers.getServer(name);
