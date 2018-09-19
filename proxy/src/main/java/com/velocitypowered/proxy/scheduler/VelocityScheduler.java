@@ -65,13 +65,13 @@ public class VelocityScheduler implements Scheduler {
         }
 
         @Override
-        public TaskBuilder delay(int time, TimeUnit unit) {
+        public TaskBuilder delay(long time, TimeUnit unit) {
             this.delay = unit.toMillis(time);
             return this;
         }
 
         @Override
-        public TaskBuilder repeat(int time, TimeUnit unit) {
+        public TaskBuilder repeat(long time, TimeUnit unit) {
             this.repeat = unit.toMillis(time);
             return this;
         }
