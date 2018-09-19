@@ -1,16 +1,14 @@
 package com.velocitypowered.api.proxy.messages;
 
 /**
- * Represents an interface to register and unregister {@link MessageHandler} instances for handling plugin messages from
- * the client or the server.
+ * Represents an interface to register and unregister {@link ChannelIdentifier}s for the proxy to listen on.
  */
 public interface ChannelRegistrar {
     /**
-     * Registers the specified message handler to listen for plugin messages on the specified channels.
-     * @param handler the handler to register
+     * Registers the specified message identifiers to listen on for the
      * @param identifiers the channel identifiers to register
      */
-    void register(MessageHandler handler, ChannelIdentifier... identifiers);
+    void register(ChannelIdentifier... identifiers);
 
     /**
      * Unregisters the handler for the specified channel.
