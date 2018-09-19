@@ -312,6 +312,14 @@ public class ServerPing {
             this.type = Preconditions.checkNotNull(type, "type");
             this.modList = ImmutableList.copyOf(modList);
         }
+
+        public String getType() {
+            return type;
+        }
+
+        public List<Mod> getModList() {
+            return modList;
+        }
     }
 
     public static class Mod {
