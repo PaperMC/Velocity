@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;

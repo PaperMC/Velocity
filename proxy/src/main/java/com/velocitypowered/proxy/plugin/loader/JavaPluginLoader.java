@@ -2,7 +2,9 @@ package com.velocitypowered.proxy.plugin.loader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.velocitypowered.api.plugin.*;
+import com.velocitypowered.api.plugin.InvalidPluginException;
+import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;

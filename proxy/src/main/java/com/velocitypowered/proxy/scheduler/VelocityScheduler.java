@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class VelocityScheduler implements Scheduler {
     private final PluginManager pluginManager;

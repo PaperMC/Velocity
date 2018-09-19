@@ -23,16 +23,13 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.velocitypowered.proxy.network.Connections.*;
-import static com.velocitypowered.proxy.network.Connections.HANDLER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 
 public class VelocityRegisteredServer implements RegisteredServer {
     private final VelocityServer server;

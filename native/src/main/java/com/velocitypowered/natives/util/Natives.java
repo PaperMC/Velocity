@@ -3,10 +3,8 @@ package com.velocitypowered.natives.util;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.NativeVelocityCompressor;
-import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
-import com.velocitypowered.natives.encryption.NativeVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 
 import java.io.IOException;

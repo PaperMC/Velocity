@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import io.netty.buffer.ByteBuf;
 
 public class StatusRequest implements MinecraftPacket {

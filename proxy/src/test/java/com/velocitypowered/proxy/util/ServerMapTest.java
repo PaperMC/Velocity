@@ -9,7 +9,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ServerMapTest {
     private static final InetSocketAddress TEST_ADDRESS = new InetSocketAddress(InetAddress.getLoopbackAddress(), 25565);

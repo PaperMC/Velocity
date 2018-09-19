@@ -8,7 +8,7 @@ import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;

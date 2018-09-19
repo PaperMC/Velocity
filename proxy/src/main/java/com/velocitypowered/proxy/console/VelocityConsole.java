@@ -4,7 +4,9 @@ import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
-import org.jline.reader.*;
+import org.jline.reader.Candidate;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
 
 import java.util.List;
 import java.util.Optional;

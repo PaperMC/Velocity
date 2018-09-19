@@ -2,13 +2,13 @@ package com.velocitypowered.proxy.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.proxy.protocol.netty.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -21,17 +21,9 @@ import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
 import java.security.GeneralSecurityException;
 
-import static com.velocitypowered.proxy.network.Connections.CIPHER_DECODER;
-import static com.velocitypowered.proxy.network.Connections.CIPHER_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.COMPRESSION_DECODER;
-import static com.velocitypowered.proxy.network.Connections.COMPRESSION_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.*;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles certain Minecraft

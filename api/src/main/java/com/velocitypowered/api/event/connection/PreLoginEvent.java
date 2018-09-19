@@ -3,13 +3,12 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
-import java.util.Optional;
-
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Optional;
 
 /**
  * This event is fired when a player has initiated a connection with the proxy but before the proxy authenticates the

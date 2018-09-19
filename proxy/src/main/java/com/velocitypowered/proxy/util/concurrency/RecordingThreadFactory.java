@@ -6,7 +6,6 @@ import com.google.common.collect.MapMaker;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 /**

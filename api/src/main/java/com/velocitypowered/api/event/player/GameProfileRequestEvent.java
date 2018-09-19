@@ -1,10 +1,9 @@
 package com.velocitypowered.api.event.player;
 
-import com.velocitypowered.api.proxy.InboundConnection;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This event is fired after the {@link com.velocitypowered.api.event.connection.PreLoginEvent} in order to set up the

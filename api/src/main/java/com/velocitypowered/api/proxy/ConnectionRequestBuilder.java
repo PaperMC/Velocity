@@ -1,9 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.proxy.server.ServerInfo;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

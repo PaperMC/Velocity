@@ -1,7 +1,6 @@
 package com.velocitypowered.api.plugin.meta;
 
 import javax.annotation.Nullable;
-
 import java.util.Objects;
 import java.util.Optional;
 

@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.network.http;
 
 import com.velocitypowered.proxy.VelocityServer;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
 import io.netty.channel.pool.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
