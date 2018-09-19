@@ -317,7 +317,7 @@ public class ServerPing {
             return type;
         }
 
-        public List<Mod> getModList() {
+        public List<Mod> getMods() {
             return modList;
         }
     }
