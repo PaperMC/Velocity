@@ -60,6 +60,17 @@ public class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.Forw
         return ByteStreams.newDataInput(data);
     }
 
+    @Override
+    public String toString() {
+        return "PluginMessageEvent{" +
+                "source=" + source +
+                ", target=" + target +
+                ", identifier=" + identifier +
+                ", data=" + Arrays.toString(data) +
+                ", result=" + result +
+                '}';
+    }
+
     /**
      * A result determining whether or not to forward this message on.
      */
