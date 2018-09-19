@@ -91,62 +91,9 @@ public class VelocityScheduler implements Scheduler {
 
         @Override
         public ScheduledTask schedule() {
-            if (delay == 0 && repeat == 0) {
-                // A special purpose, simplified implementation
-                VelocityImmediatelyScheduledTask task = new VelocityImmediatelyScheduledTask(plugin, runnable);
-                tasksByPlugin.put(plugin, task);
-                taskService.execute(task);
-                return task;
-            } else {
-                VelocityTask task = new VelocityTask(plugin, runnable, delay, repeat);
-                tasksByPlugin.put(plugin, task);
-                return task;
-            }
-        }
-    }
-
-    private class VelocityImmediatelyScheduledTask implements ScheduledTask, Runnable {
-        private final Object plugin;
-        private final Runnable runnable;
-        private final AtomicReference<TaskStatus> status;
-        private Thread taskThread;
-
-        private VelocityImmediatelyScheduledTask(Object plugin, Runnable runnable) {
-            this.plugin = plugin;
-            this.runnable = runnable;
-            this.status = new AtomicReference<>(TaskStatus.SCHEDULED);
-        }
-
-        @Override
-        public Object plugin() {
-            return plugin;
-        }
-
-        @Override
-        public TaskStatus status() {
-            return status.get();
-        }
-
-        @Override
-        public void cancel() {
-            if (status.compareAndSet(TaskStatus.SCHEDULED, TaskStatus.CANCELLED)) {
-                if (taskThread != null) {
-                    taskThread.interrupt();
-                }
-            }
-        }
-
-        @Override
-        public void run() {
-            taskThread = Thread.currentThread();
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
-            }
-            status.compareAndSet(TaskStatus.SCHEDULED, TaskStatus.FINISHED);
-            taskThread = null;
-            tasksByPlugin.remove(plugin, this);
+            VelocityTask task = new VelocityTask(plugin, runnable, delay, repeat);
+            tasksByPlugin.put(plugin, task);
+            return task;
         }
     }
 
@@ -154,6 +101,7 @@ public class VelocityScheduler implements Scheduler {
         private final Object plugin;
         private final Runnable runnable;
         private ScheduledFuture<?> future;
+        private volatile Thread currentTaskThread;
 
         private VelocityTask(Object plugin, Runnable runnable, long delay, long repeat) {
             this.plugin = plugin;
@@ -191,6 +139,12 @@ public class VelocityScheduler implements Scheduler {
         public void cancel() {
             if (future != null) {
                 future.cancel(false);
+
+                Thread cur = currentTaskThread;
+                if (cur != null) {
+                    cur.interrupt();
+                }
+
                 onFinish();
             }
         }
@@ -198,6 +152,7 @@ public class VelocityScheduler implements Scheduler {
         @Override
         public void run() {
             taskService.execute(() -> {
+                currentTaskThread = Thread.currentThread();
                 try {
                     runnable.run();
                 } catch (Exception e) {
@@ -208,6 +163,7 @@ public class VelocityScheduler implements Scheduler {
                         Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
                     }
                 }
+                currentTaskThread = null;
             });
         }
 
