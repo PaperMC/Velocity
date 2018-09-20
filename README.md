@@ -3,9 +3,8 @@
 [![Build Status](https://img.shields.io/jenkins/s/https/ci.velocitypowered.com/job/velocity/job/master.svg)](https://ci.velocitypowered.com/job/velocity/job/master/)
 [![Join our Discord](https://img.shields.io/discord/472484458856185878.svg?logo=discord&label=)](https://discord.gg/8cB9Bgf)
 
-Velocity is a next-generation Minecraft: Java Edition proxy suite. It is
-designed specifically for enhanced server support and scalability whilst
-not compromising flexibility.
+A Minecraft server proxy with unparalleled server support, scalability,
+and flexibility.
 
 Velocity is licensed under the MIT license for ultimate permissiveness
 and expanding the pool of potential contributors and users.
@@ -40,8 +39,7 @@ page.
 ## Status
 
 Velocity is currently in an alpha state: it is prone to change at any time and
-is not currently suitable for production usage. For development and testing
-purposes, however, Velocity is fully-fledged and ready to go.
+is currently only suitable for small servers and development/testing.
 
 Velocity supports Minecraft 1.8-1.13.1, and has full support for Paper and Sponge.
 Forge is fully supported but mod compatibility may vary.
