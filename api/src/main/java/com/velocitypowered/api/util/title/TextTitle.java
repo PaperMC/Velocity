@@ -7,6 +7,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Represents a "full" title, including all components.
+ */
 public class TextTitle implements Title {
     private final Component title;
     private final Component subtitle;
@@ -24,32 +27,70 @@ public class TextTitle implements Title {
         this.resetBeforeSend = builder.resetBeforeSend;
     }
 
+    /**
+     * Returns the main title this title has, if any.
+     * @return the main title of this title
+     */
     public Optional<Component> getTitle() {
         return Optional.ofNullable(title);
     }
 
+    /**
+     * Returns the subtitle this title has, if any.
+     * @return the subtitle
+     */
     public Optional<Component> getSubtitle() {
         return Optional.ofNullable(subtitle);
     }
 
+    /**
+     * Returns the number of ticks this title will stay up.
+     * @return how long the title will stay, in ticks
+     */
     public int getStay() {
         return stay;
     }
 
+    /**
+     * Returns the number of ticks over which this title will fade in.
+     * @return how long the title will fade in, in ticks
+     */
     public int getFadeIn() {
         return fadeIn;
     }
 
+    /**
+     * Returns the number of ticks over which this title will fade out.
+     * @return how long the title will fade out, in ticks
+     */
     public int getFadeOut() {
         return fadeOut;
     }
 
+    /**
+     * Returns whether or not a reset packet will be sent before this title is sent. By default, unless explicitly
+     * disabled, this is enabled by default.
+     * @return whether or not a reset packet will be sent before this title is sent
+     */
     public boolean isResetBeforeSend() {
         return resetBeforeSend;
     }
 
+    /**
+     * Determines whether or not this title has times set on it. If none are set, it will update the previous title
+     * set on the client.
+     * @return whether or not this title has times set on it
+     */
     public boolean areTimesSet() {
         return stay != 0 || fadeIn != 0 || fadeOut != 0;
+    }
+
+    /**
+     * Creates a new builder from the contents of this title so that it may be changed.
+     * @return a builder instance with the contents of this title
+     */
+    public Builder toBuilder() {
+        return new Builder(this);
     }
 
     @Override
@@ -82,6 +123,10 @@ public class TextTitle implements Title {
         return Objects.hash(title, subtitle, stay, fadeIn, fadeOut, resetBeforeSend);
     }
 
+    /**
+     * Creates a new builder for constructing titles.
+     * @return a builder for constructing titles
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -92,9 +137,18 @@ public class TextTitle implements Title {
         private int stay;
         private int fadeIn;
         private int fadeOut;
-        private boolean resetBeforeSend;
+        private boolean resetBeforeSend = true;
 
         private Builder() {}
+
+        private Builder(TextTitle copy) {
+            this.title = copy.title;
+            this.subtitle = copy.subtitle;
+            this.stay = copy.stay;
+            this.fadeIn = copy.fadeIn;
+            this.fadeOut = copy.fadeOut;
+            this.resetBeforeSend = copy.resetBeforeSend;
+        }
 
         public Builder title(Component title) {
             this.title = Preconditions.checkNotNull(title, "title");
