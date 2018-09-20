@@ -247,7 +247,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 connection.closeWith(Disconnect.create(friendlyReason));
             }
         } else {
-            connection.write(Chat.create(friendlyReason));
+            connection.write(Chat.createClientbound(friendlyReason));
         }
     }
 
@@ -348,6 +348,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         message.setData(data);
         connection.write(message);
         return true;
+    }
+
+    @Override
+    public void spoofChatInput(String input) {
+        Preconditions.checkArgument(input.length() <= Chat.MAX_SERVERBOUND_MESSAGE_LENGTH, "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH + " characters in length");
+        connectedServer.getMinecraftConnection().write(Chat.createServerbound(input));
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

@@ -10,6 +10,8 @@ import net.kyori.text.serializer.ComponentSerializers;
 
 public class Chat implements MinecraftPacket {
     public static final byte CHAT = (byte) 0;
+    public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
+
     private String message;
     private byte type;
 
@@ -61,12 +63,16 @@ public class Chat implements MinecraftPacket {
         }
     }
 
-    public static Chat create(Component component) {
-        return create(component, CHAT);
+    public static Chat createClientbound(Component component) {
+        return createClientbound(component, CHAT);
     }
 
-    public static Chat create(Component component, byte type) {
+    public static Chat createClientbound(Component component, byte type) {
         Preconditions.checkNotNull(component, "component");
         return new Chat(ComponentSerializers.JSON.serialize(component), type);
+    }
+
+    public static Chat createServerbound(String message) {
+        return new Chat(message, CHAT);
     }
 }

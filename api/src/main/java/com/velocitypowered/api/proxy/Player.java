@@ -82,4 +82,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @param reason component with the reason
      */
     void disconnect(Component reason);
+
+    /**
+     * Sends chat input onto the players current server as if they typed it
+     * into the client chat box.
+     * @param input the chat input to send
+     */
+    void spoofChatInput(String input);
 }
