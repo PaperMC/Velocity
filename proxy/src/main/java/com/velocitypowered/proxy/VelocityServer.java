@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -22,6 +21,7 @@ import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.messages.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.network.http.NettyHttpClient;
@@ -37,7 +37,6 @@ import com.velocitypowered.proxy.util.Ratelimiter;
 import io.netty.bootstrap.Bootstrap;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,17 +72,7 @@ public class VelocityServer implements ProxyServer {
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-    private final CommandSource consoleCommandSource = new CommandSource() {
-        @Override
-        public void sendMessage(Component component) {
-            logger.info(ComponentSerializers.LEGACY.serialize(component));
-        }
-
-        @Override
-        public @NonNull Tristate getPermissionValue(@NonNull String permission) {
-            return Tristate.TRUE;
-        }
-    };
+    private final VelocityConsole console = new VelocityConsole(this);
     private Ratelimiter ipAttemptLimiter;
     private VelocityEventManager eventManager;
     private VelocityScheduler scheduler;
@@ -147,6 +136,9 @@ public class VelocityServer implements ProxyServer {
             // Ignore, we don't care. InterruptedException is unlikely to happen (and if it does, you've got bigger
             // issues) and there is almost no chance ExecutionException will be thrown.
         }
+
+        // init console permissions after plugins are loaded
+        console.setupPermissions();
 
         this.cm.bind(configuration.getBind());
 
@@ -297,8 +289,8 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
-    public CommandSource getConsoleCommandSource() {
-        return consoleCommandSource;
+    public VelocityConsole getConsoleCommandSource() {
+        return console;
     }
 
     @Override
