@@ -262,17 +262,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return server.getServers().getServer(toTryName);
     }
 
-    private CompletableFuture<ConnectionRequestBuilder.Result> connect(ConnectionRequestBuilderImpl request) {
+    private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
+        Preconditions.checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
         if (connectionInFlight != null) {
-            return CompletableFuture.completedFuture(
-                    ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS)
-            );
+            return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
         }
+        if (connectedServer != null && connectedServer.getServer().equals(server)) {
+            return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
+        }
+        return Optional.empty();
+    }
 
-        if (connectedServer != null && connectedServer.getServerInfo().equals(request.getServer())) {
-            return CompletableFuture.completedFuture(
-                    ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.ALREADY_CONNECTED)
-            );
+    private CompletableFuture<ConnectionRequestBuilder.Result> connect(ConnectionRequestBuilderImpl request) {
+        Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(request.getServer());
+        if (initialCheck.isPresent()) {
+            return CompletableFuture.completedFuture(ConnectionRequestResults.plainResult(initialCheck.get()));
         }
 
         // Otherwise, initiate the connection.
@@ -286,7 +290,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     }
 
                     RegisteredServer rs = newEvent.getResult().getServer().get();
-                    Preconditions.checkState(rs instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
+                    Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
+                    if (lastCheck.isPresent()) {
+                        return CompletableFuture.completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
+                    }
                     return new VelocityServerConnection((VelocityRegisteredServer) rs, this, server).connect();
                 });
     }
