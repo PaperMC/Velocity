@@ -144,11 +144,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         byte pos = (byte) position.ordinal();
         String json;
         if (position == MessagePosition.ACTION_BAR) {
-            // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
-            // and then inject the legacy text into a component... yuck!
-            JsonObject object = new JsonObject();
-            object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
-            json = VelocityServer.GSON.toJson(object);
+            if (getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_11) {
+                // We can use the title packet instead.
+                TitlePacket pkt = new TitlePacket();
+                pkt.setAction(TitlePacket.SET_ACTION_BAR);
+                pkt.setComponent(ComponentSerializers.JSON.serialize(component));
+                connection.write(pkt);
+                return;
+            } else {
+                // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
+                // and then inject the legacy text into a component... yuck!
+                JsonObject object = new JsonObject();
+                object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
+                json = VelocityServer.GSON.toJson(object);
+            }
         } else {
             json = ComponentSerializers.JSON.serialize(component);
         }
