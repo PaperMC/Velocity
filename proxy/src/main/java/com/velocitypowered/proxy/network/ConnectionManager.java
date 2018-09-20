@@ -7,21 +7,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
-import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
-import com.velocitypowered.proxy.protocol.netty.LegacyPingEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.protocol.netty.*;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollDatagramChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.epoll.*;
 import io.netty.channel.kqueue.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
@@ -75,7 +65,7 @@ public final class ConnectionManager {
                     @Override
                     protected void initChannel(final Channel ch) {
                         ch.pipeline()
-                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(CLIENT_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                                .addLast(READ_TIMEOUT, new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(), TimeUnit.SECONDS))
                                 .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
                                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                                 .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
@@ -125,7 +115,9 @@ public final class ConnectionManager {
     public Bootstrap createWorker() {
         return new Bootstrap()
                 .channel(this.transportType.socketChannelClass)
-                .group(this.workerGroup);
+                .group(this.workerGroup)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, server.getConfiguration().getConnectTimeout());
     }
 
     public void shutdown() {

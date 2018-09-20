@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 import java.nio.charset.StandardCharsets;
@@ -20,13 +19,20 @@ public enum PluginMessageUtil {
         return message.getChannel().equals("MC|Brand") || message.getChannel().equals("minecraft:brand");
     }
 
+    public static boolean isMCRegister(PluginMessage message) {
+        Preconditions.checkNotNull(message, "message");
+        return message.getChannel().equals("REGISTER") || message.getChannel().equals("minecraft:register");
+    }
+
+    public static boolean isMCUnregister(PluginMessage message) {
+        Preconditions.checkNotNull(message, "message");
+        return message.getChannel().equals("UNREGISTER") || message.getChannel().equals("minecraft:unregister");
+    }
+
     public static List<String> getChannels(PluginMessage message) {
         Preconditions.checkNotNull(message, "message");
-        Preconditions.checkArgument(message.getChannel().equals("REGISTER") ||
-                message.getChannel().equals("UNREGISTER") ||
-                message.getChannel().equals("minecraft:register") ||
-                message.getChannel().equals("minecraft:unregister"),
-                "Unknown channel type " + message.getChannel());
+        Preconditions.checkArgument(isMCRegister(message) || isMCUnregister(message),"Unknown channel type %s",
+                message.getChannel());
         String channels = new String(message.getData(), StandardCharsets.UTF_8);
         return ImmutableList.copyOf(channels.split("\0"));
     }

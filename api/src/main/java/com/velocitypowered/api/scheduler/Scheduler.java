@@ -24,7 +24,7 @@ public interface Scheduler {
          * @param unit the unit of time for {@code time}
          * @return this builder, for chaining
          */
-        TaskBuilder delay(int time, TimeUnit unit);
+        TaskBuilder delay(long time, TimeUnit unit);
 
         /**
          * Specifies that the task should continue running after waiting for the specified amount, until it is cancelled.
@@ -32,7 +32,7 @@ public interface Scheduler {
          * @param unit the unit of time for {@code time}
          * @return this builder, for chaining
          */
-        TaskBuilder repeat(int time, TimeUnit unit);
+        TaskBuilder repeat(long time, TimeUnit unit);
 
         /**
          * Clears the delay on this task.

@@ -8,7 +8,7 @@ import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
@@ -23,7 +23,7 @@ public enum StateRegistry {
     },
     STATUS {
         {
-            SERVERBOUND.register(StatusRequest.class, StatusRequest::new,
+            SERVERBOUND.register(StatusRequest.class, () -> StatusRequest.INSTANCE,
                     genericMappings(0x00));
             SERVERBOUND.register(StatusPing.class, StatusPing::new,
                     genericMappings(0x01));

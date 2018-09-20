@@ -1,11 +1,11 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
-import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.MessagePosition;
 import java.util.List;
 import net.kyori.text.Component;
@@ -65,10 +65,10 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
 
     /**
      * Creates a new connection request so that the player can connect to another server.
-     * @param info the server to connect to
+     * @param server the server to connect to
      * @return a new connection request
      */
-    ConnectionRequestBuilder createConnectionRequest(@NonNull ServerInfo info);
+    ConnectionRequestBuilder createConnectionRequest(@NonNull RegisteredServer server);
 
     /**
      * Gets a game profile properties of player

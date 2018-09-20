@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 
 import java.util.Random;
-import java.util.function.Supplier;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 

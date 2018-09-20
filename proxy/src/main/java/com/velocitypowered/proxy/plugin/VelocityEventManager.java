@@ -13,7 +13,10 @@ import com.velocitypowered.proxy.util.concurrency.RecordingThreadFactory;
 import net.kyori.event.EventSubscriber;
 import net.kyori.event.PostResult;
 import net.kyori.event.SimpleEventBus;
-import net.kyori.event.method.*;
+import net.kyori.event.method.EventExecutor;
+import net.kyori.event.method.MethodScanner;
+import net.kyori.event.method.MethodSubscriptionAdapter;
+import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
 import net.kyori.event.method.asm.ASMEventExecutorFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +24,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class VelocityEventManager implements EventManager {
     private static final Logger logger = LogManager.getLogger(VelocityEventManager.class);

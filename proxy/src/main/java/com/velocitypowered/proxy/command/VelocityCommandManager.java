@@ -1,10 +1,9 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandSource;
 
 import java.util.*;
 import java.util.stream.Collectors;
