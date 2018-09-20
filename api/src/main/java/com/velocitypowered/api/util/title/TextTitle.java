@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Represents a "full" title, including all components.
+ * Represents a "full" title, including all components. This class is immutable.
  */
 public class TextTitle implements Title {
     private final Component title;
