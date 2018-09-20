@@ -98,6 +98,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                             }
                         }, connection.getMinecraftConnection().getChannel().eventLoop());
             }
+        } else if (packet instanceof TabCompleteResponse) {
+            playerHandler.handleTabCompleteResponse((TabCompleteResponse) packet);
         } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
