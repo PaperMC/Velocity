@@ -8,6 +8,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -39,6 +40,7 @@ import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -77,8 +79,8 @@ public class VelocityServer implements ProxyServer {
         }
 
         @Override
-        public boolean hasPermission(String permission) {
-            return true;
+        public @NonNull Tristate getPermissionValue(@NonNull String permission) {
+            return Tristate.TRUE;
         }
     };
     private Ratelimiter ipAttemptLimiter;

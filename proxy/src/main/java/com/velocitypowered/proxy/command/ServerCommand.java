@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.command;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -12,6 +13,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -87,5 +89,10 @@ public class ServerCommand implements Command {
         } else {
             return ImmutableList.of();
         }
+    }
+
+    @Override
+    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        return source.getPermissionValue("velocity.command.server") != Tristate.FALSE;
     }
 }

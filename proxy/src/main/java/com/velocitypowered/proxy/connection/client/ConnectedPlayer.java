@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -335,8 +336,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public boolean hasPermission(String permission) {
-        return permissionFunction.getPermissionSetting(permission).asBoolean();
+    public @NonNull Tristate getPermissionValue(@NonNull String permission) {
+        return permissionFunction.getPermissionValue(permission);
     }
 
     @Override

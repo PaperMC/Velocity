@@ -12,5 +12,15 @@ public interface PermissionSubject {
      * @param permission the permission to check for
      * @return whether or not the subject has the permission
      */
-    boolean hasPermission(@NonNull String permission);
+    default boolean hasPermission(@NonNull String permission) {
+        return getPermissionValue(permission).asBoolean();
+    }
+
+    /**
+     * Gets the subjects setting for a particular permission.
+     *
+     * @param permission the permission
+     * @return the value the permission is set to
+     */
+    @NonNull Tristate getPermissionValue(@NonNull String permission);
 }
