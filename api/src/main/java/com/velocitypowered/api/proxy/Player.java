@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.title.Title;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -82,4 +83,10 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @param reason component with the reason
      */
     void disconnect(Component reason);
+
+    /**
+     * Sends the specified title to the client.
+     * @param title the title to send
+     */
+    void sendTitle(Title title);
 }

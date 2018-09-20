@@ -15,6 +15,10 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.title.HideTitle;
+import com.velocitypowered.api.util.title.ResetTitle;
+import com.velocitypowered.api.util.title.TextTitle;
+import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
@@ -22,6 +26,7 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.util.ThrowableUtils;
@@ -176,6 +181,48 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         connection.closeWith(Disconnect.create(reason));
     }
 
+    @Override
+    public void sendTitle(Title title) {
+        Preconditions.checkNotNull(title, "title");
+
+        if (title instanceof ResetTitle) {
+            connection.write(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+        } else if (title instanceof HideTitle) {
+            connection.write(TitlePacket.hideForProtocolVersion(connection.getProtocolVersion()));
+        } else if (title instanceof TextTitle) {
+            TextTitle tt = (TextTitle) title;
+
+            if (tt.isResetBeforeSend()) {
+                connection.delayedWrite(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+            }
+
+            if (tt.getTitle().isPresent()) {
+                TitlePacket titlePkt = new TitlePacket();
+                titlePkt.setAction(TitlePacket.SET_TITLE);
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getTitle().get()));
+                connection.delayedWrite(titlePkt);
+            }
+            if (tt.getSubtitle().isPresent()) {
+                TitlePacket titlePkt = new TitlePacket();
+                titlePkt.setAction(TitlePacket.SET_SUBTITLE);
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getSubtitle().get()));
+                connection.delayedWrite(titlePkt);
+            }
+
+            if (tt.areTimesSet()) {
+                TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(connection.getProtocolVersion());
+                timesPkt.setFadeIn(tt.getFadeIn());
+                timesPkt.setStay(tt.getStay());
+                timesPkt.setFadeOut(tt.getFadeOut());
+                connection.delayedWrite(timesPkt);
+            }
+            connection.flush();
+        } else {
+            throw new IllegalArgumentException("Unknown title class " + title.getClass().getName());
+        }
+
+    }
+
     public VelocityServerConnection getConnectedServer() {
         return connectedServer;
     }
@@ -269,7 +316,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             );
         }
 
-        if (connectedServer != null && connectedServer.getServerInfo().equals(request.getServer())) {
+        if (connectedServer != null && connectedServer.getServer().equals(request.getServer())) {
             return CompletableFuture.completedFuture(
                     ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.ALREADY_CONNECTED)
             );
