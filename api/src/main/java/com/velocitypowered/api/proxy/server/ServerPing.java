@@ -16,13 +16,13 @@ public class ServerPing {
     private final Players players;
     private final Component description;
     private final @Nullable Favicon favicon;
-    private final Modinfo modinfo;
+    private final ModInfo modinfo;
 
     public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon) {
-        this(version, players, description, favicon, Modinfo.DEFAULT);
+        this(version, players, description, favicon, ModInfo.DEFAULT);
     }
 
-    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, @Nullable Modinfo modinfo) {
+    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, ServerPing.@Nullable ModInfo modinfo) {
         this.version = Preconditions.checkNotNull(version, "version");
         this.players = players;
         this.description = Preconditions.checkNotNull(description, "description");
@@ -46,7 +46,7 @@ public class ServerPing {
         return Optional.ofNullable(favicon);
     }
 
-    public Optional<Modinfo> getModinfo() {
+    public Optional<ModInfo> getModinfo() {
         return Optional.ofNullable(modinfo);
     }
 
@@ -165,7 +165,7 @@ public class ServerPing {
 
         public ServerPing build() {
             return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon,
-                    nullOutModinfo ? null : new Modinfo(modType, mods));
+                    nullOutModinfo ? null : new ModInfo(modType, mods));
         }
 
         public Version getVersion() {
@@ -302,13 +302,13 @@ public class ServerPing {
         }
     }
 
-    public static class Modinfo {
-        public static final Modinfo DEFAULT = new Modinfo("FML", ImmutableList.of());
+    public static class ModInfo {
+        public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
 
         private final String type;
         private final List<Mod> modList;
 
-        public Modinfo(String type, List<Mod> modList) {
+        public ModInfo(String type, List<Mod> modList) {
             this.type = Preconditions.checkNotNull(type, "type");
             this.modList = ImmutableList.copyOf(modList);
         }
@@ -329,6 +329,14 @@ public class ServerPing {
         public Mod(String id, String version) {
             this.id = Preconditions.checkNotNull(id, "id");
             this.version = Preconditions.checkNotNull(version, "version");
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getVersion() {
+            return version;
         }
     }
 }
