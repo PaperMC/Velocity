@@ -89,4 +89,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @param title the title to send
      */
     void sendTitle(Title title);
+
+    /**
+     * Sends chat input onto the players current server as if they typed it
+     * into the client chat box.
+     * @param input the chat input to send
+     */
+    void spoofChatInput(String input);
 }

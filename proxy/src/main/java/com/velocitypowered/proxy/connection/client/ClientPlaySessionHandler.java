@@ -36,6 +36,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
     private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
     private final VelocityServer server;
+    private TabCompleteRequest outstandingTabComplete;
 
     public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
         this.player = player;
@@ -100,31 +101,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof TabCompleteRequest) {
-            TabCompleteRequest req = (TabCompleteRequest) packet;
-            int lastSpace = req.getCommand().indexOf(' ');
-            if (!req.isAssumeCommand() && lastSpace != -1) {
-                String command = req.getCommand().substring(1);
-                try {
-                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
-                    if (offers.isPresent()) {
-                        TabCompleteResponse response = new TabCompleteResponse();
-                        response.setTransactionId(req.getTransactionId());
-                        response.setStart(lastSpace);
-                        response.setLength(req.getCommand().length() - lastSpace);
-
-                        for (String s : offers.get()) {
-                            response.getOffers().add(new TabCompleteResponse.Offer(s, null));
-                        }
-
-                        player.getConnection().write(response);
-                    } else {
-                        serverConnection.getMinecraftConnection().write(packet);
-                    }
-                } catch (Exception e) {
-                    logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
-                }
-                return;
-            }
+            // Record the request so that the outstanding request can be augmented later.
+            outstandingTabComplete = (TabCompleteRequest) packet;
+            serverConnection.getMinecraftConnection().write(packet);
         }
 
         if (packet instanceof PluginMessage) {
@@ -329,5 +308,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private void resetPingData() {
         this.lastPingID = -1;
         this.lastPingSent = -1;
+    }
+
+    public void handleTabCompleteResponse(TabCompleteResponse response) {
+        if (outstandingTabComplete != null) {
+            if (!outstandingTabComplete.isAssumeCommand()) {
+                String command = outstandingTabComplete.getCommand().substring(1);
+                try {
+                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
+                    offers.ifPresent(strings -> response.getOffers().addAll(strings));
+                } catch (Exception e) {
+                    logger.error("Unable to provide tab list completions for {} for command '{}'", player.getUsername(),
+                            command, e);
+                }
+                outstandingTabComplete = null;
+            }
+            player.getConnection().write(response);
+        }
     }
 }

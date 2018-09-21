@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
+import net.kyori.text.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -31,6 +32,12 @@ public interface ProxyServer {
      * @return an {@link Optional} with the player, which may be empty
      */
     Optional<Player> getPlayer(UUID uuid);
+
+    /**
+     * Broadcasts a message to all players currently online.
+     * @param component the message to send
+     */
+    void broadcast(Component component);
 
     /**
      * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot of all players

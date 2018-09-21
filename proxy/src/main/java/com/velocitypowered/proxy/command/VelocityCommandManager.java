@@ -66,6 +66,7 @@ public class VelocityCommandManager implements CommandManager {
         if (split.length == 1) {
             return Optional.of(commands.keySet().stream()
                     .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
+                    .map(cmd -> "/" + cmd)
                     .collect(Collectors.toList()));
         }
 
