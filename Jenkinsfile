@@ -9,7 +9,7 @@ pipeline {
         }
       }
       steps {
-        sh './gradlew build'
+        sh './gradlew build --no-daemon'
         archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
       }
     }
@@ -27,7 +27,7 @@ pipeline {
         }
       }
       steps {
-        sh 'export MAVEN_DEPLOYMENT=true; ./gradlew publish'
+        sh 'export MAVEN_DEPLOYMENT=true; ./gradlew publish --no-daemon'
         sh 'rsync -av --delete ./api/build/docs/javadoc/ /javadoc'
       }
     }
