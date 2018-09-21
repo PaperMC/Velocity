@@ -15,6 +15,9 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.title.TextTitle;
+import com.velocitypowered.api.util.title.Title;
+import com.velocitypowered.api.util.title.Titles;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
@@ -22,6 +25,7 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.util.ThrowableUtils;
@@ -139,11 +143,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         byte pos = (byte) position.ordinal();
         String json;
         if (position == MessagePosition.ACTION_BAR) {
-            // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
-            // and then inject the legacy text into a component... yuck!
-            JsonObject object = new JsonObject();
-            object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
-            json = VelocityServer.GSON.toJson(object);
+            if (getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_11) {
+                // We can use the title packet instead.
+                TitlePacket pkt = new TitlePacket();
+                pkt.setAction(TitlePacket.SET_ACTION_BAR);
+                pkt.setComponent(ComponentSerializers.JSON.serialize(component));
+                connection.write(pkt);
+                return;
+            } else {
+                // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
+                // and then inject the legacy text into a component... yuck!
+                JsonObject object = new JsonObject();
+                object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
+                json = VelocityServer.GSON.toJson(object);
+            }
         } else {
             json = ComponentSerializers.JSON.serialize(component);
         }
@@ -174,6 +187,48 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public void disconnect(Component reason) {
         connection.closeWith(Disconnect.create(reason));
+    }
+
+    @Override
+    public void sendTitle(Title title) {
+        Preconditions.checkNotNull(title, "title");
+
+        if (title.equals(Titles.reset())) {
+            connection.write(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+        } else if (title.equals(Titles.hide())) {
+            connection.write(TitlePacket.hideForProtocolVersion(connection.getProtocolVersion()));
+        } else if (title instanceof TextTitle) {
+            TextTitle tt = (TextTitle) title;
+
+            if (tt.isResetBeforeSend()) {
+                connection.delayedWrite(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+            }
+
+            if (tt.getTitle().isPresent()) {
+                TitlePacket titlePkt = new TitlePacket();
+                titlePkt.setAction(TitlePacket.SET_TITLE);
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getTitle().get()));
+                connection.delayedWrite(titlePkt);
+            }
+            if (tt.getSubtitle().isPresent()) {
+                TitlePacket titlePkt = new TitlePacket();
+                titlePkt.setAction(TitlePacket.SET_SUBTITLE);
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getSubtitle().get()));
+                connection.delayedWrite(titlePkt);
+            }
+
+            if (tt.areTimesSet()) {
+                TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(connection.getProtocolVersion());
+                timesPkt.setFadeIn(tt.getFadeIn());
+                timesPkt.setStay(tt.getStay());
+                timesPkt.setFadeOut(tt.getFadeOut());
+                connection.delayedWrite(timesPkt);
+            }
+            connection.flush();
+        } else {
+            throw new IllegalArgumentException("Unknown title class " + title.getClass().getName());
+        }
+
     }
 
     public VelocityServerConnection getConnectedServer() {

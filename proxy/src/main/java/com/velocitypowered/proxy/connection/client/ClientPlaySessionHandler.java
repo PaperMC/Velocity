@@ -219,6 +219,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnectedServer().getMinecraftConnection().delayedWrite(pm);
         }
 
+        // Clear any title from the previous server.
+        player.getConnection().delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
+
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();

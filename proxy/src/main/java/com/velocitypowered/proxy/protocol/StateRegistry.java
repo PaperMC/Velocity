@@ -136,6 +136,12 @@ public enum StateRegistry {
                     map(0x44, MINECRAFT_1_12, true),
                     map(0x45, MINECRAFT_1_12_1, true),
                     map(0x48, MINECRAFT_1_13, true));
+            CLIENTBOUND.register(TitlePacket.class, TitlePacket::new,
+                    map(0x45, MINECRAFT_1_8, true),
+                    map(0x45, MINECRAFT_1_9, true),
+                    map(0x47, MINECRAFT_1_12, true),
+                    map(0x48, MINECRAFT_1_12_1, true),
+                    map(0x4B, MINECRAFT_1_13, true));
         }
     },
     LOGIN {
