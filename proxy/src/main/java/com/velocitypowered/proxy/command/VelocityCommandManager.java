@@ -46,6 +46,10 @@ public class VelocityCommandManager implements CommandManager {
         }
 
         try {
+            if (!command.hasPermission(source, actualArgs)) {
+                return false;
+            }
+
             command.execute(source, actualArgs);
             return true;
         } catch (Exception e) {
@@ -62,24 +66,29 @@ public class VelocityCommandManager implements CommandManager {
             return Optional.empty();
         }
 
-        String command = split[0];
+        String alias = split[0];
         if (split.length == 1) {
-            return Optional.of(commands.keySet().stream()
-                    .filter(cmd -> cmd.regionMatches(true, 0, command, 0, command.length()))
-                    .map(cmd -> "/" + cmd)
+            return Optional.of(commands.entrySet().stream()
+                    .filter(ent -> ent.getKey().regionMatches(true, 0, alias, 0, alias.length()))
+                    .filter(ent -> ent.getValue().hasPermission(source, new String[0]))
+                    .map(ent -> "/" + ent.getKey())
                     .collect(Collectors.toList()));
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        Command executor = commands.get(command);
-        if (executor == null) {
+        Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+        if (command == null) {
             return Optional.empty();
         }
 
         try {
-            return Optional.of(executor.suggest(source, actualArgs));
+            if (!command.hasPermission(source, actualArgs)) {
+                return Optional.empty();
+            }
+
+            return Optional.of(command.suggest(source, actualArgs));
         } catch (Exception e) {
-            throw new RuntimeException("Unable to invoke suggestions for command " + command + " for " + source, e);
+            throw new RuntimeException("Unable to invoke suggestions for command " + alias + " for " + source, e);
         }
     }
 }

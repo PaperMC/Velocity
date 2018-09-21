@@ -5,6 +5,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ShutdownCommand implements Command {
     private final VelocityServer server;
@@ -20,5 +21,10 @@ public class ShutdownCommand implements Command {
             return;
         }
         server.shutdown();
+    }
+
+    @Override
+    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        return source == server.getConsoleCommandSource();
     }
 }

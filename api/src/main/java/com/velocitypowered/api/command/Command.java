@@ -26,4 +26,19 @@ public interface Command {
     default List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
         return ImmutableList.of();
     }
+
+    /**
+     * Tests to check if the {@code source} has permission to use this command
+     * with the provided {@code args}.
+     *
+     * <p>If this method returns false, the handling will be forwarded onto
+     * the players current server.</p>
+     *
+     * @param source the source of the command
+     * @param args the arguments for this command
+     * @return whether the source has permission
+     */
+    default boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        return true;
+    }
 }

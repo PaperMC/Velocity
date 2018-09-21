@@ -2,10 +2,12 @@ package com.velocitypowered.proxy.command;
 
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommand implements Command {
     @Override
@@ -36,5 +38,10 @@ public class VelocityCommand implements Command {
         source.sendMessage(thisIsVelocity);
         source.sendMessage(velocityInfo);
         source.sendMessage(velocityWebsite);
+    }
+
+    @Override
+    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
     }
 }
