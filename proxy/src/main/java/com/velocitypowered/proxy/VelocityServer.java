@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.network.http.NettyHttpClient;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
+import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
@@ -251,6 +252,14 @@ public class VelocityServer implements ProxyServer {
     public Optional<Player> getPlayer(UUID uuid) {
         Preconditions.checkNotNull(uuid, "uuid");
         return Optional.ofNullable(connectionsByUuid.get(uuid));
+    }
+
+    @Override
+    public void broadcast(Component component) {
+        Chat chat = Chat.createClientbound(component);
+        for (ConnectedPlayer player : connectionsByUuid.values()) {
+            player.getConnection().write(chat);
+        }
     }
 
     @Override
