@@ -17,6 +17,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
+import com.velocitypowered.api.util.title.Titles;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
@@ -192,9 +193,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     public void sendTitle(Title title) {
         Preconditions.checkNotNull(title, "title");
 
-        if (title.equals(Title.RESET)) {
+        if (title.equals(Titles.reset())) {
             connection.write(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
-        } else if (title.equals(Title.HIDE)) {
+        } else if (title.equals(Titles.hide())) {
             connection.write(TitlePacket.hideForProtocolVersion(connection.getProtocolVersion()));
         } else if (title instanceof TextTitle) {
             TextTitle tt = (TextTitle) title;
