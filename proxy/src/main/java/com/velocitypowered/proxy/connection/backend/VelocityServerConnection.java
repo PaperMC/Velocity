@@ -44,6 +44,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     private boolean legacyForge = false;
     private boolean hasCompletedJoin = false;
     private boolean gracefulDisconnect = false;
+    private long lastPingId;
+    private long lastPingSent;
 
     public VelocityServerConnection(VelocityRegisteredServer registeredServer, ConnectedPlayer proxyPlayer, VelocityServer server) {
         this.registeredServer = registeredServer;
@@ -192,5 +194,18 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     public boolean isGracefulDisconnect() {
         return gracefulDisconnect;
+    }
+
+    public long getLastPingId() {
+        return lastPingId;
+    }
+
+    public long getLastPingSent() {
+        return lastPingSent;
+    }
+
+    public void setLastPingId(long lastPingId) {
+        this.lastPingId = lastPingId;
+        this.lastPingSent = System.currentTimeMillis();
     }
 }

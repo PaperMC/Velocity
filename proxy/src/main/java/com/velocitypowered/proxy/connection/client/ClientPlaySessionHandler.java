@@ -29,8 +29,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final int MAX_PLUGIN_CHANNELS = 1024;
 
     private final ConnectedPlayer player;
-    private long lastPingID = -1;
-    private long lastPingSent = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
@@ -64,13 +62,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
-            if (keepAlive.getRandomId() != lastPingID) {
+            if (keepAlive.getRandomId() != serverConnection.getLastPingId()) {
                 // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
                 // ping is alright.
                 return;
             }
-            player.setPing(System.currentTimeMillis() - lastPingSent);
-            resetPingData();
+            player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
             serverConnection.getMinecraftConnection().write(packet);
             return;
         }
@@ -155,7 +152,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
-        resetPingData(); // reset ping data
         if (!spawned) {
             // Nothing special to do with regards to spawning the player
             spawned = true;
@@ -298,16 +294,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public Set<String> getClientPluginMsgChannels() {
         return clientPluginMsgChannels;
-    }
-
-    public void setLastPing(long lastPing) {
-        this.lastPingID = lastPing;
-        this.lastPingSent = System.currentTimeMillis();
-    }
-    
-    private void resetPingData() {
-        this.lastPingID = -1;
-        this.lastPingSent = -1;
     }
 
     public void handleTabCompleteResponse(TabCompleteResponse response) {
