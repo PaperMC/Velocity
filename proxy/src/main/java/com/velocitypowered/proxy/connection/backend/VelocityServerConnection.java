@@ -208,4 +208,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         this.lastPingId = lastPingId;
         this.lastPingSent = System.currentTimeMillis();
     }
+
+    public void resetLastPingId() {
+        this.lastPingId = -1;
+    }
 }
