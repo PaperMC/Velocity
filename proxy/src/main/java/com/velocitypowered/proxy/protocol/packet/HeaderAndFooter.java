@@ -2,12 +2,12 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants.Direction;
-import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
-
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializer;
 import net.kyori.text.serializer.ComponentSerializers;
+
+import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
 
 public class HeaderAndFooter implements MinecraftPacket {
 

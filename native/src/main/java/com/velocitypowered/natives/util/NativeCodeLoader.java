@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 public class NativeCodeLoader<T> implements Supplier<T> {
     private final List<Variant<T>> variants;
-    private Variant<T> selected;
+    private volatile Variant<T> selected;
 
     public NativeCodeLoader(List<Variant<T>> variants) {
         this.variants = ImmutableList.copyOf(variants);
@@ -16,36 +16,41 @@ public class NativeCodeLoader<T> implements Supplier<T> {
 
     @Override
     public T get() {
-        if (selected == null) {
-            selected = select();
-        }
-        return selected.object;
+        return tryLoad().object;
     }
 
-    private Variant<T> select() {
-        for (Variant<T> variant : variants) {
-            T got = variant.get();
-            if (got == null) {
-                continue;
-            }
-            return variant;
+    private Variant<T> tryLoad() {
+        if (selected != null) {
+            return selected;
         }
-        throw new IllegalArgumentException("Can't find any suitable variants");
+
+        synchronized (this) {
+            if (selected != null) {
+                return selected;
+            }
+
+            for (Variant<T> variant : variants) {
+                T got = variant.get();
+                if (got == null) {
+                    continue;
+                }
+                selected = variant;
+                return selected;
+            }
+            throw new IllegalArgumentException("Can't find any suitable variants");
+        }
     }
 
     public String getLoadedVariant() {
-        if (selected == null) {
-            selected = select();
-        }
-        return selected.name;
+        return tryLoad().name;
     }
 
     static class Variant<T> {
-        private boolean available;
+        private volatile boolean available;
         private final Runnable setup;
         private final String name;
         private final T object;
-        private boolean hasBeenSetup = false;
+        private volatile boolean hasBeenSetup = false;
 
         Variant(BooleanSupplier available, Runnable setup, String name, T object) {
             this.available = available.getAsBoolean();
@@ -54,27 +59,34 @@ public class NativeCodeLoader<T> implements Supplier<T> {
             this.object = object;
         }
 
-        private void setup() {
-            if (available && !hasBeenSetup) {
-                try {
-                    setup.run();
-                    hasBeenSetup = true;
-                } catch (Exception e) {
-                    available = false;
+        public T get() {
+            if (!available) {
+                return null;
+            }
+
+            // Make sure setup happens only once
+            if (!hasBeenSetup) {
+                synchronized (this) {
+                    // We change availability if need be below, may as well check it again here for sanity.
+                    if (!available) {
+                        return null;
+                    }
+
+                    // Okay, now try the setup if we haven't done so yet.
+                    if (!hasBeenSetup) {
+                        try {
+                            setup.run();
+                            hasBeenSetup = true;
+                            return object;
+                        } catch (Exception e) {
+                            available = false;
+                            return null;
+                        }
+                    }
                 }
             }
-        }
 
-        public T get() {
-            if (!hasBeenSetup) {
-                setup();
-            }
-
-            if (available) {
-                return object;
-            }
-
-            return null;
+            return object;
         }
     }
 

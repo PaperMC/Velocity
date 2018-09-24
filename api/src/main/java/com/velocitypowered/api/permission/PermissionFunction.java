@@ -29,5 +29,5 @@ public interface PermissionFunction {
      * @param permission the permission
      * @return the value the permission is set to
      */
-    @NonNull Tristate getPermissionSetting(@NonNull String permission);
+    @NonNull Tristate getPermissionValue(@NonNull String permission);
 }

@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy;
 
-import com.velocitypowered.proxy.console.VelocityConsole;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,6 +27,6 @@ public class Velocity {
 
         double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
         logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
-        new VelocityConsole(server).start();
+        server.getConsoleCommandSource().start();
     }
 }

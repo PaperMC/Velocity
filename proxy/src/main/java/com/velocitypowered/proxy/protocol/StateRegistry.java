@@ -8,7 +8,7 @@ import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
@@ -23,7 +23,7 @@ public enum StateRegistry {
     },
     STATUS {
         {
-            SERVERBOUND.register(StatusRequest.class, StatusRequest::new,
+            SERVERBOUND.register(StatusRequest.class, () -> StatusRequest.INSTANCE,
                     genericMappings(0x00));
             SERVERBOUND.register(StatusPing.class, StatusPing::new,
                     genericMappings(0x01));
@@ -40,8 +40,7 @@ public enum StateRegistry {
                     map(0x14, MINECRAFT_1_8, false),
                     map(0x01, MINECRAFT_1_9, false),
                     map(0x02, MINECRAFT_1_12, false),
-                    map(0x01, MINECRAFT_1_12_1, false),
-                    map(0x05, MINECRAFT_1_13, false));
+                    map(0x01, MINECRAFT_1_12_1, false));
             SERVERBOUND.register(Chat.class, Chat::new,
                     map(0x01, MINECRAFT_1_8, false),
                     map(0x02, MINECRAFT_1_9, false),
@@ -77,10 +76,9 @@ public enum StateRegistry {
                     map(0x0F, MINECRAFT_1_12, true),
                     map(0x0E, MINECRAFT_1_13, true));
             CLIENTBOUND.register(TabCompleteResponse.class, TabCompleteResponse::new,
-                    map(0x3A, MINECRAFT_1_8, true),
-                    map(0x0E, MINECRAFT_1_9, true),
-                    map(0x0E, MINECRAFT_1_12, true),
-                    map(0x10, MINECRAFT_1_13, true));
+                    map(0x3A, MINECRAFT_1_8, false),
+                    map(0x0E, MINECRAFT_1_9, false),
+                    map(0x0E, MINECRAFT_1_12, false));
             CLIENTBOUND.register(PluginMessage.class, PluginMessage::new,
                     map(0x3F, MINECRAFT_1_8, false),
                     map(0x18, MINECRAFT_1_9, false),
@@ -114,30 +112,12 @@ public enum StateRegistry {
                     map(0x49, MINECRAFT_1_12, true),
                     map(0x4A, MINECRAFT_1_12_1, true),
                     map(0x4E, MINECRAFT_1_13, true));
-            CLIENTBOUND.register(ScoreboardDisplay.class, ScoreboardDisplay::new,
-                    map(0x3D, MINECRAFT_1_8, true),
-                    map(0x38, MINECRAFT_1_9, true),
-                    map(0x3A, MINECRAFT_1_12, true),
-                    map(0x3B, MINECRAFT_1_12_1, true),
-                    map(0x3E, MINECRAFT_1_13, true));
-            CLIENTBOUND.register(ScoreboardObjective.class, ScoreboardObjective::new,
-                    map(0x3B, MINECRAFT_1_8, true),
-                    map(0x3F, MINECRAFT_1_9, true),
-                    map(0x41, MINECRAFT_1_12, true),
-                    map(0x42, MINECRAFT_1_12_1, true),
-                    map(0x45, MINECRAFT_1_13, true));
-            CLIENTBOUND.register(ScoreboardTeam.class, ScoreboardTeam::new,
-                    map(0x3E, MINECRAFT_1_8, true),
-                    map(0x41, MINECRAFT_1_9, true),
-                    map(0x43, MINECRAFT_1_12, true),
-                    map(0x44, MINECRAFT_1_12_1, true),
-                    map(0x47, MINECRAFT_1_13, true));
-            CLIENTBOUND.register(ScoreboardSetScore.class, ScoreboardSetScore::new,
-                    map(0x3C, MINECRAFT_1_8, true),
-                    map(0x42, MINECRAFT_1_9, true),
-                    map(0x44, MINECRAFT_1_12, true),
-                    map(0x45, MINECRAFT_1_12_1, true),
-                    map(0x48, MINECRAFT_1_13, true));
+            CLIENTBOUND.register(TitlePacket.class, TitlePacket::new,
+                    map(0x45, MINECRAFT_1_8, true),
+                    map(0x45, MINECRAFT_1_9, true),
+                    map(0x47, MINECRAFT_1_12, true),
+                    map(0x48, MINECRAFT_1_12_1, true),
+                    map(0x4B, MINECRAFT_1_13, true));
         }
     },
     LOGIN {

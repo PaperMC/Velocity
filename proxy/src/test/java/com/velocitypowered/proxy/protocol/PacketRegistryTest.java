@@ -3,9 +3,7 @@ package com.velocitypowered.proxy.protocol;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import org.junit.jupiter.api.Test;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_2;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PacketRegistryTest {

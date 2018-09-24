@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.plugin;
 
-import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.proxy.VelocityServer;

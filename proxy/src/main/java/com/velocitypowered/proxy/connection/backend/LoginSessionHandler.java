@@ -1,18 +1,18 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
+import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.*;
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.kyori.text.TextComponent;
@@ -82,12 +82,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             if (existingConnection == null) {
                 // Strap on the play session handler
                 connection.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, connection.getPlayer()));
-
-                // This is for legacy Forge servers - during first connection the FML handshake will transition to complete regardless
-                // Thus, we need to ensure that a reset packet is ALWAYS sent on first switch.
-                //
-                // The call will handle if the player is not a Forge player appropriately.
-                connection.getPlayer().getConnection().setCanSendLegacyFMLResetPacket(true);
             } else {
                 // The previous server connection should become obsolete.
                 // Before we remove it, if the server we are departing is modded, we must always reset the client state.

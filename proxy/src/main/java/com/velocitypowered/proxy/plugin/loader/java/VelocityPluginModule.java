@@ -8,7 +8,6 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.proxy.VelocityServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

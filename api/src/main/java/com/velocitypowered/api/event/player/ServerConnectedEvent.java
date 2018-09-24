@@ -2,7 +2,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 /**
  * This event is fired once the player has successfully connected to the target server and the connection to the previous
@@ -10,9 +10,9 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
  */
 public class ServerConnectedEvent {
     private final Player player;
-    private final ServerInfo server;
+    private final RegisteredServer server;
 
-    public ServerConnectedEvent(Player player, ServerInfo server) {
+    public ServerConnectedEvent(Player player, RegisteredServer server) {
         this.player = Preconditions.checkNotNull(player, "player");
         this.server = Preconditions.checkNotNull(server, "server");
     }
@@ -21,7 +21,7 @@ public class ServerConnectedEvent {
         return player;
     }
 
-    public ServerInfo getServer() {
+    public RegisteredServer getServer() {
         return server;
     }
 

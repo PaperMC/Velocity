@@ -1,15 +1,16 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.proxy.messages.ChannelSide;
-import com.velocitypowered.api.proxy.messages.MessageHandler;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 
@@ -24,7 +25,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServerInfo()));
+        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServer()));
+        connection.getServer().addPlayer(connection.getPlayer());
     }
 
     @Override
@@ -32,7 +34,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.getMinecraftConnection().close();
+            connection.disconnect();
             return;
         }
 
@@ -40,11 +42,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
             // Forward onto the player
-            playerHandler.setLastPing(((KeepAlive) packet).getRandomId());
+            connection.setLastPingId(((KeepAlive) packet).getRandomId());
             connection.getPlayer().getConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
-            connection.getPlayer().handleConnectionException(connection.getServerInfo(), original);
+            connection.disconnect();
+            connection.getPlayer().handleConnectionException(connection.getServer(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else if (packet instanceof BossBar) {
@@ -83,11 +86,20 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 return;
             }
 
-            MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(connection,
-                    ChannelSide.FROM_SERVER, pm);
-            if (status == MessageHandler.ForwardStatus.FORWARD) {
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(pm.getChannel());
+            if (id == null) {
                 connection.getPlayer().getConnection().write(pm);
+            } else {
+                PluginMessageEvent event = new PluginMessageEvent(connection, connection.getPlayer(), id, pm.getData());
+                server.getEventManager().fire(event)
+                        .thenAcceptAsync(pme -> {
+                            if (pme.getResult().isAllowed()) {
+                                connection.getPlayer().getConnection().write(pm);
+                            }
+                        }, connection.getMinecraftConnection().getChannel().eventLoop());
             }
+        } else if (packet instanceof TabCompleteResponse) {
+            playerHandler.handleTabCompleteResponse((TabCompleteResponse) packet);
         } else if (connection.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
@@ -99,7 +111,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.getMinecraftConnection().close();
+            connection.disconnect();
             return;
         }
 
@@ -110,7 +122,20 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void exception(Throwable throwable) {
-        connection.getPlayer().handleConnectionException(connection.getServerInfo(), throwable);
+        connection.getPlayer().handleConnectionException(connection.getServer(), throwable);
+    }
+
+    public VelocityServer getServer() {
+        return server;
+    }
+
+    @Override
+    public void disconnected() {
+        connection.getServer().removePlayer(connection.getPlayer());
+        if (!connection.isGracefulDisconnect()) {
+            connection.getPlayer().handleConnectionException(connection.getServer(), Disconnect.create(
+                    ConnectionMessages.UNEXPECTED_DISCONNECT));
+        }
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {

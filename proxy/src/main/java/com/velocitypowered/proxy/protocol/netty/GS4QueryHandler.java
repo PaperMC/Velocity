@@ -101,9 +101,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                     queryResponse.writeByte(QUERY_TYPE_STAT);
                     queryResponse.writeInt(sessionId);
 
-                    // Fetch information
-                    Collection<Player> players = server.getAllPlayers();
-
                     // Start writing the response
                     ResponseWriter responseWriter = new ResponseWriter(queryResponse, queryMessage.readableBytes() == 0);
                     responseWriter.write("hostname", ComponentSerializers.PLAIN.serialize(server.getConfiguration().getMotdComponent()));
@@ -114,12 +111,14 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                     responseWriter.write("plugins", "");
 
                     responseWriter.write("map", "Velocity");
-                    responseWriter.write("numplayers", players.size());
+                    responseWriter.write("numplayers", server.getPlayerCount());
                     responseWriter.write("maxplayers", server.getConfiguration().getShowMaxPlayers());
                     responseWriter.write("hostport", server.getConfiguration().getBind().getPort());
                     responseWriter.write("hostip", server.getConfiguration().getBind().getHostString());
 
-                    responseWriter.writePlayers(players);
+                    if (!responseWriter.isBasic) {
+                        responseWriter.writePlayers(server.getAllPlayers());
+                    }
                     break;
                 }
 
@@ -132,6 +131,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             ctx.writeAndFlush(responsePacket);
         } catch (Exception e) {
             logger.warn("Error while trying to handle a query packet from {}", msg.sender(), e);
+            // NB: Only need to explicitly release upon exception, writing the response out will decrement the reference
+            // count.
             responsePacket.release();
         }
     }

@@ -1,14 +1,15 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.proxy.messages.ChannelSide;
-import com.velocitypowered.api.proxy.messages.MessageHandler;
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
@@ -28,12 +29,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private static final int MAX_PLUGIN_CHANNELS = 1024;
 
     private final ConnectedPlayer player;
-    private long lastPingID = -1;
-    private long lastPingSent = -1;
     private boolean spawned = false;
     private final List<UUID> serverBossBars = new ArrayList<>();
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
+    private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
     private final VelocityServer server;
+    private TabCompleteRequest outstandingTabComplete;
 
     public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
         this.player = player;
@@ -53,16 +54,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handle(MinecraftPacket packet) {
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
         if (packet instanceof KeepAlive) {
             KeepAlive keepAlive = (KeepAlive) packet;
-            if (keepAlive.getRandomId() != lastPingID) {
+            if (keepAlive.getRandomId() != serverConnection.getLastPingId()) {
                 // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
                 // ping is alright.
                 return;
             }
-            player.setPing(System.currentTimeMillis() - lastPingSent);
-            resetPingData();
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+            player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
+            serverConnection.getMinecraftConnection().write(packet);
+            serverConnection.resetLastPingId();
             return;
         }
 
@@ -92,31 +99,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (packet instanceof TabCompleteRequest) {
-            TabCompleteRequest req = (TabCompleteRequest) packet;
-            int lastSpace = req.getCommand().indexOf(' ');
-            if (!req.isAssumeCommand() && lastSpace != -1) {
-                String command = req.getCommand().substring(1);
-                try {
-                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
-                    if (offers.isPresent()) {
-                        TabCompleteResponse response = new TabCompleteResponse();
-                        response.setTransactionId(req.getTransactionId());
-                        response.setStart(lastSpace);
-                        response.setLength(req.getCommand().length() - lastSpace);
-
-                        for (String s : offers.get()) {
-                            response.getOffers().add(new TabCompleteResponse.Offer(s, null));
-                        }
-
-                        player.getConnection().write(response);
-                    } else {
-                        player.getConnectedServer().getMinecraftConnection().write(packet);
-                    }
-                } catch (Exception e) {
-                    logger.error("Unable to provide tab list completions for " + player.getUsername() + " for command '" + req.getCommand() + "'", e);
-                }
-                return;
-            }
+            // Record the request so that the outstanding request can be augmented later.
+            outstandingTabComplete = (TabCompleteRequest) packet;
+            serverConnection.getMinecraftConnection().write(packet);
         }
 
         if (packet instanceof PluginMessage) {
@@ -125,15 +110,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         // If we don't want to handle this packet, just forward it on.
-        if (player.getConnectedServer().hasCompletedJoin()) {
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(packet);
         }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        if (player.getConnectedServer().hasCompletedJoin()) {
-            player.getConnectedServer().getMinecraftConnection().write(buf.retain());
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection == null) {
+            // No server connection yet, probably transitioning.
+            return;
+        }
+
+        if (serverConnection.hasCompletedJoin()) {
+            serverConnection.getMinecraftConnection().write(buf.retain());
         }
     }
 
@@ -162,11 +153,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleBackendJoinGame(JoinGame joinGame) {
-        resetPingData(); // reset ping data;
         if (!spawned) {
-            // nothing special to do here
+            // Nothing special to do with regards to spawning the player
             spawned = true;
             player.getConnection().delayedWrite(joinGame);
+
+            // We have something special to do for legacy Forge servers - during first connection the FML handshake
+            // will transition to complete regardless. Thus, we need to ensure that a reset packet is ALWAYS sent on
+            // first switch.
+            //
+            // As we know that calling this branch only happens on first join, we set that if we are a Forge
+            // client that we must reset on the next switch.
+            //
+            // The call will handle if the player is not a Forge player appropriately.
+            player.getConnection().setCanSendLegacyFMLResetPacket(true);
         } else {
             // Ah, this is the meat and potatoes of the whole venture!
             //
@@ -210,6 +210,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     channel, toRegister));
         }
 
+        // If we had plugin messages queued during login/FML handshake, send them now.
+        PluginMessage pm;
+        while ((pm = loginPluginMessages.poll()) != null) {
+            player.getConnectedServer().getMinecraftConnection().delayedWrite(pm);
+        }
+
+        // Clear any title from the previous server.
+        player.getConnection().delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
+
         // Flush everything
         player.getConnection().flush();
         player.getConnectedServer().getMinecraftConnection().flush();
@@ -234,8 +243,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return serverBossBars;
     }
 
-    public void handleClientPluginMessage(PluginMessage packet) {
-        if (packet.getChannel().equals("REGISTER") || packet.getChannel().equals("minecraft:register")) {
+    private void handleClientPluginMessage(PluginMessage packet) {
+        if (PluginMessageUtil.isMCRegister(packet)) {
             List<String> actuallyRegistered = new ArrayList<>();
             List<String> channels = PluginMessageUtil.getChannels(packet);
             for (String channel : channels) {
@@ -252,31 +261,35 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
                 player.getConnectedServer().getMinecraftConnection().write(newRegisterPacket);
             }
-
-            return;
-        }
-
-        if (packet.getChannel().equals("UNREGISTER") || packet.getChannel().equals("minecraft:unregister")) {
+        } else if (PluginMessageUtil.isMCUnregister(packet)) {
             List<String> channels = PluginMessageUtil.getChannels(packet);
             clientPluginMsgChannels.removeAll(channels);
-        }
-
-        if (PluginMessageUtil.isMCBrand(packet)) {
+            player.getConnectedServer().getMinecraftConnection().write(packet);
+        } else if (PluginMessageUtil.isMCBrand(packet)) {
             player.getConnectedServer().getMinecraftConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-            return;
-        }
-
-        if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
-            // Ensure that the messages are forwarded
-            player.getConnectedServer().getMinecraftConnection().write(packet);
-            return;
-        }
-
-        MessageHandler.ForwardStatus status = server.getChannelRegistrar().handlePluginMessage(player,
-                ChannelSide.FROM_CLIENT, packet);
-        if (status == MessageHandler.ForwardStatus.FORWARD) {
-            // We're going to forward on the original packet.
-            player.getConnectedServer().getMinecraftConnection().write(packet);
+        } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
+            if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                // Always forward the FML handshake to the remote server.
+                player.getConnectedServer().getMinecraftConnection().write(packet);
+            } else {
+                // The client is trying to send messages too early. This is primarily caused by mods, but it's further
+                // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
+                // be sent once the JoinGame packet has been received by the proxy.
+                loginPluginMessages.add(packet);
+            }
+        } else {
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            if (id == null) {
+                player.getConnectedServer().getMinecraftConnection().write(packet);
+            } else {
+                PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(), id, packet.getData());
+                server.getEventManager().fire(event)
+                        .thenAcceptAsync(pme -> {
+                            if (pme.getResult().isAllowed()) {
+                                player.getConnectedServer().getMinecraftConnection().write(packet);
+                            }
+                        }, player.getConnectedServer().getMinecraftConnection().getChannel().eventLoop());
+            }
         }
     }
 
@@ -284,13 +297,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return clientPluginMsgChannels;
     }
 
-    public void setLastPing(long lastPing) {
-        this.lastPingID = lastPing;
-        this.lastPingSent = System.currentTimeMillis();
-    }
-    
-    private void resetPingData() {
-        this.lastPingID = -1;
-        this.lastPingSent = -1;
+    public void handleTabCompleteResponse(TabCompleteResponse response) {
+        if (outstandingTabComplete != null) {
+            if (!outstandingTabComplete.isAssumeCommand()) {
+                String command = outstandingTabComplete.getCommand().substring(1);
+                try {
+                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
+                    offers.ifPresent(strings -> response.getOffers().addAll(strings));
+                } catch (Exception e) {
+                    logger.error("Unable to provide tab list completions for {} for command '{}'", player.getUsername(),
+                            command, e);
+                }
+                outstandingTabComplete = null;
+            }
+            player.getConnection().write(response);
+        }
     }
 }
