@@ -208,6 +208,10 @@ public class VelocityConfiguration extends AnnotatedConfig {
         return query.getQueryPort();
     }
 
+    public String getQueryMap() {
+        return query.getQueryMap();
+    }
+
     public String getMotd() {
         return motd;
     }
@@ -482,6 +486,9 @@ public class VelocityConfiguration extends AnnotatedConfig {
         @Comment("If query responding is enabled, on what port should query response listener listen on?")
         @ConfigKey("port")
         private int queryPort = 25577;
+        @Comment("This is the map name that is reported to the query services.")
+        @ConfigKey("map")
+        private String queryMap = "Velocity";
 
         private Query() {
         }
@@ -489,12 +496,14 @@ public class VelocityConfiguration extends AnnotatedConfig {
         private Query(boolean queryEnabled, int queryPort) {
             this.queryEnabled = queryEnabled;
             this.queryPort = queryPort;
+            this.queryMap = queryMap;
         }
 
         private Query(Toml toml) {
             if (toml != null) {
                 this.queryEnabled = toml.getBoolean("enabled", false);
                 this.queryPort = toml.getLong("port", 25577L).intValue();
+                this.queryMap = toml.getString("map", "Velocity");
             }
         }
 
@@ -506,11 +515,16 @@ public class VelocityConfiguration extends AnnotatedConfig {
             return queryPort;
         }
 
+        public String getQueryMap() {
+            return queryMap;
+        }
+
         @Override
         public String toString() {
             return "Query{"
                     + "queryEnabled=" + queryEnabled
                     + ", queryPort=" + queryPort
+                    + ", queryMap=" + queryMap
                     + '}';
         }
     }
