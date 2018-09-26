@@ -13,6 +13,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.util.EventUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
@@ -97,18 +98,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     return;
                 }
             } else {
-                PlayerChatEvent event = new PlayerChatEvent(player, msg);
-                server.getEventManager().fire(event)
-                        .thenAcceptAsync(pme -> {
-                            if (pme.getResult().equals(ResultedEvent.ChatResult.allowed())){
-                                player.getConnectedServer().getMinecraftConnection().write(chat);
-                            } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
-                                Chat modifiedChat = new Chat();
-                                modifiedChat.setType(Chat.CHAT);
-                                modifiedChat.setMessage(pme.getResult().getMessage().get());
-                                player.getConnectedServer().getMinecraftConnection().write(modifiedChat);
-                            }
-                        }, player.getConnectedServer().getMinecraftConnection().getChannel().eventLoop());
+                EventUtil.callPlayerChatEvent(server, player, msg, chat);
             }
             return;
         }
