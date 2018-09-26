@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -11,7 +12,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
-import com.velocitypowered.proxy.util.EventUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.TextComponent;
@@ -94,7 +94,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     return;
                 }
             } else {
-                EventUtil.callPlayerChatEvent(server, player, msg, chat);
+                PlayerChatEvent event = new PlayerChatEvent(player, msg);
+                server.getEventManager().fire(event)
+                        .thenAcceptAsync(pme -> {
+                            if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
+                                player.getConnectedServer().getMinecraftConnection().write(chat);
+                            } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
+                                player.getConnectedServer().getMinecraftConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
+                            }
+                        }, player.getConnectedServer().getMinecraftConnection().getChannel().eventLoop());
             }
             return;
         }
