@@ -36,7 +36,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         if (packet instanceof EncryptionRequest) {
             throw new IllegalStateException("Backend server is online-mode!");
         } else if (packet instanceof LoginPluginMessage) {
@@ -73,7 +73,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 doNotify(ConnectionRequestResults.forDisconnect(
                         TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
                 connection.disconnect();
-                return;
+                return PacketStatus.CANCEL;
             }
 
             // The player has been logged on to the backend server.
@@ -95,6 +95,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(server, connection));
             connection.getPlayer().setConnectedServer(connection);
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override

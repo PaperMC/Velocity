@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
+
     private final MinecraftConnection connection;
     private final VelocityServer server;
 
@@ -35,11 +36,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         if (packet instanceof LegacyPing || packet instanceof LegacyHandshake) {
             connection.setProtocolVersion(ProtocolConstants.LEGACY);
             handleLegacy(packet);
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (!(packet instanceof Handshake)) {
@@ -61,13 +62,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
                 if (!ProtocolConstants.isSupported(handshake.getProtocolVersion())) {
                     connection.closeWith(Disconnect.create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
-                    return;
+                    return PacketStatus.CANCEL;
                 }
 
                 InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
                 if (!server.getIpAttemptLimiter().attempt(address)) {
                     connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
-                    return;
+                    return PacketStatus.CANCEL;
                 }
 
                 // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13) and store that in the connection
@@ -77,15 +78,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge
                 if (handshake.getServerAddress().contains("\0") && !isForge) {
                     connection.closeWith(Disconnect.create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
-                    return;
+                    return PacketStatus.CANCEL;
                 }
 
                 // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2 and lower,
                 // otherwise IP information will never get forwarded.
-                if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && handshake.getProtocolVersion() <
-                        ProtocolConstants.MINECRAFT_1_13) {
+                if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && handshake.getProtocolVersion()
+                        < ProtocolConstants.MINECRAFT_1_13) {
                     connection.closeWith(Disconnect.create(TextComponent.of("This server is only compatible with 1.13 and above.")));
-                    return;
+                    return PacketStatus.CANCEL;
                 }
 
                 server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
@@ -94,10 +95,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
+    public PacketStatus handleUnknown(ByteBuf buf) {
         throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 
@@ -123,6 +125,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     private static class LegacyInboundConnection implements InboundConnection {
+
         private final MinecraftConnection connection;
 
         private LegacyInboundConnection(MinecraftConnection connection) {

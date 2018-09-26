@@ -31,11 +31,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.proxy.VelocityServer.GSON;
+import com.velocitypowered.proxy.connection.ConnectionInitEvent;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
-    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
-            AttributeKey.newInstance("connection-notification-result");
+
+    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER
+            = AttributeKey.newInstance("connection-notification-result");
 
     private final VelocityRegisteredServer registeredServer;
     private final ConnectedPlayer proxyPlayer;
@@ -80,9 +82,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                         if (future.isSuccess()) {
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
-                            // Kick off the connection process
                             minecraftConnection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
-                            startHandshake();
+                            server.getEventManager().fire(new ConnectionInitEvent(minecraftConnection, registeredServer)).thenRunAsync(() -> {
+                                startHandshake();
+                            }, minecraftConnection.getChannel().eventLoop());
                         } else {
                             result.completeExceptionally(future.cause());
                         }
@@ -95,10 +98,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
         // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
         // UUID (undashed), and if you are in online-mode, their login properties (retrieved from Mojang).
-        return registeredServer.getServerInfo().getAddress().getHostString() + "\0" +
-                proxyPlayer.getRemoteAddress().getHostString() + "\0" +
-                proxyPlayer.getProfile().getId() + "\0" +
-                GSON.toJson(proxyPlayer.getProfile().getProperties());
+        return registeredServer.getServerInfo().getAddress().getHostString() + "\0"
+                + proxyPlayer.getRemoteAddress().getHostString() + "\0"
+                + proxyPlayer.getProfile().getId() + "\0"
+                + GSON.toJson(proxyPlayer.getProfile().getProperties());
     }
 
     private void startHandshake() {

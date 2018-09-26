@@ -4,10 +4,12 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.buffer.ByteBuf;
 
 public interface MinecraftSessionHandler {
-    void handle(MinecraftPacket packet);
 
-    default void handleUnknown(ByteBuf buf) {
+    PacketStatus handle(MinecraftPacket packet);
+
+    default PacketStatus handleUnknown(ByteBuf buf) {
         // No-op: we'll release the buffer later.
+        return PacketStatus.ALLOW;
     }
 
     default void connected() {
@@ -32,5 +34,21 @@ public interface MinecraftSessionHandler {
 
     default void writabilityChanged() {
 
+    }
+
+    default PacketStatus writeToChannel(Object packet) {
+        return PacketStatus.ALLOW;
+    }
+
+    default int getPriority() {
+        return 0;
+    }
+
+    /**
+     * Only used in SessionHandler that was created by plugins
+     */
+    public static enum PacketStatus {
+        ALLOW,
+        CANCEL
     }
 }

@@ -30,12 +30,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
             connection.disconnect();
-            return;
+            return PacketStatus.CANCEL;
         }
 
         ClientPlaySessionHandler playerHandler =
@@ -64,12 +64,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         } else if (packet instanceof PluginMessage) {
             PluginMessage pm = (PluginMessage) packet;
             if (!canForwardPluginMessage(pm)) {
-                return;
+                return PacketStatus.CANCEL;
             }
 
             if (PluginMessageUtil.isMCBrand(pm)) {
                 connection.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
-                return;
+                return PacketStatus.CANCEL;
             }
 
             if (!connection.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
@@ -83,7 +83,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
                 // Always forward these messages during login
                 connection.getPlayer().getConnection().write(pm);
-                return;
+                return PacketStatus.CANCEL;
             }
 
             ChannelIdentifier id = server.getChannelRegistrar().getFromId(pm.getChannel());
@@ -104,20 +104,22 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             // Just forward the packet on. We don't have anything to handle at this time.
             connection.getPlayer().getConnection().write(packet);
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
+    public PacketStatus handleUnknown(ByteBuf buf) {
         if (!connection.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
             connection.disconnect();
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (connection.hasCompletedJoin()) {
             connection.getPlayer().getConnection().write(buf.retain());
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override

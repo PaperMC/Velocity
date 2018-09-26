@@ -4,6 +4,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
+
     private final ConnectedPlayer player;
 
     public InitialConnectSessionHandler(ConnectedPlayer player) {
@@ -11,8 +12,9 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         // No-op: will never handle packets
+        return PacketStatus.CANCEL;
     }
 
     @Override

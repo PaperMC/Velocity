@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public class PingSessionHandler implements MinecraftSessionHandler {
+
     private final CompletableFuture<ServerPing> result;
     private final RegisteredServer server;
     private final MinecraftConnection connection;
@@ -42,7 +43,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         Preconditions.checkState(packet instanceof StatusResponse, "Did not get status response back from connection");
 
         // All good!
@@ -51,6 +52,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
         ServerPing ping = VelocityServer.GSON.fromJson(((StatusResponse) packet).getStatus(), ServerPing.class);
         result.complete(ping);
+        return PacketStatus.ALLOW;
     }
 
     @Override

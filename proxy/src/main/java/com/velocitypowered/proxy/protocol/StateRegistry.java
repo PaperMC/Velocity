@@ -1,7 +1,9 @@
 package com.velocitypowered.proxy.protocol;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.primitives.ImmutableIntArray;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
@@ -12,9 +14,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
+import java.util.Set;
 
 public enum StateRegistry {
-        
+
     HANDSHAKE {
         {
             SERVERBOUND.register(Handshake.class, Handshake::new,
@@ -148,6 +151,7 @@ public enum StateRegistry {
     public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND, this);
 
     public static class PacketRegistry {
+
         private static final IntObjectMap<ImmutableIntArray> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
 
         static {
@@ -196,11 +200,14 @@ public enum StateRegistry {
 
                 ImmutableIntArray linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
                 if (linked != null) {
-                    links: for (int i = 0; i < linked.length(); i++) {
+                    links:
+                    for (int i = 0; i < linked.length(); i++) {
                         int linkedVersion = linked.get(i);
                         // Make sure that later mappings override this one.
                         for (PacketMapping m : mappings) {
-                            if (linkedVersion == m.protocolVersion) continue links;
+                            if (linkedVersion == m.protocolVersion) {
+                                continue links;
+                            }
                         }
                         register(clazz, packetSupplier, map(mapping.id, linkedVersion, mapping.encodeOnly));
                     }
@@ -209,6 +216,7 @@ public enum StateRegistry {
         }
 
         public class ProtocolVersion {
+
             public final int id;
             final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>(16, 0.5f);
             final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId = new Object2IntOpenHashMap<>(16, 0.5f);
@@ -248,19 +256,20 @@ public enum StateRegistry {
                 }
                 mappingAsString.setLength(mappingAsString.length() - 2);
                 mappingAsString.append("}");
-                return "ProtocolVersion{" +
-                        "id=" + id +
-                        ", packetClassToId=" + mappingAsString.toString() +
-                        '}';
+                return "ProtocolVersion{"
+                        + "id=" + id
+                        + ", packetClassToId=" + mappingAsString.toString()
+                        + '}';
             }
         }
     }
 
     public static class PacketMapping {
+
         private final int id;
         private final int protocolVersion;
         private final boolean encodeOnly;
-        
+
         public PacketMapping(int id, int protocolVersion, boolean packetDecoding) {
             this.id = id;
             this.protocolVersion = protocolVersion;
@@ -269,21 +278,25 @@ public enum StateRegistry {
 
         @Override
         public String toString() {
-            return "PacketMapping{" +
-                    "id=" + id +
-                    ", protocolVersion=" + protocolVersion +
-                    ", encodeOnly=" + encodeOnly +
-                    '}';
+            return "PacketMapping{"
+                    + "id=" + id
+                    + ", protocolVersion=" + protocolVersion
+                    + ", encodeOnly=" + encodeOnly
+                    + '}';
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             PacketMapping that = (PacketMapping) o;
-            return id == that.id &&
-                    protocolVersion == that.protocolVersion &&
-                    encodeOnly == that.encodeOnly;
+            return id == that.id
+                    && protocolVersion == that.protocolVersion
+                    && encodeOnly == that.encodeOnly;
         }
 
         @Override
@@ -294,21 +307,22 @@ public enum StateRegistry {
 
     /**
      * Creates a PacketMapping using the provided arguments
+     *
      * @param id Packet Id
      * @param version Protocol version
      * @param encodeOnly When true packet decoding will be disabled
      * @return PacketMapping with the provided arguments
      */
-    private static PacketMapping map(int id, int version, boolean encodeOnly) {
+    public static PacketMapping map(int id, int version, boolean encodeOnly) {
         return new PacketMapping(id, version, encodeOnly);
     }
-    
+
     private static PacketMapping[] genericMappings(int id) {
         return new PacketMapping[]{
-                map(id, MINECRAFT_1_8, false),
-                map(id, MINECRAFT_1_9, false),
-                map(id, MINECRAFT_1_12, false),
-                map(id, MINECRAFT_1_13, false)
+            map(id, MINECRAFT_1_8, false),
+            map(id, MINECRAFT_1_9, false),
+            map(id, MINECRAFT_1_12, false),
+            map(id, MINECRAFT_1_13, false)
         };
     }
 }

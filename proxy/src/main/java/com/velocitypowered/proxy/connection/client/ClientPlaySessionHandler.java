@@ -53,11 +53,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         VelocityServerConnection serverConnection = player.getConnectedServer();
         if (serverConnection == null) {
             // No server connection yet, probably transitioning.
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (packet instanceof KeepAlive) {
@@ -65,12 +65,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (keepAlive.getRandomId() != serverConnection.getLastPingId()) {
                 // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
                 // ping is alright.
-                return;
+                return PacketStatus.CANCEL;
             }
             player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
             serverConnection.getMinecraftConnection().write(packet);
             serverConnection.resetLastPingId();
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (packet instanceof ClientSettings) {
@@ -90,12 +90,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 } catch (Exception e) {
                     logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
                     player.sendMessage(TextComponent.of("An error occurred while running this command.", TextColor.RED));
-                    return;
+                    return PacketStatus.CANCEL;
                 }
             } else {
                 player.getConnectedServer().getMinecraftConnection().write(chat);
             }
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (packet instanceof TabCompleteRequest) {
@@ -106,26 +106,28 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         if (packet instanceof PluginMessage) {
             handleClientPluginMessage((PluginMessage) packet);
-            return;
+            return PacketStatus.CANCEL;
         }
 
         // If we don't want to handle this packet, just forward it on.
         if (serverConnection.hasCompletedJoin()) {
             serverConnection.getMinecraftConnection().write(packet);
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
+    public PacketStatus handleUnknown(ByteBuf buf) {
         VelocityServerConnection serverConnection = player.getConnectedServer();
         if (serverConnection == null) {
             // No server connection yet, probably transitioning.
-            return;
+            return PacketStatus.CANCEL;
         }
 
         if (serverConnection.hasCompletedJoin()) {
             serverConnection.getMinecraftConnection().write(buf.retain());
         }
+        return PacketStatus.ALLOW;
     }
 
     @Override
