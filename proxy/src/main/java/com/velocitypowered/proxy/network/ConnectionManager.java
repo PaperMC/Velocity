@@ -78,7 +78,7 @@ public final class ConnectionManager {
                         final MinecraftConnection connection = new MinecraftConnection(ch, server);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new HandshakeSessionHandler(connection, server));
-                        server.getEventManager().fire(new ConnectionInitializeEvent(connection, null)).join(); //I really dont know, can we use a async there and dont skip a handshake packet.
+                        server.getEventManager().fire(new ConnectionInitializeEvent(connection, null, null)).join(); //I really dont know, can we use a async there and dont skip a handshake packet.
                         ch.pipeline().addLast(Connections.HANDLER, connection);
                     }
                 })

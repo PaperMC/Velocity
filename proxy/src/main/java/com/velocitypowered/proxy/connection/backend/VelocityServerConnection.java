@@ -83,7 +83,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             minecraftConnection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
-                            server.getEventManager().fire(new ConnectionInitializeEvent(minecraftConnection, VelocityServerConnection.this)).thenRunAsync(() -> {
+                            server.getEventManager().fire(new ConnectionInitializeEvent(minecraftConnection, VelocityServerConnection.this, null)).thenRunAsync(() -> {
                                 startHandshake();
                             }, minecraftConnection.getChannel().eventLoop());
                         } else {

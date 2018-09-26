@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.connection;
 
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import java.util.Optional;
 
 /**
@@ -12,11 +14,13 @@ import java.util.Optional;
 public class ConnectionInitializeEvent {
 
     private final MinecraftConnection minecraftConnection;
-    private final VelocityServerConnection server;
+    private final VelocityServerConnection serverConnection;
+    private final VelocityRegisteredServer registeredServer;
 
-    public ConnectionInitializeEvent(MinecraftConnection connection, VelocityServerConnection server) {
+    public ConnectionInitializeEvent(MinecraftConnection connection, VelocityServerConnection serverConnection, VelocityRegisteredServer registeredServer) {
         this.minecraftConnection = connection;
-        this.server = server;
+        this.serverConnection = serverConnection;
+        this.registeredServer = registeredServer;
     }
 
     public MinecraftConnection getMinecraftConnection() {
@@ -29,7 +33,16 @@ public class ConnectionInitializeEvent {
      * connection is not backend ({@link ConnectionInitializeEvent#isBackendConnection())
      */
     public Optional<VelocityServerConnection> getServerConnection() {
-        return Optional.ofNullable(server);
+        return Optional.ofNullable(serverConnection);
+    }
+
+    /**
+     *
+     * @return Optional of VelocityRegisteredServer if this connection created
+     * by {@link RegisteredServer#ping()) or empty if not
+     */
+    public Optional<VelocityRegisteredServer> getRegisteredServer() {
+        return Optional.ofNullable(registeredServer);
     }
 
     /**
@@ -38,7 +51,15 @@ public class ConnectionInitializeEvent {
      * proxy)
      */
     public boolean isBackendConnection() {
-        return server != null;
+        return serverConnection != null;
+    }
+
+    /**
+     *
+     * @return true if connection is created by {@link RegisteredServer#ping())
+     */
+    public boolean isPingConnection() {
+        return registeredServer != null;
     }
 
 }

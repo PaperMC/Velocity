@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.ConnectionInitializeEvent;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityRegisteredServer implements RegisteredServer {
+
     private final VelocityServer server;
     private final ServerInfo serverInfo;
     private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
@@ -76,7 +78,9 @@ public class VelocityRegisteredServer implements RegisteredServer {
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (future.isSuccess()) {
                             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
-                            conn.setSessionHandler(new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn));
+                            server.getEventManager().fire(new ConnectionInitializeEvent(conn, null, VelocityRegisteredServer.this)).thenRunAsync(() -> {
+                                conn.setSessionHandler(new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn));
+                            }, future.channel().eventLoop());
                         } else {
                             pingFuture.completeExceptionally(future.cause());
                         }
