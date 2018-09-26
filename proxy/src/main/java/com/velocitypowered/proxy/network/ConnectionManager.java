@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.network;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.ConnectionInitEvent;
+import com.velocitypowered.proxy.connection.ConnectionInitializeEvent;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -78,7 +78,7 @@ public final class ConnectionManager {
                         final MinecraftConnection connection = new MinecraftConnection(ch, server);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new HandshakeSessionHandler(connection, server));
-                        server.getEventManager().fire(new ConnectionInitEvent(connection, null)).join(); //I really dont know, can we use a async there and dont skip a handshake packet.
+                        server.getEventManager().fire(new ConnectionInitializeEvent(connection, null)).join(); //I really dont know, can we use a async there and dont skip a handshake packet.
                         ch.pipeline().addLast(Connections.HANDLER, connection);
                     }
                 })

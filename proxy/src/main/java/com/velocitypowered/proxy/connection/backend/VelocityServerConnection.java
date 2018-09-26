@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.proxy.VelocityServer.GSON;
-import com.velocitypowered.proxy.connection.ConnectionInitEvent;
+import com.velocitypowered.proxy.connection.ConnectionInitializeEvent;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
@@ -83,7 +83,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             minecraftConnection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
-                            server.getEventManager().fire(new ConnectionInitEvent(minecraftConnection, VelocityServerConnection.this)).thenRunAsync(() -> {
+                            server.getEventManager().fire(new ConnectionInitializeEvent(minecraftConnection, VelocityServerConnection.this)).thenRunAsync(() -> {
                                 startHandshake();
                             }, minecraftConnection.getChannel().eventLoop());
                         } else {

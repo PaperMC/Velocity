@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection;
 
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import java.util.Optional;
 
 /**
  * This event is used to allow add custom packet handlers to
@@ -8,12 +9,12 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
  * can fired sync. Use this event only for adding custom handlers
  */
 @Deprecated
-public class ConnectionInitEvent {
+public class ConnectionInitializeEvent {
 
     private final MinecraftConnection minecraftConnection;
     private final VelocityServerConnection server;
 
-    public ConnectionInitEvent(MinecraftConnection connection, VelocityServerConnection server) {
+    public ConnectionInitializeEvent(MinecraftConnection connection, VelocityServerConnection server) {
         this.minecraftConnection = connection;
         this.server = server;
     }
@@ -24,10 +25,11 @@ public class ConnectionInitEvent {
 
     /**
      *
-     * @return VelocityServerConnection or null if this is not a backend connection({@link ConnectionInitEvent#isBackendConnection())
+     * @return Optional of VelocityServerConnection that can be empty if
+     * connection is not backend ({@link ConnectionInitializeEvent#isBackendConnection())
      */
-    public VelocityServerConnection getServer() {
-        return server;
+    public Optional<VelocityServerConnection> getServerConnection() {
+        return Optional.ofNullable(server);
     }
 
     /**
@@ -36,7 +38,7 @@ public class ConnectionInitEvent {
      * proxy)
      */
     public boolean isBackendConnection() {
-        return getServer() != null;
+        return server != null;
     }
 
 }

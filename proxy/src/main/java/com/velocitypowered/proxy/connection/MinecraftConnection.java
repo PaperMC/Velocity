@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * A utility class to make working with the pipeline a little less painful and
@@ -42,7 +44,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private final Channel channel;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
-    private List<MinecraftSessionHandler> pluginsSessionHandlers;
+    private List<MinecraftSessionHandler> pluginsSessionHandlers = new CopyOnWriteArrayList<>();
     private int protocolVersion;
     private MinecraftConnectionAssociation association;
     private boolean isLegacyForge;
@@ -57,13 +59,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-            synchronized (pluginsSessionHandlers) {
-                for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                    handler.connected();
-                }
-            }
-        }
+        pluginsSessionHandlers.forEach(MinecraftSessionHandler::connected);
         if (sessionHandler != null) {
             sessionHandler.connected();
         }
@@ -75,13 +71,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-            synchronized (pluginsSessionHandlers) {
-                for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                    handler.disconnected();
-                }
-            }
-        }
+        pluginsSessionHandlers.forEach(MinecraftSessionHandler::disconnected);
         if (sessionHandler != null) {
             sessionHandler.disconnected();
         }
@@ -95,12 +85,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof MinecraftPacket) {
             PacketStatus status = PacketStatus.ALLOW;
-            if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                synchronized (pluginsSessionHandlers) {
-                    for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                        status = handler.handle((MinecraftPacket) msg);
-                    }
-                }
+            for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
+                status = handler.handle((MinecraftPacket) msg);
             }
             if (status == PacketStatus.ALLOW) {
                 sessionHandler.handle((MinecraftPacket) msg);
@@ -108,18 +94,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         } else if (msg instanceof ByteBuf) {
             try {
                 ByteBuf bb = (ByteBuf) msg;
-                int readerIndex = bb.readerIndex(), writerIndex = bb.writerIndex();
                 PacketStatus status = PacketStatus.ALLOW;
-                if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                    synchronized (pluginsSessionHandlers) {
-                        for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                            bb.readerIndex(readerIndex).writerIndex(writerIndex);
-                            status = handler.handleUnknown(bb);
-                        }
-                    }
+                for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
+                    status = handler.handleUnknown(bb.slice());
                 }
                 if (status == PacketStatus.ALLOW) {
-                    bb.readerIndex(readerIndex).writerIndex(writerIndex);
                     sessionHandler.handleUnknown(bb);
                 }
             } finally {
@@ -131,13 +110,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (ctx.channel().isActive()) {
-            if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                synchronized (pluginsSessionHandlers) {
-                    for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                        handler.exception(cause);
-                    }
-                }
-            }
+            pluginsSessionHandlers.forEach((s) -> s.exception(cause));
 
             if (sessionHandler != null) {
                 sessionHandler.exception(cause);
@@ -153,13 +126,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-            synchronized (pluginsSessionHandlers) {
-                for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                    handler.writabilityChanged();
-                }
-            }
-        }
+        pluginsSessionHandlers.forEach(MinecraftSessionHandler::writabilityChanged);
         if (sessionHandler != null) {
             sessionHandler.writabilityChanged();
         }
@@ -197,12 +164,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     public void write(Object msg) {
         if (channel.isActive()) {
             PacketStatus status = PacketStatus.ALLOW;
-            if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                synchronized (pluginsSessionHandlers) {
-                    for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                        status = handler.writeToChannel(msg);
-                    }
-                }
+            for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
+                status = handler.writeToChannel(msg);
             }
             if (status == PacketStatus.ALLOW) {
                 channel.writeAndFlush(msg, channel.voidPromise());
@@ -211,14 +174,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void delayedWrite(Object msg) {
+
         if (channel.isActive()) {
             PacketStatus status = PacketStatus.ALLOW;
-            if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                synchronized (pluginsSessionHandlers) {
-                    for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                        status = handler.writeToChannel(msg);
-                    }
-                }
+            for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
+                status = handler.writeToChannel(msg);
             }
             if (status == PacketStatus.ALLOW) {
                 channel.write(msg, channel.voidPromise());
