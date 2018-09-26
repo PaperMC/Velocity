@@ -133,19 +133,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     public void addCustomSessionHandler(MinecraftSessionHandler handler) {
-        if (this.pluginsSessionHandlers == null) {
-            this.pluginsSessionHandlers = Collections.synchronizedList(new ArrayList<>());
-        }
-        this.pluginsSessionHandlers.add(handler);
+        pluginsSessionHandlers.add(handler);
         recalculatePriorityOfCustomHandlers();
         handler.activated();
     }
 
     public void removeCustomSessionHandler(MinecraftSessionHandler handler) {
-        if (this.pluginsSessionHandlers != null) {
-            this.pluginsSessionHandlers.remove(handler);
-            handler.deactivated();
-        }
+        this.pluginsSessionHandlers.remove(handler);
+        handler.deactivated();
     }
 
     /**
@@ -195,12 +190,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     public void closeWith(Object msg) {
         if (channel.isActive()) {
             PacketStatus status = PacketStatus.ALLOW;
-            if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
-                synchronized (pluginsSessionHandlers) {
-                    for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                        status = handler.closeWith(msg);
-                    }
-                }
+            for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
+                status = handler.closeWith(msg);
             }
             if (status == PacketStatus.ALLOW) {
                 channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
