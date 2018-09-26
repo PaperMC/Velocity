@@ -215,6 +215,15 @@ public enum StateRegistry {
             }
         }
 
+        public void unregister(MinecraftPacket packet) {
+            for (ProtocolVersion version : versions.values()) {
+                if (version.hasPacket(packet)) {
+                    version.packetClassToId.removeInt(version.getPacketId(packet));
+                    version.packetIdToSupplier.remove(version.getPacketId(packet));
+                }
+            }
+        }
+
         public class ProtocolVersion {
 
             public final int id;
@@ -243,6 +252,10 @@ public enum StateRegistry {
                     ));
                 }
                 return id;
+            }
+
+            public boolean hasPacket(final MinecraftPacket packet) {
+                return packetClassToId.containsKey(packet.getClass());
             }
 
             @Override
@@ -317,7 +330,7 @@ public enum StateRegistry {
         return new PacketMapping(id, version, encodeOnly);
     }
 
-    private static PacketMapping[] genericMappings(int id) {
+    public static PacketMapping[] genericMappings(int id) {
         return new PacketMapping[]{
             map(id, MINECRAFT_1_8, false),
             map(id, MINECRAFT_1_9, false),

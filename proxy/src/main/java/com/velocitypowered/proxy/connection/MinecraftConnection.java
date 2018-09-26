@@ -107,18 +107,20 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             }
         } else if (msg instanceof ByteBuf) {
             try {
+                ByteBuf bb = (ByteBuf) msg;
+                int readerIndex = bb.readerIndex(), writerIndex = bb.writerIndex();
                 PacketStatus status = PacketStatus.ALLOW;
                 if (pluginsSessionHandlers != null && !pluginsSessionHandlers.isEmpty()) {
                     synchronized (pluginsSessionHandlers) {
-
                         for (MinecraftSessionHandler handler : pluginsSessionHandlers) {
-                            status = handler.handle((MinecraftPacket) msg);
+                            bb.readerIndex(readerIndex).writerIndex(writerIndex);
+                            status = handler.handleUnknown(bb);
                         }
                     }
                 }
                 if (status == PacketStatus.ALLOW) {
-                    ((ByteBuf) msg).resetReaderIndex().resetWriterIndex(); //I dont know does we need use this or no.
-                    sessionHandler.handleUnknown((ByteBuf) msg);
+                    bb.readerIndex(readerIndex).writerIndex(writerIndex);
+                    sessionHandler.handleUnknown(bb);
                 }
             } finally {
                 ReferenceCountUtil.release(msg);
