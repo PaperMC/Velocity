@@ -55,7 +55,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     private final MinecraftConnection connection;
     private final InetSocketAddress virtualHost;
-    private final GameProfile profile;
+    private GameProfile profile;
     private PermissionFunction permissionFunction = null;
     private int tryIndex = 0;
     private long ping = -1;
@@ -171,6 +171,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public ConnectionRequestBuilder createConnectionRequest(@NonNull RegisteredServer server) {
         return new ConnectionRequestBuilderImpl(server);
+    }
+    
+    @Override
+    public List<GameProfile.Property> getGameProfileProperties() {
+        return this.profile.getProperties();
+    }
+    
+    @Override
+    public void setGameProfileProperties(List<GameProfile.Property> properties) {
+        Preconditions.checkNotNull(properties);
+        this.profile = new GameProfile(profile.getId(), profile.getName(), properties);
     }
 
     @Override
