@@ -40,6 +40,10 @@ public interface MinecraftSessionHandler {
         return PacketStatus.ALLOW;
     }
 
+    default PacketStatus closeWith(Object msg) {
+        return PacketStatus.ALLOW;
+    }
+
     default int getPriority() {
         return 0;
     }
