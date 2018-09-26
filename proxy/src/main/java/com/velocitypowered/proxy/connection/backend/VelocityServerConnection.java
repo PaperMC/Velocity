@@ -98,10 +98,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
         // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
         // UUID (undashed), and if you are in online-mode, their login properties (retrieved from Mojang).
-        return registeredServer.getServerInfo().getAddress().getHostString() + "\0"
-                + proxyPlayer.getRemoteAddress().getHostString() + "\0"
-                + proxyPlayer.getProfile().getId() + "\0"
-                + GSON.toJson(proxyPlayer.getProfile().getProperties());
+        return registeredServer.getServerInfo().getAddress().getHostString() + "\0" +
+                proxyPlayer.getRemoteAddress().getHostString() + "\0" +
+                proxyPlayer.getProfile().getId() + "\0" +
+                GSON.toJson(proxyPlayer.getProfile().getProperties());
     }
 
     private void startHandshake() {

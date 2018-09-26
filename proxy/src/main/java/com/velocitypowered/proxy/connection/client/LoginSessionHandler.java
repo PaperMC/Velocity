@@ -196,25 +196,25 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                     apiInbound.getVirtualHost().orElse(null));
 
             return server.getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-                    .thenCompose(event -> {
-                        // wait for permissions to load, then set the players permission function
-                        player.setPermissionFunction(event.createFunction(player));
-                        // then call & wait for the login event
-                        return server.getEventManager().fire(new LoginEvent(player));
-                    })
-                    // then complete the connection
-                    .thenAcceptAsync(event -> {
-                        if (inbound.isClosed()) {
-                            // The player was disconnected
-                            return;
-                        }
-                        if (!event.getResult().isAllowed()) {
-                            // The component is guaranteed to be provided if the connection was denied.
-                            inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
-                            return;
-                        }
+                        .thenCompose(event -> {
+                            // wait for permissions to load, then set the players permission function
+                            player.setPermissionFunction(event.createFunction(player));
+                            // then call & wait for the login event
+                            return server.getEventManager().fire(new LoginEvent(player));
+                        })
+                        // then complete the connection
+                        .thenAcceptAsync(event -> {
+                            if (inbound.isClosed()) {
+                                // The player was disconnected
+                                return;
+                            }
+                            if (!event.getResult().isAllowed()) {
+                                // The component is guaranteed to be provided if the connection was denied.
+                                inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                                return;
+                            }
 
-                        handleProxyLogin(player);
+                            handleProxyLogin(player);
                     }, inbound.getChannel().eventLoop());
         });
 
