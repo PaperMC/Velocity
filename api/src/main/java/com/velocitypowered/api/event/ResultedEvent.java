@@ -111,45 +111,4 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
             return new ComponentResult(false, reason);
         }
     }
-
-    class ChatResult implements Result {
-        private static final ChatResult ALLOWED = new ChatResult(true, null);
-        private static final ChatResult DENIED = new ChatResult(false, null);
-
-        // The server can not accept formatted text from clients!
-        private @Nullable String message;
-        private final boolean allowed;
-
-        protected ChatResult(boolean allowed, @Nullable String message) {
-            this.allowed = allowed;
-            this.message = message;
-        }
-
-        @Override
-        public boolean isAllowed() {
-            return allowed;
-        }
-
-        @Override
-        public String toString() {
-            return allowed ? "allowed" : "denied";
-        }
-
-        public static ChatResult allowed() {
-            return ALLOWED;
-        }
-
-        public static ChatResult denied() {
-            return DENIED;
-        }
-
-        public Optional<String> getMessage() {
-            return Optional.ofNullable(message);
-        }
-
-        public static ChatResult message(@NonNull String message) {
-            Preconditions.checkNotNull(message, "message");
-            return new ChatResult(true, message);
-        }
-    }
 }

@@ -29,7 +29,6 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import com.velocitypowered.proxy.util.EventUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -421,7 +420,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public void spoofChatInput(String input) {
         Preconditions.checkArgument(input.length() <= Chat.MAX_SERVERBOUND_MESSAGE_LENGTH, "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH + " characters in length");
-        EventUtil.callPlayerChatEvent(server, this, input, Chat.createServerbound(input));
+        connectedServer.getMinecraftConnection().write(Chat.createServerbound(input));
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
