@@ -1,4 +1,5 @@
-import com.velocitypowered.api.util.UuidUtils;
+package com.velocitypowered.api.util;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
