@@ -68,11 +68,14 @@ public class VelocityCommandManager implements CommandManager {
 
         String alias = split[0];
         if (split.length == 1) {
-            return Optional.of(commands.entrySet().stream()
-                    .filter(ent -> ent.getKey().regionMatches(true, 0, alias, 0, alias.length()))
-                    .filter(ent -> ent.getValue().hasPermission(source, new String[0]))
-                    .map(ent -> "/" + ent.getKey())
-                    .collect(Collectors.toList()));
+            List<String> availableCommands = new ArrayList<>();
+            for (Map.Entry<String, Command> entry : commands.entrySet()) {
+                if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length()) &&
+                        entry.getValue().hasPermission(source, new String[0])) {
+                    availableCommands.add("/" + entry.getKey());
+                }
+            }
+            return Optional.of(availableCommands);
         }
 
         String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);

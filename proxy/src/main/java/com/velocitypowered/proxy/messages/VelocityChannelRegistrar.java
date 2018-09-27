@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,10 +45,11 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     }
 
     public Collection<String> getModernChannelIds() {
-        return identifierMap.values().stream()
-                .filter(i -> i instanceof MinecraftChannelIdentifier)
-                .map(ChannelIdentifier::getId)
-                .collect(Collectors.toList());
+        Collection<String> ids = new ArrayList<>();
+        for (ChannelIdentifier value : identifierMap.values()) {
+            ids.add(value.getId());
+        }
+        return ids;
     }
 
     public boolean registered(String id) {
