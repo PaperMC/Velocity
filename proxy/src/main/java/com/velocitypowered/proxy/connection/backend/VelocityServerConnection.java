@@ -31,11 +31,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.velocitypowered.proxy.VelocityServer.GSON;
+import com.velocitypowered.proxy.connection.ConnectionInitializeEvent;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
-    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
-            AttributeKey.newInstance("connection-notification-result");
+
+    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER
+            = AttributeKey.newInstance("connection-notification-result");
 
     private final VelocityRegisteredServer registeredServer;
     private final ConnectedPlayer proxyPlayer;
@@ -80,9 +82,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                         if (future.isSuccess()) {
                             minecraftConnection = future.channel().pipeline().get(MinecraftConnection.class);
 
-                            // Kick off the connection process
                             minecraftConnection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
-                            startHandshake();
+                            server.getEventManager().fire(new ConnectionInitializeEvent(minecraftConnection, VelocityServerConnection.this, null)).thenRunAsync(() -> {
+                                startHandshake();
+                            }, minecraftConnection.getChannel().eventLoop());
                         } else {
                             result.completeExceptionally(future.cause());
                         }

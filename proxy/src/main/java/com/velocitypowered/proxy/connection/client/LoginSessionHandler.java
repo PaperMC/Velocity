@@ -42,8 +42,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
-    private static final String MOJANG_SERVER_AUTH_URL =
-            "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+    private static final String MOJANG_SERVER_AUTH_URL
+            = "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
     private final VelocityServer server;
     private final MinecraftConnection inbound;
@@ -59,7 +59,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         if (packet instanceof LoginPluginResponse) {
             LoginPluginResponse lpr = (LoginPluginResponse) packet;
             if (lpr.getId() == playerInfoId) {
@@ -142,6 +142,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 throw new AssertionError(e);
             }
         }
+        return PacketStatus.ALLOW;
     }
 
     private void beginPreLogin() {
@@ -214,7 +215,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                             }
 
                             handleProxyLogin(player);
-                        }, inbound.getChannel().eventLoop());
+                    }, inbound.getChannel().eventLoop());
         });
 
     }
@@ -250,7 +251,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
+    public PacketStatus handleUnknown(ByteBuf buf) {
         throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 }

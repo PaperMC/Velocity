@@ -18,6 +18,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
+
     private final VelocityServer server;
     private final MinecraftConnection connection;
     private final InboundConnection inboundWrapper;
@@ -29,21 +30,21 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public PacketStatus handle(MinecraftPacket packet) {
         Preconditions.checkArgument(packet instanceof StatusPing || packet instanceof StatusRequest,
                 "Unrecognized packet type " + packet.getClass().getName());
 
         if (packet instanceof StatusPing) {
             // Just send back the client's packet, no processing to do here.
             connection.closeWith(packet);
-            return;
+            return PacketStatus.CANCEL;
         }
 
         VelocityConfiguration configuration = server.getConfiguration();
 
         // Status request
-        int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection.getProtocolVersion() :
-                ProtocolConstants.MAXIMUM_GENERIC_VERSION;
+        int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection.getProtocolVersion()
+                : ProtocolConstants.MAXIMUM_GENERIC_VERSION;
         ServerPing initialPing = new ServerPing(
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                 new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
@@ -59,10 +60,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                     response.setStatus(VelocityServer.GSON.toJson(event.getPing()));
                     connection.write(response);
                 }, connection.getChannel().eventLoop());
+        return PacketStatus.ALLOW;
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
+    public PacketStatus handleUnknown(ByteBuf buf) {
         throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 }
