@@ -27,12 +27,12 @@ import java.util.concurrent.CompletableFuture;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
-    private final VelocityServerConnection connection;
+    private final VelocityServerConnection serverConn;
     private boolean informationForwarded;
 
-    public LoginSessionHandler(VelocityServer server, VelocityServerConnection connection) {
+    public LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
-        this.connection = connection;
+        this.serverConn = serverConn;
     }
 
     @Override
@@ -48,9 +48,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 response.setSuccess(true);
                 response.setId(message.getId());
                 response.setData(createForwardingData(configuration.getForwardingSecret(),
-                        connection.getPlayer().getRemoteAddress().getHostString(),
-                        connection.getPlayer().getProfile()));
-                connection.getMinecraftConnection().write(response);
+                        serverConn.getPlayer().getRemoteAddress().getHostString(),
+                        serverConn.getPlayer().getProfile()));
+                serverConn.getConnection().write(response);
                 informationForwarded = true;
             } else {
                 // Don't understand
@@ -58,48 +58,48 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 response.setSuccess(false);
                 response.setId(message.getId());
                 response.setData(Unpooled.EMPTY_BUFFER);
-                connection.getMinecraftConnection().write(response);
+                serverConn.getConnection().write(response);
             }
         } else if (packet instanceof Disconnect) {
             Disconnect disconnect = (Disconnect) packet;
             // Do we have an outstanding notification? If so, fulfill it.
             doNotify(ConnectionRequestResults.forDisconnect(disconnect));
-            connection.disconnect();
+            serverConn.disconnect();
         } else if (packet instanceof SetCompression) {
             SetCompression sc = (SetCompression) packet;
-            connection.getMinecraftConnection().setCompressionThreshold(sc.getThreshold());
+            serverConn.getConnection().setCompressionThreshold(sc.getThreshold());
         } else if (packet instanceof ServerLoginSuccess) {
             if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
                 doNotify(ConnectionRequestResults.forDisconnect(
                         TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
-                connection.disconnect();
+                serverConn.disconnect();
                 return;
             }
 
             // The player has been logged on to the backend server.
-            connection.getMinecraftConnection().setState(StateRegistry.PLAY);
-            VelocityServerConnection existingConnection = connection.getPlayer().getConnectedServer();
+            serverConn.getConnection().setState(StateRegistry.PLAY);
+            VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
             if (existingConnection == null) {
                 // Strap on the play session handler
-                connection.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, connection.getPlayer()));
+                serverConn.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
             } else {
                 // The previous server connection should become obsolete.
                 // Before we remove it, if the server we are departing is modded, we must always reset the client state.
                 if (existingConnection.isLegacyForge()) {
-                    connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
+                    serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
                 }
                 existingConnection.disconnect();
             }
 
             doNotify(ConnectionRequestResults.SUCCESSFUL);
-            connection.getMinecraftConnection().setSessionHandler(new BackendPlaySessionHandler(server, connection));
-            connection.getPlayer().setConnectedServer(connection);
+            serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+            serverConn.getPlayer().setConnectedServer(serverConn);
         }
     }
 
     @Override
     public void exception(Throwable throwable) {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
                 .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.completeExceptionally(throwable);
@@ -108,7 +108,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void disconnected() {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
                 .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
@@ -116,7 +116,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void doNotify(ConnectionRequestBuilder.Result result) {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = connection.getMinecraftConnection().getChannel()
+        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
                 .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
         if (future != null) {
             future.complete(result);

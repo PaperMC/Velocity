@@ -16,38 +16,38 @@ import io.netty.buffer.ByteBuf;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
-    private final VelocityServerConnection connection;
+    private final VelocityServerConnection serverConn;
 
-    public BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection connection) {
+    public BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
-        this.connection = connection;
+        this.serverConn = serverConn;
     }
 
     @Override
     public void activated() {
-        server.getEventManager().fireAndForget(new ServerConnectedEvent(connection.getPlayer(), connection.getServer()));
-        connection.getServer().addPlayer(connection.getPlayer());
+        server.getEventManager().fireAndForget(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()));
+        serverConn.getServer().addPlayer(serverConn.getPlayer());
     }
 
     @Override
     public void handle(MinecraftPacket packet) {
-        if (!connection.getPlayer().isActive()) {
+        if (!serverConn.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.disconnect();
+            serverConn.disconnect();
             return;
         }
 
         ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
+                (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
         if (packet instanceof KeepAlive) {
             // Forward onto the player
-            connection.setLastPingId(((KeepAlive) packet).getRandomId());
-            connection.getPlayer().getConnection().write(packet);
+            serverConn.setLastPingId(((KeepAlive) packet).getRandomId());
+            serverConn.getPlayer().getConnection().write(packet);
         } else if (packet instanceof Disconnect) {
             Disconnect original = (Disconnect) packet;
-            connection.disconnect();
-            connection.getPlayer().handleConnectionException(connection.getServer(), original);
+            serverConn.disconnect();
+            serverConn.getPlayer().handleConnectionException(serverConn.getServer(), original);
         } else if (packet instanceof JoinGame) {
             playerHandler.handleBackendJoinGame((JoinGame) packet);
         } else if (packet instanceof BossBar) {
@@ -60,7 +60,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                     playerHandler.getServerBossBars().remove(bossBar.getUuid());
                     break;
             }
-            connection.getPlayer().getConnection().write(packet);
+            serverConn.getPlayer().getConnection().write(packet);
         } else if (packet instanceof PluginMessage) {
             PluginMessage pm = (PluginMessage) packet;
             if (!canForwardPluginMessage(pm)) {
@@ -68,61 +68,61 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (PluginMessageUtil.isMCBrand(pm)) {
-                connection.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
+                serverConn.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
                 return;
             }
 
-            if (!connection.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-                if (!connection.isLegacyForge()) {
-                    connection.setLegacyForge(true);
+            if (!serverConn.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                if (!serverConn.isLegacyForge()) {
+                    serverConn.setLegacyForge(true);
 
                     // We must always reset the handshake before a modded connection is established if
                     // we haven't done so already.
-                    connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
+                    serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
                 }
 
                 // Always forward these messages during login
-                connection.getPlayer().getConnection().write(pm);
+                serverConn.getPlayer().getConnection().write(pm);
                 return;
             }
 
             ChannelIdentifier id = server.getChannelRegistrar().getFromId(pm.getChannel());
             if (id == null) {
-                connection.getPlayer().getConnection().write(pm);
+                serverConn.getPlayer().getConnection().write(pm);
             } else {
-                PluginMessageEvent event = new PluginMessageEvent(connection, connection.getPlayer(), id, pm.getData());
+                PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, pm.getData());
                 server.getEventManager().fire(event)
                         .thenAcceptAsync(pme -> {
                             if (pme.getResult().isAllowed()) {
-                                connection.getPlayer().getConnection().write(pm);
+                                serverConn.getPlayer().getConnection().write(pm);
                             }
-                        }, connection.getMinecraftConnection().getChannel().eventLoop());
+                        }, serverConn.getConnection().getChannel().eventLoop());
             }
         } else if (packet instanceof TabCompleteResponse) {
             playerHandler.handleTabCompleteResponse((TabCompleteResponse) packet);
-        } else if (connection.hasCompletedJoin()) {
+        } else if (serverConn.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
-            connection.getPlayer().getConnection().write(packet);
+            serverConn.getPlayer().getConnection().write(packet);
         }
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        if (!connection.getPlayer().isActive()) {
+        if (!serverConn.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.
-            connection.disconnect();
+            serverConn.disconnect();
             return;
         }
 
-        if (connection.hasCompletedJoin()) {
-            connection.getPlayer().getConnection().write(buf.retain());
+        if (serverConn.hasCompletedJoin()) {
+            serverConn.getPlayer().getConnection().write(buf.retain());
         }
     }
 
     @Override
     public void exception(Throwable throwable) {
-        connection.getPlayer().handleConnectionException(connection.getServer(), throwable);
+        serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable);
     }
 
     public VelocityServer getServer() {
@@ -131,18 +131,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void disconnected() {
-        connection.getServer().removePlayer(connection.getPlayer());
-        if (!connection.isGracefulDisconnect()) {
-            connection.getPlayer().handleConnectionException(connection.getServer(), Disconnect.create(
+        serverConn.getServer().removePlayer(serverConn.getPlayer());
+        if (!serverConn.isGracefulDisconnect()) {
+            serverConn.getPlayer().handleConnectionException(serverConn.getServer(), Disconnect.create(
                     ConnectionMessages.UNEXPECTED_DISCONNECT));
         }
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {
         ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) connection.getPlayer().getConnection().getSessionHandler();
+                (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
         boolean isMCOrFMLMessage;
-        if (connection.getMinecraftConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+        if (serverConn.getConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             String channel = message.getChannel();
             isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
