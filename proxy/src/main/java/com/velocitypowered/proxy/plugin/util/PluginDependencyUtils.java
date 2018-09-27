@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.plugin.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
@@ -37,7 +39,7 @@ public class PluginDependencyUtils {
             PluginDescription candidate = noEdges.poll();
             sorted.add(candidate);
 
-            for (PluginDescription node : graph.successors(candidate)) {
+            for (PluginDescription node : ImmutableSet.copyOf(graph.adjacentNodes(candidate))) {
                 graph.removeEdge(node, candidate);
 
                 if (graph.adjacentNodes(node).isEmpty()) {
@@ -49,7 +51,7 @@ public class PluginDependencyUtils {
         }
 
         if (!graph.edges().isEmpty()) {
-            throw new IllegalStateException("Plugin circular dependency found: " + graph.toString());
+            throw new IllegalStateException("Plugin circular dependency found: " + createLoopInformation(graph));
         }
 
         return sorted;
@@ -65,5 +67,34 @@ public class PluginDependencyUtils {
         }
 
         return found;
+    }
+
+    public static String createLoopInformation(Graph<PluginDescription> graph) {
+        StringBuilder repr = new StringBuilder("{");
+        for (EndpointPair<PluginDescription> edge : graph.edges()) {
+            repr.append(edge.target().getId()).append(": [");
+            repr.append(dependencyLoopInfo(graph, edge.target(), new HashSet<>())).append("], ");
+        }
+        repr.setLength(repr.length() - 2);
+        repr.append("}");
+        return repr.toString();
+    }
+
+    private static String dependencyLoopInfo(Graph<PluginDescription> graph, PluginDescription dependency, Set<PluginDescription> seen) {
+        StringBuilder repr = new StringBuilder();
+        for (PluginDescription pd : graph.adjacentNodes(dependency)) {
+            if (seen.add(pd)) {
+                repr.append(pd.getId()).append(": [").append(dependencyLoopInfo(graph, dependency, seen)).append("], ");
+            } else {
+                repr.append(pd.getId()).append(", ");
+            }
+        }
+
+        if (repr.length() != 0) {
+            repr.setLength(repr.length() - 2);
+            return repr.toString();
+        } else {
+            return "<no depends>";
+        }
     }
 }
