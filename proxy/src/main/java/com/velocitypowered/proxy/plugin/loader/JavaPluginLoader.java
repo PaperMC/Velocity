@@ -43,21 +43,18 @@ public class JavaPluginLoader implements PluginLoader {
             throw new InvalidPluginException("Did not find a valid velocity-info.json.");
         }
 
+        SerializedPluginDescription pd = serialized.get();
+        if (!PluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
+            throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' must match pattern " +
+                    PluginDescription.ID_PATTERN.pattern());
+        }
+
         PluginClassLoader loader = new PluginClassLoader(
                 new URL[] {source.toUri().toURL() }
         );
 
-        Class mainClass = loader.loadClass(serialized.get().getMain());
-        VelocityPluginDescription description = createDescription(serialized.get(), source, mainClass);
-
-        String pluginId = description.getId();
-        Pattern pattern = PluginDescription.ID_PATTERN;
-
-        if (!pattern.matcher(pluginId).matches()) {
-            throw new InvalidPluginException("Plugin ID '" + pluginId + "' must match pattern " + pattern.pattern());
-        }
-
-        return description;
+        Class mainClass = loader.loadClass(pd.getMain());
+        return createDescription(pd, source, mainClass);
     }
 
     @Override
