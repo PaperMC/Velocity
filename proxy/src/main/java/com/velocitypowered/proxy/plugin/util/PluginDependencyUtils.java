@@ -43,9 +43,7 @@ public class PluginDependencyUtils {
                 graph.removeEdge(node, candidate);
 
                 if (graph.adjacentNodes(node).isEmpty()) {
-                    if (!noEdges.contains(node)) {
-                        noEdges.add(node);
-                    }
+                    noEdges.add(node);
                 }
             }
         }
