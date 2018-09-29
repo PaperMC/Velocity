@@ -12,22 +12,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
-public enum PluginMessageUtil {
-    ;
+public class PluginMessageUtil {
+    public static final String BRAND_CHANNEL = "MC|Brand";
+    public static final String BRAND_CHANNEL_1_13 = "minecraft:brand";
+    public static final String REGISTER_CHANNEL = "REGISTER";
+    public static final String REGISTER_CHANNEL_1_13 = "minecraft:register";
+    public static final String UNREGISTER_CHANNEL = "UNREGISTER";
+    public static final String UNREGISTER_CHANNEL_1_13 = "minecraft:unregister";
+
+    private PluginMessageUtil() {
+        throw new AssertionError();
+    }
 
     public static boolean isMCBrand(PluginMessage message) {
         Preconditions.checkNotNull(message, "message");
-        return message.getChannel().equals("MC|Brand") || message.getChannel().equals("minecraft:brand");
+        return message.getChannel().equals(BRAND_CHANNEL) || message.getChannel().equals(BRAND_CHANNEL_1_13);
     }
 
     public static boolean isMCRegister(PluginMessage message) {
         Preconditions.checkNotNull(message, "message");
-        return message.getChannel().equals("REGISTER") || message.getChannel().equals("minecraft:register");
+        return message.getChannel().equals(REGISTER_CHANNEL) || message.getChannel().equals(REGISTER_CHANNEL_1_13);
     }
 
     public static boolean isMCUnregister(PluginMessage message) {
         Preconditions.checkNotNull(message, "message");
-        return message.getChannel().equals("UNREGISTER") || message.getChannel().equals("minecraft:unregister");
+        return message.getChannel().equals(UNREGISTER_CHANNEL) || message.getChannel().equals(UNREGISTER_CHANNEL_1_13);
     }
 
     public static List<String> getChannels(PluginMessage message) {
@@ -40,7 +49,7 @@ public enum PluginMessageUtil {
 
     public static PluginMessage constructChannelsPacket(int protocolVersion, Collection<String> channels) {
         Preconditions.checkNotNull(channels, "channels");
-        String channelName = protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? "minecraft:register" : "REGISTER";
+        String channelName = protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? REGISTER_CHANNEL_1_13 : REGISTER_CHANNEL;
         PluginMessage message = new PluginMessage();
         message.setChannel(channelName);
         message.setData(String.join("\0", channels).getBytes(StandardCharsets.UTF_8));
