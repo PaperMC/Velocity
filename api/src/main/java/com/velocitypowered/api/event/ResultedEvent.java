@@ -39,7 +39,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     /**
      * A generic "allowed/denied" result.
      */
-    class GenericResult implements Result {
+    final class GenericResult implements Result {
         private static final GenericResult ALLOWED = new GenericResult(true);
         private static final GenericResult DENIED = new GenericResult(false);
 
@@ -71,7 +71,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     /**
      * Represents an "allowed/denied" result with a reason allowed for denial.
      */
-    class ComponentResult implements Result {
+    final class ComponentResult implements Result {
         private static final ComponentResult ALLOWED = new ComponentResult(true, null);
 
         private final boolean allowed;
