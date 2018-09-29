@@ -58,6 +58,9 @@ public class VelocityEventManager implements EventManager {
         Preconditions.checkNotNull(plugin, "plugin");
         Preconditions.checkNotNull(listener, "listener");
         Preconditions.checkArgument(pluginManager.fromInstance(plugin).isPresent(), "Specified plugin is not loaded");
+        if (plugin == listener && registeredListenersByPlugin.containsEntry(plugin, plugin)) {
+            throw new IllegalArgumentException("Trying to register the plugin main instance. Velocity already takes care of this for you.");
+        }
         registeredListenersByPlugin.put(plugin, listener);
         bus.register(listener);
     }
