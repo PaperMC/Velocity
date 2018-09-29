@@ -93,11 +93,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 server.getEventManager().fire(event)
                         .thenAcceptAsync(pme -> {
                             if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
-                                player.getConnectedServer().getConnection().write(chat);
+                                serverConnection.getConnection().write(chat);
                             } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
-                                player.getConnectedServer().getConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
+                                serverConnection.getConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
                             }
-                        }, player.getConnectedServer().getConnection().getChannel().eventLoop());
+                        }, serverConnection.getConnection().eventLoop());
             }
             return;
         }
@@ -290,7 +290,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                             if (pme.getResult().isAllowed()) {
                                 player.getConnectedServer().getConnection().write(packet);
                             }
-                        }, player.getConnectedServer().getConnection().getChannel().eventLoop());
+                        }, player.getConnectedServer().getConnection().eventLoop());
             }
         }
     }

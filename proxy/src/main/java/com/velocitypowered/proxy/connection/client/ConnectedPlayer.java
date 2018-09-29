@@ -309,7 +309,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 // In case someone gets creative, assume we want to disconnect the player.
                                 connection.closeWith(Disconnect.create(friendlyReason));
                             }
-                        }, connection.getChannel().eventLoop());
+                        }, connection.eventLoop());
             } else {
                 connection.closeWith(Disconnect.create(friendlyReason));
             }
@@ -463,7 +463,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 handleConnectionException(server, Disconnect.create(status.getReason().orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
                                 break;
                         }
-                    }, connection.getChannel().eventLoop());
+                    }, connection.eventLoop());
         }
     }
 }

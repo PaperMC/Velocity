@@ -58,7 +58,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                     StatusResponse response = new StatusResponse();
                     response.setStatus(VelocityServer.GSON.toJson(event.getPing()));
                     connection.write(response);
-                }, connection.getChannel().eventLoop());
+                }, connection.eventLoop());
     }
 
     @Override

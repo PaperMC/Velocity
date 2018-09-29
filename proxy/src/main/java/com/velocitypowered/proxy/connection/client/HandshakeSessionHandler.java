@@ -116,7 +116,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                     .thenRunAsync(() -> {
                         // The disconnect packet is the same as the server response one.
                         connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));
-                    }, connection.getChannel().eventLoop());
+                    }, connection.eventLoop());
         } else if (packet instanceof LegacyHandshake) {
             connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
         }

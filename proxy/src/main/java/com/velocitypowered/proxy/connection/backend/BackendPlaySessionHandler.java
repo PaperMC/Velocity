@@ -96,7 +96,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                             if (pme.getResult().isAllowed()) {
                                 serverConn.getPlayer().getConnection().write(pm);
                             }
-                        }, serverConn.getConnection().getChannel().eventLoop());
+                        }, serverConn.getConnection().eventLoop());
             }
         } else if (packet instanceof TabCompleteResponse) {
             playerHandler.handleTabCompleteResponse((TabCompleteResponse) packet);

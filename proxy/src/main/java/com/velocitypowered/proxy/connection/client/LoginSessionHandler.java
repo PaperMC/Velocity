@@ -129,7 +129,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                         profileResponse.getCode(), login.getUsername(), playerIp);
                                 inbound.close();
                             }
-                        }, inbound.getChannel().eventLoop())
+                        }, inbound.eventLoop())
                         .exceptionally(exception -> {
                             logger.error("Unable to enable encryption", exception);
                             inbound.close();
@@ -167,7 +167,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                     } else {
                         initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
                     }
-                }, inbound.getChannel().eventLoop());
+                }, inbound.eventLoop());
     }
 
     private EncryptionRequest generateRequest() {
@@ -214,7 +214,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                             }
 
                             handleProxyLogin(player);
-                        }, inbound.getChannel().eventLoop());
+                        }, inbound.eventLoop());
         });
 
     }

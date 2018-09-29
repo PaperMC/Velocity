@@ -11,10 +11,7 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,6 +99,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (sessionHandler != null) {
             sessionHandler.writabilityChanged();
         }
+    }
+
+    public EventLoop eventLoop() {
+        return channel.eventLoop();
     }
 
     public void write(Object msg) {
