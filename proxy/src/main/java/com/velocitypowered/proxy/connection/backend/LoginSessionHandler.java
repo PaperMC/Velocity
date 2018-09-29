@@ -9,7 +9,6 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.*;
@@ -28,11 +27,14 @@ import java.util.concurrent.CompletableFuture;
 public class LoginSessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
     private final VelocityServerConnection serverConn;
+    private final CompletableFuture<ConnectionRequestBuilder.Result> resultFuture;
     private boolean informationForwarded;
 
-    public LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
+    public LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
+                               CompletableFuture<ConnectionRequestBuilder.Result> resultFuture) {
         this.server = server;
         this.serverConn = serverConn;
+        this.resultFuture = resultFuture;
     }
 
     @Override
@@ -66,9 +68,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(Disconnect packet) {
-        Disconnect disconnect = (Disconnect) packet;
-        // Do we have an outstanding notification? If so, fulfill it.
-        doNotify(ConnectionRequestResults.forDisconnect(disconnect));
+        resultFuture.complete(ConnectionRequestResults.forDisconnect(packet));
         serverConn.disconnect();
         return true;
     }
@@ -82,7 +82,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     @Override
     public boolean handle(ServerLoginSuccess packet) {
         if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
-            doNotify(ConnectionRequestResults.forDisconnect(
+            resultFuture.complete(ConnectionRequestResults.forDisconnect(
                     TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
             serverConn.disconnect();
             return true;
@@ -103,7 +103,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             existingConnection.disconnect();
         }
 
-        doNotify(ConnectionRequestResults.SUCCESSFUL);
+        resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
         serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
         serverConn.getPlayer().setConnectedServer(serverConn);
         return true;
@@ -111,28 +111,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void exception(Throwable throwable) {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
-                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
-        if (future != null) {
-            future.completeExceptionally(throwable);
-        }
+        resultFuture.completeExceptionally(throwable);
     }
 
     @Override
     public void disconnected() {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
-                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
-        if (future != null) {
-            future.completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
-        }
-    }
-
-    private void doNotify(ConnectionRequestBuilder.Result result) {
-        CompletableFuture<ConnectionRequestBuilder.Result> future = serverConn.getConnection().getChannel()
-                .attr(VelocityServerConnection.CONNECTION_NOTIFIER).getAndSet(null);
-        if (future != null) {
-            future.complete(result);
-        }
+        resultFuture.completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
     }
 
     private static ByteBuf createForwardingData(byte[] hmacSecret, String address, GameProfile profile) {

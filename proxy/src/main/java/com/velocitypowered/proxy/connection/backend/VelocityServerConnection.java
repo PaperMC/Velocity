@@ -25,7 +25,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.util.AttributeKey;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,9 +33,6 @@ import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
-    static final AttributeKey<CompletableFuture<ConnectionRequestBuilder.Result>> CONNECTION_NOTIFIER =
-            AttributeKey.newInstance("connection-notification-result");
-
     private final VelocityRegisteredServer registeredServer;
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
@@ -66,7 +62,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
                                 .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
 
-                        ch.attr(CONNECTION_NOTIFIER).set(result);
                         MinecraftConnection connection = new MinecraftConnection(ch, server);
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setAssociation(VelocityServerConnection.this);
@@ -81,7 +76,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                             connection = future.channel().pipeline().get(MinecraftConnection.class);
 
                             // Kick off the connection process
-                            connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this));
+                            connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this, result));
                             startHandshake();
                         } else {
                             result.completeExceptionally(future.cause());

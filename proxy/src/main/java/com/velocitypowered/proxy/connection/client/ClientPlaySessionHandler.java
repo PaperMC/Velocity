@@ -180,7 +180,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         // If we don't want to handle this packet, just forward it on.
         if (serverConnection.hasCompletedJoin()) {
-            logger.info("Will write {}", packet);
             serverConnection.getConnection().write(packet);
         }
     }
