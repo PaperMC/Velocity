@@ -49,7 +49,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
-    public static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
+    static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
@@ -107,7 +107,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
     }
 
-    public void setPlayerSettings(ClientSettings settings) {
+    void setPlayerSettings(ClientSettings settings) {
         this.settings = new ClientSettingsWrapper(settings);
         server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
     }
@@ -122,7 +122,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return Optional.ofNullable(virtualHost);
     }
 
-    public void setPermissionFunction(PermissionFunction permissionFunction) {
+    void setPermissionFunction(PermissionFunction permissionFunction) {
         this.permissionFunction = permissionFunction;
     }
 

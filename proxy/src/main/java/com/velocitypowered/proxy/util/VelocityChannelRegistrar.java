@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class VelocityChannelRegistrar implements ChannelRegistrar {
     private final Map<String, ChannelIdentifier> identifierMap = new ConcurrentHashMap<>();

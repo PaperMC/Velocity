@@ -6,7 +6,6 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_13;
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9;
 
 public class TabCompleteRequest implements MinecraftPacket {
