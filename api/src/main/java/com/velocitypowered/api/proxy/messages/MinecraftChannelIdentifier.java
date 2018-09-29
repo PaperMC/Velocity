@@ -54,10 +54,7 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
 
     @Override
     public String toString() {
-        return "MinecraftChannelIdentifier{" +
-                "namespace='" + namespace + '\'' +
-                ", name='" + name + '\'' +
-                '}';
+        return getId() + " (modern)";
     }
 
     @Override

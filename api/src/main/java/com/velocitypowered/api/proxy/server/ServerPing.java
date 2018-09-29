@@ -164,8 +164,8 @@ public final class ServerPing {
         }
 
         public ServerPing build() {
-            return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers), description, favicon,
-                    nullOutModinfo ? null : new ModInfo(modType, mods));
+            return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers),
+                    description, favicon, nullOutModinfo ? null : new ModInfo(modType, mods));
         }
 
         public Version getVersion() {
@@ -320,6 +320,14 @@ public final class ServerPing {
         public List<Mod> getMods() {
             return modList;
         }
+
+        @Override
+        public String toString() {
+            return "ModInfo{" +
+                    "type='" + type + '\'' +
+                    ", modList=" + modList +
+                    '}';
+        }
     }
 
     public static final class Mod {
@@ -337,6 +345,14 @@ public final class ServerPing {
 
         public String getVersion() {
             return version;
+        }
+
+        @Override
+        public String toString() {
+            return "Mod{" +
+                    "id='" + id + '\'' +
+                    ", version='" + version + '\'' +
+                    '}';
         }
     }
 }

@@ -23,9 +23,7 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
 
     @Override
     public String toString() {
-        return "LegacyChannelIdentifier{" +
-                "name='" + name + '\'' +
-                '}';
+        return name + " (legacy)";
     }
 
     @Override
