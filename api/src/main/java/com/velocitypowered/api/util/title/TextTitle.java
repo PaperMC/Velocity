@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * Represents a "full" title, including all components. This class is immutable.
  */
-public class TextTitle implements Title {
+public final class TextTitle implements Title {
     private final Component title;
     private final Component subtitle;
     private final int stay;

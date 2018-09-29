@@ -3,7 +3,7 @@ package com.velocitypowered.api.util.title;
 /**
  * Provides special-purpose titles.
  */
-public class Titles {
+public final class Titles {
     private Titles() {
         throw new AssertionError();
     }

@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * Represents a 1.7 and above server list ping response. This class is immutable.
  */
-public class ServerPing {
+public final class ServerPing {
     private final Version version;
     private final Players players;
     private final Component description;
@@ -87,7 +87,7 @@ public class ServerPing {
     /**
      * A builder for {@link ServerPing} objects.
      */
-    public static class Builder {
+    public static final class Builder {
         private Version version;
         private int onlinePlayers;
         private int maximumPlayers;
@@ -217,7 +217,7 @@ public class ServerPing {
         }
     }
 
-    public static class Version {
+    public static final class Version {
         private final int protocol;
         private final String name;
 
@@ -243,7 +243,7 @@ public class ServerPing {
         }
     }
 
-    public static class Players {
+    public static final class Players {
         private final int online;
         private final int max;
         private final List<SamplePlayer> sample;
@@ -276,7 +276,7 @@ public class ServerPing {
         }
     }
 
-    public static class SamplePlayer {
+    public static final class SamplePlayer {
         private final String name;
         private final UUID id;
 
@@ -302,7 +302,7 @@ public class ServerPing {
         }
     }
 
-    public static class ModInfo {
+    public static final class ModInfo {
         public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
 
         private final String type;
@@ -322,7 +322,7 @@ public class ServerPing {
         }
     }
 
-    public static class Mod {
+    public static final class Mod {
         private final String id;
         private final String version;
 

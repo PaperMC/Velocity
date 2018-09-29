@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * This event is fired before the player connects to a server.
  */
-public class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEvent.ServerResult> {
+public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConnectEvent.ServerResult> {
     private final Player player;
     private final RegisteredServer originalServer;
     private ServerResult result;

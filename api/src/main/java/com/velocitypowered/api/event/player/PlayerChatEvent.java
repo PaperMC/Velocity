@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * This event is fired once the player has been authenticated but before they connect to a server on the proxy.
  */
-public class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult> {
+public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult> {
     private final Player player;
     private final String message;
     private ChatResult result;
@@ -52,7 +52,7 @@ public class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult
     /**
      * Represents the result of the {@link PlayerChatEvent}.
      */
-    public static class ChatResult implements ResultedEvent.Result {
+    public static final class ChatResult implements ResultedEvent.Result {
         private static final ChatResult ALLOWED = new ChatResult(true, null);
         private static final ChatResult DENIED = new ChatResult(false, null);
 

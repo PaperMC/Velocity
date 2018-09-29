@@ -10,7 +10,7 @@ import java.util.UUID;
 /**
  * Provides a small, useful selection of utilities for working with Minecraft UUIDs.
  */
-public class UuidUtils {
+public final class UuidUtils {
     private UuidUtils() {
         throw new AssertionError();
     }

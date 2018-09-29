@@ -12,7 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <p>This event is only called once per subject, on initialisation.</p>
  */
-public class PermissionsSetupEvent {
+public final class PermissionsSetupEvent {
     private final PermissionSubject subject;
     private final PermissionProvider defaultProvider;
     private PermissionProvider provider;

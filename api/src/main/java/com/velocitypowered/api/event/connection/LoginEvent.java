@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * This event is fired once the player has been authenticated but before they connect to a server on the proxy.
  */
-public class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
+public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
     private final Player player;
     private ComponentResult result;
 

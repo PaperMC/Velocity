@@ -7,7 +7,7 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 /**
  * This event is fired when a server list ping request is sent by a remote client.
  */
-public class ProxyPingEvent {
+public final class ProxyPingEvent {
     private final InboundConnection connection;
     private ServerPing ping;
 

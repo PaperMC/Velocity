@@ -15,7 +15,7 @@ import java.util.Arrays;
  * This event is fired when a plugin message is sent to the proxy, either from a client ({@link com.velocitypowered.api.proxy.Player})
  * or a server ({@link com.velocitypowered.api.proxy.ServerConnection}).
  */
-public class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.ForwardResult> {
+public final class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.ForwardResult> {
     private final ChannelMessageSource source;
     private final ChannelMessageSink target;
     private final ChannelIdentifier identifier;
@@ -74,7 +74,7 @@ public class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.Forw
     /**
      * A result determining whether or not to forward this message on.
      */
-    public static class ForwardResult implements ResultedEvent.Result {
+    public static final class ForwardResult implements ResultedEvent.Result {
         private static final ForwardResult ALLOWED = new ForwardResult(true);
         private static final ForwardResult DENIED = new ForwardResult(false);
 

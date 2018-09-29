@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * This event is fired after the {@link com.velocitypowered.api.event.connection.PreLoginEvent} in order to set up the
  * game profile for the user. This can be used to configure a custom profile for a user, i.e. skin replacement.
  */
-public class GameProfileRequestEvent {
+public final class GameProfileRequestEvent {
     private final String username;
     private final InboundConnection connection;
     private final GameProfile originalProfile;

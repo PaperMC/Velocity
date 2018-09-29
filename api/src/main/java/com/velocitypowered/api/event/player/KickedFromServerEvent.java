@@ -11,7 +11,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * Fired when a player is kicked from a server. You may either allow Velocity to kick the player (with an optional reason
  * override) or redirect the player to a separate server.
  */
-public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEvent.ServerKickResult> {
+public final class KickedFromServerEvent implements ResultedEvent<KickedFromServerEvent.ServerKickResult> {
     private final Player player;
     private final RegisteredServer server;
     private final Component originalReason;
@@ -60,7 +60,7 @@ public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEven
     /**
      * Tells the proxy to disconnect the player with the specified reason.
      */
-    public static class DisconnectPlayer implements ServerKickResult {
+    public static final class DisconnectPlayer implements ServerKickResult {
         private final Component component;
 
         private DisconnectPlayer(Component component) {
@@ -90,7 +90,7 @@ public class KickedFromServerEvent implements ResultedEvent<KickedFromServerEven
      * Tells the proxy to redirect the player to another server. No messages will be sent from the proxy
      * when this result is used.
      */
-    public static class RedirectPlayer implements ServerKickResult {
+    public static final class RedirectPlayer implements ServerKickResult {
         private final RegisteredServer server;
 
         private RedirectPlayer(RegisteredServer server) {

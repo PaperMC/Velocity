@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * This event is fired when a handshake is established between a client and Velocity.
  */
-public class ConnectionHandshakeEvent {
+public final class ConnectionHandshakeEvent {
     private final @NonNull InboundConnection connection;
 
     public ConnectionHandshakeEvent(@NonNull InboundConnection connection) {

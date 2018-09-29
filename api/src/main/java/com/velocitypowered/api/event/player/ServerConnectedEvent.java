@@ -8,7 +8,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
  * This event is fired once the player has successfully connected to the target server and the connection to the previous
  * server has been de-established.
  */
-public class ServerConnectedEvent {
+public final class ServerConnectedEvent {
     private final Player player;
     private final RegisteredServer server;
 

@@ -14,7 +14,7 @@ import java.util.Optional;
  * This event is fired when a player has initiated a connection with the proxy but before the proxy authenticates the
  * player with Mojang or before the player's proxy connection is fully established (for offline mode).
  */
-public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
+public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
     private final InboundConnection connection;
     private final String username;
     private PreLoginComponentResult result;
@@ -55,7 +55,7 @@ public class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginCompon
     /**
      * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason allowed for denial.
      */
-    public static class PreLoginComponentResult implements ResultedEvent.Result {
+    public static final class PreLoginComponentResult implements ResultedEvent.Result {
 
         private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult(Result.ALLOWED, null);
         private static final PreLoginComponentResult FORCE_ONLINEMODE = new PreLoginComponentResult(Result.FORCE_ONLINE, null);

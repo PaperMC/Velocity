@@ -1,8 +1,6 @@
 package com.velocitypowered.api.proxy.player;
 
-public class SkinParts {
-
-    static final SkinParts SKIN_SHOW_ALL = new SkinParts((byte) 127);
+public final class SkinParts {
     private final byte bitmask;
 
     public SkinParts(byte skinBitmask) {

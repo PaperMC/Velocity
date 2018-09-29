@@ -7,7 +7,7 @@ import com.velocitypowered.api.proxy.Player;
  * This event is fired once the player has been successfully authenticated and
  * fully initialized and player will be connected to server after this event
  */
-public class PostLoginEvent {
+public final class PostLoginEvent {
 
     private final Player player;
 
