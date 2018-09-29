@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.messages;
+package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
