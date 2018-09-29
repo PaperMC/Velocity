@@ -44,13 +44,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        PluginMessage message;
-        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            message = PluginMessageUtil.constructChannelsPacket("minecraft:register", server.getChannelRegistrar().getModernChannelIds());
-        } else {
-            message = PluginMessageUtil.constructChannelsPacket("REGISTER", server.getChannelRegistrar().getIdsForLegacyConnections());
-        }
-        player.getConnection().write(message);
+        PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(), server.getChannelRegistrar().getModernChannelIds());
+        player.getConnection().write(register);
     }
 
     @Override
@@ -213,10 +208,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
         }
         if (!toRegister.isEmpty()) {
-            String channel = player.getConnection().getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13 ?
-                    "minecraft:register" : "REGISTER";
             player.getConnectedServer().getConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
-                    channel, toRegister));
+                    player.getConnection().getProtocolVersion(), toRegister));
         }
 
         // If we had plugin messages queued during login/FML handshake, send them now.
@@ -267,7 +260,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (actuallyRegistered.size() > 0) {
-                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(packet.getChannel(), actuallyRegistered);
+                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(), actuallyRegistered);
                 player.getConnectedServer().getConnection().write(newRegisterPacket);
             }
         } else if (PluginMessageUtil.isMCUnregister(packet)) {

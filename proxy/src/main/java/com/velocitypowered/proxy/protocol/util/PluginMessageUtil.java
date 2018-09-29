@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
@@ -37,12 +38,11 @@ public enum PluginMessageUtil {
         return ImmutableList.copyOf(channels.split("\0"));
     }
 
-    public static PluginMessage constructChannelsPacket(String channel, Collection<String> channels) {
-        Preconditions.checkNotNull(channel, "channel");
-        Preconditions.checkNotNull(channel, "channels");
-
+    public static PluginMessage constructChannelsPacket(int protocolVersion, Collection<String> channels) {
+        Preconditions.checkNotNull(channels, "channels");
+        String channelName = protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? "minecraft:register" : "REGISTER";
         PluginMessage message = new PluginMessage();
-        message.setChannel(channel);
+        message.setChannel(channelName);
         message.setData(String.join("\0", channels).getBytes(StandardCharsets.UTF_8));
         return message;
     }
