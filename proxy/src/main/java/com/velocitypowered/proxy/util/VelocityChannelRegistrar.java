@@ -46,7 +46,9 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     public Collection<String> getModernChannelIds() {
         Collection<String> ids = new ArrayList<>();
         for (ChannelIdentifier value : identifierMap.values()) {
-            ids.add(value.getId());
+            if (value instanceof MinecraftChannelIdentifier) {
+                ids.add(value.getId());
+            }
         }
         return ids;
     }
