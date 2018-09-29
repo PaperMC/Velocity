@@ -36,7 +36,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public void handleGeneric(MinecraftPacket packet) {
         if (packet instanceof EncryptionRequest) {
             throw new IllegalStateException("Backend server is online-mode!");
         } else if (packet instanceof LoginPluginMessage) {

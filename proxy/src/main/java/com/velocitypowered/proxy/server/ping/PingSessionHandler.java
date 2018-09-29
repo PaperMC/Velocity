@@ -42,7 +42,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public void handleGeneric(MinecraftPacket packet) {
         Preconditions.checkState(packet instanceof StatusResponse, "Did not get status response back from connection");
 
         // All good!

@@ -30,7 +30,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public void handleGeneric(MinecraftPacket packet) {
         if (!serverConn.getPlayer().isActive()) {
             // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
             // errors.

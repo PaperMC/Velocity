@@ -29,7 +29,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public void handleGeneric(MinecraftPacket packet) {
         Preconditions.checkArgument(packet instanceof StatusPing || packet instanceof StatusRequest,
                 "Unrecognized packet type " + packet.getClass().getName());
 

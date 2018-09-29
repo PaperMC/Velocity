@@ -69,7 +69,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof MinecraftPacket) {
-            sessionHandler.handle((MinecraftPacket) msg);
+            MinecraftPacket pkt = (MinecraftPacket) msg;
+            if (!pkt.handle(sessionHandler)) {
+                sessionHandler.handleGeneric((MinecraftPacket) msg);
+            }
         } else if (msg instanceof ByteBuf) {
             try {
                 sessionHandler.handleUnknown((ByteBuf) msg);

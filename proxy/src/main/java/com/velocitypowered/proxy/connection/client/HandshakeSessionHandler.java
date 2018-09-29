@@ -35,39 +35,53 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
-        if (packet instanceof LegacyPing || packet instanceof LegacyHandshake) {
-            connection.setProtocolVersion(ProtocolConstants.LEGACY);
-            handleLegacy(packet);
-            return;
-        }
+    public boolean handle(LegacyPing packet) {
+        connection.setProtocolVersion(ProtocolConstants.LEGACY);
+        VelocityConfiguration configuration = server.getConfiguration();
+        ServerPing ping = new ServerPing(
+                new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
+                new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
+                configuration.getMotdComponent(),
+                null,
+                null
+        );
+        ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
+        server.getEventManager().fire(event)
+                .thenRunAsync(() -> {
+                    // The disconnect packet is the same as the server response one.
+                    connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));
+                }, connection.eventLoop());
+        return true;
+    }
 
-        if (!(packet instanceof Handshake)) {
-            throw new IllegalArgumentException("Did not expect packet " + packet.getClass().getName());
-        }
+    @Override
+    public boolean handle(LegacyHandshake packet) {
+        connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
+        return true;
+    }
 
-        InitialInboundConnection ic = new InitialInboundConnection(connection, (Handshake) packet);
-
-        Handshake handshake = (Handshake) packet;
+    @Override
+    public boolean handle(Handshake handshake) {
+        InitialInboundConnection ic = new InitialInboundConnection(connection, handshake);
         switch (handshake.getNextStatus()) {
             case StateRegistry.STATUS_ID:
                 connection.setState(StateRegistry.STATUS);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
                 connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
-                break;
+                return true;
             case StateRegistry.LOGIN_ID:
                 connection.setState(StateRegistry.LOGIN);
                 connection.setProtocolVersion(handshake.getProtocolVersion());
 
                 if (!ProtocolConstants.isSupported(handshake.getProtocolVersion())) {
                     connection.closeWith(Disconnect.create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
-                    return;
+                    return true;
                 }
 
                 InetAddress address = ((InetSocketAddress) connection.getChannel().remoteAddress()).getAddress();
                 if (!server.getIpAttemptLimiter().attempt(address)) {
                     connection.closeWith(Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
-                    return;
+                    return true;
                 }
 
                 // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13) and store that in the connection
@@ -77,7 +91,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge
                 if (handshake.getServerAddress().contains("\0") && !isForge) {
                     connection.closeWith(Disconnect.create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
-                    return;
+                    return true;
                 }
 
                 // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2 and lower,
@@ -85,41 +99,25 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
                 if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && handshake.getProtocolVersion() <
                         ProtocolConstants.MINECRAFT_1_13) {
                     connection.closeWith(Disconnect.create(TextComponent.of("This server is only compatible with 1.13 and above.")));
-                    return;
+                    return true;
                 }
 
                 server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
                 connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
-                break;
+                return true;
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
     }
 
     @Override
-    public void handleUnknown(ByteBuf buf) {
-        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
+    public void handleGeneric(MinecraftPacket packet) {
+
     }
 
-    private void handleLegacy(MinecraftPacket packet) {
-        if (packet instanceof LegacyPing) {
-            VelocityConfiguration configuration = server.getConfiguration();
-            ServerPing ping = new ServerPing(
-                    new ServerPing.Version(ProtocolConstants.MAXIMUM_GENERIC_VERSION, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                    new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
-                    configuration.getMotdComponent(),
-                    null,
-                    null
-            );
-            ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
-            server.getEventManager().fire(event)
-                    .thenRunAsync(() -> {
-                        // The disconnect packet is the same as the server response one.
-                        connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));
-                    }, connection.eventLoop());
-        } else if (packet instanceof LegacyHandshake) {
-            connection.closeWith(LegacyDisconnect.from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
-        }
+    @Override
+    public void handleUnknown(ByteBuf buf) {
+        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
     }
 
     private static class LegacyInboundConnection implements InboundConnection {

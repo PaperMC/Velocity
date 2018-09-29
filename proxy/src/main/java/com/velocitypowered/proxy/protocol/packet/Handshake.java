@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -67,5 +68,10 @@ public class Handshake implements MinecraftPacket {
         ProtocolUtils.writeString(buf, this.serverAddress);
         buf.writeShort(this.port);
         ProtocolUtils.writeVarInt(buf, this.nextStatus);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 }

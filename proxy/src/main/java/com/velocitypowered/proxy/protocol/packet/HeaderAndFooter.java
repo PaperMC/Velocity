@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants.Direction;
 import io.netty.buffer.ByteBuf;
@@ -49,6 +50,11 @@ public class HeaderAndFooter implements MinecraftPacket {
     public void encode(ByteBuf buf, Direction direction, int protocolVersion) {
         writeString(buf, header);
         writeString(buf, footer);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 
     public static HeaderAndFooter create(Component header, Component footer) {

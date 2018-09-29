@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -41,6 +42,11 @@ public class Disconnect implements MinecraftPacket {
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, reason);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 
     public static Disconnect create(Component component) {

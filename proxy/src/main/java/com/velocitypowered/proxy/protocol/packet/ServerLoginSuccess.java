@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -45,5 +46,10 @@ public class ServerLoginSuccess implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeString(buf, uuid.toString());
         ProtocolUtils.writeString(buf, username);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 }

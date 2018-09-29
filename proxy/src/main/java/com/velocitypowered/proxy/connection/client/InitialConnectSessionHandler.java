@@ -11,7 +11,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handle(MinecraftPacket packet) {
+    public void handleGeneric(MinecraftPacket packet) {
         // No-op: will never handle packets
     }
 

@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -111,5 +112,10 @@ public class JoinGame implements MinecraftPacket {
         buf.writeByte(maxPlayers);
         ProtocolUtils.writeString(buf, levelType);
         buf.writeBoolean(reducedDebugInfo);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 }

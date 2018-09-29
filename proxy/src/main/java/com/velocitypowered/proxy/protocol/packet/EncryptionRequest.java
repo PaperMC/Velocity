@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -47,5 +48,10 @@ public class EncryptionRequest implements MinecraftPacket {
         ProtocolUtils.writeString(buf, ""); // Server ID
         ProtocolUtils.writeByteArray(buf, publicKey);
         ProtocolUtils.writeByteArray(buf, verifyToken);
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 }

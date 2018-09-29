@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -61,6 +62,11 @@ public class Chat implements MinecraftPacket {
         if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
             buf.writeByte(type);
         }
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
     }
 
     public static Chat createClientbound(Component component) {
