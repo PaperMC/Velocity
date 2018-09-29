@@ -49,6 +49,128 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
+    public boolean handle(KeepAlive packet) {
+        VelocityServerConnection serverConnection = player.getConnectedServer();
+        if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
+            player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
+            serverConnection.getConnection().write(packet);
+            serverConnection.resetLastPingId();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(ClientSettings packet) {
+        player.setPlayerSettings(packet);
+        return false; // will forward onto the handleGeneric below, which will write the packet to the remote server
+    }
+
+    @Override
+    public boolean handle(Chat packet) {
+        String msg = packet.getMessage();
+        if (msg.startsWith("/")) {
+            try {
+                if (!server.getCommandManager().execute(player, msg.substring(1))) {
+                    return false;
+                }
+            } catch (Exception e) {
+                logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
+                player.sendMessage(TextComponent.of("An error occurred while running this command.", TextColor.RED));
+                return true;
+            }
+        } else {
+            VelocityServerConnection serverConnection = player.getConnectedServer();
+            if (serverConnection == null) {
+                return true;
+            }
+            PlayerChatEvent event = new PlayerChatEvent(player, msg);
+            server.getEventManager().fire(event)
+                    .thenAcceptAsync(pme -> {
+                        if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
+                            serverConnection.getConnection().write(packet);
+                        } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
+                            serverConnection.getConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
+                        }
+                    }, serverConnection.getConnection().eventLoop());
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(TabCompleteRequest packet) {
+        // Record the request so that the outstanding request can be augmented later.
+        if (!packet.isAssumeCommand() && packet.getCommand().startsWith("/")) {
+            int spacePos = packet.getCommand().indexOf(' ');
+            if (spacePos > 0) {
+                String cmd = packet.getCommand().substring(1, spacePos);
+                if (server.getCommandManager().hasCommand(cmd)) {
+                    Optional<List<String>> suggestions = server.getCommandManager().offerSuggestions(player, packet.getCommand().substring(1));
+                    if (suggestions.isPresent()) {
+                        TabCompleteResponse resp = new TabCompleteResponse();
+                        resp.getOffers().addAll(suggestions.get());
+                        player.getConnection().write(resp);
+                        return true;
+                    }
+                }
+            }
+        }
+        outstandingTabComplete = packet;
+        return false;
+    }
+
+    @Override
+    public boolean handle(PluginMessage packet) {
+        if (PluginMessageUtil.isMCRegister(packet)) {
+            List<String> actuallyRegistered = new ArrayList<>();
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            for (String channel : channels) {
+                if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
+                        !clientPluginMsgChannels.contains(channel)) {
+                    throw new IllegalStateException("Too many plugin message channels registered");
+                }
+                if (clientPluginMsgChannels.add(channel)) {
+                    actuallyRegistered.add(channel);
+                }
+            }
+
+            if (actuallyRegistered.size() > 0) {
+                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(), actuallyRegistered);
+                player.getConnectedServer().getConnection().write(newRegisterPacket);
+            }
+        } else if (PluginMessageUtil.isMCUnregister(packet)) {
+            List<String> channels = PluginMessageUtil.getChannels(packet);
+            clientPluginMsgChannels.removeAll(channels);
+            player.getConnectedServer().getConnection().write(packet);
+        } else if (PluginMessageUtil.isMCBrand(packet)) {
+            player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
+        } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
+            if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                // Always forward the FML handshake to the remote server.
+                player.getConnectedServer().getConnection().write(packet);
+            } else {
+                // The client is trying to send messages too early. This is primarily caused by mods, but it's further
+                // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
+                // be sent once the JoinGame packet has been received by the proxy.
+                loginPluginMessages.add(packet);
+            }
+        } else {
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            if (id == null) {
+                player.getConnectedServer().getConnection().write(packet);
+            } else {
+                PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(), id, packet.getData());
+                server.getEventManager().fire(event)
+                        .thenAcceptAsync(pme -> {
+                            if (pme.getResult().isAllowed()) {
+                                player.getConnectedServer().getConnection().write(packet);
+                            }
+                        }, player.getConnectedServer().getConnection().eventLoop());
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void handleGeneric(MinecraftPacket packet) {
         VelocityServerConnection serverConnection = player.getConnectedServer();
         if (serverConnection == null) {
@@ -56,65 +178,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (packet instanceof KeepAlive) {
-            KeepAlive keepAlive = (KeepAlive) packet;
-            if (keepAlive.getRandomId() != serverConnection.getLastPingId()) {
-                // The last keep alive we got was probably from a different server. Let's ignore it, and hope the next
-                // ping is alright.
-                return;
-            }
-            player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-            serverConnection.getConnection().write(packet);
-            serverConnection.resetLastPingId();
-            return;
-        }
-
-        if (packet instanceof ClientSettings) {
-            player.setPlayerSettings((ClientSettings) packet);
-            // forward it on
-        }
-
-        if (packet instanceof Chat) {
-            // Try to handle any commands on the proxy. If that fails, send it onto the client.
-            Chat chat = (Chat) packet;
-            String msg = ((Chat) packet).getMessage();
-            if (msg.startsWith("/")) {
-                try {
-                    if (!server.getCommandManager().execute(player, msg.substring(1))) {
-                        player.getConnectedServer().getConnection().write(chat);
-                    }
-                } catch (Exception e) {
-                    logger.info("Exception occurred while running command for {}", player.getProfile().getName(), e);
-                    player.sendMessage(TextComponent.of("An error occurred while running this command.", TextColor.RED));
-                    return;
-                }
-            } else {
-                PlayerChatEvent event = new PlayerChatEvent(player, msg);
-                server.getEventManager().fire(event)
-                        .thenAcceptAsync(pme -> {
-                            if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
-                                serverConnection.getConnection().write(chat);
-                            } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
-                                serverConnection.getConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
-                            }
-                        }, serverConnection.getConnection().eventLoop());
-            }
-            return;
-        }
-
-        if (packet instanceof TabCompleteRequest) {
-            // Record the request so that the outstanding request can be augmented later.
-            outstandingTabComplete = (TabCompleteRequest) packet;
-            serverConnection.getConnection().write(packet);
-        }
-
-        if (packet instanceof PluginMessage) {
-            handleClientPluginMessage((PluginMessage) packet);
-            return;
-        }
-
         // If we don't want to handle this packet, just forward it on.
         if (serverConnection.hasCompletedJoin()) {
+            logger.info("Will write {}", packet);
             serverConnection.getConnection().write(packet);
         }
     }
@@ -245,62 +311,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return serverBossBars;
     }
 
-    private void handleClientPluginMessage(PluginMessage packet) {
-        if (PluginMessageUtil.isMCRegister(packet)) {
-            List<String> actuallyRegistered = new ArrayList<>();
-            List<String> channels = PluginMessageUtil.getChannels(packet);
-            for (String channel : channels) {
-                if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
-                        !clientPluginMsgChannels.contains(channel)) {
-                    throw new IllegalStateException("Too many plugin message channels registered");
-                }
-                if (clientPluginMsgChannels.add(channel)) {
-                    actuallyRegistered.add(channel);
-                }
-            }
-
-            if (actuallyRegistered.size() > 0) {
-                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(), actuallyRegistered);
-                player.getConnectedServer().getConnection().write(newRegisterPacket);
-            }
-        } else if (PluginMessageUtil.isMCUnregister(packet)) {
-            List<String> channels = PluginMessageUtil.getChannels(packet);
-            clientPluginMsgChannels.removeAll(channels);
-            player.getConnectedServer().getConnection().write(packet);
-        } else if (PluginMessageUtil.isMCBrand(packet)) {
-            player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-        } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
-            if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-                // Always forward the FML handshake to the remote server.
-                player.getConnectedServer().getConnection().write(packet);
-            } else {
-                // The client is trying to send messages too early. This is primarily caused by mods, but it's further
-                // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
-                // be sent once the JoinGame packet has been received by the proxy.
-                loginPluginMessages.add(packet);
-            }
-        } else {
-            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-            if (id == null) {
-                player.getConnectedServer().getConnection().write(packet);
-            } else {
-                PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(), id, packet.getData());
-                server.getEventManager().fire(event)
-                        .thenAcceptAsync(pme -> {
-                            if (pme.getResult().isAllowed()) {
-                                player.getConnectedServer().getConnection().write(packet);
-                            }
-                        }, player.getConnectedServer().getConnection().eventLoop());
-            }
-        }
-    }
-
     public Set<String> getClientPluginMsgChannels() {
         return clientPluginMsgChannels;
     }
 
     public void handleTabCompleteResponse(TabCompleteResponse response) {
+        logger.info("Got {}", response);
+        logger.info("Request {}", outstandingTabComplete);
         if (outstandingTabComplete != null) {
+            logger.info("HANDLING");
             if (!outstandingTabComplete.isAssumeCommand()) {
                 String command = outstandingTabComplete.getCommand().substring(1);
                 try {

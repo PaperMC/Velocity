@@ -1,12 +1,10 @@
 package com.velocitypowered.proxy.server.ping;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -42,15 +40,14 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handleGeneric(MinecraftPacket packet) {
-        Preconditions.checkState(packet instanceof StatusResponse, "Did not get status response back from connection");
-
+    public boolean handle(StatusResponse packet) {
         // All good!
         completed = true;
         connection.close();
 
         ServerPing ping = VelocityServer.GSON.fromJson(((StatusResponse) packet).getStatus(), ServerPing.class);
         result.complete(ping);
+        return true;
     }
 
     @Override

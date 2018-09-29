@@ -17,16 +17,105 @@ import io.netty.buffer.ByteBuf;
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
     private final VelocityServerConnection serverConn;
+    private final ClientPlaySessionHandler playerSessionHandler;
 
     public BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
         this.serverConn = serverConn;
+        this.playerSessionHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
     }
 
     @Override
     public void activated() {
         server.getEventManager().fireAndForget(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()));
         serverConn.getServer().addPlayer(serverConn.getPlayer());
+    }
+
+    @Override
+    public boolean beforeHandle() {
+        if (!serverConn.getPlayer().isActive()) {
+            // Obsolete connection
+            serverConn.disconnect();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean handle(KeepAlive packet) {
+        serverConn.setLastPingId(packet.getRandomId());
+        return false; // forwards on
+    }
+
+    @Override
+    public boolean handle(Disconnect packet) {
+        serverConn.disconnect();
+        serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet);
+        return true;
+    }
+
+    @Override
+    public boolean handle(JoinGame packet) {
+        playerSessionHandler.handleBackendJoinGame(packet);
+        return true;
+    }
+
+    @Override
+    public boolean handle(BossBar packet) {
+        switch (packet.getAction()) {
+            case 0: // add
+                playerSessionHandler.getServerBossBars().add(packet.getUuid());
+                break;
+            case 1: // remove
+                playerSessionHandler.getServerBossBars().remove(packet.getUuid());
+                break;
+        }
+        return false; // forward
+    }
+
+    @Override
+    public boolean handle(PluginMessage packet) {
+        if (!canForwardPluginMessage(packet)) {
+            return true;
+        }
+
+        if (PluginMessageUtil.isMCBrand(packet)) {
+            serverConn.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
+            return true;
+        }
+
+        if (!serverConn.hasCompletedJoin() && packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+            if (!serverConn.isLegacyForge()) {
+                serverConn.setLegacyForge(true);
+
+                // We must always reset the handshake before a modded connection is established if
+                // we haven't done so already.
+                serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
+            }
+
+            // Always forward these messages during login
+            return false;
+        }
+
+        ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+        if (id == null) {
+            serverConn.getPlayer().getConnection().write(packet);
+        } else {
+            PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, packet.getData());
+            server.getEventManager().fire(event)
+                    .thenAcceptAsync(pme -> {
+                        if (pme.getResult().isAllowed()) {
+                            serverConn.getPlayer().getConnection().write(packet);
+                        }
+                    }, serverConn.getConnection().eventLoop());
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(TabCompleteResponse packet) {
+        playerSessionHandler.handleTabCompleteResponse(packet);
+        return true;
     }
 
     @Override
@@ -38,69 +127,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
-        if (packet instanceof KeepAlive) {
-            // Forward onto the player
-            serverConn.setLastPingId(((KeepAlive) packet).getRandomId());
-            serverConn.getPlayer().getConnection().write(packet);
-        } else if (packet instanceof Disconnect) {
-            Disconnect original = (Disconnect) packet;
-            serverConn.disconnect();
-            serverConn.getPlayer().handleConnectionException(serverConn.getServer(), original);
-        } else if (packet instanceof JoinGame) {
-            playerHandler.handleBackendJoinGame((JoinGame) packet);
-        } else if (packet instanceof BossBar) {
-            BossBar bossBar = (BossBar) packet;
-            switch (bossBar.getAction()) {
-                case 0: // add
-                    playerHandler.getServerBossBars().add(bossBar.getUuid());
-                    break;
-                case 1: // remove
-                    playerHandler.getServerBossBars().remove(bossBar.getUuid());
-                    break;
-            }
-            serverConn.getPlayer().getConnection().write(packet);
-        } else if (packet instanceof PluginMessage) {
-            PluginMessage pm = (PluginMessage) packet;
-            if (!canForwardPluginMessage(pm)) {
-                return;
-            }
-
-            if (PluginMessageUtil.isMCBrand(pm)) {
-                serverConn.getPlayer().getConnection().write(PluginMessageUtil.rewriteMCBrand(pm));
-                return;
-            }
-
-            if (!serverConn.hasCompletedJoin() && pm.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-                if (!serverConn.isLegacyForge()) {
-                    serverConn.setLegacyForge(true);
-
-                    // We must always reset the handshake before a modded connection is established if
-                    // we haven't done so already.
-                    serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
-                }
-
-                // Always forward these messages during login
-                serverConn.getPlayer().getConnection().write(pm);
-                return;
-            }
-
-            ChannelIdentifier id = server.getChannelRegistrar().getFromId(pm.getChannel());
-            if (id == null) {
-                serverConn.getPlayer().getConnection().write(pm);
-            } else {
-                PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, pm.getData());
-                server.getEventManager().fire(event)
-                        .thenAcceptAsync(pme -> {
-                            if (pme.getResult().isAllowed()) {
-                                serverConn.getPlayer().getConnection().write(pm);
-                            }
-                        }, serverConn.getConnection().eventLoop());
-            }
-        } else if (packet instanceof TabCompleteResponse) {
-            playerHandler.handleTabCompleteResponse((TabCompleteResponse) packet);
-        } else if (serverConn.hasCompletedJoin()) {
+        if (serverConn.hasCompletedJoin()) {
             // Just forward the packet on. We don't have anything to handle at this time.
             serverConn.getPlayer().getConnection().write(packet);
         }

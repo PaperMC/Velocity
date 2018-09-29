@@ -6,7 +6,6 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class VelocityCommandManager implements CommandManager {
     private final Map<String, Command> commands = new HashMap<>();
@@ -55,6 +54,10 @@ public class VelocityCommandManager implements CommandManager {
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
         }
+    }
+
+    public boolean hasCommand(String command) {
+        return commands.containsKey(command);
     }
 
     public Optional<List<String>> offerSuggestions(CommandSource source, String cmdLine) {

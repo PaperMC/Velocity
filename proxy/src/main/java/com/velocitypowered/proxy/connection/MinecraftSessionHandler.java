@@ -5,10 +5,16 @@ import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.buffer.ByteBuf;
 
 public interface MinecraftSessionHandler {
-    void handleGeneric(MinecraftPacket packet);
+    default boolean beforeHandle() {
+        return false;
+    }
+
+    default void handleGeneric(MinecraftPacket packet) {
+
+    }
 
     default void handleUnknown(ByteBuf buf) {
-        // No-op: we'll release the buffer later.
+
     }
 
     default void connected() {

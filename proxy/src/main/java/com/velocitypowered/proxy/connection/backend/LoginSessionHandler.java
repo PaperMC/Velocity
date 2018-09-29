@@ -36,65 +36,77 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handleGeneric(MinecraftPacket packet) {
-        if (packet instanceof EncryptionRequest) {
-            throw new IllegalStateException("Backend server is online-mode!");
-        } else if (packet instanceof LoginPluginMessage) {
-            LoginPluginMessage message = (LoginPluginMessage) packet;
-            VelocityConfiguration configuration = server.getConfiguration();
-            if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN &&
-                    message.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
-                LoginPluginResponse response = new LoginPluginResponse();
-                response.setSuccess(true);
-                response.setId(message.getId());
-                response.setData(createForwardingData(configuration.getForwardingSecret(),
-                        serverConn.getPlayer().getRemoteAddress().getHostString(),
-                        serverConn.getPlayer().getProfile()));
-                serverConn.getConnection().write(response);
-                informationForwarded = true;
-            } else {
-                // Don't understand
-                LoginPluginResponse response = new LoginPluginResponse();
-                response.setSuccess(false);
-                response.setId(message.getId());
-                response.setData(Unpooled.EMPTY_BUFFER);
-                serverConn.getConnection().write(response);
-            }
-        } else if (packet instanceof Disconnect) {
-            Disconnect disconnect = (Disconnect) packet;
-            // Do we have an outstanding notification? If so, fulfill it.
-            doNotify(ConnectionRequestResults.forDisconnect(disconnect));
-            serverConn.disconnect();
-        } else if (packet instanceof SetCompression) {
-            SetCompression sc = (SetCompression) packet;
-            serverConn.getConnection().setCompressionThreshold(sc.getThreshold());
-        } else if (packet instanceof ServerLoginSuccess) {
-            if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
-                doNotify(ConnectionRequestResults.forDisconnect(
-                        TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
-                serverConn.disconnect();
-                return;
-            }
+    public boolean handle(EncryptionRequest packet) {
+        throw new IllegalStateException("Backend server is online-mode!");
+    }
 
-            // The player has been logged on to the backend server.
-            serverConn.getConnection().setState(StateRegistry.PLAY);
-            VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-            if (existingConnection == null) {
-                // Strap on the play session handler
-                serverConn.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
-            } else {
-                // The previous server connection should become obsolete.
-                // Before we remove it, if the server we are departing is modded, we must always reset the client state.
-                if (existingConnection.isLegacyForge()) {
-                    serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
-                }
-                existingConnection.disconnect();
-            }
-
-            doNotify(ConnectionRequestResults.SUCCESSFUL);
-            serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-            serverConn.getPlayer().setConnectedServer(serverConn);
+    @Override
+    public boolean handle(LoginPluginMessage packet) {
+        VelocityConfiguration configuration = server.getConfiguration();
+        if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet.getChannel()
+                .equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+            LoginPluginResponse response = new LoginPluginResponse();
+            response.setSuccess(true);
+            response.setId(packet.getId());
+            response.setData(createForwardingData(configuration.getForwardingSecret(),
+                    serverConn.getPlayer().getRemoteAddress().getHostString(),
+                    serverConn.getPlayer().getProfile()));
+            serverConn.getConnection().write(response);
+            informationForwarded = true;
+        } else {
+            // Don't understand
+            LoginPluginResponse response = new LoginPluginResponse();
+            response.setSuccess(false);
+            response.setId(packet.getId());
+            response.setData(Unpooled.EMPTY_BUFFER);
+            serverConn.getConnection().write(response);
         }
+        return true;
+    }
+
+    @Override
+    public boolean handle(Disconnect packet) {
+        Disconnect disconnect = (Disconnect) packet;
+        // Do we have an outstanding notification? If so, fulfill it.
+        doNotify(ConnectionRequestResults.forDisconnect(disconnect));
+        serverConn.disconnect();
+        return true;
+    }
+
+    @Override
+    public boolean handle(SetCompression packet) {
+        serverConn.getConnection().setCompressionThreshold(packet.getThreshold());
+        return true;
+    }
+
+    @Override
+    public boolean handle(ServerLoginSuccess packet) {
+        if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
+            doNotify(ConnectionRequestResults.forDisconnect(
+                    TextComponent.of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
+            serverConn.disconnect();
+            return true;
+        }
+
+        // The player has been logged on to the backend server.
+        serverConn.getConnection().setState(StateRegistry.PLAY);
+        VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+        if (existingConnection == null) {
+            // Strap on the play session handler
+            serverConn.getPlayer().getConnection().setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
+        } else {
+            // The previous server connection should become obsolete.
+            // Before we remove it, if the server we are departing is modded, we must always reset the client state.
+            if (existingConnection.isLegacyForge()) {
+                serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
+            }
+            existingConnection.disconnect();
+        }
+
+        doNotify(ConnectionRequestResults.SUCCESSFUL);
+        serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+        serverConn.getPlayer().setConnectedServer(serverConn);
+        return true;
     }
 
     @Override

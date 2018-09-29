@@ -59,89 +59,94 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public void handleGeneric(MinecraftPacket packet) {
-        if (packet instanceof LoginPluginResponse) {
-            LoginPluginResponse lpr = (LoginPluginResponse) packet;
-            if (lpr.getId() == playerInfoId) {
-                if (lpr.isSuccess()) {
-                    // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
-                    inbound.closeWith(Disconnect.create(
-                            TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
-                    ));
-                } else {
-                    // Proceed with the regular login process.
-                    beginPreLogin();
-                }
-            }
-        } else if (packet instanceof ServerLogin) {
-            this.login = (ServerLogin) packet;
+    public boolean handle(ServerLogin packet) {
+        this.login = packet;
+        if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+            LoginPluginMessage message = new LoginPluginMessage();
+            playerInfoId = ThreadLocalRandom.current().nextInt();
+            message.setId(playerInfoId);
+            message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
+            message.setData(Unpooled.EMPTY_BUFFER);
+            inbound.write(message);
+        } else {
+            beginPreLogin();
+        }
+        return true;
+    }
 
-            if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-                LoginPluginMessage message = new LoginPluginMessage();
-                playerInfoId = ThreadLocalRandom.current().nextInt();
-                message.setId(playerInfoId);
-                message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
-                message.setData(Unpooled.EMPTY_BUFFER);
-                inbound.write(message);
+    @Override
+    public boolean handle(LoginPluginResponse packet) {
+        if (packet.getId() == playerInfoId) {
+            if (packet.isSuccess()) {
+                // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
+                inbound.closeWith(Disconnect.create(
+                        TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
+                ));
             } else {
+                // Proceed with the regular login process.
                 beginPreLogin();
             }
-        } else if (packet instanceof EncryptionResponse) {
-            try {
-                KeyPair serverKeyPair = server.getServerKeyPair();
-                EncryptionResponse response = (EncryptionResponse) packet;
-                byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
-                if (!Arrays.equals(verify, decryptedVerifyToken)) {
-                    throw new IllegalStateException("Unable to successfully decrypt the verification token.");
-                }
-
-                byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, response.getSharedSecret());
-                String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
-
-                String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
-                server.getHttpClient()
-                        .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
-                        .thenAcceptAsync(profileResponse -> {
-                            if (inbound.isClosed()) {
-                                // The player disconnected after we authenticated them.
-                                return;
-                            }
-
-                            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption is
-                            // enabled.
-                            try {
-                                inbound.enableEncryption(decryptedSharedSecret);
-                            } catch (GeneralSecurityException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            if (profileResponse.getCode() == 200) {
-                                // All went well, initialize the session.
-                                initializePlayer(VelocityServer.GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
-                            } else if (profileResponse.getCode() == 204) {
-                                // Apparently an offline-mode user logged onto this online-mode proxy. The client has enabled
-                                // encryption, so we need to do that as well.
-                                logger.warn("An offline-mode client ({} from {}) tried to connect!", login.getUsername(), playerIp);
-                                inbound.closeWith(Disconnect.create(TextComponent.of("This server only accepts connections from online-mode clients.")));
-                            } else {
-                                // Something else went wrong
-                                logger.error("Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                                        profileResponse.getCode(), login.getUsername(), playerIp);
-                                inbound.close();
-                            }
-                        }, inbound.eventLoop())
-                        .exceptionally(exception -> {
-                            logger.error("Unable to enable encryption", exception);
-                            inbound.close();
-                            return null;
-                        });
-            } catch (GeneralSecurityException e) {
-                logger.error("Unable to enable encryption", e);
-                inbound.close();
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
         }
+        return true;
+    }
+
+    @Override
+    public boolean handle(EncryptionResponse packet) {
+        try {
+            KeyPair serverKeyPair = server.getServerKeyPair();
+            EncryptionResponse response = (EncryptionResponse) packet;
+            byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
+            if (!Arrays.equals(verify, decryptedVerifyToken)) {
+                throw new IllegalStateException("Unable to successfully decrypt the verification token.");
+            }
+
+            byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, response.getSharedSecret());
+            String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
+
+            String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
+            server.getHttpClient()
+                    .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
+                    .thenAcceptAsync(profileResponse -> {
+                        if (inbound.isClosed()) {
+                            // The player disconnected after we authenticated them.
+                            return;
+                        }
+
+                        // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption is
+                        // enabled.
+                        try {
+                            inbound.enableEncryption(decryptedSharedSecret);
+                        } catch (GeneralSecurityException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        if (profileResponse.getCode() == 200) {
+                            // All went well, initialize the session.
+                            initializePlayer(VelocityServer.GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
+                        } else if (profileResponse.getCode() == 204) {
+                            // Apparently an offline-mode user logged onto this online-mode proxy. The client has enabled
+                            // encryption, so we need to do that as well.
+                            logger.warn("An offline-mode client ({} from {}) tried to connect!", login.getUsername(), playerIp);
+                            inbound.closeWith(Disconnect.create(TextComponent.of("This server only accepts connections from online-mode clients.")));
+                        } else {
+                            // Something else went wrong
+                            logger.error("Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                                    profileResponse.getCode(), login.getUsername(), playerIp);
+                            inbound.close();
+                        }
+                    }, inbound.eventLoop())
+                    .exceptionally(exception -> {
+                        logger.error("Unable to enable encryption", exception);
+                        inbound.close();
+                        return null;
+                    });
+        } catch (GeneralSecurityException e) {
+            logger.error("Unable to enable encryption", e);
+            inbound.close();
+        } catch (MalformedURLException e) {
+            throw new AssertionError(e);
+        }
+        return true;
     }
 
     private void beginPreLogin() {

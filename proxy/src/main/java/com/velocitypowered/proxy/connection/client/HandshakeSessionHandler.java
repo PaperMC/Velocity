@@ -117,7 +117,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
+        // what even is going on?
+        connection.close();
     }
 
     private static class LegacyInboundConnection implements InboundConnection {
