@@ -16,10 +16,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class VelocityTabList implements TabList {
     private final MinecraftConnection connection;
-    private final Map<UUID, TabListEntry> entries = new HashMap<>();
+    private final Map<UUID, TabListEntry> entries = new ConcurrentHashMap<>();
 
     public VelocityTabList(MinecraftConnection connection) {
         this.connection = connection;
