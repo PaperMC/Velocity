@@ -1,10 +1,13 @@
 package com.velocitypowered.proxy.protocol;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public enum ProtocolUtils { ;
@@ -78,5 +81,36 @@ public enum ProtocolUtils { ;
     public static void writeUuid(ByteBuf buf, UUID uuid) {
         buf.writeLong(uuid.getMostSignificantBits());
         buf.writeLong(uuid.getLeastSignificantBits());
+    }
+
+    public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
+        writeVarInt(buf, properties.size());
+        for (GameProfile.Property property : properties) {
+            writeString(buf, property.getName());
+            writeString(buf, property.getValue());
+            String signature = property.getSignature();
+            if (signature != null) {
+                buf.writeBoolean(true);
+                writeString(buf, signature);
+            } else {
+                buf.writeBoolean(false);
+            }
+        }
+    }
+
+    public static List<GameProfile.Property> readProperties(ByteBuf buf) {
+        List<GameProfile.Property> properties = new ArrayList<>();
+        int size = readVarInt(buf);
+        for (int i = 0; i < size; i++) {
+            String name = readString(buf);
+            String value = readString(buf);
+            String signature = "";
+            boolean hasSignature = buf.readBoolean();
+            if (hasSignature) {
+                signature = readString(buf);
+            }
+            properties.add(new GameProfile.Property(name, value, signature));
+        }
+        return properties;
     }
 }

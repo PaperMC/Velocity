@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
@@ -12,6 +13,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.TextComponent;
@@ -237,6 +239,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // The call will handle if the player is not a Forge player appropriately.
             player.getConnection().setCanSendLegacyFMLResetPacket(true);
         } else {
+            // Clear tab list to avoid duplicate entries
+            TabList tabList = player.getTabList();
+            tabList.getEntries().forEach(entry -> tabList.removeEntry(entry.getProfile().idAsUuid()));
+
             // Ah, this is the meat and potatoes of the whole venture!
             //
             // In order to handle switching to another server, you will need to send three packets:

@@ -126,18 +126,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             ProtocolUtils.writeString(dataToForward, address);
             ProtocolUtils.writeUuid(dataToForward, profile.idAsUuid());
             ProtocolUtils.writeString(dataToForward, profile.getName());
-            ProtocolUtils.writeVarInt(dataToForward, profile.getProperties().size());
-            for (GameProfile.Property property : profile.getProperties()) {
-                ProtocolUtils.writeString(dataToForward, property.getName());
-                ProtocolUtils.writeString(dataToForward, property.getValue());
-                String signature = property.getSignature();
-                if (signature != null) {
-                    dataToForward.writeBoolean(true);
-                    ProtocolUtils.writeString(dataToForward, signature);
-                } else {
-                    dataToForward.writeBoolean(false);
-                }
-            }
+            ProtocolUtils.writeProperties(dataToForward, profile.getProperties());
 
             SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
             Mac mac = Mac.getInstance("HmacSHA256");
