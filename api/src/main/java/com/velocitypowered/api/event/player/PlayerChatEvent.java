@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Optional;
 
 /**
- * This event is fired once the player has been authenticated but before they connect to a server on the proxy.
+ * This event is fired when a player types in a chat message.
  */
 public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult> {
     private final Player player;
