@@ -6,7 +6,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
     private final ConnectedPlayer player;
 
-    public InitialConnectSessionHandler(ConnectedPlayer player) {
+    InitialConnectSessionHandler(ConnectedPlayer player) {
         this.player = player;
     }
 

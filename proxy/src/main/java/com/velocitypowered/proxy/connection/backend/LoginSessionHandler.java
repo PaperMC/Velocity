@@ -30,8 +30,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final CompletableFuture<ConnectionRequestBuilder.Result> resultFuture;
     private boolean informationForwarded;
 
-    public LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-                               CompletableFuture<ConnectionRequestBuilder.Result> resultFuture) {
+    LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
+                        CompletableFuture<ConnectionRequestBuilder.Result> resultFuture) {
         this.server = server;
         this.serverConn = serverConn;
         this.resultFuture = resultFuture;

@@ -64,7 +64,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private PlayerSettings settings;
     private final VelocityServer server;
     
-    public ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
+    ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.server = server;
         this.profile = profile;
         this.connection = connection;
@@ -99,7 +99,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return this.ping;
     }
     
-    public void setPing(long ping) {
+    void setPing(long ping) {
         this.ping = ping;
     }
     
@@ -386,7 +386,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         connection.closeWith(Disconnect.create(reason));
     }
 
-    public void teardown() {
+    void teardown() {
         if (connectionInFlight != null) {
             connectionInFlight.disconnect();
         }

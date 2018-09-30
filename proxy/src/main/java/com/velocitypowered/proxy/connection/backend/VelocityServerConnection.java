@@ -69,18 +69,15 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                     }
                 })
                 .connect(registeredServer.getServerInfo().getAddress())
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (future.isSuccess()) {
-                            connection = future.channel().pipeline().get(MinecraftConnection.class);
+                .addListener((ChannelFutureListener) future -> {
+                    if (future.isSuccess()) {
+                        connection = future.channel().pipeline().get(MinecraftConnection.class);
 
-                            // Kick off the connection process
-                            connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this, result));
-                            startHandshake();
-                        } else {
-                            result.completeExceptionally(future.cause());
-                        }
+                        // Kick off the connection process
+                        connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this, result));
+                        startHandshake();
+                    } else {
+                        result.completeExceptionally(future.cause());
                     }
                 });
         return result;
@@ -120,12 +117,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         ServerLogin login = new ServerLogin();
         login.setUsername(proxyPlayer.getUsername());
         connection.write(login);
-    }
-
-    public void writeIfJoined(PluginMessage message) {
-        if (hasCompletedJoin) {
-            connection.write(message);
-        }
     }
 
     public MinecraftConnection getConnection() {

@@ -19,7 +19,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
     private final InboundConnection inboundWrapper;
 
-    public StatusSessionHandler(VelocityServer server, MinecraftConnection connection, InboundConnection inboundWrapper) {
+    StatusSessionHandler(VelocityServer server, MinecraftConnection connection, InboundConnection inboundWrapper) {
         this.server = server;
         this.connection = connection;
         this.inboundWrapper = inboundWrapper;

@@ -19,7 +19,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     private final VelocityServerConnection serverConn;
     private final ClientPlaySessionHandler playerSessionHandler;
 
-    public BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
+    BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
         this.serverConn = serverConn;
         this.playerSessionHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();

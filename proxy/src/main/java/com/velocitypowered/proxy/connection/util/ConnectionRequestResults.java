@@ -31,20 +31,10 @@ public class ConnectionRequestResults {
 
     public static ConnectionRequestBuilder.Result forDisconnect(Disconnect disconnect) {
         Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
-        return new ConnectionRequestBuilder.Result() {
-            @Override
-            public ConnectionRequestBuilder.Status getStatus() {
-                return ConnectionRequestBuilder.Status.SERVER_DISCONNECTED;
-            }
-
-            @Override
-            public Optional<Component> getReason() {
-                return Optional.of(deserialized);
-            }
-        };
+        return forDisconnect(deserialized);
     }
 
-    public static ConnectionRequestBuilder.Result forDisconnect(TextComponent component) {
+    public static ConnectionRequestBuilder.Result forDisconnect(Component component) {
         return new ConnectionRequestBuilder.Result() {
             @Override
             public ConnectionRequestBuilder.Status getStatus() {

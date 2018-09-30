@@ -94,13 +94,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public boolean handle(EncryptionResponse packet) {
         try {
             KeyPair serverKeyPair = server.getServerKeyPair();
-            EncryptionResponse response = (EncryptionResponse) packet;
-            byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, response.getVerifyToken());
+            byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, packet.getVerifyToken());
             if (!Arrays.equals(verify, decryptedVerifyToken)) {
                 throw new IllegalStateException("Unable to successfully decrypt the verification token.");
             }
 
-            byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, response.getSharedSecret());
+            byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, packet.getSharedSecret());
             String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
             String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
