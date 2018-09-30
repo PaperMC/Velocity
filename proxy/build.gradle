@@ -23,7 +23,9 @@ jar {
 }
 
 dependencies {
+    // Note: we depend on the API twice, first the main sourceset, and then the annotation processor.
     compile project(':velocity-api')
+    compile project(':velocity-api').sourceSets.ap.output
     compile project(':velocity-native')
 
     compile "io.netty:netty-codec:${nettyVersion}"

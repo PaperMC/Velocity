@@ -5,12 +5,12 @@ import com.google.inject.Injector;
 import com.velocitypowered.api.plugin.InvalidPluginException;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
+import com.velocitypowered.api.plugin.ap.SerializedPluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
-import com.velocitypowered.proxy.plugin.loader.java.SerializedPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 
 import java.io.BufferedInputStream;
@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.regex.Pattern;
 
 public class JavaPluginLoader implements PluginLoader {
     private final ProxyServer server;
