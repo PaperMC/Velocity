@@ -10,12 +10,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import net.kyori.text.Component;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VelocityTabList implements TabList {
@@ -58,6 +53,15 @@ public class VelocityTabList implements TabList {
         }
 
         return Optional.ofNullable(entry);
+    }
+
+    public void clearAll() { // Note: this method is called upon server switch
+        List<PlayerListItem.Item> items = new ArrayList<>();
+        for (TabListEntry value : entries.values()) {
+            items.add(PlayerListItem.Item.from(value));
+        }
+        entries.clear();
+        connection.delayedWrite(new PlayerListItem(PlayerListItem.Action.REMOVE_PLAYER, items));
     }
 
     @Override

@@ -240,11 +240,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().setCanSendLegacyFMLResetPacket(true);
         } else {
             // Clear tab list to avoid duplicate entries
-            TabList tabList = player.getTabList();
-            tabList.getEntries().forEach(entry -> tabList.removeEntry(entry.getProfile().idAsUuid()));
+            player.getTabList().clearAll();
 
-            // Ah, this is the meat and potatoes of the whole venture!
-            //
             // In order to handle switching to another server, you will need to send three packets:
             //
             // - The join game packet from the backend server
@@ -271,7 +268,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
         serverBossBars.clear();
 
-        // Tell the server about this client's plugin messages. Velocity will forward them on to the client.
+        // Tell the server about this client's plugin message channels.
         Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
         if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
             toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
