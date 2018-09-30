@@ -66,4 +66,5 @@ public interface MinecraftSessionHandler {
     default boolean handle(TabCompleteRequest packet) { return false; }
     default boolean handle(TabCompleteResponse packet) { return false; }
     default boolean handle(TitlePacket packet) { return false; }
+    default boolean handle(PlayerListItem packet) { return false; }
 }

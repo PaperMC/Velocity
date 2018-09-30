@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.title.Title;
 import java.util.List;
@@ -88,13 +89,19 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * Sets the tab list header and footer for the player.
      * @param header the header component
      * @param footer the footer component
+     * @deprecated Use {@link TabList#setHeaderAndFooter(Component, Component)}.
      */
+    @Deprecated
     void setHeaderAndFooter(Component header, Component footer);
 
     /**
      * Clears the tab list header and footer for the player.
+     * @deprecated Use {@link TabList#clearHeaderAndFooter()}.
      */
+    @Deprecated
     void clearHeaderAndFooter();
+
+    TabList getTabList();
 
     /**
      * Disconnects the player with the specified reason. Once this method is called, further calls to other {@link Player}

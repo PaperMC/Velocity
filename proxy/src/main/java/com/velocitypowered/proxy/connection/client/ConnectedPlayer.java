@@ -15,6 +15,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
@@ -29,6 +30,10 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import com.velocitypowered.proxy.protocol.packet.Chat;
+import com.velocitypowered.proxy.protocol.packet.ClientSettings;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -62,10 +67,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private VelocityServerConnection connectedServer;
     private VelocityServerConnection connectionInFlight;
     private PlayerSettings settings;
+    private final VelocityTabList tabList;
     private final VelocityServer server;
     
     ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
         this.server = server;
+        this.tabList = new VelocityTabList(connection);
         this.profile = profile;
         this.connection = connection;
         this.virtualHost = virtualHost;
@@ -185,15 +192,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public void setHeaderAndFooter(@NonNull Component header, @NonNull Component footer) {
-        Preconditions.checkNotNull(header, "header");
-        Preconditions.checkNotNull(footer, "footer");
-        connection.write(HeaderAndFooter.create(header, footer));
+    public void setHeaderAndFooter(Component header, Component footer) {
+        tabList.setHeaderAndFooter(header, footer);
     }
 
     @Override
     public void clearHeaderAndFooter() {
-        connection.write(HeaderAndFooter.reset());
+        tabList.clearHeaderAndFooter();
+    }
+
+    @Override
+    public VelocityTabList getTabList() {
+        return tabList;
     }
     
     @Override

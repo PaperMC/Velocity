@@ -118,6 +118,12 @@ public enum StateRegistry {
                     map(0x47, MINECRAFT_1_12, true),
                     map(0x48, MINECRAFT_1_12_1, true),
                     map(0x4B, MINECRAFT_1_13, true));
+            CLIENTBOUND.register(PlayerListItem.class, PlayerListItem::new,
+                    map(0x38, MINECRAFT_1_8, false),
+                    map(0x2D, MINECRAFT_1_9, false),
+                    map(0x2D, MINECRAFT_1_12, false),
+                    map(0x2E, MINECRAFT_1_12_1, false),
+                    map(0x30, MINECRAFT_1_13, false));
         }
     },
     LOGIN {

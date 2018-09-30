@@ -12,6 +12,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.tablist.VelocityTabList;
 import io.netty.buffer.ByteBuf;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
@@ -116,6 +117,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     public boolean handle(TabCompleteResponse packet) {
         playerSessionHandler.handleTabCompleteResponse(packet);
         return true;
+    }
+
+    @Override
+    public boolean handle(PlayerListItem packet) {
+        serverConn.getPlayer().getTabList().processBackendPacket(packet);
+        return false; //Forward packet to player
     }
 
     @Override
