@@ -10,7 +10,6 @@ import java.util.UUID;
 
 /**
  * Represents the tab list of a {@link Player}.
- * TODO: Desetude
  */
 public interface TabList {
     /**
@@ -24,14 +23,29 @@ public interface TabList {
      * Clears the tab list header and footer for the player.
      */
     void clearHeaderAndFooter();
-
+    
+    /**
+     * Adds a {@link TabListEntry} to the {@link Player}'s tab list.
+     * @param entry to add to the tab list
+     */
     void addEntry(TabListEntry entry);
-
+    
+    /**
+     * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile}
+     * identified with the specified {@link UUID}.
+     * @param uuid of the
+     * @return {@link Optional} containing the removed {@link TabListEntry} if present,
+     * otherwise {@link Optional#empty()}
+     */
     Optional<TabListEntry> removeEntry(UUID uuid);
-
+    
+    /**
+     * Returns an immutable {@link Collection} of the {@link TabListEntry}s in the tab list.
+     * @return immutable {@link Collection} of tab list entries
+     */
     Collection<TabListEntry> getEntries();
 
-    //Necessary because the TabListEntry implementation isn't in the api
+    // Necessary because the TabListEntry implementation isn't in the api
     @Deprecated
     TabListEntry buildEntry(GameProfile profile, Component displayName, int latency, int gameMode);
 }

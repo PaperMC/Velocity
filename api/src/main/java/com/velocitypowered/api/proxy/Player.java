@@ -100,7 +100,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      */
     @Deprecated
     void clearHeaderAndFooter();
-
+    
+    /**
+     * Returns {@link this} {@link Player}'s tab list.
+     * @return this player's tab list
+     */
     TabList getTabList();
 
     /**
