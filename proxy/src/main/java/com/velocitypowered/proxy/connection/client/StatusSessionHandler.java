@@ -41,7 +41,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
                 new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                 configuration.getMotdComponent(),
-                configuration.getFavicon(),
+                configuration.getFavicon().orElse(null),
                 configuration.isAnnounceForge() ? ServerPing.ModInfo.DEFAULT : null
         );
 
