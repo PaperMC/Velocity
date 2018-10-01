@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.config;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
+import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import net.kyori.text.Component;
@@ -18,7 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class VelocityConfiguration extends AnnotatedConfig {
+public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfig {
 
     @Comment("Config version. Do not change this")
     @ConfigKey("config-version")
@@ -263,8 +264,8 @@ public class VelocityConfiguration extends AnnotatedConfig {
         return advanced.getLoginRatelimit();
     }
 
-    public Favicon getFavicon() {
-        return favicon;
+    public Optional<Favicon> getFavicon() {
+        return Optional.ofNullable(favicon);
     }
 
     public boolean isAnnounceForge() {
