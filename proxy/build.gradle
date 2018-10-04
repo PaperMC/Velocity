@@ -29,6 +29,7 @@ dependencies {
     compile project(':velocity-native')
 
     compile "io.netty:netty-codec:${nettyVersion}"
+    compile "io.netty:netty-codec-haproxy:${nettyVersion}"
     compile "io.netty:netty-codec-http:${nettyVersion}"
     compile "io.netty:netty-handler:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"

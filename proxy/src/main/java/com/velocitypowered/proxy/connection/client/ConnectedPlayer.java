@@ -122,7 +122,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress) connection.getChannel().remoteAddress();
+        return (InetSocketAddress) connection.getRemoteAddress();
     }
 
     @Override

@@ -20,6 +20,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,6 +78,10 @@ public final class ConnectionManager {
                         connection.setState(StateRegistry.HANDSHAKE);
                         connection.setSessionHandler(new HandshakeSessionHandler(connection, server));
                         ch.pipeline().addLast(Connections.HANDLER, connection);
+                        
+                        if (server.getConfiguration().isProxyProtocol()) {
+                            ch.pipeline().addFirst(new HAProxyMessageDecoder());
+                        }
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, true)

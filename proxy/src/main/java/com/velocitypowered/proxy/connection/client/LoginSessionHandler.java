@@ -101,7 +101,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             byte[] decryptedSharedSecret = EncryptionUtils.decryptRsa(serverKeyPair, packet.getSharedSecret());
             String serverId = EncryptionUtils.generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
-            String playerIp = ((InetSocketAddress) inbound.getChannel().remoteAddress()).getHostString();
+            String playerIp = ((InetSocketAddress) inbound.getRemoteAddress()).getHostString();
             server.getHttpClient()
                     .get(new URL(String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
                     .thenAcceptAsync(profileResponse -> {

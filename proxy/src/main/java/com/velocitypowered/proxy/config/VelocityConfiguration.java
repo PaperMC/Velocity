@@ -280,6 +280,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return advanced.getReadTimeout();
     }
 
+    public boolean isProxyProtocol() {
+        return advanced.isProxyProtocol();
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -433,6 +437,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
         @ConfigKey("read-timeout")
         private int readTimeout = 30000;
+        @Comment("Enables compatibility with HAProxy.")
+        @ConfigKey("proxy-protocol")
+        private boolean proxyProtocol = false;
 
         private Advanced() {
         }
@@ -444,6 +451,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
                 this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
                 this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
+                this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
             }
         }
 
@@ -467,6 +475,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
             return readTimeout;
         }
 
+        public boolean isProxyProtocol() {
+            return proxyProtocol;
+        }
+
         @Override
         public String toString() {
             return "Advanced{" +
@@ -475,6 +487,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                     ", loginRatelimit=" + loginRatelimit +
                     ", connectionTimeout=" + connectionTimeout +
                     ", readTimeout=" + readTimeout +
+                    ", proxyProtocol=" + proxyProtocol +
                     '}';
         }
     }
