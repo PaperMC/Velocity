@@ -41,6 +41,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("online-mode")
     private boolean onlineMode = true;
 
+    @Comment("Enables compatibility with the PROXY protocol.")
+    @ConfigKey("proxy-protocol")
+    private boolean proxyProtocol = false;
+    
     @Comment({
         "Should we forward IP addresses and other data to backend servers?",
         "Available options:",
@@ -82,13 +86,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.query = query;
     }
 
-    private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
+    private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode, boolean proxyProtocol,
             boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
             Servers servers, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
         this.onlineMode = onlineMode;
+        this.proxyProtocol = proxyProtocol;
         this.announceForge = announceForge;
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
@@ -236,6 +241,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return onlineMode;
     }
 
+    public boolean isProxyProtocol() {
+        return proxyProtocol;
+    }
+
     public PlayerInfoForwarding getPlayerInfoForwardingMode() {
         return playerInfoForwardingMode;
     }
@@ -320,6 +329,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
                 toml.getBoolean("online-mode", true),
+                toml.getBoolean("proxy-protocol", false),
                 toml.getBoolean("announce-forge", false),
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,

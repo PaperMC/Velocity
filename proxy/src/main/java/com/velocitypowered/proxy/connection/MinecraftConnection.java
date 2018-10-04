@@ -12,12 +12,15 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 
 import static com.velocitypowered.proxy.network.Connections.*;
@@ -30,6 +33,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
     private final Channel channel;
+    private SocketAddress remoteAddress;
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
@@ -40,6 +44,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public MinecraftConnection(Channel channel, VelocityServer server) {
         this.channel = channel;
+        this.remoteAddress = channel.remoteAddress();
         this.server = server;
         this.state = StateRegistry.HANDSHAKE;
     }
@@ -77,6 +82,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
             if (!pkt.handle(sessionHandler)) {
                 sessionHandler.handleGeneric((MinecraftPacket) msg);
             }
+        } else if (msg instanceof HAProxyMessage) {
+            if (sessionHandler.beforeHandle()) {
+                return;
+            }
+
+            HAProxyMessage proxyMessage = (HAProxyMessage) msg;
+            this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(), proxyMessage.sourcePort());
         } else if (msg instanceof ByteBuf) {
             try {
                 if (sessionHandler.beforeHandle()) {
@@ -151,6 +163,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public boolean isClosed() {
         return !channel.isActive();
+    }
+
+    public SocketAddress getRemoteAddress() {
+        return remoteAddress;
     }
 
     public StateRegistry getState() {
