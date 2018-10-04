@@ -41,10 +41,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("online-mode")
     private boolean onlineMode = true;
 
-    @Comment("Enables compatibility with the PROXY protocol.")
-    @ConfigKey("proxy-protocol")
-    private boolean proxyProtocol = false;
-    
     @Comment({
         "Should we forward IP addresses and other data to backend servers?",
         "Available options:",
@@ -86,14 +82,13 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.query = query;
     }
 
-    private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode, boolean proxyProtocol,
+    private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
             boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
             Servers servers, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
         this.onlineMode = onlineMode;
-        this.proxyProtocol = proxyProtocol;
         this.announceForge = announceForge;
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
@@ -241,10 +236,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return onlineMode;
     }
 
-    public boolean isProxyProtocol() {
-        return proxyProtocol;
-    }
-
     public PlayerInfoForwarding getPlayerInfoForwardingMode() {
         return playerInfoForwardingMode;
     }
@@ -289,6 +280,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return advanced.getReadTimeout();
     }
 
+    public boolean isProxyProtocol() {
+        return advanced.isProxyProtocol();
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -329,7 +324,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 toml.getString("motd", "&3A Velocity Server"),
                 toml.getLong("show-max-players", 500L).intValue(),
                 toml.getBoolean("online-mode", true),
-                toml.getBoolean("proxy-protocol", false),
                 toml.getBoolean("announce-forge", false),
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
@@ -443,6 +437,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
         @ConfigKey("read-timeout")
         private int readTimeout = 30000;
+        @Comment("Enables compatibility with HAProxy.")
+        @ConfigKey("proxy-protocol")
+        private boolean proxyProtocol = false;
 
         private Advanced() {
         }
@@ -454,6 +451,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
                 this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
                 this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
+                this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
             }
         }
 
@@ -477,6 +475,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
             return readTimeout;
         }
 
+        public boolean isProxyProtocol() {
+            return proxyProtocol;
+        }
+
         @Override
         public String toString() {
             return "Advanced{" +
@@ -485,6 +487,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                     ", loginRatelimit=" + loginRatelimit +
                     ", connectionTimeout=" + connectionTimeout +
                     ", readTimeout=" + readTimeout +
+                    ", proxyProtocol=" + proxyProtocol +
                     '}';
         }
     }
