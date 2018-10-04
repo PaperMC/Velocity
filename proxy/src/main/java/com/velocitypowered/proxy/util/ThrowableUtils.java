@@ -4,6 +4,6 @@ public enum ThrowableUtils {
     ;
 
     public static String briefDescription(Throwable throwable) {
-        return throwable.getClass().getName() + ": " + throwable.getMessage();
+        return throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
     }
 }

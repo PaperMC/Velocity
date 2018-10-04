@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
@@ -258,13 +259,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     public void handleConnectionException(RegisteredServer server, Throwable throwable) {
-        String error = ThrowableUtils.briefDescription(throwable);
+        Throwable wrapped = throwable;
+        if (throwable instanceof CompletionException) {
+            wrapped = throwable.getCause();
+        }
+
+        String error = ThrowableUtils.briefDescription(wrapped);
         String userMessage;
         if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
             userMessage = "Exception in server " + server.getServerInfo().getName();
         } else {
-            logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(), throwable);
-            userMessage = "Exception connecting to server " + server.getServerInfo().getName();
+            logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(), wrapped);
+            userMessage = "Can't connect to server " + server.getServerInfo().getName();
         }
         handleConnectionException(server, null, TextComponent.builder()
                 .content(userMessage + ": ")
@@ -286,7 +292,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         } else {
             logger.error("{}: disconnected while connecting to {}: {}", this, server.getServerInfo().getName(), plainTextReason);
             handleConnectionException(server, disconnectReason, TextComponent.builder()
-                    .content("Unable to connect to " + server.getServerInfo().getName() + ": ")
+                    .content("Can't connect to server " + server.getServerInfo().getName() + ": ")
                     .color(TextColor.RED)
                     .append(disconnectReason)
                     .build());
