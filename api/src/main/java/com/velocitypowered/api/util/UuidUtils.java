@@ -1,6 +1,7 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.nio.charset.StandardCharsets;
@@ -36,7 +37,8 @@ public final class UuidUtils {
      */
     public static @NonNull String toUndashed(final @NonNull UUID uuid) {
         Preconditions.checkNotNull(uuid, "uuid");
-        return Long.toUnsignedString(uuid.getMostSignificantBits(), 16) + Long.toUnsignedString(uuid.getLeastSignificantBits(), 16);
+        return Strings.padStart(Long.toHexString(uuid.getMostSignificantBits()), 16, '0') +
+                Strings.padStart(Long.toHexString(uuid.getLeastSignificantBits()), 16, '0');
     }
 
     /**
