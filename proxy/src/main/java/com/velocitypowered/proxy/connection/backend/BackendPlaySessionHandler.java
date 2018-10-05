@@ -94,22 +94,22 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
             }
 
-            // Always forward these messages during login
+            // Always forward these messages during login. Don't pass it onto the handleGeneric below.
             return false;
         }
 
         ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
         if (id == null) {
-            serverConn.getPlayer().getConnection().write(packet);
-        } else {
-            PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, packet.getData());
-            server.getEventManager().fire(event)
-                    .thenAcceptAsync(pme -> {
-                        if (pme.getResult().isAllowed()) {
-                            serverConn.getPlayer().getConnection().write(packet);
-                        }
-                    }, serverConn.getConnection().eventLoop());
+            return false;
         }
+
+        PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, packet.getData());
+        server.getEventManager().fire(event)
+                .thenAcceptAsync(pme -> {
+                    if (pme.getResult().isAllowed()) {
+                        serverConn.getPlayer().getConnection().write(packet);
+                    }
+                }, serverConn.getConnection().eventLoop());
         return true;
     }
 
@@ -134,10 +134,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (serverConn.hasCompletedJoin()) {
-            // Just forward the packet on. We don't have anything to handle at this time.
-            serverConn.getPlayer().getConnection().write(packet);
-        }
+        // Just forward the packet on. We don't have anything to handle at this time.
+        serverConn.getPlayer().getConnection().write(packet);
     }
 
     @Override
@@ -149,9 +147,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (serverConn.hasCompletedJoin()) {
-            serverConn.getPlayer().getConnection().write(buf.retain());
-        }
+        serverConn.getPlayer().getConnection().write(buf.retain());
     }
 
     @Override
