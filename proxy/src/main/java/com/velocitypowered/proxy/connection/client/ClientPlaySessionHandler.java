@@ -202,7 +202,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public void disconnected() {
         player.teardown();
-        server.getEventManager().fireAndForget(new DisconnectEvent(player));
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
@@ -410,6 +411,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             connectedServer.disconnect();
         }
         server.unregisterConnection(this);
+        server.getEventManager().fireAndForget(new DisconnectEvent(this));
     }
 
     @Override

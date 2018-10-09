@@ -50,6 +50,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private ServerLogin login;
     private byte[] verify;
     private int playerInfoId;
+    private ConnectedPlayer connectedPlayer;
 
     public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound, InboundConnection apiInbound) {
         this.server = Preconditions.checkNotNull(server, "server");
@@ -196,6 +197,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // Initiate a regular connection and move over to it.
             ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(), inbound,
                     apiInbound.getVirtualHost().orElse(null));
+            this.connectedPlayer = player;
 
             return server.getEventManager().fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
                         .thenCompose(event -> {
@@ -212,7 +214,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                             }
                             if (!event.getResult().isAllowed()) {
                                 // The component is guaranteed to be provided if the connection was denied.
-                                inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                                player.disconnect(event.getResult().getReason().get());
                                 return;
                             }
 
@@ -226,6 +228,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         Optional<RegisteredServer> toTry = player.getNextServerToTry();
         if (!toTry.isPresent()) {
             player.close(TextComponent.of("No available servers", TextColor.RED));
+            return;
+        }
+
+        if (!server.registerConnection(player)) {
+            inbound.closeWith(Disconnect.create(TextComponent.of("You are already on this proxy!", TextColor.RED)));
             return;
         }
 
@@ -243,10 +250,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         inbound.setAssociation(player);
         inbound.setState(StateRegistry.PLAY);
 
-        if (!server.registerConnection(player)) {
-            inbound.closeWith(Disconnect.create(TextComponent.of("You are already on this proxy!", TextColor.RED)));
-        }
-
         logger.info("{} has connected", player);
         inbound.setSessionHandler(new InitialConnectSessionHandler(player));
         server.getEventManager().fire(new PostLoginEvent(player)).thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
@@ -255,5 +258,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     @Override
     public void handleUnknown(ByteBuf buf) {
         throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
+    }
+
+    @Override
+    public void disconnected() {
+        if (connectedPlayer != null) {
+            connectedPlayer.teardown();
+        }
     }
 }
