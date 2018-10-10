@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.Title;
 import java.util.List;
 
@@ -44,6 +45,12 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @return the settings
      */
     PlayerSettings getPlayerSettings();
+    
+    /**
+     * Returns the player's mod info if they have a modded client.
+     * @return an {@link Optional} the mod info. which may be empty
+     */
+    Optional<ModInfo> getModInfo();
 
     /**
      * Returns the current player's ping
