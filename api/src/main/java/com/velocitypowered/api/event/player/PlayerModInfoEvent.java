@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.ModInfo;
 
+/**
+ * This event is fired when the players ModInfo is changed.
+ */
 public final class PlayerModInfoEvent {
     private final Player player;
     private final ModInfo modInfo;

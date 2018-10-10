@@ -145,9 +145,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
         } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
             if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-                List<ModInfo.Mod> mods = PluginMessageUtil.readModList(packet);
-                if (!mods.isEmpty()) {
-                    player.setModInfo(new ModInfo("FML", mods));
+                if (!player.getModInfo().isPresent()) {
+                    PluginMessageUtil.readModList(packet).ifPresent(mods -> player.setModInfo(new ModInfo("FML", mods)));
                 }
                 
                 // Always forward the FML handshake to the remote server.
