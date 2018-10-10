@@ -1,10 +1,9 @@
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
@@ -13,7 +12,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
-import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.TextComponent;
@@ -147,6 +145,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
         } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
             if (packet.getChannel().equals(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+                List<ModInfo.Mod> mods = PluginMessageUtil.readModList(packet);
+                if (!mods.isEmpty()) {
+                    player.setModInfo(new ModInfo("FML", mods));
+                }
+                
                 // Always forward the FML handshake to the remote server.
                 player.getConnectedServer().getConnection().write(packet);
             } else {

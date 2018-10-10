@@ -2,6 +2,8 @@ package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -75,5 +77,24 @@ public class PluginMessageUtil {
         newMsg.setChannel(message.getChannel());
         newMsg.setData(rewrittenData);
         return newMsg;
+    }
+    
+    public static List<ModInfo.Mod> readModList(PluginMessage message) {
+        List<ModInfo.Mod> mods = Lists.newArrayList();
+        
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(message.getData());
+        byte discriminator = byteBuf.readByte();
+        
+        if (discriminator == 2) {
+            int modCount = ProtocolUtils.readVarInt(byteBuf);
+            
+            for (int index = 0; index < modCount; index++) {
+                String id = ProtocolUtils.readString(byteBuf);
+                String version = ProtocolUtils.readString(byteBuf);
+                mods.add(new ModInfo.Mod(id, version));
+            }
+        }
+        
+        return ImmutableList.copyOf(mods);
     }
 }

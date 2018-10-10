@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -42,7 +43,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                 new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
                 configuration.getMotdComponent(),
                 configuration.getFavicon().orElse(null),
-                configuration.isAnnounceForge() ? ServerPing.ModInfo.DEFAULT : null
+                configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
         );
 
         ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);

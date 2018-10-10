@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
+import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
@@ -16,8 +17,8 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.util.MessagePosition;
+import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
@@ -31,9 +32,6 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import com.velocitypowered.proxy.protocol.packet.Chat;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.ThrowableUtils;
 import net.kyori.text.Component;
@@ -69,6 +67,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private VelocityServerConnection connectedServer;
     private VelocityServerConnection connectionInFlight;
     private PlayerSettings settings;
+    private ModInfo modInfo;
     private final VelocityTabList tabList;
     private final VelocityServer server;
     
@@ -120,7 +119,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         this.settings = new ClientSettingsWrapper(settings);
         server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
     }
-
+    
+    public Optional<ModInfo> getModInfo() {
+        return Optional.ofNullable(modInfo);
+    }
+    
+    void setModInfo(ModInfo modInfo) {
+        this.modInfo = modInfo;
+        server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, this.modInfo));
+    }
+    
     @Override
     public InetSocketAddress getRemoteAddress() {
         return (InetSocketAddress) connection.getRemoteAddress();

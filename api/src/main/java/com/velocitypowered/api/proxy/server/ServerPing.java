@@ -3,6 +3,7 @@ package com.velocitypowered.api.proxy.server;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.api.util.ModInfo;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -16,13 +17,13 @@ public final class ServerPing {
     private final Players players;
     private final Component description;
     private final @Nullable Favicon favicon;
-    private final ModInfo modinfo;
+    private final @Nullable ModInfo modinfo;
 
     public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon) {
         this(version, players, description, favicon, ModInfo.DEFAULT);
     }
 
-    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, ServerPing.@Nullable ModInfo modinfo) {
+    public ServerPing(Version version, @Nullable Players players, Component description, @Nullable Favicon favicon, @Nullable ModInfo modinfo) {
         this.version = Preconditions.checkNotNull(version, "version");
         this.players = players;
         this.description = Preconditions.checkNotNull(description, "description");
@@ -74,8 +75,8 @@ public final class ServerPing {
         builder.favicon = favicon;
         builder.nullOutModinfo = modinfo == null;
         if (modinfo != null) {
-            builder.modType = modinfo.type;
-            builder.mods.addAll(modinfo.modList);
+            builder.modType = modinfo.getType();
+            builder.mods.addAll(modinfo.getMods());
         }
         return builder;
     }
@@ -93,7 +94,7 @@ public final class ServerPing {
         private int maximumPlayers;
         private final List<SamplePlayer> samplePlayers = new ArrayList<>();
         private String modType;
-        private final List<Mod> mods = new ArrayList<>();
+        private final List<ModInfo.Mod> mods = new ArrayList<>();
         private Component description;
         private Favicon favicon;
         private boolean nullOutPlayers;
@@ -128,7 +129,7 @@ public final class ServerPing {
             return this;
         }
 
-        public Builder mods(Mod... mods) {
+        public Builder mods(ModInfo.Mod... mods) {
             this.mods.addAll(Arrays.asList(mods));
             return this;
         }
@@ -196,7 +197,7 @@ public final class ServerPing {
             return modType;
         }
 
-        public List<Mod> getMods() {
+        public List<ModInfo.Mod> getMods() {
             return mods;
         }
 
@@ -298,60 +299,6 @@ public final class ServerPing {
             return "SamplePlayer{" +
                     "name='" + name + '\'' +
                     ", id=" + id +
-                    '}';
-        }
-    }
-
-    public static final class ModInfo {
-        public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
-
-        private final String type;
-        private final List<Mod> modList;
-
-        public ModInfo(String type, List<Mod> modList) {
-            this.type = Preconditions.checkNotNull(type, "type");
-            this.modList = ImmutableList.copyOf(modList);
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public List<Mod> getMods() {
-            return modList;
-        }
-
-        @Override
-        public String toString() {
-            return "ModInfo{" +
-                    "type='" + type + '\'' +
-                    ", modList=" + modList +
-                    '}';
-        }
-    }
-
-    public static final class Mod {
-        private final String id;
-        private final String version;
-
-        public Mod(String id, String version) {
-            this.id = Preconditions.checkNotNull(id, "id");
-            this.version = Preconditions.checkNotNull(version, "version");
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        @Override
-        public String toString() {
-            return "Mod{" +
-                    "id='" + id + '\'' +
-                    ", version='" + version + '\'' +
                     '}';
         }
     }
