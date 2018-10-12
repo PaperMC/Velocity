@@ -1,0 +1,28 @@
+package com.velocitypowered.proxy.network;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.function.Supplier;
+
+public class ServerChannelInitializerHolder implements Supplier<ChannelInitializer<Channel>> {
+    private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
+    private ChannelInitializer<Channel> initializer;
+
+    public ServerChannelInitializerHolder(final ChannelInitializer<Channel> initializer) {
+        this.initializer = initializer;
+    }
+
+    @Override
+    public ChannelInitializer<Channel> get() {
+        return this.initializer;
+    }
+
+    @Deprecated
+    public void set(final ChannelInitializer<Channel> initializer) {
+        LOGGER.warn("The server channel initializer has been replaced by {}", Thread.currentThread().getStackTrace()[2]);
+        this.initializer = initializer;
+    }
+}
