@@ -51,12 +51,16 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Comm
         return super.buildReader(builder
                 .appName("Velocity")
                 .completer((reader, parsedLine, list) -> {
-                    Optional<List<String>> o = this.server.getCommandManager().offerSuggestions(this, parsedLine.line());
-                    o.ifPresent(offers -> {
-                        for (String offer : offers) {
-                            list.add(new Candidate(offer));
-                        }
-                    });
+                    try {
+                        Optional<List<String>> o = this.server.getCommandManager().offerSuggestions(this, parsedLine.line());
+                        o.ifPresent(offers -> {
+                            for (String offer : offers) {
+                                list.add(new Candidate(offer));
+                            }
+                        });
+                    } catch (Exception e) {
+                        logger.error("An error occurred while trying to perform tab completion.", e);
+                    }
                 })
         );
     }
