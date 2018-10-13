@@ -61,7 +61,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(Handshake handshake) {
-        InitialInboundConnection ic = new InitialInboundConnection(connection, handshake);
+        InitialInboundConnection ic = new InitialInboundConnection(connection, cleanVhost(handshake.getServerAddress()), handshake);
         switch (handshake.getNextStatus()) {
             case StateRegistry.STATUS_ID:
                 connection.setState(StateRegistry.STATUS);
@@ -107,6 +107,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             default:
                 throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
         }
+    }
+
+    private String cleanVhost(String hostname) {
+        int zeroIdx = hostname.indexOf('\0');
+        return zeroIdx == -1 ? hostname : hostname.substring(0, zeroIdx);
     }
 
     @Override

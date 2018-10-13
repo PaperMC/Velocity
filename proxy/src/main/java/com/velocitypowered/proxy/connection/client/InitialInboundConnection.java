@@ -9,10 +9,12 @@ import java.util.Optional;
 
 class InitialInboundConnection implements InboundConnection {
     private final MinecraftConnection connection;
+    private final String cleanedAddress;
     private final Handshake handshake;
 
-    InitialInboundConnection(MinecraftConnection connection, Handshake handshake) {
+    InitialInboundConnection(MinecraftConnection connection, String cleanedAddress, Handshake handshake) {
         this.connection = connection;
+        this.cleanedAddress = cleanedAddress;
         this.handshake = handshake;
     }
 
@@ -23,7 +25,7 @@ class InitialInboundConnection implements InboundConnection {
 
     @Override
     public Optional<InetSocketAddress> getVirtualHost() {
-        return Optional.of(InetSocketAddress.createUnresolved(handshake.getServerAddress(), handshake.getPort()));
+        return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
     }
 
     @Override
