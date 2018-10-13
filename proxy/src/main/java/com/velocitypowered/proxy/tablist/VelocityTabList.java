@@ -40,7 +40,7 @@ public class VelocityTabList implements TabList {
         Preconditions.checkArgument(!entries.containsKey(entry.getProfile().idAsUuid()), "this TabList already contains an entry with the same uuid");
 
         PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-        connection.write(new PlayerListItem(PlayerListItem.Action.ADD_PLAYER, Collections.singletonList(packetItem)));
+        connection.write(new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
         entries.put(entry.getProfile().idAsUuid(), entry);
     }
 
@@ -49,7 +49,7 @@ public class VelocityTabList implements TabList {
         TabListEntry entry = entries.remove(uuid);
         if (entry != null) {
             PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-            connection.write(new PlayerListItem(PlayerListItem.Action.REMOVE_PLAYER, Collections.singletonList(packetItem)));
+            connection.write(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
         }
 
         return Optional.ofNullable(entry);
@@ -61,7 +61,7 @@ public class VelocityTabList implements TabList {
             items.add(PlayerListItem.Item.from(value));
         }
         entries.clear();
-        connection.delayedWrite(new PlayerListItem(PlayerListItem.Action.REMOVE_PLAYER, items));
+        connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
     }
 
     @Override
@@ -78,13 +78,13 @@ public class VelocityTabList implements TabList {
         //Packets are already forwarded on, so no need to do that here
         for (PlayerListItem.Item item : packet.getItems()) {
             UUID uuid = item.getUuid();
-            if (packet.getAction() != PlayerListItem.Action.ADD_PLAYER && !entries.containsKey(uuid)) {
+            if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
                 //Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
                 continue;
             }
 
             switch (packet.getAction()) {
-                case ADD_PLAYER:
+                case PlayerListItem.ADD_PLAYER:
                     entries.put(item.getUuid(), TabListEntry.builder()
                             .tabList(this)
                             .profile(new GameProfile(UuidUtils.toUndashed(uuid), item.getName(), item.getProperties()))
@@ -93,23 +93,23 @@ public class VelocityTabList implements TabList {
                             .gameMode(item.getGameMode())
                             .build());
                     break;
-                case REMOVE_PLAYER:
+                case PlayerListItem.REMOVE_PLAYER:
                     entries.remove(uuid);
                     break;
-                case UPDATE_DISPLAY_NAME:
+                case PlayerListItem.UPDATE_DISPLAY_NAME:
                     entries.get(uuid).setDisplayName(item.getDisplayName());
                     break;
-                case UPDATE_LATENCY:
+                case PlayerListItem.UPDATE_LATENCY:
                     entries.get(uuid).setLatency(item.getLatency());
                     break;
-                case UPDATE_GAMEMODE:
+                case PlayerListItem.UPDATE_GAMEMODE:
                     entries.get(uuid).setGameMode(item.getGameMode());
                     break;
             }
         }
     }
 
-    void updateEntry(PlayerListItem.Action action, TabListEntry entry) {
+    void updateEntry(int action, TabListEntry entry) {
         if (entries.containsKey(entry.getProfile().idAsUuid())) {
             PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
             connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));

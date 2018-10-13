@@ -81,14 +81,18 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
     ConnectionRequestBuilder createConnectionRequest(@NonNull RegisteredServer server);
 
     /**
-     * Gets a game profile properties of player
-     * @return a immutable list of properties
+     * Gets the player's profile properties.
+     *
+     * <p>The returned list may be unmodifiable.</p>
+     *
+     * @return the player's profile properties
      */
     List<GameProfile.Property> getGameProfileProperties();
     
     /**
-     * Sets a GameProfile properties({@link GameProfile.Property)
-     * @param properties a properties to set
+     * Sets the player's profile properties.
+     *
+     * @param properties the properties
      */
     void setGameProfileProperties(List<GameProfile.Property> properties);
     
@@ -109,7 +113,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
     void clearHeaderAndFooter();
     
     /**
-     * Returns {@link this} {@link Player}'s tab list.
+     * Returns the player's tab list.
      * @return this player's tab list
      */
     TabList getTabList();

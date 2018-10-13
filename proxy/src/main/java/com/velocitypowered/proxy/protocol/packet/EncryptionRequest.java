@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionRequest implements MinecraftPacket {
+    private String serverId;
     private byte[] publicKey;
     private byte[] verifyToken;
 
@@ -38,14 +39,14 @@ public class EncryptionRequest implements MinecraftPacket {
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.readString(buf); // Server ID, can be ignored since it is an empty string
+        this.serverId = ProtocolUtils.readString(buf, 20);
         publicKey = ProtocolUtils.readByteArray(buf, 256);
         verifyToken = ProtocolUtils.readByteArray(buf, 16);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeString(buf, ""); // Server ID
+        ProtocolUtils.writeString(buf, this.serverId);
         ProtocolUtils.writeByteArray(buf, publicKey);
         ProtocolUtils.writeByteArray(buf, verifyToken);
     }

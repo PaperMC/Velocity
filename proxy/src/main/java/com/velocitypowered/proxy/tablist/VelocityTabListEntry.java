@@ -42,7 +42,7 @@ public class VelocityTabListEntry implements TabListEntry {
     @Override
     public TabListEntry setDisplayName(@Nullable Component displayName) {
         this.displayName = displayName;
-        tabList.updateEntry(PlayerListItem.Action.UPDATE_DISPLAY_NAME, this);
+        tabList.updateEntry(PlayerListItem.UPDATE_DISPLAY_NAME, this);
         return this;
     }
 
@@ -54,7 +54,7 @@ public class VelocityTabListEntry implements TabListEntry {
     @Override
     public TabListEntry setLatency(int latency) {
         this.latency = latency;
-        tabList.updateEntry(PlayerListItem.Action.UPDATE_LATENCY, this);
+        tabList.updateEntry(PlayerListItem.UPDATE_LATENCY, this);
         return this;
     }
 
@@ -66,7 +66,7 @@ public class VelocityTabListEntry implements TabListEntry {
     @Override
     public TabListEntry setGameMode(int gameMode) {
         this.gameMode = gameMode;
-        tabList.updateEntry(PlayerListItem.Action.UPDATE_GAMEMODE, this);
+        tabList.updateEntry(PlayerListItem.UPDATE_GAMEMODE, this);
         return this;
     }
 }

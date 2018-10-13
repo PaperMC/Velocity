@@ -59,7 +59,7 @@ public interface TabListEntry {
     
     /**
      * Sets the latency for {@code this} entry to the specified value
-     * @see this#getLatency()
+     * @see #getLatency()
      * @param latency to changed to
      * @return {@code this}, for chaining
      */
@@ -74,13 +74,13 @@ public interface TabListEntry {
      *     <li>Adventure</li>
      *     <li>Spectator</li>
      * </ol>
-     * @return
+     * @return the game mode
      */
     int getGameMode();
     
     /**
      * Sets the game mode for {@code this} entry to the specified value
-     * @see this#getGameMode()
+     * @see #getGameMode()
      * @param gameMode to change to
      * @return {@code this}, for chaining
      */

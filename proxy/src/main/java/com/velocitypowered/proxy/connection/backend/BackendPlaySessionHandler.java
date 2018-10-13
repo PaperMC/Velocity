@@ -64,10 +64,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public boolean handle(BossBar packet) {
         switch (packet.getAction()) {
-            case 0: // add
+            case BossBar.ADD:
                 playerSessionHandler.getServerBossBars().add(packet.getUuid());
                 break;
-            case 1: // remove
+            case BossBar.REMOVE:
                 playerSessionHandler.getServerBossBars().remove(packet.getUuid());
                 break;
         }

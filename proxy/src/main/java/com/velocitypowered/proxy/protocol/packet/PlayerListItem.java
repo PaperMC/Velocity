@@ -15,17 +15,22 @@ import java.util.List;
 import java.util.UUID;
 
 public class PlayerListItem implements MinecraftPacket {
-    private Action action;
+    public static final int ADD_PLAYER = 0;
+    public static final int UPDATE_GAMEMODE = 1;
+    public static final int UPDATE_LATENCY = 2;
+    public static final int UPDATE_DISPLAY_NAME = 3;
+    public static final int REMOVE_PLAYER = 4;
+    private int action;
     private List<Item> items;
 
-    public PlayerListItem(Action action, List<Item> items) {
+    public PlayerListItem(int action, List<Item> items) {
         this.action = action;
         this.items = items;
     }
 
     public PlayerListItem() {}
 
-    public Action getAction() {
+    public int getAction() {
         return action;
     }
 
@@ -35,7 +40,7 @@ public class PlayerListItem implements MinecraftPacket {
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        action = Action.values()[ProtocolUtils.readVarInt(buf)];
+        action = ProtocolUtils.readVarInt(buf);
         items = new ArrayList<>();
         int length = ProtocolUtils.readVarInt(buf);
 
@@ -74,7 +79,7 @@ public class PlayerListItem implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, action.ordinal());
+        ProtocolUtils.writeVarInt(buf, action);
         ProtocolUtils.writeVarInt(buf, items.size());
         for (Item item: items) {
             ProtocolUtils.writeUuid(buf, item.getUuid());
@@ -184,13 +189,5 @@ public class PlayerListItem implements MinecraftPacket {
             this.displayName = displayName;
             return this;
         }
-    }
-
-    public enum Action {
-        ADD_PLAYER,
-        UPDATE_GAMEMODE,
-        UPDATE_LATENCY,
-        UPDATE_DISPLAY_NAME,
-        REMOVE_PLAYER
     }
 }
