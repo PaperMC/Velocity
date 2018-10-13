@@ -68,8 +68,12 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Comm
 
     @Override
     protected void runCommand(String command) {
-        if (!this.server.getCommandManager().execute(this, command)) {
-            sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+        try {
+            if (!this.server.getCommandManager().execute(this, command)) {
+                sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+            }
+        } catch (Exception e) {
+            logger.error("An error occurred while running this command.", e);
         }
     }
 
