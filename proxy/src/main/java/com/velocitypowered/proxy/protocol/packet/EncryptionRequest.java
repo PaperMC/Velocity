@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionRequest implements MinecraftPacket {
-    private String serverId;
+    private String serverId = "";
     private byte[] publicKey;
     private byte[] verifyToken;
 
