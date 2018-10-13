@@ -1,100 +1,102 @@
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandBuilder;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.proxy.VelocityServer;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class VelocityCommandManager implements CommandManager {
-    private final Map<String, Command> commands = new HashMap<>();
 
-    @Override
-    public void register(final Command command, final String... aliases) {
-        Preconditions.checkNotNull(aliases, "aliases");
-        Preconditions.checkNotNull(command, "executor");
-        for (int i = 0, length = aliases.length; i < length; i++) {
-            final String alias = aliases[i];
-            Preconditions.checkNotNull(aliases, "alias at index %s", i);
-            this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
-        }
+    private final VelocityServer server;
+    private final Set<Command> commands;
+
+    public VelocityCommandManager(final VelocityServer server) {
+        this.server = server;
+        this.commands = new HashSet<>();
+    }
+
+    public VelocityServer getServer() {
+        return this.server;
     }
 
     @Override
-    public void unregister(final String alias) {
-        Preconditions.checkNotNull(alias, "name");
-        this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
+    public void register(@NonNull Command command) {
+        if (this.commands.stream().anyMatch(existing -> Arrays.stream(command.getAliases()).anyMatch(existing::isTriggered))) {
+            throw new IllegalArgumentException("Duplicate command found: " + command.getAliases()[0]);
+        }
+
+        this.commands.add(command);
     }
 
     @Override
-    public boolean execute(CommandSource source, String cmdLine) {
-        Preconditions.checkNotNull(source, "invoker");
-        Preconditions.checkNotNull(cmdLine, "cmdLine");
+    public void unregister(@NonNull String alias) {
+        this.commands.removeIf(command -> command.isTriggered(alias));
+    }
 
-        String[] split = cmdLine.split(" ", -1);
-        if (split.length == 0) {
-            return false;
+    @Override
+    public boolean hasCommand(@NonNull String alias) {
+        return this.lookup(alias).getCommand() != null;
+    }
+
+    @Override
+    public Optional<List<String>> offerSuggestions(@NonNull CommandSource source, @NonNull String rawInput) {
+        if (rawInput.trim().isEmpty()) {
+            return Optional.of(this.commands.stream()
+                    .map(command -> "/" + command.getAliases()[0])
+                    .collect(Collectors.toList()));
         }
 
-        String alias = split[0];
-        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+        final CommandLookup lookup = this.lookup(rawInput);
+        final Command command = lookup.getCommand();
+        if (command == null) {
+            return Optional.empty();
+        }
+        final String[] args = lookup.getRemaining();
+
+        final List<String> suggestions = command.getExecutor().suggest(source, args);
+        command.getChildren().forEach(child -> suggestions.add(child.getAliases()[0]));
+
+        return Optional.of(suggestions);
+    }
+
+    @Override
+    public boolean execute(@NonNull CommandSource source, @NonNull String rawInput) {
+        final CommandLookup lookup = this.lookup(rawInput);
+        final Command command = lookup.getCommand();
         if (command == null) {
             return false;
         }
+        final String[] args = lookup.getRemaining();
 
         try {
-            if (!command.hasPermission(source, actualArgs)) {
+            if (!command.hasPermission(source)) {
                 return false;
             }
 
-            command.execute(source, actualArgs);
+            command.getExecutor().execute(source, args);
             return true;
         } catch (Exception e) {
-            throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
+            throw new RuntimeException("Unable to invoke command " + rawInput + " for " + source, e);
         }
     }
 
-    public boolean hasCommand(String command) {
-        return commands.containsKey(command);
+    @Override
+    public CommandBuilder builder(@NonNull String alias, String... aliases) {
+        return new VelocityCommandBuilder(this, alias, aliases);
     }
 
-    public Optional<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
-        Preconditions.checkNotNull(source, "source");
-        Preconditions.checkNotNull(cmdLine, "cmdLine");
-
-        String[] split = cmdLine.split(" ", -1);
-        if (split.length == 0) {
-            return Optional.empty();
-        }
-
-        String alias = split[0];
-        if (split.length == 1) {
-            List<String> availableCommands = new ArrayList<>();
-            for (Map.Entry<String, Command> entry : commands.entrySet()) {
-                if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length()) &&
-                        entry.getValue().hasPermission(source, new String[0])) {
-                    availableCommands.add("/" + entry.getKey());
-                }
-            }
-            return Optional.of(availableCommands);
-        }
-
-        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-        Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-        if (command == null) {
-            return Optional.empty();
-        }
-
-        try {
-            if (!command.hasPermission(source, actualArgs)) {
-                return Optional.empty();
-            }
-
-            return Optional.of(command.suggest(source, actualArgs));
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to invoke suggestions for command " + alias + " for " + source, e);
-        }
+    public CommandLookup lookup(@NonNull String input) {
+        final CommandLookup lookup = new CommandLookup(input);
+        lookup.lookup(this.commands);
+        return lookup;
     }
 }

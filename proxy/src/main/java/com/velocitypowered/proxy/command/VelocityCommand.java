@@ -1,46 +1,130 @@
 package com.velocitypowered.proxy.command;
 
 import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandExecutor;
+import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.PermissionState;
 import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
-import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextDecoration;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class VelocityCommand implements Command {
-    @Override
-    public void execute(CommandSource source, String[] args) {
-        String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
-        TextComponent velocity = TextComponent.builder("Velocity ")
-                .decoration(TextDecoration.BOLD, true)
-                .color(TextColor.DARK_AQUA)
-                .append(TextComponent.of(implVersion == null ? "<unknown>" : implVersion).decoration(TextDecoration.BOLD, false))
-                .build();
-        TextComponent copyright = TextComponent.of("Copyright 2018 Velocity Contributors. Velocity is freely licensed under the terms of the " +
-                "MIT License.");
-        TextComponent velocityWebsite = TextComponent.builder()
-                .content("Visit the ")
-                .append(TextComponent.builder("Velocity website")
-                        .color(TextColor.GREEN)
-                        .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.velocitypowered.com"))
-                        .build())
-                .append(TextComponent.of(" or the ").resetStyle())
-                .append(TextComponent.builder("Velocity GitHub")
-                        .color(TextColor.GREEN)
-                        .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/VelocityPowered/Velocity"))
-                        .build())
-                .build();
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
-        source.sendMessage(velocity);
-        source.sendMessage(copyright);
-        source.sendMessage(velocityWebsite);
+public class VelocityCommand implements Command {
+
+    private final VelocityCommandManager manager;
+
+    private final String[] aliases;
+    private final String description;
+    private final Command parent;
+    private final Set<Command> children;
+    private final CommandExecutor executor;
+    private final PermissionState permissionState;
+    private final String permission;
+
+    public VelocityCommand(@NonNull VelocityCommandManager manager,
+                           @NonNull String[] aliases,
+                           @NonNull String description,
+                           Command parent,
+                           @NonNull CommandExecutor executor,
+                           @NonNull PermissionState permissionState,
+                           String permission) {
+        this.manager = manager;
+        this.aliases = aliases;
+        this.description = description;
+        this.parent = parent;
+        this.children = new HashSet<>();
+        this.executor = executor;
+        this.permissionState = permissionState;
+        this.permission = permission;
     }
 
     @Override
-    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
-        return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
+    public CommandManager getCommandManager() {
+        return this.manager;
+    }
+
+    @Override
+    public String[] getAliases() {
+        return this.aliases;
+    }
+
+    @Override
+    public boolean isTriggered(@NonNull String trigger) {
+        return Arrays.asList(this.aliases).contains(trigger.toLowerCase());
+    }
+
+    @Override
+    public String getDescription() {
+        return this.description;
+    }
+
+    @Override
+    public Optional<Command> getParent() {
+        return Optional.ofNullable(this.parent);
+    }
+
+    @Override
+    public boolean hasParent() {
+        return this.getParent().isPresent();
+    }
+
+    @Override
+    public String getCommandPath() {
+        return this.parent.getCommandPath() + " " + this.aliases[0];
+    }
+
+    @Override
+    public Set<Command> getChildren() {
+        return this.children;
+    }
+
+    @Override
+    public Optional<Command> getChild(@NonNull String name) {
+        return this.children.stream().filter(child -> child.isTriggered(name)).findFirst();
+    }
+
+    @Override
+    public boolean hasChild(@NonNull String name) {
+        return this.getChild(name).isPresent();
+    }
+
+    @Override
+    public CommandExecutor getExecutor() {
+        return this.executor;
+    }
+
+    @Override
+    public PermissionState getPermissionState() {
+        return this.permissionState;
+    }
+
+    @Override
+    public boolean hasPermission(@NonNull CommandSource source) {
+        if (source == this.manager.getServer().getConsoleCommandSource()) {
+            // Source is the console.
+            if (this.permissionState == PermissionState.PLAYER_ONLY) {
+                source.sendMessage(TextComponent.of("This command can only be executed by a player.", TextColor.RED));
+                return false;
+            }
+
+            return true;
+        } else {
+            // Source is a player.
+            if (this.permissionState == PermissionState.CONSOLE_ONLY) {
+                return false;
+            }
+
+            if (this.permission == null) {
+                return true;
+            }
+
+            return source.getPermissionValue(this.permission) != Tristate.FALSE;
+        }
     }
 }

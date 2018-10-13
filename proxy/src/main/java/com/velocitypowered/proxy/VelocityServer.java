@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.api.command.PermissionState;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -13,10 +14,11 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.proxy.command.ServerCommand;
-import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.command.gen.ActualVelocityCommand;
+import com.velocitypowered.proxy.command.gen.ServerCommand;
+import com.velocitypowered.proxy.command.gen.ShutdownCommand;
 import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -63,7 +65,7 @@ public class VelocityServer implements ProxyServer {
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
     private final ServerMap servers = new ServerMap(this);
-    private final VelocityCommandManager commandManager = new VelocityCommandManager();
+    private final VelocityCommandManager commandManager = new VelocityCommandManager(this);
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
     private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
@@ -77,9 +79,24 @@ public class VelocityServer implements ProxyServer {
     private VelocityChannelRegistrar channelRegistrar;
 
     VelocityServer() {
-        commandManager.register(new VelocityCommand(), "velocity");
-        commandManager.register(new ServerCommand(this), "server");
-        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
+        commandManager.register(commandManager.builder("velocity")
+                .description("Display information about Velocity.")
+                .permission("velocity.command.info")
+                .executor(new ActualVelocityCommand())
+                .build());
+
+        commandManager.register(commandManager.builder("server")
+                .description("Display information about or connect to other servers connected to Velocity.")
+                .permission("velocity.command.info")
+                .permissionState(PermissionState.PLAYER_ONLY)
+                .executor(new ServerCommand(commandManager))
+                .build());
+
+        commandManager.register(commandManager.builder("shutdown", "end")
+                .description("Shut Velocity down.")
+                .permissionState(PermissionState.CONSOLE_ONLY)
+                .executor(new ShutdownCommand(this))
+                .build());
     }
 
     public KeyPair getServerKeyPair() {
