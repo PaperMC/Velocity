@@ -51,7 +51,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
         "            forwarding. Only applicable for Minecraft 1.13 or higher."})
     @ConfigKey("player-info-forwarding-mode")
-    private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.MODERN;
+    private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
 
     @StringAsBytes
     @Comment("If you are using modern IP forwarding, configure an unique secret here.")
