@@ -6,7 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.forge.ForgeUtil;
+import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -84,7 +84,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             return true;
         }
 
-        if (!serverConn.hasCompletedJoin() && packet.getChannel().equals(ForgeUtil.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+        if (!serverConn.hasCompletedJoin() && packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
             if (!serverConn.isLegacyForge()) {
                 serverConn.setLegacyForge(true);
 
@@ -173,7 +173,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         boolean isMCOrFMLMessage;
         if (serverConn.getConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             String channel = message.getChannel();
-            isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(ForgeUtil.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+            isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
             isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
         }

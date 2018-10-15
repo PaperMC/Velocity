@@ -7,6 +7,7 @@ import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.forge.ForgeUtil;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -144,7 +145,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         } else if (PluginMessageUtil.isMCBrand(packet)) {
             player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
         } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
-            if (packet.getChannel().equals(ForgeUtil.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+            if (packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
                 if (!player.getModInfo().isPresent()) {
                     ForgeUtil.readModList(packet).ifPresent(mods -> player.setModInfo(new ModInfo("FML", mods)));
                 }
