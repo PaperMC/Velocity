@@ -93,7 +93,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
             }
 
-            // Always forward these messages during login. Don't pass it onto the handleGeneric below.
+            // Always forward these messages during login.
             return false;
         }
 
@@ -126,26 +126,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleGeneric(MinecraftPacket packet) {
-        if (!serverConn.getPlayer().isActive()) {
-            // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
-            // errors.
-            serverConn.disconnect();
-            return;
-        }
-
-        // Just forward the packet on. We don't have anything to handle at this time.
         serverConn.getPlayer().getConnection().write(packet);
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        if (!serverConn.getPlayer().isActive()) {
-            // Connection was left open accidentally. Close it so as to avoid "You logged in from another location"
-            // errors.
-            serverConn.disconnect();
-            return;
-        }
-
         serverConn.getPlayer().getConnection().write(buf.retain());
     }
 
