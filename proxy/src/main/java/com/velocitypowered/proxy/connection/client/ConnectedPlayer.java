@@ -25,8 +25,8 @@ import com.velocitypowered.api.util.title.Titles;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
-import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.ForgeUtil;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
@@ -400,8 +400,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     public void sendLegacyForgeHandshakeResetPacket() {
         if (connection.canSendLegacyFMLResetPacket()) {
             PluginMessage resetPacket = new PluginMessage();
-            resetPacket.setChannel(VelocityConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-            resetPacket.setData(VelocityConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
+            resetPacket.setChannel(ForgeUtil.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+            resetPacket.setData(ForgeUtil.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
             connection.write(resetPacket);
             connection.setCanSendLegacyFMLResetPacket(false);
         }
