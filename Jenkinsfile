@@ -2,6 +2,8 @@ pipeline {
   agent none
   stages {
     stage('Build') {
+      GIT_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+
       agent {
         docker {
           image 'velocitypowered/openjdk8-plus-git:slim'
@@ -10,7 +12,9 @@ pipeline {
       }
       steps {
         sh './gradlew build --no-daemon'
-        archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
+        if (GIT_BRANCH == "master") {
+          archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
+        }
       }
     }
     stage('Deploy') {
