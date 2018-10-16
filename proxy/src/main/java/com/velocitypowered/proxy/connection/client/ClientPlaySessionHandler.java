@@ -320,10 +320,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     public void handleTabCompleteResponse(TabCompleteResponse response) {
-        logger.info("Got {}", response);
-        logger.info("Request {}", outstandingTabComplete);
         if (outstandingTabComplete != null) {
-            logger.info("HANDLING");
             if (!outstandingTabComplete.isAssumeCommand()) {
                 String command = outstandingTabComplete.getCommand().substring(1);
                 try {
