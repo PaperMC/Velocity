@@ -10,10 +10,15 @@ pipeline {
           args '-v gradle-cache:/root/.gradle:rw'
         }
       }
-      steps {
-        sh './gradlew build --no-daemon'
-        if (GIT_BRANCH == "master") {
-          archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
+
+      if (GIT_BRANCH == "master") {
+        steps {
+          sh './gradlew build --no-daemon'
+        }
+      } else {
+        steps {
+           sh './gradlew build --no-daemon'
+           archiveArtifacts 'proxy/build/libs/*-all.jar,api/build/libs/*-all.jar'
         }
       }
     }
