@@ -123,6 +123,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         ByteBuf dataToForward = Unpooled.buffer();
         ByteBuf finalData = Unpooled.buffer();
         try {
+            ProtocolUtils.writeVarInt(dataToForward, VelocityConstants.FORWARDING_VERSION);
             ProtocolUtils.writeString(dataToForward, address);
             ProtocolUtils.writeUuid(dataToForward, profile.idAsUuid());
             ProtocolUtils.writeString(dataToForward, profile.getName());
