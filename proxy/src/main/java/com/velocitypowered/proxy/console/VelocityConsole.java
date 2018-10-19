@@ -55,7 +55,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Comm
                         Optional<List<String>> o = this.server.getCommandManager().offerSuggestions(this, parsedLine.line());
                         o.ifPresent(offers -> {
                             for (String offer : offers) {
-                                list.add(new Candidate(offer));
+                                list.add(new Candidate(offer.substring(1)));
                             }
                         });
                     } catch (Exception e) {
