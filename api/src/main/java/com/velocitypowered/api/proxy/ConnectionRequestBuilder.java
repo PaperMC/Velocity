@@ -25,6 +25,13 @@ public interface ConnectionRequestBuilder {
     CompletableFuture<Result> connect();
 
     /**
+     * Initiates the connection to the remote server and emits a result on the {@link CompletableFuture} after the user
+     * has logged on. Velocity's own built-in handling will be used to provide errors to the client.
+     * @return a {@link CompletableFuture} representing the status of this connection
+     */
+    CompletableFuture<Boolean> connectWithIndication();
+
+    /**
      * Initiates the connection to the remote server without waiting for a result. Velocity will use generic error
      * handling code to notify the user.
      */

@@ -467,8 +467,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         }
 
         @Override
-        public void fireAndForget() {
-            connect()
+        public CompletableFuture<Boolean> connectWithIndication() {
+            return connect()
                     .whenCompleteAsync((status, throwable) -> {
                         if (throwable != null) {
                             handleConnectionException(server, throwable);
@@ -489,7 +489,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 handleConnectionException(server, Disconnect.create(status.getReason().orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
                                 break;
                         }
-                    }, connection.eventLoop());
+                    }, connection.eventLoop())
+                    .thenApply(Result::isSuccessful);
+        }
+
+        @Override
+        public void fireAndForget() {
+            connectWithIndication();
         }
     }
 }
