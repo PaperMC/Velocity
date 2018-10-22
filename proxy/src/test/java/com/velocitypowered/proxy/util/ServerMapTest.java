@@ -35,4 +35,12 @@ class ServerMapTest {
         ServerInfo willReject = new ServerInfo("TESTSERVER", TEST_ADDRESS);
         assertThrows(IllegalArgumentException.class, () -> map.register(willReject));
     }
+
+    @Test
+    void allowsSameServerLaxRegistrationCheck() {
+        ServerMap map = new ServerMap(null);
+        ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+        RegisteredServer connection = map.register(info);
+        assertEquals(connection, map.register(info));
+    }
 }

@@ -34,8 +34,15 @@ public class ServerMap {
         Preconditions.checkNotNull(serverInfo, "serverInfo");
         String lowerName = serverInfo.getName().toLowerCase(Locale.US);
         VelocityRegisteredServer rs = new VelocityRegisteredServer(server, serverInfo);
-        Preconditions.checkArgument(servers.putIfAbsent(lowerName, rs) == null, "Server with name %s already registered", serverInfo.getName());
-        return rs;
+
+        RegisteredServer existing = servers.putIfAbsent(lowerName, rs);
+        if (existing != null && !existing.getServerInfo().equals(serverInfo)) {
+            throw new IllegalArgumentException("Server with name " + serverInfo.getName() + " already registered");
+        } else if (existing == null) {
+            return rs;
+        } else {
+            return existing;
+        }
     }
 
     public void unregister(ServerInfo serverInfo) {
