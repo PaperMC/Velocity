@@ -161,7 +161,7 @@ public enum StateRegistry {
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableIntArray.of(MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1));
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableIntArray.of(MINECRAFT_1_12_1));
             LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableIntArray.of(MINECRAFT_1_12_2));
-            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableIntArray.of(MINECRAFT_1_13_1));
+            LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableIntArray.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
         }
 
         private final ProtocolConstants.Direction direction;
