@@ -98,7 +98,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         // Initiate a handshake.
         Handshake handshake = new Handshake();
         handshake.setNextStatus(StateRegistry.LOGIN_ID);
-        handshake.setProtocolVersion(proxyPlayer.getConnection().getProtocolVersion());
+        handshake.setProtocolVersion(proxyPlayer.getConnection().getNextProtocolVersion());
         if (forwardingMode == PlayerInfoForwarding.LEGACY) {
             handshake.setServerAddress(createBungeeForwardingAddress());
         } else if (proxyPlayer.getConnection().isLegacyForge()) {
@@ -109,7 +109,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
         connection.write(handshake);
 
-        int protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
+        int protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
         connection.setProtocolVersion(protocolVersion);
         connection.setState(StateRegistry.LOGIN);
 
