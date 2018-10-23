@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.config;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
@@ -65,6 +66,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @Table("[servers]")
     private final Servers servers;
 
+    @Table("[forced-hosts]")
+    private final ForcedHosts forcedHosts;
+
     @Table("[advanced]")
     private final Advanced advanced;
 
@@ -76,15 +80,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @Ignore
     private Favicon favicon;
 
-    public VelocityConfiguration(Servers servers, Advanced advanced, Query query) {
+    public VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
         this.servers = servers;
+        this.forcedHosts = forcedHosts;
         this.advanced = advanced;
         this.query = query;
     }
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
             boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-            Servers servers, Advanced advanced, Query query) {
+            Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
@@ -93,6 +98,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
         this.servers = servers;
+        this.forcedHosts = forcedHosts;
         this.advanced = advanced;
         this.query = query;
     }
@@ -151,6 +157,21 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 if (!servers.getServers().containsKey(s)) {
                     logger.error("Fallback server " + s + " is not registered in your configuration!");
                     valid = false;
+                }
+            }
+
+            for (Map.Entry<String, List<String>> entry : forcedHosts.getForcedHosts().entrySet()) {
+                if (entry.getValue().isEmpty()) {
+                    logger.error("Forced host '{}' does not contain any servers", entry.getKey());
+                    valid = false;
+                    continue;
+                }
+
+                for (String server : entry.getValue()) {
+                    if (!servers.getServers().containsKey(server)) {
+                        logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
+                        valid = false;
+                    }
                 }
             }
         }
@@ -257,6 +278,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return servers.getAttemptConnectionOrder();
     }
 
+    public Map<String, List<String>> getForcedHosts() {
+        return forcedHosts.getForcedHosts();
+    }
+
     public int getCompressionThreshold() {
         return advanced.getCompressionThreshold();
     }
@@ -301,6 +326,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 .add("forwardingSecret", forwardingSecret)
                 .add("announceForge", announceForge)
                 .add("servers", servers)
+                .add("forcedHosts", forcedHosts)
                 .add("advanced", advanced)
                 .add("query", query)
                 .add("favicon", favicon)
@@ -311,7 +337,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         Toml toml;
         if (!path.toFile().exists()) {
             getLogger().info("No velocity.toml found, creating one for you...");
-            return new VelocityConfiguration(new Servers(), new Advanced(), new Query());
+            return new VelocityConfiguration(new Servers(), new ForcedHosts(), new Advanced(), new Query());
         } else {
             try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
                 toml = new Toml().read(reader);
@@ -319,6 +345,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         }
 
         Servers servers = new Servers(toml.getTable("servers"));
+        ForcedHosts forcedHosts = new ForcedHosts(toml.getTable("forced-hosts"));
         Advanced advanced = new Advanced(toml.getTable("advanced"));
         Query query = new Query(toml.getTable("query"));
         byte[] forwardingSecret = toml.getString("forwarding-secret", "5up3r53cr3t")
@@ -333,6 +360,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
                 servers,
+                forcedHosts,
                 advanced,
                 query
         );
@@ -419,6 +447,61 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                     + '}';
         }
 
+    }
+
+    private static class ForcedHosts {
+        @IsMap
+        @Comment("Configure your forced hosts here.")
+        private Map<String, List<String>> forcedHosts = ImmutableMap.of(
+                "lobby.example.com", ImmutableList.of("lobby"),
+                "factions.example.com", ImmutableList.of("factions"),
+                "minigames.example.com", ImmutableList.of("minigames")
+        );
+
+        private ForcedHosts() {}
+
+        private ForcedHosts(Toml toml) {
+            if (toml != null) {
+                Map<String, List<String>> forcedHosts = new HashMap<>();
+                for (Map.Entry<String, Object> entry : toml.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        forcedHosts.put(stripQuotes(entry.getKey()), ImmutableList.of((String) entry.getValue()));
+                    } else if (entry.getValue() instanceof List) {
+                        forcedHosts.put(stripQuotes(entry.getKey()), ImmutableList.copyOf((List<String>) entry.getValue()));
+                    } else {
+                        throw new IllegalStateException("Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
+                    }
+                }
+                this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
+            }
+        }
+
+        private ForcedHosts(Map<String, List<String>> forcedHosts) {
+            this.forcedHosts = forcedHosts;
+        }
+
+        private Map<String, List<String>> getForcedHosts() {
+            return forcedHosts;
+        }
+
+        private void setForcedHosts(Map<String, List<String>> forcedHosts) {
+            this.forcedHosts = forcedHosts;
+        }
+
+        private static String stripQuotes(String key) {
+            int lastIndex;
+            if (key.indexOf('"') == 0 && (lastIndex = key.lastIndexOf('"')) == (key.length() - 1)) {
+                return key.substring(1, lastIndex);
+            }
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return "ForcedHosts{" +
+                    "forcedHosts=" + forcedHosts +
+                    '}';
+        }
     }
 
     private static class Advanced {
