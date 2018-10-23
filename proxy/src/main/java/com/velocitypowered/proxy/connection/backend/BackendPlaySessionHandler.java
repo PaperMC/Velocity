@@ -27,7 +27,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void activated() {
-        server.getEventManager().fireAndForget(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()));
         serverConn.getServer().addPlayer(serverConn.getPlayer());
     }
 

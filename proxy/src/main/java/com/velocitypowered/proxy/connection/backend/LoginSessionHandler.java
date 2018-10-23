@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -103,9 +104,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             existingConnection.disconnect();
         }
 
-        resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
-        serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-        serverConn.getPlayer().setConnectedServer(serverConn);
+        server.getEventManager().fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
+                .whenCompleteAsync((x, error) -> {
+                    resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
+                    serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+                    serverConn.getPlayer().setConnectedServer(serverConn);
+                }, serverConn.getConnection().eventLoop());
         return true;
     }
 
