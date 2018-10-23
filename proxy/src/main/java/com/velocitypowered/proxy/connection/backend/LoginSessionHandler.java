@@ -104,11 +104,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             existingConnection.disconnect();
         }
 
+        serverConn.getConnection().getChannel().config().setAutoRead(false);
         server.getEventManager().fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
                 .whenCompleteAsync((x, error) -> {
                     resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
                     serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
                     serverConn.getPlayer().setConnectedServer(serverConn);
+                    serverConn.getConnection().getChannel().config().setAutoRead(true);
                 }, serverConn.getConnection().eventLoop());
         return true;
     }
