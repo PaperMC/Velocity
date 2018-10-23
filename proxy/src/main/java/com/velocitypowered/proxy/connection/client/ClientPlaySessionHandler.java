@@ -135,7 +135,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             if (actuallyRegistered.size() > 0) {
-                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(), actuallyRegistered);
+                PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(player.getConnectedServer()
+                        .getConnection().getProtocolVersion(), actuallyRegistered);
                 player.getConnectedServer().getConnection().write(newRegisterPacket);
             }
         } else if (PluginMessageUtil.isMCUnregister(packet)) {
@@ -271,15 +272,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         serverBossBars.clear();
 
         // Tell the server about this client's plugin message channels.
+        int serverVersion = player.getConnectedServer().getConnection().getProtocolVersion();
         Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
-        if (player.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+        if (serverVersion >= ProtocolConstants.MINECRAFT_1_13) {
             toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
         } else {
             toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
         }
         if (!toRegister.isEmpty()) {
             player.getConnectedServer().getConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
-                    player.getConnection().getProtocolVersion(), toRegister));
+                    serverVersion, toRegister));
         }
 
         // If we had plugin messages queued during login/FML handshake, send them now.
