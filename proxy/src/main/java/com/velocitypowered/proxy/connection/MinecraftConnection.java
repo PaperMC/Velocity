@@ -37,6 +37,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private StateRegistry state;
     private MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
+    private int nextProtocolVersion;
     private MinecraftConnectionAssociation association;
     private boolean isLegacyForge;
     private final VelocityServer server;
@@ -185,6 +186,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
+        this.nextProtocolVersion = protocolVersion;
         if (protocolVersion != ProtocolConstants.LEGACY) {
             this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
             this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
@@ -263,5 +265,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     public void setCanSendLegacyFMLResetPacket(boolean canSendLegacyFMLResetPacket) {
         this.canSendLegacyFMLResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
+    }
+
+    public int getNextProtocolVersion() {
+        return this.nextProtocolVersion;
+    }
+
+    public void setNextProtocolVersion(int nextProtocolVersion) {
+        this.nextProtocolVersion = nextProtocolVersion;
     }
 }
