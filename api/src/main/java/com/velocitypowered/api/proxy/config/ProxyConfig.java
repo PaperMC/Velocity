@@ -30,6 +30,13 @@ public interface ProxyConfig {
     String getQueryMap();
 
     /**
+     * Whether GameSpy 4 queries should show plugins installed on
+     * Velocity by default
+     * @return show plugins in query
+     */
+    boolean shouldQueryShowPlugins();
+
+    /**
      * Get the MOTD component shown in the tab list
      * @return the motd component
      */
