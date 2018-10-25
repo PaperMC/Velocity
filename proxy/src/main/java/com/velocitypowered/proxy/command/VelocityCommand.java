@@ -87,7 +87,7 @@ public class VelocityCommand implements Command {
             TextComponent velocity = TextComponent.builder(implName + " ")
                     .decoration(TextDecoration.BOLD, true)
                     .color(TextColor.DARK_AQUA)
-                    .append(TextComponent.of(implVersion == null ? "<unknown>" : implVersion).decoration(TextDecoration.BOLD, false))
+                    .append(TextComponent.of(implVersion).decoration(TextDecoration.BOLD, false))
                     .build();
             TextComponent copyright = TextComponent.of("Copyright 2018 " + implVendor + ". " + implName + " is freely licensed under the terms of the " +
                     "MIT License.");
