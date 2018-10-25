@@ -52,10 +52,15 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Comm
                 .appName("Velocity")
                 .completer((reader, parsedLine, list) -> {
                     try {
+                        boolean isCommand = parsedLine.line().indexOf(' ') == -1;
                         Optional<List<String>> o = this.server.getCommandManager().offerSuggestions(this, parsedLine.line());
                         o.ifPresent(offers -> {
                             for (String offer : offers) {
-                                list.add(new Candidate(offer.substring(1)));
+                                if (isCommand) {
+                                    list.add(new Candidate(offer.substring(1)));
+                                } else {
+                                    list.add(new Candidate(offer));
+                                }
                             }
                         });
                     } catch (Exception e) {
