@@ -604,7 +604,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
         private Query() {}
 
-        private Query(boolean queryEnabled, int queryPort) {
+        private Query(boolean queryEnabled, int queryPort, String queryMap) {
             this.queryEnabled = queryEnabled;
             this.queryPort = queryPort;
             this.queryMap = queryMap;
