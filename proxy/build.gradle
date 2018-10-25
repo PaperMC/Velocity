@@ -18,7 +18,9 @@ jar {
         def version = "${project.version} (git-${project.ext.getCurrentShortRevision()}-b${buildNumber})"
 
         attributes 'Main-Class': 'com.velocitypowered.proxy.Velocity'
+        attributes 'Implementation-Title': "Velocity"
         attributes 'Implementation-Version': version
+        attributes 'Implementation-Vendor': "Velocity Contributors"
     }
 }
 

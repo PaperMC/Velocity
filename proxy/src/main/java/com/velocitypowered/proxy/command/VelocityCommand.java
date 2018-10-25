@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.command;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.Command;
@@ -80,30 +81,34 @@ public class VelocityCommand implements Command {
 
         @Override
         public void execute(@NonNull CommandSource source, @NonNull String[] args) {
-            String implVersion = VelocityServer.class.getPackage().getImplementationVersion();
-            TextComponent velocity = TextComponent.builder("Velocity ")
+            String implName = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationTitle(), "Velocity");
+            String implVersion = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVersion(), "<unknown>");
+            String implVendor = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVendor(), "Velocity Contributors");
+            TextComponent velocity = TextComponent.builder(implName + " ")
                     .decoration(TextDecoration.BOLD, true)
                     .color(TextColor.DARK_AQUA)
                     .append(TextComponent.of(implVersion == null ? "<unknown>" : implVersion).decoration(TextDecoration.BOLD, false))
                     .build();
-            TextComponent copyright = TextComponent.of("Copyright 2018 Velocity Contributors. Velocity is freely licensed under the terms of the " +
+            TextComponent copyright = TextComponent.of("Copyright 2018 " + implVendor + ". " + implName + " is freely licensed under the terms of the " +
                     "MIT License.");
-            TextComponent velocityWebsite = TextComponent.builder()
-                    .content("Visit the ")
-                    .append(TextComponent.builder("Velocity website")
-                            .color(TextColor.GREEN)
-                            .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.velocitypowered.com"))
-                            .build())
-                    .append(TextComponent.of(" or the ").resetStyle())
-                    .append(TextComponent.builder("Velocity GitHub")
-                            .color(TextColor.GREEN)
-                            .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/VelocityPowered/Velocity"))
-                            .build())
-                    .build();
-
             source.sendMessage(velocity);
             source.sendMessage(copyright);
-            source.sendMessage(velocityWebsite);
+
+            if (implName.equals("Velocity")) {
+                TextComponent velocityWebsite = TextComponent.builder()
+                        .content("Visit the ")
+                        .append(TextComponent.builder("Velocity website")
+                                .color(TextColor.GREEN)
+                                .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.velocitypowered.com"))
+                                .build())
+                        .append(TextComponent.of(" or the ").resetStyle())
+                        .append(TextComponent.builder("Velocity GitHub")
+                                .color(TextColor.GREEN)
+                                .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/VelocityPowered/Velocity"))
+                                .build())
+                        .build();
+                source.sendMessage(velocityWebsite);
+            }
         }
 
         @Override
