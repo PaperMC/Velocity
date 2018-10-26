@@ -24,11 +24,10 @@ public class Natives {
         return () -> {
             try {
                 Path tempFile = Files.createTempFile("native-", path.substring(path.lastIndexOf('.')));
-                @Nullable InputStream nativeLibPossiblyNull = Natives.class.getResourceAsStream(path);
-                if (nativeLibPossiblyNull == null) {
+                InputStream nativeLib = Natives.class.getResourceAsStream(path);
+                if (nativeLib == null) {
                     throw new IllegalStateException("Native library " + path + " not found.");
                 }
-                @NonNull InputStream nativeLib = nativeLibPossiblyNull;
 
                 Files.copy(nativeLib, tempFile, StandardCopyOption.REPLACE_EXISTING);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {

@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
@@ -165,8 +166,12 @@ public final class ServerPing {
         }
 
         public ServerPing build() {
-            Preconditions.checkNotNull(version, "version not specified");
-            Preconditions.checkNotNull(description, "no server description supplied");
+            if (this.version == null) {
+                throw new IllegalStateException("version not specified");
+            }
+            if (this.description == null) {
+                throw new IllegalStateException("no server description supplied");
+            }
             return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers),
                     description, favicon, nullOutModinfo ? null : new ModInfo(modType, mods));
         }

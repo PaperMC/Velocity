@@ -99,8 +99,8 @@ public interface TabListEntry {
      * @see TabListEntry
      */
     class Builder {
-        private TabList tabList;
-        private GameProfile profile;
+        private @Nullable TabList tabList;
+        private @Nullable GameProfile profile;
         private @Nullable Component displayName;
         private int latency = 0;
         private int gameMode = 0;
@@ -167,9 +167,12 @@ public interface TabListEntry {
          * @return the constructed {@link TabListEntry}
          */
         public TabListEntry build() {
-            Preconditions.checkState(tabList != null, "The Tablist must be set when building a TabListEntry");
-            Preconditions.checkState(profile != null, "The GameProfile must be set when building a TabListEntry");
-
+            if (tabList == null) {
+                throw new IllegalStateException("The Tablist must be set when building a TabListEntry");
+            }
+            if (profile == null) {
+                throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
+            }
             return tabList.buildEntry(profile, displayName, latency, gameMode);
         }
     }

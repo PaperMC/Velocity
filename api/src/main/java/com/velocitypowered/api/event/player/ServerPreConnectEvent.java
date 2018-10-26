@@ -74,7 +74,7 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
         @Override
         public String toString() {
             if (server != null) {
-                return "allowed: connect to " + server.getServerInfo().getName();
+                return "allowed";
             }
             return "denied";
         }
