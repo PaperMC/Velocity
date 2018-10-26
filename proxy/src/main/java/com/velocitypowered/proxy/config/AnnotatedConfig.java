@@ -121,18 +121,18 @@ public abstract class AnnotatedConfig {
                 // Check if field is table.
                 Table table = field.getAnnotation(Table.class);
                 if (table != null) {
-                    lines.add(table.value()); // Write [name]
-                    lines.addAll(dumpConfig(field.get(dumpable))); // dump fields of table
+                    lines.add(table.value()); // Write [name] 
+                    lines.addAll(dumpConfig(field.get(dumpable))); // Dump fields of table
                     continue;
                 }
 
-                if (field.getAnnotation(IsMap.class) != null) { // check if field is map
+                if (field.getAnnotation(IsMap.class) != null) { // Check if field is a map
                     @SuppressWarnings("unchecked")
                     Map<String, ?> map = (Map<String, ?>) field.get(dumpable);
                     for (Entry<String, ?> entry : map.entrySet()) {
                         lines.add(entry.getKey() + " = " + serialize(entry.getValue())); // Save map data
                     }
-                    lines.add(""); //Add empty line
+                    lines.add(""); // Add empty line
                     continue;
                 }
 
@@ -145,7 +145,7 @@ public abstract class AnnotatedConfig {
 
                 // Save field to config
                 lines.add(name + " = " + serialize(value));
-                lines.add(""); // add empty line
+                lines.add(""); // Add empty line
             }
         } catch (IllegalAccessException | IllegalArgumentException | SecurityException e) {
             throw new RuntimeException("Could not dump configuration", e);
