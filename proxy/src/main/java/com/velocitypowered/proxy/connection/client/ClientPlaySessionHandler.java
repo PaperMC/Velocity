@@ -242,7 +242,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         VelocityServerConnection server = player.getConnectedServer();
         if (server != null) {
             boolean writable = player.getConnection().getChannel().isWritable();
-            server.getConnection().getChannel().config().setAutoRead(writable);
+            MinecraftConnection smc = server.getConnection();
+            if (smc != null) {
+                smc.getChannel().config().setAutoRead(writable);
+            }
         }
     }
 

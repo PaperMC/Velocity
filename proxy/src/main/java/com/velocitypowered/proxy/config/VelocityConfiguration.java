@@ -8,6 +8,8 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -71,9 +73,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     private final Query query;
 
     @Ignore
-    private Component motdAsComponent;
+    private @MonotonicNonNull Component motdAsComponent;
     @Ignore
-    private Favicon favicon;
+    private @Nullable Favicon favicon;
 
     public VelocityConfiguration(Servers servers, Advanced advanced, Query query) {
         this.servers = servers;

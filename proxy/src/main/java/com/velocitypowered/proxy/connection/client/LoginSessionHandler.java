@@ -26,6 +26,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
@@ -48,10 +49,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
-    private @Nullable ServerLogin login;
+    private @MonotonicNonNull ServerLogin login;
     private byte[] verify = new byte[0];
     private int playerInfoId;
-    private @Nullable ConnectedPlayer connectedPlayer;
+    private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
     public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound, InboundConnection apiInbound) {
         this.server = Preconditions.checkNotNull(server, "server");
@@ -93,6 +94,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(EncryptionResponse packet) {
+        ServerLogin login = this.login;
         if (login == null) {
             throw new IllegalStateException("No ServerLogin packet received yet.");
         }

@@ -12,6 +12,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
@@ -70,7 +71,7 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         Injector injector = Guice.createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
-        Object instance = injector.getInstance(javaDescription.getMainClass());
+        @NonNull Object instance = injector.getInstance(javaDescription.getMainClass());
 
         return new VelocityPluginContainer(description, instance);
     }

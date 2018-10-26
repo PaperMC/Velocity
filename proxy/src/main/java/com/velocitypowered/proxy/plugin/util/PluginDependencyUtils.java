@@ -36,7 +36,7 @@ public class PluginDependencyUtils {
         // Actually run Kahn's algorithm
         List<PluginDescription> sorted = new ArrayList<>();
         while (!noEdges.isEmpty()) {
-            PluginDescription candidate = noEdges.poll();
+            PluginDescription candidate = noEdges.remove();
             sorted.add(candidate);
 
             for (PluginDescription node : ImmutableSet.copyOf(graph.adjacentNodes(candidate))) {

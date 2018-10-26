@@ -115,18 +115,25 @@ public class AnnotatedConfig {
                 field.setAccessible(true); // Make field accessible
                 Table table = field.getAnnotation(Table.class);
                 if (table != null) { // Check if field is table.
-                    lines.add(table.value()); // Write [name] 
-                    dumpFields(field.get(toSave), lines); // dump fields of table class
+                    lines.add(table.value()); // Write [name]
+                    Object val = field.get(toSave);
+                    if (val != null) {
+                        dumpFields(field.get(toSave), lines); // dump fields of table class
+                    }
                 } else {
+                    Object value = field.get(toSave);
+                    if (value == null) {
+                        continue;
+                    }
+
                     if (field.getAnnotation(IsMap.class) != null) { // check if field is map
-                        Map<String, ?> map = (Map<String, ?>) field.get(toSave);
+                        Map<String, ?> map = (Map<String, ?>) value;
                         for (Entry<String, ?> entry : map.entrySet()) {
                             lines.add(entry.getKey() + " = " + toString(entry.getValue())); // Save a map data
                         }
                         lines.add(""); //Add empty line
                         continue;
                     }
-                    Object value = field.get(toSave);
                     if (field.getAnnotation(StringAsBytes.class) != null) { // Check if field is a byte[] representation of  a string
                         value = new String((byte[]) value, StandardCharsets.UTF_8);
                     }

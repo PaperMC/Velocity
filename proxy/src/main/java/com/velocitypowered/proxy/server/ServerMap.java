@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerMap {
-    private final VelocityServer server;
+    private final @Nullable VelocityServer server;
     private final Map<String, RegisteredServer> servers = new ConcurrentHashMap<>();
 
     public ServerMap(@Nullable VelocityServer server) {

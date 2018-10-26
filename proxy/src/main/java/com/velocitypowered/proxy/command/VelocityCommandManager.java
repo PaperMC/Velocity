@@ -66,7 +66,7 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "source");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        String[] split = cmdLine.split(" ", -1);
+        @NonNull String[] split = cmdLine.split(" ", -1);
         if (split.length == 0) {
             return ImmutableList.of();
         }
@@ -83,7 +83,7 @@ public class VelocityCommandManager implements CommandManager {
             return availableCommands;
         }
 
-        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
+        @NonNull String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
         Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
         if (command == null) {
             return ImmutableList.of();
