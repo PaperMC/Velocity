@@ -11,6 +11,7 @@ import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.scheduler.TaskStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -92,6 +93,7 @@ public class VelocityScheduler implements Scheduler {
         public ScheduledTask schedule() {
             VelocityTask task = new VelocityTask(plugin, runnable, delay, repeat);
             tasksByPlugin.put(plugin, task);
+            task.schedule();
             return task;
         }
     }
@@ -99,12 +101,19 @@ public class VelocityScheduler implements Scheduler {
     private class VelocityTask implements Runnable, ScheduledTask {
         private final Object plugin;
         private final Runnable runnable;
-        private ScheduledFuture<?> future;
-        private volatile Thread currentTaskThread;
+        private final long delay;
+        private final long repeat;
+        private @Nullable ScheduledFuture<?> future;
+        private volatile @Nullable Thread currentTaskThread;
 
         private VelocityTask(Object plugin, Runnable runnable, long delay, long repeat) {
             this.plugin = plugin;
             this.runnable = runnable;
+            this.delay = delay;
+            this.repeat = repeat;
+        }
+
+        public void schedule() {
             if (repeat == 0) {
                 this.future = timerExecutionService.schedule(this, delay, TimeUnit.MILLISECONDS);
             } else {

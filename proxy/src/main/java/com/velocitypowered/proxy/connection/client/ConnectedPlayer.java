@@ -61,13 +61,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private final MinecraftConnection connection;
     private final InetSocketAddress virtualHost;
     private GameProfile profile;
-    private PermissionFunction permissionFunction = null;
+    private PermissionFunction permissionFunction;
     private int tryIndex = 0;
     private long ping = -1;
-    private VelocityServerConnection connectedServer;
-    private VelocityServerConnection connectionInFlight;
-    private PlayerSettings settings;
-    private ModInfo modInfo;
+    private @Nullable VelocityServerConnection connectedServer;
+    private @Nullable VelocityServerConnection connectionInFlight;
+    private @Nullable PlayerSettings settings;
+    private @Nullable ModInfo modInfo;
     private final VelocityTabList tabList;
     private final VelocityServer server;
     
@@ -77,6 +77,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         this.profile = profile;
         this.connection = connection;
         this.virtualHost = virtualHost;
+        this.permissionFunction = (permission) -> Tristate.UNDEFINED;
     }
 
     @Override
@@ -269,11 +270,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     public void handleConnectionException(RegisteredServer server, Throwable throwable) {
+        if (throwable == null) {
+            throw new NullPointerException("throwable");
+        }
+
         Throwable wrapped = throwable;
         if (throwable instanceof CompletionException) {
             wrapped = throwable.getCause();
         }
-
         String error = ThrowableUtils.briefDescription(wrapped);
         String userMessage;
         if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
@@ -425,7 +429,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     @Override
     public String toString() {
-        return "[connected player] " + getProfile().getName() + " (" + getRemoteAddress() + ")";
+        return "[connected player] " + profile.getName() + " (" + getRemoteAddress() + ")";
     }
 
     @Override
@@ -447,6 +451,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public void spoofChatInput(String input) {
         Preconditions.checkArgument(input.length() <= Chat.MAX_SERVERBOUND_MESSAGE_LENGTH, "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH + " characters in length");
+
         connectedServer.getConnection().write(Chat.createServerbound(input));
     }
 

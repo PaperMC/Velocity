@@ -19,7 +19,7 @@ public class PluginClassLoader extends URLClassLoader {
         loaders.add(this);
     }
 
-    public void addPath(Path path) {
+    void addPath(Path path) {
         try {
             addURL(path.toUri().toURL());
         } catch (MalformedURLException e) {

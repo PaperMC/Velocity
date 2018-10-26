@@ -9,6 +9,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,7 +71,7 @@ public class VelocityTabList implements TabList {
     }
 
     @Override
-    public TabListEntry buildEntry(GameProfile profile, Component displayName, int latency, int gameMode) {
+    public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
         return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
     }
 
@@ -96,15 +97,27 @@ public class VelocityTabList implements TabList {
                 case PlayerListItem.REMOVE_PLAYER:
                     entries.remove(uuid);
                     break;
-                case PlayerListItem.UPDATE_DISPLAY_NAME:
-                    entries.get(uuid).setDisplayName(item.getDisplayName());
+                case PlayerListItem.UPDATE_DISPLAY_NAME: {
+                    TabListEntry entry = entries.get(uuid);
+                    if (entry != null) {
+                        entry.setDisplayName(item.getDisplayName());
+                    }
                     break;
-                case PlayerListItem.UPDATE_LATENCY:
-                    entries.get(uuid).setLatency(item.getLatency());
+                }
+                case PlayerListItem.UPDATE_LATENCY: {
+                    TabListEntry entry = entries.get(uuid);
+                    if (entry != null) {
+                        entry.setLatency(item.getLatency());
+                    }
                     break;
-                case PlayerListItem.UPDATE_GAMEMODE:
-                    entries.get(uuid).setGameMode(item.getGameMode());
+                }
+                case PlayerListItem.UPDATE_GAMEMODE: {
+                    TabListEntry entry = entries.get(uuid);
+                    if (entry != null) {
+                        entry.setLatency(item.getGameMode());
+                    }
                     break;
+                }
             }
         }
     }

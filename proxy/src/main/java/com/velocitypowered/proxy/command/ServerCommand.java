@@ -27,7 +27,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String[] args) {
+    public void execute(@NonNull CommandSource source, @NonNull String[] args) {
         if (!(source instanceof Player)) {
             source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
             return;
@@ -76,7 +76,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public List<String> suggest(CommandSource source, String[] currentArgs) {
+    public List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
         if (currentArgs.length == 0) {
             return server.getAllServers().stream()
                     .map(rs -> rs.getServerInfo().getName())

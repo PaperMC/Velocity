@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
@@ -20,6 +21,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 
@@ -37,7 +39,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     private final Set<String> clientPluginMsgChannels = new HashSet<>();
     private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
     private final VelocityServer server;
-    private TabCompleteRequest outstandingTabComplete;
+    private @Nullable TabCompleteRequest outstandingTabComplete;
 
     public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
         this.player = player;
@@ -123,7 +125,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     @Override
     public boolean handle(PluginMessage packet) {
         VelocityServerConnection serverConn = player.getConnectedServer();
-        if (serverConn != null) {
+        MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
+        if (backendConn != null) {
             if (PluginMessageUtil.isMCRegister(packet)) {
                 List<String> actuallyRegistered = new ArrayList<>();
                 List<String> channels = PluginMessageUtil.getChannels(packet);
@@ -138,26 +141,27 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 }
 
                 if (actuallyRegistered.size() > 0) {
-                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(serverConn.getConnection()
+                    PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(backendConn
                             .getProtocolVersion(), actuallyRegistered);
-                    serverConn.getConnection().write(newRegisterPacket);
+                    backendConn.write(newRegisterPacket);
                 }
                 return true;
             } else if (PluginMessageUtil.isMCUnregister(packet)) {
                 List<String> channels = PluginMessageUtil.getChannels(packet);
                 clientPluginMsgChannels.removeAll(channels);
-                serverConn.getConnection().write(packet);
+                backendConn.write(packet);
                 return true;
             } else if (PluginMessageUtil.isMCBrand(packet)) {
-                player.getConnectedServer().getConnection().write(PluginMessageUtil.rewriteMCBrand(packet));
-            } else if (player.getConnectedServer().isLegacyForge() && !player.getConnectedServer().hasCompletedJoin()) {
+                backendConn.write(PluginMessageUtil.rewriteMCBrand(packet));
+                return true;
+            } else if (backendConn.isLegacyForge() && !serverConn.hasCompletedJoin()) {
                 if (packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
                     if (!player.getModInfo().isPresent()) {
                         ForgeUtil.readModList(packet).ifPresent(mods -> player.setModInfo(new ModInfo("FML", mods)));
                     }
 
                     // Always forward the FML handshake to the remote server.
-                    serverConn.getConnection().write(packet);
+                    backendConn.write(packet);
                 } else {
                     // The client is trying to send messages too early. This is primarily caused by mods, but it's further
                     // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
@@ -169,16 +173,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-        if (id == null) {
-            player.getConnectedServer().getConnection().write(packet);
-        } else {
+        if (id == null && backendConn != null) {
+            backendConn.write(packet);
+        } else if (id != null) {
             PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(), id, packet.getData());
             server.getEventManager().fire(event)
-                    .thenAcceptAsync(pme -> {
-                        if (pme.getResult().isAllowed()) {
-                            player.getConnectedServer().getConnection().write(packet);
+                    .thenAccept(pme -> {
+                        if (backendConn != null) {
+                            backendConn.write(packet);
                         }
-                    }, player.getConnectedServer().getConnection().eventLoop());
+                    });
         }
         return true;
     }

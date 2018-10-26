@@ -26,6 +26,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -47,10 +48,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
-    private ServerLogin login;
+    private @Nullable ServerLogin login;
     private byte[] verify;
     private int playerInfoId;
-    private ConnectedPlayer connectedPlayer;
+    private @Nullable ConnectedPlayer connectedPlayer;
 
     public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound, InboundConnection apiInbound) {
         this.server = Preconditions.checkNotNull(server, "server");
@@ -92,6 +93,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(EncryptionResponse packet) {
+        if (login == null) {
+            throw new IllegalStateException("No ServerLogin packet received yet.");
+        }
+
+        if (verify == null) {
+            throw new IllegalStateException("No EncryptionRequest packet sent yet.");
+        }
+
         try {
             KeyPair serverKeyPair = server.getServerKeyPair();
             byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, packet.getVerifyToken());
@@ -149,6 +158,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void beginPreLogin() {
+        if (login == null) {
+            throw new IllegalStateException("No ServerLogin packet received yet.");
+        }
         PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
         server.getEventManager().fire(event)
                 .thenRunAsync(() -> {

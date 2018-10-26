@@ -16,7 +16,7 @@ public interface TabListEntry {
      * Returns the parent {@link TabList} of this {@code this} {@link TabListEntry}.
      * @return parent {@link TabList}
      */
-    @NonNull TabList getTabList();
+    TabList getTabList();
     
     /**
      * Returns the {@link GameProfile} of the entry, which uniquely identifies the entry
@@ -24,14 +24,14 @@ public interface TabListEntry {
      * as the player head in the tab list.
      * @return {@link GameProfile} of the entry
      */
-    @NonNull GameProfile getProfile();
+    GameProfile getProfile();
     
     /**
      * Returns {@link Optional} text {@link Component}, which if present is the text displayed for
      * {@code this} entry in the {@link TabList}, otherwise {@link GameProfile#getName()} is shown.
      * @return {@link Optional} text {@link Component} of name displayed in the tab list
      */
-    @NonNull Optional<Component> getDisplayName();
+    Optional<Component> getDisplayName();
     
     /**
      * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}.
@@ -39,7 +39,7 @@ public interface TabListEntry {
      * @param displayName to show in the {@link TabList} for {@code this} entry
      * @return {@code this}, for chaining
      */
-    @NonNull TabListEntry setDisplayName(@Nullable Component displayName);
+    TabListEntry setDisplayName(@Nullable Component displayName);
     
     /**
      * Returns the latency for {@code this} entry.
@@ -63,7 +63,7 @@ public interface TabListEntry {
      * @param latency to changed to
      * @return {@code this}, for chaining
      */
-    @NonNull TabListEntry setLatency(int latency);
+    TabListEntry setLatency(int latency);
     
     /**
      * Gets the game mode {@code this} entry has been set to.

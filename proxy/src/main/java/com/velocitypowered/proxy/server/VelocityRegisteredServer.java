@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.server;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -22,6 +23,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Set;
@@ -32,13 +34,13 @@ import java.util.concurrent.TimeUnit;
 import static com.velocitypowered.proxy.network.Connections.*;
 
 public class VelocityRegisteredServer implements RegisteredServer {
-    private final VelocityServer server;
+    private final @Nullable VelocityServer server;
     private final ServerInfo serverInfo;
     private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
 
-    public VelocityRegisteredServer(VelocityServer server, ServerInfo serverInfo) {
+    public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
         this.server = server;
-        this.serverInfo = serverInfo;
+        this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
     }
 
     @Override
@@ -53,6 +55,9 @@ public class VelocityRegisteredServer implements RegisteredServer {
 
     @Override
     public CompletableFuture<ServerPing> ping() {
+        if (server == null) {
+            throw new IllegalStateException("No Velocity proxy instance available");
+        }
         CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
         server.initializeGenericBootstrap()
                 .handler(new ChannelInitializer<Channel>() {

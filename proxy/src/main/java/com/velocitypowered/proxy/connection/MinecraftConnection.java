@@ -16,6 +16,7 @@ import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -35,10 +36,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     private final Channel channel;
     private SocketAddress remoteAddress;
     private StateRegistry state;
-    private MinecraftSessionHandler sessionHandler;
+    private @Nullable MinecraftSessionHandler sessionHandler;
     private int protocolVersion;
     private int nextProtocolVersion;
-    private MinecraftConnectionAssociation association;
+    private @Nullable MinecraftConnectionAssociation association;
     private boolean isLegacyForge;
     private final VelocityServer server;
     private boolean canSendLegacyFMLResetPacket = false;
@@ -74,6 +75,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (sessionHandler == null) {
+            // No session handler available, do nothing
+            ReferenceCountUtil.release(msg);
+            return;
+        }
+
         if (msg instanceof MinecraftPacket) {
             if (sessionHandler.beforeHandle()) {
                 return;
@@ -197,6 +204,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
     }
 
+    @Nullable
     public MinecraftSessionHandler getSessionHandler() {
         return sessionHandler;
     }

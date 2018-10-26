@@ -7,6 +7,8 @@ import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -224,7 +226,7 @@ public enum StateRegistry {
                 this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
             }
 
-            public MinecraftPacket createPacket(final int id) {
+            public @Nullable MinecraftPacket createPacket(final int id) {
                 final Supplier<? extends MinecraftPacket> supplier = this.packetIdToSupplier.get(id);
                 if (supplier == null) {
                     return null;
@@ -244,6 +246,7 @@ public enum StateRegistry {
             }
 
             @Override
+            @SideEffectFree
             public String toString() {
                 StringBuilder mappingAsString = new StringBuilder("{");
                 for (Object2IntMap.Entry<Class<? extends MinecraftPacket>> entry : packetClassToId.object2IntEntrySet()) {
@@ -283,7 +286,7 @@ public enum StateRegistry {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             PacketMapping that = (PacketMapping) o;

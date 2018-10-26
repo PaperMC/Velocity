@@ -4,6 +4,8 @@ plugins {
     id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
 }
 
+apply from: '../gradle/checkerframework.gradle'
+
 compileJava {
     options.compilerArgs += ['-proc:none']
 }

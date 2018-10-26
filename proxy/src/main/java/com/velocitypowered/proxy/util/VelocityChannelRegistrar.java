@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,7 +58,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
         return identifierMap.containsKey(id);
     }
 
-    public ChannelIdentifier getFromId(String id) {
+    public @Nullable ChannelIdentifier getFromId(String id) {
         return identifierMap.get(id);
     }
 }

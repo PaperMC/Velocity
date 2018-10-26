@@ -24,13 +24,13 @@ public class VelocityCommand implements Command {
             .put("version", Info.INSTANCE)
             .build();
 
-    private void usage(CommandSource source) {
+    private void usage(@NonNull CommandSource source) {
         String commandText = "/velocity <" + String.join("|", subcommands.keySet()) + ">";
         source.sendMessage(TextComponent.of(commandText, TextColor.RED));
     }
 
     @Override
-    public void execute(CommandSource source, String[] args) {
+    public void execute(@NonNull CommandSource source, @NonNull String[] args) {
         if (args.length == 0) {
             usage(source);
             return;

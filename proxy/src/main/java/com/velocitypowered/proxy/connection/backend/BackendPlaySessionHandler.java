@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
@@ -152,16 +153,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {
-        ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
+        MinecraftConnection mc = serverConn.getConnection();
+        if (mc == null) {
+            return false;
+        }
         boolean isMCOrFMLMessage;
-        if (serverConn.getConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+        if (mc.getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             String channel = message.getChannel();
             isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
             isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
         }
-        return isMCOrFMLMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+        return isMCOrFMLMessage || playerSessionHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
                 server.getChannelRegistrar().registered(message.getChannel());
     }
 }

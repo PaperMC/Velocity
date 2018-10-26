@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Locale;
@@ -16,7 +17,7 @@ public class ServerMap {
     private final VelocityServer server;
     private final Map<String, RegisteredServer> servers = new ConcurrentHashMap<>();
 
-    public ServerMap(VelocityServer server) {
+    public ServerMap(@Nullable VelocityServer server) {
         this.server = server;
     }
 

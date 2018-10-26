@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -24,10 +25,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Verify.verify;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.network.Connections.*;
 
@@ -35,7 +38,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     private final VelocityRegisteredServer registeredServer;
     private final ConnectedPlayer proxyPlayer;
     private final VelocityServer server;
-    private MinecraftConnection connection;
+    private @Nullable MinecraftConnection connection;
     private boolean legacyForge = false;
     private boolean hasCompletedJoin = false;
     private boolean gracefulDisconnect = false;
@@ -71,6 +74,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
                         connection = future.channel().pipeline().get(MinecraftConnection.class);
+
+                        // This is guaranteed not to be null, but Checker Framework is whining about it anyway
+                        verify(connection != null, "MinecraftConnection not injected into pipeline");
 
                         // Kick off the connection process
                         connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this, result));

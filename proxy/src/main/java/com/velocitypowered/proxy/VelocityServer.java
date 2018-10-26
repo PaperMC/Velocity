@@ -39,6 +39,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -58,11 +59,11 @@ public class VelocityServer implements ProxyServer {
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
-    private final ConnectionManager cm = new ConnectionManager(this);
+    private final @UnderInitialization(ConnectionManager.class) ConnectionManager cm = new ConnectionManager(this);
     private VelocityConfiguration configuration;
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
-    private final ServerMap servers = new ServerMap(this);
+    private final @UnderInitialization(ServerMap.class) ServerMap servers = new ServerMap(this);
     private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
@@ -76,11 +77,7 @@ public class VelocityServer implements ProxyServer {
     private VelocityScheduler scheduler;
     private VelocityChannelRegistrar channelRegistrar;
 
-    VelocityServer() {
-        commandManager.register(new VelocityCommand(), "velocity");
-        commandManager.register(new ServerCommand(this), "server");
-        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
-    }
+    VelocityServer() {}
 
     public KeyPair getServerKeyPair() {
         return serverKeyPair;
@@ -96,6 +93,11 @@ public class VelocityServer implements ProxyServer {
     }
 
     public void start() {
+        // Initialize commands first
+        commandManager.register(new VelocityCommand(), "velocity");
+        commandManager.register(new ServerCommand(this), "server");
+        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
+
         try {
             Path configPath = Paths.get("velocity.toml");
             configuration = VelocityConfiguration.read(configPath);
