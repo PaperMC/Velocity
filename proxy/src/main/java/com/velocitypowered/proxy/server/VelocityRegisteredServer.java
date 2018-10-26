@@ -96,8 +96,8 @@ public class VelocityRegisteredServer implements RegisteredServer {
     @Override
     public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
         for (ConnectedPlayer player : players) {
-            if (player.getConnectedServer() != null && player.getConnectedServer().getServerInfo().equals(serverInfo)) {
-                ServerConnection connection = player.getConnectedServer();
+            ServerConnection connection = player.getConnectedServer();
+            if (connection != null && connection.getServerInfo().equals(serverInfo)) {
                 return connection.sendPluginMessage(identifier, data);
             }
         }
