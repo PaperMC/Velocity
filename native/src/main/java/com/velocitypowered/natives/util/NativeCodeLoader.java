@@ -34,48 +34,43 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
     }
 
     static class Variant<T> {
-        private volatile boolean available;
+        private Status status;
         private final Runnable setup;
         private final String name;
         private final T object;
-        private volatile boolean hasBeenSetup = false;
 
-        Variant(BooleanSupplier available, Runnable setup, String name, T object) {
-            this.available = available.getAsBoolean();
+        Variant(BooleanSupplier possiblyAvailable, Runnable setup, String name, T object) {
+            this.status = possiblyAvailable.getAsBoolean() ? Status.POSSIBLY_AVAILABLE : Status.NOT_AVAILABLE;
             this.setup = setup;
             this.name = name;
             this.object = object;
         }
 
         public @Nullable T get() {
-            if (!available) {
+            if (status == Status.NOT_AVAILABLE || status == Status.SETUP_FAILURE) {
                 return null;
             }
 
             // Make sure setup happens only once
-            if (!hasBeenSetup) {
-                synchronized (this) {
-                    // We change availability if need be below, may as well check it again here for sanity.
-                    if (!available) {
-                        return null;
-                    }
-
-                    // Okay, now try the setup if we haven't done so yet.
-                    if (!hasBeenSetup) {
-                        try {
-                            setup.run();
-                            hasBeenSetup = true;
-                            return object;
-                        } catch (Exception e) {
-                            available = false;
-                            return null;
-                        }
-                    }
+            if (status == Status.POSSIBLY_AVAILABLE) {
+                try {
+                    setup.run();
+                    status = Status.SETUP;
+                } catch (Exception e) {
+                    status = Status.SETUP_FAILURE;
+                    return null;
                 }
             }
 
             return object;
         }
+    }
+
+    private enum Status {
+        NOT_AVAILABLE,
+        POSSIBLY_AVAILABLE,
+        SETUP,
+        SETUP_FAILURE
     }
 
     static final BooleanSupplier MACOS = () -> System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X") &&
