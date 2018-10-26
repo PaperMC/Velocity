@@ -251,6 +251,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         channel.pipeline().addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
     }
 
+    @Nullable
     public MinecraftConnectionAssociation getAssociation() {
         return association;
     }

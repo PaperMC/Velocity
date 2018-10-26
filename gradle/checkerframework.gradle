@@ -62,7 +62,7 @@ compileJava {
                 '-Xmaxerrs', '10000',
                 '-Xmaxwarns', '10000',
                 // '-Awarns',      // -Awarns turns Checker Framework errors into warnings
-                '-AcheckPurityAnnotations',
+                //'-AcheckPurityAnnotations', // Disabled for Velocity, wish we could do better
                 '-processorpath', "${configurations.checkerFrameworkCheckerJar.asPath}",
                 "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
         ]

@@ -94,10 +94,8 @@ public class JavaPluginLoader implements PluginLoader {
     private VelocityPluginDescription createDescription(SerializedPluginDescription description, Path source, Class mainClass) {
         Set<PluginDependency> dependencies = new HashSet<>();
 
-        if (description.getDependencies() != null) {
-            for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
-                dependencies.add(toDependencyMeta(dependency));
-            }
+        for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
+            dependencies.add(toDependencyMeta(dependency));
         }
 
         return new JavaVelocityPluginDescription(

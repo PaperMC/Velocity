@@ -277,7 +277,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
         Throwable wrapped = throwable;
         if (throwable instanceof CompletionException) {
-            wrapped = throwable.getCause();
+            Throwable cause = throwable.getCause();
+            if (cause != null) {
+                wrapped = cause;
+            }
         }
         String error = ThrowableUtils.briefDescription(wrapped);
         String userMessage;

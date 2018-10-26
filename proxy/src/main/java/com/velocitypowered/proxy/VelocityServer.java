@@ -41,6 +41,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -60,26 +61,32 @@ public class VelocityServer implements ProxyServer {
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
-    private final ConnectionManager cm = new ConnectionManager(this);
+    private final ConnectionManager cm;
     private VelocityConfiguration configuration;
-    private NettyHttpClient httpClient;
-    private KeyPair serverKeyPair;
-    private final ServerMap servers = new ServerMap(this);
+    private @MonotonicNonNull NettyHttpClient httpClient;
+    private final KeyPair serverKeyPair;
+    private final ServerMap servers;
     private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
-    private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
+    private final VelocityPluginManager pluginManager;
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
     private final VelocityConsole console = new VelocityConsole(this);
-    private Ratelimiter ipAttemptLimiter;
-    private VelocityEventManager eventManager;
-    private VelocityScheduler scheduler;
-    private VelocityChannelRegistrar channelRegistrar;
+    private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
+    private final VelocityEventManager eventManager;
+    private final VelocityScheduler scheduler;
+    private final VelocityChannelRegistrar channelRegistrar;
 
     VelocityServer() {
+        cm = new ConnectionManager(this);
         serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
+        servers = new ServerMap(this);
+        pluginManager = new VelocityPluginManager(this);
+        eventManager = new VelocityEventManager(pluginManager);
+        scheduler = new VelocityScheduler(pluginManager);
+        channelRegistrar = new VelocityChannelRegistrar();
     }
 
     public KeyPair getServerKeyPair() {
@@ -144,9 +151,6 @@ public class VelocityServer implements ProxyServer {
 
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
         httpClient = new NettyHttpClient(this);
-        eventManager = new VelocityEventManager(pluginManager);
-        scheduler = new VelocityScheduler(pluginManager);
-        channelRegistrar = new VelocityChannelRegistrar();
         loadPlugins();
 
         try {
@@ -336,6 +340,9 @@ public class VelocityServer implements ProxyServer {
 
     @Override
     public InetSocketAddress getBoundAddress() {
+        if (configuration == null) {
+            throw new IllegalStateException("No configuration"); // even though you'll never get the chance... heh, heh
+        }
         return configuration.getBind();
     }
 }

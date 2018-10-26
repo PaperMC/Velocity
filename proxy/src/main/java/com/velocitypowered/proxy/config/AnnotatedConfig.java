@@ -118,7 +118,7 @@ public class AnnotatedConfig {
                     lines.add(table.value()); // Write [name]
                     Object val = field.get(toSave);
                     if (val != null) {
-                        dumpFields(field.get(toSave), lines); // dump fields of table class
+                        dumpFields(val, lines); // dump fields of table class
                     }
                 } else {
                     Object value = field.get(toSave);
