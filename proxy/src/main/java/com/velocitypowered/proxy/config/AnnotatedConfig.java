@@ -21,10 +21,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Only for simple configs
+ * Simple annotation and fields based TOML configuration serializer
  */
-public class AnnotatedConfig {
-
+public abstract class AnnotatedConfig {
     private static final Logger logger = LogManager.getLogger(AnnotatedConfig.class);
 
     public static Logger getLogger() {
