@@ -1,48 +1,36 @@
 package com.velocitypowered.natives.util;
 
-import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-public class NativeCodeLoader<T> implements Supplier<T> {
-    private final List<Variant<T>> variants;
-    private volatile Variant<T> selected;
+public final class NativeCodeLoader<T> implements Supplier<T> {
+    private final Variant<T> selected;
 
-    public NativeCodeLoader(List<Variant<T>> variants) {
-        this.variants = ImmutableList.copyOf(variants);
+    NativeCodeLoader(List<Variant<T>> variants) {
+        this.selected = getVariant(variants);
     }
 
     @Override
     public T get() {
-        return tryLoad().object;
+        return selected.object;
     }
 
-    private Variant<T> tryLoad() {
-        if (selected != null) {
-            return selected;
-        }
-
-        synchronized (this) {
-            if (selected != null) {
-                return selected;
+    private static <T> Variant<T> getVariant(List<Variant<T>> variants) {
+        for (Variant<T> variant : variants) {
+            T got = variant.get();
+            if (got == null) {
+                continue;
             }
-
-            for (Variant<T> variant : variants) {
-                T got = variant.get();
-                if (got == null) {
-                    continue;
-                }
-                selected = variant;
-                return selected;
-            }
-            throw new IllegalArgumentException("Can't find any suitable variants");
+            return variant;
         }
+        throw new IllegalArgumentException("Can't find any suitable variants");
     }
 
     public String getLoadedVariant() {
-        return tryLoad().name;
+        return selected.name;
     }
 
     static class Variant<T> {
@@ -59,7 +47,7 @@ public class NativeCodeLoader<T> implements Supplier<T> {
             this.object = object;
         }
 
-        public T get() {
+        public @Nullable T get() {
             if (!available) {
                 return null;
             }
@@ -90,9 +78,9 @@ public class NativeCodeLoader<T> implements Supplier<T> {
         }
     }
 
-    static final BooleanSupplier MACOS = () -> System.getProperty("os.name").equalsIgnoreCase("Mac OS X") &&
+    static final BooleanSupplier MACOS = () -> System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X") &&
             System.getProperty("os.arch").equals("x86_64");
-    static final BooleanSupplier LINUX = () -> System.getProperties().getProperty("os.name").equalsIgnoreCase("Linux") &&
+    static final BooleanSupplier LINUX = () -> System.getProperties().getProperty("os.name", "").equalsIgnoreCase("Linux") &&
             System.getProperty("os.arch").equals("amd64");
     static final BooleanSupplier ALWAYS = () -> true;
 }

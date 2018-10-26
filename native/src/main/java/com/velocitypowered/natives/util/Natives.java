@@ -6,8 +6,11 @@ import com.velocitypowered.natives.compression.NativeVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -21,7 +24,13 @@ public class Natives {
         return () -> {
             try {
                 Path tempFile = Files.createTempFile("native-", path.substring(path.lastIndexOf('.')));
-                Files.copy(Natives.class.getResourceAsStream(path), tempFile, StandardCopyOption.REPLACE_EXISTING);
+                @Nullable InputStream nativeLibPossiblyNull = Natives.class.getResourceAsStream(path);
+                if (nativeLibPossiblyNull == null) {
+                    throw new IllegalStateException("Native library " + path + " not found.");
+                }
+                @NonNull InputStream nativeLib = nativeLibPossiblyNull;
+
+                Files.copy(nativeLib, tempFile, StandardCopyOption.REPLACE_EXISTING);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
                         Files.deleteIfExists(tempFile);
