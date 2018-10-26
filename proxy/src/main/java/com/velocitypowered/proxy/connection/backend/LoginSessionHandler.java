@@ -6,6 +6,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -38,6 +39,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         this.resultFuture = resultFuture;
     }
 
+    private MinecraftConnection ensureMinecraftConnection() {
+        MinecraftConnection mc = serverConn.getConnection();
+        if (mc == null) {
+            throw new IllegalStateException("Not connected to backend server!");
+        }
+        return mc;
+    }
+
     @Override
     public boolean handle(EncryptionRequest packet) {
         throw new IllegalStateException("Backend server is online-mode!");
@@ -45,6 +54,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(LoginPluginMessage packet) {
+        MinecraftConnection mc = ensureMinecraftConnection();
         VelocityConfiguration configuration = server.getConfiguration();
         if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet.getChannel()
                 .equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
@@ -54,7 +64,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             response.setData(createForwardingData(configuration.getForwardingSecret(),
                     serverConn.getPlayer().getRemoteAddress().getHostString(),
                     serverConn.getPlayer().getProfile()));
-            serverConn.getConnection().write(response);
+            mc.write(response);
             informationForwarded = true;
         } else {
             // Don't understand
@@ -62,7 +72,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             response.setSuccess(false);
             response.setId(packet.getId());
             response.setData(Unpooled.EMPTY_BUFFER);
-            serverConn.getConnection().write(response);
+            mc.write(response);
         }
         return true;
     }
@@ -76,7 +86,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(SetCompression packet) {
-        serverConn.getConnection().setCompressionThreshold(packet.getThreshold());
+        ensureMinecraftConnection().setCompressionThreshold(packet.getThreshold());
         return true;
     }
 
@@ -90,7 +100,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }
 
         // The player has been logged on to the backend server.
-        serverConn.getConnection().setState(StateRegistry.PLAY);
+        MinecraftConnection smc = ensureMinecraftConnection();
+        smc.setState(StateRegistry.PLAY);
         VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
         if (existingConnection == null) {
             // Strap on the play session handler
@@ -104,14 +115,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             existingConnection.disconnect();
         }
 
-        serverConn.getConnection().getChannel().config().setAutoRead(false);
+        smc.getChannel().config().setAutoRead(false);
         server.getEventManager().fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
                 .whenCompleteAsync((x, error) -> {
                     resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
-                    serverConn.getConnection().setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+                    smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
                     serverConn.getPlayer().setConnectedServer(serverConn);
-                    serverConn.getConnection().getChannel().config().setAutoRead(true);
-                }, serverConn.getConnection().eventLoop());
+                    smc.getChannel().config().setAutoRead(true);
+                }, smc.eventLoop());
         return true;
     }
 

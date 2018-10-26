@@ -159,7 +159,11 @@ public class VelocityEventManager implements EventManager {
 
         @Override
         public int postOrder(@NonNull Object listener, @NonNull Method method) {
-            return method.getAnnotation(Subscribe.class).order().ordinal();
+            Subscribe annotation = method.getAnnotation(Subscribe.class);
+            if (annotation == null) {
+                throw new IllegalStateException("Trying to determine post order for listenrer without @Subscribe annotation");
+            }
+            return annotation.order().ordinal();
         }
 
         @Override

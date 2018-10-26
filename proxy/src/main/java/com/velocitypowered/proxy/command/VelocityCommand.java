@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
@@ -20,9 +22,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VelocityCommand implements Command {
-    private final Map<String, Command> subcommands = ImmutableMap.<String, Command>builder()
-            .put("version", Info.INSTANCE)
-            .build();
+    private final Map<String, Command> subcommands;
+
+    public VelocityCommand(ProxyServer server) {
+        this.subcommands = ImmutableMap.<String, Command>builder()
+                .put("version", new Info(server))
+                .build();
+    }
 
     private void usage(@NonNull CommandSource source) {
         String commandText = "/velocity <" + String.join("|", subcommands.keySet()) + ">";
@@ -76,25 +82,27 @@ public class VelocityCommand implements Command {
     }
 
     private static class Info implements Command {
-        static final Info INSTANCE = new Info();
-        private Info() {}
+        private final ProxyServer server;
+
+        private Info(ProxyServer server) {
+            this.server = server;
+        }
 
         @Override
         public void execute(@NonNull CommandSource source, @NonNull String[] args) {
-            String implName = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationTitle(), "Velocity");
-            String implVersion = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVersion(), "<unknown>");
-            String implVendor = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVendor(), "Velocity Contributors");
-            TextComponent velocity = TextComponent.builder(implName + " ")
+            ProxyVersion version = server.getVersion();
+
+            TextComponent velocity = TextComponent.builder(version.getName() + " ")
                     .decoration(TextDecoration.BOLD, true)
                     .color(TextColor.DARK_AQUA)
-                    .append(TextComponent.of(implVersion).decoration(TextDecoration.BOLD, false))
+                    .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
                     .build();
-            TextComponent copyright = TextComponent.of("Copyright 2018 " + implVendor + ". " + implName + " is freely licensed under the terms of the " +
+            TextComponent copyright = TextComponent.of("Copyright 2018 " + version.getVendor() + ". " + version.getName() + " is freely licensed under the terms of the " +
                     "MIT License.");
             source.sendMessage(velocity);
             source.sendMessage(copyright);
 
-            if (implName.equals("Velocity")) {
+            if (version.getName().equals("Velocity")) {
                 TextComponent velocityWebsite = TextComponent.builder()
                         .content("Visit the ")
                         .append(TextComponent.builder("Velocity website")

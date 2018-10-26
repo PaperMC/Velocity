@@ -50,7 +50,9 @@ public class ServerMap {
         Preconditions.checkNotNull(serverInfo, "serverInfo");
         String lowerName = serverInfo.getName().toLowerCase(Locale.US);
         RegisteredServer rs = servers.get(lowerName);
-        Preconditions.checkArgument(rs != null, "Server with name %s is not registered!", serverInfo.getName());
+        if (rs == null) {
+            throw new IllegalArgumentException("Server with name " + serverInfo.getName() + " is not registered!");
+        }
         Preconditions.checkArgument(rs.getServerInfo().equals(serverInfo), "Trying to remove server %s with differing information", serverInfo.getName());
         Preconditions.checkState(servers.remove(lowerName, rs), "Server with name %s replaced whilst unregistering", serverInfo.getName());
     }

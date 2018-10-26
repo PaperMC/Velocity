@@ -56,8 +56,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public boolean handle(KeepAlive packet) {
         VelocityServerConnection serverConnection = player.getConnectedServer();
         if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
+            MinecraftConnection smc = serverConnection.getConnection();
+            if (smc == null) {
+                // eat the packet
+                return true;
+            }
             player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-            serverConnection.getConnection().write(packet);
+            smc.write(packet);
             serverConnection.resetLastPingId();
         }
         return true;
@@ -87,15 +92,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (serverConnection == null) {
                 return true;
             }
+            MinecraftConnection smc = serverConnection.getConnection();
+            if (smc == null) {
+                return true;
+            }
             PlayerChatEvent event = new PlayerChatEvent(player, msg);
             server.getEventManager().fire(event)
                     .thenAcceptAsync(pme -> {
                         if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
-                            serverConnection.getConnection().write(packet);
+                            smc.write(packet);
                         } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
-                            serverConnection.getConnection().write(Chat.createServerbound(pme.getResult().getMessage().get()));
+                            smc.write(Chat.createServerbound(pme.getResult().getMessage().get()));
                         }
-                    }, serverConnection.getConnection().eventLoop());
+                    }, smc.eventLoop());
         }
         return true;
     }
@@ -126,7 +135,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     public boolean handle(PluginMessage packet) {
         VelocityServerConnection serverConn = player.getConnectedServer();
         MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
-        if (backendConn != null) {
+        if (serverConn != null && backendConn != null) {
             if (PluginMessageUtil.isMCRegister(packet)) {
                 List<String> actuallyRegistered = new ArrayList<>();
                 List<String> channels = PluginMessageUtil.getChannels(packet);
@@ -169,21 +178,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                     loginPluginMessages.add(packet);
                 }
                 return true;
+            } else {
+                ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+                if (id == null) {
+                    backendConn.write(packet);
+                } else {
+                    PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, packet.getData());
+                    server.getEventManager().fire(event)
+                            .thenAcceptAsync(pme -> {
+                                backendConn.write(packet);
+                            }, backendConn.eventLoop());
+                }
             }
         }
 
-        ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-        if (id == null && backendConn != null) {
-            backendConn.write(packet);
-        } else if (id != null) {
-            PluginMessageEvent event = new PluginMessageEvent(player, player.getConnectedServer(), id, packet.getData());
-            server.getEventManager().fire(event)
-                    .thenAccept(pme -> {
-                        if (backendConn != null) {
-                            backendConn.write(packet);
-                        }
-                    });
-        }
         return true;
     }
 
@@ -195,9 +203,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        // If we don't want to handle this packet, just forward it on.
-        if (serverConnection.hasCompletedJoin()) {
-            serverConnection.getConnection().write(packet);
+        MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null && serverConnection.hasCompletedJoin()) {
+            smc.write(packet);
         }
     }
 
@@ -209,8 +217,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
         }
 
-        if (serverConnection.hasCompletedJoin()) {
-            serverConnection.getConnection().write(buf.retain());
+        MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null && serverConnection.hasCompletedJoin()) {
+            smc.write(buf.retain());
         }
     }
 
@@ -239,8 +248,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     public void handleBackendJoinGame(JoinGame joinGame) {
         VelocityServerConnection serverConn = player.getConnectedServer();
-        Preconditions.checkState(serverConn != null, "No server connection for %s, but JoinGame packet received",
-                player);
+        if (serverConn == null) {
+            throw new IllegalStateException("No server connection for " + player + ", but JoinGame packet received");
+        }
+        MinecraftConnection serverMc = serverConn.getConnection();
+        if (serverMc == null) {
+            throw new IllegalStateException("Server connection for " + player + " is disconnected, but JoinGame packet received");
+        }
 
         if (!spawned) {
             // Nothing special to do with regards to spawning the player
@@ -287,7 +301,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         serverBossBars.clear();
 
         // Tell the server about this client's plugin message channels.
-        int serverVersion = serverConn.getConnection().getProtocolVersion();
+        int serverVersion = serverMc.getProtocolVersion();
         Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
         if (serverVersion >= ProtocolConstants.MINECRAFT_1_13) {
             toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
@@ -295,14 +309,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
         }
         if (!toRegister.isEmpty()) {
-            serverConn.getConnection().delayedWrite(PluginMessageUtil.constructChannelsPacket(
-                    serverVersion, toRegister));
+            serverMc.delayedWrite(PluginMessageUtil.constructChannelsPacket(serverVersion, toRegister));
         }
 
         // If we had plugin messages queued during login/FML handshake, send them now.
         PluginMessage pm;
         while ((pm = loginPluginMessages.poll()) != null) {
-            serverConn.getConnection().delayedWrite(pm);
+            serverMc.delayedWrite(pm);
         }
 
         // Clear any title from the previous server.
@@ -310,7 +323,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
         // Flush everything
         player.getConnection().flush();
-        serverConn.getConnection().flush();
+        serverMc.flush();
         serverConn.setHasCompletedJoin(true);
         if (serverConn.isLegacyForge()) {
             // We only need to indicate we can send a reset packet if we complete a handshake, that is,

@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
@@ -13,6 +14,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
@@ -39,7 +41,6 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -59,11 +60,11 @@ public class VelocityServer implements ProxyServer {
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
-    private final @UnderInitialization(ConnectionManager.class) ConnectionManager cm = new ConnectionManager(this);
+    private final ConnectionManager cm = new ConnectionManager(this);
     private VelocityConfiguration configuration;
     private NettyHttpClient httpClient;
     private KeyPair serverKeyPair;
-    private final @UnderInitialization(ServerMap.class) ServerMap servers = new ServerMap(this);
+    private final ServerMap servers = new ServerMap(this);
     private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
@@ -77,7 +78,9 @@ public class VelocityServer implements ProxyServer {
     private VelocityScheduler scheduler;
     private VelocityChannelRegistrar channelRegistrar;
 
-    VelocityServer() {}
+    VelocityServer() {
+        serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
+    }
 
     public KeyPair getServerKeyPair() {
         return serverKeyPair;
@@ -88,13 +91,32 @@ public class VelocityServer implements ProxyServer {
     }
 
     @Override
+    public ProxyVersion getVersion() {
+        Package pkg = VelocityServer.class.getPackage();
+        String implName, implVersion, implVendor;
+        if (pkg != null) {
+            implName = MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
+            implVersion = MoreObjects.firstNonNull(pkg.getImplementationVersion(), "<unknown>");
+            implVendor = MoreObjects.firstNonNull(pkg.getImplementationVendor(), "Velocity Contributors");
+        } else {
+            implName = "Velocity";
+            implVersion = "<unknown>";
+            implVendor = "Velocity Contributors";
+        }
+
+        return new ProxyVersion(implName, implVendor, implVersion);
+    }
+
+    @Override
     public VelocityCommandManager getCommandManager() {
         return commandManager;
     }
 
     public void start() {
+        logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+
         // Initialize commands first
-        commandManager.register(new VelocityCommand(), "velocity");
+        commandManager.register(new VelocityCommand(this), "velocity");
         commandManager.register(new ServerCommand(this), "server");
         commandManager.register(new ShutdownCommand(this), "shutdown", "end");
 
@@ -120,7 +142,6 @@ public class VelocityServer implements ProxyServer {
             servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
         }
 
-        serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
         httpClient = new NettyHttpClient(this);
         eventManager = new VelocityEventManager(pluginManager);

@@ -18,7 +18,6 @@ public class Velocity {
 
     public static void main(String... args) {
         startTime = System.currentTimeMillis();
-        logger.info("Booting up Velocity {}...", Velocity.class.getPackage().getImplementationVersion());
 
         VelocityServer server = new VelocityServer();
         server.start();

@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.protocol;
 
-import com.google.common.base.Strings;
 import com.google.common.primitives.ImmutableIntArray;
 import com.velocitypowered.proxy.protocol.packet.*;
 import io.netty.util.collection.IntObjectHashMap;
@@ -8,7 +7,6 @@ import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -243,24 +241,6 @@ public enum StateRegistry {
                     ));
                 }
                 return id;
-            }
-
-            @Override
-            @SideEffectFree
-            public String toString() {
-                StringBuilder mappingAsString = new StringBuilder("{");
-                for (Object2IntMap.Entry<Class<? extends MinecraftPacket>> entry : packetClassToId.object2IntEntrySet()) {
-                    mappingAsString.append(entry.getKey().getSimpleName()).append(" -> ")
-                            .append("0x")
-                            .append(Strings.padStart(Integer.toHexString(entry.getIntValue()), 2, '0'))
-                            .append(", ");
-                }
-                mappingAsString.setLength(mappingAsString.length() - 2);
-                mappingAsString.append("}");
-                return "ProtocolVersion{" +
-                        "id=" + id +
-                        ", packetClassToId=" + mappingAsString.toString() +
-                        '}';
             }
         }
     }

@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
+import com.velocitypowered.api.util.ProxyVersion;
 import net.kyori.text.Component;
 
 import java.net.InetSocketAddress;
@@ -131,4 +132,10 @@ public interface ProxyServer {
      * @return the proxy config
      * */
     ProxyConfig getConfiguration();
+
+    /**
+     * Returns the version of the proxy.
+     * @return the proxy version
+     */
+    ProxyVersion getVersion();
 }

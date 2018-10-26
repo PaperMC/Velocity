@@ -59,7 +59,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
     private final MinecraftConnection connection;
-    private final InetSocketAddress virtualHost;
+    private @Nullable final InetSocketAddress virtualHost;
     private GameProfile profile;
     private PermissionFunction permissionFunction;
     private int tryIndex = 0;
@@ -71,7 +71,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private final VelocityTabList tabList;
     private final VelocityServer server;
     
-    ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, InetSocketAddress virtualHost) {
+    ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, @Nullable InetSocketAddress virtualHost) {
         this.server = server;
         this.tabList = new VelocityTabList(connection);
         this.profile = profile;
@@ -117,8 +117,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     void setPlayerSettings(ClientSettings settings) {
-        this.settings = new ClientSettingsWrapper(settings);
-        server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, this.settings));
+        ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
+        this.settings = cs;
+        server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
     }
     
     public Optional<ModInfo> getModInfo() {
@@ -127,7 +128,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     
     void setModInfo(ModInfo modInfo) {
         this.modInfo = modInfo;
-        server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, this.modInfo));
+        server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
     }
     
     @Override
@@ -396,8 +397,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     public void setConnectedServer(VelocityServerConnection serverConnection) {
-        if (this.connectedServer != null && !serverConnection.getServerInfo().equals(connectedServer.getServerInfo())) {
+        VelocityServerConnection oldConnection = this.connectedServer;
+        if (oldConnection != null && !serverConnection.getServerInfo().equals(oldConnection.getServerInfo())) {
             this.tryIndex = 0;
+        }
+        if (serverConnection == connectionInFlight) {
+            connectionInFlight = null;
         }
         this.connectedServer = serverConnection;
     }
@@ -414,6 +419,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public void close(TextComponent reason) {
         connection.closeWith(Disconnect.create(reason));
+    }
+
+    private MinecraftConnection ensureBackendConnection() {
+        VelocityServerConnection sc = this.connectedServer;
+        if (sc == null) {
+            throw new IllegalStateException("No backend connection");
+        }
+
+        MinecraftConnection mc = sc.getConnection();
+        if (mc == null) {
+            throw new IllegalStateException("Backend connection is not connected to a server");
+        }
+
+        return mc;
     }
 
     void teardown() {
@@ -451,8 +470,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     @Override
     public void spoofChatInput(String input) {
         Preconditions.checkArgument(input.length() <= Chat.MAX_SERVERBOUND_MESSAGE_LENGTH, "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH + " characters in length");
-
-        connectedServer.getConnection().write(Chat.createServerbound(input));
+        ensureBackendConnection().write(Chat.createServerbound(input));
     }
 
     private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

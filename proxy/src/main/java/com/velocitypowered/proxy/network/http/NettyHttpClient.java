@@ -61,6 +61,7 @@ public class NettyHttpClient {
                 .addListener(future -> {
                     if (future.isSuccess()) {
                         Channel channel = (Channel) future.getNow();
+                        assert channel != null;
                         channel.pipeline().addLast("collector", new SimpleHttpResponseCollector(reply));
 
                         DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url.getPath() + "?" + url.getQuery());

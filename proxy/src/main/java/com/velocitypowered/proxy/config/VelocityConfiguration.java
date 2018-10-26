@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.config;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
@@ -284,24 +283,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return advanced.isProxyProtocol();
     }
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("configVersion", configVersion)
-                .add("bind", bind)
-                .add("motd", motd)
-                .add("showMaxPlayers", showMaxPlayers)
-                .add("onlineMode", onlineMode)
-                .add("playerInfoForwardingMode", playerInfoForwardingMode)
-                .add("forwardingSecret", forwardingSecret)
-                .add("announceForge", announceForge)
-                .add("servers", servers)
-                .add("advanced", advanced)
-                .add("query", query)
-                .add("favicon", favicon)
-                .toString();
-    }
-
     public static VelocityConfiguration read(Path path) throws IOException {
         Toml toml;
         if (!path.toFile().exists()) {
@@ -405,15 +386,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
             this.attemptConnectionOrder = attemptConnectionOrder;
         }
-
-        @Override
-        public String toString() {
-            return "Servers{"
-                    + "servers=" + servers
-                    + ", attemptConnectionOrder=" + attemptConnectionOrder
-                    + '}';
-        }
-
     }
 
     private static class Advanced {
@@ -478,18 +450,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         public boolean isProxyProtocol() {
             return proxyProtocol;
         }
-
-        @Override
-        public String toString() {
-            return "Advanced{" +
-                    "compressionThreshold=" + compressionThreshold +
-                    ", compressionLevel=" + compressionLevel +
-                    ", loginRatelimit=" + loginRatelimit +
-                    ", connectionTimeout=" + connectionTimeout +
-                    ", readTimeout=" + readTimeout +
-                    ", proxyProtocol=" + proxyProtocol +
-                    '}';
-        }
     }
 
     private static class Query {
@@ -531,15 +491,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
         public String getQueryMap() {
             return queryMap;
-        }
-
-        @Override
-        public String toString() {
-            return "Query{"
-                    + "queryEnabled=" + queryEnabled
-                    + ", queryPort=" + queryPort
-                    + ", queryMap=" + queryMap
-                    + '}';
         }
     }
 }

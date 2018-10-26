@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.base.VerifyException;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -76,7 +77,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                         connection = future.channel().pipeline().get(MinecraftConnection.class);
 
                         // This is guaranteed not to be null, but Checker Framework is whining about it anyway
-                        verify(connection != null, "MinecraftConnection not injected into pipeline");
+                        if (connection == null) {
+                            throw new VerifyException("MinecraftConnection not injected into pipeline");
+                        }
 
                         // Kick off the connection process
                         connection.setSessionHandler(new LoginSessionHandler(server, VelocityServerConnection.this, result));
@@ -99,6 +102,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     }
 
     private void startHandshake() {
+        MinecraftConnection mc = connection;
+        if (mc == null) {
+            throw new IllegalStateException("No connection established!");
+        }
+
         PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
         // Initiate a handshake.
@@ -113,17 +121,18 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
         }
         handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
-        connection.write(handshake);
+        mc.write(handshake);
 
         int protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
-        connection.setProtocolVersion(protocolVersion);
-        connection.setState(StateRegistry.LOGIN);
+        mc.setProtocolVersion(protocolVersion);
+        mc.setState(StateRegistry.LOGIN);
 
         ServerLogin login = new ServerLogin();
         login.setUsername(proxyPlayer.getUsername());
-        connection.write(login);
+        mc.write(login);
     }
 
+    @Nullable
     public MinecraftConnection getConnection() {
         return connection;
     }
@@ -160,10 +169,16 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
         Preconditions.checkNotNull(identifier, "identifier");
         Preconditions.checkNotNull(data, "data");
+
+        MinecraftConnection mc = connection;
+        if (mc == null) {
+            throw new IllegalStateException("Not connected to a server!");
+        }
+
         PluginMessage message = new PluginMessage();
         message.setChannel(identifier.getId());
         message.setData(data);
-        connection.write(message);
+        mc.write(message);
         return true;
     }
 

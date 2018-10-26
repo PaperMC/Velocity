@@ -85,15 +85,22 @@ public class VelocityTabList implements TabList {
             }
 
             switch (packet.getAction()) {
-                case PlayerListItem.ADD_PLAYER:
+                case PlayerListItem.ADD_PLAYER: {
+                    // ensure that name and properties are available
+                    String name = item.getName();
+                    List<GameProfile.Property> properties = item.getProperties();
+                    if (name == null || properties == null) {
+                        throw new IllegalStateException("Got null game profile for ADD_PLAYER");
+                    }
                     entries.put(item.getUuid(), TabListEntry.builder()
                             .tabList(this)
-                            .profile(new GameProfile(UuidUtils.toUndashed(uuid), item.getName(), item.getProperties()))
+                            .profile(new GameProfile(UuidUtils.toUndashed(uuid), name, properties))
                             .displayName(item.getDisplayName())
                             .latency(item.getLatency())
                             .gameMode(item.getGameMode())
                             .build());
                     break;
+                }
                 case PlayerListItem.REMOVE_PLAYER:
                     entries.remove(uuid);
                     break;

@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.config;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -138,8 +139,10 @@ public class AnnotatedConfig {
         }
     }
 
-    private String toString(Object value) {
-        if (value instanceof List) {
+    private String toString(@Nullable Object value) {
+        if (value == null) {
+            return "null";
+        } else if (value instanceof List) {
             Collection<?> listValue = (Collection<?>) value;
             if (listValue.isEmpty()) {
                 return "[]";
@@ -162,7 +165,7 @@ public class AnnotatedConfig {
             }
             return "\"" + stringValue.replace("\n", "\\n") + "\"";
         }
-        return value != null ? value.toString() : "null";
+        return value.toString();
     }
 
     /**

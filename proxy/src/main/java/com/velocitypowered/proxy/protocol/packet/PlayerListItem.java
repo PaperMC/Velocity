@@ -9,6 +9,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,11 +123,11 @@ public class PlayerListItem implements MinecraftPacket {
 
     public static class Item {
         private final UUID uuid;
-        private String name;
-        private List<GameProfile.Property> properties;
+        private @Nullable String name;
+        private @Nullable List<GameProfile.Property> properties;
         private int gameMode;
         private int latency;
-        private Component displayName;
+        private @Nullable Component displayName;
 
         public Item(UUID uuid) {
             this.uuid = uuid;
@@ -145,20 +146,20 @@ public class PlayerListItem implements MinecraftPacket {
             return uuid;
         }
 
-        public String getName() {
+        public @Nullable String getName() {
             return name;
         }
 
-        public Item setName(String name) {
+        public Item setName(@Nullable String name) {
             this.name = name;
             return this;
         }
 
-        public List<GameProfile.Property> getProperties() {
+        public @Nullable List<GameProfile.Property> getProperties() {
             return properties;
         }
 
-        public Item setProperties(List<GameProfile.Property> properties) {
+        public Item setProperties(@Nullable List<GameProfile.Property> properties) {
             this.properties = properties;
             return this;
         }
@@ -181,11 +182,11 @@ public class PlayerListItem implements MinecraftPacket {
             return this;
         }
 
-        public Component getDisplayName() {
+        public @Nullable Component getDisplayName() {
             return displayName;
         }
 
-        public Item setDisplayName(Component displayName) {
+        public Item setDisplayName(@Nullable Component displayName) {
             this.displayName = displayName;
             return this;
         }

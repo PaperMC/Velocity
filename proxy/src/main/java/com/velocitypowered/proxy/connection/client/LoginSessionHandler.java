@@ -49,7 +49,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private @Nullable ServerLogin login;
-    private byte[] verify;
+    private byte[] verify = new byte[0];
     private int playerInfoId;
     private @Nullable ConnectedPlayer connectedPlayer;
 
@@ -97,7 +97,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             throw new IllegalStateException("No ServerLogin packet received yet.");
         }
 
-        if (verify == null) {
+        if (verify.length == 0) {
             throw new IllegalStateException("No EncryptionRequest packet sent yet.");
         }
 
