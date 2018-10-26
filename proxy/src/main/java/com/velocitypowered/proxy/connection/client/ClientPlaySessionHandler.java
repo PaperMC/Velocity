@@ -105,10 +105,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (spacePos > 0) {
                 String cmd = packet.getCommand().substring(1, spacePos);
                 if (server.getCommandManager().hasCommand(cmd)) {
-                    Optional<List<String>> suggestions = server.getCommandManager().offerSuggestions(player, packet.getCommand().substring(1));
-                    if (suggestions.isPresent()) {
+                    List<String> suggestions = server.getCommandManager().offerSuggestions(player, packet.getCommand().substring(1));
+                    if (suggestions.size() > 0) {
                         TabCompleteResponse resp = new TabCompleteResponse();
-                        resp.getOffers().addAll(suggestions.get());
+                        resp.getOffers().addAll(suggestions);
                         player.getConnection().write(resp);
                         return true;
                     }
@@ -326,8 +326,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (!outstandingTabComplete.isAssumeCommand()) {
                 String command = outstandingTabComplete.getCommand().substring(1);
                 try {
-                    Optional<List<String>> offers = server.getCommandManager().offerSuggestions(player, command);
-                    offers.ifPresent(strings -> response.getOffers().addAll(strings));
+                    response.getOffers().addAll(server.getCommandManager().offerSuggestions(player, command));
                 } catch (Exception e) {
                     logger.error("Unable to provide tab list completions for {} for command '{}'", player.getUsername(),
                             command, e);
