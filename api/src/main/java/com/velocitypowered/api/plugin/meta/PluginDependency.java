@@ -1,6 +1,7 @@
 package com.velocitypowered.api.plugin.meta;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -13,7 +14,8 @@ import static com.google.common.base.Strings.emptyToNull;
  */
 public final class PluginDependency {
     private final String id;
-    @Nullable private final String version;
+    @Nullable
+    private final String version;
 
     private final boolean optional;
 
@@ -53,7 +55,7 @@ public final class PluginDependency {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PluginDependency that = (PluginDependency) o;

@@ -263,6 +263,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     }
 
+    @Nullable
     public VelocityServerConnection getConnectedServer() {
         return connectedServer;
     }

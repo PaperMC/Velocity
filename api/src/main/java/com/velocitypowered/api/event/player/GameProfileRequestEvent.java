@@ -14,7 +14,7 @@ public final class GameProfileRequestEvent {
     private final InboundConnection connection;
     private final GameProfile originalProfile;
     private final boolean onlineMode;
-    private GameProfile gameProfile;
+    private @Nullable GameProfile gameProfile;
 
     public GameProfileRequestEvent(InboundConnection connection, GameProfile originalProfile, boolean onlineMode) {
         this.connection = Preconditions.checkNotNull(connection, "connection");

@@ -2,6 +2,7 @@ package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Objects;
@@ -40,7 +41,7 @@ public final class ServerInfo {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public final boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ServerInfo that = (ServerInfo) o;

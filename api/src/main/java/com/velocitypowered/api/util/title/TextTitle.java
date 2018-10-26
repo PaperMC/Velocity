@@ -11,8 +11,8 @@ import java.util.Optional;
  * Represents a "full" title, including all components. This class is immutable.
  */
 public final class TextTitle implements Title {
-    private final Component title;
-    private final Component subtitle;
+    private final @Nullable Component title;
+    private final @Nullable Component subtitle;
     private final int stay;
     private final int fadeIn;
     private final int fadeOut;
@@ -94,7 +94,7 @@ public final class TextTitle implements Title {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TextTitle textTitle = (TextTitle) o;
@@ -193,12 +193,12 @@ public final class TextTitle implements Title {
             return this;
         }
 
-        public Component getTitle() {
-            return title;
+        public Optional<Component> getTitle() {
+            return Optional.ofNullable(title);
         }
 
-        public Component getSubtitle() {
-            return subtitle;
+        public Optional<Component> getSubtitle() {
+            return Optional.ofNullable(subtitle);
         }
 
         public int getStay() {

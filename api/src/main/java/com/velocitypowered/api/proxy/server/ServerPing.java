@@ -14,7 +14,7 @@ import java.util.*;
  */
 public final class ServerPing {
     private final Version version;
-    private final Players players;
+    private final @Nullable Players players;
     private final Component description;
     private final @Nullable Favicon favicon;
     private final @Nullable ModInfo modinfo;
@@ -89,14 +89,14 @@ public final class ServerPing {
      * A builder for {@link ServerPing} objects.
      */
     public static final class Builder {
-        private Version version;
+        private Version version = new Version(0, "Unknown");
         private int onlinePlayers;
         private int maximumPlayers;
         private final List<SamplePlayer> samplePlayers = new ArrayList<>();
-        private String modType;
+        private String modType = "FML";
         private final List<ModInfo.Mod> mods = new ArrayList<>();
-        private Component description;
-        private Favicon favicon;
+        private @Nullable Component description;
+        private @Nullable Favicon favicon;
         private boolean nullOutPlayers;
         private boolean nullOutModinfo;
 
@@ -165,6 +165,8 @@ public final class ServerPing {
         }
 
         public ServerPing build() {
+            Preconditions.checkNotNull(version, "version not specified");
+            Preconditions.checkNotNull(description, "no server description supplied");
             return new ServerPing(version, nullOutPlayers ? null : new Players(onlinePlayers, maximumPlayers, samplePlayers),
                     description, favicon, nullOutModinfo ? null : new ModInfo(modType, mods));
         }
@@ -185,12 +187,12 @@ public final class ServerPing {
             return samplePlayers;
         }
 
-        public Component getDescription() {
-            return description;
+        public Optional<Component> getDescription() {
+            return Optional.ofNullable(description);
         }
 
-        public Favicon getFavicon() {
-            return favicon;
+        public Optional<Favicon> getFavicon() {
+            return Optional.ofNullable(favicon);
         }
 
         public String getModType() {

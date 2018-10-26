@@ -54,19 +54,17 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
      * Represents the result of the {@link ServerPreConnectEvent}.
      */
     public static class ServerResult implements ResultedEvent.Result {
-        private static final ServerResult DENIED = new ServerResult(false, null);
+        private static final ServerResult DENIED = new ServerResult(null);
 
-        private final boolean allowed;
-        private final RegisteredServer server;
+        private final @Nullable RegisteredServer server;
 
-        private ServerResult(boolean allowed, @Nullable RegisteredServer server) {
-            this.allowed = allowed;
+        private ServerResult(@Nullable RegisteredServer server) {
             this.server = server;
         }
 
         @Override
         public boolean isAllowed() {
-            return allowed;
+            return server != null;
         }
 
         public Optional<RegisteredServer> getServer() {
@@ -75,10 +73,10 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
 
         @Override
         public String toString() {
-            if (!allowed) {
-                return "denied";
+            if (server != null) {
+                return "allowed: connect to " + server.getServerInfo().getName();
             }
-            return "allowed: connect to " + server.getServerInfo().getName();
+            return "denied";
         }
 
         public static ServerResult denied() {
@@ -87,7 +85,7 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
 
         public static ServerResult allowed(RegisteredServer server) {
             Preconditions.checkNotNull(server, "server");
-            return new ServerResult(true, server);
+            return new ServerResult(server);
         }
     }
 }

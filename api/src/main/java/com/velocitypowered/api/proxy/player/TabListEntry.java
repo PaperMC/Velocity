@@ -101,7 +101,7 @@ public interface TabListEntry {
     class Builder {
         private TabList tabList;
         private GameProfile profile;
-        private Component displayName;
+        private @Nullable Component displayName;
         private int latency = 0;
         private int gameMode = 0;
 
