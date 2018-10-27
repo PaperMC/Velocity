@@ -604,10 +604,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
         private Query() {}
 
-        private Query(boolean queryEnabled, int queryPort, String queryMap) {
+        private Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
             this.queryEnabled = queryEnabled;
             this.queryPort = queryPort;
             this.queryMap = queryMap;
+            this.showPlugins = showPlugins;
         }
 
         private Query(Toml toml) {
@@ -615,6 +616,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 this.queryEnabled = toml.getBoolean("enabled", false);
                 this.queryPort = toml.getLong("port", 25577L).intValue();
                 this.queryMap = toml.getString("map", "Velocity");
+                this.showPlugins = toml.getBoolean("show-plugins", false);
             }
         }
 
