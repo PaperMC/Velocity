@@ -394,7 +394,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     private static class Servers {
         @IsMap
         @Comment("Configure your servers here.")
-        private Map<String, String> servers = ImmutableMap.of("lobby", "127.0.0.1:30066", "factions", "127.0.0.1:30067", "minigames", "127.0.0.1:30068");
+        private Map<String, String> servers = ImmutableMap.of(
+                "lobby", "127.0.0.1:30066",
+                "factions", "127.0.0.1:30067",
+                "minigames", "127.0.0.1:30068"
+        );
 
         @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
         @ConfigKey("try")
