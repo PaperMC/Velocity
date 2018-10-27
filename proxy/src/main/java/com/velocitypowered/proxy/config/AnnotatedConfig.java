@@ -3,7 +3,6 @@ package com.velocitypowered.proxy.config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,18 +10,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Only for simple configs
+ * Simple annotation and fields based TOML configuration serializer
  */
-public class AnnotatedConfig {
-
+public abstract class AnnotatedConfig {
     private static final Logger logger = LogManager.getLogger(AnnotatedConfig.class);
 
     public static Logger getLogger() {
@@ -35,7 +36,6 @@ public class AnnotatedConfig {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
     public @interface Table {
-
         String value();
     }
 
@@ -45,7 +45,6 @@ public class AnnotatedConfig {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
     public @interface Comment {
-
         String[] value();
     }
 
@@ -55,7 +54,6 @@ public class AnnotatedConfig {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
     public @interface ConfigKey {
-
         String value();
     }
 
@@ -65,96 +63,125 @@ public class AnnotatedConfig {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
-    public @interface IsMap {
-    }
+    public @interface IsMap {}
 
     /**
      * Indicates that a field is a string converted to byte[]
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.TYPE})
-    public @interface StringAsBytes {
-    }
+    public @interface StringAsBytes {}
 
     /**
-     * Indicates that a field should be skiped
+     * Indicates that a field should be skipped
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})
-    public @interface Ignore {
-    }
+    public @interface Ignore {}
 
+    /**
+     * Dumps this configuration to list of strings using {@link #dumpConfig(Object)}
+     * @return configuration dump
+     */
     public List<String> dumpConfig() {
-        List<String> lines = new ArrayList<>();
-        dumpFields(this, lines);
-        return lines;
+        return dumpConfig(this);
     }
 
     /**
-     * Dump all field and they annotations to List
+     * Creates TOML configuration from supplied <pre>dumpable</pre> object.
      *
-     * @param toSave object those we need to dump
-     * @param lines a list where store dumped lines
+     * @param dumpable object which is going to be dumped
+     * @throws RuntimeException if reading field value(s) fail
+     * @return string list of configuration file lines
      */
-    private void dumpFields(Object toSave, List<String> lines) {
-
+    private static List<String> dumpConfig(Object dumpable) {
+        List<String> lines = new ArrayList<>();
         try {
-            for (Field field : toSave.getClass().getDeclaredFields()) {
-                if (field.getAnnotation(Ignore.class) != null) { //Skip this field
+            for (Field field : dumpable.getClass().getDeclaredFields()) {
+                // Skip fields with @Ignore annotation
+                if (field.getAnnotation(Ignore.class) != null) {
                     continue;
                 }
+
+                // Make field accessible
+                field.setAccessible(true);
+
+                // Add comments
                 Comment comment = field.getAnnotation(Comment.class);
-                if (comment != null) { //Add comments
+                if (comment != null) {
                     for (String line : comment.value()) {
                         lines.add("# " + line);
                     }
                 }
-                ConfigKey key = field.getAnnotation(ConfigKey.class); //Get a key name for config
-                String name = key == null ? field.getName() : key.value(); // Use a field name if name in annotation is not present
-                field.setAccessible(true); // Make field accessible
+
+                // Get a key name for config
+                ConfigKey key = field.getAnnotation(ConfigKey.class);
+                String name = key == null ? field.getName() : key.value(); // Use field name if @ConfigKey annotation is not present
+
+                // Check if field is table.
                 Table table = field.getAnnotation(Table.class);
-                if (table != null) { // Check if field is table.
+                if (table != null) {
                     lines.add(table.value()); // Write [name] 
-                    dumpFields(field.get(toSave), lines); // dump fields of table class
-                } else {
-                    if (field.getAnnotation(IsMap.class) != null) { // check if field is map
-                        Map<String, ?> map = (Map<String, ?>) field.get(toSave);
-                        for (Entry<String, ?> entry : map.entrySet()) {
-                            lines.add(safeKey(entry.getKey()) + " = " + toString(entry.getValue())); // Save a map data
-                        }
-                        lines.add(""); //Add empty line
-                        continue;
-                    }
-                    Object value = field.get(toSave);
-                    if (field.getAnnotation(StringAsBytes.class) != null) { // Check if field is a byte[] representation of  a string
-                        value = new String((byte[]) value, StandardCharsets.UTF_8);
-                    }
-                    lines.add(name + " = " + toString(value)); // save field to config
-                    lines.add(""); // add empty line
+                    lines.addAll(dumpConfig(field.get(dumpable))); // Dump fields of table
+                    continue;
                 }
+
+                if (field.getAnnotation(IsMap.class) != null) { // Check if field is a map
+                    @SuppressWarnings("unchecked")
+                    Map<String, ?> map = (Map<String, ?>) field.get(dumpable);
+                    for (Entry<String, ?> entry : map.entrySet()) {
+                        lines.add(entry.getKey() + " = " + serialize(entry.getValue())); // Save map data
+                    }
+                    lines.add(""); // Add empty line
+                    continue;
+                }
+
+                Object value = field.get(dumpable);
+
+                // Check if field is a byte[] representation of a string
+                if (field.getAnnotation(StringAsBytes.class) != null) {
+                    value = new String((byte[]) value, StandardCharsets.UTF_8);
+                }
+
+                // Save field to config
+                lines.add(name + " = " + serialize(value));
+                lines.add(""); // Add empty line
             }
         } catch (IllegalAccessException | IllegalArgumentException | SecurityException e) {
-            throw new RuntimeException("Can not dump config", e);
+            throw new RuntimeException("Could not dump configuration", e);
         }
+
+        return lines;
     }
 
-    private String toString(Object value) {
+    /**
+     * Serializes <pre>value</pre> so it could be parsed by TOML specification
+     *
+     * @param value object to serialize
+     * @return Serialized object
+     */
+    private static String serialize(Object value) {
         if (value instanceof List) {
-            Collection<?> listValue = (Collection<?>) value;
+            List<?> listValue = (List<?>) value;
             if (listValue.isEmpty()) {
                 return "[]";
             }
+
             StringBuilder m = new StringBuilder();
             m.append("[");
+
             for (Object obj : listValue) {
-                m.append(System.lineSeparator()).append("  ").append(toString(obj)).append(",");
+                m.append(System.lineSeparator()).append("  ").append(serialize(obj)).append(",");
             }
+
             m.deleteCharAt(m.length() - 1).append(System.lineSeparator()).append("]");
             return m.toString();
         }
+
         if (value instanceof Enum) {
             value = value.toString();
         }
+
         if (value instanceof String) {
             String stringValue = (String) value;
             if (stringValue.isEmpty()) {
@@ -162,6 +189,7 @@ public class AnnotatedConfig {
             }
             return "\"" + stringValue.replace("\n", "\\n") + "\"";
         }
+
         return value != null ? value.toString() : "null";
     }
 
@@ -173,23 +201,24 @@ public class AnnotatedConfig {
     }
 
     /**
-     * Saves lines to file
+     * Writes list of strings to file
      *
-     * @param lines Lines to save
-     * @param to A path of file where to save lines
-     * @throws IOException if lines is empty or was error during saving
+     * @param lines list of strings to write
+     * @param to Path of file where lines should be written
+     * @throws IOException if error occurred during writing
+     * @throws IllegalArgumentException if <pre>lines</pre> is empty list
      */
     public static void saveConfig(List<String> lines, Path to) throws IOException {
         if (lines.isEmpty()) {
-            throw new IOException("Can not save config because list is empty");
+            throw new IllegalArgumentException("lines cannot be empty");
         }
-        Path temp = new File(to.toFile().getParent(), "__tmp").toPath();
+
+        Path temp = to.getParent().resolve(to.getFileName().toString() + "__tmp");
         Files.write(temp, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
         try {
             Files.move(temp, to, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException e) {
             Files.move(temp, to, StandardCopyOption.REPLACE_EXISTING);
         }
-
     }
 }

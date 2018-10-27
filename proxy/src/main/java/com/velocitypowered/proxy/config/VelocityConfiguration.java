@@ -34,7 +34,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Comment({
         "What should we display for the maximum number of players? (Velocity does not support a cap",
-        "on the number of players online.)"})
+        "on the number of players online.)"
+    })
     @ConfigKey("show-max-players")
     private int showMaxPlayers = 500;
 
@@ -50,7 +51,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         "- \"legacy\": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run",
         "            servers using Minecraft 1.12 or lower.",
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
-        "            forwarding. Only applicable for Minecraft 1.13 or higher."})
+        "            forwarding. Only applicable for Minecraft 1.13 or higher."
+    })
     @ConfigKey("player-info-forwarding-mode")
     private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
 
@@ -77,6 +79,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Ignore
     private Component motdAsComponent;
+
     @Ignore
     private Favicon favicon;
 
@@ -389,17 +392,19 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     private static class Servers {
-
         @IsMap
         @Comment("Configure your servers here.")
-        private Map<String, String> servers = ImmutableMap.of("lobby", "127.0.0.1:30066", "factions", "127.0.0.1:30067", "minigames", "127.0.0.1:30068");
+        private Map<String, String> servers = ImmutableMap.of(
+                "lobby", "127.0.0.1:30066",
+                "factions", "127.0.0.1:30067",
+                "minigames", "127.0.0.1:30068"
+        );
 
         @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
         @ConfigKey("try")
         private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
-        private Servers() {
-        }
+        private Servers() {}
 
         private Servers(Toml toml) {
             if (toml != null) {
@@ -446,7 +451,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                     + ", attemptConnectionOrder=" + attemptConnectionOrder
                     + '}';
         }
-
     }
 
     private static class ForcedHosts {
@@ -505,32 +509,37 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     private static class Advanced {
-
         @Comment({
             "How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
-            "setting it to -1 will disable compression entirely."})
+            "setting it to -1 will disable compression entirely."
+        })
         @ConfigKey("compression-threshold")
         private int compressionThreshold = 1024;
+
         @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
         @ConfigKey("compression-level")
         private int compressionLevel = -1;
+
         @Comment({
             "How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
-            "Disable by setting to 0"})
+            "Disable by setting to 0"
+        })
         @ConfigKey("login-ratelimit")
         private int loginRatelimit = 3000;
+
         @Comment({"Specify a custom timeout for connection timeouts here. The default is five seconds."})
         @ConfigKey("connection-timeout")
         private int connectionTimeout = 5000;
+
         @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
         @ConfigKey("read-timeout")
         private int readTimeout = 30000;
+
         @Comment("Enables compatibility with HAProxy.")
         @ConfigKey("proxy-protocol")
         private boolean proxyProtocol = false;
 
-        private Advanced() {
-        }
+        private Advanced() {}
 
         private Advanced(Toml toml) {
             if (toml != null) {
@@ -581,13 +590,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     private static class Query {
-
         @Comment("Whether to enable responding to GameSpy 4 query responses or not")
         @ConfigKey("enabled")
         private boolean queryEnabled = false;
+
         @Comment("If query responding is enabled, on what port should query response listener listen on?")
         @ConfigKey("port")
         private int queryPort = 25577;
+
         @Comment("This is the map name that is reported to the query services.")
         @ConfigKey("map")
         private String queryMap = "Velocity";
@@ -596,13 +606,13 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         @ConfigKey("show-plugins")
         private boolean showPlugins = false;
 
-        private Query() {
-        }
+        private Query() {}
 
-        private Query(boolean queryEnabled, int queryPort) {
+        private Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
             this.queryEnabled = queryEnabled;
             this.queryPort = queryPort;
             this.queryMap = queryMap;
+            this.showPlugins = showPlugins;
         }
 
         private Query(Toml toml) {
@@ -610,6 +620,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 this.queryEnabled = toml.getBoolean("enabled", false);
                 this.queryPort = toml.getLong("port", 25577L).intValue();
                 this.queryMap = toml.getString("map", "Velocity");
+                this.showPlugins = toml.getBoolean("show-plugins", false);
             }
         }
 
