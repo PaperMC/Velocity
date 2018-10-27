@@ -57,6 +57,7 @@ public class VelocityCommand implements Command {
         }
 
         if (currentArgs.length == 1) {
+            System.out.println(Arrays.toString(currentArgs));
             return subcommands.keySet().stream()
                     .filter(name -> name.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
                     .collect(Collectors.toList());

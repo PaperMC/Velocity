@@ -35,13 +35,14 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        List<String> split = Splitter.on(" ").trimResults().omitEmptyStrings().splitToList(cmdLine);
-        if (split.isEmpty()) {
+        String[] split = cmdLine.split(" ", -1);
+        if (split.length == 0) {
             return false;
         }
 
-        String alias = split.get(0);
-        String[] actualArgs = split.subList(1, split.size()).toArray(new String[0]);
+        String alias = split[0];
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
         Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
         if (command == null) {
             return false;
@@ -67,13 +68,13 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "source");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        List<String> split = Splitter.on(" ").trimResults().omitEmptyStrings().splitToList(cmdLine);
-        if (split.isEmpty()) {
+        String[] split = cmdLine.split(" ", -1);
+        if (split.length == 0) {
             return ImmutableList.of();
         }
 
-        String alias = split.get(0);
-        if (split.size() == 1) {
+        String alias = split[0];
+        if (split.length == 1) {
             List<String> availableCommands = new ArrayList<>();
             for (Map.Entry<String, Command> entry : commands.entrySet()) {
                 if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length()) &&
@@ -84,7 +85,8 @@ public class VelocityCommandManager implements CommandManager {
             return availableCommands;
         }
 
-        String[] actualArgs = split.subList(1, split.size()).toArray(new String[0]);
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
         Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
         if (command == null) {
             return ImmutableList.of();
