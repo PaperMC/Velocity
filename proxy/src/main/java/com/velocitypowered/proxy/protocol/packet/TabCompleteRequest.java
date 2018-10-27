@@ -5,16 +5,20 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9;
 
 public class TabCompleteRequest implements MinecraftPacket {
-    private String command;
+    private @Nullable String command;
     private boolean assumeCommand;
     private boolean hasPosition;
     private long position;
 
     public String getCommand() {
+        if (command == null) {
+            throw new IllegalStateException("Command is not specified");
+        }
         return command;
     }
 
@@ -70,6 +74,9 @@ public class TabCompleteRequest implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (command == null) {
+            throw new IllegalStateException("Command is not specified");
+        }
         ProtocolUtils.writeString(buf, command);
         if (protocolVersion >= MINECRAFT_1_9) {
             buf.writeBoolean(assumeCommand);

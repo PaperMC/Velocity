@@ -10,8 +10,8 @@ import java.util.Arrays;
 
 public class EncryptionRequest implements MinecraftPacket {
     private String serverId = "";
-    private byte[] publicKey;
-    private byte[] verifyToken;
+    private byte[] publicKey = new byte[0];
+    private byte[] verifyToken = new byte[0];
 
     public byte[] getPublicKey() {
         return publicKey;
