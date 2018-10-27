@@ -206,7 +206,7 @@ public class VelocityServer implements ProxyServer {
         for (PluginContainer plugin : pluginManager.getPlugins()) {
             Optional<?> instance = plugin.getInstance();
             if (instance.isPresent()) {
-                eventManager.register(plugin, plugin);
+                eventManager.register(instance.get(), instance.get());
             }
         }
 

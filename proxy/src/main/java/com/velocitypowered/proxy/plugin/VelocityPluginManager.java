@@ -35,7 +35,7 @@ public class VelocityPluginManager implements PluginManager {
         plugins.put(plugin.getDescription().getId(), plugin);
         Optional<?> instance = plugin.getInstance();
         if (instance.isPresent()) {
-            pluginInstances.put(instance, plugin);
+            pluginInstances.put(instance.get(), plugin);
         }
     }
 
