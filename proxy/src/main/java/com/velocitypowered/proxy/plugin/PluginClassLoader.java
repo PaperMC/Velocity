@@ -16,6 +16,9 @@ public class PluginClassLoader extends URLClassLoader {
 
     public PluginClassLoader(URL[] urls) {
         super(urls);
+    }
+
+    public void addToClassloaders() {
         loaders.add(this);
     }
 

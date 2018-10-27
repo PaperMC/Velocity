@@ -160,6 +160,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void beginPreLogin() {
+        ServerLogin login = this.login;
         if (login == null) {
             throw new IllegalStateException("No ServerLogin packet received yet.");
         }

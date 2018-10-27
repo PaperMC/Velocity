@@ -6,6 +6,7 @@ import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
@@ -36,6 +37,9 @@ public enum StateRegistry {
     },
     PLAY {
         {
+            SERVERBOUND.fallback = false;
+            CLIENTBOUND.fallback = false;
+
             SERVERBOUND.register(TabCompleteRequest.class, TabCompleteRequest::new,
                     map(0x14, MINECRAFT_1_8, false),
                     map(0x01, MINECRAFT_1_9, false),
@@ -150,8 +154,8 @@ public enum StateRegistry {
 
     public static final int STATUS_ID = 1;
     public static final int LOGIN_ID = 2;
-    public final PacketRegistry CLIENTBOUND = new PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND, this);
-    public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND, this);
+    public final PacketRegistry CLIENTBOUND = new PacketRegistry(ProtocolConstants.Direction.CLIENTBOUND);
+    public final PacketRegistry SERVERBOUND = new PacketRegistry(ProtocolConstants.Direction.SERVERBOUND);
 
     public static class PacketRegistry {
         private static final IntObjectMap<ImmutableIntArray> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
@@ -165,19 +169,18 @@ public enum StateRegistry {
         }
 
         private final ProtocolConstants.Direction direction;
-        private final StateRegistry state;
         private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>(16);
+        private boolean fallback = true;
 
-        public PacketRegistry(Direction direction, StateRegistry state) {
+        public PacketRegistry(Direction direction) {
             this.direction = direction;
-            this.state = state;
             ProtocolConstants.SUPPORTED_VERSIONS.forEach(version -> versions.put(version, new ProtocolVersion(version)));
         }
 
         public ProtocolVersion getVersion(final int version) {
             ProtocolVersion result = versions.get(version);
             if (result == null) {
-                if (state != PLAY) {
+                if (fallback) {
                     return getVersion(MINIMUM_GENERIC_VERSION);
                 }
                 throw new IllegalArgumentException("Could not find data for protocol version " + version);

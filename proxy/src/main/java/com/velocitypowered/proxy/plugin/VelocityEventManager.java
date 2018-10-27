@@ -38,13 +38,17 @@ public class VelocityEventManager implements EventManager {
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
     private final ListMultimap<Object, EventHandler<?>> registeredHandlersByPlugin = Multimaps
             .synchronizedListMultimap(Multimaps.newListMultimap(new IdentityHashMap<>(), ArrayList::new));
-    private final VelocityEventBus bus = new VelocityEventBus(
-            new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
-            new VelocityMethodScanner());
+    private final VelocityEventBus bus;
     private final ExecutorService service;
     private final PluginManager pluginManager;
 
     public VelocityEventManager(PluginManager pluginManager) {
+        PluginClassLoader cl = new PluginClassLoader(new URL[0]);
+        cl.addToClassloaders();
+        this.bus = new VelocityEventBus(
+                new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
+                new VelocityMethodScanner());
+
         this.pluginManager = pluginManager;
         this.service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder()
                 .setNameFormat("Velocity Event Executor - #%d").setDaemon(true).build());

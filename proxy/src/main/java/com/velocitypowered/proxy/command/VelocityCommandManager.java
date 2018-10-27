@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
@@ -34,13 +35,13 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        String @NonNull[] split = cmdLine.split(" ", -1);
-        if (split.length == 0) {
+        List<String> split = Splitter.on(" ").trimResults().omitEmptyStrings().splitToList(cmdLine);
+        if (split.isEmpty()) {
             return false;
         }
 
-        String alias = split[0];
-        String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
+        String alias = split.get(0);
+        String[] actualArgs = split.subList(1, split.size()).toArray(new String[0]);
         Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
         if (command == null) {
             return false;
@@ -66,13 +67,13 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "source");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        @NonNull String[] split = cmdLine.split(" ", -1);
-        if (split.length == 0) {
+        List<String> split = Splitter.on(" ").trimResults().omitEmptyStrings().splitToList(cmdLine);
+        if (split.isEmpty()) {
             return ImmutableList.of();
         }
 
-        String alias = split[0];
-        if (split.length == 1) {
+        String alias = split.get(0);
+        if (split.size() == 1) {
             List<String> availableCommands = new ArrayList<>();
             for (Map.Entry<String, Command> entry : commands.entrySet()) {
                 if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length()) &&
@@ -83,7 +84,7 @@ public class VelocityCommandManager implements CommandManager {
             return availableCommands;
         }
 
-        @NonNull String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
+        String[] actualArgs = split.subList(1, split.size()).toArray(new String[0]);
         Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
         if (command == null) {
             return ImmutableList.of();

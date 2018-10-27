@@ -62,7 +62,7 @@ public class VelocityServer implements ProxyServer {
             .create();
 
     private final ConnectionManager cm;
-    private VelocityConfiguration configuration;
+    private @MonotonicNonNull VelocityConfiguration configuration;
     private @MonotonicNonNull NettyHttpClient httpClient;
     private final KeyPair serverKeyPair;
     private final ServerMap servers;

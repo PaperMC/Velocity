@@ -52,6 +52,7 @@ public class JavaPluginLoader implements PluginLoader {
         PluginClassLoader loader = new PluginClassLoader(
                 new URL[] {source.toUri().toURL() }
         );
+        loader.addToClassloaders();
 
         Class mainClass = loader.loadClass(pd.getMain());
         return createDescription(pd, source, mainClass);

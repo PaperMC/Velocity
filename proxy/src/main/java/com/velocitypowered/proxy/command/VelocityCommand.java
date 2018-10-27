@@ -45,7 +45,9 @@ public class VelocityCommand implements Command {
             usage(source);
             return;
         }
-        command.execute(source, Arrays.copyOfRange(args, 1, args.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
+        command.execute(source, actualArgs);
     }
 
     @Override
@@ -64,7 +66,9 @@ public class VelocityCommand implements Command {
         if (command == null) {
             return ImmutableList.of();
         }
-        return command.suggest(source, Arrays.copyOfRange(currentArgs, 1, currentArgs.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(currentArgs, 1, currentArgs.length);
+        return command.suggest(source, actualArgs);
     }
 
     @Override
@@ -76,7 +80,9 @@ public class VelocityCommand implements Command {
         if (command == null) {
             return true;
         }
-        return command.hasPermission(source, Arrays.copyOfRange(args, 1, args.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
+        return command.hasPermission(source, actualArgs);
     }
 
     private static class Info implements Command {

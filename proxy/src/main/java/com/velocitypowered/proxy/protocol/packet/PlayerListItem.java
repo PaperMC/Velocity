@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -114,7 +115,7 @@ public class PlayerListItem implements MinecraftPacket {
         return handler.handle(this);
     }
 
-    private void writeDisplayName(ByteBuf buf, Component displayName) {
+    private void writeDisplayName(ByteBuf buf, @Nullable Component displayName) {
         buf.writeBoolean(displayName != null);
         if (displayName != null) {
             ProtocolUtils.writeString(buf, ComponentSerializers.JSON.serialize(displayName));
@@ -124,7 +125,7 @@ public class PlayerListItem implements MinecraftPacket {
     public static class Item {
         private final UUID uuid;
         private @Nullable String name;
-        private @Nullable List<GameProfile.Property> properties;
+        private List<GameProfile.Property> properties = ImmutableList.of();
         private int gameMode;
         private int latency;
         private @Nullable Component displayName;
@@ -155,11 +156,11 @@ public class PlayerListItem implements MinecraftPacket {
             return this;
         }
 
-        public @Nullable List<GameProfile.Property> getProperties() {
+        public List<GameProfile.Property> getProperties() {
             return properties;
         }
 
-        public Item setProperties(@Nullable List<GameProfile.Property> properties) {
+        public Item setProperties(List<GameProfile.Property> properties) {
             this.properties = properties;
             return this;
         }
