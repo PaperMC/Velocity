@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
+
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
@@ -50,7 +52,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
     private @MonotonicNonNull ServerLogin login;
-    private byte[] verify = new byte[0];
+    private byte[] verify = EMPTY_BYTE_ARRAY;
     private int playerInfoId;
     private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 

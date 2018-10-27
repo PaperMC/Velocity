@@ -8,9 +8,11 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
+import static com.velocitypowered.proxy.connection.VelocityConstants.*;
+
 public class EncryptionResponse implements MinecraftPacket {
-    private byte[] sharedSecret = new byte[0];
-    private byte[] verifyToken = new byte[0];
+    private byte[] sharedSecret = EMPTY_BYTE_ARRAY;
+    private byte[] verifyToken = EMPTY_BYTE_ARRAY;
 
     public byte[] getSharedSecret() {
         return sharedSecret;

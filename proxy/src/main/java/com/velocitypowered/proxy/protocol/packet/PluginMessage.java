@@ -8,9 +8,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static com.velocitypowered.proxy.connection.VelocityConstants.*;
+
 public class PluginMessage implements MinecraftPacket {
     private @Nullable String channel;
-    private byte[] data = new byte[0];
+    private byte[] data = EMPTY_BYTE_ARRAY;
 
     public String getChannel() {
         if (channel == null) {
