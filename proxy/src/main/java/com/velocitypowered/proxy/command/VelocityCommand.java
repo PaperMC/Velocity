@@ -28,13 +28,13 @@ public class VelocityCommand implements Command {
                 .build();
     }
 
-    private void usage(@NonNull CommandSource source) {
+    private void usage(CommandSource source) {
         String commandText = "/velocity <" + String.join("|", subcommands.keySet()) + ">";
         source.sendMessage(TextComponent.of(commandText, TextColor.RED));
     }
 
     @Override
-    public void execute(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
+    public void execute(CommandSource source, String @NonNull [] args) {
         if (args.length == 0) {
             usage(source);
             return;
@@ -51,7 +51,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public List<String> suggest(@NonNull CommandSource source, String @NonNull [] currentArgs) {
+    public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
         if (currentArgs.length == 0) {
             return ImmutableList.copyOf(subcommands.keySet());
         }
@@ -72,7 +72,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
         if (args.length == 0) {
             return true;
         }
@@ -93,7 +93,7 @@ public class VelocityCommand implements Command {
         }
 
         @Override
-        public void execute(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
+        public void execute(CommandSource source, String @NonNull [] args) {
             ProxyVersion version = server.getVersion();
 
             TextComponent velocity = TextComponent.builder(version.getName() + " ")
@@ -124,7 +124,7 @@ public class VelocityCommand implements Command {
         }
 
         @Override
-        public boolean hasPermission(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
+        public boolean hasPermission(CommandSource source, String @NonNull [] args) {
             return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
         }
     }

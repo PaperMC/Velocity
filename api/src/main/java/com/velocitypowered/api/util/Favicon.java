@@ -1,7 +1,6 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.imageio.ImageIO;
@@ -26,7 +25,7 @@ public final class Favicon {
      * of functions.
      * @param base64Url the url for use with this favicon
      */
-    public Favicon(@NonNull String base64Url) {
+    public Favicon(String base64Url) {
         this.base64Url = Preconditions.checkNotNull(base64Url, "base64Url");
     }
 
@@ -63,7 +62,7 @@ public final class Favicon {
      * @param image the image to use for the favicon
      * @return the created {@link Favicon} instance
      */
-    public static Favicon create(@NonNull BufferedImage image) {
+    public static Favicon create(BufferedImage image) {
         Preconditions.checkNotNull(image, "image");
         Preconditions.checkArgument(image.getWidth() == 64 && image.getHeight() == 64, "Image does not have" +
                 " 64x64 dimensions (found %sx%s)", image.getWidth(), image.getHeight());
@@ -82,7 +81,7 @@ public final class Favicon {
      * @return the created {@link Favicon} instance
      * @throws IOException if the file could not be read from the path
      */
-    public static Favicon create(@NonNull Path path) throws IOException {
+    public static Favicon create(Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path)) {
             return create(ImageIO.read(stream));
         }

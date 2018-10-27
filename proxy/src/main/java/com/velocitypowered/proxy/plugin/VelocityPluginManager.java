@@ -31,7 +31,7 @@ public class VelocityPluginManager implements PluginManager {
         this.server = checkNotNull(server, "server");
     }
 
-    private void registerPlugin(@NonNull PluginContainer plugin) {
+    private void registerPlugin(PluginContainer plugin) {
         plugins.put(plugin.getDescription().getId(), plugin);
         Optional<?> instance = plugin.getInstance();
         if (instance.isPresent()) {
@@ -39,7 +39,7 @@ public class VelocityPluginManager implements PluginManager {
         }
     }
 
-    public void loadPlugins(@NonNull Path directory) throws IOException {
+    public void loadPlugins(Path directory) throws IOException {
         checkNotNull(directory, "directory");
         checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
 
@@ -89,7 +89,7 @@ public class VelocityPluginManager implements PluginManager {
     }
 
     @Override
-    public @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance) {
+    public Optional<PluginContainer> fromInstance(Object instance) {
         checkNotNull(instance, "instance");
 
         if (instance instanceof PluginContainer) {
@@ -100,23 +100,23 @@ public class VelocityPluginManager implements PluginManager {
     }
 
     @Override
-    public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
+    public Optional<PluginContainer> getPlugin(String id) {
         checkNotNull(id, "id");
         return Optional.ofNullable(plugins.get(id));
     }
 
     @Override
-    public @NonNull Collection<PluginContainer> getPlugins() {
+    public Collection<PluginContainer> getPlugins() {
         return Collections.unmodifiableCollection(plugins.values());
     }
 
     @Override
-    public boolean isLoaded(@NonNull String id) {
+    public boolean isLoaded(String id) {
         return plugins.containsKey(id);
     }
 
     @Override
-    public void addToClasspath(@NonNull Object plugin, @NonNull Path path) {
+    public void addToClasspath(Object plugin, Path path) {
         checkNotNull(plugin, "instance");
         checkNotNull(path, "path");
         checkArgument(pluginInstances.containsKey(plugin), "plugin is not loaded");

@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;

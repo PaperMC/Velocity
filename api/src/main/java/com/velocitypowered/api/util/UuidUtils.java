@@ -2,7 +2,6 @@ package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -21,7 +20,7 @@ public final class UuidUtils {
      * @param string the string to convert
      * @return the UUID object
      */
-    public static @NonNull UUID fromUndashed(final @NonNull String string) {
+    public static UUID fromUndashed(final String string) {
         Objects.requireNonNull(string, "string");
         Preconditions.checkArgument(string.length() == 32, "Length is incorrect");
         return new UUID(
@@ -35,7 +34,7 @@ public final class UuidUtils {
      * @param uuid the UUID to convert
      * @return the undashed UUID
      */
-    public static @NonNull String toUndashed(final @NonNull UUID uuid) {
+    public static String toUndashed(final UUID uuid) {
         Preconditions.checkNotNull(uuid, "uuid");
         return Strings.padStart(Long.toHexString(uuid.getMostSignificantBits()), 16, '0') +
                 Strings.padStart(Long.toHexString(uuid.getLeastSignificantBits()), 16, '0');
@@ -46,7 +45,7 @@ public final class UuidUtils {
      * @param username the username to use
      * @return the offline mode UUID
      */
-    public static @NonNull UUID generateOfflinePlayerUuid(@NonNull String username) {
+    public static UUID generateOfflinePlayerUuid(String username) {
         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 }

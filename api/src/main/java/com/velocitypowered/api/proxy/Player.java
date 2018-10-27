@@ -13,7 +13,6 @@ import com.velocitypowered.api.util.title.Title;
 import java.util.List;
 
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -62,7 +61,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * Sends a chat message to the player's client.
      * @param component the chat message to send
      */
-    default void sendMessage(@NonNull Component component) {
+    default void sendMessage(Component component) {
         sendMessage(component, MessagePosition.CHAT);
     }
 
@@ -71,14 +70,14 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
      * @param component the chat message to send
      * @param position the position for the message
      */
-    void sendMessage(@NonNull Component component, @NonNull MessagePosition position);
+    void sendMessage(Component component, MessagePosition position);
 
     /**
      * Creates a new connection request so that the player can connect to another server.
      * @param server the server to connect to
      * @return a new connection request
      */
-    ConnectionRequestBuilder createConnectionRequest(@NonNull RegisteredServer server);
+    ConnectionRequestBuilder createConnectionRequest(RegisteredServer server);
 
     /**
      * Gets the player's profile properties.

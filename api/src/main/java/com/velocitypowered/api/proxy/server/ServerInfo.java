@@ -1,7 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
@@ -11,24 +10,24 @@ import java.util.Objects;
  * ServerInfo represents a server that a player can connect to. This object is immutable and safe for concurrent access.
  */
 public final class ServerInfo {
-    private final @NonNull String name;
-    private final @NonNull InetSocketAddress address;
+    private final String name;
+    private final InetSocketAddress address;
 
     /**
      * Creates a new ServerInfo object.
      * @param name the name for the server
      * @param address the address of the server to connect to
      */
-    public ServerInfo(@NonNull String name, @NonNull InetSocketAddress address) {
+    public ServerInfo(String name, InetSocketAddress address) {
         this.name = Preconditions.checkNotNull(name, "name");
         this.address = Preconditions.checkNotNull(address, "address");
     }
 
-    public final @NonNull String getName() {
+    public final String getName() {
         return name;
     }
 
-    public final @NonNull InetSocketAddress getAddress() {
+    public final InetSocketAddress getAddress() {
         return address;
     }
 

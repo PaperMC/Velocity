@@ -1,5 +1,6 @@
 package com.velocitypowered.api.util;
 
+import com.google.common.base.Preconditions;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
@@ -13,9 +14,9 @@ public final class ProxyVersion {
     private final String version;
 
     public ProxyVersion(String name, String vendor, String version) {
-        this.name = name;
-        this.vendor = vendor;
-        this.version = version;
+        this.name = Preconditions.checkNotNull(name, "name");
+        this.vendor = Preconditions.checkNotNull(vendor, "vendor");
+        this.version = Preconditions.checkNotNull(version, "version");
     }
 
     public String getName() {

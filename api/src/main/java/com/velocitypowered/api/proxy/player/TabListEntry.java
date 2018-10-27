@@ -1,9 +1,7 @@
 package com.velocitypowered.api.proxy.player;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.util.GameProfile;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Optional;

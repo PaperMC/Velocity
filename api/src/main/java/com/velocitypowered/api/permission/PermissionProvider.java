@@ -1,7 +1,5 @@
 package com.velocitypowered.api.permission;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 /**
  * Provides {@link PermissionFunction}s for {@link PermissionSubject}s.
  */
@@ -13,5 +11,5 @@ public interface PermissionProvider {
      * @param subject the subject
      * @return the function
      */
-    @NonNull PermissionFunction createFunction(@NonNull PermissionSubject subject);
+    PermissionFunction createFunction(PermissionSubject subject);
 }

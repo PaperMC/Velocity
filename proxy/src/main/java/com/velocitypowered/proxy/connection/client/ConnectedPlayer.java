@@ -42,7 +42,6 @@ import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
@@ -156,7 +155,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public void sendMessage(@NonNull Component component, @NonNull MessagePosition position) {
+    public void sendMessage(Component component, MessagePosition position) {
         Preconditions.checkNotNull(component, "component");
         Preconditions.checkNotNull(position, "position");
 
@@ -188,7 +187,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public ConnectionRequestBuilder createConnectionRequest(@NonNull RegisteredServer server) {
+    public ConnectionRequestBuilder createConnectionRequest(RegisteredServer server) {
         return new ConnectionRequestBuilderImpl(server);
     }
     
@@ -455,7 +454,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
-    public @NonNull Tristate getPermissionValue(@NonNull String permission) {
+    public Tristate getPermissionValue(String permission) {
         return permissionFunction.getPermissionValue(permission);
     }
 

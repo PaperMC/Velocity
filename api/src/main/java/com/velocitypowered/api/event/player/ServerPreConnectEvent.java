@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Optional;
@@ -33,7 +32,7 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
     }
 
     @Override
-    public void setResult(@NonNull ServerResult result) {
+    public void setResult(ServerResult result) {
         this.result = Preconditions.checkNotNull(result, "result");
     }
 
@@ -74,7 +73,7 @@ public final class ServerPreConnectEvent implements ResultedEvent<ServerPreConne
         @Override
         public String toString() {
             if (server != null) {
-                return "allowed";
+                return "allowed: connect to " + server.getServerInfo().getName();
             }
             return "denied";
         }
