@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.config;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
@@ -34,7 +36,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Comment({
         "What should we display for the maximum number of players? (Velocity does not support a cap",
-        "on the number of players online.)"})
+        "on the number of players online.)"
+    })
     @ConfigKey("show-max-players")
     private int showMaxPlayers = 500;
 
@@ -50,7 +53,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         "- \"legacy\": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run",
         "            servers using Minecraft 1.12 or lower.",
         "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
-        "            forwarding. Only applicable for Minecraft 1.13 or higher."})
+        "            forwarding. Only applicable for Minecraft 1.13 or higher."
+    })
     @ConfigKey("player-info-forwarding-mode")
     private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
 
@@ -66,6 +70,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @Table("[servers]")
     private final Servers servers;
 
+    @Table("[forced-hosts]")
+    private final ForcedHosts forcedHosts;
+
     @Table("[advanced]")
     private final Advanced advanced;
 
@@ -74,18 +81,20 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Ignore
     private @MonotonicNonNull Component motdAsComponent;
+
     @Ignore
     private @Nullable Favicon favicon;
 
-    public VelocityConfiguration(Servers servers, Advanced advanced, Query query) {
+    public VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
         this.servers = servers;
+        this.forcedHosts = forcedHosts;
         this.advanced = advanced;
         this.query = query;
     }
 
     private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
             boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-            Servers servers, Advanced advanced, Query query) {
+            Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
         this.bind = bind;
         this.motd = motd;
         this.showMaxPlayers = showMaxPlayers;
@@ -94,6 +103,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.playerInfoForwardingMode = playerInfoForwardingMode;
         this.forwardingSecret = forwardingSecret;
         this.servers = servers;
+        this.forcedHosts = forcedHosts;
         this.advanced = advanced;
         this.query = query;
     }
@@ -152,6 +162,21 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 if (!servers.getServers().containsKey(s)) {
                     logger.error("Fallback server " + s + " is not registered in your configuration!");
                     valid = false;
+                }
+            }
+
+            for (Map.Entry<String, List<String>> entry : forcedHosts.getForcedHosts().entrySet()) {
+                if (entry.getValue().isEmpty()) {
+                    logger.error("Forced host '{}' does not contain any servers", entry.getKey());
+                    valid = false;
+                    continue;
+                }
+
+                for (String server : entry.getValue()) {
+                    if (!servers.getServers().containsKey(server)) {
+                        logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
+                        valid = false;
+                    }
                 }
             }
         }
@@ -214,6 +239,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return query.getQueryMap();
     }
 
+    @Override
+    public boolean shouldQueryShowPlugins() {
+        return query.shouldQueryShowPlugins();
+    }
+
     public String getMotd() {
         return motd;
     }
@@ -253,6 +283,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return servers.getAttemptConnectionOrder();
     }
 
+    public Map<String, List<String>> getForcedHosts() {
+        return forcedHosts.getForcedHosts();
+    }
+
     public int getCompressionThreshold() {
         return advanced.getCompressionThreshold();
     }
@@ -285,11 +319,30 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return advanced.isProxyProtocol();
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("configVersion", configVersion)
+                .add("bind", bind)
+                .add("motd", motd)
+                .add("showMaxPlayers", showMaxPlayers)
+                .add("onlineMode", onlineMode)
+                .add("playerInfoForwardingMode", playerInfoForwardingMode)
+                .add("forwardingSecret", forwardingSecret)
+                .add("announceForge", announceForge)
+                .add("servers", servers)
+                .add("forcedHosts", forcedHosts)
+                .add("advanced", advanced)
+                .add("query", query)
+                .add("favicon", favicon)
+                .toString();
+    }
+
     public static VelocityConfiguration read(Path path) throws IOException {
         Toml toml;
         if (!path.toFile().exists()) {
             getLogger().info("No velocity.toml found, creating one for you...");
-            return new VelocityConfiguration(new Servers(), new Advanced(), new Query());
+            return new VelocityConfiguration(new Servers(), new ForcedHosts(), new Advanced(), new Query());
         } else {
             try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
                 toml = new Toml().read(reader);
@@ -297,6 +350,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         }
 
         Servers servers = new Servers(toml.getTable("servers"));
+        ForcedHosts forcedHosts = new ForcedHosts(toml.getTable("forced-hosts"));
         Advanced advanced = new Advanced(toml.getTable("advanced"));
         Query query = new Query(toml.getTable("query"));
         byte[] forwardingSecret = toml.getString("forwarding-secret", "5up3r53cr3t")
@@ -311,6 +365,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 PlayerInfoForwarding.valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
                 forwardingSecret,
                 servers,
+                forcedHosts,
                 advanced,
                 query
         );
@@ -339,17 +394,19 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     private static class Servers {
-
         @IsMap
         @Comment("Configure your servers here.")
-        private Map<String, String> servers = ImmutableMap.of("lobby", "127.0.0.1:30066", "factions", "127.0.0.1:30067", "minigames", "127.0.0.1:30068");
+        private Map<String, String> servers = ImmutableMap.of(
+                "lobby", "127.0.0.1:30066",
+                "factions", "127.0.0.1:30067",
+                "minigames", "127.0.0.1:30068"
+        );
 
         @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
         @ConfigKey("try")
         private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
-        private Servers() {
-        }
+        private Servers() {}
 
         private Servers(Toml toml) {
             if (toml != null) {
@@ -388,35 +445,103 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
             this.attemptConnectionOrder = attemptConnectionOrder;
         }
+
+        @Override
+        public String toString() {
+            return "Servers{"
+                    + "servers=" + servers
+                    + ", attemptConnectionOrder=" + attemptConnectionOrder
+                    + '}';
+        }
+    }
+
+    private static class ForcedHosts {
+        @IsMap
+        @Comment("Configure your forced hosts here.")
+        private Map<String, List<String>> forcedHosts = ImmutableMap.of(
+                "lobby.example.com", ImmutableList.of("lobby"),
+                "factions.example.com", ImmutableList.of("factions"),
+                "minigames.example.com", ImmutableList.of("minigames")
+        );
+
+        private ForcedHosts() {}
+
+        private ForcedHosts(Toml toml) {
+            if (toml != null) {
+                Map<String, List<String>> forcedHosts = new HashMap<>();
+                for (Map.Entry<String, Object> entry : toml.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        forcedHosts.put(stripQuotes(entry.getKey()), ImmutableList.of((String) entry.getValue()));
+                    } else if (entry.getValue() instanceof List) {
+                        forcedHosts.put(stripQuotes(entry.getKey()), ImmutableList.copyOf((List<String>) entry.getValue()));
+                    } else {
+                        throw new IllegalStateException("Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
+                    }
+                }
+                this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
+            }
+        }
+
+        private ForcedHosts(Map<String, List<String>> forcedHosts) {
+            this.forcedHosts = forcedHosts;
+        }
+
+        private Map<String, List<String>> getForcedHosts() {
+            return forcedHosts;
+        }
+
+        private void setForcedHosts(Map<String, List<String>> forcedHosts) {
+            this.forcedHosts = forcedHosts;
+        }
+
+        private static String stripQuotes(String key) {
+            int lastIndex;
+            if (key.indexOf('"') == 0 && (lastIndex = key.lastIndexOf('"')) == (key.length() - 1)) {
+                return key.substring(1, lastIndex);
+            }
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            return "ForcedHosts{" +
+                    "forcedHosts=" + forcedHosts +
+                    '}';
+        }
     }
 
     private static class Advanced {
-
         @Comment({
             "How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
-            "setting it to -1 will disable compression entirely."})
+            "setting it to -1 will disable compression entirely."
+        })
         @ConfigKey("compression-threshold")
         private int compressionThreshold = 1024;
+
         @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
         @ConfigKey("compression-level")
         private int compressionLevel = -1;
+
         @Comment({
             "How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
-            "Disable by setting to 0"})
+            "Disable by setting to 0"
+        })
         @ConfigKey("login-ratelimit")
         private int loginRatelimit = 3000;
+
         @Comment({"Specify a custom timeout for connection timeouts here. The default is five seconds."})
         @ConfigKey("connection-timeout")
         private int connectionTimeout = 5000;
+
         @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
         @ConfigKey("read-timeout")
         private int readTimeout = 30000;
+
         @Comment("Enables compatibility with HAProxy.")
         @ConfigKey("proxy-protocol")
         private boolean proxyProtocol = false;
 
-        private Advanced() {
-        }
+        private Advanced() {}
 
         private Advanced(Toml toml) {
             if (toml != null) {
@@ -452,27 +577,44 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         public boolean isProxyProtocol() {
             return proxyProtocol;
         }
+
+        @Override
+        public String toString() {
+            return "Advanced{" +
+                    "compressionThreshold=" + compressionThreshold +
+                    ", compressionLevel=" + compressionLevel +
+                    ", loginRatelimit=" + loginRatelimit +
+                    ", connectionTimeout=" + connectionTimeout +
+                    ", readTimeout=" + readTimeout +
+                    ", proxyProtocol=" + proxyProtocol +
+                    '}';
+        }
     }
 
     private static class Query {
-
         @Comment("Whether to enable responding to GameSpy 4 query responses or not")
         @ConfigKey("enabled")
         private boolean queryEnabled = false;
+
         @Comment("If query responding is enabled, on what port should query response listener listen on?")
         @ConfigKey("port")
         private int queryPort = 25577;
+
         @Comment("This is the map name that is reported to the query services.")
         @ConfigKey("map")
         private String queryMap = "Velocity";
 
-        private Query() {
-        }
+        @Comment("Whether plugins should be shown in query response by default or not")
+        @ConfigKey("show-plugins")
+        private boolean showPlugins = false;
 
-        private Query(boolean queryEnabled, int queryPort) {
+        private Query() {}
+
+        private Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
             this.queryEnabled = queryEnabled;
             this.queryPort = queryPort;
             this.queryMap = queryMap;
+            this.showPlugins = showPlugins;
         }
 
         private Query(Toml toml) {
@@ -480,6 +622,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 this.queryEnabled = toml.getBoolean("enabled", false);
                 this.queryPort = toml.getLong("port", 25577L).intValue();
                 this.queryMap = toml.getString("map", "Velocity");
+                this.showPlugins = toml.getBoolean("show-plugins", false);
             }
         }
 
@@ -493,6 +636,20 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
         public String getQueryMap() {
             return queryMap;
+        }
+
+        public boolean shouldQueryShowPlugins() {
+            return showPlugins;
+        }
+
+        @Override
+        public String toString() {
+            return "Query{" +
+                    "queryEnabled=" + queryEnabled +
+                    ", queryPort=" + queryPort +
+                    ", queryMap='" + queryMap + '\'' +
+                    ", showPlugins=" + showPlugins +
+                    '}';
         }
     }
 }

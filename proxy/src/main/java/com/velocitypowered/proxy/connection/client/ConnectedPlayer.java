@@ -42,11 +42,16 @@ import net.kyori.text.serializer.ComponentSerializers;
 import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -69,7 +74,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private @Nullable ModInfo modInfo;
     private final VelocityTabList tabList;
     private final VelocityServer server;
-    
+
+    @MonotonicNonNull
+    private List<String> serversToTry = null;
+
     ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection, @Nullable InetSocketAddress virtualHost) {
         this.server = server;
         this.tabList = new VelocityTabList(connection);
@@ -355,7 +363,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     Optional<RegisteredServer> getNextServerToTry() {
-        List<String> serversToTry = server.getConfiguration().getAttemptConnectionOrder();
+        if (serversToTry == null) {
+            String virtualHost = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
+            serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHost, Collections.emptyList());
+        }
+
+        if (serversToTry.isEmpty()) {
+            serversToTry = server.getConfiguration().getAttemptConnectionOrder();
+        }
+
         if (tryIndex >= serversToTry.size()) {
             return Optional.empty();
         }

@@ -1,7 +1,7 @@
 ### Intellij ###
 .idea/
 *.iws
-/out/
+*/out/
 *.iml
 .idea_modules/
 atlassian-ide-plugin.xml
