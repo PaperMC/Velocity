@@ -71,7 +71,11 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         Injector injector = Guice.createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
-        @NonNull Object instance = injector.getInstance(javaDescription.getMainClass());
+        Object instance = injector.getInstance(javaDescription.getMainClass());
+
+        if (instance == null) {
+            throw new IllegalStateException("Got nothing from injector for plugin " + javaDescription.getId());
+        }
 
         return new VelocityPluginContainer(description, instance);
     }

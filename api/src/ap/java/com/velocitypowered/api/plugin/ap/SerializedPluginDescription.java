@@ -20,7 +20,7 @@ public class SerializedPluginDescription {
     private final @Nullable String description;
     private final @Nullable String url;
     private final @Nullable List<String> authors;
-    private final List<Dependency> dependencies;
+    private final @Nullable List<Dependency> dependencies;
     private final String main;
 
     public SerializedPluginDescription(String id, String name, String version, String description, String url,
@@ -65,11 +65,11 @@ public class SerializedPluginDescription {
     }
 
     public List<String> getAuthors() {
-        return authors;
+        return authors == null ? ImmutableList.of() : authors;
     }
 
     public List<Dependency> getDependencies() {
-        return dependencies;
+        return dependencies == null ? ImmutableList.of() : dependencies;
     }
 
     public String getMain() {

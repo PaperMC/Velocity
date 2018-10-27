@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.Command;
@@ -8,7 +7,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
@@ -36,7 +34,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public void execute(@NonNull CommandSource source, @NonNull String[] args) {
+    public void execute(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
         if (args.length == 0) {
             usage(source);
             return;
@@ -51,7 +49,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
+    public List<String> suggest(@NonNull CommandSource source, String @NonNull [] currentArgs) {
         if (currentArgs.length == 0) {
             return ImmutableList.copyOf(subcommands.keySet());
         }
@@ -70,7 +68,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+    public boolean hasPermission(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
         if (args.length == 0) {
             return true;
         }
@@ -89,7 +87,7 @@ public class VelocityCommand implements Command {
         }
 
         @Override
-        public void execute(@NonNull CommandSource source, @NonNull String[] args) {
+        public void execute(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
             ProxyVersion version = server.getVersion();
 
             TextComponent velocity = TextComponent.builder(version.getName() + " ")
@@ -120,7 +118,7 @@ public class VelocityCommand implements Command {
         }
 
         @Override
-        public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        public boolean hasPermission(@NonNull CommandSource source, @NonNull String @NonNull [] args) {
             return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
         }
     }

@@ -13,14 +13,14 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
 public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
-    private StateRegistry state;
     private final ProtocolConstants.Direction direction;
+    private StateRegistry state;
     private StateRegistry.PacketRegistry.ProtocolVersion protocolVersion;
 
     public MinecraftDecoder(ProtocolConstants.Direction direction) {
-        this.state = StateRegistry.HANDSHAKE;
         this.direction = Preconditions.checkNotNull(direction, "direction");
-        this.setProtocolVersion(ProtocolConstants.MINIMUM_GENERIC_VERSION);
+        this.protocolVersion = direction.getProtocol(StateRegistry.HANDSHAKE, ProtocolConstants.MINIMUM_GENERIC_VERSION);
+        this.state = StateRegistry.HANDSHAKE;
     }
 
     @Override
@@ -51,24 +51,12 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         }
     }
 
-    public StateRegistry.PacketRegistry.ProtocolVersion getProtocolVersion() {
-        return protocolVersion;
-    }
-
     public void setProtocolVersion(int protocolVersion) {
-        this.protocolVersion = (this.direction == ProtocolConstants.Direction.CLIENTBOUND ? this.state.CLIENTBOUND : this.state.SERVERBOUND).getVersion(protocolVersion);
-    }
-
-    public StateRegistry getState() {
-        return state;
+        this.protocolVersion = direction.getProtocol(state, protocolVersion);
     }
 
     public void setState(StateRegistry state) {
         this.state = state;
         this.setProtocolVersion(protocolVersion.id);
-    }
-
-    public ProtocolConstants.Direction getDirection() {
-        return direction;
     }
 }

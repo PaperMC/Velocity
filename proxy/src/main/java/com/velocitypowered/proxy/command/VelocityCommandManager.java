@@ -34,7 +34,7 @@ public class VelocityCommandManager implements CommandManager {
         Preconditions.checkNotNull(source, "invoker");
         Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-        String[] split = cmdLine.split(" ", -1);
+        String @NonNull[] split = cmdLine.split(" ", -1);
         if (split.length == 0) {
             return false;
         }

@@ -23,7 +23,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
         this.serverConn = serverConn;
-        this.playerSessionHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
+
+        MinecraftSessionHandler psh = serverConn.getPlayer().getConnection().getSessionHandler();
+        if (!(psh instanceof ClientPlaySessionHandler)) {
+            throw new IllegalStateException("Initializing BackendPlaySessionHandler with no backing client play session handler!");
+        }
+        this.playerSessionHandler = (ClientPlaySessionHandler) psh;
     }
 
     @Override
