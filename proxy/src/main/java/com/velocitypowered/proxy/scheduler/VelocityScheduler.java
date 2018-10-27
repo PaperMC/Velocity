@@ -164,14 +164,10 @@ public class VelocityScheduler implements Scheduler {
                 try {
                     runnable.run();
                 } catch (Exception e) {
-                    // Since we can't catch InterruptedException separately...
-                    if (e instanceof InterruptedException) {
-                        onFinish();
-                    } else {
-                        Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
-                    }
+                    Log.logger.error("Exception in task {} by plugin {}", runnable, plugin);
+                } finally {
+                    currentTaskThread = null;
                 }
-                currentTaskThread = null;
             });
         }
 

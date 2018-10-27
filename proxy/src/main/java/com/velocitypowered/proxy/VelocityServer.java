@@ -162,14 +162,9 @@ public class VelocityServer implements ProxyServer {
         httpClient = new NettyHttpClient(this);
         loadPlugins();
 
-        try {
-            // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
-            // to fully initialize before we accept any connections to the server.
-            eventManager.fire(new ProxyInitializeEvent()).get();
-        } catch (InterruptedException | ExecutionException e) {
-            // Ignore, we don't care. InterruptedException is unlikely to happen (and if it does, you've got bigger
-            // issues) and there is almost no chance ExecutionException will be thrown.
-        }
+        // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
+        // to fully initialize before we accept any connections to the server.
+        eventManager.fire(new ProxyInitializeEvent()).join();
 
         // init console permissions after plugins are loaded
         console.setupPermissions();
