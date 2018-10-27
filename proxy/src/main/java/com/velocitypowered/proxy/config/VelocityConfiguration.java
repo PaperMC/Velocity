@@ -213,6 +213,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         return query.getQueryMap();
     }
 
+    @Override
+    public boolean shouldQueryShowPlugins() {
+        return query.shouldQueryShowPlugins();
+    }
+
     public String getMotd() {
         return motd;
     }
@@ -504,6 +509,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         @ConfigKey("map")
         private String queryMap = "Velocity";
 
+        @Comment("Whether plugins should be shown in query response by default or not")
+        @ConfigKey("show-plugins")
+        private boolean showPlugins = false;
+
         private Query() {
         }
 
@@ -533,13 +542,18 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
             return queryMap;
         }
 
+        public boolean shouldQueryShowPlugins() {
+            return showPlugins;
+        }
+
         @Override
         public String toString() {
-            return "Query{"
-                    + "queryEnabled=" + queryEnabled
-                    + ", queryPort=" + queryPort
-                    + ", queryMap=" + queryMap
-                    + '}';
+            return "Query{" +
+                    "queryEnabled=" + queryEnabled +
+                    ", queryPort=" + queryPort +
+                    ", queryMap='" + queryMap + '\'' +
+                    ", showPlugins=" + showPlugins +
+                    '}';
         }
     }
 }
