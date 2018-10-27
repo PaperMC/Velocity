@@ -67,6 +67,12 @@ public interface ProxyConfig {
     List<String> getAttemptConnectionOrder();
 
     /**
+     * Get forced servers mapped to given virtual host
+     * @return list of server names
+     */
+    Map<String, List<String>> getForcedHosts();
+
+    /**
      * Get the minimum compression threshold for packets
      * @return the compression threshold
      */

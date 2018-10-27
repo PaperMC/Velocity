@@ -120,7 +120,7 @@ public class AnnotatedConfig {
                     if (field.getAnnotation(IsMap.class) != null) { // check if field is map
                         Map<String, ?> map = (Map<String, ?>) field.get(toSave);
                         for (Entry<String, ?> entry : map.entrySet()) {
-                            lines.add(entry.getKey() + " = " + toString(entry.getValue())); // Save a map data
+                            lines.add(safeKey(entry.getKey()) + " = " + toString(entry.getValue())); // Save a map data
                         }
                         lines.add(""); //Add empty line
                         continue;
@@ -163,6 +163,13 @@ public class AnnotatedConfig {
             return "\"" + stringValue.replace("\n", "\\n") + "\"";
         }
         return value != null ? value.toString() : "null";
+    }
+
+    private String safeKey(String key) {
+        if(key.contains(".") && !(key.indexOf('"') == 0 && key.lastIndexOf('"') == (key.length() - 1))) {
+            return '"' + key + '"';
+        }
+        return key;
     }
 
     /**
