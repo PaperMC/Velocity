@@ -237,16 +237,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 connection.delayedWrite(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
             }
 
-            if (tt.getTitle().isPresent()) {
+            Optional<Component> titleText = tt.getTitle();
+            if (titleText.isPresent()) {
                 TitlePacket titlePkt = new TitlePacket();
                 titlePkt.setAction(TitlePacket.SET_TITLE);
-                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getTitle().get()));
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(titleText.get()));
                 connection.delayedWrite(titlePkt);
             }
-            if (tt.getSubtitle().isPresent()) {
+
+            Optional<Component> subtitleText = tt.getSubtitle();
+            if (subtitleText.isPresent()) {
                 TitlePacket titlePkt = new TitlePacket();
                 titlePkt.setAction(TitlePacket.SET_SUBTITLE);
-                titlePkt.setComponent(ComponentSerializers.JSON.serialize(tt.getSubtitle().get()));
+                titlePkt.setComponent(ComponentSerializers.JSON.serialize(subtitleText.get()));
                 connection.delayedWrite(titlePkt);
             }
 
@@ -383,13 +386,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         ServerPreConnectEvent event = new ServerPreConnectEvent(this, request.getServer());
         return server.getEventManager().fire(event)
                 .thenCompose((newEvent) -> {
-                    if (!newEvent.getResult().isAllowed()) {
+                    Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
+                    if (!connectTo.isPresent()) {
                         return CompletableFuture.completedFuture(
                                 ConnectionRequestResults.plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
                         );
                     }
 
-                    RegisteredServer rs = newEvent.getResult().getServer().get();
+                    RegisteredServer rs = connectTo.get();
                     Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
                     if (lastCheck.isPresent()) {
                         return CompletableFuture.completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));

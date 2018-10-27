@@ -59,6 +59,7 @@ compileJava {
     doFirst {
         options.compilerArgs = [
                 '-processor', 'org.checkerframework.checker.nullness.NullnessChecker',
+                '-processor', 'org.checkerframework.checker.optional.OptionalChecker',
                 '-Xmaxerrs', '10000',
                 '-Xmaxwarns', '10000',
                 // '-Awarns',      // -Awarns turns Checker Framework errors into warnings

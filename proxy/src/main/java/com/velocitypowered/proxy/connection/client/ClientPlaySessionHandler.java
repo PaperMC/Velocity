@@ -99,10 +99,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             PlayerChatEvent event = new PlayerChatEvent(player, msg);
             server.getEventManager().fire(event)
                     .thenAcceptAsync(pme -> {
-                        if (pme.getResult().equals(PlayerChatEvent.ChatResult.allowed())){
-                            smc.write(packet);
-                        } else if (pme.getResult().isAllowed() && pme.getResult().getMessage().isPresent()){
-                            smc.write(Chat.createServerbound(pme.getResult().getMessage().get()));
+                        PlayerChatEvent.ChatResult chatResult = pme.getResult();
+                        if (chatResult.isAllowed()) {
+                            Optional<String> eventMsg = pme.getResult().getMessage();
+                            if (eventMsg.isPresent()) {
+                                smc.write(Chat.createServerbound(eventMsg.get()));
+                            } else {
+                                smc.write(packet);
+                            }
                         }
                     }, smc.eventLoop());
         }
@@ -166,7 +170,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             } else if (backendConn.isLegacyForge() && !serverConn.hasCompletedJoin()) {
                 if (packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
                     if (!player.getModInfo().isPresent()) {
-                        ForgeUtil.readModList(packet).ifPresent(mods -> player.setModInfo(new ModInfo("FML", mods)));
+                        List<ModInfo.Mod> mods = ForgeUtil.readModList(packet);
+                        if (!mods.isEmpty()) {
+                            player.setModInfo(new ModInfo("FML", mods));
+                        }
                     }
 
                     // Always forward the FML handshake to the remote server.

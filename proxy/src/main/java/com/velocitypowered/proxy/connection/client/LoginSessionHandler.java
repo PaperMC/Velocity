@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.util.EncryptionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -168,9 +169,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
                     PreLoginComponentResult result = event.getResult();
-                    if (!result.isAllowed()) {
+                    Optional<Component> disconnectReason = result.getReason();
+                    if (disconnectReason.isPresent()) {
                         // The component is guaranteed to be provided if the connection was denied.
-                        inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                        inbound.closeWith(Disconnect.create(disconnectReason.get()));
                         return;
                     }
 
@@ -223,13 +225,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player was disconnected
                                 return;
                             }
-                            if (!event.getResult().isAllowed()) {
-                                // The component is guaranteed to be provided if the connection was denied.
-                                player.disconnect(event.getResult().getReason().get());
-                                return;
-                            }
 
-                            handleProxyLogin(player);
+                            Optional<Component> reason = event.getResult().getReason();
+                            if (reason.isPresent()) {
+                                player.disconnect(reason.get());
+                            } else {
+                                handleProxyLogin(player);
+                            }
                         }, inbound.eventLoop());
         });
 

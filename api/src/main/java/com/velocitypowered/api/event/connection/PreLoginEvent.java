@@ -61,11 +61,11 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         private static final PreLoginComponentResult FORCE_OFFLINEMODE = new PreLoginComponentResult(Result.FORCE_OFFLINE, null);
 
         private final Result result;
-        private final Optional<Component> reason;
+        private final @Nullable Component reason;
 
         private PreLoginComponentResult(Result result, @Nullable Component reason) {
             this.result = result;
-            this.reason = Optional.ofNullable(reason);
+            this.reason = reason;
         }
 
         @Override
@@ -74,7 +74,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         }
 
         public Optional<Component> getReason() {
-            return reason;
+            return Optional.ofNullable(reason);
         }
 
         public boolean isOnlineModeAllowed() {
