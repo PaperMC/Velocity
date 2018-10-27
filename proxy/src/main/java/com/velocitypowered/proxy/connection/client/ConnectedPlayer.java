@@ -360,7 +360,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
         String toTryName = serversToTry.get(tryIndex);
         tryIndex++;
-        return server.getServers().getServer(toTryName);
+        return server.getServer(toTryName);
     }
 
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {

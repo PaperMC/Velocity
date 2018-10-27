@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.network.http;
 
+import com.google.common.base.VerifyException;
 import com.velocitypowered.proxy.VelocityServer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -61,7 +62,9 @@ public class NettyHttpClient {
                 .addListener(future -> {
                     if (future.isSuccess()) {
                         Channel channel = (Channel) future.getNow();
-                        assert channel != null;
+                        if (channel == null) {
+                            throw new VerifyException("Null channel retrieved from pool!");
+                        }
                         channel.pipeline().addLast("collector", new SimpleHttpResponseCollector(reply));
 
                         DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url.getPath() + "?" + url.getQuery());

@@ -124,7 +124,7 @@ public class PlayerListItem implements MinecraftPacket {
 
     public static class Item {
         private final UUID uuid;
-        private @Nullable String name;
+        private String name = "";
         private List<GameProfile.Property> properties = ImmutableList.of();
         private int gameMode;
         private int latency;
@@ -147,7 +147,7 @@ public class PlayerListItem implements MinecraftPacket {
             return uuid;
         }
 
-        public @Nullable String getName() {
+        public String getName() {
             return name;
         }
 
