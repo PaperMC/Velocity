@@ -45,8 +45,7 @@ public class VelocityEventManager implements EventManager {
     public VelocityEventManager(PluginManager pluginManager) {
         PluginClassLoader cl = new PluginClassLoader(new URL[0]);
         cl.addToClassloaders();
-        this.bus = new VelocityEventBus(
-                new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
+        this.bus = new VelocityEventBus(new ASMEventExecutorFactory<>(new PluginClassLoader(new URL[0])),
                 new VelocityMethodScanner());
 
         this.pluginManager = pluginManager;

@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -193,9 +194,12 @@ public class VelocityServer implements ProxyServer {
         }
 
         // Register the plugin main classes so that we may proceed with firing the proxy initialize event
-        pluginManager.getPlugins().forEach(container -> {
-            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
-        });
+        for (PluginContainer plugin : pluginManager.getPlugins()) {
+            Optional<?> instance = plugin.getInstance();
+            if (instance.isPresent()) {
+                eventManager.register(plugin, plugin);
+            }
+        }
 
         logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }

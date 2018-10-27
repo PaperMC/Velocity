@@ -23,11 +23,11 @@ public class PlayerListItem implements MinecraftPacket {
     public static final int UPDATE_DISPLAY_NAME = 3;
     public static final int REMOVE_PLAYER = 4;
     private int action;
-    private List<Item> items;
+    private final List<Item> items = new ArrayList<>();
 
     public PlayerListItem(int action, List<Item> items) {
         this.action = action;
-        this.items = items;
+        this.items.addAll(items);
     }
 
     public PlayerListItem() {}
@@ -43,7 +43,6 @@ public class PlayerListItem implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         action = ProtocolUtils.readVarInt(buf);
-        items = new ArrayList<>();
         int length = ProtocolUtils.readVarInt(buf);
 
         for (int i = 0; i < length; i++) {
@@ -59,7 +58,8 @@ public class PlayerListItem implements MinecraftPacket {
                     if (hasDisplayName) {
                         item.setDisplayName(ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf)));
                     }
-                } break;
+                    break;
+                }
                 case UPDATE_GAMEMODE:
                     item.setGameMode(ProtocolUtils.readVarInt(buf));
                     break;
@@ -83,7 +83,7 @@ public class PlayerListItem implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeVarInt(buf, action);
         ProtocolUtils.writeVarInt(buf, items.size());
-        for (Item item: items) {
+        for (Item item : items) {
             ProtocolUtils.writeUuid(buf, item.getUuid());
             switch (action) {
                 case ADD_PLAYER:
@@ -151,7 +151,7 @@ public class PlayerListItem implements MinecraftPacket {
             return name;
         }
 
-        public Item setName(@Nullable String name) {
+        public Item setName(String name) {
             this.name = name;
             return this;
         }

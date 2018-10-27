@@ -8,14 +8,15 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.*;
 
 public class PluginDependencyUtils {
-    public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
+    public static List<PluginDescription> sortCandidates(List<@NonNull PluginDescription> candidates) {
         // Create our graph, we're going to be using this for Kahn's algorithm.
         MutableGraph<PluginDescription> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
-        Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(candidates, PluginDescription::getId);
+        Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(candidates, d -> d == null ? null : d.getId());
 
         // Add edges
         for (PluginDescription description : candidates) {

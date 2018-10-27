@@ -33,7 +33,10 @@ public class VelocityPluginManager implements PluginManager {
 
     private void registerPlugin(@NonNull PluginContainer plugin) {
         plugins.put(plugin.getDescription().getId(), plugin);
-        plugin.getInstance().ifPresent(instance -> pluginInstances.put(instance, plugin));
+        Optional<?> instance = plugin.getInstance();
+        if (instance.isPresent()) {
+            pluginInstances.put(instance, plugin);
+        }
     }
 
     public void loadPlugins(@NonNull Path directory) throws IOException {
