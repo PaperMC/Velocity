@@ -16,6 +16,7 @@ import io.netty.channel.socket.DatagramPacket;
 import net.kyori.text.serializer.ComponentSerializers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -56,6 +57,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .build();
 
+    @MonotonicNonNull
     private volatile List<QueryResponse.PluginInformation> pluginInformationList = null;
 
     private final VelocityServer server;
