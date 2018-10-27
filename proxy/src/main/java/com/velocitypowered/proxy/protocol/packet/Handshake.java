@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 
 public class Handshake implements MinecraftPacket {
     private int protocolVersion;
-    private String serverAddress;
+    private String serverAddress = "";
     private int port;
     private int nextStatus;
 

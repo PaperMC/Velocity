@@ -9,8 +9,8 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionResponse implements MinecraftPacket {
-    private byte[] sharedSecret;
-    private byte[] verifyToken;
+    private byte[] sharedSecret = new byte[0];
+    private byte[] verifyToken = new byte[0];
 
     public byte[] getSharedSecret() {
         return sharedSecret;

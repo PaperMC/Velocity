@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
 
@@ -15,15 +16,18 @@ public class BossBar implements MinecraftPacket {
     public static final int UPDATE_NAME = 3;
     public static final int UPDATE_STYLE = 4;
     public static final int UPDATE_PROPERTIES = 5;
-    private UUID uuid;
+    private @Nullable UUID uuid;
     private int action;
-    private String name;
+    private @Nullable String name;
     private float percent;
     private int color;
     private int overlay;
     private short flags;
 
     public UUID getUuid() {
+        if (uuid == null) {
+            throw new IllegalStateException("No boss bar UUID specified");
+        }
         return uuid;
     }
 
@@ -39,7 +43,7 @@ public class BossBar implements MinecraftPacket {
         this.action = action;
     }
 
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -124,10 +128,16 @@ public class BossBar implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (uuid == null) {
+            throw new IllegalStateException("No boss bar UUID specified");
+        }
         ProtocolUtils.writeUuid(buf, uuid);
         ProtocolUtils.writeVarInt(buf, action);
         switch (action) {
             case ADD:
+                if (name == null) {
+                    throw new IllegalStateException("No name specified!");
+                }
                 ProtocolUtils.writeString(buf, name);
                 buf.writeFloat(percent);
                 ProtocolUtils.writeVarInt(buf, color);
@@ -140,6 +150,9 @@ public class BossBar implements MinecraftPacket {
                 buf.writeFloat(percent);
                 break;
             case UPDATE_NAME:
+                if (name == null) {
+                    throw new IllegalStateException("No name specified!");
+                }
                 ProtocolUtils.writeString(buf, name);
                 break;
             case UPDATE_STYLE:

@@ -10,7 +10,7 @@ public class Respawn implements MinecraftPacket {
     private int dimension;
     private short difficulty;
     private short gamemode;
-    private String levelType;
+    private String levelType = "";
 
     public Respawn() {
     }

@@ -6,34 +6,36 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginPluginMessage implements MinecraftPacket {
     private int id;
-    private String channel;
-    private ByteBuf data;
+    private @Nullable String channel;
+    private ByteBuf data = Unpooled.EMPTY_BUFFER;
+
+    public LoginPluginMessage() {
+
+    }
+
+    public LoginPluginMessage(int id, @Nullable String channel, ByteBuf data) {
+        this.id = id;
+        this.channel = channel;
+        this.data = data;
+    }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getChannel() {
+        if (channel == null) {
+            throw new IllegalStateException("Channel is not specified!");
+        }
         return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
     }
 
     public ByteBuf getData() {
         return data;
-    }
-
-    public void setData(ByteBuf data) {
-        this.data = data;
     }
 
     @Override
@@ -59,6 +61,9 @@ public class LoginPluginMessage implements MinecraftPacket {
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeVarInt(buf, id);
+        if (channel == null) {
+            throw new IllegalStateException("Channel is not specified!");
+        }
         ProtocolUtils.writeString(buf, channel);
         buf.writeBytes(data);
     }

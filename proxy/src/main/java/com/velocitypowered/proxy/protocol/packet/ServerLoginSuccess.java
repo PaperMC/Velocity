@@ -5,14 +5,18 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
 
 public class ServerLoginSuccess implements MinecraftPacket {
-    private UUID uuid;
-    private String username;
+    private @Nullable UUID uuid;
+    private @Nullable String username;
 
     public UUID getUuid() {
+        if (uuid == null) {
+            throw new IllegalStateException("No UUID specified!");
+        }
         return uuid;
     }
 
@@ -21,6 +25,9 @@ public class ServerLoginSuccess implements MinecraftPacket {
     }
 
     public String getUsername() {
+        if (username == null) {
+            throw new IllegalStateException("No username specified!");
+        }
         return username;
     }
 
@@ -44,7 +51,13 @@ public class ServerLoginSuccess implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (uuid == null) {
+            throw new IllegalStateException("No UUID specified!");
+        }
         ProtocolUtils.writeString(buf, uuid.toString());
+        if (username == null) {
+            throw new IllegalStateException("No username specified!");
+        }
         ProtocolUtils.writeString(buf, username);
     }
 

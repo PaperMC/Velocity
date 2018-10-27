@@ -48,8 +48,8 @@ public class VelocityEventManager implements EventManager {
         PluginClassLoader cl = new PluginClassLoader(new URL[0]);
         cl.addToClassloaders();
         this.bus = new SimpleEventBus<>(Object.class);
-        this.methodAdapter = new SimpleMethodSubscriptionAdapter<>(bus, new ASMEventExecutorFactory<>(
-                new PluginClassLoader(new URL[0])), new VelocityMethodScanner());
+        this.methodAdapter = new SimpleMethodSubscriptionAdapter<>(bus, new ASMEventExecutorFactory<>(cl),
+                new VelocityMethodScanner());
         this.pluginManager = pluginManager;
         this.service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder()
                 .setNameFormat("Velocity Event Executor - #%d").setDaemon(true).build());

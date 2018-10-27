@@ -5,10 +5,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
 
-    private String locale;
+    private @Nullable String locale;
     private byte viewDistance;
     private int chatVisibility;
     private boolean chatColors;
@@ -28,6 +29,9 @@ public class ClientSettings implements MinecraftPacket {
     }
 
     public String getLocale() {
+        if (locale == null) {
+            throw new IllegalStateException("No locale specified");
+        }
         return locale;
     }
 
@@ -102,6 +106,9 @@ public class ClientSettings implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (locale == null) {
+            throw new IllegalStateException("No locale specified");
+        }
         ProtocolUtils.writeString(buf, locale);
         buf.writeByte(viewDistance);
         ProtocolUtils.writeVarInt(buf, chatVisibility);

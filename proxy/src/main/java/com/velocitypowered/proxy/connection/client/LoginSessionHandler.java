@@ -64,12 +64,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public boolean handle(ServerLogin packet) {
         this.login = packet;
         if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            LoginPluginMessage message = new LoginPluginMessage();
             playerInfoId = ThreadLocalRandom.current().nextInt();
-            message.setId(playerInfoId);
-            message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
-            message.setData(Unpooled.EMPTY_BUFFER);
-            inbound.write(message);
+            inbound.write(new LoginPluginMessage(playerInfoId, VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL,
+                    Unpooled.EMPTY_BUFFER));
         } else {
             beginPreLogin();
         }
