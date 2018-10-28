@@ -100,14 +100,19 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return result;
   }
 
-  private String createBungeeForwardingAddress() {
+  private String createLegacyForwardingAddress() {
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
-    return registeredServer.getServerInfo().getAddress().getHostString() + "\0"
-        + proxyPlayer.getRemoteAddress().getHostString() + "\0"
-        + proxyPlayer.getProfile().getId() + "\0"
-        + GSON.toJson(proxyPlayer.getProfile().getProperties());
+    StringBuilder data = new StringBuilder(2048)
+        .append(registeredServer.getServerInfo().getAddress().getHostString())
+        .append('\0')
+        .append(proxyPlayer.getRemoteAddress().getHostString())
+        .append('\0')
+        .append(proxyPlayer.getProfile().getId())
+        .append('\0');
+    GSON.toJson(proxyPlayer.getProfile().getProperties(), data);
+    return data.toString();
   }
 
   private void startHandshake() {
@@ -123,7 +128,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(proxyPlayer.getConnection().getNextProtocolVersion());
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
-      handshake.setServerAddress(createBungeeForwardingAddress());
+      handshake.setServerAddress(createLegacyForwardingAddress());
     } else if (proxyPlayer.getConnection().isLegacyForge()) {
       handshake.setServerAddress(handshake.getServerAddress() + "\0FML\0");
     } else {
