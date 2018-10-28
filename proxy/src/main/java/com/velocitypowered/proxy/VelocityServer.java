@@ -85,6 +85,10 @@ public class VelocityServer implements ProxyServer {
   private @MonotonicNonNull VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
+  public Logger getLogger() {
+    return logger;
+  }
+
   public KeyPair getServerKeyPair() {
     if (serverKeyPair == null) {
       throw new AssertionError();
@@ -98,6 +102,10 @@ public class VelocityServer implements ProxyServer {
       throw new IllegalStateException("Configuration not initialized!");
     }
     return cfg;
+  }
+
+  public void reloadConfiguration() {
+    // TODO
   }
 
   @Override

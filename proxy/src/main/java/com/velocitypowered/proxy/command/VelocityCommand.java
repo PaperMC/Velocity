@@ -10,6 +10,9 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.proxy.VelocityServer;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -28,10 +31,11 @@ public class VelocityCommand implements Command {
 
   private final Map<String, Command> subcommands;
 
-  public VelocityCommand(ProxyServer server) {
+  public VelocityCommand(VelocityServer server) {
     this.subcommands = ImmutableMap.<String, Command>builder()
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
+        .put("reload", new Reload(server))
         .build();
   }
 
@@ -208,6 +212,41 @@ public class VelocityCommand implements Command {
     @Override
     public boolean hasPermission(CommandSource source, String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+    }
+  }
+
+  private static class Reload implements Command {
+
+    private final VelocityServer server;
+
+    private Reload(VelocityServer server) {
+      this.server = server;
+    }
+
+    @Override
+    public void execute(@NonNull CommandSource source, @NonNull String[] args) {
+      try {
+        server.reloadConfiguration();
+        source.sendMessage(TextComponent.of("Proxy configuration reloaded", TextColor.GREEN));
+      } catch (Exception e) {
+        if (source == server.getConsoleCommandSource()) {
+          server.getLogger().error("An error occured while reloading the proxy configuration", e);
+        } else {
+          StringWriter stacktrace = new StringWriter();
+          e.printStackTrace(new PrintWriter(stacktrace));
+          TextComponent message = TextComponent.builder()
+              .content("An error occured while reloading the proxy configuration, hover to see details")
+              .color(TextColor.RED)
+              .hoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.of(stacktrace.toString())))
+              .build();
+          source.sendMessage(message);
+        }
+      }
+    }
+
+    @Override
+    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+      return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
     }
   }
 }
