@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
+import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
+import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
+import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
@@ -336,9 +339,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private void handleConnectionException(RegisteredServer rs, @Nullable Component kickReason,
       Component friendlyReason) {
-    boolean alreadyConnected =
-        connectedServer != null && connectedServer.getServerInfo().equals(rs.getServerInfo());
+    // There can't be any connection in flight now.
     connectionInFlight = null;
+
     if (connectedServer == null) {
       // The player isn't yet connected to a server.
       Optional<RegisteredServer> nextServer = getNextServerToTry();
@@ -347,30 +350,33 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       } else {
         connection.closeWith(Disconnect.create(friendlyReason));
       }
-    } else if (connectedServer.getServerInfo().equals(rs.getServerInfo())) {
+    } else if (kickReason != null) {
       // Already connected to the server being disconnected from.
-      if (kickReason != null) {
-        server.getEventManager().fire(
-            new KickedFromServerEvent(this, rs, kickReason, !alreadyConnected, friendlyReason))
-            .thenAcceptAsync(event -> {
-              if (event.getResult() instanceof KickedFromServerEvent.DisconnectPlayer) {
-                KickedFromServerEvent.DisconnectPlayer res = (KickedFromServerEvent.DisconnectPlayer) event
-                    .getResult();
-                connection.closeWith(Disconnect.create(res.getReason()));
-              } else if (event.getResult() instanceof KickedFromServerEvent.RedirectPlayer) {
-                KickedFromServerEvent.RedirectPlayer res = (KickedFromServerEvent.RedirectPlayer) event
-                    .getResult();
-                createConnectionRequest(res.getServer()).fireAndForget();
+      KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
+          !connectedServer.getServer().equals(rs), friendlyReason);
+
+      server.getEventManager().fire(originalEvent)
+          .thenAcceptAsync(event -> {
+            if (event.getResult() instanceof DisconnectPlayer) {
+              DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+              connection.closeWith(Disconnect.create(res.getReason()));
+            } else if (event.getResult() instanceof RedirectPlayer) {
+              RedirectPlayer res = (RedirectPlayer) event.getResult();
+              createConnectionRequest(res.getServer()).fireAndForget();
+            } else if (event.getResult() instanceof Notify) {
+              Notify res = (Notify) event.getResult();
+              if (event.kickedDuringServerConnect()) {
+                sendMessage(res.getMessage());
               } else {
-                // In case someone gets creative, assume we want to disconnect the player.
-                connection.closeWith(Disconnect.create(friendlyReason));
+                connection.closeWith(Disconnect.create(res.getMessage()));
               }
-            }, connection.eventLoop());
-      } else {
-        connection.closeWith(Disconnect.create(friendlyReason));
-      }
+            } else {
+              // In case someone gets creative, assume we want to disconnect the player.
+              connection.closeWith(Disconnect.create(friendlyReason));
+            }
+          }, connection.eventLoop());
     } else {
-      connection.write(Chat.createClientbound(friendlyReason));
+      connection.closeWith(Disconnect.create(friendlyReason));
     }
   }
 

@@ -17,16 +17,16 @@ public final class KickedFromServerEvent implements
   private final Player player;
   private final RegisteredServer server;
   private final Component originalReason;
-  private final boolean duringLogin;
+  private final boolean duringServerConnect;
   private ServerKickResult result;
 
   public KickedFromServerEvent(Player player, RegisteredServer server, Component originalReason,
-      boolean duringLogin, Component fancyReason) {
+      boolean duringServerConnect, Component fancyReason) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
     this.originalReason = Preconditions.checkNotNull(originalReason, "originalReason");
-    this.duringLogin = duringLogin;
-    this.result = new DisconnectPlayer(fancyReason);
+    this.duringServerConnect = duringServerConnect;
+    this.result = new Notify(fancyReason);
   }
 
   @Override
@@ -51,8 +51,25 @@ public final class KickedFromServerEvent implements
     return originalReason;
   }
 
+  /**
+   * Returns whether or not the player got kicked while connecting to another server.
+   *
+   * @return whether or not the player got kicked
+   */
+  public boolean kickedDuringServerConnect() {
+    return duringServerConnect;
+  }
+
+  /**
+   * Returns whether or not the player got kicked while logging in.
+   *
+   * @return whether or not the player got kicked
+   * @deprecated {@link #kickedDuringServerConnect()} has a better name and reflects the actual
+   *     result
+   */
+  @Deprecated
   public boolean kickedDuringLogin() {
-    return duringLogin;
+    return duringServerConnect;
   }
 
   /**
@@ -122,6 +139,39 @@ public final class KickedFromServerEvent implements
      */
     public static RedirectPlayer create(RegisteredServer server) {
       return new RedirectPlayer(server);
+    }
+  }
+
+  /**
+   * Notifies the player with the specified message but does nothing else. This is only a valid
+   * result to use if the player was  trying to connect to a different server, otherwise it is
+   * treated like a {@link DisconnectPlayer} result.
+   */
+  public static final class Notify implements ServerKickResult {
+
+    private final Component message;
+
+    private Notify(Component message) {
+      this.message = Preconditions.checkNotNull(message, "message");
+    }
+
+    @Override
+    public boolean isAllowed() {
+      return false;
+    }
+
+    public Component getMessage() {
+      return message;
+    }
+
+    /**
+     * Notifies the player with the specified message but does nothing else.
+     *
+     * @param message the server to send the player to
+     * @return the redirect result
+     */
+    public static Notify create(Component message) {
+      return new Notify(message);
     }
   }
 }
