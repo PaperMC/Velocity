@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -57,6 +58,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
@@ -106,8 +108,36 @@ public class VelocityServer implements ProxyServer {
     return cfg;
   }
 
-  public void reloadConfiguration() {
-    // TODO
+  /**
+   * Loads configuration from file
+   *
+   * @param file File where configuration should be loaded
+   * @return {@link VelocityConfiguration}, or null if validation fails
+   * @throws Exception if configuration parser fails to load the configuration
+   */
+  @Nullable
+  private VelocityConfiguration loadConfiguration(Path file) throws Exception {
+    VelocityConfiguration config = VelocityConfiguration.read(file);
+    AnnotatedConfig.saveConfig(configuration.dumpConfig(), configurationPath);
+
+    if (!config.validate()) {
+      return null;
+    }
+
+    return config;
+  }
+
+  public void reloadConfiguration() throws Exception {
+    VelocityConfiguration newConfig = loadConfiguration(configurationPath);
+
+    if (newConfig == null) {
+      throw new IllegalStateException("Failed to validate configuration, check console");
+    }
+
+    configuration = newConfig;
+
+    // Give a chance for plugins to reload as well
+    eventManager.fireAndForget(new ProxyReloadEvent());
   }
 
   @Override
@@ -155,12 +185,9 @@ public class VelocityServer implements ProxyServer {
     commandManager.register(new ShutdownCommand(this), "shutdown", "end");
 
     try {
-      configuration = VelocityConfiguration.read(configurationPath);
+      configuration = loadConfiguration(configurationPath);
 
-      AnnotatedConfig
-              .saveConfig(configuration.dumpConfig(), configurationPath); // Resave config to add new values
-
-      if (!configuration.validate()) {
+      if (configuration == null) {
         logger.error(
             "Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
         LogManager.shutdown();
