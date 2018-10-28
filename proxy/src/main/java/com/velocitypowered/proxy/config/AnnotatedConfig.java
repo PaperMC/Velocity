@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Simple annotation and fields based TOML configuration serializer
+ * Simple annotation and fields based TOML configuration serializer.
  */
 public abstract class AnnotatedConfig {
 
@@ -31,7 +31,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Indicates that a field is a table
+   * Indicates that a field is a table.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
@@ -41,7 +41,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Creates a comment
+   * Creates a comment.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
@@ -51,7 +51,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * How field will be named in config
+   * How field will be named in config.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
@@ -61,7 +61,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Indicates that a field is a map and we need to save all map data to config
+   * Indicates that a field is a map and we need to save all map data to config.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
@@ -70,7 +70,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Indicates that a field is a string converted to byte[]
+   * Indicates that a field is a string converted to byte[].
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
@@ -79,7 +79,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Indicates that a field should be skipped
+   * Indicates that a field should be skipped.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD})
@@ -88,7 +88,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Dumps this configuration to list of strings using {@link #dumpConfig(Object)}
+   * Dumps this configuration to list of strings using {@link #dumpConfig(Object)}.
    *
    * @return configuration dump
    */
@@ -123,22 +123,23 @@ public abstract class AnnotatedConfig {
           }
         }
 
-        // Get a key name for config
+        // Get a key name for config. Use field name if @ConfigKey annotation is not present.
         ConfigKey key = field.getAnnotation(ConfigKey.class);
-        String name = safeKey(key == null ? field.getName()
-            : key.value()); // Use field name if @ConfigKey annotation is not present
+        final String name = safeKey(key == null ? field.getName() : key.value());
+
+        Object value = field.get(dumpable);
 
         // Check if field is table.
         Table table = field.getAnnotation(Table.class);
         if (table != null) {
           lines.add(table.value()); // Write [name]
-          lines.addAll(dumpConfig(field.get(dumpable))); // Dump fields of table
+          lines.addAll(dumpConfig(value)); // Dump fields of table
           continue;
         }
 
         if (field.getAnnotation(IsMap.class) != null) { // Check if field is a map
           @SuppressWarnings("unchecked")
-          Map<String, ?> map = (Map<String, ?>) field.get(dumpable);
+          Map<String, ?> map = (Map<String, ?>) value;
           for (Entry<String, ?> entry : map.entrySet()) {
             lines.add(
                 safeKey(entry.getKey()) + " = " + serialize(entry.getValue())); // Save map data
@@ -146,8 +147,6 @@ public abstract class AnnotatedConfig {
           lines.add(""); // Add empty line
           continue;
         }
-
-        Object value = field.get(dumpable);
 
         // Check if field is a byte[] representation of a string
         if (field.getAnnotation(StringAsBytes.class) != null) {

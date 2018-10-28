@@ -450,9 +450,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   public void sendLegacyForgeHandshakeResetPacket() {
-    if (connection.canSendLegacyFMLResetPacket()) {
+    if (connection.canSendLegacyFmlResetPacket()) {
       connection.write(ForgeConstants.resetPacket());
-      connection.setCanSendLegacyFMLResetPacket(false);
+      connection.setCanSendLegacyFmlResetPacket(false);
     }
   }
 

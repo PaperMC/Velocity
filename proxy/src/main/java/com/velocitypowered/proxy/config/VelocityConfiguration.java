@@ -522,9 +522,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Override
     public String toString() {
-      return "ForcedHosts{" +
-          "forcedHosts=" + forcedHosts +
-          '}';
+      return "ForcedHosts{"
+          + "forcedHosts=" + forcedHosts
+          + '}';
     }
   }
 
@@ -601,14 +601,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Override
     public String toString() {
-      return "Advanced{" +
-          "compressionThreshold=" + compressionThreshold +
-          ", compressionLevel=" + compressionLevel +
-          ", loginRatelimit=" + loginRatelimit +
-          ", connectionTimeout=" + connectionTimeout +
-          ", readTimeout=" + readTimeout +
-          ", proxyProtocol=" + proxyProtocol +
-          '}';
+      return "Advanced{"
+          + "compressionThreshold=" + compressionThreshold
+          + ", compressionLevel=" + compressionLevel
+          + ", loginRatelimit=" + loginRatelimit
+          + ", connectionTimeout=" + connectionTimeout
+          + ", readTimeout=" + readTimeout
+          + ", proxyProtocol=" + proxyProtocol
+          + '}';
     }
   }
 
@@ -667,12 +667,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     @Override
     public String toString() {
-      return "Query{" +
-          "queryEnabled=" + queryEnabled +
-          ", queryPort=" + queryPort +
-          ", queryMap='" + queryMap + '\'' +
-          ", showPlugins=" + showPlugins +
-          '}';
+      return "Query{"
+          + "queryEnabled=" + queryEnabled
+          + ", queryPort=" + queryPort
+          + ", queryMap='" + queryMap + '\''
+          + ", showPlugins=" + showPlugins
+          + '}';
     }
   }
 }

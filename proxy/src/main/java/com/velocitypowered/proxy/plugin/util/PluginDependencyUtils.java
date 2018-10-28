@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class PluginDependencyUtils {
 
@@ -23,8 +22,15 @@ public class PluginDependencyUtils {
     throw new AssertionError();
   }
 
-  public static List<PluginDescription> sortCandidates(
-      List<@NonNull PluginDescription> candidates) {
+  /**
+   * Attempts to topographically sort all plugins for the proxy to load by dependencies using
+   * Kahn's algorithm.
+   *
+   * @param candidates the plugins to sort
+   * @return the sorted list of plugins
+   * @throws IllegalStateException if there is a circular loop in the dependency graph
+   */
+  public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
     // Create our graph, we're going to be using this for Kahn's algorithm.
     MutableGraph<PluginDescription> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
     Map<String, PluginDescription> candidateMap = Maps
@@ -69,7 +75,7 @@ public class PluginDependencyUtils {
     return sorted;
   }
 
-  public static Queue<PluginDescription> getNoDependencyCandidates(Graph<PluginDescription> graph) {
+  private static Queue<PluginDescription> getNoDependencyCandidates(Graph<PluginDescription> graph) {
     Queue<PluginDescription> found = new ArrayDeque<>();
 
     for (PluginDescription node : graph.nodes()) {
@@ -81,7 +87,7 @@ public class PluginDependencyUtils {
     return found;
   }
 
-  public static String createLoopInformation(Graph<PluginDescription> graph) {
+  private static String createLoopInformation(Graph<PluginDescription> graph) {
     StringBuilder repr = new StringBuilder("{");
     for (EndpointPair<PluginDescription> edge : graph.edges()) {
       repr.append(edge.target().getId()).append(": [");

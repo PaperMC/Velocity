@@ -104,8 +104,7 @@ public class VelocityCommand implements Command {
           .build();
       TextComponent copyright = TextComponent
           .of("Copyright 2018 " + version.getVendor() + ". " + version.getName()
-              + " is freely licensed under the terms of the " +
-              "MIT License.");
+              + " is freely licensed under the terms of the MIT License.");
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 

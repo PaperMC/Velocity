@@ -14,8 +14,8 @@ public class FakePluginManager implements PluginManager {
   public static final Object PLUGIN_A = new Object();
   public static final Object PLUGIN_B = new Object();
 
-  public static final PluginContainer PC_A = new FakePluginContainer("a", PLUGIN_A);
-  public static final PluginContainer PC_B = new FakePluginContainer("b", PLUGIN_B);
+  private static final PluginContainer PC_A = new FakePluginContainer("a", PLUGIN_A);
+  private static final PluginContainer PC_B = new FakePluginContainer("b", PLUGIN_B);
 
   @Override
   public @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance) {

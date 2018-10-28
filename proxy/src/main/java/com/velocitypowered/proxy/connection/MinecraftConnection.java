@@ -58,7 +58,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private @Nullable MinecraftConnectionAssociation association;
   private boolean isLegacyForge;
   private final VelocityServer server;
-  private boolean canSendLegacyFMLResetPacket = false;
+  private boolean canSendLegacyFmlResetPacket = false;
 
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
@@ -287,12 +287,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.isLegacyForge = isForge;
   }
 
-  public boolean canSendLegacyFMLResetPacket() {
-    return canSendLegacyFMLResetPacket;
+  public boolean canSendLegacyFmlResetPacket() {
+    return canSendLegacyFmlResetPacket;
   }
 
-  public void setCanSendLegacyFMLResetPacket(boolean canSendLegacyFMLResetPacket) {
-    this.canSendLegacyFMLResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
+  public void setCanSendLegacyFmlResetPacket(boolean canSendLegacyFMLResetPacket) {
+    this.canSendLegacyFmlResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
   }
 
   public int getNextProtocolVersion() {

@@ -198,7 +198,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return legacyForge;
   }
 
-  public void setLegacyForge(boolean modded) {
+  void setLegacyForge(boolean modded) {
     legacyForge = modded;
   }
 
@@ -210,7 +210,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     this.hasCompletedJoin = hasCompletedJoin;
   }
 
-  public boolean isGracefulDisconnect() {
+  boolean isGracefulDisconnect() {
     return gracefulDisconnect;
   }
 
@@ -222,7 +222,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return lastPingSent;
   }
 
-  public void setLastPingId(long lastPingId) {
+  void setLastPingId(long lastPingId) {
     this.lastPingId = lastPingId;
     this.lastPingSent = System.currentTimeMillis();
   }

@@ -190,10 +190,8 @@ public enum StateRegistry {
 
   public static final int STATUS_ID = 1;
   public static final int LOGIN_ID = 2;
-  public final PacketRegistry CLIENTBOUND = new PacketRegistry(
-      ProtocolConstants.Direction.CLIENTBOUND);
-  public final PacketRegistry SERVERBOUND = new PacketRegistry(
-      ProtocolConstants.Direction.SERVERBOUND);
+  public final PacketRegistry CLIENTBOUND = new PacketRegistry(Direction.CLIENTBOUND);
+  public final PacketRegistry SERVERBOUND = new PacketRegistry(Direction.SERVERBOUND);
 
   public static class PacketRegistry {
 
@@ -210,11 +208,11 @@ public enum StateRegistry {
           .put(MINECRAFT_1_13, ImmutableIntArray.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
     }
 
-    private final ProtocolConstants.Direction direction;
+    private final Direction direction;
     private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>(16);
     private boolean fallback = true;
 
-    public PacketRegistry(Direction direction) {
+    PacketRegistry(Direction direction) {
       this.direction = direction;
       ProtocolConstants.SUPPORTED_VERSIONS
           .forEach(version -> versions.put(version, new ProtocolVersion(version)));
@@ -267,10 +265,10 @@ public enum StateRegistry {
     public class ProtocolVersion {
 
       public final int version;
-      final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>(
-          16, 0.5f);
-      final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId = new Object2IntOpenHashMap<>(
-          16, 0.5f);
+      final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier =
+          new IntObjectHashMap<>(16, 0.5f);
+      final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId =
+          new Object2IntOpenHashMap<>(16, 0.5f);
 
       ProtocolVersion(final int version) {
         this.version = version;
@@ -312,11 +310,11 @@ public enum StateRegistry {
 
     @Override
     public String toString() {
-      return "PacketMapping{" +
-          "id=" + id +
-          ", protocolVersion=" + protocolVersion +
-          ", encodeOnly=" + encodeOnly +
-          '}';
+      return "PacketMapping{"
+          + "id=" + id
+          + ", protocolVersion=" + protocolVersion
+          + ", encodeOnly=" + encodeOnly
+          + '}';
     }
 
     @Override
@@ -328,9 +326,9 @@ public enum StateRegistry {
         return false;
       }
       PacketMapping that = (PacketMapping) o;
-      return id == that.id &&
-          protocolVersion == that.protocolVersion &&
-          encodeOnly == that.encodeOnly;
+      return id == that.id
+          && protocolVersion == that.protocolVersion
+          && encodeOnly == that.encodeOnly;
     }
 
     @Override
@@ -340,7 +338,7 @@ public enum StateRegistry {
   }
 
   /**
-   * Creates a PacketMapping using the provided arguments
+   * Creates a PacketMapping using the provided arguments.
    *
    * @param id Packet Id
    * @param version Protocol version

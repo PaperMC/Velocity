@@ -31,8 +31,8 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     }
 
     Preconditions.checkState(uncompressedSize >= threshold,
-        "Uncompressed size %s doesn't make sense with threshold %s", uncompressedSize, threshold);
-    // Try to use the uncompressed size, but place a cap if it might be too big (possibly malicious).
+        "Uncompressed size %s is greater than threshold %s",
+        uncompressedSize, threshold);
     ByteBuf uncompressed = ctx.alloc()
         .buffer(Math.min(uncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
     try {
@@ -41,7 +41,6 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
           "Mismatched compression sizes");
       out.add(uncompressed);
     } catch (Exception e) {
-      // If something went wrong, rethrow the exception, but ensure we free our temporary buffer first.
       uncompressed.release();
       throw e;
     }

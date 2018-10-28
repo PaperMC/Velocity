@@ -173,16 +173,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (mc == null) {
       return false;
     }
-    boolean isMCOrFMLMessage;
+    boolean minecraftOrFmlMessage;
     if (mc.getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
       String channel = message.getChannel();
-      isMCOrFMLMessage = channel.startsWith("MC|") || channel
+      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
           .startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
     } else {
-      isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
+      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
     }
-    return isMCOrFMLMessage || playerSessionHandler.getClientPluginMsgChannels()
-        .contains(message.getChannel()) ||
-        server.getChannelRegistrar().registered(message.getChannel());
+    return minecraftOrFmlMessage
+        || playerSessionHandler.getKnownChannels().contains(message.getChannel())
+        || server.getChannelRegistrar().registered(message.getChannel());
   }
 }

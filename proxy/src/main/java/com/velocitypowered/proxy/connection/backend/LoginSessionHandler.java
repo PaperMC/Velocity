@@ -32,6 +32,9 @@ import net.kyori.text.TextComponent;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
+  private static final TextComponent MODERN_IP_FORWARDING_FAILURE = TextComponent
+      .of("Your server did not send a forwarding request to the proxy. Is it set up correctly?");
+
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<ConnectionRequestBuilder.Result> resultFuture;
@@ -100,9 +103,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLoginSuccess packet) {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(
-          TextComponent
-              .of("Your server did not send a forwarding request to the proxy. Is it set up correctly?")));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE));
       serverConn.disconnect();
       return true;
     }

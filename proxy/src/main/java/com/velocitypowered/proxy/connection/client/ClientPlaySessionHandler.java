@@ -52,7 +52,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final ConnectedPlayer player;
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
-  private final Set<String> clientPluginMsgChannels = new HashSet<>();
+  private final Set<String> knownChannels = new HashSet<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
@@ -163,11 +163,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         List<String> actuallyRegistered = new ArrayList<>();
         List<String> channels = PluginMessageUtil.getChannels(packet);
         for (String channel : channels) {
-          if (clientPluginMsgChannels.size() >= MAX_PLUGIN_CHANNELS &&
-              !clientPluginMsgChannels.contains(channel)) {
+          if (knownChannels.size() >= MAX_PLUGIN_CHANNELS &&
+              !knownChannels.contains(channel)) {
             throw new IllegalStateException("Too many plugin message channels registered");
           }
-          if (clientPluginMsgChannels.add(channel)) {
+          if (knownChannels.add(channel)) {
             actuallyRegistered.add(channel);
           }
         }
@@ -179,7 +179,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
       } else if (PluginMessageUtil.isMCUnregister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
-        clientPluginMsgChannels.removeAll(channels);
+        knownChannels.removeAll(channels);
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMCBrand(packet)) {
         backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet));
@@ -296,7 +296,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Forge client that we must reset on the next switch.
       //
       // The call will handle if the player is not a Forge player appropriately.
-      player.getConnection().setCanSendLegacyFMLResetPacket(true);
+      player.getConnection().setCanSendLegacyFmlResetPacket(true);
     } else {
       // Clear tab list to avoid duplicate entries
       player.getTabList().clearAll();
@@ -334,7 +334,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Tell the server about this client's plugin message channels.
     int serverVersion = serverMc.getProtocolVersion();
-    Collection<String> toRegister = new HashSet<>(clientPluginMsgChannels);
+    Collection<String> toRegister = new HashSet<>(knownChannels);
     if (serverVersion >= ProtocolConstants.MINECRAFT_1_13) {
       toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
     } else {
@@ -370,7 +370,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // don't want to set it false if this is a first connection to a Vanilla server.
       //
       // See LoginSessionHandler#handle for where the counterpart to this method is
-      player.getConnection().setCanSendLegacyFMLResetPacket(true);
+      player.getConnection().setCanSendLegacyFmlResetPacket(true);
     }
   }
 
@@ -378,8 +378,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return serverBossBars;
   }
 
-  public Set<String> getClientPluginMsgChannels() {
-    return clientPluginMsgChannels;
+  public Set<String> getKnownChannels() {
+    return knownChannels;
   }
 
   public void handleTabCompleteResponse(TabCompleteResponse response) {
