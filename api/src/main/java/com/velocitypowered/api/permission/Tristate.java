@@ -16,22 +16,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public enum Tristate {
 
   /**
-   * A value indicating a positive setting
+   * A value indicating a positive setting.
    */
   TRUE(true),
 
   /**
-   * A value indicating a negative (negated) setting
+   * A value indicating a negative (negated) setting.
    */
   FALSE(false),
 
   /**
-   * A value indicating a non-existent setting
+   * A value indicating a non-existent setting.
    */
   UNDEFINED(false);
 
   /**
-   * Returns a {@link Tristate} from a boolean
+   * Returns a {@link Tristate} from a boolean.
    *
    * @param val the boolean value
    * @return {@link #TRUE} or {@link #FALSE}, if the value is <code>true</code> or

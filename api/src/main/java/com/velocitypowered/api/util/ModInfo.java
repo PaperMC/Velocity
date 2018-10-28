@@ -26,10 +26,10 @@ public final class ModInfo {
 
   @Override
   public String toString() {
-    return "ModInfo{" +
-        "type='" + type + '\'' +
-        ", modList=" + modList +
-        '}';
+    return "ModInfo{"
+        + "type='" + type + '\''
+        + ", modList=" + modList
+        + '}';
   }
 
   public static final class Mod {
@@ -52,10 +52,10 @@ public final class ModInfo {
 
     @Override
     public String toString() {
-      return "Mod{" +
-          "id='" + id + '\'' +
-          ", version='" + version + '\'' +
-          '}';
+      return "Mod{"
+          + "id='" + id + '\''
+          + ", version='" + version + '\''
+          + '}';
     }
   }
 }

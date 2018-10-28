@@ -50,11 +50,11 @@ public final class GameProfile {
 
   @Override
   public String toString() {
-    return "GameProfile{" +
-        "id='" + id + '\'' +
-        ", name='" + name + '\'' +
-        ", properties=" + properties +
-        '}';
+    return "GameProfile{"
+        + "id='" + id + '\''
+        + ", name='" + name + '\''
+        + ", properties=" + properties
+        + '}';
   }
 
   public static final class Property {
@@ -83,11 +83,11 @@ public final class GameProfile {
 
     @Override
     public String toString() {
-      return "Property{" +
-          "name='" + name + '\'' +
-          ", value='" + value + '\'' +
-          ", signature='" + signature + '\'' +
-          '}';
+      return "Property{"
+          + "name='" + name + '\''
+          + ", value='" + value + '\''
+          + ", signature='" + signature + '\''
+          + '}';
     }
   }
 }

@@ -1,5 +1,6 @@
 package com.velocitypowered.api.util.title;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.util.Objects;
 import java.util.Optional;
@@ -110,24 +111,24 @@ public final class TextTitle implements Title {
       return false;
     }
     TextTitle textTitle = (TextTitle) o;
-    return stay == textTitle.stay &&
-        fadeIn == textTitle.fadeIn &&
-        fadeOut == textTitle.fadeOut &&
-        resetBeforeSend == textTitle.resetBeforeSend &&
-        Objects.equals(title, textTitle.title) &&
-        Objects.equals(subtitle, textTitle.subtitle);
+    return stay == textTitle.stay
+        && fadeIn == textTitle.fadeIn
+        && fadeOut == textTitle.fadeOut
+        && resetBeforeSend == textTitle.resetBeforeSend
+        && Objects.equals(title, textTitle.title)
+        && Objects.equals(subtitle, textTitle.subtitle);
   }
 
   @Override
   public String toString() {
-    return "TextTitle{" +
-        "title=" + title +
-        ", subtitle=" + subtitle +
-        ", stay=" + stay +
-        ", fadeIn=" + fadeIn +
-        ", fadeOut=" + fadeOut +
-        ", resetBeforeSend=" + resetBeforeSend +
-        '}';
+    return MoreObjects.toStringHelper(this)
+        .add("title", title)
+        .add("subtitle", subtitle)
+        .add("stay", stay)
+        .add("fadeIn", fadeIn)
+        .add("fadeOut", fadeOut)
+        .add("resetBeforeSend", resetBeforeSend)
+        .toString();
   }
 
   @Override
@@ -238,14 +239,14 @@ public final class TextTitle implements Title {
 
     @Override
     public String toString() {
-      return "Builder{" +
-          "title=" + title +
-          ", subtitle=" + subtitle +
-          ", stay=" + stay +
-          ", fadeIn=" + fadeIn +
-          ", fadeOut=" + fadeOut +
-          ", resetBeforeSend=" + resetBeforeSend +
-          '}';
+      return MoreObjects.toStringHelper(this)
+          .add("title", title)
+          .add("subtitle", subtitle)
+          .add("stay", stay)
+          .add("fadeIn", fadeIn)
+          .add("fadeOut", fadeOut)
+          .add("resetBeforeSend", resetBeforeSend)
+          .toString();
     }
   }
 }

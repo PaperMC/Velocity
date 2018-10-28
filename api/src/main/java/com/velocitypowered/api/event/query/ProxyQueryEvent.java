@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * This event is fired if proxy is getting queried over GS4 Query protocol
+ * This event is fired if proxy is getting queried over GS4 Query protocol.
  */
 public final class ProxyQueryEvent {
 
@@ -14,6 +14,13 @@ public final class ProxyQueryEvent {
   private final InetAddress querierAddress;
   private QueryResponse response;
 
+  /**
+   * Creates a new event.
+   *
+   * @param queryType the type of query
+   * @param querierAddress the remote address for the query
+   * @param response the current query response
+   */
   public ProxyQueryEvent(QueryType queryType, InetAddress querierAddress, QueryResponse response) {
     this.queryType = Preconditions.checkNotNull(queryType, "queryType");
     this.querierAddress = Preconditions.checkNotNull(querierAddress, "querierAddress");
@@ -21,7 +28,7 @@ public final class ProxyQueryEvent {
   }
 
   /**
-   * Get query type
+   * Returns the kind of query the remote client is performing.
    *
    * @return query type
    */
@@ -31,7 +38,7 @@ public final class ProxyQueryEvent {
   }
 
   /**
-   * Get querier address
+   * Get the address of the client that sent this query.
    *
    * @return querier address
    */
@@ -41,9 +48,9 @@ public final class ProxyQueryEvent {
   }
 
   /**
-   * Get query response
+   * Returns the current query response.
    *
-   * @return query response
+   * @return the current query response
    */
   @NonNull
   public QueryResponse getResponse() {
@@ -51,9 +58,9 @@ public final class ProxyQueryEvent {
   }
 
   /**
-   * Set query response
+   * Sets a new query response.
    *
-   * @param response query response
+   * @param response the new non-null query response
    */
   public void setResponse(@NonNull QueryResponse response) {
     this.response = Preconditions.checkNotNull(response, "response");
@@ -61,20 +68,20 @@ public final class ProxyQueryEvent {
 
   @Override
   public String toString() {
-    return "ProxyQueryEvent{" +
-        "queryType=" + queryType +
-        ", querierAddress=" + querierAddress +
-        ", response=" + response +
-        '}';
+    return "ProxyQueryEvent{"
+        + "queryType=" + queryType
+        + ", querierAddress=" + querierAddress
+        + ", response=" + response
+        + '}';
   }
 
   /**
-   * The type of query
+   * Represents the type of query the client is asking for.
    */
   public enum QueryType {
     /**
      * Basic query asks only a subset of information, such as hostname, game type (hardcoded to
-     * <pre>MINECRAFT</pre>), map, current players, max players, proxy port and proxy hostname
+     * <pre>MINECRAFT</pre>), map, current players, max players, proxy port and proxy hostname.
      */
     BASIC,
 
@@ -82,6 +89,6 @@ public final class ProxyQueryEvent {
      * Full query asks pretty much everything present on this event (only hardcoded values cannot be
      * modified here).
      */
-    FULL;
+    FULL
   }
 }

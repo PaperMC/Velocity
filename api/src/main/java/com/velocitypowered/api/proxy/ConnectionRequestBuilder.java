@@ -6,8 +6,8 @@ import java.util.concurrent.CompletableFuture;
 import net.kyori.text.Component;
 
 /**
- * Provides a fluent interface to compose and send a connection request to another server behind the
- * proxy. A connection request is created using {@link Player#createConnectionRequest(RegisteredServer)}.
+ * Provides a fluent interface to send a connection request to another server on the proxy. A
+ * connection request is created using {@link Player#createConnectionRequest(RegisteredServer)}.
  */
 public interface ConnectionRequestBuilder {
 

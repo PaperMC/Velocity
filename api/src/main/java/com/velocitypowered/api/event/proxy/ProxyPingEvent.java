@@ -31,9 +31,9 @@ public final class ProxyPingEvent {
 
   @Override
   public String toString() {
-    return "ProxyPingEvent{" +
-        "connection=" + connection +
-        ", ping=" + ping +
-        '}';
+    return "ProxyPingEvent{"
+        + "connection=" + connection
+        + ", ping=" + ping
+        + '}';
   }
 }

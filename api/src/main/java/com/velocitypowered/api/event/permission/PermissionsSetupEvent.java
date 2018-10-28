@@ -54,10 +54,10 @@ public final class PermissionsSetupEvent {
 
   @Override
   public String toString() {
-    return "PermissionsSetupEvent{" +
-        "subject=" + subject +
-        ", defaultProvider=" + defaultProvider +
-        ", provider=" + provider +
-        '}';
+    return "PermissionsSetupEvent{"
+        + "subject=" + subject
+        + ", defaultProvider=" + defaultProvider
+        + ", provider=" + provider
+        + '}';
   }
 }

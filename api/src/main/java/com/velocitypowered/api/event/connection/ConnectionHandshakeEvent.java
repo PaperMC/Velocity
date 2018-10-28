@@ -20,8 +20,8 @@ public final class ConnectionHandshakeEvent {
 
   @Override
   public String toString() {
-    return "ConnectionHandshakeEvent{" +
-        "connection=" + connection +
-        '}';
+    return "ConnectionHandshakeEvent{"
+        + "connection=" + connection
+        + '}';
   }
 }

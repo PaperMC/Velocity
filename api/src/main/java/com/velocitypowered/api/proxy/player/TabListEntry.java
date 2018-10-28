@@ -45,15 +45,16 @@ public interface TabListEntry {
 
   /**
    * Returns the latency for {@code this} entry.
-   * <p>The icon shown in the tab list is calculated by the latency in the following way:<p>
+   *
+   * <p>The icon shown in the tab list is calculated by the latency as follows:</p>
+   *
    * <ul>
-   * <li>A negative latency will display the no connection icon</li>
-   * <li>0-150 will display 5 bars</li>
-   * <li>150-300 will display 4 bars</li>
-   * <li>300-600 will display 3 bars</li>
-   * <li>600-1000 will display 2 bars</li>
-   * <li>A latency move than 1 second will display 1 bar</li>
-   * <li></li>
+   *  <li>A negative latency will display the no connection icon</li>
+   *  <li>0-150 will display 5 bars</li>
+   *  <li>150-300 will display 4 bars</li>
+   *  <li>300-600 will display 3 bars</li>
+   *  <li>600-1000 will display 2 bars</li>
+   *  <li>A latency move than 1 second will display 1 bar</li>
    * </ul>
    *
    * @return latency set for {@code this} entry
@@ -61,7 +62,7 @@ public interface TabListEntry {
   int getLatency();
 
   /**
-   * Sets the latency for {@code this} entry to the specified value
+   * Sets the latency for {@code this} entry to the specified value.
    *
    * @param latency to changed to
    * @return {@code this}, for chaining
@@ -71,6 +72,7 @@ public interface TabListEntry {
 
   /**
    * Gets the game mode {@code this} entry has been set to.
+   *
    * <p>The number corresponds to the game mode in the following way:</p>
    * <ol start="0">
    * <li>Survival</li>
@@ -142,7 +144,7 @@ public interface TabListEntry {
     }
 
     /**
-     * Sets the displayed name of the {@link TabListEntry}
+     * Sets the displayed name of the {@link TabListEntry}.
      *
      * @param displayName to set
      * @return {@code this}, for chaining
@@ -154,7 +156,7 @@ public interface TabListEntry {
     }
 
     /**
-     * Sets the latency of the {@link TabListEntry}
+     * Sets the latency of the {@link TabListEntry}.
      *
      * @param latency to set
      * @return {@code this}, for chaining
@@ -166,7 +168,7 @@ public interface TabListEntry {
     }
 
     /**
-     * Sets the game mode of the {@link TabListEntry}
+     * Sets the game mode of the {@link TabListEntry}.
      *
      * @param gameMode to set
      * @return {@code this}, for chaining

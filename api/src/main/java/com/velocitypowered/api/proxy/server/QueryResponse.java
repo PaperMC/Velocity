@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -90,7 +92,7 @@ public final class QueryResponse {
   }
 
   /**
-   * Get proxy (public facing) hostname
+   * Get proxy (public facing) hostname.
    *
    * @return proxy hostname
    */
@@ -99,7 +101,7 @@ public final class QueryResponse {
   }
 
   /**
-   * Get proxy (public facing) port
+   * Get proxy (public facing) port.
    *
    * @return proxy port
    */
@@ -136,7 +138,7 @@ public final class QueryResponse {
 
 
   /**
-   * Creates a new {@link Builder} instance from data represented by this response
+   * Creates a new {@link Builder} instance from data represented by this response.
    *
    * @return {@link QueryResponse} builder
    */
@@ -155,7 +157,7 @@ public final class QueryResponse {
   }
 
   /**
-   * Creates a new {@link Builder} instance
+   * Creates a new {@link Builder} instance.
    *
    * @return {@link QueryResponse} builder
    */
@@ -225,6 +227,11 @@ public final class QueryResponse {
       return this;
     }
 
+    /**
+     * Sets the port where this proxy is running.
+     * @param proxyPort the port where the proxy is running
+     * @return this instance, for chaining
+     */
     public Builder proxyPort(int proxyPort) {
       Preconditions
           .checkArgument(proxyPort >= 1 && proxyPort <= 65535, "proxyPort must be between 1-65535");
@@ -262,13 +269,19 @@ public final class QueryResponse {
       return this;
     }
 
+    /**
+     * Clears all currently set plugins.
+     *
+     * @return this builder, for chaining
+     */
     public Builder clearPlugins() {
       this.plugins.clear();
       return this;
     }
 
     /**
-     * Builds new {@link QueryResponse} with supplied data
+     * Builds a new {@link QueryResponse} with the supplied data. The current instance can be reused
+     * after this method is called.
      *
      * @return response
      */
@@ -289,37 +302,36 @@ public final class QueryResponse {
   }
 
   /**
-   * Plugin information
+   * Represents a plugin in the query response.
    */
   public static class PluginInformation {
 
-    private String name;
-    private String version;
+    private final String name;
+    private final @Nullable String version;
 
-    public PluginInformation(String name, String version) {
+    PluginInformation(String name, @Nullable String version) {
       this.name = Preconditions.checkNotNull(name, "name");
-      this.version = Preconditions.checkNotNull(version, "version");
+      this.version = version;
     }
 
     public String getName() {
       return name;
     }
 
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public void setVersion(@Nullable String version) {
-      this.version = version;
-    }
-
-    @Nullable
-    public String getVersion() {
-      return version;
+    public Optional<String> getVersion() {
+      return Optional.ofNullable(version);
     }
 
     public static PluginInformation of(String name, @Nullable String version) {
       return new PluginInformation(name, version);
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("name", name)
+          .add("version", version)
+          .toString();
     }
   }
 }

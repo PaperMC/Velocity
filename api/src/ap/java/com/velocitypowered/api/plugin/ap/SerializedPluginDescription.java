@@ -23,7 +23,7 @@ public class SerializedPluginDescription {
   private final @Nullable List<Dependency> dependencies;
   private final String main;
 
-  public SerializedPluginDescription(String id, String name, String version, String description,
+  private SerializedPluginDescription(String id, String name, String version, String description,
       String url,
       List<String> authors, List<Dependency> dependencies, String main) {
     this.id = Preconditions.checkNotNull(id, "id");
@@ -37,7 +37,7 @@ public class SerializedPluginDescription {
     this.main = Preconditions.checkNotNull(main, "main");
   }
 
-  public static SerializedPluginDescription from(Plugin plugin, String qualifiedName) {
+  static SerializedPluginDescription from(Plugin plugin, String qualifiedName) {
     List<Dependency> dependencies = new ArrayList<>();
     for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
       dependencies.add(new Dependency(dependency.id(), dependency.optional()));
@@ -89,14 +89,14 @@ public class SerializedPluginDescription {
       return false;
     }
     SerializedPluginDescription that = (SerializedPluginDescription) o;
-    return Objects.equals(id, that.id) &&
-        Objects.equals(name, that.name) &&
-        Objects.equals(version, that.version) &&
-        Objects.equals(description, that.description) &&
-        Objects.equals(url, that.url) &&
-        Objects.equals(authors, that.authors) &&
-        Objects.equals(dependencies, that.dependencies) &&
-        Objects.equals(main, that.main);
+    return Objects.equals(id, that.id)
+        && Objects.equals(name, that.name)
+        && Objects.equals(version, that.version)
+        && Objects.equals(description, that.description)
+        && Objects.equals(url, that.url)
+        && Objects.equals(authors, that.authors)
+        && Objects.equals(dependencies, that.dependencies)
+        && Objects.equals(main, that.main);
   }
 
   @Override
@@ -106,16 +106,16 @@ public class SerializedPluginDescription {
 
   @Override
   public String toString() {
-    return "SerializedPluginDescription{" +
-        "id='" + id + '\'' +
-        ", name='" + name + '\'' +
-        ", version='" + version + '\'' +
-        ", description='" + description + '\'' +
-        ", url='" + url + '\'' +
-        ", authors=" + authors +
-        ", dependencies=" + dependencies +
-        ", main='" + main + '\'' +
-        '}';
+    return "SerializedPluginDescription{"
+        + "id='" + id + '\''
+        + ", name='" + name + '\''
+        + ", version='" + version + '\''
+        + ", description='" + description + '\''
+        + ", url='" + url + '\''
+        + ", authors=" + authors
+        + ", dependencies=" + dependencies
+        + ", main='" + main + '\''
+        + '}';
   }
 
   public static class Dependency {
@@ -145,8 +145,8 @@ public class SerializedPluginDescription {
         return false;
       }
       Dependency that = (Dependency) o;
-      return optional == that.optional &&
-          Objects.equals(id, that.id);
+      return optional == that.optional
+          && Objects.equals(id, that.id);
     }
 
     @Override
@@ -156,10 +156,10 @@ public class SerializedPluginDescription {
 
     @Override
     public String toString() {
-      return "Dependency{" +
-          "id='" + id + '\'' +
-          ", optional=" + optional +
-          '}';
+      return "Dependency{"
+          + "id='" + id + '\''
+          + ", optional=" + optional
+          + '}';
     }
   }
 }

@@ -72,8 +72,8 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
       return false;
     }
     MinecraftChannelIdentifier that = (MinecraftChannelIdentifier) o;
-    return Objects.equals(namespace, that.namespace) &&
-        Objects.equals(name, that.name);
+    return Objects.equals(namespace, that.namespace)
+        && Objects.equals(name, that.name);
   }
 
   @Override

@@ -13,6 +13,13 @@ public final class ProxyVersion {
   private final String vendor;
   private final String version;
 
+  /**
+   * Creates a new {@link ProxyVersion} instance.
+   *
+   * @param name the name for the proxy implementation
+   * @param vendor the vendor for the proxy implementation
+   * @param version the version for the proxy implementation
+   */
   public ProxyVersion(String name, String vendor, String version) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.vendor = Preconditions.checkNotNull(vendor, "vendor");
@@ -40,9 +47,9 @@ public final class ProxyVersion {
       return false;
     }
     ProxyVersion that = (ProxyVersion) o;
-    return Objects.equals(name, that.name) &&
-        Objects.equals(vendor, that.vendor) &&
-        Objects.equals(version, that.version);
+    return Objects.equals(name, that.name)
+        && Objects.equals(vendor, that.vendor)
+        && Objects.equals(version, that.version);
   }
 
   @Override
@@ -52,10 +59,10 @@ public final class ProxyVersion {
 
   @Override
   public String toString() {
-    return "ProxyVersion{" +
-        "name='" + name + '\'' +
-        ", vendor='" + vendor + '\'' +
-        ", version='" + version + '\'' +
-        '}';
+    return "ProxyVersion{"
+        + "name='" + name + '\''
+        + ", vendor='" + vendor + '\''
+        + ", version='" + version + '\''
+        + '}';
   }
 }

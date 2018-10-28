@@ -21,8 +21,8 @@ public final class DisconnectEvent {
 
   @Override
   public String toString() {
-    return "DisconnectEvent{" +
-        "player=" + player +
-        '}';
+    return "DisconnectEvent{"
+        + "player=" + player
+        + '}';
   }
 }

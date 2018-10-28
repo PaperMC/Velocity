@@ -35,10 +35,10 @@ public final class ServerInfo {
 
   @Override
   public String toString() {
-    return "ServerInfo{" +
-        "name='" + name + '\'' +
-        ", address=" + address +
-        '}';
+    return "ServerInfo{"
+        + "name='" + name + '\''
+        + ", address=" + address
+        + '}';
   }
 
   @Override
@@ -50,8 +50,8 @@ public final class ServerInfo {
       return false;
     }
     ServerInfo that = (ServerInfo) o;
-    return Objects.equals(name, that.name) &&
-        Objects.equals(address, that.address);
+    return Objects.equals(name, that.name)
+        && Objects.equals(address, that.address);
   }
 
   @Override

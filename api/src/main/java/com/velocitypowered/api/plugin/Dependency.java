@@ -5,7 +5,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Represents a dependency for a {@link Plugin}
+ * Indicates that the {@link Plugin} depends on another plugin in order to enable.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})
@@ -20,9 +20,10 @@ public @interface Dependency {
   String id();
 
   /**
-   * If this dependency is optional for the plugin to work. By default this is {@code false}.
+   * Whether or not the dependency is not required to enable this plugin. By default this is
+   * {@code false}, meaning that the dependency is required to enable this plugin.
    *
-   * @return true if the dependency is optional for the plugin to work
+   * @return true if the dependency is not required for the plugin to work
    */
   boolean optional() default false;
 }

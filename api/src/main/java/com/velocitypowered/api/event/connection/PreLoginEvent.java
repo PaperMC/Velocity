@@ -19,6 +19,11 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   private final String username;
   private PreLoginComponentResult result;
 
+  /**
+   * Creates a new instance.
+   * @param connection the connection logging into the proxy
+   * @param username the player's username
+   */
   public PreLoginEvent(InboundConnection connection, String username) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
@@ -45,11 +50,11 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
   @Override
   public String toString() {
-    return "PreLoginEvent{" +
-        "connection=" + connection +
-        ", username='" + username + '\'' +
-        ", result=" + result +
-        '}';
+    return "PreLoginEvent{"
+        + "connection=" + connection
+        + ", username='" + username + '\''
+        + ", result=" + result
+        + '}';
   }
 
   /**
@@ -126,7 +131,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
     /**
      * Returns a result indicating the connection will be allowed through the proxy, but the
-     * connection will be forced to use offline mode even when proxy running in online mode
+     * connection will be forced to use offline mode even when the proxy is running in online mode.
      *
      * @return the result
      */

@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
@@ -59,14 +60,18 @@ public final class ServerPing {
 
   @Override
   public String toString() {
-    return "ServerPing{" +
-        "version=" + version +
-        ", players=" + players +
-        ", description=" + description +
-        ", favicon='" + favicon + '\'' +
-        '}';
+    return "ServerPing{"
+        + "version=" + version
+        + ", players=" + players
+        + ", description=" + description
+        + ", favicon='" + favicon + '\''
+        + '}';
   }
 
+  /**
+   * Returns a copy of this {@link ServerPing} instance as a builder so that it can be modified.
+   * @return a copy of this instance as a {@link Builder}
+   */
   public Builder asBuilder() {
     Builder builder = new Builder();
     builder.version = version;
@@ -171,6 +176,11 @@ public final class ServerPing {
       return this;
     }
 
+    /**
+     * Uses the information from this builder to create a new {@link ServerPing} instance. The
+     * builder can be re-used after this event has been called.
+     * @return a new {@link ServerPing} instance
+     */
     public ServerPing build() {
       if (this.version == null) {
         throw new IllegalStateException("version not specified");
@@ -217,18 +227,18 @@ public final class ServerPing {
 
     @Override
     public String toString() {
-      return "Builder{" +
-          "version=" + version +
-          ", onlinePlayers=" + onlinePlayers +
-          ", maximumPlayers=" + maximumPlayers +
-          ", samplePlayers=" + samplePlayers +
-          ", modType=" + modType +
-          ", mods=" + mods +
-          ", description=" + description +
-          ", favicon=" + favicon +
-          ", nullOutPlayers=" + nullOutPlayers +
-          ", nullOutModinfo=" + nullOutModinfo +
-          '}';
+      return MoreObjects.toStringHelper(this)
+          .add("version", version)
+          .add("onlinePlayers", onlinePlayers)
+          .add("maximumPlayers", maximumPlayers)
+          .add("samplePlayers", samplePlayers)
+          .add("modType", modType)
+          .add("mods", mods)
+          .add("description", description)
+          .add("favicon", favicon)
+          .add("nullOutPlayers", nullOutPlayers)
+          .add("nullOutModinfo", nullOutModinfo)
+          .toString();
     }
   }
 
@@ -237,9 +247,14 @@ public final class ServerPing {
     private final int protocol;
     private final String name;
 
+    /**
+     * Creates a new instance.
+     * @param protocol the protocol version as an integer
+     * @param name a friendly name for the protocol version
+     */
     public Version(int protocol, String name) {
       this.protocol = protocol;
-      this.name = name;
+      this.name = Preconditions.checkNotNull(name, "name");
     }
 
     public int getProtocol() {
@@ -252,10 +267,10 @@ public final class ServerPing {
 
     @Override
     public String toString() {
-      return "Version{" +
-          "protocol=" + protocol +
-          ", name='" + name + '\'' +
-          '}';
+      return "Version{"
+          + "protocol=" + protocol
+          + ", name='" + name + '\''
+          + '}';
     }
   }
 
@@ -265,6 +280,12 @@ public final class ServerPing {
     private final int max;
     private final List<SamplePlayer> sample;
 
+    /**
+     * Creates a new instance.
+     * @param online the number of online players
+     * @param max the maximum number of players
+     * @param sample a sample of players on the server
+     */
     public Players(int online, int max, List<SamplePlayer> sample) {
       this.online = online;
       this.max = max;
@@ -285,11 +306,11 @@ public final class ServerPing {
 
     @Override
     public String toString() {
-      return "Players{" +
-          "online=" + online +
-          ", max=" + max +
-          ", sample=" + sample +
-          '}';
+      return "Players{"
+          + "online=" + online
+          + ", max=" + max
+          + ", sample=" + sample
+          + '}';
     }
   }
 
@@ -313,10 +334,10 @@ public final class ServerPing {
 
     @Override
     public String toString() {
-      return "SamplePlayer{" +
-          "name='" + name + '\'' +
-          ", id=" + id +
-          '}';
+      return "SamplePlayer{"
+          + "name='" + name + '\''
+          + ", id=" + id
+          + '}';
     }
   }
 }

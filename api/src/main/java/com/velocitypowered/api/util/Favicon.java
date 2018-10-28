@@ -59,9 +59,9 @@ public final class Favicon {
 
   @Override
   public String toString() {
-    return "Favicon{" +
-        "base64Url='" + base64Url + '\'' +
-        '}';
+    return "Favicon{"
+        + "base64Url='" + base64Url + '\''
+        + '}';
   }
 
   /**
@@ -72,9 +72,8 @@ public final class Favicon {
    */
   public static Favicon create(BufferedImage image) {
     Preconditions.checkNotNull(image, "image");
-    Preconditions
-        .checkArgument(image.getWidth() == 64 && image.getHeight() == 64, "Image does not have" +
-            " 64x64 dimensions (found %sx%s)", image.getWidth(), image.getHeight());
+    Preconditions.checkArgument(image.getWidth() == 64 && image.getHeight() == 64,
+        "Image is not 64x64(found %sx%s)", image.getWidth(), image.getHeight());
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     try {
       ImageIO.write(image, "PNG", os);

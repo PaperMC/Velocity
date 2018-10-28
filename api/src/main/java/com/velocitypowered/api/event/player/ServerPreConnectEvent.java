@@ -43,11 +43,11 @@ public final class ServerPreConnectEvent implements
 
   @Override
   public String toString() {
-    return "ServerPreConnectEvent{" +
-        "player=" + player +
-        ", originalServer=" + originalServer +
-        ", result=" + result +
-        '}';
+    return "ServerPreConnectEvent{"
+        + "player=" + player
+        + ", originalServer=" + originalServer
+        + ", result=" + result
+        + '}';
   }
 
   /**

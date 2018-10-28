@@ -34,9 +34,9 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
 
   @Override
   public String toString() {
-    return "LoginEvent{" +
-        "player=" + player +
-        ", result=" + result +
-        '}';
+    return "LoginEvent{"
+        + "player=" + player
+        + ", result=" + result
+        + '}';
   }
 }

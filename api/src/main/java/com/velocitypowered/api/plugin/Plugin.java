@@ -13,9 +13,8 @@ import java.lang.annotation.Target;
 public @interface Plugin {
 
   /**
-   * The ID of the plugin. This ID should be unique as to not conflict with other plugins.
-   *
-   * The plugin ID must match the {@link PluginDescription#ID_PATTERN}.
+   * The ID of the plugin. This ID should be unique as to not conflict with other plugins. The
+   * plugin ID must match the {@link PluginDescription#ID_PATTERN}.
    *
    * @return the ID for this plugin
    */

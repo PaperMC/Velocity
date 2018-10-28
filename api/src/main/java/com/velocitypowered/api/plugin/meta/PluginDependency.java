@@ -19,6 +19,12 @@ public final class PluginDependency {
 
   private final boolean optional;
 
+  /**
+   * Creates a new instance.
+   * @param id the plugin ID
+   * @param version an optional version
+   * @param optional whether or not this dependency is optional
+   */
   public PluginDependency(String id, @Nullable String version, boolean optional) {
     this.id = checkNotNull(id, "id");
     checkArgument(!id.isEmpty(), "id cannot be empty");
@@ -27,7 +33,7 @@ public final class PluginDependency {
   }
 
   /**
-   * Returns the plugin ID of this {@link PluginDependency}
+   * Returns the plugin ID of this {@link PluginDependency}.
    *
    * @return the plugin ID
    */
@@ -62,9 +68,9 @@ public final class PluginDependency {
       return false;
     }
     PluginDependency that = (PluginDependency) o;
-    return optional == that.optional &&
-        Objects.equals(id, that.id) &&
-        Objects.equals(version, that.version);
+    return optional == that.optional
+        && Objects.equals(id, that.id)
+        && Objects.equals(version, that.version);
   }
 
   @Override
@@ -74,10 +80,10 @@ public final class PluginDependency {
 
   @Override
   public String toString() {
-    return "PluginDependency{" +
-        "id='" + id + '\'' +
-        ", version='" + version + '\'' +
-        ", optional=" + optional +
-        '}';
+    return "PluginDependency{"
+        + "id='" + id + '\''
+        + ", version='" + version + '\''
+        + ", optional=" + optional
+        + '}';
   }
 }

@@ -42,11 +42,11 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
   @Override
   public String toString() {
-    return "PlayerChatEvent{" +
-        "player=" + player +
-        ", message=" + message +
-        ", result=" + result +
-        '}';
+    return "PlayerChatEvent{"
+        + "player=" + player
+        + ", message=" + message
+        + ", result=" + result
+        + '}';
   }
 
   /**

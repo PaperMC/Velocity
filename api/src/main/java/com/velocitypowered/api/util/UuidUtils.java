@@ -38,8 +38,10 @@ public final class UuidUtils {
    */
   public static String toUndashed(final UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
-    return Strings.padStart(Long.toHexString(uuid.getMostSignificantBits()), 16, '0') +
-        Strings.padStart(Long.toHexString(uuid.getLeastSignificantBits()), 16, '0');
+    String msbStr = Long.toHexString(uuid.getMostSignificantBits());
+    String lsbStr = Long.toHexString(uuid.getLeastSignificantBits());
+    return Strings.padStart(msbStr, 16, '0') + Strings.padStart(lsbStr,
+        16, '0');
   }
 
   /**

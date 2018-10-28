@@ -43,7 +43,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
   Optional<ServerConnection> getCurrentServer();
 
   /**
-   * Returns the player settings
+   * Returns the player's client settings.
    *
    * @return the settings
    */
@@ -57,7 +57,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
   Optional<ModInfo> getModInfo();
 
   /**
-   * Returns the current player's ping
+   * Returns the current player's ping.
    *
    * @return the player's ping or -1 if ping information is currently unknown
    */

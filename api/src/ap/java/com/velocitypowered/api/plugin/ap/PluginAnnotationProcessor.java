@@ -57,8 +57,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
       if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
         if (!warnedAboutMultiplePlugins) {
           environment.getMessager()
-              .printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support " +
-                  "multiple plugins. We are using " + pluginClassFound
+              .printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support "
+                  + "multiple plugins. We are using " + pluginClassFound
                   + " for your plugin's main class.");
           warnedAboutMultiplePlugins = true;
         }
@@ -69,8 +69,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
       if (!PluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
         environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
             + qualifiedName
-            + ". IDs must start alphabetically, have alphanumeric characters, and can " +
-            "contain dashes or underscores.");
+            + ". IDs must start alphabetically, have alphanumeric characters, and can "
+            + "contain dashes or underscores.");
         return false;
       }
 
