@@ -8,8 +8,6 @@ import java.text.DecimalFormat;
 public class Velocity {
     private static final Logger logger = LogManager.getLogger(Velocity.class);
 
-    private static long startTime;
-
     static {
         // We use BufferedImage for favicons, and on macOS this puts the Java application in the dock. How inconvenient.
         // Force AWT to work with its head chopped off.
@@ -17,8 +15,7 @@ public class Velocity {
     }
 
     public static void main(String... args) {
-        startTime = System.currentTimeMillis();
-        logger.info("Booting up Velocity {}...", Velocity.class.getPackage().getImplementationVersion());
+        long startTime = System.currentTimeMillis();
 
         VelocityServer server = new VelocityServer();
         server.start();

@@ -2,6 +2,7 @@ package com.velocitypowered.api.plugin.ap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -29,8 +30,8 @@ public class SerializedPluginDescription {
         this.version = Strings.emptyToNull(version);
         this.description = Strings.emptyToNull(description);
         this.url = Strings.emptyToNull(url);
-        this.authors = authors == null || authors.isEmpty() ? null : authors;
-        this.dependencies = dependencies == null || dependencies.isEmpty() ? null : dependencies;
+        this.authors = authors == null || authors.isEmpty() ? ImmutableList.of() : authors;
+        this.dependencies = dependencies == null || dependencies.isEmpty() ? ImmutableList.of() : dependencies;
         this.main = Preconditions.checkNotNull(main, "main");
     }
 
@@ -63,12 +64,12 @@ public class SerializedPluginDescription {
         return url;
     }
 
-    public @Nullable List<String> getAuthors() {
-        return authors;
+    public List<String> getAuthors() {
+        return authors == null ? ImmutableList.of() : authors;
     }
 
-    public @Nullable List<Dependency> getDependencies() {
-        return dependencies;
+    public List<Dependency> getDependencies() {
+        return dependencies == null ? ImmutableList.of() : dependencies;
     }
 
     public String getMain() {

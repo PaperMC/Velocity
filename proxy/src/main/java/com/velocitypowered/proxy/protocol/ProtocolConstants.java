@@ -48,6 +48,10 @@ public enum ProtocolConstants { ;
 
     public enum Direction {
         SERVERBOUND,
-        CLIENTBOUND
+        CLIENTBOUND;
+
+        public StateRegistry.PacketRegistry.ProtocolVersion getProtocol(StateRegistry state, int protocolVersion) {
+            return (this == SERVERBOUND ? state.SERVERBOUND : state.CLIENTBOUND).getVersion(protocolVersion);
+        }
     }
 }

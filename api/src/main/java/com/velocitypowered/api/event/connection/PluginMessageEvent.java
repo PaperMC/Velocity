@@ -36,7 +36,7 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
     }
 
     @Override
-    public void setResult(@NonNull ForwardResult result) {
+    public void setResult(ForwardResult result) {
         this.result = Preconditions.checkNotNull(result, "result");
     }
 

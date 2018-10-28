@@ -8,22 +8,26 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Disconnect implements MinecraftPacket {
-    private String reason;
+    private @Nullable String reason;
 
     public Disconnect() {
     }
 
     public Disconnect(String reason) {
-        this.reason = reason;
+        this.reason = Preconditions.checkNotNull(reason, "reason");
     }
 
     public String getReason() {
+        if (reason == null) {
+            throw new IllegalStateException("No reason specified");
+        }
         return reason;
     }
 
-    public void setReason(String reason) {
+    public void setReason(@Nullable String reason) {
         this.reason = reason;
     }
 
@@ -41,6 +45,9 @@ public class Disconnect implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (reason == null) {
+            throw new IllegalStateException("No reason specified.");
+        }
         ProtocolUtils.writeString(buf, reason);
     }
 

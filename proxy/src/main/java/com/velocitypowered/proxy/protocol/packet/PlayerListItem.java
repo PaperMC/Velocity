@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -9,6 +10,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +23,11 @@ public class PlayerListItem implements MinecraftPacket {
     public static final int UPDATE_DISPLAY_NAME = 3;
     public static final int REMOVE_PLAYER = 4;
     private int action;
-    private List<Item> items;
+    private final List<Item> items = new ArrayList<>();
 
     public PlayerListItem(int action, List<Item> items) {
         this.action = action;
-        this.items = items;
+        this.items.addAll(items);
     }
 
     public PlayerListItem() {}
@@ -41,7 +43,6 @@ public class PlayerListItem implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         action = ProtocolUtils.readVarInt(buf);
-        items = new ArrayList<>();
         int length = ProtocolUtils.readVarInt(buf);
 
         for (int i = 0; i < length; i++) {
@@ -57,7 +58,8 @@ public class PlayerListItem implements MinecraftPacket {
                     if (hasDisplayName) {
                         item.setDisplayName(ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf)));
                     }
-                } break;
+                    break;
+                }
                 case UPDATE_GAMEMODE:
                     item.setGameMode(ProtocolUtils.readVarInt(buf));
                     break;
@@ -81,7 +83,7 @@ public class PlayerListItem implements MinecraftPacket {
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
         ProtocolUtils.writeVarInt(buf, action);
         ProtocolUtils.writeVarInt(buf, items.size());
-        for (Item item: items) {
+        for (Item item : items) {
             ProtocolUtils.writeUuid(buf, item.getUuid());
             switch (action) {
                 case ADD_PLAYER:
@@ -113,7 +115,7 @@ public class PlayerListItem implements MinecraftPacket {
         return handler.handle(this);
     }
 
-    private void writeDisplayName(ByteBuf buf, Component displayName) {
+    private void writeDisplayName(ByteBuf buf, @Nullable Component displayName) {
         buf.writeBoolean(displayName != null);
         if (displayName != null) {
             ProtocolUtils.writeString(buf, ComponentSerializers.JSON.serialize(displayName));
@@ -122,11 +124,11 @@ public class PlayerListItem implements MinecraftPacket {
 
     public static class Item {
         private final UUID uuid;
-        private String name;
-        private List<GameProfile.Property> properties;
+        private String name = "";
+        private List<GameProfile.Property> properties = ImmutableList.of();
         private int gameMode;
         private int latency;
-        private Component displayName;
+        private @Nullable Component displayName;
 
         public Item(UUID uuid) {
             this.uuid = uuid;
@@ -181,11 +183,11 @@ public class PlayerListItem implements MinecraftPacket {
             return this;
         }
 
-        public Component getDisplayName() {
+        public @Nullable Component getDisplayName() {
             return displayName;
         }
 
-        public Item setDisplayName(Component displayName) {
+        public Item setDisplayName(@Nullable Component displayName) {
             this.displayName = displayName;
             return this;
         }

@@ -12,6 +12,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
@@ -51,6 +52,7 @@ public class JavaPluginLoader implements PluginLoader {
         PluginClassLoader loader = new PluginClassLoader(
                 new URL[] {source.toUri().toURL() }
         );
+        loader.addToClassloaders();
 
         Class mainClass = loader.loadClass(pd.getMain());
         return createDescription(pd, source, mainClass);
@@ -71,6 +73,10 @@ public class JavaPluginLoader implements PluginLoader {
 
         Injector injector = Guice.createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
         Object instance = injector.getInstance(javaDescription.getMainClass());
+
+        if (instance == null) {
+            throw new IllegalStateException("Got nothing from injector for plugin " + javaDescription.getId());
+        }
 
         return new VelocityPluginContainer(description, instance);
     }
@@ -93,10 +99,8 @@ public class JavaPluginLoader implements PluginLoader {
     private VelocityPluginDescription createDescription(SerializedPluginDescription description, Path source, Class mainClass) {
         Set<PluginDependency> dependencies = new HashSet<>();
 
-        if (description.getDependencies() != null) {
-            for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
-                dependencies.add(toDependencyMeta(dependency));
-            }
+        for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
+            dependencies.add(toDependencyMeta(dependency));
         }
 
         return new JavaVelocityPluginDescription(

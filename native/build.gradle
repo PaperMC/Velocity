@@ -2,9 +2,13 @@ plugins {
     id 'java'
 }
 
+apply from: '../gradle/checkerframework.gradle'
+
 dependencies {
     compile "com.google.guava:guava:${guavaVersion}"
     compile "io.netty:netty-buffer:${nettyVersion}"
+    compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }

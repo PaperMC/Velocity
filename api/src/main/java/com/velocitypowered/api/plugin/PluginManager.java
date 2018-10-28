@@ -1,16 +1,12 @@
 package com.velocitypowered.api.plugin;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 /**
- * The class that manages plugins. This manager can retrieve
- * {@link PluginContainer}s from {@link Plugin} instances, getting
- * {@link Logger}s, etc.
+ * Manages plugins loaded on the proxy. This manager can retrieve {@link PluginContainer}s from plugin instances
+ * and inject arbitrary JAR files into the plugin classpath with {@link #addToClasspath(Object, Path)}.
  */
 public interface PluginManager {
     /**
@@ -19,7 +15,7 @@ public interface PluginManager {
      * @param instance the instance
      * @return the container
      */
-    @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance);
+    Optional<PluginContainer> fromInstance(Object instance);
 
     /**
      * Retrieves a {@link PluginContainer} based on its ID.
@@ -27,22 +23,22 @@ public interface PluginManager {
      * @param id the plugin ID
      * @return the plugin, if available
      */
-    @NonNull Optional<PluginContainer> getPlugin(@NonNull String id);
+    Optional<PluginContainer> getPlugin(String id);
 
     /**
      * Gets a {@link Collection} of all {@link PluginContainer}s.
      *
      * @return the plugins
      */
-    @NonNull Collection<PluginContainer> getPlugins();
+    Collection<PluginContainer> getPlugins();
 
     /**
      * Checks if a plugin is loaded based on its ID.
      *
-     * @param id the id of the {@link Plugin}
+     * @param id the id of the plugin
      * @return {@code true} if loaded
      */
-    boolean isLoaded(@NonNull String id);
+    boolean isLoaded(String id);
 
     /**
      * Adds the specified {@code path} to the plugin classpath.
@@ -51,5 +47,5 @@ public interface PluginManager {
      * @param path the path to the JAR you want to inject into the classpath
      * @throws UnsupportedOperationException if the operation is not applicable to this plugin
      */
-    void addToClasspath(@NonNull Object plugin, @NonNull Path path);
+    void addToClasspath(Object plugin, Path path);
 }

@@ -8,12 +8,13 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Chat implements MinecraftPacket {
     public static final byte CHAT = (byte) 0;
     public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
 
-    private String message;
+    private @Nullable String message;
     private byte type;
 
     public Chat() {
@@ -25,6 +26,9 @@ public class Chat implements MinecraftPacket {
     }
 
     public String getMessage() {
+        if (message == null) {
+            throw new IllegalStateException("Message is not specified");
+        }
         return message;
     }
 
@@ -58,6 +62,9 @@ public class Chat implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (message == null) {
+            throw new IllegalStateException("Message is not specified");
+        }
         ProtocolUtils.writeString(buf, message);
         if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
             buf.writeByte(type);

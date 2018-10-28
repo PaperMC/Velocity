@@ -1,9 +1,7 @@
 package com.velocitypowered.api.proxy.player;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.util.GameProfile;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Optional;
@@ -16,7 +14,7 @@ public interface TabListEntry {
      * Returns the parent {@link TabList} of this {@code this} {@link TabListEntry}.
      * @return parent {@link TabList}
      */
-    @NonNull TabList getTabList();
+    TabList getTabList();
     
     /**
      * Returns the {@link GameProfile} of the entry, which uniquely identifies the entry
@@ -24,14 +22,14 @@ public interface TabListEntry {
      * as the player head in the tab list.
      * @return {@link GameProfile} of the entry
      */
-    @NonNull GameProfile getProfile();
+    GameProfile getProfile();
     
     /**
      * Returns {@link Optional} text {@link Component}, which if present is the text displayed for
      * {@code this} entry in the {@link TabList}, otherwise {@link GameProfile#getName()} is shown.
      * @return {@link Optional} text {@link Component} of name displayed in the tab list
      */
-    @NonNull Optional<Component> getDisplayName();
+    Optional<Component> getDisplayName();
     
     /**
      * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}.
@@ -39,7 +37,7 @@ public interface TabListEntry {
      * @param displayName to show in the {@link TabList} for {@code this} entry
      * @return {@code this}, for chaining
      */
-    @NonNull TabListEntry setDisplayName(@Nullable Component displayName);
+    TabListEntry setDisplayName(@Nullable Component displayName);
     
     /**
      * Returns the latency for {@code this} entry.
@@ -63,7 +61,7 @@ public interface TabListEntry {
      * @param latency to changed to
      * @return {@code this}, for chaining
      */
-    @NonNull TabListEntry setLatency(int latency);
+    TabListEntry setLatency(int latency);
     
     /**
      * Gets the game mode {@code this} entry has been set to.
@@ -99,9 +97,9 @@ public interface TabListEntry {
      * @see TabListEntry
      */
     class Builder {
-        private TabList tabList;
-        private GameProfile profile;
-        private Component displayName;
+        private @Nullable TabList tabList;
+        private @Nullable GameProfile profile;
+        private @Nullable Component displayName;
         private int latency = 0;
         private int gameMode = 0;
 
@@ -167,9 +165,12 @@ public interface TabListEntry {
          * @return the constructed {@link TabListEntry}
          */
         public TabListEntry build() {
-            Preconditions.checkState(tabList != null, "The Tablist must be set when building a TabListEntry");
-            Preconditions.checkState(profile != null, "The GameProfile must be set when building a TabListEntry");
-
+            if (tabList == null) {
+                throw new IllegalStateException("The Tablist must be set when building a TabListEntry");
+            }
+            if (profile == null) {
+                throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
+            }
             return tabList.buildEntry(profile, displayName, latency, gameMode);
         }
     }

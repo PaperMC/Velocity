@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.SkinParts;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Locale;
 
@@ -11,7 +12,7 @@ public class ClientSettingsWrapper implements PlayerSettings {
     
     private final ClientSettings settings;
     private final SkinParts parts;
-    private Locale locale = null;
+    private @Nullable Locale locale;
 
     ClientSettingsWrapper(ClientSettings settings) {
         this.settings = settings;

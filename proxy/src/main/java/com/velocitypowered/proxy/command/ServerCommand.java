@@ -27,7 +27,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String[] args) {
+    public void execute(CommandSource source, String @NonNull [] args) {
         if (!(source instanceof Player)) {
             source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
             return;
@@ -76,7 +76,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public List<String> suggest(CommandSource source, String[] currentArgs) {
+    public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
         if (currentArgs.length == 0) {
             return server.getAllServers().stream()
                     .map(rs -> rs.getServerInfo().getName())
@@ -92,7 +92,7 @@ public class ServerCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
         return source.getPermissionValue("velocity.command.server") != Tristate.FALSE;
     }
 }

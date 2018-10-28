@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -62,11 +61,11 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         private static final PreLoginComponentResult FORCE_OFFLINEMODE = new PreLoginComponentResult(Result.FORCE_OFFLINE, null);
 
         private final Result result;
-        private final Optional<Component> reason;
+        private final @Nullable Component reason;
 
         private PreLoginComponentResult(Result result, @Nullable Component reason) {
             this.result = result;
-            this.reason = Optional.ofNullable(reason);
+            this.reason = reason;
         }
 
         @Override
@@ -75,7 +74,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         }
 
         public Optional<Component> getReason() {
-            return reason;
+            return Optional.ofNullable(reason);
         }
 
         public boolean isOnlineModeAllowed() {
@@ -88,19 +87,16 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
         @Override
         public String toString() {
-            if (isForceOfflineMode()) {
-                return "allowed with force offline mode";
+            switch (result) {
+                case ALLOWED:
+                    return "allowed";
+                case FORCE_OFFLINE:
+                    return "allowed with force offline mode";
+                case FORCE_ONLINE:
+                    return "allowed with online mode";
+                default:
+                    return "denied";
             }
-            if (isOnlineModeAllowed()) {
-                return "allowed with online mode";
-            }
-            if (isAllowed()) {
-                return "allowed";
-            }
-            if (reason.isPresent()) {
-                return "denied: " + ComponentSerializers.PLAIN.serialize(reason.get());
-            }
-            return "denied";
         }
 
         /**

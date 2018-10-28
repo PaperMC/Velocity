@@ -36,7 +36,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     }
 
     @Override
-    public void setResult(@NonNull ChatResult result) {
+    public void setResult(ChatResult result) {
         this.result = Preconditions.checkNotNull(result, "result");
     }
 

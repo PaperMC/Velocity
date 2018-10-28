@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TitlePacket implements MinecraftPacket {
     public static final int SET_TITLE = 0;
@@ -18,7 +19,7 @@ public class TitlePacket implements MinecraftPacket {
     public static final int RESET_OLD = 4;
 
     private int action;
-    private String component;
+    private @Nullable String component;
     private int fadeIn;
     private int stay;
     private int fadeOut;
@@ -37,6 +38,9 @@ public class TitlePacket implements MinecraftPacket {
                 case SET_TITLE:
                 case SET_SUBTITLE:
                 case SET_ACTION_BAR:
+                    if (component == null) {
+                        throw new IllegalStateException("No component found for " + action);
+                    }
                     ProtocolUtils.writeString(buf, component);
                     break;
                 case SET_TIMES:
@@ -52,6 +56,9 @@ public class TitlePacket implements MinecraftPacket {
             switch (action) {
                 case SET_TITLE:
                 case SET_SUBTITLE:
+                    if (component == null) {
+                        throw new IllegalStateException("No component found for " + action);
+                    }
                     ProtocolUtils.writeString(buf, component);
                     break;
                 case SET_TIMES_OLD:
@@ -74,11 +81,11 @@ public class TitlePacket implements MinecraftPacket {
         this.action = action;
     }
 
-    public String getComponent() {
+    public @Nullable String getComponent() {
         return component;
     }
 
-    public void setComponent(String component) {
+    public void setComponent(@Nullable String component) {
         this.component = component;
     }
 

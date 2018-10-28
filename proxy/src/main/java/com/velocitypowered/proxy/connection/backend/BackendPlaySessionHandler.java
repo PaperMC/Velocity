@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
@@ -22,7 +23,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
         this.server = server;
         this.serverConn = serverConn;
-        this.playerSessionHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
+
+        MinecraftSessionHandler psh = serverConn.getPlayer().getConnection().getSessionHandler();
+        if (!(psh instanceof ClientPlaySessionHandler)) {
+            throw new IllegalStateException("Initializing BackendPlaySessionHandler with no backing client play session handler!");
+        }
+        this.playerSessionHandler = (ClientPlaySessionHandler) psh;
     }
 
     @Override
@@ -74,6 +80,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(PluginMessage packet) {
+        MinecraftConnection smc = serverConn.getConnection();
+        if (smc == null) {
+            return true;
+        }
+
         if (!canForwardPluginMessage(packet)) {
             return true;
         }
@@ -105,9 +116,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         server.getEventManager().fire(event)
                 .thenAcceptAsync(pme -> {
                     if (pme.getResult().isAllowed()) {
-                        serverConn.getPlayer().getConnection().write(packet);
+                        smc.write(packet);
                     }
-                }, serverConn.getConnection().eventLoop());
+                }, smc.eventLoop());
         return true;
     }
 
@@ -152,16 +163,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     private boolean canForwardPluginMessage(PluginMessage message) {
-        ClientPlaySessionHandler playerHandler =
-                (ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getSessionHandler();
+        MinecraftConnection mc = serverConn.getConnection();
+        if (mc == null) {
+            return false;
+        }
         boolean isMCOrFMLMessage;
-        if (serverConn.getConnection().getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+        if (mc.getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
             String channel = message.getChannel();
             isMCOrFMLMessage = channel.startsWith("MC|") || channel.startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
         } else {
             isMCOrFMLMessage = message.getChannel().startsWith("minecraft:");
         }
-        return isMCOrFMLMessage || playerHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
+        return isMCOrFMLMessage || playerSessionHandler.getClientPluginMsgChannels().contains(message.getChannel()) ||
                 server.getChannelRegistrar().registered(message.getChannel());
     }
 }

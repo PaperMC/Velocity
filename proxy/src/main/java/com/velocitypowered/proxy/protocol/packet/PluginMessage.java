@@ -6,12 +6,18 @@ import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static com.velocitypowered.proxy.connection.VelocityConstants.*;
 
 public class PluginMessage implements MinecraftPacket {
-    private String channel;
-    private byte[] data;
+    private @Nullable String channel;
+    private byte[] data = EMPTY_BYTE_ARRAY;
 
     public String getChannel() {
+        if (channel == null) {
+            throw new IllegalStateException("Channel is not specified.");
+        }
         return channel;
     }
 
@@ -44,6 +50,9 @@ public class PluginMessage implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (channel == null) {
+            throw new IllegalStateException("Channel is not specified.");
+        }
         ProtocolUtils.writeString(buf, channel);
         buf.writeBytes(data);
     }

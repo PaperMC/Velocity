@@ -17,7 +17,6 @@ public final class PlayerSettingsChangedEvent {
         return player;
     }
 
-    //New settings
     public PlayerSettings getPlayerSettings() {
         return playerSettings;
     }

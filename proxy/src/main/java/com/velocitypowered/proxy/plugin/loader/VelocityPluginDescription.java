@@ -33,7 +33,7 @@ public class VelocityPluginDescription implements PluginDescription {
         this.description = Strings.emptyToNull(description);
         this.url = Strings.emptyToNull(url);
         this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
-        this.dependencies = Maps.uniqueIndex(dependencies, PluginDependency::getId);
+        this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.getId());
         this.source = source;
     }
 

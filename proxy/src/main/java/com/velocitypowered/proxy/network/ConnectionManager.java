@@ -12,6 +12,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -27,16 +28,15 @@ public final class ConnectionManager {
     private final VelocityServer server;
     public final ServerChannelInitializerHolder serverChannelInitializer;
 
-    public ConnectionManager(final VelocityServer server) {
+    public ConnectionManager(VelocityServer server) {
         this.server = server;
         this.transportType = TransportType.bestType();
         this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
         this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
         this.serverChannelInitializer = new ServerChannelInitializerHolder(new ServerChannelInitializer(this.server));
-        this.logChannelInformation();
     }
 
-    private void logChannelInformation() {
+    public void logChannelInformation() {
         LOGGER.info("Connections will use {} channels, {} compression, {} ciphers", this.transportType, Natives.compressor.getLoadedVariant(), Natives.cipher.getLoadedVariant());
     }
 

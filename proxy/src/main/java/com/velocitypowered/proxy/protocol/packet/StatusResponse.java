@@ -5,16 +5,22 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class StatusResponse implements MinecraftPacket {
-    private String status;
+    private @Nullable String status;
 
-    public String getStatus() {
-        return status;
+    public StatusResponse() {}
+
+    public StatusResponse(String status) {
+        this.status = status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public String getStatus() {
+        if (status == null) {
+            throw new IllegalStateException("Status is not specified");
+        }
+        return status;
     }
 
     @Override
@@ -31,6 +37,9 @@ public class StatusResponse implements MinecraftPacket {
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        if (status == null) {
+            throw new IllegalStateException("Status is not specified");
+        }
         ProtocolUtils.writeString(buf, status);
     }
 

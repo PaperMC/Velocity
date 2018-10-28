@@ -21,7 +21,7 @@ public class Ratelimiter {
     Ratelimiter(long timeoutMs, Ticker ticker) {
         if (timeoutMs == 0) {
             this.timeoutNanos = timeoutMs;
-            this.expiringCache = null;
+            this.expiringCache = CacheBuilder.newBuilder().maximumSize(0).build();
         } else {
             this.timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMs);
             this.expiringCache = CacheBuilder.newBuilder()

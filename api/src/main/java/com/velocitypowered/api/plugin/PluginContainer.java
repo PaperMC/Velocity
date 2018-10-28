@@ -1,7 +1,5 @@
 package com.velocitypowered.api.plugin;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.util.Optional;
 
 /**
@@ -13,7 +11,7 @@ public interface PluginContainer {
      *
      * @return the plugin's description
      */
-    @NonNull PluginDescription getDescription();
+    PluginDescription getDescription();
 
     /**
      * Returns the created plugin if it is available.

@@ -3,6 +3,7 @@ package com.velocitypowered.api.proxy.player;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.GameProfile;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -47,5 +48,5 @@ public interface TabList {
 
     // Necessary because the TabListEntry implementation isn't in the api
     @Deprecated
-    TabListEntry buildEntry(GameProfile profile, Component displayName, int latency, int gameMode);
+    TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode);
 }

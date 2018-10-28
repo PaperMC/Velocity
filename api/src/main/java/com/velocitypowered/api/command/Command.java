@@ -15,7 +15,7 @@ public interface Command {
      * @param source the source of this command
      * @param args the arguments for this command
      */
-    void execute(@NonNull CommandSource source, @NonNull String[] args);
+    void execute(CommandSource source, String @NonNull [] args);
 
     /**
      * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
@@ -23,7 +23,7 @@ public interface Command {
      * @param currentArgs the current, partial arguments for this command
      * @return tab complete suggestions
      */
-    default List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
+    default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
         return ImmutableList.of();
     }
 
@@ -38,7 +38,7 @@ public interface Command {
      * @param args the arguments for this command
      * @return whether the source has permission
      */
-    default boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+    default boolean hasPermission(CommandSource source, String @NonNull [] args) {
         return true;
     }
 }

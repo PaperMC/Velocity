@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
@@ -7,12 +8,14 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
@@ -39,6 +42,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.*;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -58,36 +62,54 @@ public class VelocityServer implements ProxyServer {
             .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
             .create();
 
-    private final ConnectionManager cm = new ConnectionManager(this);
-    private VelocityConfiguration configuration;
-    private NettyHttpClient httpClient;
-    private KeyPair serverKeyPair;
-    private final ServerMap servers = new ServerMap(this);
+    private @MonotonicNonNull ConnectionManager cm;
+    private @MonotonicNonNull VelocityConfiguration configuration;
+    private @MonotonicNonNull NettyHttpClient httpClient;
+    private @MonotonicNonNull KeyPair serverKeyPair;
+    private @MonotonicNonNull ServerMap servers;
     private final VelocityCommandManager commandManager = new VelocityCommandManager();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
     private boolean shutdown = false;
-    private final VelocityPluginManager pluginManager = new VelocityPluginManager(this);
+    private @MonotonicNonNull VelocityPluginManager pluginManager;
 
     private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
     private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-    private final VelocityConsole console = new VelocityConsole(this);
-    private Ratelimiter ipAttemptLimiter;
-    private VelocityEventManager eventManager;
-    private VelocityScheduler scheduler;
-    private VelocityChannelRegistrar channelRegistrar;
-
-    VelocityServer() {
-        commandManager.register(new VelocityCommand(), "velocity");
-        commandManager.register(new ServerCommand(this), "server");
-        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
-    }
+    private @MonotonicNonNull VelocityConsole console;
+    private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
+    private @MonotonicNonNull VelocityEventManager eventManager;
+    private @MonotonicNonNull VelocityScheduler scheduler;
+    private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
     public KeyPair getServerKeyPair() {
+        if (serverKeyPair == null) {
+            throw new AssertionError();
+        }
         return serverKeyPair;
     }
 
     public VelocityConfiguration getConfiguration() {
-        return configuration;
+        VelocityConfiguration cfg = this.configuration;
+        if (cfg == null) {
+            throw new IllegalStateException("Configuration not initialized!");
+        }
+        return cfg;
+    }
+
+    @Override
+    public ProxyVersion getVersion() {
+        Package pkg = VelocityServer.class.getPackage();
+        String implName, implVersion, implVendor;
+        if (pkg != null) {
+            implName = MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
+            implVersion = MoreObjects.firstNonNull(pkg.getImplementationVersion(), "<unknown>");
+            implVendor = MoreObjects.firstNonNull(pkg.getImplementationVendor(), "Velocity Contributors");
+        } else {
+            implName = "Velocity";
+            implVersion = "<unknown>";
+            implVendor = "Velocity Contributors";
+        }
+
+        return new ProxyVersion(implName, implVendor, implVersion);
     }
 
     @Override
@@ -95,7 +117,25 @@ public class VelocityServer implements ProxyServer {
         return commandManager;
     }
 
+    @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler", "console", "cm", "configuration"})
     public void start() {
+        logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+
+        serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
+        pluginManager = new VelocityPluginManager(this);
+        eventManager = new VelocityEventManager(pluginManager);
+        scheduler = new VelocityScheduler(pluginManager);
+        console = new VelocityConsole(this);
+        cm = new ConnectionManager(this);
+        servers = new ServerMap(this);
+
+        cm.logChannelInformation();
+
+        // Initialize commands first
+        commandManager.register(new VelocityCommand(this), "velocity");
+        commandManager.register(new ServerCommand(this), "server");
+        commandManager.register(new ShutdownCommand(this), "shutdown", "end");
+
         try {
             Path configPath = Paths.get("velocity.toml");
             configuration = VelocityConfiguration.read(configPath);
@@ -118,22 +158,13 @@ public class VelocityServer implements ProxyServer {
             servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
         }
 
-        serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
         ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
         httpClient = new NettyHttpClient(this);
-        eventManager = new VelocityEventManager(pluginManager);
-        scheduler = new VelocityScheduler(pluginManager);
-        channelRegistrar = new VelocityChannelRegistrar();
         loadPlugins();
 
-        try {
-            // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
-            // to fully initialize before we accept any connections to the server.
-            eventManager.fire(new ProxyInitializeEvent()).get();
-        } catch (InterruptedException | ExecutionException e) {
-            // Ignore, we don't care. InterruptedException is unlikely to happen (and if it does, you've got bigger
-            // issues) and there is almost no chance ExecutionException will be thrown.
-        }
+        // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
+        // to fully initialize before we accept any connections to the server.
+        eventManager.fire(new ProxyInitializeEvent()).join();
 
         // init console permissions after plugins are loaded
         console.setupPermissions();
@@ -145,6 +176,7 @@ public class VelocityServer implements ProxyServer {
         }
     }
 
+    @RequiresNonNull({"pluginManager", "eventManager"})
     private void loadPlugins() {
         logger.info("Loading plugins...");
 
@@ -166,18 +198,20 @@ public class VelocityServer implements ProxyServer {
         }
 
         // Register the plugin main classes so that we may proceed with firing the proxy initialize event
-        pluginManager.getPlugins().forEach(container -> {
-            container.getInstance().ifPresent(plugin -> eventManager.register(plugin, plugin));
-        });
+        for (PluginContainer plugin : pluginManager.getPlugins()) {
+            Optional<?> instance = plugin.getInstance();
+            if (instance.isPresent()) {
+                eventManager.register(instance.get(), instance.get());
+            }
+        }
 
         logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
     }
 
-    public ServerMap getServers() {
-        return servers;
-    }
-
     public Bootstrap initializeGenericBootstrap() {
+        if (cm == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return this.cm.createWorker();
     }
 
@@ -186,6 +220,10 @@ public class VelocityServer implements ProxyServer {
     }
 
     public void shutdown() {
+        if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
+            throw new AssertionError();
+        }
+
         if (!shutdownInProgress.compareAndSet(false, true)) {
             return;
         }
@@ -210,10 +248,16 @@ public class VelocityServer implements ProxyServer {
     }
 
     public NettyHttpClient getHttpClient() {
+        if (httpClient == null) {
+            throw new IllegalStateException("HTTP client not initialized");
+        }
         return httpClient;
     }
 
     public Ratelimiter getIpAttemptLimiter() {
+        if (ipAttemptLimiter == null) {
+            throw new IllegalStateException("Ratelimiter not initialized");
+        }
         return ipAttemptLimiter;
     }
 
@@ -268,41 +312,65 @@ public class VelocityServer implements ProxyServer {
     @Override
     public Optional<RegisteredServer> getServer(String name) {
         Preconditions.checkNotNull(name, "name");
+        if (servers == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return servers.getServer(name);
     }
 
     @Override
     public Collection<RegisteredServer> getAllServers() {
+        if (servers == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return servers.getAllServers();
     }
 
     @Override
     public RegisteredServer registerServer(ServerInfo server) {
+        if (servers == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return servers.register(server);
     }
 
     @Override
     public void unregisterServer(ServerInfo server) {
+        if (servers == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         servers.unregister(server);
     }
 
     @Override
     public VelocityConsole getConsoleCommandSource() {
+        if (console == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return console;
     }
 
     @Override
     public PluginManager getPluginManager() {
+        if (pluginManager == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return pluginManager;
     }
 
     @Override
     public EventManager getEventManager() {
+        if (eventManager == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return eventManager;
     }
 
     @Override
     public VelocityScheduler getScheduler() {
+        if (scheduler == null) {
+            throw new IllegalStateException("Server did not initialize properly.");
+        }
         return scheduler;
     }
 
@@ -313,6 +381,9 @@ public class VelocityServer implements ProxyServer {
 
     @Override
     public InetSocketAddress getBoundAddress() {
+        if (configuration == null) {
+            throw new IllegalStateException("No configuration"); // even though you'll never get the chance... heh, heh
+        }
         return configuration.getBind();
     }
 }

@@ -8,10 +8,12 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
+import static com.velocitypowered.proxy.connection.VelocityConstants.*;
+
 public class EncryptionRequest implements MinecraftPacket {
     private String serverId = "";
-    private byte[] publicKey;
-    private byte[] verifyToken;
+    private byte[] publicKey = EMPTY_BYTE_ARRAY;
+    private byte[] verifyToken = EMPTY_BYTE_ARRAY;
 
     public byte[] getPublicKey() {
         return publicKey;

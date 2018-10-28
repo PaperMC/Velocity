@@ -1,12 +1,12 @@
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.util.ProxyVersion;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
@@ -20,9 +20,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VelocityCommand implements Command {
-    private final Map<String, Command> subcommands = ImmutableMap.<String, Command>builder()
-            .put("version", Info.INSTANCE)
-            .build();
+    private final Map<String, Command> subcommands;
+
+    public VelocityCommand(ProxyServer server) {
+        this.subcommands = ImmutableMap.<String, Command>builder()
+                .put("version", new Info(server))
+                .build();
+    }
 
     private void usage(CommandSource source) {
         String commandText = "/velocity <" + String.join("|", subcommands.keySet()) + ">";
@@ -30,7 +34,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String[] args) {
+    public void execute(CommandSource source, String @NonNull [] args) {
         if (args.length == 0) {
             usage(source);
             return;
@@ -41,11 +45,13 @@ public class VelocityCommand implements Command {
             usage(source);
             return;
         }
-        command.execute(source, Arrays.copyOfRange(args, 1, args.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
+        command.execute(source, actualArgs);
     }
 
     @Override
-    public List<String> suggest(@NonNull CommandSource source, @NonNull String[] currentArgs) {
+    public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
         if (currentArgs.length == 0) {
             return ImmutableList.copyOf(subcommands.keySet());
         }
@@ -60,11 +66,13 @@ public class VelocityCommand implements Command {
         if (command == null) {
             return ImmutableList.of();
         }
-        return command.suggest(source, Arrays.copyOfRange(currentArgs, 1, currentArgs.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(currentArgs, 1, currentArgs.length);
+        return command.suggest(source, actualArgs);
     }
 
     @Override
-    public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
         if (args.length == 0) {
             return true;
         }
@@ -72,29 +80,33 @@ public class VelocityCommand implements Command {
         if (command == null) {
             return true;
         }
-        return command.hasPermission(source, Arrays.copyOfRange(args, 1, args.length));
+        @SuppressWarnings("nullness")
+        String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
+        return command.hasPermission(source, actualArgs);
     }
 
     private static class Info implements Command {
-        static final Info INSTANCE = new Info();
-        private Info() {}
+        private final ProxyServer server;
+
+        private Info(ProxyServer server) {
+            this.server = server;
+        }
 
         @Override
-        public void execute(@NonNull CommandSource source, @NonNull String[] args) {
-            String implName = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationTitle(), "Velocity");
-            String implVersion = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVersion(), "<unknown>");
-            String implVendor = MoreObjects.firstNonNull(VelocityServer.class.getPackage().getImplementationVendor(), "Velocity Contributors");
-            TextComponent velocity = TextComponent.builder(implName + " ")
+        public void execute(CommandSource source, String @NonNull [] args) {
+            ProxyVersion version = server.getVersion();
+
+            TextComponent velocity = TextComponent.builder(version.getName() + " ")
                     .decoration(TextDecoration.BOLD, true)
                     .color(TextColor.DARK_AQUA)
-                    .append(TextComponent.of(implVersion).decoration(TextDecoration.BOLD, false))
+                    .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
                     .build();
-            TextComponent copyright = TextComponent.of("Copyright 2018 " + implVendor + ". " + implName + " is freely licensed under the terms of the " +
+            TextComponent copyright = TextComponent.of("Copyright 2018 " + version.getVendor() + ". " + version.getName() + " is freely licensed under the terms of the " +
                     "MIT License.");
             source.sendMessage(velocity);
             source.sendMessage(copyright);
 
-            if (implName.equals("Velocity")) {
+            if (version.getName().equals("Velocity")) {
                 TextComponent velocityWebsite = TextComponent.builder()
                         .content("Visit the ")
                         .append(TextComponent.builder("Velocity website")
@@ -112,7 +124,7 @@ public class VelocityCommand implements Command {
         }
 
         @Override
-        public boolean hasPermission(@NonNull CommandSource source, @NonNull String[] args) {
+        public boolean hasPermission(CommandSource source, String @NonNull [] args) {
             return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
         }
     }

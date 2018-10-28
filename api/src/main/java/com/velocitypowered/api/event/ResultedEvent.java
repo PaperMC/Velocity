@@ -22,7 +22,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
      * Sets the result of this event. The result must be non-null.
      * @param result the new result
      */
-    void setResult(@NonNull R result);
+    void setResult(R result);
 
     /**
      * Represents a result for an event.
@@ -106,7 +106,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
             return ALLOWED;
         }
 
-        public static ComponentResult denied(@NonNull Component reason) {
+        public static ComponentResult denied(Component reason) {
             Preconditions.checkNotNull(reason, "reason");
             return new ComponentResult(false, reason);
         }

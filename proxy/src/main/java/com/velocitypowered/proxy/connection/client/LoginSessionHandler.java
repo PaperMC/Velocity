@@ -22,10 +22,12 @@ import com.velocitypowered.proxy.util.EncryptionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -38,6 +40,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
+
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
     private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
@@ -47,10 +51,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     private final VelocityServer server;
     private final MinecraftConnection inbound;
     private final InboundConnection apiInbound;
-    private ServerLogin login;
-    private byte[] verify;
+    private @MonotonicNonNull ServerLogin login;
+    private byte[] verify = EMPTY_BYTE_ARRAY;
     private int playerInfoId;
-    private ConnectedPlayer connectedPlayer;
+    private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
     public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound, InboundConnection apiInbound) {
         this.server = Preconditions.checkNotNull(server, "server");
@@ -62,12 +66,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     public boolean handle(ServerLogin packet) {
         this.login = packet;
         if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
-            LoginPluginMessage message = new LoginPluginMessage();
             playerInfoId = ThreadLocalRandom.current().nextInt();
-            message.setId(playerInfoId);
-            message.setChannel(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL);
-            message.setData(Unpooled.EMPTY_BUFFER);
-            inbound.write(message);
+            inbound.write(new LoginPluginMessage(playerInfoId, VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL,
+                    Unpooled.EMPTY_BUFFER));
         } else {
             beginPreLogin();
         }
@@ -92,6 +93,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(EncryptionResponse packet) {
+        ServerLogin login = this.login;
+        if (login == null) {
+            throw new IllegalStateException("No ServerLogin packet received yet.");
+        }
+
+        if (verify.length == 0) {
+            throw new IllegalStateException("No EncryptionRequest packet sent yet.");
+        }
+
         try {
             KeyPair serverKeyPair = server.getServerKeyPair();
             byte[] decryptedVerifyToken = EncryptionUtils.decryptRsa(serverKeyPair, packet.getVerifyToken());
@@ -149,6 +159,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     private void beginPreLogin() {
+        ServerLogin login = this.login;
+        if (login == null) {
+            throw new IllegalStateException("No ServerLogin packet received yet.");
+        }
         PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
         server.getEventManager().fire(event)
                 .thenRunAsync(() -> {
@@ -157,9 +171,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                         return;
                     }
                     PreLoginComponentResult result = event.getResult();
-                    if (!result.isAllowed()) {
+                    Optional<Component> disconnectReason = result.getReason();
+                    if (disconnectReason.isPresent()) {
                         // The component is guaranteed to be provided if the connection was denied.
-                        inbound.closeWith(Disconnect.create(event.getResult().getReason().get()));
+                        inbound.closeWith(Disconnect.create(disconnectReason.get()));
                         return;
                     }
 
@@ -212,13 +227,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                                 // The player was disconnected
                                 return;
                             }
-                            if (!event.getResult().isAllowed()) {
-                                // The component is guaranteed to be provided if the connection was denied.
-                                player.disconnect(event.getResult().getReason().get());
-                                return;
-                            }
 
-                            handleProxyLogin(player);
+                            Optional<Component> reason = event.getResult().getReason();
+                            if (reason.isPresent()) {
+                                player.disconnect(reason.get());
+                            } else {
+                                handleProxyLogin(player);
+                            }
                         }, inbound.eventLoop());
         });
 

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.PermissionSubject;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -22,7 +21,7 @@ public final class PermissionsSetupEvent {
         this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
     }
 
-    public @NonNull PermissionSubject getSubject() {
+    public PermissionSubject getSubject() {
         return this.subject;
     }
 
@@ -33,11 +32,11 @@ public final class PermissionsSetupEvent {
      * @param subject the subject
      * @return the obtained permission function
      */
-    public @NonNull PermissionFunction createFunction(PermissionSubject subject) {
+    public PermissionFunction createFunction(PermissionSubject subject) {
         return this.provider.createFunction(subject);
     }
 
-    public @NonNull PermissionProvider getProvider() {
+    public PermissionProvider getProvider() {
         return this.provider;
     }
 

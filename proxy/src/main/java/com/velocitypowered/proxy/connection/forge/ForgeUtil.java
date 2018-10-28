@@ -9,15 +9,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.util.List;
-import java.util.Optional;
 
 public class ForgeUtil {
-
     private ForgeUtil() {
         throw new AssertionError();
     }
 
-    public static Optional<List<ModInfo.Mod>> readModList(PluginMessage message) {
+    public static List<ModInfo.Mod> readModList(PluginMessage message) {
         Preconditions.checkNotNull(message, "message");
         Preconditions.checkArgument(message.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL),
                 "message is not a FML HS plugin message");
@@ -36,10 +34,10 @@ public class ForgeUtil {
                     mods.add(new ModInfo.Mod(id, version));
                 }
 
-                return Optional.of(mods.build());
+                return mods.build();
             }
 
-            return Optional.empty();
+            return ImmutableList.of();
         } finally {
             byteBuf.release();
         }

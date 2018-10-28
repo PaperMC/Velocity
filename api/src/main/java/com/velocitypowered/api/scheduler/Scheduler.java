@@ -1,5 +1,8 @@
 package com.velocitypowered.api.scheduler;
 
+import org.checkerframework.common.value.qual.IntRange;
+import org.checkerframework.common.value.qual.IntRangeFromNonNegative;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +27,7 @@ public interface Scheduler {
          * @param unit the unit of time for {@code time}
          * @return this builder, for chaining
          */
-        TaskBuilder delay(long time, TimeUnit unit);
+        TaskBuilder delay(@IntRange(from = 0) long time, TimeUnit unit);
 
         /**
          * Specifies that the task should continue running after waiting for the specified amount, until it is cancelled.
@@ -32,7 +35,7 @@ public interface Scheduler {
          * @param unit the unit of time for {@code time}
          * @return this builder, for chaining
          */
-        TaskBuilder repeat(long time, TimeUnit unit);
+        TaskBuilder repeat(@IntRange(from = 0) long time, TimeUnit unit);
 
         /**
          * Clears the delay on this task.

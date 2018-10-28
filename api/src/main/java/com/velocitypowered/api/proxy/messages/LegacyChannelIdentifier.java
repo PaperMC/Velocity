@@ -2,6 +2,7 @@ package com.velocitypowered.api.proxy.messages;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -27,7 +28,7 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LegacyChannelIdentifier that = (LegacyChannelIdentifier) o;

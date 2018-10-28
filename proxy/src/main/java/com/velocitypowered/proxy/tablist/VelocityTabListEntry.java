@@ -12,11 +12,11 @@ import java.util.Optional;
 public class VelocityTabListEntry implements TabListEntry {
     private final VelocityTabList tabList;
     private final GameProfile profile;
-    private Component displayName;
+    private @Nullable Component displayName;
     private int latency;
     private int gameMode;
 
-    VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName, int latency, int gameMode) {
+    VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
         this.tabList = tabList;
         this.profile = profile;
         this.displayName = displayName;

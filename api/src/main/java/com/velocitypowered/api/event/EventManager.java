@@ -1,7 +1,5 @@
 package com.velocitypowered.api.event;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -13,7 +11,7 @@ public interface EventManager {
      * @param plugin the plugin to associate with the listener
      * @param listener the listener to register
      */
-    void register(@NonNull Object plugin, @NonNull Object listener);
+    void register(Object plugin, Object listener);
 
     /**
      * Requests that the specified {@code handler} listen for events and associate it with the {@code plugin}.
@@ -22,7 +20,7 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    default <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull EventHandler<E> handler) {
+    default <E> void register(Object plugin, Class<E> eventClass, EventHandler<E> handler) {
         register(plugin, eventClass, PostOrder.NORMAL, handler);
     }
 
@@ -34,7 +32,7 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    <E> void register(@NonNull Object plugin, @NonNull Class<E> eventClass, @NonNull PostOrder postOrder, @NonNull EventHandler<E> handler);
+    <E> void register(Object plugin, Class<E> eventClass, PostOrder postOrder, EventHandler<E> handler);
 
     /**
      * Fires the specified event to the event bus asynchronously. This allows Velocity to continue servicing connections
@@ -42,13 +40,13 @@ public interface EventManager {
      * @param event the event to fire
      * @return a {@link CompletableFuture} representing the posted event
      */
-    @NonNull <E> CompletableFuture<E> fire(@NonNull E event);
+    <E> CompletableFuture<E> fire(E event);
 
     /**
      * Posts the specified event to the event bus and discards the result.
      * @param event the event to fire
      */
-    default void fireAndForget(@NonNull Object event) {
+    default void fireAndForget(Object event) {
         fire(event);
     }
 
@@ -56,14 +54,14 @@ public interface EventManager {
      * Unregisters all listeners for the specified {@code plugin}.
      * @param plugin the plugin to deregister listeners for
      */
-    void unregisterListeners(@NonNull Object plugin);
+    void unregisterListeners(Object plugin);
 
     /**
      * Unregisters a specific listener for a specific plugin.
      * @param plugin the plugin associated with the listener
      * @param listener the listener to deregister
      */
-    void unregisterListener(@NonNull Object plugin, @NonNull Object listener);
+    void unregisterListener(Object plugin, Object listener);
 
     /**
      * Unregisters a specific event handler for a specific plugin.
@@ -71,5 +69,5 @@ public interface EventManager {
      * @param handler the handler to register
      * @param <E> the event type to handle
      */
-    <E> void unregister(@NonNull Object plugin, @NonNull EventHandler<E> handler);
+    <E> void unregister(Object plugin, EventHandler<E> handler);
 }

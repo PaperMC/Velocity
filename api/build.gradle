@@ -4,6 +4,8 @@ plugins {
     id 'maven-publish'
 }
 
+apply from: '../gradle/checkerframework.gradle'
+
 sourceSets {
     ap {
         compileClasspath += main.compileClasspath + main.output
@@ -17,7 +19,7 @@ dependencies {
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile 'com.google.inject:guice:4.2.0'
-    compile 'org.checkerframework:checker-qual:2.5.4'
+    compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
 
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"

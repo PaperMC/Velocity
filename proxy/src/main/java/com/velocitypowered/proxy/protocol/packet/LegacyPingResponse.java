@@ -6,14 +6,11 @@ import net.kyori.text.serializer.ComponentSerializers;
 
 public class LegacyPingResponse {
     private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0, ImmutableList.of());
-    private int protocolVersion;
-    private String serverVersion;
-    private String motd;
-    private int playersOnline;
-    private int playersMax;
-
-    public LegacyPingResponse() {
-    }
+    private final int protocolVersion;
+    private final String serverVersion;
+    private final String motd;
+    private final int playersOnline;
+    private final int playersMax;
 
     public LegacyPingResponse(int protocolVersion, String serverVersion, String motd, int playersOnline, int playersMax) {
         this.protocolVersion = protocolVersion;
@@ -27,40 +24,20 @@ public class LegacyPingResponse {
         return protocolVersion;
     }
 
-    public void setProtocolVersion(int protocolVersion) {
-        this.protocolVersion = protocolVersion;
-    }
-
     public String getServerVersion() {
         return serverVersion;
-    }
-
-    public void setServerVersion(String serverVersion) {
-        this.serverVersion = serverVersion;
     }
 
     public String getMotd() {
         return motd;
     }
 
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
     public int getPlayersOnline() {
         return playersOnline;
     }
 
-    public void setPlayersOnline(int playersOnline) {
-        this.playersOnline = playersOnline;
-    }
-
     public int getPlayersMax() {
         return playersMax;
-    }
-
-    public void setPlayersMax(int playersMax) {
-        this.playersMax = playersMax;
     }
 
     @Override

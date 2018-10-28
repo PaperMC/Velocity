@@ -10,7 +10,7 @@ import io.netty.buffer.Unpooled;
 public class LoginPluginResponse implements MinecraftPacket {
     private int id;
     private boolean success;
-    private ByteBuf data;
+    private ByteBuf data = Unpooled.EMPTY_BUFFER;
 
     public int getId() {
         return id;

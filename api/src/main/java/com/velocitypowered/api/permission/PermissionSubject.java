@@ -1,7 +1,5 @@
 package com.velocitypowered.api.permission;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 /**
  * Represents a object that has a set of queryable permissions.
  */
@@ -12,7 +10,7 @@ public interface PermissionSubject {
      * @param permission the permission to check for
      * @return whether or not the subject has the permission
      */
-    default boolean hasPermission(@NonNull String permission) {
+    default boolean hasPermission(String permission) {
         return getPermissionValue(permission).asBoolean();
     }
 
@@ -22,5 +20,5 @@ public interface PermissionSubject {
      * @param permission the permission
      * @return the value the permission is set to
      */
-    @NonNull Tristate getPermissionValue(@NonNull String permission);
+    Tristate getPermissionValue(String permission);
 }

@@ -1,7 +1,5 @@
 package com.velocitypowered.api.permission;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 /**
  * Function that calculates the permission settings for a given
  * {@link PermissionSubject}.
@@ -29,5 +27,5 @@ public interface PermissionFunction {
      * @param permission the permission
      * @return the value the permission is set to
      */
-    @NonNull Tristate getPermissionValue(@NonNull String permission);
+    Tristate getPermissionValue(String permission);
 }

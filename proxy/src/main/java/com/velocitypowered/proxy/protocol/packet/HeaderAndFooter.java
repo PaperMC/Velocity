@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants.Direction;
@@ -11,34 +12,27 @@ import net.kyori.text.serializer.ComponentSerializers;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
 
 public class HeaderAndFooter implements MinecraftPacket {
-
-    private static final HeaderAndFooter RESET = new HeaderAndFooter("{\"translate\":\"\"}", "{\"translate\":\"\"}");
+    private static final String EMPTY_COMPONENT = "{\"translate\":\"\"}";
+    private static final HeaderAndFooter RESET = new HeaderAndFooter();
     
     private String header;
     private String footer;
 
     public HeaderAndFooter() {
+        this(EMPTY_COMPONENT, EMPTY_COMPONENT);
     }
 
     public HeaderAndFooter(String header, String footer) {
-        this.header = header;
-        this.footer = footer;
+        this.header = Preconditions.checkNotNull(header, "header");
+        this.footer = Preconditions.checkNotNull(footer, "footer");
     }
 
     public String getHeader() {
         return header;
     }
 
-    public void setHeader(String header) {
-        this.header = header;
-    }
-
     public String getFooter() {
         return footer;
-    }
-
-    public void setFooter(String footer) {
-        this.footer = footer;
     }
 
     @Override

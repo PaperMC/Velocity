@@ -5,6 +5,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
     private int entityId;
@@ -12,7 +13,7 @@ public class JoinGame implements MinecraftPacket {
     private int dimension;
     private short difficulty;
     private short maxPlayers;
-    private String levelType;
+    private @Nullable String levelType;
     private boolean reducedDebugInfo;
 
     public int getEntityId() {
@@ -56,6 +57,9 @@ public class JoinGame implements MinecraftPacket {
     }
 
     public String getLevelType() {
+        if (levelType == null) {
+            throw new IllegalStateException("No level type specified.");
+        }
         return levelType;
     }
 
@@ -110,6 +114,9 @@ public class JoinGame implements MinecraftPacket {
         }
         buf.writeByte(difficulty);
         buf.writeByte(maxPlayers);
+        if (levelType == null) {
+            throw new IllegalStateException("No level type specified.");
+        }
         ProtocolUtils.writeString(buf, levelType);
         buf.writeBoolean(reducedDebugInfo);
     }

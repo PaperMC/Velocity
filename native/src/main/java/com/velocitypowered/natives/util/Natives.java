@@ -8,6 +8,7 @@ import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -21,7 +22,12 @@ public class Natives {
         return () -> {
             try {
                 Path tempFile = Files.createTempFile("native-", path.substring(path.lastIndexOf('.')));
-                Files.copy(Natives.class.getResourceAsStream(path), tempFile, StandardCopyOption.REPLACE_EXISTING);
+                InputStream nativeLib = Natives.class.getResourceAsStream(path);
+                if (nativeLib == null) {
+                    throw new IllegalStateException("Native library " + path + " not found.");
+                }
+
+                Files.copy(nativeLib, tempFile, StandardCopyOption.REPLACE_EXISTING);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
                         Files.deleteIfExists(tempFile);
