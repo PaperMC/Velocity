@@ -46,6 +46,11 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     return ImmutableList.copyOf(identifierMap.keySet());
   }
 
+  /**
+   * Returns all channel IDs (as strings) for use with Minecraft 1.13 and above.
+   *
+   * @return the channel IDs for Minecraft 1.13 and above
+   */
   public Collection<String> getModernChannelIds() {
     Collection<String> ids = new ArrayList<>();
     for (ChannelIdentifier value : identifierMap.values()) {

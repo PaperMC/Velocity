@@ -7,10 +7,15 @@ public class LegacyDisconnect {
 
   private final String reason;
 
-  public LegacyDisconnect(String reason) {
+  private LegacyDisconnect(String reason) {
     this.reason = reason;
   }
 
+  /**
+   * Converts a legacy response into a disconnect packet.
+   * @param response the response to convert
+   * @return the disconnect packet
+   */
   public static LegacyDisconnect fromPingResponse(LegacyPingResponse response) {
     String kickMessage = String.join("\0",
         "§1",

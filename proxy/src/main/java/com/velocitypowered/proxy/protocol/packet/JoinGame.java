@@ -78,15 +78,15 @@ public class JoinGame implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "JoinGame{" +
-        "entityId=" + entityId +
-        ", gamemode=" + gamemode +
-        ", dimension=" + dimension +
-        ", difficulty=" + difficulty +
-        ", maxPlayers=" + maxPlayers +
-        ", levelType='" + levelType + '\'' +
-        ", reducedDebugInfo=" + reducedDebugInfo +
-        '}';
+    return "JoinGame{"
+        + "entityId=" + entityId
+        + ", gamemode=" + gamemode
+        + ", dimension=" + dimension
+        + ", difficulty=" + difficulty
+        + ", maxPlayers=" + maxPlayers
+        + ", levelType='" + levelType + '\''
+        + ", reducedDebugInfo=" + reducedDebugInfo
+        + '}';
   }
 
   @Override

@@ -27,9 +27,9 @@ public class StatusResponse implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "StatusResponse{" +
-        "status='" + status + '\'' +
-        '}';
+    return "StatusResponse{"
+        + "status='" + status + '\''
+        + '}';
   }
 
   @Override

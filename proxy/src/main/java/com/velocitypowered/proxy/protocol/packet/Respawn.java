@@ -57,12 +57,12 @@ public class Respawn implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "Respawn{" +
-        "dimension=" + dimension +
-        ", difficulty=" + difficulty +
-        ", gamemode=" + gamemode +
-        ", levelType='" + levelType + '\'' +
-        '}';
+    return "Respawn{"
+        + "dimension=" + dimension
+        + ", difficulty=" + difficulty
+        + ", gamemode=" + gamemode
+        + ", levelType='" + levelType + '\''
+        + '}';
   }
 
   @Override

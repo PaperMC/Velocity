@@ -22,9 +22,9 @@ public class KeepAlive implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "KeepAlive{" +
-        "randomId=" + randomId +
-        '}';
+    return "KeepAlive{"
+        + "randomId=" + randomId
+        + '}';
   }
 
   @Override

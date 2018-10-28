@@ -85,15 +85,15 @@ public class BossBar implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "BossBar{" +
-        "uuid=" + uuid +
-        ", action=" + action +
-        ", name='" + name + '\'' +
-        ", percent=" + percent +
-        ", color=" + color +
-        ", overlay=" + overlay +
-        ", flags=" + flags +
-        '}';
+    return "BossBar{"
+        + "uuid=" + uuid
+        + ", action=" + action
+        + ", name='" + name + '\''
+        + ", percent=" + percent
+        + ", color=" + color
+        + ", overlay=" + overlay
+        + ", flags=" + flags
+        + '}';
   }
 
   @Override

@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.server.ping;
+package com.velocitypowered.proxy.server;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -20,7 +20,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private final MinecraftConnection connection;
   private boolean completed = false;
 
-  public PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
+  PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
       MinecraftConnection connection) {
     this.result = result;
     this.server = server;

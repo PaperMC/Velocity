@@ -28,9 +28,9 @@ public class ServerLogin implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ServerLogin{" +
-        "username='" + username + '\'' +
-        '}';
+    return "ServerLogin{"
+        + "username='" + username + '\''
+        + '}';
   }
 
   @Override

@@ -47,10 +47,10 @@ public class Chat implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "Chat{" +
-        "message='" + message + '\'' +
-        ", type=" + type +
-        '}';
+    return "Chat{"
+        + "message='" + message + '\''
+        + ", type=" + type
+        + '}';
   }
 
   @Override

@@ -141,13 +141,13 @@ public class TitlePacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "TitlePacket{" +
-        "action=" + action +
-        ", component='" + component + '\'' +
-        ", fadeIn=" + fadeIn +
-        ", stay=" + stay +
-        ", fadeOut=" + fadeOut +
-        '}';
+    return "TitlePacket{"
+        + "action=" + action
+        + ", component='" + component + '\''
+        + ", fadeIn=" + fadeIn
+        + ", stay=" + stay
+        + ", fadeOut=" + fadeOut
+        + '}';
   }
 
   @Override

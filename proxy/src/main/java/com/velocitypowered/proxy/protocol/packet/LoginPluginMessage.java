@@ -41,11 +41,11 @@ public class LoginPluginMessage implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "LoginPluginMessage{" +
-        "id=" + id +
-        ", channel='" + channel + '\'' +
-        ", data=" + data +
-        '}';
+    return "LoginPluginMessage{"
+        + "id=" + id
+        + ", channel='" + channel + '\''
+        + ", data=" + data
+        + '}';
   }
 
   @Override

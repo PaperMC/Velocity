@@ -53,12 +53,12 @@ public class TabCompleteRequest implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "TabCompleteRequest{" +
-        "command='" + command + '\'' +
-        ", assumeCommand=" + assumeCommand +
-        ", hasPosition=" + hasPosition +
-        ", position=" + position +
-        '}';
+    return "TabCompleteRequest{"
+        + "command='" + command + '\''
+        + ", assumeCommand=" + assumeCommand
+        + ", hasPosition=" + hasPosition
+        + ", position=" + position
+        + '}';
   }
 
   @Override

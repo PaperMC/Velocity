@@ -21,6 +21,12 @@ public class ServerMap {
     this.server = server;
   }
 
+  /**
+   * Returns the server associated with the given name.
+   *
+   * @param name the name to look up
+   * @return the server, if it exists
+   */
   public Optional<RegisteredServer> getServer(String name) {
     Preconditions.checkNotNull(name, "server");
     String lowerName = name.toLowerCase(Locale.US);
@@ -31,6 +37,12 @@ public class ServerMap {
     return ImmutableList.copyOf(servers.values());
   }
 
+  /**
+   * Registers a server with the proxy.
+   *
+   * @param serverInfo the server to register
+   * @return the registered server
+   */
   public RegisteredServer register(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
     String lowerName = serverInfo.getName().toLowerCase(Locale.US);
@@ -47,6 +59,11 @@ public class ServerMap {
     }
   }
 
+  /**
+   * Unregisters the specified server from the proxy.
+   *
+   * @param serverInfo the server to unregister
+   */
   public void unregister(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
     String lowerName = serverInfo.getName().toLowerCase(Locale.US);

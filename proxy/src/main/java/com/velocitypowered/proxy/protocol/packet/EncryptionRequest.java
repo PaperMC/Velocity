@@ -33,10 +33,10 @@ public class EncryptionRequest implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "EncryptionRequest{" +
-        "publicKey=" + Arrays.toString(publicKey) +
-        ", verifyToken=" + Arrays.toString(verifyToken) +
-        '}';
+    return "EncryptionRequest{"
+        + "publicKey=" + Arrays.toString(publicKey)
+        + ", verifyToken=" + Arrays.toString(verifyToken)
+        + '}';
   }
 
   @Override

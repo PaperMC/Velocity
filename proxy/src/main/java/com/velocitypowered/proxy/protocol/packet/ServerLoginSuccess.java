@@ -37,10 +37,10 @@ public class ServerLoginSuccess implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ServerLoginSuccess{" +
-        "uuid=" + uuid +
-        ", username='" + username + '\'' +
-        '}';
+    return "ServerLoginSuccess{"
+        + "uuid=" + uuid
+        + ", username='" + username + '\''
+        + '}';
   }
 
   @Override

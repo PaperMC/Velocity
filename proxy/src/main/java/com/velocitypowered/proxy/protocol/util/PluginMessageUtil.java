@@ -13,12 +13,12 @@ import java.util.List;
 
 public class PluginMessageUtil {
 
-  public static final String BRAND_CHANNEL_LEGACY = "MC|Brand";
-  public static final String BRAND_CHANNEL = "minecraft:brand";
-  public static final String REGISTER_CHANNEL_LEGACY = "REGISTER";
-  public static final String REGISTER_CHANNEL = "minecraft:register";
-  public static final String UNREGISTER_CHANNEL_LEGACY = "UNREGISTER";
-  public static final String UNREGISTER_CHANNEL = "minecraft:unregister";
+  private static final String BRAND_CHANNEL_LEGACY = "MC|Brand";
+  private static final String BRAND_CHANNEL = "minecraft:brand";
+  private static final String REGISTER_CHANNEL_LEGACY = "REGISTER";
+  private static final String REGISTER_CHANNEL = "minecraft:register";
+  private static final String UNREGISTER_CHANNEL_LEGACY = "UNREGISTER";
+  private static final String UNREGISTER_CHANNEL = "minecraft:unregister";
 
   private PluginMessageUtil() {
     throw new AssertionError();
@@ -62,7 +62,7 @@ public class PluginMessageUtil {
     return message;
   }
 
-  public static PluginMessage rewriteMCBrand(PluginMessage message) {
+  public static PluginMessage rewriteMinecraftBrand(PluginMessage message) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkArgument(isMCBrand(message), "message is not a MC Brand plugin message");
 

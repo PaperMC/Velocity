@@ -47,12 +47,12 @@ public class Handshake implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "Handshake{" +
-        "protocolVersion=" + protocolVersion +
-        ", serverAddress='" + serverAddress + '\'' +
-        ", port=" + port +
-        ", nextStatus=" + nextStatus +
-        '}';
+    return "Handshake{"
+        + "protocolVersion=" + protocolVersion
+        + ", serverAddress='" + serverAddress + '\''
+        + ", port=" + port
+        + ", nextStatus=" + nextStatus
+        + '}';
   }
 
   @Override

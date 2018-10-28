@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -174,8 +175,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       }
     } catch (Exception e) {
       logger.warn("Error while trying to handle a query packet from {}", msg.sender(), e);
-      // NB: Only need to explicitly release upon exception, writing the response out will decrement the reference
-      // count.
+      // NB: Only need to explicitly release upon exception, writing the response out will decrement
+      // the reference count.
       responsePacket.release();
     }
   }
@@ -265,9 +266,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       while (iterator.hasNext()) {
         QueryResponse.PluginInformation info = iterator.next();
         pluginsString.append(info.getName());
-        if (info.getVersion() != null) {
-          pluginsString.append(' ').append(info.getVersion());
-        }
+        Optional<String> version = info.getVersion();
+        version.ifPresent(s -> pluginsString.append(' ').append(s));
         if (iterator.hasNext()) {
           pluginsString.append(';').append(' ');
         }

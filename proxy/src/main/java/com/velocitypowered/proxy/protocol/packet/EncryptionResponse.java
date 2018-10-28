@@ -32,10 +32,10 @@ public class EncryptionResponse implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "EncryptionResponse{" +
-        "sharedSecret=" + Arrays.toString(sharedSecret) +
-        ", verifyToken=" + Arrays.toString(verifyToken) +
-        '}';
+    return "EncryptionResponse{"
+        + "sharedSecret=" + Arrays.toString(sharedSecret)
+        + ", verifyToken=" + Arrays.toString(verifyToken)
+        + '}';
   }
 
   @Override

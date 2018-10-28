@@ -27,9 +27,9 @@ public class SetCompression implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "SetCompression{" +
-        "threshold=" + threshold +
-        '}';
+    return "SetCompression{"
+        + "threshold=" + threshold
+        + '}';
   }
 
   @Override

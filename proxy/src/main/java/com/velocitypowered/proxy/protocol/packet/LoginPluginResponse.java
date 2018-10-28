@@ -39,11 +39,11 @@ public class LoginPluginResponse implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "LoginPluginResponse{" +
-        "id=" + id +
-        ", success=" + success +
-        ", data=" + data +
-        '}';
+    return "LoginPluginResponse{"
+        + "id=" + id
+        + ", success=" + success
+        + ", data=" + data
+        + '}';
   }
 
   @Override

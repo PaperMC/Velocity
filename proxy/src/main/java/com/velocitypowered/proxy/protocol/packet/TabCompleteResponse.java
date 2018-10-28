@@ -18,9 +18,9 @@ public class TabCompleteResponse implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "TabCompleteResponse{" +
-        "offers=" + offers +
-        '}';
+    return "TabCompleteResponse{"
+        + "offers=" + offers
+        + '}';
   }
 
   @Override

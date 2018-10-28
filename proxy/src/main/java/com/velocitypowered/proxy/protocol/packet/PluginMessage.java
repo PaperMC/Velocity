@@ -36,10 +36,10 @@ public class PluginMessage implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "PluginMessage{" +
-        "channel='" + channel + '\'' +
-        ", data=" + ByteBufUtil.hexDump(data) +
-        '}';
+    return "PluginMessage{"
+        + "channel='" + channel + '\''
+        + ", data=" + ByteBufUtil.hexDump(data)
+        + '}';
   }
 
   @Override

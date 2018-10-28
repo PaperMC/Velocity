@@ -182,7 +182,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         clientPluginMsgChannels.removeAll(channels);
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMCBrand(packet)) {
-        backendConn.write(PluginMessageUtil.rewriteMCBrand(packet));
+        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet));
       } else if (backendConn.isLegacyForge() && !serverConn.hasCompletedJoin()) {
         if (packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
           if (!player.getModInfo().isPresent()) {
@@ -195,9 +195,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           // Always forward the FML handshake to the remote server.
           backendConn.write(packet);
         } else {
-          // The client is trying to send messages too early. This is primarily caused by mods, but it's further
-          // aggravated by Velocity. To work around these issues, we will queue any non-FML handshake messages to
-          // be sent once the JoinGame packet has been received by the proxy.
+          // The client is trying to send messages too early. This is primarily caused by mods, but
+          // it's further aggravated by Velocity. To work around these issues, we will queue any
+          // non-FML handshake messages to be sent once the JoinGame packet has been received by the
+          // proxy.
           loginPluginMessages.add(packet);
         }
       } else {
@@ -287,12 +288,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       spawned = true;
       player.getConnection().delayedWrite(joinGame);
 
-      // We have something special to do for legacy Forge servers - during first connection the FML handshake
-      // will transition to complete regardless. Thus, we need to ensure that a reset packet is ALWAYS sent on
-      // first switch.
+      // We have something special to do for legacy Forge servers - during first connection the FML
+      // handshake will transition to complete regardless. Thus, we need to ensure that a reset
+      // packet is ALWAYS sent on first switch.
       //
-      // As we know that calling this branch only happens on first join, we set that if we are a Forge
-      // client that we must reset on the next switch.
+      // As we know that calling this branch only happens on first join, we set that if we are a
+      // Forge client that we must reset on the next switch.
       //
       // The call will handle if the player is not a Forge player appropriately.
       player.getConnection().setCanSendLegacyFMLResetPacket(true);
@@ -306,11 +307,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // - A respawn packet with a different dimension
       // - Another respawn with the correct dimension
       //
-      // The two respawns with different dimensions are required, otherwise the client gets confused.
+      // The two respawns with different dimensions are required, otherwise the client gets
+      // confused.
       //
-      // Most notably, by having the client accept the join game packet, we can work around the need to perform
-      // entity ID rewrites, eliminating potential issues from rewriting packets and improving compatibility with
-      // mods.
+      // Most notably, by having the client accept the join game packet, we can work around the need
+      // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
+      // improving compatibility with mods.
       player.getConnection().delayedWrite(joinGame);
       int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
       player.getConnection().delayedWrite(
@@ -360,12 +362,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // We only need to indicate we can send a reset packet if we complete a handshake, that is,
       // logged onto a Forge server.
       //
-      // The special case is if we log onto a Vanilla server as our first server, FML will treat this
-      // as complete and **will** need a reset packet sending at some point. We will handle this
-      // during initial player connection if the player is detected to be forge.
+      // The special case is if we log onto a Vanilla server as our first server, FML will treat
+      // this  as complete and **will** need a reset packet sending at some point. We will handle
+      // this during initial player connection if the player is detected to be forge.
       //
-      // This is why we use an if statement rather than the result of VelocityServerConnection#isLegacyForge()
-      // because we don't want to set it false if this is a first connection to a Vanilla server.
+      // We do not use the result of VelocityServerConnection#isLegacyForge() directly because we
+      // don't want to set it false if this is a first connection to a Vanilla server.
       //
       // See LoginSessionHandler#handle for where the counterpart to this method is
       player.getConnection().setCanSendLegacyFMLResetPacket(true);

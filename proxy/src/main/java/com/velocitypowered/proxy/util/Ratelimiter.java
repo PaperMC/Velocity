@@ -8,6 +8,9 @@ import java.net.InetAddress;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * A simple rate-limiter based on a Guava {@link Cache}.
+ */
 public class Ratelimiter {
 
   private final Cache<InetAddress, Long> expiringCache;
@@ -32,6 +35,12 @@ public class Ratelimiter {
     }
   }
 
+  /**
+   * Attempts to rate-limit the client.
+   *
+   * @param address the address to rate limit
+   * @return true if we should allow the client, false if we should rate-limit
+   */
   public boolean attempt(InetAddress address) {
     if (timeoutNanos == 0) {
       return true;

@@ -45,15 +45,20 @@ public class LegacyPingResponse {
 
   @Override
   public String toString() {
-    return "LegacyPingResponse{" +
-        "protocolVersion=" + protocolVersion +
-        ", serverVersion='" + serverVersion + '\'' +
-        ", motd='" + motd + '\'' +
-        ", playersOnline=" + playersOnline +
-        ", playersMax=" + playersMax +
-        '}';
+    return "LegacyPingResponse{"
+        + "protocolVersion=" + protocolVersion
+        + ", serverVersion='" + serverVersion + '\''
+        + ", motd='" + motd + '\''
+        + ", playersOnline=" + playersOnline
+        + ", playersMax=" + playersMax
+        + '}';
   }
 
+  /**
+   * Transforms a {@link ServerPing} into a legacy ping response.
+   * @param ping the response to transform
+   * @return the legacy ping response
+   */
   public static LegacyPingResponse from(ServerPing ping) {
     return new LegacyPingResponse(ping.getVersion().getProtocol(),
         ping.getVersion().getName(),
