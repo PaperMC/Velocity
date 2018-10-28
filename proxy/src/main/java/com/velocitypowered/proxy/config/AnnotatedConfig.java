@@ -125,7 +125,7 @@ public abstract class AnnotatedConfig {
 
         // Get a key name for config. Use field name if @ConfigKey annotation is not present.
         ConfigKey key = field.getAnnotation(ConfigKey.class);
-        final String name = safeKey(key == null ? field.getName() : key.value());
+        final String name = escapeKeyIfNeeded(key == null ? field.getName() : key.value());
 
         Object value = field.get(dumpable);
 
@@ -142,7 +142,7 @@ public abstract class AnnotatedConfig {
           Map<String, ?> map = (Map<String, ?>) value;
           for (Entry<String, ?> entry : map.entrySet()) {
             lines.add(
-                safeKey(entry.getKey()) + " = " + serialize(entry.getValue())); // Save map data
+                escapeKeyIfNeeded(entry.getKey()) + " = " + serialize(entry.getValue())); // Save map data
           }
           lines.add(""); // Add empty line
           continue;
@@ -203,10 +203,18 @@ public abstract class AnnotatedConfig {
     return value != null ? value.toString() : "null";
   }
 
-  private static String safeKey(String key) {
+  protected static String escapeKeyIfNeeded(String key) {
     if (key.contains(".") && !(key.indexOf('"') == 0 && key.lastIndexOf('"') == (key.length()
         - 1))) {
       return '"' + key + '"';
+    }
+    return key;
+  }
+
+  protected static String unesacpeKeyIfNeeded(String key) {
+    int lastIndex;
+    if (key.indexOf('"') == 0 && (lastIndex = key.lastIndexOf('"')) == (key.length() - 1)) {
+      return key.substring(1, lastIndex);
     }
     return key;
   }

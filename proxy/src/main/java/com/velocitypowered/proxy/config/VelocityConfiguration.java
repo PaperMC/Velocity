@@ -487,9 +487,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
             forcedHosts
-                .put(stripQuotes(entry.getKey()), ImmutableList.of((String) entry.getValue()));
+                .put(unesacpeKeyIfNeeded(entry.getKey()), ImmutableList.of((String) entry.getValue()));
           } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(stripQuotes(entry.getKey()),
+            forcedHosts.put(unesacpeKeyIfNeeded(entry.getKey()),
                 ImmutableList.copyOf((List<String>) entry.getValue()));
           } else {
             throw new IllegalStateException(
@@ -510,14 +510,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     private void setForcedHosts(Map<String, List<String>> forcedHosts) {
       this.forcedHosts = forcedHosts;
-    }
-
-    private static String stripQuotes(String key) {
-      int lastIndex;
-      if (key.indexOf('"') == 0 && (lastIndex = key.lastIndexOf('"')) == (key.length() - 1)) {
-        return key.substring(1, lastIndex);
-      }
-      return key;
     }
 
     @Override
