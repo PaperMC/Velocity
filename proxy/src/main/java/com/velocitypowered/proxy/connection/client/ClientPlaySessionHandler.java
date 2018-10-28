@@ -91,6 +91,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Chat packet) {
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      return true;
+    }
+    MinecraftConnection smc = serverConnection.getConnection();
+    if (smc == null) {
+      return true;
+    }
+
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
       try {
@@ -106,14 +115,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else {
-      VelocityServerConnection serverConnection = player.getConnectedServer();
-      if (serverConnection == null) {
-        return true;
-      }
-      MinecraftConnection smc = serverConnection.getConnection();
-      if (smc == null) {
-        return true;
-      }
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {

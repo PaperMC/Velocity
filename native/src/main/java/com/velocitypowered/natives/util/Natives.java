@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.util;
 
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.natives.NativeSetupException;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.NativeVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
@@ -37,7 +38,7 @@ public class Natives {
         }));
         System.load(tempFile.toAbsolutePath().toString());
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new NativeSetupException("Unable to copy natives", e);
       }
     };
   }
@@ -57,12 +58,12 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-                    /*new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
-                            copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
-                            NativeVelocityCipher.FACTORY),
-                    new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
-                            copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
-                            NativeVelocityCipher.FACTORY),*/
+          /*new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
+              copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
+              NativeVelocityCipher.FACTORY),
+            new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
+              copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
+              NativeVelocityCipher.FACTORY),*/
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )

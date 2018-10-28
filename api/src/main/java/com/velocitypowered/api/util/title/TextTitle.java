@@ -186,21 +186,23 @@ public final class TextTitle implements Title {
       return this;
     }
 
-    public Builder stay(int ticks) {
+    private int checkTicks(int ticks) {
       Preconditions.checkArgument(ticks >= 0, "ticks value %s is negative", ticks);
-      this.stay = ticks;
+      return ticks;
+    }
+
+    public Builder stay(int ticks) {
+      this.stay = checkTicks(ticks);
       return this;
     }
 
     public Builder fadeIn(int ticks) {
-      Preconditions.checkArgument(ticks >= 0, "ticks value %s is negative", ticks);
-      this.fadeIn = ticks;
+      this.fadeIn = checkTicks(ticks);
       return this;
     }
 
     public Builder fadeOut(int ticks) {
-      Preconditions.checkArgument(ticks >= 0, "ticks value %s is negative", ticks);
-      this.fadeOut = ticks;
+      this.fadeOut = checkTicks(ticks);
       return this;
     }
 

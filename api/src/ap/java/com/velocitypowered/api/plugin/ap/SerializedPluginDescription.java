@@ -8,10 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SerializedPluginDescription {
+
+  public static final Pattern ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{0,63}");
 
   // @Nullable is used here to make GSON skip these in the serialized file
   private final String id;
@@ -26,7 +29,9 @@ public class SerializedPluginDescription {
   private SerializedPluginDescription(String id, String name, String version, String description,
       String url,
       List<String> authors, List<Dependency> dependencies, String main) {
-    this.id = Preconditions.checkNotNull(id, "id");
+    Preconditions.checkNotNull(id, "id");
+    Preconditions.checkArgument(ID_PATTERN.matcher(id).matches(), "id is not valid");
+    this.id = id;
     this.name = Strings.emptyToNull(name);
     this.version = Strings.emptyToNull(version);
     this.description = Strings.emptyToNull(description);

@@ -2,7 +2,6 @@ package com.velocitypowered.api.plugin.ap;
 
 import com.google.gson.Gson;
 import com.velocitypowered.api.plugin.Plugin;
-import com.velocitypowered.api.plugin.PluginDescription;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -66,7 +65,7 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
       }
 
       Plugin plugin = element.getAnnotation(Plugin.class);
-      if (!PluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
+      if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
         environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
             + qualifiedName
             + ". IDs must start alphabetically, have alphanumeric characters, and can "

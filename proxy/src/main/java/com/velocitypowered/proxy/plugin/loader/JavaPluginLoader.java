@@ -43,9 +43,8 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     SerializedPluginDescription pd = serialized.get();
-    if (!PluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
-      throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' must match pattern " +
-          PluginDescription.ID_PATTERN.pattern());
+    if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
+      throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
     }
 
     PluginClassLoader loader = new PluginClassLoader(

@@ -69,6 +69,25 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     this.server = server;
   }
 
+  private QueryResponse createInitialResponse() {
+    return QueryResponse.builder()
+        .hostname(ComponentSerializers.PLAIN
+            .serialize(server.getConfiguration().getMotdComponent()))
+        .gameVersion(ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING)
+        .map(server.getConfiguration().getQueryMap())
+        .currentPlayers(server.getPlayerCount())
+        .maxPlayers(server.getConfiguration().getShowMaxPlayers())
+        .proxyPort(server.getConfiguration().getBind().getPort())
+        .proxyHost(server.getConfiguration().getBind().getHostString())
+        .players(server.getAllPlayers().stream().map(Player::getUsername)
+            .collect(Collectors.toList()))
+        .proxyVersion("Velocity")
+        .plugins(
+            server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
+                : Collections.emptyList())
+        .build();
+  }
+
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
     ByteBuf queryMessage = msg.content();
@@ -117,22 +136,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
           }
 
           // Build query response
-          QueryResponse response = QueryResponse.builder()
-              .hostname(ComponentSerializers.PLAIN
-                  .serialize(server.getConfiguration().getMotdComponent()))
-              .gameVersion(ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING)
-              .map(server.getConfiguration().getQueryMap())
-              .currentPlayers(server.getPlayerCount())
-              .maxPlayers(server.getConfiguration().getShowMaxPlayers())
-              .proxyPort(server.getConfiguration().getBind().getPort())
-              .proxyHost(server.getConfiguration().getBind().getHostString())
-              .players(server.getAllPlayers().stream().map(Player::getUsername)
-                  .collect(Collectors.toList()))
-              .proxyVersion("Velocity")
-              .plugins(
-                  server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
-                      : Collections.emptyList())
-              .build();
+          QueryResponse response = createInitialResponse();
 
           boolean isBasic = queryMessage.readableBytes() == 0;
 

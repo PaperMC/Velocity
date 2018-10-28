@@ -50,14 +50,13 @@ public class PlayerListItem implements MinecraftPacket {
       Item item = new Item(ProtocolUtils.readUuid(buf));
       items.add(item);
       switch (action) {
-        case ADD_PLAYER: {
+        case ADD_PLAYER:
           item.setName(ProtocolUtils.readString(buf));
           item.setProperties(ProtocolUtils.readProperties(buf));
           item.setGameMode(ProtocolUtils.readVarInt(buf));
           item.setLatency(ProtocolUtils.readVarInt(buf));
           item.setDisplayName(readOptionalComponent(buf));
           break;
-        }
         case UPDATE_GAMEMODE:
           item.setGameMode(ProtocolUtils.readVarInt(buf));
           break;

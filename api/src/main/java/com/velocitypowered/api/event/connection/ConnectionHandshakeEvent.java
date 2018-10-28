@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.InboundConnection;
 
 /**
- * This event is fired when a handshake is established between a client and Velocity.
+ * This event is fired when a handshake is established between a client and the proxy.
  */
 public final class ConnectionHandshakeEvent {
 
