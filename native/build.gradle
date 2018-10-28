@@ -1,8 +1,10 @@
 plugins {
     id 'java'
+    id 'checkstyle'
 }
 
 apply from: '../gradle/checkerframework.gradle'
+apply from: '../gradle/checkstyle.gradle'
 
 dependencies {
     compile "com.google.guava:guava:${guavaVersion}"

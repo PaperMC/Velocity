@@ -25,7 +25,7 @@ dependencies {
         implementation "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     } else if (System.getenv("CHECKERFRAMEWORK") == null) {
         throw new GradleException("Environment variable CHECKERFRAMEWORK is not set")
-    } else if (! file(System.getenv("CHECKERFRAMEWORK")).exists()) {
+    } else if (!file(System.getenv("CHECKERFRAMEWORK")).exists()) {
         throw new GradleException("Environment variable CHECKERFRAMEWORK is set to non-existent directory " + System.getenv("CHECKERFRAMEWORK"));
     } else {
         ext.checkerframeworkdist = "$System.env.CHECKERFRAMEWORK/checker/dist"

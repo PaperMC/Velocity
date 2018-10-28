@@ -5,64 +5,64 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.UUID;
-
 public class ServerLoginSuccess implements MinecraftPacket {
-    private @Nullable UUID uuid;
-    private @Nullable String username;
 
-    public UUID getUuid() {
-        if (uuid == null) {
-            throw new IllegalStateException("No UUID specified!");
-        }
-        return uuid;
-    }
+  private @Nullable UUID uuid;
+  private @Nullable String username;
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+  public UUID getUuid() {
+    if (uuid == null) {
+      throw new IllegalStateException("No UUID specified!");
     }
+    return uuid;
+  }
 
-    public String getUsername() {
-        if (username == null) {
-            throw new IllegalStateException("No username specified!");
-        }
-        return username;
-    }
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
+  }
 
-    public void setUsername(String username) {
-        this.username = username;
+  public String getUsername() {
+    if (username == null) {
+      throw new IllegalStateException("No username specified!");
     }
+    return username;
+  }
 
-    @Override
-    public String toString() {
-        return "ServerLoginSuccess{" +
-                "uuid=" + uuid +
-                ", username='" + username + '\'' +
-                '}';
-    }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
-        username = ProtocolUtils.readString(buf, 16);
-    }
+  @Override
+  public String toString() {
+    return "ServerLoginSuccess{" +
+        "uuid=" + uuid +
+        ", username='" + username + '\'' +
+        '}';
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        if (uuid == null) {
-            throw new IllegalStateException("No UUID specified!");
-        }
-        ProtocolUtils.writeString(buf, uuid.toString());
-        if (username == null) {
-            throw new IllegalStateException("No username specified!");
-        }
-        ProtocolUtils.writeString(buf, username);
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
+    username = ProtocolUtils.readString(buf, 16);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    if (uuid == null) {
+      throw new IllegalStateException("No UUID specified!");
     }
+    ProtocolUtils.writeString(buf, uuid.toString());
+    if (username == null) {
+      throw new IllegalStateException("No username specified!");
+    }
+    ProtocolUtils.writeString(buf, username);
+  }
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

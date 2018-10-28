@@ -8,121 +8,122 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
-    private int entityId;
-    private short gamemode;
-    private int dimension;
-    private short difficulty;
-    private short maxPlayers;
-    private @Nullable String levelType;
-    private boolean reducedDebugInfo;
 
-    public int getEntityId() {
-        return entityId;
-    }
+  private int entityId;
+  private short gamemode;
+  private int dimension;
+  private short difficulty;
+  private short maxPlayers;
+  private @Nullable String levelType;
+  private boolean reducedDebugInfo;
 
-    public void setEntityId(int entityId) {
-        this.entityId = entityId;
-    }
+  public int getEntityId() {
+    return entityId;
+  }
 
-    public short getGamemode() {
-        return gamemode;
-    }
+  public void setEntityId(int entityId) {
+    this.entityId = entityId;
+  }
 
-    public void setGamemode(short gamemode) {
-        this.gamemode = gamemode;
-    }
+  public short getGamemode() {
+    return gamemode;
+  }
 
-    public int getDimension() {
-        return dimension;
-    }
+  public void setGamemode(short gamemode) {
+    this.gamemode = gamemode;
+  }
 
-    public void setDimension(int dimension) {
-        this.dimension = dimension;
-    }
+  public int getDimension() {
+    return dimension;
+  }
 
-    public short getDifficulty() {
-        return difficulty;
-    }
+  public void setDimension(int dimension) {
+    this.dimension = dimension;
+  }
 
-    public void setDifficulty(short difficulty) {
-        this.difficulty = difficulty;
-    }
+  public short getDifficulty() {
+    return difficulty;
+  }
 
-    public short getMaxPlayers() {
-        return maxPlayers;
-    }
+  public void setDifficulty(short difficulty) {
+    this.difficulty = difficulty;
+  }
 
-    public void setMaxPlayers(short maxPlayers) {
-        this.maxPlayers = maxPlayers;
-    }
+  public short getMaxPlayers() {
+    return maxPlayers;
+  }
 
-    public String getLevelType() {
-        if (levelType == null) {
-            throw new IllegalStateException("No level type specified.");
-        }
-        return levelType;
-    }
+  public void setMaxPlayers(short maxPlayers) {
+    this.maxPlayers = maxPlayers;
+  }
 
-    public void setLevelType(String levelType) {
-        this.levelType = levelType;
+  public String getLevelType() {
+    if (levelType == null) {
+      throw new IllegalStateException("No level type specified.");
     }
+    return levelType;
+  }
 
-    public boolean isReducedDebugInfo() {
-        return reducedDebugInfo;
-    }
+  public void setLevelType(String levelType) {
+    this.levelType = levelType;
+  }
 
-    public void setReducedDebugInfo(boolean reducedDebugInfo) {
-        this.reducedDebugInfo = reducedDebugInfo;
-    }
+  public boolean isReducedDebugInfo() {
+    return reducedDebugInfo;
+  }
 
-    @Override
-    public String toString() {
-        return "JoinGame{" +
-                "entityId=" + entityId +
-                ", gamemode=" + gamemode +
-                ", dimension=" + dimension +
-                ", difficulty=" + difficulty +
-                ", maxPlayers=" + maxPlayers +
-                ", levelType='" + levelType + '\'' +
-                ", reducedDebugInfo=" + reducedDebugInfo +
-                '}';
-    }
+  public void setReducedDebugInfo(boolean reducedDebugInfo) {
+    this.reducedDebugInfo = reducedDebugInfo;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.entityId = buf.readInt();
-        this.gamemode = buf.readUnsignedByte();
-        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
-            this.dimension = buf.readInt();
-        } else {
-            this.dimension = buf.readByte();
-        }
-        this.difficulty = buf.readUnsignedByte();
-        this.maxPlayers = buf.readUnsignedByte();
-        this.levelType = ProtocolUtils.readString(buf, 16);
-        this.reducedDebugInfo = buf.readBoolean();
-    }
+  @Override
+  public String toString() {
+    return "JoinGame{" +
+        "entityId=" + entityId +
+        ", gamemode=" + gamemode +
+        ", dimension=" + dimension +
+        ", difficulty=" + difficulty +
+        ", maxPlayers=" + maxPlayers +
+        ", levelType='" + levelType + '\'' +
+        ", reducedDebugInfo=" + reducedDebugInfo +
+        '}';
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        buf.writeInt(entityId);
-        buf.writeByte(gamemode);
-        if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
-            buf.writeInt(dimension);
-        } else {
-            buf.writeByte(dimension);
-        }
-        buf.writeByte(difficulty);
-        buf.writeByte(maxPlayers);
-        if (levelType == null) {
-            throw new IllegalStateException("No level type specified.");
-        }
-        ProtocolUtils.writeString(buf, levelType);
-        buf.writeBoolean(reducedDebugInfo);
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    this.entityId = buf.readInt();
+    this.gamemode = buf.readUnsignedByte();
+    if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
+      this.dimension = buf.readInt();
+    } else {
+      this.dimension = buf.readByte();
     }
+    this.difficulty = buf.readUnsignedByte();
+    this.maxPlayers = buf.readUnsignedByte();
+    this.levelType = ProtocolUtils.readString(buf, 16);
+    this.reducedDebugInfo = buf.readBoolean();
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    buf.writeInt(entityId);
+    buf.writeByte(gamemode);
+    if (protocolVersion >= ProtocolConstants.MINECRAFT_1_9_1) {
+      buf.writeInt(dimension);
+    } else {
+      buf.writeByte(dimension);
     }
+    buf.writeByte(difficulty);
+    buf.writeByte(maxPlayers);
+    if (levelType == null) {
+      throw new IllegalStateException("No level type specified.");
+    }
+    ProtocolUtils.writeString(buf, levelType);
+    buf.writeBoolean(reducedDebugInfo);
+  }
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

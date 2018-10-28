@@ -16,46 +16,52 @@ import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import io.netty.buffer.ByteBuf;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
-    private final VelocityServer server;
-    private final MinecraftConnection connection;
-    private final InboundConnection inboundWrapper;
 
-    StatusSessionHandler(VelocityServer server, MinecraftConnection connection, InboundConnection inboundWrapper) {
-        this.server = server;
-        this.connection = connection;
-        this.inboundWrapper = inboundWrapper;
-    }
+  private final VelocityServer server;
+  private final MinecraftConnection connection;
+  private final InboundConnection inboundWrapper;
 
-    @Override
-    public boolean handle(StatusPing packet) {
-        connection.closeWith(packet);
-        return true;
-    }
+  StatusSessionHandler(VelocityServer server, MinecraftConnection connection,
+      InboundConnection inboundWrapper) {
+    this.server = server;
+    this.connection = connection;
+    this.inboundWrapper = inboundWrapper;
+  }
 
-    @Override
-    public boolean handle(StatusRequest packet) {
-        VelocityConfiguration configuration = server.getConfiguration();
+  @Override
+  public boolean handle(StatusPing packet) {
+    connection.closeWith(packet);
+    return true;
+  }
 
-        int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection.getProtocolVersion() :
-                ProtocolConstants.MAXIMUM_GENERIC_VERSION;
-        ServerPing initialPing = new ServerPing(
-                new ServerPing.Version(shownVersion, "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
-                new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(), ImmutableList.of()),
-                configuration.getMotdComponent(),
-                configuration.getFavicon().orElse(null),
-                configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
-        );
+  @Override
+  public boolean handle(StatusRequest packet) {
+    VelocityConfiguration configuration = server.getConfiguration();
 
-        ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
-        server.getEventManager().fire(event)
-                .thenRunAsync(() -> connection.write(new StatusResponse(VelocityServer.GSON.toJson(event.getPing()))),
-                        connection.eventLoop());
-        return true;
-    }
+    int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion()) ? connection
+        .getProtocolVersion() :
+        ProtocolConstants.MAXIMUM_GENERIC_VERSION;
+    ServerPing initialPing = new ServerPing(
+        new ServerPing.Version(shownVersion,
+            "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
+        new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
+            ImmutableList.of()),
+        configuration.getMotdComponent(),
+        configuration.getFavicon().orElse(null),
+        configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
+    );
 
-    @Override
-    public void handleUnknown(ByteBuf buf) {
-        // what even is going on?
-        connection.close();
-    }
+    ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
+    server.getEventManager().fire(event)
+        .thenRunAsync(
+            () -> connection.write(new StatusResponse(VelocityServer.GSON.toJson(event.getPing()))),
+            connection.eventLoop());
+    return true;
+  }
+
+  @Override
+  public void handleUnknown(ByteBuf buf) {
+    // what even is going on?
+    connection.close();
+  }
 }

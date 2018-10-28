@@ -9,67 +9,68 @@ import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginPluginMessage implements MinecraftPacket {
-    private int id;
-    private @Nullable String channel;
-    private ByteBuf data = Unpooled.EMPTY_BUFFER;
 
-    public LoginPluginMessage() {
+  private int id;
+  private @Nullable String channel;
+  private ByteBuf data = Unpooled.EMPTY_BUFFER;
 
+  public LoginPluginMessage() {
+
+  }
+
+  public LoginPluginMessage(int id, @Nullable String channel, ByteBuf data) {
+    this.id = id;
+    this.channel = channel;
+    this.data = data;
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  public String getChannel() {
+    if (channel == null) {
+      throw new IllegalStateException("Channel is not specified!");
     }
+    return channel;
+  }
 
-    public LoginPluginMessage(int id, @Nullable String channel, ByteBuf data) {
-        this.id = id;
-        this.channel = channel;
-        this.data = data;
-    }
+  public ByteBuf getData() {
+    return data;
+  }
 
-    public int getId() {
-        return id;
-    }
+  @Override
+  public String toString() {
+    return "LoginPluginMessage{" +
+        "id=" + id +
+        ", channel='" + channel + '\'' +
+        ", data=" + data +
+        '}';
+  }
 
-    public String getChannel() {
-        if (channel == null) {
-            throw new IllegalStateException("Channel is not specified!");
-        }
-        return channel;
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    this.id = ProtocolUtils.readVarInt(buf);
+    this.channel = ProtocolUtils.readString(buf);
+    if (buf.isReadable()) {
+      this.data = buf.readSlice(buf.readableBytes());
+    } else {
+      this.data = Unpooled.EMPTY_BUFFER;
     }
+  }
 
-    public ByteBuf getData() {
-        return data;
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, id);
+    if (channel == null) {
+      throw new IllegalStateException("Channel is not specified!");
     }
+    ProtocolUtils.writeString(buf, channel);
+    buf.writeBytes(data);
+  }
 
-    @Override
-    public String toString() {
-        return "LoginPluginMessage{" +
-                "id=" + id +
-                ", channel='" + channel + '\'' +
-                ", data=" + data +
-                '}';
-    }
-
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.id = ProtocolUtils.readVarInt(buf);
-        this.channel = ProtocolUtils.readString(buf);
-        if (buf.isReadable()) {
-            this.data = buf.readSlice(buf.readableBytes());
-        } else {
-            this.data = Unpooled.EMPTY_BUFFER;
-        }
-    }
-
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, id);
-        if (channel == null) {
-            throw new IllegalStateException("Channel is not specified!");
-        }
-        ProtocolUtils.writeString(buf, channel);
-        buf.writeBytes(data);
-    }
-
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

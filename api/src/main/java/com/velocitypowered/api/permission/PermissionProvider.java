@@ -5,11 +5,12 @@ package com.velocitypowered.api.permission;
  */
 @FunctionalInterface
 public interface PermissionProvider {
-    /**
-     * Creates a {@link PermissionFunction} for the subject.
-     *
-     * @param subject the subject
-     * @return the function
-     */
-    PermissionFunction createFunction(PermissionSubject subject);
+
+  /**
+   * Creates a {@link PermissionFunction} for the subject.
+   *
+   * @param subject the subject
+   * @return the function
+   */
+  PermissionFunction createFunction(PermissionSubject subject);
 }

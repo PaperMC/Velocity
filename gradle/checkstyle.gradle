@@ -1,0 +1,4 @@
+checkstyle {
+    toolVersion '8.14'
+    configFile new File(project.rootDir, ['config', 'checkstyle', 'checkstyle.xml'].join(File.separator))
+}

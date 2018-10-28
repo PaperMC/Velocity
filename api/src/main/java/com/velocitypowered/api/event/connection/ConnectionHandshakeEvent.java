@@ -7,20 +7,21 @@ import com.velocitypowered.api.proxy.InboundConnection;
  * This event is fired when a handshake is established between a client and Velocity.
  */
 public final class ConnectionHandshakeEvent {
-    private final InboundConnection connection;
 
-    public ConnectionHandshakeEvent(InboundConnection connection) {
-        this.connection = Preconditions.checkNotNull(connection, "connection");
-    }
+  private final InboundConnection connection;
 
-    public InboundConnection getConnection() {
-        return connection;
-    }
+  public ConnectionHandshakeEvent(InboundConnection connection) {
+    this.connection = Preconditions.checkNotNull(connection, "connection");
+  }
 
-    @Override
-    public String toString() {
-        return "ConnectionHandshakeEvent{" +
-                "connection=" + connection +
-                '}';
-    }
+  public InboundConnection getConnection() {
+    return connection;
+  }
+
+  @Override
+  public String toString() {
+    return "ConnectionHandshakeEvent{" +
+        "connection=" + connection +
+        '}';
+  }
 }

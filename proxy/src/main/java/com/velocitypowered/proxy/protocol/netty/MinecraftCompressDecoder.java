@@ -6,46 +6,49 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
-
 import java.util.List;
 
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
-    private static final int MAXIMUM_INITIAL_BUFFER_SIZE = 65536; // 64KiB
 
-    private final int threshold;
-    private final VelocityCompressor compressor;
+  private static final int MAXIMUM_INITIAL_BUFFER_SIZE = 65536; // 64KiB
 
-    public MinecraftCompressDecoder(int threshold, VelocityCompressor compressor) {
-        this.threshold = threshold;
-        this.compressor = compressor;
+  private final int threshold;
+  private final VelocityCompressor compressor;
+
+  public MinecraftCompressDecoder(int threshold, VelocityCompressor compressor) {
+    this.threshold = threshold;
+    this.compressor = compressor;
+  }
+
+  @Override
+  protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+    int uncompressedSize = ProtocolUtils.readVarInt(msg);
+    if (uncompressedSize == 0) {
+      // Strip the now-useless uncompressed size, this message is already uncompressed.
+      out.add(msg.retainedSlice());
+      msg.skipBytes(msg.readableBytes());
+      return;
     }
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        int uncompressedSize = ProtocolUtils.readVarInt(msg);
-        if (uncompressedSize == 0) {
-            // Strip the now-useless uncompressed size, this message is already uncompressed.
-            out.add(msg.retainedSlice());
-            msg.skipBytes(msg.readableBytes());
-            return;
-        }
-
-        Preconditions.checkState(uncompressedSize >= threshold, "Uncompressed size %s doesn't make sense with threshold %s", uncompressedSize, threshold);
-        // Try to use the uncompressed size, but place a cap if it might be too big (possibly malicious).
-        ByteBuf uncompressed = ctx.alloc().buffer(Math.min(uncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
-        try {
-            compressor.inflate(msg, uncompressed);
-            Preconditions.checkState(uncompressedSize == uncompressed.readableBytes(), "Mismatched compression sizes");
-            out.add(uncompressed);
-        } catch (Exception e) {
-            // If something went wrong, rethrow the exception, but ensure we free our temporary buffer first.
-            uncompressed.release();
-            throw e;
-        }
+    Preconditions.checkState(uncompressedSize >= threshold,
+        "Uncompressed size %s doesn't make sense with threshold %s", uncompressedSize, threshold);
+    // Try to use the uncompressed size, but place a cap if it might be too big (possibly malicious).
+    ByteBuf uncompressed = ctx.alloc()
+        .buffer(Math.min(uncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
+    try {
+      compressor.inflate(msg, uncompressed);
+      Preconditions.checkState(uncompressedSize == uncompressed.readableBytes(),
+          "Mismatched compression sizes");
+      out.add(uncompressed);
+    } catch (Exception e) {
+      // If something went wrong, rethrow the exception, but ensure we free our temporary buffer first.
+      uncompressed.release();
+      throw e;
     }
+  }
 
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        compressor.dispose();
-    }
+  @Override
+  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    compressor.dispose();
+  }
 }

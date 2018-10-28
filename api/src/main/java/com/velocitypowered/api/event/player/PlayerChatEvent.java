@@ -3,95 +3,96 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
+import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.Optional;
 
 /**
  * This event is fired when a player types in a chat message.
  */
 public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult> {
-    private final Player player;
-    private final String message;
-    private ChatResult result;
 
-    public PlayerChatEvent(Player player, String message) {
-        this.player = Preconditions.checkNotNull(player, "player");
-        this.message = Preconditions.checkNotNull(message, "message");
-        this.result = ChatResult.allowed();
-    }
+  private final Player player;
+  private final String message;
+  private ChatResult result;
 
-    public Player getPlayer() {
-        return player;
-    }
+  public PlayerChatEvent(Player player, String message) {
+    this.player = Preconditions.checkNotNull(player, "player");
+    this.message = Preconditions.checkNotNull(message, "message");
+    this.result = ChatResult.allowed();
+  }
 
-    public String getMessage() {
-        return message;
+  public Player getPlayer() {
+    return player;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  @Override
+  public ChatResult getResult() {
+    return result;
+  }
+
+  @Override
+  public void setResult(ChatResult result) {
+    this.result = Preconditions.checkNotNull(result, "result");
+  }
+
+  @Override
+  public String toString() {
+    return "PlayerChatEvent{" +
+        "player=" + player +
+        ", message=" + message +
+        ", result=" + result +
+        '}';
+  }
+
+  /**
+   * Represents the result of the {@link PlayerChatEvent}.
+   */
+  public static final class ChatResult implements ResultedEvent.Result {
+
+    private static final ChatResult ALLOWED = new ChatResult(true, null);
+    private static final ChatResult DENIED = new ChatResult(false, null);
+
+    // The server can not accept formatted text from clients!
+    private @Nullable String message;
+    private final boolean status;
+
+    protected ChatResult(boolean status, @Nullable String message) {
+      this.status = status;
+      this.message = message;
     }
 
     @Override
-    public ChatResult getResult() {
-        return result;
-    }
-
-    @Override
-    public void setResult(ChatResult result) {
-        this.result = Preconditions.checkNotNull(result, "result");
+    public boolean isAllowed() {
+      return status;
     }
 
     @Override
     public String toString() {
-        return "PlayerChatEvent{" +
-                "player=" + player +
-                ", message=" + message +
-                ", result=" + result +
-                '}';
+      return status ? "allowed" : "denied";
     }
 
-    /**
-     * Represents the result of the {@link PlayerChatEvent}.
-     */
-    public static final class ChatResult implements ResultedEvent.Result {
-        private static final ChatResult ALLOWED = new ChatResult(true, null);
-        private static final ChatResult DENIED = new ChatResult(false, null);
-
-        // The server can not accept formatted text from clients!
-        private @Nullable String message;
-        private final boolean status;
-
-        protected ChatResult(boolean status, @Nullable String message) {
-            this.status = status;
-            this.message = message;
-        }
-
-        @Override
-        public boolean isAllowed() {
-            return status;
-        }
-
-        @Override
-        public String toString() {
-            return status ? "allowed" : "denied";
-        }
-
-        public static ChatResult allowed() {
-            return ALLOWED;
-        }
-
-        public static ChatResult denied() {
-            return DENIED;
-        }
-
-        public Optional<String> getMessage() {
-            return Optional.ofNullable(message);
-        }
-
-        public static ChatResult message(@NonNull String message) {
-            Preconditions.checkNotNull(message, "message");
-            return new ChatResult(true, message);
-        }
+    public static ChatResult allowed() {
+      return ALLOWED;
     }
+
+    public static ChatResult denied() {
+      return DENIED;
+    }
+
+    public Optional<String> getMessage() {
+      return Optional.ofNullable(message);
+    }
+
+    public static ChatResult message(@NonNull String message) {
+      Preconditions.checkNotNull(message, "message");
+      return new ChatResult(true, message);
+    }
+  }
 
 
 }

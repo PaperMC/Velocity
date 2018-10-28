@@ -8,31 +8,32 @@ import com.velocitypowered.api.proxy.server.ServerPing;
  * This event is fired when a server list ping request is sent by a remote client.
  */
 public final class ProxyPingEvent {
-    private final InboundConnection connection;
-    private ServerPing ping;
 
-    public ProxyPingEvent(InboundConnection connection, ServerPing ping) {
-        this.connection = Preconditions.checkNotNull(connection, "connection");
-        this.ping = Preconditions.checkNotNull(ping, "ping");
-    }
+  private final InboundConnection connection;
+  private ServerPing ping;
 
-    public InboundConnection getConnection() {
-        return connection;
-    }
+  public ProxyPingEvent(InboundConnection connection, ServerPing ping) {
+    this.connection = Preconditions.checkNotNull(connection, "connection");
+    this.ping = Preconditions.checkNotNull(ping, "ping");
+  }
 
-    public ServerPing getPing() {
-        return ping;
-    }
+  public InboundConnection getConnection() {
+    return connection;
+  }
 
-    public void setPing(ServerPing ping) {
-        this.ping = Preconditions.checkNotNull(ping, "ping");
-    }
+  public ServerPing getPing() {
+    return ping;
+  }
 
-    @Override
-    public String toString() {
-        return "ProxyPingEvent{" +
-                "connection=" + connection +
-                ", ping=" + ping +
-                '}';
-    }
+  public void setPing(ServerPing ping) {
+    this.ping = Preconditions.checkNotNull(ping, "ping");
+  }
+
+  @Override
+  public String toString() {
+    return "ProxyPingEvent{" +
+        "connection=" + connection +
+        ", ping=" + ping +
+        '}';
+  }
 }

@@ -12,7 +12,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
-
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -26,100 +25,108 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 public class JavaPluginLoader implements PluginLoader {
-    private final ProxyServer server;
-    private final Path baseDirectory;
 
-    public JavaPluginLoader(ProxyServer server, Path baseDirectory) {
-        this.server = server;
-        this.baseDirectory = baseDirectory;
+  private final ProxyServer server;
+  private final Path baseDirectory;
+
+  public JavaPluginLoader(ProxyServer server, Path baseDirectory) {
+    this.server = server;
+    this.baseDirectory = baseDirectory;
+  }
+
+  @Override
+  public PluginDescription loadPlugin(Path source) throws Exception {
+    Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
+
+    if (!serialized.isPresent()) {
+      throw new InvalidPluginException("Did not find a valid velocity-info.json.");
     }
 
-    @Override
-    public PluginDescription loadPlugin(Path source) throws Exception {
-        Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
-
-        if (!serialized.isPresent()) {
-            throw new InvalidPluginException("Did not find a valid velocity-info.json.");
-        }
-
-        SerializedPluginDescription pd = serialized.get();
-        if (!PluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
-            throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' must match pattern " +
-                    PluginDescription.ID_PATTERN.pattern());
-        }
-
-        PluginClassLoader loader = new PluginClassLoader(
-                new URL[] {source.toUri().toURL() }
-        );
-        loader.addToClassloaders();
-
-        Class mainClass = loader.loadClass(pd.getMain());
-        return createDescription(pd, source, mainClass);
+    SerializedPluginDescription pd = serialized.get();
+    if (!PluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
+      throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' must match pattern " +
+          PluginDescription.ID_PATTERN.pattern());
     }
 
-    @Override
-    public PluginContainer createPlugin(PluginDescription description) throws Exception {
-        if (!(description instanceof JavaVelocityPluginDescription)) {
-            throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
-        }
+    PluginClassLoader loader = new PluginClassLoader(
+        new URL[]{source.toUri().toURL()}
+    );
+    loader.addToClassloaders();
 
-        JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
-        Optional<Path> source = javaDescription.getSource();
+    Class mainClass = loader.loadClass(pd.getMain());
+    return createDescription(pd, source, mainClass);
+  }
 
-        if (!source.isPresent()) {
-            throw new IllegalArgumentException("No path in plugin description");
-        }
-
-        Injector injector = Guice.createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
-        Object instance = injector.getInstance(javaDescription.getMainClass());
-
-        if (instance == null) {
-            throw new IllegalStateException("Got nothing from injector for plugin " + javaDescription.getId());
-        }
-
-        return new VelocityPluginContainer(description, instance);
+  @Override
+  public PluginContainer createPlugin(PluginDescription description) throws Exception {
+    if (!(description instanceof JavaVelocityPluginDescription)) {
+      throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source) throws Exception {
-        try (JarInputStream in = new JarInputStream(new BufferedInputStream(Files.newInputStream(source)))) {
-            JarEntry entry;
-            while ((entry = in.getNextJarEntry()) != null) {
-                if (entry.getName().equals("velocity-plugin.json")) {
-                    try (Reader pluginInfoReader = new InputStreamReader(in)) {
-                        return Optional.of(VelocityServer.GSON.fromJson(pluginInfoReader, SerializedPluginDescription.class));
-                    }
-                }
-            }
+    JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
+    Optional<Path> source = javaDescription.getSource();
 
-            return Optional.empty();
+    if (!source.isPresent()) {
+      throw new IllegalArgumentException("No path in plugin description");
+    }
+
+    Injector injector = Guice
+        .createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
+    Object instance = injector.getInstance(javaDescription.getMainClass());
+
+    if (instance == null) {
+      throw new IllegalStateException(
+          "Got nothing from injector for plugin " + javaDescription.getId());
+    }
+
+    return new VelocityPluginContainer(description, instance);
+  }
+
+  private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
+      throws Exception {
+    try (JarInputStream in = new JarInputStream(
+        new BufferedInputStream(Files.newInputStream(source)))) {
+      JarEntry entry;
+      while ((entry = in.getNextJarEntry()) != null) {
+        if (entry.getName().equals("velocity-plugin.json")) {
+          try (Reader pluginInfoReader = new InputStreamReader(in)) {
+            return Optional.of(VelocityServer.GSON
+                .fromJson(pluginInfoReader, SerializedPluginDescription.class));
+          }
         }
+      }
+
+      return Optional.empty();
+    }
+  }
+
+  private VelocityPluginDescription createDescription(SerializedPluginDescription description,
+      Path source, Class mainClass) {
+    Set<PluginDependency> dependencies = new HashSet<>();
+
+    for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
+      dependencies.add(toDependencyMeta(dependency));
     }
 
-    private VelocityPluginDescription createDescription(SerializedPluginDescription description, Path source, Class mainClass) {
-        Set<PluginDependency> dependencies = new HashSet<>();
+    return new JavaVelocityPluginDescription(
+        description.getId(),
+        description.getName(),
+        description.getVersion(),
+        description.getDescription(),
+        description.getUrl(),
+        description.getAuthors(),
+        dependencies,
+        source,
+        mainClass
+    );
+  }
 
-        for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
-            dependencies.add(toDependencyMeta(dependency));
-        }
-
-        return new JavaVelocityPluginDescription(
-                description.getId(),
-                description.getName(),
-                description.getVersion(),
-                description.getDescription(),
-                description.getUrl(),
-                description.getAuthors(),
-                dependencies,
-                source,
-                mainClass
-        );
-    }
-
-    private static PluginDependency toDependencyMeta(SerializedPluginDescription.Dependency dependency) {
-        return new PluginDependency(
-            dependency.getId(),
-            null, // TODO Implement version matching in dependency annotation
-            dependency.isOptional()
-        );
-    }
+  private static PluginDependency toDependencyMeta(
+      SerializedPluginDescription.Dependency dependency) {
+    return new PluginDependency(
+        dependency.getId(),
+        null, // TODO Implement version matching in dependency annotation
+        dependency.isOptional()
+    );
+  }
 }

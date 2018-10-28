@@ -6,51 +6,58 @@ import java.util.Locale;
  * Represents the client settings for the player.
  */
 public interface PlayerSettings {
-    /**
-     * Returns the locale of the Minecraft client.
-     * @return the client locale
-     */
-    Locale getLocale();
 
-    /**
-     * Returns the client's view distance. This does not guarantee the client will see this many chunks, since your
-     * servers are responsible for sending the chunks.
-     * @return the client view distance
-     */
-    byte getViewDistance();
+  /**
+   * Returns the locale of the Minecraft client.
+   *
+   * @return the client locale
+   */
+  Locale getLocale();
 
-    /**
-     * Returns the chat setting for the client.
-     * @return the chat setting
-     */
-    ChatMode getChatMode();
+  /**
+   * Returns the client's view distance. This does not guarantee the client will see this many
+   * chunks, since your servers are responsible for sending the chunks.
+   *
+   * @return the client view distance
+   */
+  byte getViewDistance();
 
-    /**
-     * Returns whether or not the client has chat colors disabled.
-     * @return whether or not the client has chat colors disabled
-     */
-    boolean hasChatColors();
+  /**
+   * Returns the chat setting for the client.
+   *
+   * @return the chat setting
+   */
+  ChatMode getChatMode();
 
-    /**
-     * Returns the parts of player skins the client will show.
-     * @return the skin parts for the client
-     */
-    SkinParts getSkinParts();
+  /**
+   * Returns whether or not the client has chat colors disabled.
+   *
+   * @return whether or not the client has chat colors disabled
+   */
+  boolean hasChatColors();
 
-    /**
-     * Returns the primary hand of the client.
-     * @return the primary hand of the client
-     */
-    MainHand getMainHand();
+  /**
+   * Returns the parts of player skins the client will show.
+   *
+   * @return the skin parts for the client
+   */
+  SkinParts getSkinParts();
 
-    enum ChatMode {
-        SHOWN,
-        COMMANDS_ONLY,
-        HIDDEN
-    }
+  /**
+   * Returns the primary hand of the client.
+   *
+   * @return the primary hand of the client
+   */
+  MainHand getMainHand();
 
-    enum MainHand {
-        LEFT,
-        RIGHT
-    }
+  enum ChatMode {
+    SHOWN,
+    COMMANDS_ONLY,
+    HIDDEN
+  }
+
+  enum MainHand {
+    LEFT,
+    RIGHT
+  }
 }

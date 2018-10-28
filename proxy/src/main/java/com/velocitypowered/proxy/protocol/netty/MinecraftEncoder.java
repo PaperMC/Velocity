@@ -10,29 +10,31 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
-    private final ProtocolConstants.Direction direction;
-    private StateRegistry state;
-    private StateRegistry.PacketRegistry.ProtocolVersion protocolVersion;
 
-    public MinecraftEncoder(ProtocolConstants.Direction direction) {
-        this.direction = Preconditions.checkNotNull(direction, "direction");
-        this.protocolVersion = direction.getProtocol(StateRegistry.HANDSHAKE, ProtocolConstants.MINIMUM_GENERIC_VERSION);
-        this.state = StateRegistry.HANDSHAKE;
-    }
+  private final ProtocolConstants.Direction direction;
+  private StateRegistry state;
+  private StateRegistry.PacketRegistry.ProtocolVersion protocolVersion;
 
-    @Override
-    protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
-        int packetId = this.protocolVersion.getPacketId(msg);
-        ProtocolUtils.writeVarInt(out, packetId);
-        msg.encode(out, direction, protocolVersion.version);
-    }
+  public MinecraftEncoder(ProtocolConstants.Direction direction) {
+    this.direction = Preconditions.checkNotNull(direction, "direction");
+    this.protocolVersion = direction
+        .getProtocol(StateRegistry.HANDSHAKE, ProtocolConstants.MINIMUM_GENERIC_VERSION);
+    this.state = StateRegistry.HANDSHAKE;
+  }
 
-    public void setProtocolVersion(final int protocolVersion) {
-        this.protocolVersion = direction.getProtocol(state, protocolVersion);
-    }
+  @Override
+  protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
+    int packetId = this.protocolVersion.getPacketId(msg);
+    ProtocolUtils.writeVarInt(out, packetId);
+    msg.encode(out, direction, protocolVersion.version);
+  }
 
-    public void setState(StateRegistry state) {
-        this.state = state;
-        this.setProtocolVersion(protocolVersion.version);
-    }
+  public void setProtocolVersion(final int protocolVersion) {
+    this.protocolVersion = direction.getProtocol(state, protocolVersion);
+  }
+
+  public void setState(StateRegistry state) {
+    this.state = state;
+    this.setProtocolVersion(protocolVersion.version);
+  }
 }

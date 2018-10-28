@@ -12,52 +12,52 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <p>This event is only called once per subject, on initialisation.</p>
  */
 public final class PermissionsSetupEvent {
-    private final PermissionSubject subject;
-    private final PermissionProvider defaultProvider;
-    private PermissionProvider provider;
 
-    public PermissionsSetupEvent(PermissionSubject subject, PermissionProvider provider) {
-        this.subject = Preconditions.checkNotNull(subject, "subject");
-        this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
-    }
+  private final PermissionSubject subject;
+  private final PermissionProvider defaultProvider;
+  private PermissionProvider provider;
 
-    public PermissionSubject getSubject() {
-        return this.subject;
-    }
+  public PermissionsSetupEvent(PermissionSubject subject, PermissionProvider provider) {
+    this.subject = Preconditions.checkNotNull(subject, "subject");
+    this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
+  }
 
-    /**
-     * Uses the provider function to obtain a {@link PermissionFunction} for
-     * the subject.
-     *
-     * @param subject the subject
-     * @return the obtained permission function
-     */
-    public PermissionFunction createFunction(PermissionSubject subject) {
-        return this.provider.createFunction(subject);
-    }
+  public PermissionSubject getSubject() {
+    return this.subject;
+  }
 
-    public PermissionProvider getProvider() {
-        return this.provider;
-    }
+  /**
+   * Uses the provider function to obtain a {@link PermissionFunction} for the subject.
+   *
+   * @param subject the subject
+   * @return the obtained permission function
+   */
+  public PermissionFunction createFunction(PermissionSubject subject) {
+    return this.provider.createFunction(subject);
+  }
 
-    /**
-     * Sets the {@link PermissionFunction} that should be used for the subject.
-     *
-     * <p>Specifying <code>null</code> will reset the provider to the default
-     * instance given when the event was posted.</p>
-     *
-     * @param provider the provider
-     */
-    public void setProvider(@Nullable PermissionProvider provider) {
-        this.provider = provider == null ? this.defaultProvider : provider;
-    }
+  public PermissionProvider getProvider() {
+    return this.provider;
+  }
 
-    @Override
-    public String toString() {
-        return "PermissionsSetupEvent{" +
-                "subject=" + subject +
-                ", defaultProvider=" + defaultProvider +
-                ", provider=" + provider +
-                '}';
-    }
+  /**
+   * Sets the {@link PermissionFunction} that should be used for the subject.
+   *
+   * <p>Specifying <code>null</code> will reset the provider to the default
+   * instance given when the event was posted.</p>
+   *
+   * @param provider the provider
+   */
+  public void setProvider(@Nullable PermissionProvider provider) {
+    this.provider = provider == null ? this.defaultProvider : provider;
+  }
+
+  @Override
+  public String toString() {
+    return "PermissionsSetupEvent{" +
+        "subject=" + subject +
+        ", defaultProvider=" + defaultProvider +
+        ", provider=" + provider +
+        '}';
+  }
 }

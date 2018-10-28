@@ -1,27 +1,28 @@
 package com.velocitypowered.proxy.network.http;
 
 public class SimpleHttpResponse {
-    private final int code;
-    private final String body;
 
-    SimpleHttpResponse(int code, String body) {
-        this.code = code;
-        this.body = body;
-    }
+  private final int code;
+  private final String body;
 
-    public int getCode() {
-        return code;
-    }
+  SimpleHttpResponse(int code, String body) {
+    this.code = code;
+    this.body = body;
+  }
 
-    public String getBody() {
-        return body;
-    }
+  public int getCode() {
+    return code;
+  }
 
-    @Override
-    public String toString() {
-        return "SimpleHttpResponse{" +
-                "code=" + code +
-                ", body='" + body + '\'' +
-                '}';
-    }
+  public String getBody() {
+    return body;
+  }
+
+  @Override
+  public String toString() {
+    return "SimpleHttpResponse{" +
+        "code=" + code +
+        ", body='" + body + '\'' +
+        '}';
+  }
 }

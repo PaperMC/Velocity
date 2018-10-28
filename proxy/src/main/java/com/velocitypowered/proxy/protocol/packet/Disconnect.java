@@ -11,53 +11,54 @@ import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Disconnect implements MinecraftPacket {
-    private @Nullable String reason;
 
-    public Disconnect() {
-    }
+  private @Nullable String reason;
 
-    public Disconnect(String reason) {
-        this.reason = Preconditions.checkNotNull(reason, "reason");
-    }
+  public Disconnect() {
+  }
 
-    public String getReason() {
-        if (reason == null) {
-            throw new IllegalStateException("No reason specified");
-        }
-        return reason;
-    }
+  public Disconnect(String reason) {
+    this.reason = Preconditions.checkNotNull(reason, "reason");
+  }
 
-    public void setReason(@Nullable String reason) {
-        this.reason = reason;
+  public String getReason() {
+    if (reason == null) {
+      throw new IllegalStateException("No reason specified");
     }
+    return reason;
+  }
 
-    @Override
-    public String toString() {
-        return "Disconnect{" +
-                "reason='" + reason + '\'' +
-                '}';
-    }
+  public void setReason(@Nullable String reason) {
+    this.reason = reason;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        reason = ProtocolUtils.readString(buf);
-    }
+  @Override
+  public String toString() {
+    return "Disconnect{" +
+        "reason='" + reason + '\'' +
+        '}';
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        if (reason == null) {
-            throw new IllegalStateException("No reason specified.");
-        }
-        ProtocolUtils.writeString(buf, reason);
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    reason = ProtocolUtils.readString(buf);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    if (reason == null) {
+      throw new IllegalStateException("No reason specified.");
     }
+    ProtocolUtils.writeString(buf, reason);
+  }
 
-    public static Disconnect create(Component component) {
-        Preconditions.checkNotNull(component, "component");
-        return new Disconnect(ComponentSerializers.JSON.serialize(component));
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
+
+  public static Disconnect create(Component component) {
+    Preconditions.checkNotNull(component, "component");
+    return new Disconnect(ComponentSerializers.JSON.serialize(component));
+  }
 }

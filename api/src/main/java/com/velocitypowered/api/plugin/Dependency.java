@@ -10,19 +10,19 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})
 public @interface Dependency {
-    /**
-     * The plugin ID of the dependency.
-     *
-     * @return The dependency plugin ID
-     * @see Plugin#id()
-     */
-    String id();
 
-    /**
-     * If this dependency is optional for the plugin to work. By default
-     * this is {@code false}.
-     *
-     * @return true if the dependency is optional for the plugin to work
-     */
-    boolean optional() default false;
+  /**
+   * The plugin ID of the dependency.
+   *
+   * @return The dependency plugin ID
+   * @see Plugin#id()
+   */
+  String id();
+
+  /**
+   * If this dependency is optional for the plugin to work. By default this is {@code false}.
+   *
+   * @return true if the dependency is optional for the plugin to work
+   */
+  boolean optional() default false;
 }

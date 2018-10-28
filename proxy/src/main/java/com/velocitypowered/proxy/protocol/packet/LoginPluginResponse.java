@@ -8,63 +8,64 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class LoginPluginResponse implements MinecraftPacket {
-    private int id;
-    private boolean success;
-    private ByteBuf data = Unpooled.EMPTY_BUFFER;
 
-    public int getId() {
-        return id;
-    }
+  private int id;
+  private boolean success;
+  private ByteBuf data = Unpooled.EMPTY_BUFFER;
 
-    public void setId(int id) {
-        this.id = id;
-    }
+  public int getId() {
+    return id;
+  }
 
-    public boolean isSuccess() {
-        return success;
-    }
+  public void setId(int id) {
+    this.id = id;
+  }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
+  public boolean isSuccess() {
+    return success;
+  }
 
-    public ByteBuf getData() {
-        return data;
-    }
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
 
-    public void setData(ByteBuf data) {
-        this.data = data;
-    }
+  public ByteBuf getData() {
+    return data;
+  }
 
-    @Override
-    public String toString() {
-        return "LoginPluginResponse{" +
-                "id=" + id +
-                ", success=" + success +
-                ", data=" + data +
-                '}';
-    }
+  public void setData(ByteBuf data) {
+    this.data = data;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.id = ProtocolUtils.readVarInt(buf);
-        this.success = buf.readBoolean();
-        if (buf.isReadable()) {
-            this.data = buf.readSlice(buf.readableBytes());
-        } else {
-            this.data = Unpooled.EMPTY_BUFFER;
-        }
-    }
+  @Override
+  public String toString() {
+    return "LoginPluginResponse{" +
+        "id=" + id +
+        ", success=" + success +
+        ", data=" + data +
+        '}';
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, id);
-        buf.writeBoolean(success);
-        buf.writeBytes(data);
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    this.id = ProtocolUtils.readVarInt(buf);
+    this.success = buf.readBoolean();
+    if (buf.isReadable()) {
+      this.data = buf.readSlice(buf.readableBytes());
+    } else {
+      this.data = Unpooled.EMPTY_BUFFER;
     }
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, id);
+    buf.writeBoolean(success);
+    buf.writeBytes(data);
+  }
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

@@ -7,41 +7,43 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class SetCompression implements MinecraftPacket {
-    private int threshold;
 
-    public SetCompression() {}
+  private int threshold;
 
-    public SetCompression(int threshold) {
-        this.threshold = threshold;
-    }
+  public SetCompression() {
+  }
 
-    public int getThreshold() {
-        return threshold;
-    }
+  public SetCompression(int threshold) {
+    this.threshold = threshold;
+  }
 
-    public void setThreshold(int threshold) {
-        this.threshold = threshold;
-    }
+  public int getThreshold() {
+    return threshold;
+  }
 
-    @Override
-    public String toString() {
-        return "SetCompression{" +
-                "threshold=" + threshold +
-                '}';
-    }
+  public void setThreshold(int threshold) {
+    this.threshold = threshold;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        this.threshold = ProtocolUtils.readVarInt(buf);
-    }
+  @Override
+  public String toString() {
+    return "SetCompression{" +
+        "threshold=" + threshold +
+        '}';
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, threshold);
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    this.threshold = ProtocolUtils.readVarInt(buf);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, threshold);
+  }
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

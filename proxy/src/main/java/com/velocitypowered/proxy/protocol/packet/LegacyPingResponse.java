@@ -5,57 +5,60 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class LegacyPingResponse {
-    private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0, ImmutableList.of());
-    private final int protocolVersion;
-    private final String serverVersion;
-    private final String motd;
-    private final int playersOnline;
-    private final int playersMax;
 
-    public LegacyPingResponse(int protocolVersion, String serverVersion, String motd, int playersOnline, int playersMax) {
-        this.protocolVersion = protocolVersion;
-        this.serverVersion = serverVersion;
-        this.motd = motd;
-        this.playersOnline = playersOnline;
-        this.playersMax = playersMax;
-    }
+  private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0,
+      ImmutableList.of());
+  private final int protocolVersion;
+  private final String serverVersion;
+  private final String motd;
+  private final int playersOnline;
+  private final int playersMax;
 
-    public int getProtocolVersion() {
-        return protocolVersion;
-    }
+  public LegacyPingResponse(int protocolVersion, String serverVersion, String motd,
+      int playersOnline, int playersMax) {
+    this.protocolVersion = protocolVersion;
+    this.serverVersion = serverVersion;
+    this.motd = motd;
+    this.playersOnline = playersOnline;
+    this.playersMax = playersMax;
+  }
 
-    public String getServerVersion() {
-        return serverVersion;
-    }
+  public int getProtocolVersion() {
+    return protocolVersion;
+  }
 
-    public String getMotd() {
-        return motd;
-    }
+  public String getServerVersion() {
+    return serverVersion;
+  }
 
-    public int getPlayersOnline() {
-        return playersOnline;
-    }
+  public String getMotd() {
+    return motd;
+  }
 
-    public int getPlayersMax() {
-        return playersMax;
-    }
+  public int getPlayersOnline() {
+    return playersOnline;
+  }
 
-    @Override
-    public String toString() {
-        return "LegacyPingResponse{" +
-                "protocolVersion=" + protocolVersion +
-                ", serverVersion='" + serverVersion + '\'' +
-                ", motd='" + motd + '\'' +
-                ", playersOnline=" + playersOnline +
-                ", playersMax=" + playersMax +
-                '}';
-    }
+  public int getPlayersMax() {
+    return playersMax;
+  }
 
-    public static LegacyPingResponse from(ServerPing ping) {
-        return new LegacyPingResponse(ping.getVersion().getProtocol(),
-                ping.getVersion().getName(),
-                ComponentSerializers.LEGACY.serialize(ping.getDescription()),
-                ping.getPlayers().orElse(FAKE_PLAYERS).getOnline(),
-                ping.getPlayers().orElse(FAKE_PLAYERS).getMax());
-    }
+  @Override
+  public String toString() {
+    return "LegacyPingResponse{" +
+        "protocolVersion=" + protocolVersion +
+        ", serverVersion='" + serverVersion + '\'' +
+        ", motd='" + motd + '\'' +
+        ", playersOnline=" + playersOnline +
+        ", playersMax=" + playersMax +
+        '}';
+  }
+
+  public static LegacyPingResponse from(ServerPing ping) {
+    return new LegacyPingResponse(ping.getVersion().getProtocol(),
+        ping.getVersion().getName(),
+        ComponentSerializers.LEGACY.serialize(ping.getDescription()),
+        ping.getPlayers().orElse(FAKE_PLAYERS).getOnline(),
+        ping.getPlayers().orElse(FAKE_PLAYERS).getMax());
+  }
 }

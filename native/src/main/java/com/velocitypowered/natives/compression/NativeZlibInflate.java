@@ -4,20 +4,22 @@ package com.velocitypowered.natives.compression;
  * Represents a native interface for zlib's inflate functions.
  */
 class NativeZlibInflate {
-    boolean finished;
-    int consumed;
 
-    native long init();
+  boolean finished;
+  int consumed;
 
-    native long free(long ctx);
+  native long init();
 
-    native int process(long ctx, long sourceAddress, int sourceLength, long destinationAddress, int destinationLength);
+  native long free(long ctx);
 
-    native void reset(long ctx);
+  native int process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
+      int destinationLength);
 
-    static {
-        initIDs();
-    }
+  native void reset(long ctx);
 
-    private static native void initIDs();
+  static {
+    initIDs();
+  }
+
+  private static native void initIDs();
 }
