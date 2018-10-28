@@ -67,6 +67,8 @@ public class VelocityServer implements ProxyServer {
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .create();
 
+  private static final Path configurationPath = Paths.get("velocity.toml");
+
   private @MonotonicNonNull ConnectionManager cm;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull NettyHttpClient httpClient;
@@ -153,11 +155,10 @@ public class VelocityServer implements ProxyServer {
     commandManager.register(new ShutdownCommand(this), "shutdown", "end");
 
     try {
-      Path configPath = Paths.get("velocity.toml");
-      configuration = VelocityConfiguration.read(configPath);
+      configuration = VelocityConfiguration.read(configurationPath);
 
       AnnotatedConfig
-              .saveConfig(configuration.dumpConfig(), configPath); // Resave config to add new values
+              .saveConfig(configuration.dumpConfig(), configurationPath); // Resave config to add new values
 
       if (!configuration.validate()) {
         logger.error(
