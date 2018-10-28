@@ -51,7 +51,6 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VelocityServer implements ProxyServer {
@@ -98,7 +97,9 @@ public class VelocityServer implements ProxyServer {
     @Override
     public ProxyVersion getVersion() {
         Package pkg = VelocityServer.class.getPackage();
-        String implName, implVersion, implVendor;
+        String implName;
+        String implVersion;
+        String implVendor;
         if (pkg != null) {
             implName = MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
             implVersion = MoreObjects.firstNonNull(pkg.getImplementationVersion(), "<unknown>");
@@ -148,7 +149,7 @@ public class VelocityServer implements ProxyServer {
 
             AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
             LogManager.shutdown();
             System.exit(1);
@@ -183,10 +184,10 @@ public class VelocityServer implements ProxyServer {
         try {
             Path pluginPath = Paths.get("plugins");
 
-            if (Files.notExists(pluginPath)) {
+            if (!pluginPath.toFile().exists()) {
                 Files.createDirectory(pluginPath);
             } else {
-                if (!Files.isDirectory(pluginPath)) {
+                if (!pluginPath.toFile().isDirectory()) {
                     logger.warn("Plugin location {} is not a directory, continuing without loading plugins", pluginPath);
                     return;
                 }
@@ -242,6 +243,7 @@ public class VelocityServer implements ProxyServer {
             }
         } catch (InterruptedException e) {
             // Not much we can do about this...
+            Thread.currentThread().interrupt();
         }
 
         shutdown = true;

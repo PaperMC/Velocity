@@ -12,7 +12,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -94,6 +93,7 @@ public final class ConnectionManager {
                 endpoint.close().sync();
             } catch (final InterruptedException e) {
                 LOGGER.info("Interrupted whilst closing endpoint", e);
+                Thread.currentThread().interrupt();
             }
         }
     }

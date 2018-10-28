@@ -123,6 +123,8 @@ public class BossBar implements MinecraftPacket {
             case UPDATE_PROPERTIES:
                 this.flags = buf.readUnsignedByte();
                 break;
+            default:
+                throw new UnsupportedOperationException("Unknown action " + action);
         }
     }
 
@@ -162,6 +164,8 @@ public class BossBar implements MinecraftPacket {
             case UPDATE_PROPERTIES:
                 buf.writeByte(flags);
                 break;
+            default:
+                throw new UnsupportedOperationException("Unknown action " + action);
         }
     }
 

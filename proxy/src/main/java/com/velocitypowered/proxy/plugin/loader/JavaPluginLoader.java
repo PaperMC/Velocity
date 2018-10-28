@@ -12,7 +12,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;

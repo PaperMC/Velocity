@@ -31,6 +31,8 @@ public class NettyHttpClient {
 
                     @Override
                     public void channelAcquired(Channel channel) throws Exception {
+                        // We don't do anything special when acquiring channels. The channel handler cleans up after
+                        // each connection is used.
                     }
 
                     @Override
@@ -72,10 +74,8 @@ public class NettyHttpClient {
                         request.headers().add(HttpHeaderNames.USER_AGENT, "Velocity");
                         channel.writeAndFlush(request);
 
-                        reply.whenComplete((resp, err) -> {
-                            // Make sure to release this connection
-                            poolMap.get(address).release(channel, channel.voidPromise());
-                        });
+                        // Make sure to release this connection
+                        reply.whenComplete((resp, err) -> poolMap.get(address).release(channel));
                     } else {
                         reply.completeExceptionally(future.cause());
                     }

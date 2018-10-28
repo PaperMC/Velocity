@@ -8,7 +8,7 @@ public final class SkinParts {
     }
 
     public boolean hasCape() {
-        return ((bitmask >> 0) & 1) == 1;
+        return (bitmask & 1) == 1;
     }
 
     public boolean hasJacket() {

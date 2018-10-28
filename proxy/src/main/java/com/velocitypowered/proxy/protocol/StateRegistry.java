@@ -217,12 +217,12 @@ public enum StateRegistry {
         }
 
         public class ProtocolVersion {
-            public final int id;
+            public final int version;
             final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier = new IntObjectHashMap<>(16, 0.5f);
             final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId = new Object2IntOpenHashMap<>(16, 0.5f);
 
-            ProtocolVersion(final int id) {
-                this.id = id;
+            ProtocolVersion(final int version) {
+                this.version = version;
                 this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
             }
 
@@ -239,7 +239,7 @@ public enum StateRegistry {
                 if (id == Integer.MIN_VALUE) {
                     throw new IllegalArgumentException(String.format(
                             "Unable to find id for packet of type %s in %s protocol %s",
-                            packet.getClass().getName(), PacketRegistry.this.direction, this.id
+                            packet.getClass().getName(), PacketRegistry.this.direction, this.version
                     ));
                 }
                 return id;

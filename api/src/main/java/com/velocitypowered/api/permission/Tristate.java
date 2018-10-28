@@ -1,6 +1,5 @@
 package com.velocitypowered.api.permission;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -52,7 +51,10 @@ public enum Tristate {
      *         is <code>null</code>, <code>true</code> or <code>false</code>, respectively.
      */
     public static Tristate fromNullableBoolean(@Nullable Boolean val) {
-        return val == null ? UNDEFINED : val ? TRUE : FALSE;
+        if (val == null) {
+            return UNDEFINED;
+        }
+        return val ? TRUE : FALSE;
     }
 
     private final boolean booleanValue;

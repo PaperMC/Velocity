@@ -48,7 +48,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
         server.getEventManager().fire(event)
                 .thenRunAsync(() -> {
                     // The disconnect packet is the same as the server response one.
-                    connection.closeWith(LegacyDisconnect.fromPingResponse(LegacyPingResponse.from(event.getPing())));
+                    LegacyPingResponse response = LegacyPingResponse.from(event.getPing());
+                    connection.closeWith(LegacyDisconnect.fromPingResponse(response));
                 }, connection.eventLoop());
         return true;
     }
@@ -116,12 +117,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public void handleGeneric(MinecraftPacket packet) {
-
+        // Unknown packet received. Better to close the connection.
+        connection.close();
     }
 
     @Override
     public void handleUnknown(ByteBuf buf) {
-        // what even is going on?
+        // Unknown packet received. Better to close the connection.
         connection.close();
     }
 

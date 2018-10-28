@@ -58,21 +58,21 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
         // The server can not accept formatted text from clients!
         private @Nullable String message;
-        private final boolean allowed;
+        private final boolean status;
 
-        protected ChatResult(boolean allowed, @Nullable String message) {
-            this.allowed = allowed;
+        protected ChatResult(boolean status, @Nullable String message) {
+            this.status = status;
             this.message = message;
         }
 
         @Override
         public boolean isAllowed() {
-            return allowed;
+            return status;
         }
 
         @Override
         public String toString() {
-            return allowed ? "allowed" : "denied";
+            return status ? "allowed" : "denied";
         }
 
         public static ChatResult allowed() {

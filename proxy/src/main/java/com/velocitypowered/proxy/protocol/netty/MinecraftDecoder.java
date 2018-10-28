@@ -38,14 +38,14 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
             out.add(slice.retain());
         } else {
             try {
-                packet.decode(msg, direction, protocolVersion.id);
+                packet.decode(msg, direction, protocolVersion.version);
             } catch (Exception e) {
                 throw new CorruptedFrameException("Error decoding " + packet.getClass() + " Direction " + direction
-                        + " Protocol " + protocolVersion.id + " State " + state + " ID " + Integer.toHexString(packetId), e);
+                        + " Protocol " + protocolVersion.version + " State " + state + " ID " + Integer.toHexString(packetId), e);
             }
             if (msg.isReadable()) {
                 throw new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " Direction " + direction
-                        + " Protocol " + protocolVersion.id + " State " + state + " ID " + Integer.toHexString(packetId));
+                        + " Protocol " + protocolVersion.version + " State " + state + " ID " + Integer.toHexString(packetId));
             }
             out.add(packet);
         }
@@ -57,6 +57,6 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     public void setState(StateRegistry state) {
         this.state = state;
-        this.setProtocolVersion(protocolVersion.id);
+        this.setProtocolVersion(protocolVersion.version);
     }
 }

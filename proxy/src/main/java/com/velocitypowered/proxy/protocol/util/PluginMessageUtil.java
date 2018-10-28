@@ -2,9 +2,6 @@ package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -14,7 +11,6 @@ import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public class PluginMessageUtil {
     public static final String BRAND_CHANNEL_LEGACY = "MC|Brand";

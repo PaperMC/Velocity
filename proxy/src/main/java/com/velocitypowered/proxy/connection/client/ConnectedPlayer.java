@@ -43,27 +43,24 @@ import net.kyori.text.serializer.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
-    private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer((c) -> "", TranslatableComponent::key);
+    private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer(c -> "", TranslatableComponent::key);
     static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
     private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
     private final MinecraftConnection connection;
-    private @Nullable final InetSocketAddress virtualHost;
+    private final @Nullable InetSocketAddress virtualHost;
     private GameProfile profile;
     private PermissionFunction permissionFunction;
     private int tryIndex = 0;
@@ -84,7 +81,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         this.profile = profile;
         this.connection = connection;
         this.virtualHost = virtualHost;
-        this.permissionFunction = (permission) -> Tristate.UNDEFINED;
+        this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     }
 
     @Override
@@ -364,8 +361,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     Optional<RegisteredServer> getNextServerToTry() {
         if (serversToTry == null) {
-            String virtualHost = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
-            serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHost, Collections.emptyList());
+            String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
+            serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr, Collections.emptyList());
         }
 
         if (serversToTry.isEmpty()) {
@@ -401,7 +398,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         // Otherwise, initiate the connection.
         ServerPreConnectEvent event = new ServerPreConnectEvent(this, request.getServer());
         return server.getEventManager().fire(event)
-                .thenCompose((newEvent) -> {
+                .thenCompose(newEvent -> {
                     Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
                     if (!connectTo.isPresent()) {
                         return CompletableFuture.completedFuture(
@@ -431,10 +428,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     public void sendLegacyForgeHandshakeResetPacket() {
         if (connection.canSendLegacyFMLResetPacket()) {
-            PluginMessage resetPacket = new PluginMessage();
-            resetPacket.setChannel(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-            resetPacket.setData(ForgeConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA);
-            connection.write(resetPacket);
+            connection.write(ForgeConstants.resetPacket());
             connection.setCanSendLegacyFMLResetPacket(false);
         }
     }
@@ -533,6 +527,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                                 break;
                             case SERVER_DISCONNECTED:
                                 handleConnectionException(server, Disconnect.create(status.getReason().orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
+                                break;
+                            default:
+                                // The only remaining value is successful (no need to do anything!)
                                 break;
                         }
                     }, connection.eventLoop())

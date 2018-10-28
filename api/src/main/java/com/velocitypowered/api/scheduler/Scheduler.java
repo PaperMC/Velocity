@@ -1,7 +1,6 @@
 package com.velocitypowered.api.scheduler;
 
 import org.checkerframework.common.value.qual.IntRange;
-import org.checkerframework.common.value.qual.IntRangeFromNonNegative;
 
 import java.util.concurrent.TimeUnit;
 

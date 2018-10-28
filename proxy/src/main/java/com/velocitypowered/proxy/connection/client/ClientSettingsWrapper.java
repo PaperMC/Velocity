@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Locale;
 
 public class ClientSettingsWrapper implements PlayerSettings {
-    static PlayerSettings DEFAULT = new ClientSettingsWrapper(new ClientSettings("en_US", (byte) 10, 0, true, (short)127, 1));
+    static final PlayerSettings DEFAULT = new ClientSettingsWrapper(new ClientSettings("en_US", (byte) 10, 0, true, (short)127, 1));
     
     private final ClientSettings settings;
     private final SkinParts parts;
@@ -21,7 +21,10 @@ public class ClientSettingsWrapper implements PlayerSettings {
 
     @Override
     public Locale getLocale() {
-        return locale == null ? locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-")) : locale; //Will throw error if locale not found
+        if (locale == null) {
+            locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-"));
+        }
+        return locale;
     }
 
     @Override

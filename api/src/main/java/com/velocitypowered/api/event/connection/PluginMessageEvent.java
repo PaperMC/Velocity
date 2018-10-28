@@ -78,20 +78,20 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
         private static final ForwardResult ALLOWED = new ForwardResult(true);
         private static final ForwardResult DENIED = new ForwardResult(false);
 
-        private final boolean allowed;
+        private final boolean status;
 
         private ForwardResult(boolean b) {
-            this.allowed = b;
+            this.status = b;
         }
 
         @Override
         public boolean isAllowed() {
-            return allowed;
+            return status;
         }
 
         @Override
         public String toString() {
-            return allowed ? "forward to sink" : "handled message at proxy";
+            return status ? "forward to sink" : "handled message at proxy";
         }
 
         public static ForwardResult forward() {

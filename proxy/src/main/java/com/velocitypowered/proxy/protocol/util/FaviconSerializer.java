@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 
 public class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
     @Override
-    public Favicon deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public Favicon deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
         return new Favicon(json.getAsString());
     }
 

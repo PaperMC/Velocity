@@ -18,8 +18,6 @@ public @interface Dependency {
      */
     String id();
 
-    // TODO Add required version field
-
     /**
      * If this dependency is optional for the plugin to work. By default
      * this is {@code false}.

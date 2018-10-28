@@ -43,20 +43,20 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         private static final GenericResult ALLOWED = new GenericResult(true);
         private static final GenericResult DENIED = new GenericResult(false);
 
-        private final boolean allowed;
+        private final boolean status;
 
         private GenericResult(boolean b) {
-            this.allowed = b;
+            this.status = b;
         }
 
         @Override
         public boolean isAllowed() {
-            return allowed;
+            return status;
         }
 
         @Override
         public String toString() {
-            return allowed ? "allowed" : "denied";
+            return status ? "allowed" : "denied";
         }
 
         public static GenericResult allowed() {
@@ -74,17 +74,17 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     final class ComponentResult implements Result {
         private static final ComponentResult ALLOWED = new ComponentResult(true, null);
 
-        private final boolean allowed;
+        private final boolean status;
         private final @Nullable Component reason;
 
-        protected ComponentResult(boolean allowed, @Nullable Component reason) {
-            this.allowed = allowed;
+        protected ComponentResult(boolean status, @Nullable Component reason) {
+            this.status = status;
             this.reason = reason;
         }
 
         @Override
         public boolean isAllowed() {
-            return allowed;
+            return status;
         }
 
         public Optional<Component> getReason() {
@@ -93,7 +93,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
 
         @Override
         public String toString() {
-            if (allowed) {
+            if (status) {
                 return "allowed";
             }
             if (reason != null) {

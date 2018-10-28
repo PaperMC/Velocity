@@ -11,7 +11,7 @@ import net.kyori.text.serializer.ComponentSerializers;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Chat implements MinecraftPacket {
-    public static final byte CHAT = (byte) 0;
+    public static final byte CHAT_TYPE = (byte) 0;
     public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
 
     private @Nullable String message;
@@ -77,7 +77,7 @@ public class Chat implements MinecraftPacket {
     }
 
     public static Chat createClientbound(Component component) {
-        return createClientbound(component, CHAT);
+        return createClientbound(component, CHAT_TYPE);
     }
 
     public static Chat createClientbound(Component component, byte type) {
@@ -86,6 +86,6 @@ public class Chat implements MinecraftPacket {
     }
 
     public static Chat createServerbound(String message) {
-        return new Chat(message, CHAT);
+        return new Chat(message, CHAT_TYPE);
     }
 }

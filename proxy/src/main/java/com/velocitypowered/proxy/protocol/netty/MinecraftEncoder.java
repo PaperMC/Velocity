@@ -24,7 +24,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
         int packetId = this.protocolVersion.getPacketId(msg);
         ProtocolUtils.writeVarInt(out, packetId);
-        msg.encode(out, direction, protocolVersion.id);
+        msg.encode(out, direction, protocolVersion.version);
     }
 
     public void setProtocolVersion(final int protocolVersion) {
@@ -33,6 +33,6 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
 
     public void setState(StateRegistry state) {
         this.state = state;
-        this.setProtocolVersion(protocolVersion.id);
+        this.setProtocolVersion(protocolVersion.version);
     }
 }

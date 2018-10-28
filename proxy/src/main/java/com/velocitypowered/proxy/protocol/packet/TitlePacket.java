@@ -51,6 +51,8 @@ public class TitlePacket implements MinecraftPacket {
                 case HIDE:
                 case RESET:
                     break;
+                default:
+                    throw new UnsupportedOperationException("Unknown action " + action);
             }
         } else {
             switch (action) {
@@ -69,6 +71,8 @@ public class TitlePacket implements MinecraftPacket {
                 case HIDE_OLD:
                 case RESET_OLD:
                     break;
+                default:
+                    throw new UnsupportedOperationException("Unknown action " + action);
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -67,13 +66,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     @Override
     public boolean handle(BossBar packet) {
-        switch (packet.getAction()) {
-            case BossBar.ADD:
-                playerSessionHandler.getServerBossBars().add(packet.getUuid());
-                break;
-            case BossBar.REMOVE:
-                playerSessionHandler.getServerBossBars().remove(packet.getUuid());
-                break;
+        if (packet.getAction() == BossBar.ADD) {
+            playerSessionHandler.getServerBossBars().add(packet.getUuid());
+        } else if (packet.getAction() == BossBar.REMOVE) {
+            playerSessionHandler.getServerBossBars().remove(packet.getUuid());
         }
         return false; // forward
     }

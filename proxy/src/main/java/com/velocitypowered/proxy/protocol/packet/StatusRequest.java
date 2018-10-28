@@ -14,12 +14,12 @@ public class StatusRequest implements MinecraftPacket {
 
     @Override
     public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-
+        // There is no additional data to decode.
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-
+        // There is no data to decode.
     }
 
     @Override

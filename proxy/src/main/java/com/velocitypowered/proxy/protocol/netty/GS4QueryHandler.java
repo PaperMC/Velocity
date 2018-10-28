@@ -35,15 +35,15 @@ import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.FULL
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     private static final Logger logger = LogManager.getLogger(GS4QueryHandler.class);
 
-    private final static short QUERY_MAGIC_FIRST = 0xFE;
-    private final static short QUERY_MAGIC_SECOND = 0xFD;
-    private final static byte QUERY_TYPE_HANDSHAKE = 0x09;
-    private final static byte QUERY_TYPE_STAT = 0x00;
-    private final static byte[] QUERY_RESPONSE_FULL_PADDING = new byte[] { 0x73, 0x70, 0x6C, 0x69, 0x74, 0x6E, 0x75, 0x6D, 0x00, (byte) 0x80, 0x00 };
-    private final static byte[] QUERY_RESPONSE_FULL_PADDING2 = new byte[] { 0x01, 0x70, 0x6C, 0x61, 0x79, 0x65, 0x72, 0x5F, 0x00, 0x00 };
+    private static final short QUERY_MAGIC_FIRST = 0xFE;
+    private static final short QUERY_MAGIC_SECOND = 0xFD;
+    private static final byte QUERY_TYPE_HANDSHAKE = 0x09;
+    private static final byte QUERY_TYPE_STAT = 0x00;
+    private static final byte[] QUERY_RESPONSE_FULL_PADDING = new byte[] { 0x73, 0x70, 0x6C, 0x69, 0x74, 0x6E, 0x75, 0x6D, 0x00, (byte) 0x80, 0x00 };
+    private static final byte[] QUERY_RESPONSE_FULL_PADDING2 = new byte[] { 0x01, 0x70, 0x6C, 0x61, 0x79, 0x65, 0x72, 0x5F, 0x00, 0x00 };
 
     // Contents to add into basic stat response. See ResponseWriter class below
-    private final static Set<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
+    private static final Set<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
             "hostname",
             "gametype",
             "map",
@@ -159,10 +159,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
                     break;
                 }
-
-                default: {
+                default:
                     throw new IllegalStateException("Invalid query type: " + type);
-                }
             }
         } catch (Exception e) {
             logger.warn("Error while trying to handle a query packet from {}", msg.sender(), e);

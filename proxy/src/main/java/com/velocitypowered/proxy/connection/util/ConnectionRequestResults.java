@@ -3,7 +3,6 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.ComponentSerializers;
 
 import java.util.Optional;

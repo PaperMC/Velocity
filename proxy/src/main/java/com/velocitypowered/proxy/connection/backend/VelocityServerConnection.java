@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.base.VerifyException;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -65,10 +64,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                                 .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
                                 .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
 
-                        MinecraftConnection connection = new MinecraftConnection(ch, server);
-                        connection.setState(StateRegistry.HANDSHAKE);
-                        connection.setAssociation(VelocityServerConnection.this);
-                        ch.pipeline().addLast(HANDLER, connection);
+                        MinecraftConnection mc = new MinecraftConnection(ch, server);
+                        mc.setState(StateRegistry.HANDSHAKE);
+                        mc.setAssociation(VelocityServerConnection.this);
+                        ch.pipeline().addLast(HANDLER, mc);
                     }
                 })
                 .connect(registeredServer.getServerInfo().getAddress())

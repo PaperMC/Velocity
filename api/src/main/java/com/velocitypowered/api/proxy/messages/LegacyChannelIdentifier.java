@@ -42,6 +42,6 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
 
     @Override
     public String getId() {
-        return name;
+        return this.getName();
     }
 }

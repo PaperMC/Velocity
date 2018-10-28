@@ -9,7 +9,6 @@ import com.velocitypowered.proxy.plugin.loader.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -41,12 +40,12 @@ public class VelocityPluginManager implements PluginManager {
 
     public void loadPlugins(Path directory) throws IOException {
         checkNotNull(directory, "directory");
-        checkArgument(Files.isDirectory(directory), "provided path isn't a directory");
+        checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
 
         List<PluginDescription> found = new ArrayList<>();
         JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, p -> Files.isRegularFile(p) && p.toString().endsWith(".jar"))) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
             for (Path path : stream) {
                 try {
                     found.add(loader.loadPlugin(path));
@@ -79,7 +78,7 @@ public class VelocityPluginManager implements PluginManager {
 
             try {
                 pluginObject = loader.createPlugin(plugin);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.error("Can't create plugin {}", plugin.getId(), e);
                 continue;
             }

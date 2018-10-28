@@ -54,10 +54,7 @@ public class PlayerListItem implements MinecraftPacket {
                     item.setProperties(ProtocolUtils.readProperties(buf));
                     item.setGameMode(ProtocolUtils.readVarInt(buf));
                     item.setLatency(ProtocolUtils.readVarInt(buf));
-                    boolean hasDisplayName = buf.readBoolean();
-                    if (hasDisplayName) {
-                        item.setDisplayName(ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf)));
-                    }
+                    item.setDisplayName(readOptionalComponent(buf));
                     break;
                 }
                 case UPDATE_GAMEMODE:
@@ -66,17 +63,24 @@ public class PlayerListItem implements MinecraftPacket {
                 case UPDATE_LATENCY:
                     item.setLatency(ProtocolUtils.readVarInt(buf));
                     break;
-                case UPDATE_DISPLAY_NAME: {
-                    boolean hasDisplayName = buf.readBoolean();
-                    if (hasDisplayName) {
-                        item.setDisplayName(ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf)));
-                    }
-                } break;
+                case UPDATE_DISPLAY_NAME:
+                    item.setDisplayName(readOptionalComponent(buf));
+                    break;
                 case REMOVE_PLAYER:
                     //Do nothing, all that is needed is the uuid
                     break;
+                default:
+                    throw new UnsupportedOperationException("Unknown action " + action);
             }
         }
+    }
+
+    @Nullable
+    private static Component readOptionalComponent(ByteBuf buf) {
+        if (buf.readBoolean()) {
+            return ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf));
+        }
+        return null;
     }
 
     @Override
@@ -106,6 +110,8 @@ public class PlayerListItem implements MinecraftPacket {
                 case REMOVE_PLAYER:
                     //Do nothing, all that is needed is the uuid
                     break;
+                default:
+                    throw new UnsupportedOperationException("Unknown action " + action);
             }
         }
     }
