@@ -213,7 +213,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Writes list of strings to file
+   * Writes list of strings to file.
    *
    * @param lines list of strings to write
    * @param to Path of file where lines should be written
@@ -225,7 +225,7 @@ public abstract class AnnotatedConfig {
       throw new IllegalArgumentException("lines cannot be empty");
     }
 
-    Path temp = to.getParent().resolve(to.getFileName().toString() + "__tmp");
+    Path temp = to.toAbsolutePath().getParent().resolve(to.getFileName().toString() + "__tmp");
     Files.write(temp, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
     try {
       Files.move(temp, to, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
