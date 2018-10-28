@@ -147,16 +147,15 @@ public class VelocityServer implements ProxyServer {
       Path configPath = Paths.get("velocity.toml");
       configuration = VelocityConfiguration.read(configPath);
 
+      AnnotatedConfig
+              .saveConfig(configuration.dumpConfig(), configPath); // Resave config to add new values
+
       if (!configuration.validate()) {
         logger.error(
             "Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
         LogManager.shutdown();
         System.exit(1);
       }
-
-      AnnotatedConfig
-          .saveConfig(configuration.dumpConfig(), configPath); //Resave config to add new values
-
     } catch (Exception e) {
       logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
       LogManager.shutdown();
