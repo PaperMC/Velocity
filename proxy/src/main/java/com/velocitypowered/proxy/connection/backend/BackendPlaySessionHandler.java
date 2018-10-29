@@ -45,7 +45,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean beforeHandle() {
-    if (!serverConn.getPlayer().isActive()) {
+    if (!serverConn.isActive()) {
       // Obsolete connection
       serverConn.disconnect();
       return true;
@@ -121,7 +121,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         packet.getData());
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
-          if (pme.getResult().isAllowed()) {
+          if (pme.getResult().isAllowed() && serverConn.isActive()) {
             smc.write(packet);
           }
         }, smc.eventLoop());

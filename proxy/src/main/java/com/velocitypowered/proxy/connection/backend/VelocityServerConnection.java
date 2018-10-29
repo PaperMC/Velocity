@@ -165,9 +165,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   public void disconnect() {
     if (connection != null) {
+      gracefulDisconnect = true;
       connection.close();
       connection = null;
-      gracefulDisconnect = true;
     }
   }
 
@@ -229,5 +229,16 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   public void resetLastPingId() {
     this.lastPingId = -1;
+  }
+
+  /**
+   * Ensures that this server connection remains "active": the connection is established and not
+   * closed, the player is still connected to the server, and the player still remains online.
+   *
+   * @return whether or not the player is online
+   */
+  boolean isActive() {
+    return connection != null && !connection.isClosed() && !gracefulDisconnect
+        && proxyPlayer.isActive();
   }
 }

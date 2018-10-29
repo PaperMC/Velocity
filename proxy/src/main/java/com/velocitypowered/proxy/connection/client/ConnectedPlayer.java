@@ -443,8 +443,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         });
   }
 
-  public void setConnectedServer(VelocityServerConnection serverConnection) {
+  public void setConnectedServer(@Nullable VelocityServerConnection serverConnection) {
     VelocityServerConnection oldConnection = this.connectedServer;
+    this.connectedServer = serverConnection;
+
+    if (serverConnection == null) {
+      return;
+    }
     if (oldConnection != null && !serverConnection.getServerInfo()
         .equals(oldConnection.getServerInfo())) {
       this.tryIndex = 0;
@@ -452,7 +457,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (serverConnection == connectionInFlight) {
       connectionInFlight = null;
     }
-    this.connectedServer = serverConnection;
   }
 
   public void sendLegacyForgeHandshakeResetPacket() {

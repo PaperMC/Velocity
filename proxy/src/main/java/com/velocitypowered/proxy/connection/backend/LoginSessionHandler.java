@@ -117,11 +117,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       serverConn.getPlayer().getConnection()
           .setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
     } else {
-      // The previous server connection should become obsolete.
-      // Before we remove it, if the server we are departing is modded, we must always reset the client state.
+      // If the server we are departing is modded, we must always reset the client's handshake.
       if (existingConnection.isLegacyForge()) {
         serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
       }
+
+      // Shut down the existing server connection.
+      serverConn.getPlayer().setConnectedServer(null);
       existingConnection.disconnect();
     }
 
