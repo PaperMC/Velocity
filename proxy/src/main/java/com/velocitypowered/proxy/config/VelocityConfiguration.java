@@ -487,9 +487,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
             forcedHosts
-                .put(unesacpeKeyIfNeeded(entry.getKey()), ImmutableList.of((String) entry.getValue()));
+                .put(unescapeKeyIfNeeded(entry.getKey()), ImmutableList.of((String) entry.getValue()));
           } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(unesacpeKeyIfNeeded(entry.getKey()),
+            forcedHosts.put(unescapeKeyIfNeeded(entry.getKey()),
                 ImmutableList.copyOf((List<String>) entry.getValue()));
           } else {
             throw new IllegalStateException(

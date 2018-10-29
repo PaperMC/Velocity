@@ -211,7 +211,7 @@ public abstract class AnnotatedConfig {
     return key;
   }
 
-  protected static String unesacpeKeyIfNeeded(String key) {
+  protected static String unescapeKeyIfNeeded(String key) {
     int lastIndex;
     if (key.indexOf('"') == 0 && (lastIndex = key.lastIndexOf('"')) == (key.length() - 1)) {
       return key.substring(1, lastIndex);

@@ -444,16 +444,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   public void setConnectedServer(@Nullable VelocityServerConnection serverConnection) {
-    VelocityServerConnection oldConnection = this.connectedServer;
     this.connectedServer = serverConnection;
+    this.tryIndex = 0; // reset since we got connected to a server
 
-    if (serverConnection == null) {
-      return;
-    }
-    if (oldConnection != null && !serverConnection.getServerInfo()
-        .equals(oldConnection.getServerInfo())) {
-      this.tryIndex = 0;
-    }
     if (serverConnection == connectionInFlight) {
       connectionInFlight = null;
     }
