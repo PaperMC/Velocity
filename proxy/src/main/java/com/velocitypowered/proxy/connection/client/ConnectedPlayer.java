@@ -350,11 +350,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       } else {
         connection.closeWith(Disconnect.create(friendlyReason));
       }
-    } else if (kickReason != null) {
-      // Already connected to the server being disconnected from.
+    } else {
       KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
           !connectedServer.getServer().equals(rs), friendlyReason);
-
       server.getEventManager().fire(originalEvent)
           .thenAcceptAsync(event -> {
             if (event.getResult() instanceof DisconnectPlayer) {
@@ -375,8 +373,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               connection.closeWith(Disconnect.create(friendlyReason));
             }
           }, connection.eventLoop());
-    } else {
-      connection.closeWith(Disconnect.create(friendlyReason));
     }
   }
 

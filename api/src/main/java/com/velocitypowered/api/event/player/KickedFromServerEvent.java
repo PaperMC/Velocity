@@ -4,8 +4,10 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import java.util.Optional;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a player is kicked from a server. You may either allow Velocity to kick the player
@@ -16,15 +18,15 @@ public final class KickedFromServerEvent implements
 
   private final Player player;
   private final RegisteredServer server;
-  private final Component originalReason;
+  private final @Nullable Component originalReason;
   private final boolean duringServerConnect;
   private ServerKickResult result;
 
-  public KickedFromServerEvent(Player player, RegisteredServer server, Component originalReason,
-      boolean duringServerConnect, Component fancyReason) {
+  public KickedFromServerEvent(Player player, RegisteredServer server,
+      @Nullable Component originalReason, boolean duringServerConnect, Component fancyReason) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
-    this.originalReason = Preconditions.checkNotNull(originalReason, "originalReason");
+    this.originalReason = originalReason;
     this.duringServerConnect = duringServerConnect;
     this.result = new Notify(fancyReason);
   }
@@ -47,8 +49,8 @@ public final class KickedFromServerEvent implements
     return server;
   }
 
-  public Component getOriginalReason() {
-    return originalReason;
+  public Optional<Component> getOriginalReason() {
+    return Optional.ofNullable(originalReason);
   }
 
   /**
