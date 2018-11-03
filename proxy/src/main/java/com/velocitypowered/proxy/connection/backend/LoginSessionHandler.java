@@ -61,18 +61,20 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(EncryptionRequest packet) {
-    byte[] sharedSecret = EncryptionUtils.createSharedSecret();
-    // Some servers and lan worlds accept clients not authenticated and have encryption
+    // Lan worlds and maybe some servers accept non-authenticated clients and have encryption
     MinecraftConnection serverCon = ensureMinecraftConnection();
+
     EncryptionResponse response = new EncryptionResponse();
     try {
       PublicKey serverKey = EncryptionUtils.decodePublicKey(packet.getPublicKey());
+      byte[] sharedSecret = EncryptionUtils.createSharedSecret();
+
       response.setVerifyToken(EncryptionUtils.encryptRsa(serverKey, packet.getVerifyToken()));
       response.setSharedSecret(EncryptionUtils.encryptRsa(serverKey, sharedSecret));
+
       serverCon.write(response);
       serverCon.enableEncryption(sharedSecret);
     } catch (GeneralSecurityException e) {
-      e.printStackTrace();
       throw new RuntimeException(e);
     }
     return true;
