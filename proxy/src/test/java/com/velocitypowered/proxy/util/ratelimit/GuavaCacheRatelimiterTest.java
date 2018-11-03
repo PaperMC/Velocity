@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.util;
+package com.velocitypowered.proxy.util.ratelimit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,11 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
-class RatelimiterTest {
+class GuavaCacheRatelimiterTest {
 
   @Test
   void attemptZero() {
-    Ratelimiter noRatelimiter = new Ratelimiter(0);
+    Ratelimiter noRatelimiter = new GuavaCacheRatelimiter(0, TimeUnit.MILLISECONDS);
     assertTrue(noRatelimiter.attempt(InetAddress.getLoopbackAddress()));
     assertTrue(noRatelimiter.attempt(InetAddress.getLoopbackAddress()));
   }
@@ -28,7 +28,7 @@ class RatelimiterTest {
         return base + extra.get();
       }
     };
-    Ratelimiter ratelimiter = new Ratelimiter(1000, testTicker);
+    Ratelimiter ratelimiter = new GuavaCacheRatelimiter(1000, TimeUnit.MILLISECONDS, testTicker);
     assertTrue(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
     assertFalse(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
     extra.addAndGet(TimeUnit.SECONDS.toNanos(2));

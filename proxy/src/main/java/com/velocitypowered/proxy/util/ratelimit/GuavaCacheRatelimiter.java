@@ -1,6 +1,7 @@
-package com.velocitypowered.proxy.util;
+package com.velocitypowered.proxy.util.ratelimit;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -11,28 +12,25 @@ import java.util.concurrent.TimeUnit;
 /**
  * A simple rate-limiter based on a Guava {@link Cache}.
  */
-public class Ratelimiter {
+public class GuavaCacheRatelimiter implements Ratelimiter {
 
   private final Cache<InetAddress, Long> expiringCache;
   private final long timeoutNanos;
 
-  public Ratelimiter(long timeoutMs) {
-    this(timeoutMs, Ticker.systemTicker());
+  GuavaCacheRatelimiter(long time, TimeUnit unit) {
+    this(time, unit, Ticker.systemTicker());
   }
 
   @VisibleForTesting
-  Ratelimiter(long timeoutMs, Ticker ticker) {
-    if (timeoutMs == 0) {
-      this.timeoutNanos = timeoutMs;
-      this.expiringCache = CacheBuilder.newBuilder().maximumSize(0).build();
-    } else {
-      this.timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMs);
-      this.expiringCache = CacheBuilder.newBuilder()
-          .ticker(ticker)
-          .concurrencyLevel(Runtime.getRuntime().availableProcessors())
-          .expireAfterWrite(timeoutMs, TimeUnit.MILLISECONDS)
-          .build();
-    }
+  GuavaCacheRatelimiter(long time, TimeUnit unit, Ticker ticker) {
+    Preconditions.checkNotNull(unit, "unit");
+    Preconditions.checkNotNull(ticker, "ticker");
+    this.timeoutNanos = unit.toNanos(time);
+    this.expiringCache = CacheBuilder.newBuilder()
+        .ticker(ticker)
+        .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+        .expireAfterWrite(time, unit)
+        .build();
   }
 
   /**
@@ -41,10 +39,9 @@ public class Ratelimiter {
    * @param address the address to rate limit
    * @return true if we should allow the client, false if we should rate-limit
    */
+  @Override
   public boolean attempt(InetAddress address) {
-    if (timeoutNanos == 0) {
-      return true;
-    }
+    Preconditions.checkNotNull(address, "address");
     long expectedNewValue = System.nanoTime() + timeoutNanos;
     long last;
     try {

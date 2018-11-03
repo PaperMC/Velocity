@@ -34,8 +34,9 @@ import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
-import com.velocitypowered.proxy.util.Ratelimiter;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
+import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
+import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -166,7 +167,7 @@ public class VelocityServer implements ProxyServer {
       servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
     }
 
-    ipAttemptLimiter = new Ratelimiter(configuration.getLoginRatelimit());
+    ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
     httpClient = new NettyHttpClient(this);
     loadPlugins();
 
