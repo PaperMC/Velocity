@@ -133,8 +133,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption is
-            // enabled.
+            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+            // is enabled.
             try {
               inbound.enableEncryption(decryptedSharedSecret);
             } catch (GeneralSecurityException e) {
@@ -146,8 +146,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               initializePlayer(
                   VelocityServer.GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
             } else if (profileResponse.getCode() == 204) {
-              // Apparently an offline-mode user logged onto this online-mode proxy. The client has enabled
-              // encryption, so we need to do that as well.
+              // Apparently an offline-mode user logged onto this online-mode proxy.
               logger.warn("An offline-mode client ({} from {}) tried to connect!",
                   login.getUsername(), playerIp);
               inbound.closeWith(Disconnect.create(TextComponent

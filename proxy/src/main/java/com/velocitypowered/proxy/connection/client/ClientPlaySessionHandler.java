@@ -86,7 +86,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientSettings packet) {
     player.setPlayerSettings(packet);
-    return false; // will forward onto the handleGeneric below, which will write the packet to the remote server
+    return false; // will forward onto the server
   }
 
   @Override
@@ -164,8 +164,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         List<String> actuallyRegistered = new ArrayList<>();
         List<String> channels = PluginMessageUtil.getChannels(packet);
         for (String channel : channels) {
-          if (knownChannels.size() >= MAX_PLUGIN_CHANNELS &&
-              !knownChannels.contains(channel)) {
+          if (knownChannels.size() >= MAX_PLUGIN_CHANNELS && !knownChannels.contains(channel)) {
             throw new IllegalStateException("Too many plugin message channels registered");
           }
           if (knownChannels.add(channel)) {

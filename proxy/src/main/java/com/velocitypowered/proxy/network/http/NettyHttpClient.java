@@ -41,8 +41,8 @@ public class NettyHttpClient {
 
           @Override
           public void channelAcquired(Channel channel) throws Exception {
-            // We don't do anything special when acquiring channels. The channel handler cleans up after
-            // each connection is used.
+            // We don't do anything special when acquiring channels. The channel handler cleans up
+            // after each connection is used.
           }
 
           @Override
@@ -59,6 +59,11 @@ public class NettyHttpClient {
     };
   }
 
+  /**
+   * Attempts an HTTP GET request to the specified URL.
+   * @param url the URL to fetch
+   * @return a future representing the response
+   */
   public CompletableFuture<SimpleHttpResponse> get(URL url) {
     String host = url.getHost();
     int port = url.getPort();

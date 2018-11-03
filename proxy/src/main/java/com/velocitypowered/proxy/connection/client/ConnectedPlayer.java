@@ -184,8 +184,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         connection.write(pkt);
         return;
       } else {
-        // Due to issues with action bar packets, we'll need to convert the text message into a legacy message
-        // and then inject the legacy text into a component... yuck!
+        // Due to issues with action bar packets, we'll need to convert the text message into a
+        // legacy message and then inject the legacy text into a component... yuck!
         JsonObject object = new JsonObject();
         object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
         json = VelocityServer.GSON.toJson(object);
@@ -396,49 +396,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return server.getServer(toTryName);
   }
 
-  private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
-    Preconditions
-        .checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
-    if (connectionInFlight != null) {
-      return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
-    }
-    if (connectedServer != null && connectedServer.getServer().equals(server)) {
-      return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
-    }
-    return Optional.empty();
-  }
-
-  private CompletableFuture<ConnectionRequestBuilder.Result> connect(
-      ConnectionRequestBuilderImpl request) {
-    Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(request.getServer());
-    if (initialCheck.isPresent()) {
-      return CompletableFuture
-          .completedFuture(ConnectionRequestResults.plainResult(initialCheck.get()));
-    }
-
-    // Otherwise, initiate the connection.
-    ServerPreConnectEvent event = new ServerPreConnectEvent(this, request.getServer());
-    return server.getEventManager().fire(event)
-        .thenCompose(newEvent -> {
-          Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
-          if (!connectTo.isPresent()) {
-            return CompletableFuture.completedFuture(
-                ConnectionRequestResults
-                    .plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
-            );
-          }
-
-          RegisteredServer rs = connectTo.get();
-          Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
-          if (lastCheck.isPresent()) {
-            return CompletableFuture
-                .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
-          }
-          return new VelocityServerConnection((VelocityRegisteredServer) rs, this, server)
-              .connect();
-        });
-  }
-
   public void setConnectedServer(@Nullable VelocityServerConnection serverConnection) {
     this.connectedServer = serverConnection;
     this.tryIndex = 0; // reset since we got connected to a server
@@ -515,20 +472,58 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
-    private final RegisteredServer server;
+    private final RegisteredServer toConnect;
 
-    ConnectionRequestBuilderImpl(RegisteredServer server) {
-      this.server = Preconditions.checkNotNull(server, "info");
+    ConnectionRequestBuilderImpl(RegisteredServer toConnect) {
+      this.toConnect = Preconditions.checkNotNull(toConnect, "info");
     }
 
     @Override
     public RegisteredServer getServer() {
-      return server;
+      return toConnect;
+    }
+
+    private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
+      Preconditions
+          .checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
+      if (connectionInFlight != null) {
+        return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
+      }
+      if (connectedServer != null && connectedServer.getServer().equals(server)) {
+        return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
+      }
+      return Optional.empty();
     }
 
     @Override
     public CompletableFuture<Result> connect() {
-      return ConnectedPlayer.this.connect(this);
+      Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(toConnect);
+      if (initialCheck.isPresent()) {
+        return CompletableFuture
+            .completedFuture(ConnectionRequestResults.plainResult(initialCheck.get()));
+      }
+
+      // Otherwise, initiate the connection.
+      ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this, toConnect);
+      return server.getEventManager().fire(event)
+          .thenCompose(newEvent -> {
+            Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
+            if (!connectTo.isPresent()) {
+              return CompletableFuture.completedFuture(
+                  ConnectionRequestResults
+                      .plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
+              );
+            }
+
+            RegisteredServer rs = connectTo.get();
+            Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
+            if (lastCheck.isPresent()) {
+              return CompletableFuture
+                  .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
+            }
+            return new VelocityServerConnection((VelocityRegisteredServer) toConnect,
+                ConnectedPlayer.this, server).connect();
+          });
     }
 
     @Override
@@ -536,7 +531,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return connect()
           .whenCompleteAsync((status, throwable) -> {
             if (throwable != null) {
-              handleConnectionException(server, throwable);
+              handleConnectionException(toConnect, throwable);
               return;
             }
 
@@ -551,7 +546,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 // Ignored; the plugin probably already handled this.
                 break;
               case SERVER_DISCONNECTED:
-                handleConnectionException(server, Disconnect.create(status.getReason()
+                handleConnectionException(toConnect, Disconnect.create(status.getReason()
                     .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
                 break;
               default:

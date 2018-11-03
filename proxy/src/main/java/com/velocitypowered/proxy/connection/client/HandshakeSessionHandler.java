@@ -95,22 +95,22 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
           return true;
         }
 
-        // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13) and store that in the connection
+        // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
         boolean isForge = handshake.getServerAddress().endsWith("\0FML\0");
         connection.setLegacyForge(isForge);
 
-        // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_ reject Forge
+        // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_
+        // reject Forge.
         if (handshake.getServerAddress().contains("\0") && !isForge) {
           connection.closeWith(Disconnect
               .create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
           return true;
         }
 
-        // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2 and lower,
-        // otherwise IP information will never get forwarded.
+        // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
+        // and lower, otherwise IP information will never get forwarded.
         if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-            && handshake.getProtocolVersion() <
-            ProtocolConstants.MINECRAFT_1_13) {
+            && handshake.getProtocolVersion() < ProtocolConstants.MINECRAFT_1_13) {
           connection.closeWith(Disconnect
               .create(TextComponent.of("This server is only compatible with 1.13 and above.")));
           return true;
