@@ -15,15 +15,19 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
+import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.util.EncryptionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.concurrent.CompletableFuture;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -57,7 +61,21 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(EncryptionRequest packet) {
-    throw new IllegalStateException("Backend server is online-mode!");
+    byte[] sharedSecret = EncryptionUtils.createSharedSecret();
+    // Some servers and lan worlds accept clients not authenticated and have encryption
+    MinecraftConnection serverCon = ensureMinecraftConnection();
+    EncryptionResponse response = new EncryptionResponse();
+    try {
+      PublicKey serverKey = EncryptionUtils.decodePublicKey(packet.getPublicKey());
+      response.setVerifyToken(EncryptionUtils.encryptRsa(serverKey, packet.getVerifyToken()));
+      response.setSharedSecret(EncryptionUtils.encryptRsa(serverKey, sharedSecret));
+      serverCon.write(response);
+      serverCon.enableEncryption(sharedSecret);
+    } catch (GeneralSecurityException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
+    return true;
   }
 
   @Override
@@ -164,7 +182,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");
       mac.init(key);
-      mac.update(dataToForward.array(), dataToForward.arrayOffset(), dataToForward.readableBytes());
+      mac.update(dataToForward.array(), dataToForward.arrayOffset(),
+          dataToForward.readableBytes());
       byte[] sig = mac.doFinal();
       finalData.writeBytes(sig);
       finalData.writeBytes(dataToForward);

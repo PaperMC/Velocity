@@ -2,11 +2,14 @@ package com.velocitypowered.proxy.util;
 
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.Cipher;
 
 public enum EncryptionUtils {
@@ -68,5 +71,21 @@ public enum EncryptionUtils {
     } catch (NoSuchAlgorithmException e) {
       throw new AssertionError(e);
     }
+  }
+
+  public static byte[] createSharedSecret() {
+    byte[] secret = new byte[16];
+    new SecureRandom().nextBytes(secret);
+    return secret;
+  }
+
+  public static byte[] encryptRsa(PublicKey key, byte[] bytes) throws GeneralSecurityException {
+    Cipher cipher = Cipher.getInstance("RSA");
+    cipher.init(Cipher.ENCRYPT_MODE, key);
+    return cipher.doFinal(bytes);
+  }
+
+  public static PublicKey decodePublicKey(byte[] bytes) throws GeneralSecurityException {
+    return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
   }
 }
