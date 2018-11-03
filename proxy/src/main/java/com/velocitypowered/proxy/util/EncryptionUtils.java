@@ -10,10 +10,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Random;
 import javax.crypto.Cipher;
 
 public enum EncryptionUtils {
   ;
+  static final Random secureRandom = new SecureRandom();
 
   /**
    * Generates an RSA key pair.
@@ -75,7 +77,7 @@ public enum EncryptionUtils {
 
   public static byte[] createSharedSecret() {
     byte[] secret = new byte[16];
-    new SecureRandom().nextBytes(secret);
+    secureRandom.nextBytes(secret);
     return secret;
   }
 
