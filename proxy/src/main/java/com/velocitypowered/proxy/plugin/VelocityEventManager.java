@@ -68,8 +68,7 @@ public class VelocityEventManager implements EventManager {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(listener, "listener");
     if (plugin == listener && registeredListenersByPlugin.containsEntry(plugin, plugin)) {
-      throw new IllegalArgumentException(
-          "Trying to register the plugin main instance. Velocity already takes care of this for you.");
+      throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
     registeredListenersByPlugin.put(plugin, listener);
     methodAdapter.register(listener);

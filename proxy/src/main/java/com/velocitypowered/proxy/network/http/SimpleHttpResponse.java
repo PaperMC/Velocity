@@ -20,9 +20,9 @@ public class SimpleHttpResponse {
 
   @Override
   public String toString() {
-    return "SimpleHttpResponse{" +
-        "code=" + code +
-        ", body='" + body + '\'' +
-        '}';
+    return "SimpleHttpResponse{"
+        + "code=" + code
+        + ", body='" + body + '\''
+        + '}';
   }
 }
