@@ -11,12 +11,10 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.kyori.text.Components;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
@@ -194,7 +192,7 @@ public class VelocityCommand implements Command {
         if (description.getAuthors().size() == 1) {
           hoverText.append(TextComponent.of("Author: " + description.getAuthors().get(0)));
         } else {
-          hoverText.append(TextComponent.of("Author: " + Joiner.on(", ")
+          hoverText.append(TextComponent.of("Authors: " + Joiner.on(", ")
               .join(description.getAuthors())));
         }
       }
