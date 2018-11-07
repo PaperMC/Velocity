@@ -84,11 +84,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    MinecraftConnection smc = serverConn.getConnection();
-    if (smc == null) {
-      return true;
-    }
-
     if (!canForwardPluginMessage(packet)) {
       return true;
     }
@@ -117,14 +112,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
+    MinecraftConnection clientConn = serverConn.getPlayer().getConnection();
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
         packet.getData());
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
-          if (pme.getResult().isAllowed() && serverConn.isActive()) {
-            smc.write(packet);
+          if (pme.getResult().isAllowed() && !clientConn.isClosed()) {
+            clientConn.write(packet);
           }
-        }, smc.eventLoop());
+        }, clientConn.eventLoop());
     return true;
   }
 
