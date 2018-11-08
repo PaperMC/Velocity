@@ -2,6 +2,7 @@ package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public final class ModInfo {
@@ -34,6 +35,7 @@ public final class ModInfo {
 
   public static final class Mod {
 
+    @SerializedName("modid")
     private final String id;
     private final String version;
 
