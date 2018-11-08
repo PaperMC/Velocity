@@ -34,16 +34,16 @@ public final class ModInfo {
 
   public static final class Mod {
 
-    private final String id;
+    private final String modid;
     private final String version;
 
-    public Mod(String id, String version) {
-      this.id = Preconditions.checkNotNull(id, "id");
+    public Mod(String modid, String version) {
+      this.modid = Preconditions.checkNotNull(modid, "modid");
       this.version = Preconditions.checkNotNull(version, "version");
     }
 
     public String getId() {
-      return id;
+      return modid;
     }
 
     public String getVersion() {
@@ -53,7 +53,7 @@ public final class ModInfo {
     @Override
     public String toString() {
       return "Mod{"
-          + "id='" + id + '\''
+          + "modid='" + modid + '\''
           + ", version='" + version + '\''
           + '}';
     }
