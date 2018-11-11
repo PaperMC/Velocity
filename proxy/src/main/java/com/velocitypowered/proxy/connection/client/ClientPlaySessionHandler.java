@@ -65,7 +65,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(),
-        server.getChannelRegistrar().getModernChannelIds());
+        server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion()));
     player.getConnection().write(register);
   }
 

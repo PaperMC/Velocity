@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -67,5 +68,12 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   public @Nullable ChannelIdentifier getFromId(String id) {
     return identifierMap.get(id);
+  }
+
+  public Collection<String> getChannelsForProtocol(int protocolVersion) {
+    if (protocolVersion >= ProtocolConstants.MINECRAFT_1_13) {
+      return getModernChannelIds();
+    }
+    return getIdsForLegacyConnections();
   }
 }
