@@ -15,6 +15,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -30,6 +31,7 @@ import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
+import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -65,6 +67,7 @@ public class VelocityServer implements ProxyServer {
   public static final Gson GSON = new GsonBuilder()
       .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
 
   private @MonotonicNonNull ConnectionManager cm;

@@ -8,24 +8,36 @@ import java.util.UUID;
 /**
  * Represents a Mojang game profile. This class is immutable.
  */
-public final class GameProfile {
+public final class GameProfile implements Identifiable {
 
-  private final String id;
-  private final String name;
+  private final UUID id;
+  private final String undashedId, name;
   private final List<Property> properties;
 
-  public GameProfile(String id, String name, List<Property> properties) {
-    this.id = Preconditions.checkNotNull(id, "id");
-    this.name = Preconditions.checkNotNull(name, "name");
-    this.properties = ImmutableList.copyOf(properties);
+  public GameProfile(UUID id, String name, List<Property> properties) {
+    this(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
+        Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
   }
 
-  public String getId() {
-    return id;
+  public GameProfile(String undashedId, String name, List<Property> properties) {
+    this(UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
+        Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
   }
 
-  public UUID idAsUuid() {
-    return UuidUtils.fromUndashed(id);
+  private GameProfile(UUID id, String undashedId, String name, List<Property> properties) {
+    this.id = id;
+    this.undashedId = undashedId;
+    this.name = name;
+    this.properties = properties;
+  }
+
+  @Override
+  public UUID getUniqueId() {
+    return this.id;
+  }
+
+  public String getUndashedId() {
+    return this.undashedId;
   }
 
   public String getName() {
@@ -36,6 +48,36 @@ public final class GameProfile {
     return properties;
   }
 
+  public GameProfile setUniqueId(UUID id) {
+    return new GameProfile(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
+        this.name, this.properties);
+  }
+
+  public GameProfile setUndashedId(String undashedId) {
+    return new GameProfile(
+        UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
+        this.name, this.properties);
+  }
+
+  public GameProfile setName(String name) {
+    return new GameProfile(this.id, this.undashedId, Preconditions.checkNotNull(name, "name"),
+        this.properties);
+  }
+
+  public GameProfile setProperties(List<Property> properties) {
+    return new GameProfile(this.id, this.undashedId, this.name, ImmutableList.copyOf(properties));
+  }
+
+  public GameProfile addProperties(Iterable<Property> properties) {
+    return new GameProfile(this.id, this.undashedId, this.name,
+        ImmutableList.<Property>builder().addAll(this.properties).addAll(properties).build());
+  }
+
+  public GameProfile addProperty(Property property) {
+    return new GameProfile(this.id, this.undashedId, this.name,
+        ImmutableList.<Property>builder().addAll(this.properties).add(property).build());
+  }
+
   /**
    * Creates a game profile suitable for use in offline-mode.
    *
@@ -44,8 +86,8 @@ public final class GameProfile {
    */
   public static GameProfile forOfflinePlayer(String username) {
     Preconditions.checkNotNull(username, "username");
-    String id = UuidUtils.toUndashed(UuidUtils.generateOfflinePlayerUuid(username));
-    return new GameProfile(id, username, ImmutableList.of());
+    return new GameProfile(UuidUtils.generateOfflinePlayerUuid(username), username,
+        ImmutableList.of());
   }
 
   @Override

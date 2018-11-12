@@ -100,7 +100,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public UUID getUniqueId() {
-    return profile.idAsUuid();
+    return profile.getUniqueId();
   }
 
   @Override
@@ -212,8 +212,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void setGameProfileProperties(List<GameProfile.Property> properties) {
-    Preconditions.checkNotNull(properties);
-    this.profile = new GameProfile(profile.getId(), profile.getName(), properties);
+    this.profile = profile.setProperties(Preconditions.checkNotNull(properties));
   }
 
   @Override

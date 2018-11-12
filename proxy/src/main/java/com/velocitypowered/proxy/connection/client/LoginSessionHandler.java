@@ -219,9 +219,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (inbound.isLegacyForge()
         && server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       // We want to add the FML token to the properties
-      List<GameProfile.Property> properties = new ArrayList<>(profile.getProperties());
-      properties.add(new GameProfile.Property("forgeClient", "true", ""));
-      profile = new GameProfile(profile.getId(), profile.getName(), properties);
+      profile = profile.addProperty(new GameProfile.Property("forgeClient", "true", ""));
     }
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile,
         onlineMode);
