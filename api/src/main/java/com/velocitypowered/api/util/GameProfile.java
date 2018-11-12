@@ -48,31 +48,69 @@ public final class GameProfile implements Identifiable {
     return properties;
   }
 
-  public GameProfile setUniqueId(UUID id) {
+  /**
+   * Creates a new {@code GameProfile} with the specified unique id.
+   *
+   * @param id the new unique id
+   * @return the new {@code GameProfile}
+   */
+  public GameProfile withUniqueId(UUID id) {
     return new GameProfile(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
         this.name, this.properties);
   }
 
-  public GameProfile setUndashedId(String undashedId) {
+  /**
+   * Creates a new {@code GameProfile} with the specified undashed id.
+   *
+   * @param undashedId the new undashed id
+   * @return the new {@code GameProfile}
+   */
+  public GameProfile withUndashedId(String undashedId) {
     return new GameProfile(
         UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
         this.name, this.properties);
   }
 
-  public GameProfile setName(String name) {
+  /**
+   * Creates a new {@code GameProfile} with the specified name.
+   *
+   * @param name the new name
+   * @return the new {@code GameProfile}
+   */
+  public GameProfile withName(String name) {
     return new GameProfile(this.id, this.undashedId, Preconditions.checkNotNull(name, "name"),
         this.properties);
   }
 
-  public GameProfile setProperties(List<Property> properties) {
+  /**
+   * Creates a new {@code GameProfile} with the specified properties.
+   *
+   * @param properties the new properties
+   * @return the new {@code GameProfile}
+   */
+  public GameProfile withProperties(List<Property> properties) {
     return new GameProfile(this.id, this.undashedId, this.name, ImmutableList.copyOf(properties));
   }
 
+  /**
+   * Creates a new {@code GameProfile} with the properties of this object plus the specified
+   * properties.
+   *
+   * @param properties the properties to add
+   * @return the new {@code GameProfile}
+   */
   public GameProfile addProperties(Iterable<Property> properties) {
     return new GameProfile(this.id, this.undashedId, this.name,
         ImmutableList.<Property>builder().addAll(this.properties).addAll(properties).build());
   }
 
+  /**
+   * Creates a new {@code GameProfile} with the properties of this object plus the specified
+   * property.
+   *
+   * @param property the property to add
+   * @return the new {@code GameProfile}
+   */
   public GameProfile addProperty(Property property) {
     return new GameProfile(this.id, this.undashedId, this.name,
         ImmutableList.<Property>builder().addAll(this.properties).add(property).build());

@@ -7,5 +7,10 @@ import java.util.UUID;
  */
 public interface Identifiable {
 
-	UUID getUniqueId();
+  /**
+   * Returns the {@code UUID} attached to this object.
+   *
+   * @return the UUID
+   */
+  UUID getUniqueId();
 }
