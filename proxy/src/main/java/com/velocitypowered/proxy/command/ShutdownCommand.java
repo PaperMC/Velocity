@@ -22,7 +22,7 @@ public class ShutdownCommand implements Command {
           .sendMessage(TextComponent.of("You are not allowed to use this command.", TextColor.RED));
       return;
     }
-    server.shutdown();
+    server.shutdown(true);
   }
 
   @Override

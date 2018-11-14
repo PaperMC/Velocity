@@ -229,7 +229,7 @@ public class VelocityServer implements ProxyServer {
     return shutdown;
   }
 
-  public void shutdown() {
+  public void shutdown(boolean explicitExit) {
     if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
       throw new AssertionError();
     }
@@ -256,6 +256,10 @@ public class VelocityServer implements ProxyServer {
     }
 
     shutdown = true;
+
+    if (explicitExit) {
+      System.exit(0);
+    }
   }
 
   public NettyHttpClient getHttpClient() {

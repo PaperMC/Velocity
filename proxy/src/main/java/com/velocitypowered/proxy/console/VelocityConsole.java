@@ -88,7 +88,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Comm
 
   @Override
   protected void shutdown() {
-    this.server.shutdown();
+    this.server.shutdown(true);
   }
 
 }

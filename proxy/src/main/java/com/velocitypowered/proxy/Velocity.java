@@ -20,7 +20,7 @@ public class Velocity {
     VelocityServer server = new VelocityServer();
     server.start();
 
-    Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown, "Shutdown thread"));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown(false), "Shutdown thread"));
 
     double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
     logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
