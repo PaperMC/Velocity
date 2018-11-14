@@ -39,7 +39,7 @@ public class JavaPluginLoader implements PluginLoader {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
     if (!serialized.isPresent()) {
-      throw new InvalidPluginException("Did not find a valid velocity-info.json.");
+      throw new InvalidPluginException("Did not find a valid velocity-plugin.json.");
     }
 
     SerializedPluginDescription pd = serialized.get();
