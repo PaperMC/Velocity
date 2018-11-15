@@ -7,7 +7,6 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.Identifiable;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.Title;
@@ -20,7 +19,7 @@ import net.kyori.text.Component;
  * Represents a player who is connected to the proxy.
  */
 public interface Player extends CommandSource, InboundConnection, ChannelMessageSource,
-    ChannelMessageSink, Identifiable {
+    ChannelMessageSink {
 
   /**
    * Returns the player's current username.
@@ -28,6 +27,14 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * @return the username
    */
   String getUsername();
+
+
+  /**
+   * Returns the player's UUID.
+   *
+   * @return the UUID
+   */
+  UUID getUniqueId();
 
   /**
    * Returns the server that the player is currently connected to.

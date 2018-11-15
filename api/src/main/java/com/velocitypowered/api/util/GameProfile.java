@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * Represents a Mojang game profile. This class is immutable.
  */
-public final class GameProfile implements Identifiable {
+public final class GameProfile {
 
   private final UUID id;
   private final String undashedId, name;
@@ -31,13 +31,12 @@ public final class GameProfile implements Identifiable {
     this.properties = properties;
   }
 
-  @Override
-  public UUID getUniqueId() {
-    return this.id;
+  public String getId() {
+    return undashedId;
   }
 
-  public String getUndashedId() {
-    return this.undashedId;
+  public UUID idAsUuid() {
+    return id;
   }
 
   public String getName() {
@@ -54,7 +53,7 @@ public final class GameProfile implements Identifiable {
    * @param id the new unique id
    * @return the new {@code GameProfile}
    */
-  public GameProfile withUniqueId(UUID id) {
+  public GameProfile withUuid(UUID id) {
     return new GameProfile(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
         this.name, this.properties);
   }
@@ -65,7 +64,7 @@ public final class GameProfile implements Identifiable {
    * @param undashedId the new undashed id
    * @return the new {@code GameProfile}
    */
-  public GameProfile withUndashedId(String undashedId) {
+  public GameProfile withId(String undashedId) {
     return new GameProfile(
         UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
         this.name, this.properties);

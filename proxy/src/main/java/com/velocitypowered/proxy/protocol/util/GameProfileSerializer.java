@@ -29,7 +29,7 @@ public class GameProfileSerializer implements JsonSerializer<GameProfile>,
   @Override
   public JsonElement serialize(GameProfile src, Type typeOfSrc, JsonSerializationContext context) {
     JsonObject obj = new JsonObject();
-    obj.add("id", new JsonPrimitive(src.getUndashedId()));
+    obj.add("id", new JsonPrimitive(src.getId()));
     obj.add("name", new JsonPrimitive(src.getName()));
     obj.add("properties", context.serialize(src.getProperties(), propertyList));
     return obj;

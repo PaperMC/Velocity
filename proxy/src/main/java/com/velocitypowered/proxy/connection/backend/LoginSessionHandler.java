@@ -157,7 +157,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     try {
       ProtocolUtils.writeVarInt(dataToForward, VelocityConstants.FORWARDING_VERSION);
       ProtocolUtils.writeString(dataToForward, address);
-      ProtocolUtils.writeUuid(dataToForward, profile.getUniqueId());
+      ProtocolUtils.writeUuid(dataToForward, profile.idAsUuid());
       ProtocolUtils.writeString(dataToForward, profile.getName());
       ProtocolUtils.writeProperties(dataToForward, profile.getProperties());
 

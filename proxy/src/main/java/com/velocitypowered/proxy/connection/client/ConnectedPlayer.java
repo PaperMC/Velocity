@@ -100,7 +100,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public UUID getUniqueId() {
-    return profile.getUniqueId();
+    return profile.idAsUuid();
   }
 
   @Override
