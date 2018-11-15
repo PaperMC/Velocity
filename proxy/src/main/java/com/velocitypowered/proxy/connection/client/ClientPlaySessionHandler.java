@@ -160,7 +160,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
-      if (PluginMessageUtil.isMCRegister(packet)) {
+      if (PluginMessageUtil.isRegister(packet)) {
         List<String> actuallyRegistered = new ArrayList<>();
         List<String> channels = PluginMessageUtil.getChannels(packet);
         for (String channel : channels) {
@@ -177,12 +177,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               .getProtocolVersion(), actuallyRegistered);
           backendConn.write(newRegisterPacket);
         }
-      } else if (PluginMessageUtil.isMCUnregister(packet)) {
+      } else if (PluginMessageUtil.isUnregister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         knownChannels.removeAll(channels);
         backendConn.write(packet);
-      } else if (PluginMessageUtil.isMCBrand(packet)) {
-        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet));
+      } else if (PluginMessageUtil.isMcBrand(packet)) {
+        PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion());
+        backendConn.write(rewritten);
       } else if (backendConn.isLegacyForge() && !serverConn.hasCompletedJoin()) {
         if (packet.getChannel().equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
           if (!player.getModInfo().isPresent()) {

@@ -28,6 +28,10 @@ public class VelocityCommand implements Command {
 
   private final Map<String, Command> subcommands;
 
+  /**
+   * Initializes the command object for /velocity.
+   * @param server the Velocity server
+   */
   public VelocityCommand(ProxyServer server) {
     this.subcommands = ImmutableMap.<String, Command>builder()
         .put("version", new Info(server))

@@ -1,7 +1,11 @@
 package com.velocitypowered.proxy.protocol.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -24,36 +28,61 @@ public class PluginMessageUtil {
     throw new AssertionError();
   }
 
-  public static boolean isMCBrand(PluginMessage message) {
-    Preconditions.checkNotNull(message, "message");
+  /**
+   * Determines whether or not this is a brand plugin message. This is shown on the client.
+   * @param message the plugin message
+   * @return whether or not this is a brand plugin message
+   */
+  public static boolean isMcBrand(PluginMessage message) {
+    checkNotNull(message, "message");
     return message.getChannel().equals(BRAND_CHANNEL_LEGACY) || message.getChannel()
         .equals(BRAND_CHANNEL);
   }
 
-  public static boolean isMCRegister(PluginMessage message) {
-    Preconditions.checkNotNull(message, "message");
+  /**
+   * Determines whether or not this plugin message is being used to register plugin channels.
+   * @param message the plugin message
+   * @return whether we are registering plugin channels or not
+   */
+  public static boolean isRegister(PluginMessage message) {
+    checkNotNull(message, "message");
     return message.getChannel().equals(REGISTER_CHANNEL_LEGACY) || message.getChannel()
         .equals(REGISTER_CHANNEL);
   }
 
-  public static boolean isMCUnregister(PluginMessage message) {
-    Preconditions.checkNotNull(message, "message");
+  /**
+   * Determines whether or not this plugin message is being used to unregister plugin channels.
+   * @param message the plugin message
+   * @return whether we are unregistering plugin channels or not
+   */
+  public static boolean isUnregister(PluginMessage message) {
+    checkNotNull(message, "message");
     return message.getChannel().equals(UNREGISTER_CHANNEL_LEGACY) || message.getChannel()
         .equals(UNREGISTER_CHANNEL);
   }
 
+  /**
+   * Fetches all the channels in a register or unregister plugin message.
+   * @param message the message to get the channels from
+   * @return the channels, as an immutable list
+   */
   public static List<String> getChannels(PluginMessage message) {
-    Preconditions.checkNotNull(message, "message");
-    Preconditions
-        .checkArgument(isMCRegister(message) || isMCUnregister(message), "Unknown channel type %s",
+    checkNotNull(message, "message");
+    checkArgument(isRegister(message) || isUnregister(message), "Unknown channel type %s",
             message.getChannel());
     String channels = new String(message.getData(), StandardCharsets.UTF_8);
     return ImmutableList.copyOf(channels.split("\0"));
   }
 
+  /**
+   * Constructs a channel (un)register packet.
+   * @param protocolVersion the client/server's protocol version
+   * @param channels the channels to register
+   * @return the plugin message to send
+   */
   public static PluginMessage constructChannelsPacket(int protocolVersion,
       Collection<String> channels) {
-    Preconditions.checkNotNull(channels, "channels");
+    checkNotNull(channels, "channels");
     String channelName = protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? REGISTER_CHANNEL
         : REGISTER_CHANNEL_LEGACY;
     PluginMessage message = new PluginMessage();
@@ -62,15 +91,24 @@ public class PluginMessageUtil {
     return message;
   }
 
-  public static PluginMessage rewriteMinecraftBrand(PluginMessage message) {
-    Preconditions.checkNotNull(message, "message");
-    Preconditions.checkArgument(isMCBrand(message), "message is not a MC Brand plugin message");
+  /**
+   * Rewrites the brand message to indicate the presence of Velocity.
+   * @param message the plugin message
+   * @param version the proxy version
+   * @return the rewritten plugin message
+   */
+  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version) {
+    checkNotNull(message, "message");
+    checkNotNull(version, "version");
+    checkArgument(isMcBrand(message), "message is not a brand plugin message");
+
+    String toAppend = " (" + version.getName() + ")";
 
     byte[] rewrittenData;
     ByteBuf rewrittenBuf = Unpooled.buffer();
     try {
       String currentBrand = ProtocolUtils.readString(Unpooled.wrappedBuffer(message.getData()));
-      ProtocolUtils.writeString(rewrittenBuf, currentBrand + " (Velocity)");
+      ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
       rewrittenData = new byte[rewrittenBuf.readableBytes()];
       rewrittenBuf.readBytes(rewrittenData);
     } finally {
