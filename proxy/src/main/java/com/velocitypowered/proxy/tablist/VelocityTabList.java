@@ -105,7 +105,7 @@ public class VelocityTabList implements TabList {
           }
           entries.put(item.getUuid(), TabListEntry.builder()
               .tabList(this)
-              .profile(new GameProfile(UuidUtils.toUndashed(uuid), name, properties))
+              .profile(new GameProfile(uuid, name, properties))
               .displayName(item.getDisplayName())
               .latency(item.getLatency())
               .gameMode(item.getGameMode())

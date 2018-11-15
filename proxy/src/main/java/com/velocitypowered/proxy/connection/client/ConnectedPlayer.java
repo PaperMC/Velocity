@@ -212,8 +212,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void setGameProfileProperties(List<GameProfile.Property> properties) {
-    Preconditions.checkNotNull(properties);
-    this.profile = new GameProfile(profile.getId(), profile.getName(), properties);
+    this.profile = profile.withProperties(Preconditions.checkNotNull(properties));
   }
 
   @Override
