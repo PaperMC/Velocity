@@ -56,9 +56,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private ProtocolVersion protocolVersion;
   private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private boolean isLegacyForge;
   private final VelocityServer server;
-  private boolean canSendLegacyFmlResetPacket = false;
+  private ConnectionType connectionType = ConnectionType.UNDETERMINED;
 
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
@@ -279,27 +278,27 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.association = association;
   }
 
-  public boolean isLegacyForge() {
-    return isLegacyForge;
-  }
-
-  public void setLegacyForge(boolean isForge) {
-    this.isLegacyForge = isForge;
-  }
-
-  public boolean canSendLegacyFmlResetPacket() {
-    return canSendLegacyFmlResetPacket;
-  }
-
-  public void setCanSendLegacyFmlResetPacket(boolean canSendLegacyFMLResetPacket) {
-    this.canSendLegacyFmlResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
-  }
-
   public ProtocolVersion getNextProtocolVersion() {
     return this.nextProtocolVersion;
   }
 
   public void setNextProtocolVersion(ProtocolVersion nextProtocolVersion) {
     this.nextProtocolVersion = nextProtocolVersion;
+  }
+
+  /**
+   * Gets the detected {@link ConnectionType}
+   * @return The {@link ConnectionType}
+   */
+  public ConnectionType getType() {
+    return connectionType;
+  }
+
+  /**
+   * Sets the detected {@link ConnectionType}
+   * @param connectionType The {@link ConnectionType}
+   */
+  public void setType(ConnectionType connectionType) {
+    this.connectionType = connectionType;
   }
 }

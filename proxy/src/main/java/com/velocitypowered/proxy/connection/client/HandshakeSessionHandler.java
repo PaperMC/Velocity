@@ -10,8 +10,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -95,13 +97,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
           return true;
         }
 
-        // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
-        boolean isForge = handshake.getServerAddress().endsWith("\0FML\0");
-        connection.setLegacyForge(isForge);
+        ConnectionType type = checkForForge(handshake);
+        connection.setType(type);
 
-        // Make sure legacy forwarding is not in use on this connection. Make sure that we do _not_
-        // reject Forge.
-        if (handshake.getServerAddress().contains("\0") && !isForge) {
+        // Make sure legacy forwarding is not in use on this connection.
+        if (!type.checkServerAddressIsValid(handshake.getServerAddress())) {
           connection.closeWith(Disconnect
               .create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
           return true;
@@ -121,6 +121,18 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
         return true;
       default:
         throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
+    }
+  }
+
+  private ConnectionType checkForForge(Handshake handshake) {
+    // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
+    if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
+        && handshake.getProtocolVersion() < ProtocolConstants.MINECRAFT_1_13) {
+      return ConnectionType.LEGACY_FORGE;
+    } else {
+      // For later: See if we can determine Forge 1.13+ here, else this will need to be UNDETERMINED
+      // until later in the cycle (most likely determinable during the LOGIN phase)
+      return ConnectionType.VANILLA;
     }
   }
 

@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -44,9 +45,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private final ConnectedPlayer proxyPlayer;
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
-  private boolean legacyForge = false;
-  private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
+  private BackendConnectionPhase connectionPhase = BackendConnectionPhase.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
 
@@ -93,6 +93,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             // Kick off the connection process
             connection.setSessionHandler(
                 new LoginSessionHandler(server, VelocityServerConnection.this, result));
+
+            // Set the connection phase, which may, for future forge (or whatever), be determined
+            // at this point already
+            connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();
           } else {
             // We need to remember to reset the in-flight connection to allow connect() to work
@@ -133,7 +137,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setProtocolVersion(proxyPlayer.getConnection().getNextProtocolVersion());
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getConnection().isLegacyForge()) {
+    } else if (proxyPlayer.getConnection().getType() == ConnectionType.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + "\0FML\0");
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
@@ -198,20 +202,14 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return true;
   }
 
-  public boolean isLegacyForge() {
-    return legacyForge;
-  }
-
-  void setLegacyForge(boolean modded) {
-    legacyForge = modded;
-  }
-
-  public boolean hasCompletedJoin() {
-    return hasCompletedJoin;
-  }
-
-  public void setHasCompletedJoin(boolean hasCompletedJoin) {
-    this.hasCompletedJoin = hasCompletedJoin;
+  public void completeJoin() {
+    if (connectionPhase == BackendConnectionPhase.UNKNOWN) {
+      // Now we know
+      connectionPhase = BackendConnectionPhase.VANILLA;
+      if (connection != null) {
+        connection.setType(ConnectionType.VANILLA);
+      }
+    }
   }
 
   boolean isGracefulDisconnect() {
@@ -244,5 +242,25 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   boolean isActive() {
     return connection != null && !connection.isClosed() && !gracefulDisconnect
         && proxyPlayer.isActive();
+  }
+
+  /**
+   * Gets the current "phase" of the connection, mostly used for tracking
+   * modded negotiation for legacy forge servers and provides methods
+   * for performing phase specific actions.
+   *
+   * @return The {@link BackendConnectionPhase}
+   */
+  public BackendConnectionPhase getPhase() {
+    return connectionPhase;
+  }
+
+  /**
+   * Sets the current "phase" of the connection. See {@link #getPhase()}
+   *
+   * @param connectionPhase The {@link BackendConnectionPhase}
+   */
+  public void setConnectionPhase(BackendConnectionPhase connectionPhase) {
+    this.connectionPhase = connectionPhase;
   }
 }
