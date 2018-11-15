@@ -36,7 +36,11 @@ public class VelocityCommand implements Command {
   }
 
   private void usage(CommandSource source) {
-    String commandText = "/velocity <" + String.join("|", subcommands.keySet()) + ">";
+    String availableCommands = subcommands.entrySet().stream()
+        .filter(e -> e.getValue().hasPermission(source, new String[0]))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.joining("|"));
+    String commandText = "/velocity <" + availableCommands + ">";
     source.sendMessage(TextComponent.of(commandText, TextColor.RED));
   }
 
@@ -64,8 +68,11 @@ public class VelocityCommand implements Command {
     }
 
     if (currentArgs.length == 1) {
-      return subcommands.keySet().stream()
-          .filter(name -> name.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
+      return subcommands.entrySet().stream()
+          .filter(e -> e.getKey().regionMatches(true, 0, currentArgs[0], 0,
+              currentArgs[0].length()))
+          .filter(e -> e.getValue().hasPermission(source, new String[0]))
+          .map(Map.Entry::getKey)
           .collect(Collectors.toList());
     }
 
