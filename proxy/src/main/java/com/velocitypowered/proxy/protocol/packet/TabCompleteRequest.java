@@ -1,10 +1,8 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9;
-
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -62,9 +60,9 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     this.command = ProtocolUtils.readString(buf);
-    if (protocolVersion >= MINECRAFT_1_9) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       this.assumeCommand = buf.readBoolean();
     }
     this.hasPosition = buf.readBoolean();
@@ -74,12 +72,12 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");
     }
     ProtocolUtils.writeString(buf, command);
-    if (protocolVersion >= MINECRAFT_1_9) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       buf.writeBoolean(assumeCommand);
     }
     buf.writeBoolean(hasPosition);

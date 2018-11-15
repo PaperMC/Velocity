@@ -3,9 +3,10 @@ package com.velocitypowered.proxy.protocol.packet;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants.Direction;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializer;
@@ -37,12 +38,12 @@ public class HeaderAndFooter implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   @Override
-  public void encode(ByteBuf buf, Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     writeString(buf, header);
     writeString(buf, footer);
   }

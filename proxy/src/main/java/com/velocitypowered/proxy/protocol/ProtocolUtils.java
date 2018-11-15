@@ -2,8 +2,10 @@ package com.velocitypowered.proxy.protocol;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,5 +120,16 @@ public enum ProtocolUtils {
       properties.add(new GameProfile.Property(name, value, signature));
     }
     return properties;
+  }
+
+  public enum Direction {
+    SERVERBOUND,
+    CLIENTBOUND;
+
+    public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
+                                                                    ProtocolVersion protocolVersion) {
+      return (this == SERVERBOUND ? state.SERVERBOUND : state.CLIENTBOUND)
+              .getProtocolRegistry(protocolVersion);
+    }
   }
 }

@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
@@ -44,13 +44,13 @@ public class ServerLoginSuccess implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
     username = ProtocolUtils.readString(buf, 16);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
     }

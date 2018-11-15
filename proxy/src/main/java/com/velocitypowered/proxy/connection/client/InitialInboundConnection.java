@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import java.net.InetSocketAddress;
@@ -35,7 +36,7 @@ class InitialInboundConnection implements InboundConnection {
   }
 
   @Override
-  public int getProtocolVersion() {
+  public ProtocolVersion getProtocolVersion() {
     return connection.getProtocolVersion();
   }
 }

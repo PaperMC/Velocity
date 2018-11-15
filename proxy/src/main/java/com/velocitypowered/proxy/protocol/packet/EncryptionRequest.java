@@ -2,9 +2,9 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
@@ -40,14 +40,14 @@ public class EncryptionRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     this.serverId = ProtocolUtils.readString(buf, 20);
     publicKey = ProtocolUtils.readByteArray(buf, 256);
     verifyToken = ProtocolUtils.readByteArray(buf, 16);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, this.serverId);
     ProtocolUtils.writeByteArray(buf, publicKey);
     ProtocolUtils.writeByteArray(buf, verifyToken);

@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.network.ProtocolVersion;
 import net.kyori.text.serializer.ComponentSerializers;
 
 public class LegacyPingResponse {
@@ -15,7 +16,7 @@ public class LegacyPingResponse {
   private final int playersMax;
 
   public LegacyPingResponse(int protocolVersion, String serverVersion, String motd,
-      int playersOnline, int playersMax) {
+                            int playersOnline, int playersMax) {
     this.protocolVersion = protocolVersion;
     this.serverVersion = serverVersion;
     this.motd = motd;

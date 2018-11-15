@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -9,7 +10,6 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
@@ -171,7 +171,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
     boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
       String channel = message.getChannel();
       minecraftOrFmlMessage = channel.startsWith("MC|") || channel
           .startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);

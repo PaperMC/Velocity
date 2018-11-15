@@ -2,9 +2,9 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -43,14 +43,14 @@ public class PluginMessage implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     this.channel = ProtocolUtils.readString(buf);
     this.data = new byte[buf.readableBytes()];
     buf.readBytes(data);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }

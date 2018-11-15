@@ -3,9 +3,9 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     action = ProtocolUtils.readVarInt(buf);
     int length = ProtocolUtils.readVarInt(buf);
 
@@ -84,7 +84,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, action);
     ProtocolUtils.writeVarInt(buf, items.size());
     for (Item item : items) {

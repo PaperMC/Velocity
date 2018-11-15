@@ -2,10 +2,10 @@ package com.velocitypowered.proxy.server;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
@@ -33,7 +33,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     handshake.setNextStatus(StateRegistry.STATUS_ID);
     handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
     handshake.setPort(server.getServerInfo().getAddress().getPort());
-    handshake.setProtocolVersion(ProtocolConstants.MINIMUM_GENERIC_VERSION);
+    handshake.setProtocolVersion(ProtocolVersion.MINIMUM_VERSION);
     connection.write(handshake);
 
     connection.setState(StateRegistry.STATUS);

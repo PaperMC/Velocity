@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -11,7 +12,6 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.forge.ForgeUtil;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -335,9 +335,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     serverBossBars.clear();
 
     // Tell the server about this client's plugin message channels.
-    int serverVersion = serverMc.getProtocolVersion();
+    ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     Collection<String> toRegister = new HashSet<>(knownChannels);
-    if (serverVersion >= ProtocolConstants.MINECRAFT_1_13) {
+    if (serverVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
     } else {
       toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());

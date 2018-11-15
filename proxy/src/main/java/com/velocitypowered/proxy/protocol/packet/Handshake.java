@@ -1,23 +1,23 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class Handshake implements MinecraftPacket {
 
-  private int protocolVersion;
+  private ProtocolVersion protocolVersion;
   private String serverAddress = "";
   private int port;
   private int nextStatus;
 
-  public int getProtocolVersion() {
+  public ProtocolVersion getProtocolVersion() {
     return protocolVersion;
   }
 
-  public void setProtocolVersion(int protocolVersion) {
+  public void setProtocolVersion(ProtocolVersion protocolVersion) {
     this.protocolVersion = protocolVersion;
   }
 
@@ -56,16 +56,16 @@ public class Handshake implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-    this.protocolVersion = ProtocolUtils.readVarInt(buf);
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    this.protocolVersion = ProtocolVersion.getProtocolVersion(ProtocolUtils.readVarInt(buf));
     this.serverAddress = ProtocolUtils.readString(buf);
     this.port = buf.readUnsignedShort();
     this.nextStatus = ProtocolUtils.readVarInt(buf);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, this.protocolVersion);
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, this.protocolVersion.getProtocol());
     ProtocolUtils.writeString(buf, this.serverAddress);
     buf.writeShort(this.port);
     ProtocolUtils.writeVarInt(buf, this.nextStatus);
