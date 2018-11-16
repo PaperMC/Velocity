@@ -15,11 +15,23 @@ public final class GameProfile {
   private final String name;
   private final List<Property> properties;
 
+  /**
+   * Creates a new Mojang game profile.
+   * @param id the UUID for the profile
+   * @param name the profile's username
+   * @param properties properties for the profile
+   */
   public GameProfile(UUID id, String name, List<Property> properties) {
     this(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
         Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
   }
 
+  /**
+   * Creates a new Mojang game profile.
+   * @param undashedId the undashed, Mojang-style UUID for the profile
+   * @param name the profile's username
+   * @param properties properties for the profile
+   */
   public GameProfile(String undashedId, String name, List<Property> properties) {
     this(UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
         Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
@@ -32,18 +44,34 @@ public final class GameProfile {
     this.properties = properties;
   }
 
-  public String getId() {
+  /**
+   * Returns the undashed, Mojang-style UUID.
+   * @return the undashed UUID
+   */
+  public String getUndashedId() {
     return undashedId;
   }
 
-  public UUID idAsUuid() {
+  /**
+   * Returns the UUID associated with this game profile.
+   * @return the UUID
+   */
+  public UUID getId() {
     return id;
   }
 
+  /**
+   * Returns the username associated with this profile.
+   * @return the username
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Returns an immutable list of profile properties associated with this profile.
+   * @return the properties associated with this profile
+   */
   public List<Property> getProperties() {
     return properties;
   }

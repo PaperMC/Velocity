@@ -1,6 +1,9 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
+import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
+import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -28,6 +31,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -36,9 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
@@ -51,8 +53,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
-  private static final String MOJANG_SERVER_AUTH_URL =
+  private static final String MOJANG_HASJOINED_URL =
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+  private static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
+      new GameProfile.Property("forgeClient", "true", "");
 
   private final VelocityServer server;
   private final MinecraftConnection inbound;
@@ -62,7 +66,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private int playerInfoId;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
-  public LoginSessionHandler(VelocityServer server, MinecraftConnection inbound,
+  LoginSessionHandler(VelocityServer server, MinecraftConnection inbound,
       InboundConnection apiInbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
@@ -72,11 +76,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerLogin packet) {
     this.login = packet;
-    if (inbound.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13) {
+    if (inbound.getProtocolVersion() >= MINECRAFT_1_13) {
       playerInfoId = ThreadLocalRandom.current().nextInt();
-      inbound.write(
-          new LoginPluginMessage(playerInfoId, VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL,
-              Unpooled.EMPTY_BUFFER));
+      inbound.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
+          Unpooled.EMPTY_BUFFER));
     } else {
       beginPreLogin();
     }
@@ -88,9 +91,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (packet.getId() == playerInfoId) {
       if (packet.isSuccess()) {
         // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
-        inbound.closeWith(Disconnect.create(
-            TextComponent.of("Running Velocity behind Velocity isn't supported.", TextColor.RED)
-        ));
+        inbound.closeWith(Disconnect.create(VelocityMessages.NO_PROXY_BEHIND_PROXY));
       } else {
         // Proceed with the regular login process.
         beginPreLogin();
@@ -124,9 +125,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           .generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) inbound.getRemoteAddress()).getHostString();
+      String url = String.format(MOJANG_HASJOINED_URL, login.getUsername(), serverId, playerIp);
       server.getHttpClient()
-          .get(new URL(
-              String.format(MOJANG_SERVER_AUTH_URL, login.getUsername(), serverId, playerIp)))
+          .get(new URL(url))
           .thenAcceptAsync(profileResponse -> {
             if (inbound.isClosed()) {
               // The player disconnected after we authenticated them.
@@ -143,14 +144,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             if (profileResponse.getCode() == 200) {
               // All went well, initialize the session.
-              initializePlayer(
-                  VelocityServer.GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
+              initializePlayer(GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
             } else if (profileResponse.getCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
               logger.warn("An offline-mode client ({} from {}) tried to connect!",
                   login.getUsername(), playerIp);
-              inbound.closeWith(Disconnect.create(TextComponent
-                  .of("This server only accepts connections from online-mode clients.")));
+              inbound.closeWith(Disconnect.create(VelocityMessages.ONLINE_MODE_ONLY));
             } else {
               // Something else went wrong
               logger.error(
@@ -216,10 +215,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void initializePlayer(GameProfile profile, boolean onlineMode) {
-    if (inbound.isLegacyForge()
-        && server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
-      // We want to add the FML token to the properties
-      profile = profile.addProperty(new GameProfile.Property("forgeClient", "true", ""));
+    if (inbound.isLegacyForge() && server.getConfiguration().getPlayerInfoForwardingMode()
+        == PlayerInfoForwarding.LEGACY) {
+      // We can't forward the FML token to the server when we are running in legacy forwarding mode,
+      // since both use the "hostname" field in the handshake. We add a special property to the
+      // profile instead, which will be ignored by non-Forge servers and can be intercepted by a
+      // Forge coremod, such as SpongeForge.
+      profile = profile.addProperty(IS_FORGE_CLIENT_PROPERTY);
     }
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile,
         onlineMode);

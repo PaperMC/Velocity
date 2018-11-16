@@ -142,7 +142,7 @@ public class PlayerListItem implements MinecraftPacket {
     }
 
     public static Item from(TabListEntry entry) {
-      return new Item(entry.getProfile().idAsUuid())
+      return new Item(entry.getProfile().getId())
           .setName(entry.getProfile().getName())
           .setProperties(entry.getProfile().getProperties())
           .setLatency(entry.getLatency())
