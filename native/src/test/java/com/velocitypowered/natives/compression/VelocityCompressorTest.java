@@ -20,13 +20,13 @@ class VelocityCompressorTest {
 
   @BeforeAll
   static void checkNatives() {
-    Natives.compressor.getLoadedVariant();
+    Natives.compress.getLoadedVariant();
   }
 
   @Test
   @EnabledOnOs({MAC, LINUX})
   void nativeIntegrityCheck() throws DataFormatException {
-    VelocityCompressor compressor = Natives.compressor.get().create(Deflater.DEFAULT_COMPRESSION);
+    VelocityCompressor compressor = Natives.compress.get().create(Deflater.DEFAULT_COMPRESSION);
     if (compressor instanceof JavaVelocityCompressor) {
       compressor.dispose();
       fail("Loaded regular compressor");

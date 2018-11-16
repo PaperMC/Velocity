@@ -11,7 +11,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a player is kicked from a server. You may either allow Velocity to kick the player
- * (with an optional reason override) or redirect the player to a separate server.
+ * (with an optional reason override) or redirect the player to a separate server. By default,
+ * Velocity will notify the user (if they are already connected to a server) or disconnect them
+ * (if they are not on a server and no other servers are available).
  */
 public final class KickedFromServerEvent implements
     ResultedEvent<KickedFromServerEvent.ServerKickResult> {
@@ -22,6 +24,14 @@ public final class KickedFromServerEvent implements
   private final boolean duringServerConnect;
   private ServerKickResult result;
 
+  /**
+   * Creates a {@code KickedFromServerEvent} instance.
+   * @param player the player affected
+   * @param server the server the player disconnected from
+   * @param originalReason the reason for being kicked, optional
+   * @param duringServerConnect whether or not the player was kicked during the connection process
+   * @param fancyReason a fancy reason for being disconnected, used for the initial result
+   */
   public KickedFromServerEvent(Player player, RegisteredServer server,
       @Nullable Component originalReason, boolean duringServerConnect, Component fancyReason) {
     this.player = Preconditions.checkNotNull(player, "player");

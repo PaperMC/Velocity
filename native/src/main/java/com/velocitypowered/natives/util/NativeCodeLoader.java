@@ -76,10 +76,10 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
   }
 
   static final BooleanSupplier MACOS = () ->
-      System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X") &&
-          System.getProperty("os.arch").equals("x86_64");
+      System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X")
+          && System.getProperty("os.arch").equals("x86_64");
   static final BooleanSupplier LINUX = () ->
-      System.getProperties().getProperty("os.name", "").equalsIgnoreCase("Linux") &&
-          System.getProperty("os.arch").equals("amd64");
+      System.getProperties().getProperty("os.name", "").equalsIgnoreCase("Linux")
+          && System.getProperty("os.arch").equals("amd64");
   static final BooleanSupplier ALWAYS = () -> true;
 }

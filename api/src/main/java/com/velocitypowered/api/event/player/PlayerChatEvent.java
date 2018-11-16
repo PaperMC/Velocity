@@ -16,6 +16,11 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   private final String message;
   private ChatResult result;
 
+  /**
+   * Constructs a PlayerChatEvent.
+   * @param player the player sending the message
+   * @param message the message being sent
+   */
   public PlayerChatEvent(Player player, String message) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.message = Preconditions.checkNotNull(message, "message");
@@ -57,11 +62,10 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     private static final ChatResult ALLOWED = new ChatResult(true, null);
     private static final ChatResult DENIED = new ChatResult(false, null);
 
-    // The server can not accept formatted text from clients!
     private @Nullable String message;
     private final boolean status;
 
-    protected ChatResult(boolean status, @Nullable String message) {
+    private ChatResult(boolean status, @Nullable String message) {
       this.status = status;
       this.message = message;
     }
@@ -76,10 +80,18 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       return status ? "allowed" : "denied";
     }
 
+    /**
+     * Allows the message to be sent, without modification.
+     * @return the allowed result
+     */
     public static ChatResult allowed() {
       return ALLOWED;
     }
 
+    /**
+     * Prevents the message from being sent.
+     * @return the denied result
+     */
     public static ChatResult denied() {
       return DENIED;
     }
@@ -88,6 +100,11 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       return Optional.ofNullable(message);
     }
 
+    /**
+     * Allows the message to be sent, but silently replaced with another.
+     * @param message the message to use instead
+     * @return a result with a new message
+     */
     public static ChatResult message(@NonNull String message) {
       Preconditions.checkNotNull(message, "message");
       return new ChatResult(true, message);

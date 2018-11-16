@@ -39,7 +39,7 @@ public final class ConnectionManager {
 
   public void logChannelInformation() {
     LOGGER.info("Connections will use {} channels, {} compression, {} ciphers", this.transportType,
-        Natives.compressor.getLoadedVariant(), Natives.cipher.getLoadedVariant());
+        Natives.compress.getLoadedVariant(), Natives.cipher.getLoadedVariant());
   }
 
   public void bind(final InetSocketAddress address) {

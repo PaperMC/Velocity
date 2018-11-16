@@ -50,7 +50,16 @@ public interface TabList {
    */
   Collection<TabListEntry> getEntries();
 
-  // Necessary because the TabListEntry implementation isn't in the api
+  /**
+   * Builds a tab list entry.
+   *
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   * @param profile profile
+   * @param displayName display name
+   * @param latency latency
+   * @param gameMode game mode
+   * @return entry
+   */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
       int gameMode);

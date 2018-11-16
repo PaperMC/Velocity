@@ -11,7 +11,8 @@ import java.util.UUID;
 public final class GameProfile {
 
   private final UUID id;
-  private final String undashedId, name;
+  private final String undashedId;
+  private final String name;
   private final List<Property> properties;
 
   public GameProfile(UUID id, String name, List<Property> properties) {
@@ -136,12 +137,21 @@ public final class GameProfile {
         + '}';
   }
 
+  /**
+   * Represents a Mojang profile property. Just like {@link GameProfile}, this class is immutable.
+   */
   public static final class Property {
 
     private final String name;
     private final String value;
     private final String signature;
 
+    /**
+     * Creates a profile property entry.
+     * @param name the name of the property
+     * @param value the value of the property
+     * @param signature the Mojang signature for the property
+     */
     public Property(String name, String value, String signature) {
       this.name = Preconditions.checkNotNull(name, "name");
       this.value = Preconditions.checkNotNull(value, "value");

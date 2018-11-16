@@ -6,7 +6,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.ModInfo;
 
 /**
- * This event is fired when the players ModInfo is changed.
+ * This event is fired when a Forge client sends its mods to the proxy while connecting to a server.
  */
 public final class PlayerModInfoEvent {
 

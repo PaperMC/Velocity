@@ -43,7 +43,7 @@ public class Natives {
     };
   }
 
-  public static final NativeCodeLoader<VelocityCompressorFactory> compressor = new NativeCodeLoader<>(
+  public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
       ImmutableList.of(
           new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
               copyAndLoadNative("/macosx/velocity-compress.dylib"), "native (macOS)",

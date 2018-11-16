@@ -28,7 +28,7 @@ class VelocityCipherTest {
   void nativeIntegrityCheck() throws GeneralSecurityException {
     VelocityCipherFactory factory = Natives.cipher.get();
     if (factory == JavaVelocityCipher.FACTORY) {
-      fail("Loaded regular compressor");
+      fail("Loaded regular cipher");
     }
     check(factory);
   }

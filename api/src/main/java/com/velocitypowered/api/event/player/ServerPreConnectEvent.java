@@ -2,6 +2,8 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
@@ -17,6 +19,11 @@ public final class ServerPreConnectEvent implements
   private final RegisteredServer originalServer;
   private ServerResult result;
 
+  /**
+   * Creates the ServerPreConnectEvent.
+   * @param player the player who is connecting to a server
+   * @param originalServer the server the player was trying to connect to
+   */
   public ServerPreConnectEvent(Player player, RegisteredServer originalServer) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.originalServer = Preconditions.checkNotNull(originalServer, "originalServer");
@@ -80,10 +87,21 @@ public final class ServerPreConnectEvent implements
       return "denied";
     }
 
+    /**
+     * Returns a result that will prevent players from connecting to another server. If this result
+     * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status
+     * {@link Status#CONNECTION_CANCELLED}.
+     * @return a result to deny conneections
+     */
     public static ServerResult denied() {
       return DENIED;
     }
 
+    /**
+     * Allows the player to connect to the specified server.
+     * @param server the new server to connect to
+     * @return a result to allow the player to connect to the specified server
+     */
     public static ServerResult allowed(RegisteredServer server) {
       Preconditions.checkNotNull(server, "server");
       return new ServerResult(server);

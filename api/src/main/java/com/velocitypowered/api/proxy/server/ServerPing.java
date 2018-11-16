@@ -29,6 +29,14 @@ public final class ServerPing {
     this(version, players, description, favicon, ModInfo.DEFAULT);
   }
 
+  /**
+   * Constructs a ServerPing instance.
+   * @param version the version of the server
+   * @param players the players on the server
+   * @param description the MOTD for the server
+   * @param favicon the server's favicon
+   * @param modinfo the mods this server runs
+   */
   public ServerPing(Version version, @Nullable Players players, Component description,
       @Nullable Favicon favicon, @Nullable ModInfo modinfo) {
     this.version = Preconditions.checkNotNull(version, "version");

@@ -86,7 +86,7 @@ public interface TabListEntry {
   int getGameMode();
 
   /**
-   * Sets the game mode for {@code this} entry to the specified value
+   * Sets the game mode for {@code this} entry to the specified value.
    *
    * @param gameMode to change to
    * @return {@code this}, for chaining
