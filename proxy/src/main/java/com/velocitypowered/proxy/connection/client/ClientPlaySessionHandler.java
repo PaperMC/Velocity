@@ -253,7 +253,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.close(TextComponent.builder()
+    player.disconnect(TextComponent.builder()
         .content("An exception occurred in your connection: ")
         .color(TextColor.RED)
         .append(TextComponent.of(ThrowableUtils.briefDescription(throwable), TextColor.WHITE))

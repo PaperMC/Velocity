@@ -243,7 +243,7 @@ public class VelocityServer implements ProxyServer {
     logger.info("Shutting down the proxy...");
 
     for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
-      player.close(TextComponent.of("Proxy shutting down."));
+      player.disconnect(TextComponent.of("Proxy shutting down."));
     }
 
     this.cm.shutdown();

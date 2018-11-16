@@ -19,8 +19,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.connection.VelocityConstants;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -44,8 +42,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -195,7 +191,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result
               .isOnlineModeAllowed())) {
             // Request encryption.
-            EncryptionRequest request = generateRequest();
+            EncryptionRequest request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
             inbound.write(request);
           } else {
@@ -204,7 +200,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         }, inbound.eventLoop());
   }
 
-  private EncryptionRequest generateRequest() {
+  private EncryptionRequest generateEncryptionRequest() {
     byte[] verify = new byte[4];
     ThreadLocalRandom.current().nextBytes(verify);
 
@@ -251,23 +247,22 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             if (reason.isPresent()) {
               player.disconnect(reason.get());
             } else {
-              handleProxyLogin(player);
+              finishLogin(player);
             }
           }, inbound.eventLoop());
     });
 
   }
 
-  private void handleProxyLogin(ConnectedPlayer player) {
+  private void finishLogin(ConnectedPlayer player) {
     Optional<RegisteredServer> toTry = player.getNextServerToTry();
     if (!toTry.isPresent()) {
-      player.close(TextComponent.of("No available servers", TextColor.RED));
+      player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
       return;
     }
 
     if (!server.registerConnection(player)) {
-      inbound.closeWith(
-          Disconnect.create(TextComponent.of("You are already on this proxy!", TextColor.RED)));
+      player.disconnect(VelocityMessages.ALREADY_CONNECTED);
       return;
     }
 

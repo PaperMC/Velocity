@@ -411,10 +411,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  public void close(TextComponent reason) {
-    connection.closeWith(Disconnect.create(reason));
-  }
-
   private MinecraftConnection ensureBackendConnection() {
     VelocityServerConnection sc = this.connectedServer;
     if (sc == null) {
