@@ -432,9 +432,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (connectedServer != null) {
       connectedServer.disconnect();
     }
-    if (server.unregisterConnection(this)) {
-      server.getEventManager().fireAndForget(new DisconnectEvent(this));
-    }
+    server.unregisterConnection(this);
+    server.getEventManager().fireAndForget(new DisconnectEvent(this));
   }
 
   @Override
