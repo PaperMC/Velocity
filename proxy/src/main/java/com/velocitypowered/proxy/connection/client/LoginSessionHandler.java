@@ -40,6 +40,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import org.apache.logging.log4j.LogManager;
@@ -228,6 +229,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           apiInbound.getVirtualHost().orElse(null));
       this.connectedPlayer = player;
 
+      if (!server.registerConnection(player)) {
+        player.disconnect(VelocityMessages.ALREADY_CONNECTED);
+        return CompletableFuture.completedFuture(null);
+      }
+
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
           .thenCompose(event -> {
@@ -258,11 +264,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     Optional<RegisteredServer> toTry = player.getNextServerToTry();
     if (!toTry.isPresent()) {
       player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
-      return;
-    }
-
-    if (!server.registerConnection(player)) {
-      player.disconnect(VelocityMessages.ALREADY_CONNECTED);
       return;
     }
 
