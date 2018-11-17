@@ -82,7 +82,7 @@ public final class GameProfile {
    * @param id the new unique id
    * @return the new {@code GameProfile}
    */
-  public GameProfile withUuid(UUID id) {
+  public GameProfile withId(UUID id) {
     return new GameProfile(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
         this.name, this.properties);
   }
@@ -93,7 +93,7 @@ public final class GameProfile {
    * @param undashedId the new undashed id
    * @return the new {@code GameProfile}
    */
-  public GameProfile withId(String undashedId) {
+  public GameProfile withUndashedId(String undashedId) {
     return new GameProfile(
         UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
         this.name, this.properties);
