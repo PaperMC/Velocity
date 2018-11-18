@@ -1,4 +1,4 @@
-package com.velocitypowered.api.event.player;
+package com.velocitypowered.api.event.command;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired when a player runs a command!.
  */
-public final class CommandRanEvent implements ResultedEvent<CommandRanEvent.CommandResult> {
+public final class CommandEvent implements ResultedEvent<CommandEvent.CommandResult> {
 
   private final Player player;
   private final String command;
@@ -18,12 +18,12 @@ public final class CommandRanEvent implements ResultedEvent<CommandRanEvent.Comm
   private CommandResult result;
 
   /**
-   * Constructs a CommandRanEvent.
+   * Constructs a CommandEvent.
    * @param player the player sending the command
    * @param command the command being sent
    * @param args the arguments being sent
    */
-  public CommandRanEvent(Player player, String command, String[] args) {
+  public CommandEvent(Player player, String command, String[] args) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.command = Preconditions.checkNotNull(command, "command");
     this.args = Preconditions.checkNotNull(args, "args");
@@ -54,7 +54,7 @@ public final class CommandRanEvent implements ResultedEvent<CommandRanEvent.Comm
 
   @Override
   public String toString() {
-    return "CommandRanEvent{"
+    return "CommandEvent{"
         + "player=" + player
         + ", command=" + command
         + ", args=" + args
@@ -63,7 +63,7 @@ public final class CommandRanEvent implements ResultedEvent<CommandRanEvent.Comm
   }
 
   /**
-   * Represents the result of the {@link CommandRanEvent}.
+   * Represents the result of the {@link CommandEvent}.
    */
   public static final class CommandResult implements ResultedEvent.Result {
 
