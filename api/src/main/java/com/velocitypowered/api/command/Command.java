@@ -16,7 +16,16 @@ public interface Command {
    * @param source the source of this command
    * @param args the arguments for this command
    */
-  void execute(CommandSource source, String @NonNull [] args);
+  default void execute(CommandSource source, String @NonNull [] args) {}
+
+  /**
+   * Executes the command for the specified {@link CommandSource}.
+   *
+   * @param source the source of this command
+   * @param label the label for this command
+   * @param args the arguments for this command
+   */
+  default void execute(CommandSource source, @NonNull String label, String @NonNull [] args) {}
 
   /**
    * Provides tab complete suggestions for a command for a specified {@link CommandSource}.

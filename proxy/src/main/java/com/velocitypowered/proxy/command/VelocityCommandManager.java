@@ -58,6 +58,7 @@ public class VelocityCommandManager implements CommandManager {
       }
 
       command.execute(source, actualArgs);
+      command.execute(source, split[0], actualArgs);
       return true;
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
