@@ -3,12 +3,16 @@ package com.velocitypowered.api.event.command;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
+
+import java.util.Arrays;
 import java.util.Optional;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.optional.qual.MaybePresent;
 
 /**
- * This event is fired when a player runs a command!.
+ * This event is fired when a player runs a command.
  */
 public final class CommandEvent implements ResultedEvent<CommandEvent.CommandResult> {
 
@@ -19,9 +23,10 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
 
   /**
    * Constructs a CommandEvent.
-   * @param player the player sending the command
+   *
+   * @param player  the player sending the command
    * @param command the command being sent
-   * @param args the arguments being sent
+   * @param args    the arguments being sent
    */
   public CommandEvent(Player player, String command, String[] args) {
     this.player = Preconditions.checkNotNull(player, "player");
@@ -55,11 +60,11 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
   @Override
   public String toString() {
     return "CommandEvent{"
-        + "player=" + player
-        + ", command=" + command
-        + ", args=" + args
-        + ", result=" + result
-        + '}';
+            + "player=" + player
+            + ", command=" + command
+            + ", args=" + Arrays.toString(args)
+            + ", result=" + result
+            + '}';
   }
 
   /**
@@ -74,7 +79,7 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
     private @Nullable String[] args;
     private final boolean status;
 
-    private CommandResult(boolean status, @Nullable String command, @Nullable String[] args) {
+    private CommandResult(boolean status, @Nullable String command, @Nullable @MaybePresent String[] args) {
       this.status = status;
       this.command = command;
       this.args = args;
@@ -92,6 +97,7 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
 
     /**
      * Allows the command to be sent, without modification.
+     *
      * @return the allowed result
      */
     public static CommandResult allowed() {
@@ -100,6 +106,7 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
 
     /**
      * Prevents the command from being sent.
+     *
      * @return the denied result
      */
     public static CommandResult denied() {
@@ -116,15 +123,16 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
 
     /**
      * Allows the command to be sent, but silently replaced with another.
+     *
      * @param command the command to use instead
      * @return a result with a new command
      */
-    public static CommandResult command(@NonNull String command, @NonNull String[] args) {
+    public static CommandResult command(@NonNull String command, @Nullable @MaybePresent String[] args) {
       Preconditions.checkNotNull(command, "command");
       Preconditions.checkNotNull(args, "args");
       return new CommandResult(true, command, args);
     }
   }
-
-
 }
+
+

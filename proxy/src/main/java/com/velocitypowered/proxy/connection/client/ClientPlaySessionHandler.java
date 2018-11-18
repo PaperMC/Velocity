@@ -104,10 +104,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               thenAcceptAsync(pme -> {
                 CommandEvent.CommandResult commandResult = pme.getResult();
         if (commandResult.isAllowed()) {
-            Optional<String> eventMsg = pme.getResult().getCommand();
-            if (eventMsg.isPresent()) {
+            Optional<String> eventCmd = pme.getResult().getCommand();
+            Optional<String[]> eventArgs = pme.getResult().getCommandArgs();
+            if (eventCmd.isPresent()) {
               try {
-                server.getCommandManager().execute(player, eventMsg.get().substring(1));
+                server.getCommandManager().execute(player, eventCmd.get().substring(1) + Arrays.toString(eventArgs.orElse(null)));
               } catch (Exception e) {
                 logger
                         .info("Exception occurred while running command for {}", player.getProfile().getName(),
@@ -117,7 +118,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               }
             } else {
               try {
-                server.getCommandManager().execute(player, split[0]);
+                server.getCommandManager().execute(player, msg.substring(1));
               } catch (Exception e) {
                 logger
                         .info("Exception occurred while running command for {}", player.getProfile().getName(),
