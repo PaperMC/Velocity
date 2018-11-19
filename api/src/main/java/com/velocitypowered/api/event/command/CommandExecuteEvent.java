@@ -14,7 +14,7 @@ import org.checkerframework.checker.optional.qual.MaybePresent;
 /**
  * This event is fired when a player runs a command.
  */
-public final class CommandEvent implements ResultedEvent<CommandEvent.CommandResult> {
+public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEvent.CommandResult> {
 
   private final Player player;
   private final String command;
@@ -22,13 +22,13 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
   private CommandResult result;
 
   /**
-   * Constructs a CommandEvent.
+   * Constructs a CommandExecuteEvent.
    *
    * @param player  the player sending the command
    * @param command the command being sent
    * @param args    the arguments being sent
    */
-  public CommandEvent(Player player, String command, String[] args) {
+  public CommandExecuteEvent(Player player, String command, String[] args) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.command = Preconditions.checkNotNull(command, "command");
     this.args = Preconditions.checkNotNull(args, "args");
@@ -59,7 +59,7 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
 
   @Override
   public String toString() {
-    return "CommandEvent{"
+    return "CommandExecuteEvent{"
             + "player=" + player
             + ", command=" + command
             + ", args=" + Arrays.toString(args)
@@ -68,7 +68,7 @@ public final class CommandEvent implements ResultedEvent<CommandEvent.CommandRes
   }
 
   /**
-   * Represents the result of the {@link CommandEvent}.
+   * Represents the result of the {@link CommandExecuteEvent}.
    */
   public static final class CommandResult implements ResultedEvent.Result {
 

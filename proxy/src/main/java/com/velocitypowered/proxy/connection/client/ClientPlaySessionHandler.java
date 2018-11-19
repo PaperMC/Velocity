@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.command.CommandEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.ModInfo;
@@ -99,10 +99,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (msg.startsWith("/")) {
       String[] split = msg.split(" ", -1);
       String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-      CommandEvent event = new CommandEvent(player, split[0], actualArgs);
+      CommandExecuteEvent event = new CommandExecuteEvent(player, split[0], actualArgs);
       server.getEventManager().fire(event).
               thenAcceptAsync(pme -> {
-                CommandEvent.CommandResult commandResult = pme.getResult();
+                CommandExecuteEvent.CommandResult commandResult = pme.getResult();
         if (commandResult.isAllowed()) {
             Optional<String> eventCmd = pme.getResult().getCommand();
             Optional<String[]> eventArgs = pme.getResult().getCommandArgs();
