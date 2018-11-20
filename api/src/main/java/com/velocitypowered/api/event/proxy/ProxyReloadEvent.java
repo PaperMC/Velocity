@@ -7,6 +7,6 @@ public class ProxyReloadEvent {
 
   @Override
   public String toString() {
-    return "ProxyInitializeEvent";
+    return "ProxyReloadEvent";
   }
 }
