@@ -11,11 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.proxy.ProxyServer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, Command> commands = new HashMap<>();
+  private final ProxyServer server;
+
+  public VelocityCommandManager(ProxyServer server) {
+    this.server = server;
+  }
 
   @Override
   public void register(@NonNull final Command command, final String... aliases) {
@@ -56,8 +64,14 @@ public class VelocityCommandManager implements CommandManager {
       if (!command.hasPermission(source, actualArgs)) {
         return false;
       }
-
-      command.execute(source, actualArgs);
+      CommandExecuteEvent event = new CommandExecuteEvent(source, alias, actualArgs);
+      server.getEventManager().fire(event)
+              .thenAcceptAsync(cee -> {
+                CommandExecuteEvent.CommandResult commandResult = cee.getResult();
+                if (commandResult.isAllowed()) {
+                  command.execute(source, actualArgs);
+                }
+              });
       return true;
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);

@@ -1,13 +1,12 @@
 package com.velocitypowered.api.event.command;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.ResultedEvent;
-import com.velocitypowered.api.proxy.Player;
 
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.optional.qual.MaybePresent;
 
@@ -16,7 +15,7 @@ import org.checkerframework.checker.optional.qual.MaybePresent;
  */
 public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEvent.CommandResult> {
 
-  private final Player player;
+  private final CommandSource source;
   private final String command;
   private final String[] args;
   private CommandResult result;
@@ -24,19 +23,19 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEv
   /**
    * Constructs a CommandExecuteEvent.
    *
-   * @param player  the player sending the command
+   * @param source  the player sending the command
    * @param command the command being sent
    * @param args    the arguments being sent
    */
-  public CommandExecuteEvent(Player player, String command, String[] args) {
-    this.player = Preconditions.checkNotNull(player, "player");
+  public CommandExecuteEvent(CommandSource source, String command, String[] args) {
+    this.source = Preconditions.checkNotNull(source, "player");
     this.command = Preconditions.checkNotNull(command, "command");
     this.args = Preconditions.checkNotNull(args, "args");
     this.result = CommandResult.allowed();
   }
 
-  public Player getPlayer() {
-    return player;
+  public CommandSource getSource() {
+    return source;
   }
 
   public String getCommand() {
@@ -60,7 +59,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEv
   @Override
   public String toString() {
     return "CommandExecuteEvent{"
-            + "player=" + player
+            + "source=" + source
             + ", command=" + command
             + ", args=" + Arrays.toString(args)
             + ", result=" + result
@@ -121,17 +120,6 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEv
       return Optional.ofNullable(args);
     }
 
-    /**
-     * Allows the command to be sent, but silently replaced with another.
-     *
-     * @param command the command to use instead
-     * @return a result with a new command
-     */
-    public static CommandResult command(@NonNull String command, @Nullable @MaybePresent String[] args) {
-      Preconditions.checkNotNull(command, "command");
-      Preconditions.checkNotNull(args, "args");
-      return new CommandResult(true, command, args);
-    }
   }
 }
 

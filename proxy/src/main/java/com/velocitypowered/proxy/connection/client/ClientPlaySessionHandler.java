@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.util.ModInfo;
@@ -97,38 +96,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
-      String[] split = msg.split(" ", -1);
-      String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
-      CommandExecuteEvent event = new CommandExecuteEvent(player, split[0], actualArgs);
-      server.getEventManager().fire(event).
-              thenAcceptAsync(pme -> {
-                CommandExecuteEvent.CommandResult commandResult = pme.getResult();
-        if (commandResult.isAllowed()) {
-            Optional<String> eventCmd = pme.getResult().getCommand();
-            Optional<String[]> eventArgs = pme.getResult().getCommandArgs();
-            if (eventCmd.isPresent()) {
-              try {
-                server.getCommandManager().execute(player, eventCmd.get().substring(1) + Arrays.toString(eventArgs.orElse(null)));
-              } catch (Exception e) {
-                logger
-                        .info("Exception occurred while running command for {}", player.getProfile().getName(),
-                                e);
-                player.sendMessage(
-                        TextComponent.of("An error occurred while running this command.", TextColor.RED));
-              }
-            } else {
-              try {
-                server.getCommandManager().execute(player, msg.substring(1));
-              } catch (Exception e) {
-                logger
-                        .info("Exception occurred while running command for {}", player.getProfile().getName(),
-                                e);
-                player.sendMessage(
-                        TextComponent.of("An error occurred while running this command.", TextColor.RED));
-              }
-            }
-          }
-          }, smc.eventLoop());
+      try {
+        server.getCommandManager().execute(player, msg.substring(1));
+        } catch (Exception e) {
+        logger
+                .info("Exception occurred while running command for {}", player.getProfile().getName(),
+                        e);
+        player.sendMessage(
+                TextComponent.of("An error occurred while running this command.", TextColor.RED));
+        }
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)

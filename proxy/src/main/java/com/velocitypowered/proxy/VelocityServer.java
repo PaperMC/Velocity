@@ -75,7 +75,7 @@ public class VelocityServer implements ProxyServer {
   private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private @MonotonicNonNull ServerMap servers;
-  private final VelocityCommandManager commandManager = new VelocityCommandManager();
+  private final VelocityCommandManager commandManager = new VelocityCommandManager(this);
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private @MonotonicNonNull VelocityPluginManager pluginManager;
