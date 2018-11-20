@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -40,6 +41,7 @@ import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -230,6 +232,37 @@ public class VelocityServer implements ProxyServer {
 
   public boolean isShutdown() {
     return shutdown;
+  }
+
+  public boolean reloadConfiguration() throws IOException {
+    Path configPath = Paths.get("velocity.toml");
+    VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
+
+    if (!newConfiguration.validate()) {
+      return false;
+    }
+
+    // If we have a new bind address, bind to it
+    if (!configuration.getBind().equals(newConfiguration.getBind())) {
+      this.cm.bind(newConfiguration.getBind());
+    }
+
+    // Re-register servers
+    for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
+      ServerInfo newInfo =
+          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
+      if (!rs.isPresent()) {
+        servers.register(newInfo);
+      } else if (!rs.get().getServerInfo().equals(newInfo)) {
+        throw new IllegalStateException("Unable to replace servers in flight!");
+      }
+    }
+
+    ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
+    this.configuration = newConfiguration;
+    eventManager.fireAndForget(new ProxyReloadEvent());
+    return true;
   }
 
   public void shutdown(boolean explicitExit) {
