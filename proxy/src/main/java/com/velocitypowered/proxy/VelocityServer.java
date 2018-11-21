@@ -3,6 +3,7 @@ package com.velocitypowered.proxy;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
@@ -47,13 +48,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
@@ -242,7 +246,8 @@ public class VelocityServer implements ProxyServer {
       return false;
     }
 
-    // Re-register servers
+    // Re-register servers. If we are replacing a server, we must evacuate players.
+    Collection<ConnectedPlayer> evacuate = new ArrayList<>();
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
           new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
@@ -250,8 +255,40 @@ public class VelocityServer implements ProxyServer {
       if (!rs.isPresent()) {
         servers.register(newInfo);
       } else if (!rs.get().getServerInfo().equals(newInfo)) {
-        throw new IllegalStateException("Unable to replace servers in flight!");
+        for (Player player : rs.get().getPlayersConnected()) {
+          if (!(player instanceof ConnectedPlayer)) {
+            throw new IllegalStateException("ConnectedPlayer not found for player " + player
+                + " in server " + rs.get().getServerInfo().getName());
+          }
+          evacuate.add((ConnectedPlayer) player);
+        }
+        servers.unregister(rs.get().getServerInfo());
+        servers.register(newInfo);
       }
+    }
+
+    CountDownLatch latch = new CountDownLatch(evacuate.size());
+    for (ConnectedPlayer player : evacuate) {
+      Optional<RegisteredServer> next = player.getNextServerToTry();
+      if (next.isPresent()) {
+        player.createConnectionRequest(next.get()).connectWithIndication()
+            .whenComplete((success, ex) -> {
+              if (ex != null || success == null || !success) {
+                player.disconnect(TextComponent.of("Your server has been changed, but we could "
+                    + "not move you to any fallback servers."));
+              }
+              latch.countDown();
+            });
+      } else {
+        player.disconnect(TextComponent.of("Your server has been changed, but we could "
+            + "not move you to any fallback servers."));
+      }
+    }
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      logger.error("Interrupted whilst moving players", e);
+      Thread.currentThread().interrupt();
     }
 
     // If we have a new bind address, bind to it
