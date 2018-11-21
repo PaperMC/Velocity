@@ -242,11 +242,6 @@ public class VelocityServer implements ProxyServer {
       return false;
     }
 
-    // If we have a new bind address, bind to it
-    if (!configuration.getBind().equals(newConfiguration.getBind())) {
-      this.cm.bind(newConfiguration.getBind());
-    }
-
     // Re-register servers
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
@@ -257,6 +252,23 @@ public class VelocityServer implements ProxyServer {
       } else if (!rs.get().getServerInfo().equals(newInfo)) {
         throw new IllegalStateException("Unable to replace servers in flight!");
       }
+    }
+
+    // If we have a new bind address, bind to it
+    if (!configuration.getBind().equals(newConfiguration.getBind())) {
+      this.cm.bind(newConfiguration.getBind());
+      this.cm.shutdown(configuration.getBind());
+    }
+
+    if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
+        || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
+      this.cm.shutdown(new InetSocketAddress(
+          configuration.getBind().getHostString(), configuration.getQueryPort()));
+    }
+
+    if (newConfiguration.isQueryEnabled()) {
+      this.cm.queryBind(newConfiguration.getBind().getHostString(),
+          newConfiguration.getQueryPort());
     }
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
