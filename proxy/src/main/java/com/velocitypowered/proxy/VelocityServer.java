@@ -280,6 +280,7 @@ public class VelocityServer implements ProxyServer {
               latch.countDown();
             });
       } else {
+        latch.countDown();
         player.disconnect(TextComponent.of("Your server has been changed, but we could "
             + "not move you to any fallback servers."));
       }
