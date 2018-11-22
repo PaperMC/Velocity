@@ -246,7 +246,8 @@ public class VelocityServer implements ProxyServer {
       return false;
     }
 
-    // Re-register servers. If we are replacing a server, we must evacuate players.
+    // Re-register servers. If a server is being replaced, make sure to note what players need to
+    // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
@@ -267,29 +268,32 @@ public class VelocityServer implements ProxyServer {
       }
     }
 
-    CountDownLatch latch = new CountDownLatch(evacuate.size());
-    for (ConnectedPlayer player : evacuate) {
-      Optional<RegisteredServer> next = player.getNextServerToTry();
-      if (next.isPresent()) {
-        player.createConnectionRequest(next.get()).connectWithIndication()
-            .whenComplete((success, ex) -> {
-              if (ex != null || success == null || !success) {
-                player.disconnect(TextComponent.of("Your server has been changed, but we could "
-                    + "not move you to any fallback servers."));
-              }
-              latch.countDown();
-            });
-      } else {
-        latch.countDown();
-        player.disconnect(TextComponent.of("Your server has been changed, but we could "
-            + "not move you to any fallback servers."));
+    // If we had any players to evacuate, let's move them now. Wait until they are all moved off.
+    if (!evacuate.isEmpty()) {
+      CountDownLatch latch = new CountDownLatch(evacuate.size());
+      for (ConnectedPlayer player : evacuate) {
+        Optional<RegisteredServer> next = player.getNextServerToTry();
+        if (next.isPresent()) {
+          player.createConnectionRequest(next.get()).connectWithIndication()
+              .whenComplete((success, ex) -> {
+                if (ex != null || success == null || !success) {
+                  player.disconnect(TextComponent.of("Your server has been changed, but we could "
+                      + "not move you to any fallback servers."));
+                }
+                latch.countDown();
+              });
+        } else {
+          latch.countDown();
+          player.disconnect(TextComponent.of("Your server has been changed, but we could "
+              + "not move you to any fallback servers."));
+        }
       }
-    }
-    try {
-      latch.await();
-    } catch (InterruptedException e) {
-      logger.error("Interrupted whilst moving players", e);
-      Thread.currentThread().interrupt();
+      try {
+        latch.await();
+      } catch (InterruptedException e) {
+        logger.error("Interrupted whilst moving players", e);
+        Thread.currentThread().interrupt();
+      }
     }
 
     // If we have a new bind address, bind to it
