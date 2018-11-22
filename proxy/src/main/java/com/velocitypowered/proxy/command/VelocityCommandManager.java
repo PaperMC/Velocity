@@ -23,7 +23,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(command, "executor");
     for (int i = 0, length = aliases.length; i < length; i++) {
       final String alias = aliases[i];
-      Preconditions.checkNotNull(aliases, "alias at index %s", i);
+      Preconditions.checkNotNull(alias, "alias at index %s", i);
       this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
     }
   }
