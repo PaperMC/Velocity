@@ -1,4 +1,4 @@
-package com.velocitypowered.api.event.proxy;
+package com.velocitypowered.api.event;
 
 /**
  * This event is a proxy, for all events that have only one toString method, 
