@@ -75,9 +75,9 @@ public class VelocityCommand implements Command {
       return subcommands.entrySet().stream()
           .filter(e -> e.getKey().regionMatches(true, 0, currentArgs[0], 0,
               currentArgs[0].length()))
-          .filter(e -> e.getValue().hasPermission(source, new String[0]))
+          .filter(e -> e.getValue().hasPermission(source, currentArgs))
           .map(Map.Entry::getKey)
-          .collect(Collectors.toList());
+          .collect(Collectors.toList()).size() != 0;
     }
 
     Command command = subcommands.get(currentArgs[0].toLowerCase(Locale.US));
@@ -92,6 +92,10 @@ public class VelocityCommand implements Command {
   @Override
   public boolean hasPermission(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
+      String availableCommands = subcommands.entrySet().stream()
+				.filter(e -> e.getValue().hasPermission(source, new String[0]))
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toList());
       return true;
     }
     Command command = subcommands.get(args[0].toLowerCase(Locale.US));
@@ -113,6 +117,11 @@ public class VelocityCommand implements Command {
 
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
+      if (args.length != 0) {
+        source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
+        return;
+      }
+      
       ProxyVersion version = server.getVersion();
 
       TextComponent velocity = TextComponent.builder(version.getName() + " ")
