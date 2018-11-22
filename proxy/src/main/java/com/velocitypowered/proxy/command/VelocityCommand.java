@@ -93,7 +93,7 @@ public class VelocityCommand implements Command {
   public boolean hasPermission(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
       return subcommands.entrySet().stream()
-			.filter(e -> e.getValue().hasPermission(source, currentArgs))
+			.filter(e -> e.getValue().hasPermission(source, args))
 			.map(Map.Entry::getKey)
 			.collect(Collectors.toList()).size() != 0;
     }
