@@ -6,10 +6,10 @@ package com.velocitypowered.api.event;
  *
  * @author Lars Artmann | LartyHD
  */
-public final class NamedEvent {
+public class NamedEvent {
 
   protected NamedEvent() {
-    throw new AssertionError();
+    throw new AssertionError("Don't create a simple instance of NamedEvent");
   }
 
   @Override
