@@ -17,7 +17,13 @@ public class Velocity {
   public static void main(String... args) {
     long startTime = System.currentTimeMillis();
 
-    VelocityServer server = new VelocityServer();
+    final ProxyOptions options = new ProxyOptions(args);
+
+    if (options.isHelp()) {
+      return;
+    }
+
+    VelocityServer server = new VelocityServer(options);
     server.start();
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown(false), "Shutdown thread"));

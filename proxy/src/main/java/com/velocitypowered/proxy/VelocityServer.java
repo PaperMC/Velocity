@@ -70,6 +70,7 @@ public class VelocityServer implements ProxyServer {
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
 
+  private final ProxyOptions options;
   private @MonotonicNonNull ConnectionManager cm;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull NettyHttpClient httpClient;
@@ -87,6 +88,10 @@ public class VelocityServer implements ProxyServer {
   private @MonotonicNonNull VelocityEventManager eventManager;
   private @MonotonicNonNull VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
+
+  public VelocityServer(final ProxyOptions options) {
+    this.options = options;
+  }
 
   public KeyPair getServerKeyPair() {
     if (serverKeyPair == null) {
@@ -181,7 +186,13 @@ public class VelocityServer implements ProxyServer {
     // init console permissions after plugins are loaded
     console.setupPermissions();
 
-    this.cm.bind(configuration.getBind());
+    final Integer port = this.options.getPort();
+    if (port != null) {
+      logger.debug("Overriding bind port to {} from command line option", port);
+      this.cm.bind(new InetSocketAddress(configuration.getBind().getHostString(), port));
+    } else {
+      this.cm.bind(configuration.getBind());
+    }
 
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
