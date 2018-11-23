@@ -517,8 +517,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               return CompletableFuture
                   .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
             }
-            return new VelocityServerConnection((VelocityRegisteredServer) rs,
-                ConnectedPlayer.this, server).connect();
+
+            VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
+            VelocityServerConnection con = new VelocityServerConnection(vrs, ConnectedPlayer.this,
+                server);
+            connectionInFlight = con;
+            return con.connect();
           });
     }
 
