@@ -286,6 +286,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connectedServer;
   }
 
+  public void resetInFlightConnection() {
+    connectionInFlight = null;
+  }
+
   public void handleConnectionException(RegisteredServer server, Throwable throwable) {
     if (throwable == null) {
       throw new NullPointerException("throwable");
