@@ -2,11 +2,11 @@ package com.velocitypowered.proxy.connection.forge.legacy;
 
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
-import com.velocitypowered.proxy.connection.ConnectionType;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
- * Contains extra logic for {@link ConnectionType#LEGACY_FORGE}
+ * Contains extra logic for {@link ConnectionTypes#LEGACY_FORGE}
  */
 public class LegacyForgeConnectionType extends ConnectionTypeImpl {
 

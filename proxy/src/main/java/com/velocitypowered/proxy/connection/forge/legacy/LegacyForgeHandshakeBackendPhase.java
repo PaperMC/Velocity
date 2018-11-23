@@ -1,7 +1,8 @@
 package com.velocitypowered.proxy.connection.forge.legacy;
 
-import com.velocitypowered.proxy.connection.ConnectionType;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
+import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -14,7 +15,7 @@ import javax.annotation.Nullable;
 public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
   /**
-   * Dummy phase for use with {@link BackendConnectionPhase#UNKNOWN}
+   * Dummy phase for use with {@link BackendConnectionPhases#UNKNOWN}
    */
   NOT_STARTED(LegacyForgeConstants.SERVER_HELLO_DISCRIMINATOR) {
     @Override
@@ -38,7 +39,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
       // We must always reset the handshake before a modded connection is established if
       // we haven't done so already.
       if (connection.getConnection() != null) {
-        connection.getConnection().setType(ConnectionType.LEGACY_FORGE);
+        connection.getConnection().setType(ConnectionTypes.LEGACY_FORGE);
       }
       connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
     }

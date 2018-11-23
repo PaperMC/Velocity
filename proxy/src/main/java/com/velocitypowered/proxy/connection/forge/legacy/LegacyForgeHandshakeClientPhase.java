@@ -7,8 +7,8 @@ import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import javax.annotation.Nullable;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Allows for simple tracking of the phase that the Legacy
@@ -35,6 +35,16 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
       // As we know that calling this branch only happens on first join, we set that if we are a
       // Forge client that we must reset on the next switch.
       player.setPhase(LegacyForgeHandshakeClientPhase.COMPLETE);
+    }
+
+    @Override
+    boolean onHandle(ConnectedPlayer player,
+                     ClientPlaySessionHandler handler,
+                     PluginMessage message,
+                     MinecraftConnection backendConn) {
+      // If we stay in this phase, we do nothing because it means the packet wasn't handled.
+      // Returning false indicates this
+      return false;
     }
   },
 
@@ -63,14 +73,19 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
 
     @Override
-    void preWrite(ConnectedPlayer player, PluginMessage packet) {
+    boolean onHandle(ConnectedPlayer player,
+                  ClientPlaySessionHandler handler,
+                  PluginMessage message,
+                  MinecraftConnection backendConn) {
       // Read the mod list if we haven't already.
       if (!player.getModInfo().isPresent()) {
-        List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(packet);
+        List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(message);
         if (!mods.isEmpty()) {
           player.setModInfo(new ModInfo("FML", mods));
         }
       }
+
+      return super.onHandle(player, handler, message, backendConn);
     }
   },
 
@@ -133,10 +148,17 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
 
     @Override
-    void postWrite(ConnectedPlayer player, ClientPlaySessionHandler handler) {
+    boolean onHandle(ConnectedPlayer player,
+                     ClientPlaySessionHandler handler,
+                     PluginMessage message,
+                     MinecraftConnection backendConn) {
+      super.onHandle(player, handler, message, backendConn);
+
       // just in case the timing is awful
       player.sendKeepAlive();
       handler.flushQueuedMessages();
+
+      return true;
     }
   };
 
@@ -170,17 +192,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
         // Update phase on player
         player.setPhase(newPhase);
 
-        // Perform tasks before sending the packet on to the server.
-        newPhase.preWrite(player, message);
-
-        // Send the packet on to the server.
-        backendConn.write(message);
-
-        // Perform tasks after sending the packet on, such as keep alives.
-        newPhase.postWrite(player, handler);
-
-        // We handled the packet, nothing else needs to.
-        return true;
+        // Perform phase handling
+        return newPhase.onHandle(player, handler, message, backendConn);
       }
     }
 
@@ -188,31 +201,31 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     return false;
   }
 
+  /**
+   * Handles the phase tasks
+   *
+   * @param player The player
+   * @param handler The {@link ClientPlaySessionHandler} that is handling
+   *                packets
+   * @param message The message to handle
+   * @param backendConn The backend connection to write to, if required.
+   *
+   * @return true if handled, false otherwise.
+   */
+  boolean onHandle(ConnectedPlayer player,
+                   ClientPlaySessionHandler handler,
+                   PluginMessage message,
+                   MinecraftConnection backendConn) {
+    // Send the packet on to the server.
+    backendConn.write(message);
+
+    // We handled the packet. No need to continue processing.
+    return true;
+  }
+
   @Override
   public boolean consideredComplete() {
     return false;
-  }
-
-  /**
-   * Actions to occur before the handled packet is sent on to
-   * the server.
-   *
-   * @param player The player to act on
-   * @param packet The packet that was sent
-   */
-  void preWrite(ConnectedPlayer player, PluginMessage packet) {
-    // usually nothing to do.
-  }
-
-  /**
-   * Actions to occur after the handled packet is sent on to the
-   * server.
-   *
-   * @param player The player
-   * @param handler The {@link ClientPlaySessionHandler} to act with
-   */
-  void postWrite(ConnectedPlayer player, ClientPlaySessionHandler handler) {
-    // usually nothing to do
   }
 
   /**

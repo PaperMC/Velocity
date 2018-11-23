@@ -57,7 +57,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
   private final VelocityServer server;
-  private ConnectionType connectionType = ConnectionType.UNDETERMINED;
+  private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
 
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;

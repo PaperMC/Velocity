@@ -13,30 +13,6 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 public interface BackendConnectionPhase {
 
   /**
-   * The backend connection is vanilla.
-   */
-  BackendConnectionPhase VANILLA = new BackendConnectionPhase() {};
-
-  /**
-   * The backend connection is unknown at this time.
-   */
-  BackendConnectionPhase UNKNOWN = new BackendConnectionPhase() {
-    @Override
-    public boolean consideredComplete() {
-      return false;
-    }
-
-    @Override
-    public boolean handle(VelocityServerConnection serverConn,
-                          ConnectedPlayer player,
-                          PluginMessage message) {
-      // The connection may be legacy forge. If so, the Forge handler will deal with this
-      // for us. Otherwise, we have nothing to do.
-      return LegacyForgeHandshakeBackendPhase.NOT_STARTED.handle(serverConn, player, message);
-    }
-  };
-
-  /**
    * Handle a plugin message in the context of
    * this phase.
    *

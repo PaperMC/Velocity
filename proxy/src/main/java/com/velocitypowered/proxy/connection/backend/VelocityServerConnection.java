@@ -17,7 +17,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
-import com.velocitypowered.proxy.connection.ConnectionType;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -47,7 +47,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
   private boolean gracefulDisconnect = false;
-  private BackendConnectionPhase connectionPhase = BackendConnectionPhase.UNKNOWN;
+  private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
 
@@ -138,7 +138,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setProtocolVersion(proxyPlayer.getConnection().getNextProtocolVersion());
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getConnection().getType() == ConnectionType.LEGACY_FORGE) {
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
@@ -204,11 +204,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   public void completeJoin() {
-    if (connectionPhase == BackendConnectionPhase.UNKNOWN) {
+    if (connectionPhase == BackendConnectionPhases.UNKNOWN) {
       // Now we know
-      connectionPhase = BackendConnectionPhase.VANILLA;
+      connectionPhase = BackendConnectionPhases.VANILLA;
       if (connection != null) {
-        connection.setType(ConnectionType.VANILLA);
+        connection.setType(ConnectionTypes.VANILLA);
       }
     }
   }

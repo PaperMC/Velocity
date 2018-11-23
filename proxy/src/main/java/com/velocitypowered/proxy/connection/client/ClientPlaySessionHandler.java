@@ -3,13 +3,13 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -158,7 +158,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
-      if (PluginMessageUtil.isRegister(packet)) {
+      if (backendConn.getState() != StateRegistry.PLAY) {
+        logger.warn("Plugin message was sent while the backend was in PLAY. Channel: {}. Packet discarded.");
+      } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> actuallyRegistered = new ArrayList<>();
         List<String> channels = PluginMessageUtil.getChannels(packet);
         for (String channel : channels) {

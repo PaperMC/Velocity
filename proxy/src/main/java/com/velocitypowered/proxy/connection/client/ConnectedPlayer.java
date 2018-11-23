@@ -66,8 +66,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer(
       c -> "", TranslatableComponent::key);
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
-  private static final Random RANDOM = new Random();
 
+  private static final ThreadLocal<Random> threadLocalRandom = ThreadLocal.withInitial(Random::new);
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
   private final MinecraftConnection connection;
@@ -479,7 +479,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
       KeepAlive keepAlive = new KeepAlive();
-      keepAlive.setRandomId(RANDOM.nextLong());
+      keepAlive.setRandomId(threadLocalRandom.get().nextLong());
       connection.write(keepAlive);
     }
   }

@@ -4,33 +4,11 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConnectionType;
-import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
  * The types of connection that may be selected.
  */
 public interface ConnectionType {
-
-  /**
-   * Indicates that the connection has yet to reach the
-   * point where we have a definitive answer as to what
-   * type of connection we have.
-   */
-  ConnectionType UNDETERMINED =
-      new ConnectionTypeImpl(ClientConnectionPhase.VANILLA, BackendConnectionPhase.UNKNOWN);
-
-  /**
-   * Indicates that the connection is a Vanilla connection.
-   */
-  ConnectionType VANILLA =
-      new ConnectionTypeImpl(ClientConnectionPhase.VANILLA, BackendConnectionPhase.VANILLA);
-
-  /**
-   * Indicates that the connection is a 1.8-1.12 Forge
-   * connection.
-   */
-  ConnectionType LEGACY_FORGE = new LegacyForgeConnectionType();
 
   /**
    * The initial {@link ClientConnectionPhase} for this connection type.

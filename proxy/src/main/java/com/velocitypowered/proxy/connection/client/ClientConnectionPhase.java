@@ -12,11 +12,6 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 public interface ClientConnectionPhase {
 
   /**
-   * The client is connecting with a vanilla client (as far as we can tell).
-   */
-  ClientConnectionPhase VANILLA = new ClientConnectionPhase() {};
-
-  /**
    * Handle a plugin message in the context of
    * this phase.
    *
