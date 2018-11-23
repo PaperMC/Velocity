@@ -92,7 +92,7 @@ public class VelocityCommand implements Command {
   @Override
   public boolean hasPermission(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
-      return true;
+      return subcommands.values().stream().anyMatch(e -> e.hasPermission(source, args));
     }
     Command command = subcommands.get(args[0].toLowerCase(Locale.US));
     if (command == null) {
@@ -113,6 +113,11 @@ public class VelocityCommand implements Command {
 
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
+      if (args.length != 0) {
+        source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
+        return;
+      }
+
       ProxyVersion version = server.getVersion();
 
       TextComponent velocity = TextComponent.builder(version.getName() + " ")
