@@ -1,14 +1,13 @@
 package com.velocitypowered.proxy;
 
+import java.io.IOException;
+import java.util.Arrays;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 public final class ProxyOptions {
   private static final Logger logger = LogManager.getLogger(ProxyOptions.class);
@@ -18,8 +17,11 @@ public final class ProxyOptions {
   ProxyOptions(final String[] args) {
     final OptionParser parser = new OptionParser();
 
-    final OptionSpec<Void> help = parser.acceptsAll(Arrays.asList("h", "help"), "Print help").forHelp();
-    final OptionSpec<Integer> port = parser.acceptsAll(Arrays.asList("p", "port"), "Specify the bind port to be used. The configuration bind port will be ignored.").withRequiredArg().ofType(Integer.class);
+    final OptionSpec<Void> help = parser.acceptsAll(Arrays.asList("h", "help"), "Print help")
+        .forHelp();
+    final OptionSpec<Integer> port = parser.acceptsAll(Arrays.asList("p", "port"),
+        "Specify the bind port to be used. The configuration bind port will be ignored.")
+        .withRequiredArg().ofType(Integer.class);
     final OptionSet set = parser.parse(args);
 
     this.help = set.has(help);
