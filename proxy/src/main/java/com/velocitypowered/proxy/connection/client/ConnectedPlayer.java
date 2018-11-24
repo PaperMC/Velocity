@@ -67,7 +67,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       c -> "", TranslatableComponent::key);
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
-  private static final ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
   private final MinecraftConnection connection;
@@ -479,7 +478,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
       KeepAlive keepAlive = new KeepAlive();
-      keepAlive.setRandomId(threadLocalRandom.nextLong());
+      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
   }
