@@ -314,11 +314,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
+      joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
       player.getConnection().delayedWrite(joinGame);
-      int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-      player.getConnection().delayedWrite(
-          new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(),
-              joinGame.getLevelType()));
       player.getConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
