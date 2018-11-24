@@ -50,6 +50,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
+  private boolean hasCompletedJoin = false;
 
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
       ConnectedPlayer proxyPlayer, VelocityServer server) {
@@ -204,11 +205,14 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   public void completeJoin() {
-    if (connectionPhase == BackendConnectionPhases.UNKNOWN) {
-      // Now we know
-      connectionPhase = BackendConnectionPhases.VANILLA;
-      if (connection != null) {
-        connection.setType(ConnectionTypes.VANILLA);
+    if (!hasCompletedJoin) {
+      hasCompletedJoin = true;
+      if (connectionPhase == BackendConnectionPhases.UNKNOWN) {
+        // Now we know
+        connectionPhase = BackendConnectionPhases.VANILLA;
+        if (connection != null) {
+          connection.setType(ConnectionTypes.VANILLA);
+        }
       }
     }
   }
@@ -264,4 +268,15 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   public void setConnectionPhase(BackendConnectionPhase connectionPhase) {
     this.connectionPhase = connectionPhase;
   }
+
+  /**
+   * Gets whether the {@link com.velocitypowered.proxy.protocol.packet.JoinGame}
+   * packet has been sent by this server.
+   *
+   * @return Whether the join has been completed.
+   */
+  public boolean hasCompletedJoin() {
+    return hasCompletedJoin;
+  }
+
 }

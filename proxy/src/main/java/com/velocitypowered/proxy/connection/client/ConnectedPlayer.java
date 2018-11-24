@@ -46,10 +46,10 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -67,7 +67,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       c -> "", TranslatableComponent::key);
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
-  private static final ThreadLocal<Random> threadLocalRandom = ThreadLocal.withInitial(Random::new);
+  private static final ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
   private final MinecraftConnection connection;
@@ -479,7 +479,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
       KeepAlive keepAlive = new KeepAlive();
-      keepAlive.setRandomId(threadLocalRandom.get().nextLong());
+      keepAlive.setRandomId(threadLocalRandom.nextLong());
       connection.write(keepAlive);
     }
   }
