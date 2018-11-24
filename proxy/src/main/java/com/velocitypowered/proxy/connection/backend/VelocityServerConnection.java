@@ -46,11 +46,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private final ConnectedPlayer proxyPlayer;
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
+  private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
-  private boolean hasCompletedJoin = false;
 
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
       ConnectedPlayer proxyPlayer, VelocityServer server) {
