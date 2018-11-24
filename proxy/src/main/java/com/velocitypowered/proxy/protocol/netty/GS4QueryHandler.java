@@ -264,6 +264,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         return;
       }
 
+      writeString(buf, "plugins");
+      
       StringBuilder pluginsString = new StringBuilder();
       pluginsString.append(serverVersion).append(':').append(' ');
       Iterator<QueryResponse.PluginInformation> iterator = plugins.iterator();
