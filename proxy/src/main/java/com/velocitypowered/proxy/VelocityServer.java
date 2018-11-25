@@ -74,24 +74,23 @@ public class VelocityServer implements ProxyServer {
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
 
-  private ConnectionManager cm;
+  private final ConnectionManager cm;
   private final ProxyOptions options;
-  private @MonotonicNonNull ConnectionManager cm;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
-  private ServerMap servers;
+  private final ServerMap servers;
   private final VelocityCommandManager commandManager = new VelocityCommandManager();
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
-  private VelocityPluginManager pluginManager;
+  private final VelocityPluginManager pluginManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-  private VelocityConsole console;
+  private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
-  private VelocityEventManager eventManager;
-  private VelocityScheduler scheduler;
+  private final VelocityEventManager eventManager;
+  private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
   VelocityServer(final ProxyOptions options) {
