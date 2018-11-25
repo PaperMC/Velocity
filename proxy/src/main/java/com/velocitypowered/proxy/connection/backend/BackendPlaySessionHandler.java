@@ -160,8 +160,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect()) {
-      serverConn.getPlayer().handleConnectionException(serverConn.getServer(), Disconnect.create(
-          ConnectionMessages.UNEXPECTED_DISCONNECT));
+      serverConn.getPlayer().disconnect(ConnectionMessages.UNEXPECTED_DISCONNECT);
     }
   }
 
