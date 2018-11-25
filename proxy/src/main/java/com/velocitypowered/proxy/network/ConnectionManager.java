@@ -94,7 +94,7 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout());
   }
 
-  public void shutdown(InetSocketAddress oldBind) {
+  public void close(InetSocketAddress oldBind) {
     Channel serverChannel = endpoints.remove(oldBind);
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
     LOGGER.info("Closing endpoint {}", serverChannel.localAddress());

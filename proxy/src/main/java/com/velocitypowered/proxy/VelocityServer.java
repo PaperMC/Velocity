@@ -3,7 +3,6 @@ package com.velocitypowered.proxy;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
@@ -57,7 +56,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
@@ -299,12 +297,12 @@ public class VelocityServer implements ProxyServer {
     // If we have a new bind address, bind to it
     if (!configuration.getBind().equals(newConfiguration.getBind())) {
       this.cm.bind(newConfiguration.getBind());
-      this.cm.shutdown(configuration.getBind());
+      this.cm.close(configuration.getBind());
     }
 
     if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
         || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
-      this.cm.shutdown(new InetSocketAddress(
+      this.cm.close(new InetSocketAddress(
           configuration.getBind().getHostString(), configuration.getQueryPort()));
     }
 
