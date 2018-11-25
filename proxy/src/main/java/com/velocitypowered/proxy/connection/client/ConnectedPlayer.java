@@ -286,6 +286,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connectedServer;
   }
 
+  public void resetInFlightConnection() {
+    connectionInFlight = null;
+  }
+
   public void handleConnectionException(RegisteredServer server, Throwable throwable) {
     if (throwable == null) {
       throw new NullPointerException("throwable");
@@ -481,7 +485,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
       Preconditions
           .checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
-      if (connectionInFlight != null) {
+      if (connectionInFlight != null || (connectedServer != null
+          && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
       if (connectedServer != null && connectedServer.getServer().equals(server)) {
@@ -516,8 +521,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               return CompletableFuture
                   .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
             }
-            return new VelocityServerConnection((VelocityRegisteredServer) rs,
-                ConnectedPlayer.this, server).connect();
+
+            VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
+            VelocityServerConnection con = new VelocityServerConnection(vrs, ConnectedPlayer.this,
+                server);
+            connectionInFlight = con;
+            return con.connect();
           });
     }
 

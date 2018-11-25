@@ -38,6 +38,7 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
 
+    compile 'net.sf.jopt-simple:jopt-simple:5.0.4' // command-line options
     compile 'net.minecrell:terminalconsoleappender:1.1.1'
     runtime 'net.java.dev.jna:jna:4.5.2' // Needed for JLine
     runtime 'com.lmax:disruptor:3.4.2' // Async loggers

@@ -75,6 +75,8 @@ public class VelocityServer implements ProxyServer {
       .create();
 
   private ConnectionManager cm;
+  private final ProxyOptions options;
+  private @MonotonicNonNull ConnectionManager cm;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
@@ -92,13 +94,14 @@ public class VelocityServer implements ProxyServer {
   private VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
-  VelocityServer() {
+  VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
+    this.options = options;
   }
 
   public KeyPair getServerKeyPair() {
@@ -188,7 +191,13 @@ public class VelocityServer implements ProxyServer {
     // init console permissions after plugins are loaded
     console.setupPermissions();
 
-    this.cm.bind(configuration.getBind());
+    final Integer port = this.options.getPort();
+    if (port != null) {
+      logger.debug("Overriding bind port to {} from command line option", port);
+      this.cm.bind(new InetSocketAddress(configuration.getBind().getHostString(), port));
+    } else {
+      this.cm.bind(configuration.getBind());
+    }
 
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());

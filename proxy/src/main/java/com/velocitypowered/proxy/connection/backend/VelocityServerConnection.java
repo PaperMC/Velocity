@@ -94,6 +94,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 new LoginSessionHandler(server, VelocityServerConnection.this, result));
             startHandshake();
           } else {
+            // We need to remember to reset the in-flight connection to allow connect() to work
+            // properly.
+            proxyPlayer.resetInFlightConnection();
             result.completeExceptionally(future.cause());
           }
         });
