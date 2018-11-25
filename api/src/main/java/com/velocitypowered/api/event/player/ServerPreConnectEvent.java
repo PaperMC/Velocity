@@ -30,6 +30,10 @@ public final class ServerPreConnectEvent implements
     this.result = ServerResult.allowed(originalServer);
   }
 
+  /**
+   * Returns the player connecting to the server.
+   * @return the player connecting to the server
+   */
   public Player getPlayer() {
     return player;
   }
@@ -44,6 +48,12 @@ public final class ServerPreConnectEvent implements
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Returns the server that the player originally tried to connect to. To get the server the
+   * player will connect to, see the {@link ServerResult} of this event. To get the server the
+   * player is currently on when this event is fired, use {@link Player#getCurrentServer()}.
+   * @return the server that the player originally tried to connect to
+   */
   public RegisteredServer getOriginalServer() {
     return originalServer;
   }
