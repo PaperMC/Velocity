@@ -5,10 +5,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.ResultedEvent;
 
 import java.util.Arrays;
-import java.util.Optional;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.optional.qual.MaybePresent;
 
 /**
  * This event is fired when a player runs a command.
@@ -71,17 +67,13 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEv
    */
   public static final class CommandResult implements ResultedEvent.Result {
 
-    private static final CommandResult ALLOWED = new CommandResult(true, null, null);
-    private static final CommandResult DENIED = new CommandResult(false, null, null);
+    private static final CommandResult ALLOWED = new CommandResult(true);
+    private static final CommandResult DENIED = new CommandResult(false);
 
-    private @Nullable String command;
-    private @Nullable String[] args;
     private final boolean status;
 
-    private CommandResult(boolean status, @Nullable String command, @Nullable @MaybePresent String[] args) {
+    private CommandResult(boolean status) {
       this.status = status;
-      this.command = command;
-      this.args = args;
     }
 
     @Override
@@ -110,14 +102,6 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandExecuteEv
      */
     public static CommandResult denied() {
       return DENIED;
-    }
-
-    public Optional<String> getCommand() {
-      return Optional.ofNullable(command);
-    }
-
-    public Optional<String[]> getCommandArgs() {
-      return Optional.ofNullable(args);
     }
 
   }
