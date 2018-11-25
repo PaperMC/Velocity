@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     int offersAvailable = ProtocolUtils.readVarInt(buf);
     for (int i = 0; i < offersAvailable; i++) {
       offers.add(ProtocolUtils.readString(buf));
@@ -32,7 +32,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, offers.size());
     for (String offer : offers) {
       ProtocolUtils.writeString(buf, offer);

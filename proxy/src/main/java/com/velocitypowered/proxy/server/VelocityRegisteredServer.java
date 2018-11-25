@@ -18,7 +18,7 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -74,9 +74,9 @@ public class VelocityRegisteredServer implements RegisteredServer {
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
+                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
                 .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
+                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
             MinecraftConnection connection = new MinecraftConnection(ch, server);
             connection.setState(StateRegistry.HANDSHAKE);

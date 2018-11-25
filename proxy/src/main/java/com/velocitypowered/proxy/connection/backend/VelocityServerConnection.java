@@ -14,12 +14,13 @@ import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -69,9 +70,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolConstants.Direction.CLIENTBOUND))
+                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
                 .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolConstants.Direction.SERVERBOUND));
+                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
             MinecraftConnection mc = new MinecraftConnection(ch, server);
             mc.setState(StateRegistry.HANDSHAKE);
@@ -140,7 +141,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
     mc.write(handshake);
 
-    int protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
+    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
     mc.write(new ServerLogin(proxyPlayer.getUsername()));

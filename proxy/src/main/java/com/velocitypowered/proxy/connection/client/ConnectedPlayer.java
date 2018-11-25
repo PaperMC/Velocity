@@ -22,6 +22,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
@@ -32,7 +33,6 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -164,7 +164,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public int getProtocolVersion() {
+  public ProtocolVersion getProtocolVersion() {
     return connection.getProtocolVersion();
   }
 
@@ -176,7 +176,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     byte pos = (byte) position.ordinal();
     String json;
     if (position == MessagePosition.ACTION_BAR) {
-      if (getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_11) {
+      if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
         // We can use the title packet instead.
         TitlePacket pkt = new TitlePacket();
         pkt.setAction(TitlePacket.SET_ACTION_BAR);

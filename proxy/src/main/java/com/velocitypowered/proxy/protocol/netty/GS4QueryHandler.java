@@ -10,8 +10,8 @@ import com.velocitypowered.api.event.query.ProxyQueryEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -73,7 +73,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     return QueryResponse.builder()
         .hostname(ComponentSerializers.PLAIN
             .serialize(server.getConfiguration().getMotdComponent()))
-        .gameVersion(ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING)
+        .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
         .maxPlayers(server.getConfiguration().getShowMaxPlayers())

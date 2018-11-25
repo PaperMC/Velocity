@@ -1,23 +1,26 @@
 package com.velocitypowered.proxy.protocol;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.Direction;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_10;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_11;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_11_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_2;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_13;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_13_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_13_2;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_8;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9_1;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9_2;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_9_4;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINIMUM_GENERIC_VERSION;
+import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_10;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_11;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_11_1;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_12;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_12_1;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_12_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13_1;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_1;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
+import static com.velocitypowered.api.network.ProtocolVersion.MINIMUM_VERSION;
 
-import com.google.common.primitives.ImmutableIntArray;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -46,8 +49,10 @@ import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.util.Objects;
+
+import java.util.*;
 import java.util.function.Supplier;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum StateRegistry {
@@ -195,38 +200,40 @@ public enum StateRegistry {
 
   public static class PacketRegistry {
 
-    private static final IntObjectMap<ImmutableIntArray> LINKED_PROTOCOL_VERSIONS = new IntObjectHashMap<>();
+    private static final EnumMap<ProtocolVersion, ImmutableList<ProtocolVersion>> LINKED_PROTOCOL_VERSIONS = new EnumMap(ProtocolVersion.class);
 
     static {
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9,
-          ImmutableIntArray.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2, MINECRAFT_1_9_4));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4,
-          ImmutableIntArray.of(MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableIntArray.of(MINECRAFT_1_12_1));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableIntArray.of(MINECRAFT_1_12_2));
-      LINKED_PROTOCOL_VERSIONS
-          .put(MINECRAFT_1_13, ImmutableIntArray.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, ImmutableList.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2, MINECRAFT_1_9_4));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableList.of(MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableList.of(MINECRAFT_1_12_1));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableList.of(MINECRAFT_1_12_2));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableList.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
     }
 
     private final Direction direction;
-    private final IntObjectMap<ProtocolVersion> versions = new IntObjectHashMap<>(16);
+    private final Map<ProtocolVersion, ProtocolRegistry> versions;
     private boolean fallback = true;
 
     PacketRegistry(Direction direction) {
       this.direction = direction;
-      ProtocolConstants.SUPPORTED_VERSIONS
-          .forEach(version -> versions.put(version, new ProtocolVersion(version)));
+
+      EnumMap<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap(ProtocolVersion.class);
+      for (ProtocolVersion version : ProtocolVersion.values()) {
+        mutableVersions.put(version, new ProtocolRegistry(version));
+      }
+
+      this.versions = Collections.unmodifiableMap(mutableVersions);
     }
 
-    public ProtocolVersion getVersion(final int version) {
-      ProtocolVersion result = versions.get(version);
-      if (result == null) {
+    public ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {
+      ProtocolRegistry registry = versions.get(version);
+      if (registry == null) {
         if (fallback) {
-          return getVersion(MINIMUM_GENERIC_VERSION);
+          return getProtocolRegistry(MINIMUM_VERSION);
         }
         throw new IllegalArgumentException("Could not find data for protocol version " + version);
       }
-      return result;
+      return registry;
     }
 
     public <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
@@ -236,20 +243,20 @@ public enum StateRegistry {
       }
 
       for (final PacketMapping mapping : mappings) {
-        ProtocolVersion version = this.versions.get(mapping.protocolVersion);
-        if (version == null) {
+        ProtocolRegistry registry = this.versions.get(mapping.protocolVersion);
+        if (registry == null) {
           throw new IllegalArgumentException("Unknown protocol version " + mapping.protocolVersion);
         }
         if (!mapping.encodeOnly) {
-          version.packetIdToSupplier.put(mapping.id, packetSupplier);
+          registry.packetIdToSupplier.put(mapping.id, packetSupplier);
         }
-        version.packetClassToId.put(clazz, mapping.id);
+        registry.packetClassToId.put(clazz, mapping.id);
 
-        ImmutableIntArray linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
+        ImmutableList<ProtocolVersion> linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
         if (linked != null) {
           links:
-          for (int i = 0; i < linked.length(); i++) {
-            int linkedVersion = linked.get(i);
+          for (int i = 0; i < linked.size(); i++) {
+            ProtocolVersion linkedVersion = linked.get(i);
             // Make sure that later mappings override this one.
             for (PacketMapping m : mappings) {
               if (linkedVersion == m.protocolVersion) {
@@ -262,15 +269,15 @@ public enum StateRegistry {
       }
     }
 
-    public class ProtocolVersion {
+    public class ProtocolRegistry {
 
-      public final int version;
+      public final ProtocolVersion version;
       final IntObjectMap<Supplier<? extends MinecraftPacket>> packetIdToSupplier =
           new IntObjectHashMap<>(16, 0.5f);
       final Object2IntMap<Class<? extends MinecraftPacket>> packetClassToId =
           new Object2IntOpenHashMap<>(16, 0.5f);
 
-      ProtocolVersion(final int version) {
+      ProtocolRegistry(final ProtocolVersion version) {
         this.version = version;
         this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
       }
@@ -299,10 +306,10 @@ public enum StateRegistry {
   public static class PacketMapping {
 
     private final int id;
-    private final int protocolVersion;
+    private final ProtocolVersion protocolVersion;
     private final boolean encodeOnly;
 
-    public PacketMapping(int id, int protocolVersion, boolean packetDecoding) {
+    public PacketMapping(int id, ProtocolVersion protocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.encodeOnly = packetDecoding;
@@ -345,7 +352,7 @@ public enum StateRegistry {
    * @param encodeOnly When true packet decoding will be disabled
    * @return PacketMapping with the provided arguments
    */
-  private static PacketMapping map(int id, int version, boolean encodeOnly) {
+  private static PacketMapping map(int id, ProtocolVersion version, boolean encodeOnly) {
     return new PacketMapping(id, version, encodeOnly);
   }
 

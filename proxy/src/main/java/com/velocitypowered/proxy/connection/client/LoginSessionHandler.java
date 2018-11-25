@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.*;
+import static com.velocitypowered.api.network.ProtocolVersion.*;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -15,10 +15,12 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -73,7 +75,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerLogin packet) {
     this.login = packet;
-    if (inbound.getProtocolVersion() >= MINECRAFT_1_13) {
+    if (inbound.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
       playerInfoId = ThreadLocalRandom.current().nextInt();
       inbound.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
           Unpooled.EMPTY_BUFFER));
