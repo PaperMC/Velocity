@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 
@@ -53,6 +54,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+  private static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
+      new GameProfile.Property("forgeClient", "true", "");
 
   private final VelocityServer server;
   private final MinecraftConnection inbound;
@@ -211,9 +214,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void initializePlayer(GameProfile profile, boolean onlineMode) {
-    // Some connection types may need to alter the game profile.
-    profile = inbound.getType().addGameProfileTokensIfRequired(profile,
-        server.getConfiguration().getPlayerInfoForwardingMode());
+    if (inbound.isLegacyForge() && server.getConfiguration().getPlayerInfoForwardingMode()
+        == PlayerInfoForwarding.LEGACY) {
+      // We can't forward the FML token to the server when we are running in legacy forwarding mode,
+      // since both use the "hostname" field in the handshake. We add a special property to the
+      // profile instead, which will be ignored by non-Forge servers and can be intercepted by a
+      // Forge coremod, such as SpongeForge.
+      profile = profile.addProperty(IS_FORGE_CLIENT_PROPERTY);
+    }
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile,
         onlineMode);
 

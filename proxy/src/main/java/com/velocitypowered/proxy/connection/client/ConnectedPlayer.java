@@ -30,13 +30,12 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -49,7 +48,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -81,7 +79,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable ModInfo modInfo;
   private final VelocityTabList tabList;
   private final VelocityServer server;
-  private ClientConnectionPhase connectionPhase;
 
   @MonotonicNonNull
   private List<String> serversToTry = null;
@@ -94,7 +91,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connection = connection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
-    this.connectionPhase = connection.getType().getInitialClientPhase();
   }
 
   @Override
@@ -143,7 +139,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(modInfo);
   }
 
-  public void setModInfo(ModInfo modInfo) {
+  void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
     server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
   }
@@ -413,7 +409,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   public void sendLegacyForgeHandshakeResetPacket() {
-    connectionPhase.resetConnectionPhase(this);
+    if (connection.canSendLegacyFmlResetPacket()) {
+      connection.write(ForgeConstants.resetPacket());
+      connection.setCanSendLegacyFmlResetPacket(false);
+    }
   }
 
   private MinecraftConnection ensureBackendConnection() {
@@ -468,39 +467,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
     ensureBackendConnection().write(Chat.createServerbound(input));
-  }
-
-  /**
-   * Sends a {@link KeepAlive} packet to the player with a random ID.
-   * The response will be ignored by Velocity as it will not match the
-   * ID last sent by the server.
-   */
-  public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
-      KeepAlive keepAlive = new KeepAlive();
-      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
-      connection.write(keepAlive);
-    }
-  }
-
-  /**
-   * Gets the current "phase" of the connection, mostly used for tracking
-   * modded negotiation for legacy forge servers and provides methods
-   * for performing phase specific actions.
-   *
-   * @return The {@link ClientConnectionPhase}
-   */
-  public ClientConnectionPhase getPhase() {
-    return connectionPhase;
-  }
-
-  /**
-   * Sets the current "phase" of the connection. See {@link #getPhase()}
-   *
-   * @param connectionPhase The {@link ClientConnectionPhase}
-   */
-  public void setPhase(ClientConnectionPhase connectionPhase) {
-    this.connectionPhase = connectionPhase;
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
