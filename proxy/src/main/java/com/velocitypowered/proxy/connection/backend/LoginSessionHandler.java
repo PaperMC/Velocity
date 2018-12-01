@@ -117,15 +117,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       serverConn.getPlayer().getConnection()
           .setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
     } else {
-      // For Legacy Forge
-      existingConnection.getPhase().onDepartForNewServer(serverConn, serverConn.getPlayer());
+      // If the server we are departing is modded, we must always reset the client's handshake.
+      if (existingConnection.isLegacyForge()) {
+        serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
+      }
 
       // Shut down the existing server connection.
       serverConn.getPlayer().setConnectedServer(null);
       existingConnection.disconnect();
-
-      // Send keep alive to try to avoid timeouts
-      serverConn.getPlayer().sendKeepAlive();
     }
 
     smc.getChannel().config().setAutoRead(false);
