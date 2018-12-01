@@ -386,7 +386,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   public void handleTabCompleteResponse(TabCompleteResponse response) {
     if (outstandingTabComplete != null) {
-      if (!outstandingTabComplete.isAssumeCommand()) {
+      if (!outstandingTabComplete.isAssumeCommand()
+          && outstandingTabComplete.getCommand().startsWith("/")) {
         String command = outstandingTabComplete.getCommand().substring(1);
         try {
           response.getOffers().addAll(server.getCommandManager().offerSuggestions(player, command));
