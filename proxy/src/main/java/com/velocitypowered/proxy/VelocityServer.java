@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -40,17 +41,20 @@ import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -70,26 +74,32 @@ public class VelocityServer implements ProxyServer {
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
 
+  private final ConnectionManager cm;
   private final ProxyOptions options;
-  private @MonotonicNonNull ConnectionManager cm;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
-  private @MonotonicNonNull ServerMap servers;
+  private final ServerMap servers;
   private final VelocityCommandManager commandManager = new VelocityCommandManager();
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
-  private @MonotonicNonNull VelocityPluginManager pluginManager;
+  private final VelocityPluginManager pluginManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
-  private @MonotonicNonNull VelocityConsole console;
+  private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
-  private @MonotonicNonNull VelocityEventManager eventManager;
-  private @MonotonicNonNull VelocityScheduler scheduler;
+  private final VelocityEventManager eventManager;
+  private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
-  public VelocityServer(final ProxyOptions options) {
+  VelocityServer(final ProxyOptions options) {
+    pluginManager = new VelocityPluginManager(this);
+    eventManager = new VelocityEventManager(pluginManager);
+    scheduler = new VelocityScheduler(pluginManager);
+    console = new VelocityConsole(this);
+    cm = new ConnectionManager(this);
+    servers = new ServerMap(this);
     this.options = options;
   }
 
@@ -138,12 +148,6 @@ public class VelocityServer implements ProxyServer {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
 
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
-    pluginManager = new VelocityPluginManager(this);
-    eventManager = new VelocityEventManager(pluginManager);
-    scheduler = new VelocityScheduler(pluginManager);
-    console = new VelocityConsole(this);
-    cm = new ConnectionManager(this);
-    servers = new ServerMap(this);
 
     cm.logChannelInformation();
 
@@ -233,14 +237,92 @@ public class VelocityServer implements ProxyServer {
   }
 
   public Bootstrap initializeGenericBootstrap() {
-    if (cm == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return this.cm.createWorker();
   }
 
   public boolean isShutdown() {
     return shutdown;
+  }
+
+  public boolean reloadConfiguration() throws IOException {
+    Path configPath = Paths.get("velocity.toml");
+    VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
+
+    if (!newConfiguration.validate()) {
+      return false;
+    }
+
+    // Re-register servers. If a server is being replaced, make sure to note what players need to
+    // move back to a fallback server.
+    Collection<ConnectedPlayer> evacuate = new ArrayList<>();
+    for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
+      ServerInfo newInfo =
+          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
+      if (!rs.isPresent()) {
+        servers.register(newInfo);
+      } else if (!rs.get().getServerInfo().equals(newInfo)) {
+        for (Player player : rs.get().getPlayersConnected()) {
+          if (!(player instanceof ConnectedPlayer)) {
+            throw new IllegalStateException("ConnectedPlayer not found for player " + player
+                + " in server " + rs.get().getServerInfo().getName());
+          }
+          evacuate.add((ConnectedPlayer) player);
+        }
+        servers.unregister(rs.get().getServerInfo());
+        servers.register(newInfo);
+      }
+    }
+
+    // If we had any players to evacuate, let's move them now. Wait until they are all moved off.
+    if (!evacuate.isEmpty()) {
+      CountDownLatch latch = new CountDownLatch(evacuate.size());
+      for (ConnectedPlayer player : evacuate) {
+        Optional<RegisteredServer> next = player.getNextServerToTry();
+        if (next.isPresent()) {
+          player.createConnectionRequest(next.get()).connectWithIndication()
+              .whenComplete((success, ex) -> {
+                if (ex != null || success == null || !success) {
+                  player.disconnect(TextComponent.of("Your server has been changed, but we could "
+                      + "not move you to any fallback servers."));
+                }
+                latch.countDown();
+              });
+        } else {
+          latch.countDown();
+          player.disconnect(TextComponent.of("Your server has been changed, but we could "
+              + "not move you to any fallback servers."));
+        }
+      }
+      try {
+        latch.await();
+      } catch (InterruptedException e) {
+        logger.error("Interrupted whilst moving players", e);
+        Thread.currentThread().interrupt();
+      }
+    }
+
+    // If we have a new bind address, bind to it
+    if (!configuration.getBind().equals(newConfiguration.getBind())) {
+      this.cm.bind(newConfiguration.getBind());
+      this.cm.close(configuration.getBind());
+    }
+
+    if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
+        || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
+      this.cm.close(new InetSocketAddress(
+          configuration.getBind().getHostString(), configuration.getQueryPort()));
+    }
+
+    if (newConfiguration.isQueryEnabled()) {
+      this.cm.queryBind(newConfiguration.getBind().getHostString(),
+          newConfiguration.getQueryPort());
+    }
+
+    ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
+    this.configuration = newConfiguration;
+    eventManager.fireAndForget(new ProxyReloadEvent());
+    return true;
   }
 
   public void shutdown(boolean explicitExit) {
@@ -340,66 +422,41 @@ public class VelocityServer implements ProxyServer {
 
   @Override
   public Optional<RegisteredServer> getServer(String name) {
-    Preconditions.checkNotNull(name, "name");
-    if (servers == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return servers.getServer(name);
   }
 
   @Override
   public Collection<RegisteredServer> getAllServers() {
-    if (servers == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return servers.getAllServers();
   }
 
   @Override
   public RegisteredServer registerServer(ServerInfo server) {
-    if (servers == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return servers.register(server);
   }
 
   @Override
   public void unregisterServer(ServerInfo server) {
-    if (servers == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     servers.unregister(server);
   }
 
   @Override
   public VelocityConsole getConsoleCommandSource() {
-    if (console == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return console;
   }
 
   @Override
   public PluginManager getPluginManager() {
-    if (pluginManager == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return pluginManager;
   }
 
   @Override
   public EventManager getEventManager() {
-    if (eventManager == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return eventManager;
   }
 
   @Override
   public VelocityScheduler getScheduler() {
-    if (scheduler == null) {
-      throw new IllegalStateException("Server did not initialize properly.");
-    }
     return scheduler;
   }
 
