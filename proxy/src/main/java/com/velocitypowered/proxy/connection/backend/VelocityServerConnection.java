@@ -17,10 +17,12 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -44,9 +46,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private final ConnectedPlayer proxyPlayer;
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
-  private boolean legacyForge = false;
   private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
+  private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
 
@@ -93,6 +95,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             // Kick off the connection process
             connection.setSessionHandler(
                 new LoginSessionHandler(server, VelocityServerConnection.this, result));
+
+            // Set the connection phase, which may, for future forge (or whatever), be determined
+            // at this point already
+            connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();
           } else {
             // We need to remember to reset the in-flight connection to allow connect() to work
@@ -133,8 +139,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setProtocolVersion(proxyPlayer.getConnection().getNextProtocolVersion());
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getConnection().isLegacyForge()) {
-      handshake.setServerAddress(handshake.getServerAddress() + "\0FML\0");
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+      handshake.setServerAddress(handshake.getServerAddress() + LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
     }
@@ -198,20 +204,17 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return true;
   }
 
-  public boolean isLegacyForge() {
-    return legacyForge;
-  }
-
-  void setLegacyForge(boolean modded) {
-    legacyForge = modded;
-  }
-
-  public boolean hasCompletedJoin() {
-    return hasCompletedJoin;
-  }
-
-  public void setHasCompletedJoin(boolean hasCompletedJoin) {
-    this.hasCompletedJoin = hasCompletedJoin;
+  public void completeJoin() {
+    if (!hasCompletedJoin) {
+      hasCompletedJoin = true;
+      if (connectionPhase == BackendConnectionPhases.UNKNOWN) {
+        // Now we know
+        connectionPhase = BackendConnectionPhases.VANILLA;
+        if (connection != null) {
+          connection.setType(ConnectionTypes.VANILLA);
+        }
+      }
+    }
   }
 
   boolean isGracefulDisconnect() {
@@ -245,4 +248,35 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return connection != null && !connection.isClosed() && !gracefulDisconnect
         && proxyPlayer.isActive();
   }
+
+  /**
+   * Gets the current "phase" of the connection, mostly used for tracking
+   * modded negotiation for legacy forge servers and provides methods
+   * for performing phase specific actions.
+   *
+   * @return The {@link BackendConnectionPhase}
+   */
+  public BackendConnectionPhase getPhase() {
+    return connectionPhase;
+  }
+
+  /**
+   * Sets the current "phase" of the connection. See {@link #getPhase()}
+   *
+   * @param connectionPhase The {@link BackendConnectionPhase}
+   */
+  public void setConnectionPhase(BackendConnectionPhase connectionPhase) {
+    this.connectionPhase = connectionPhase;
+  }
+
+  /**
+   * Gets whether the {@link com.velocitypowered.proxy.protocol.packet.JoinGame}
+   * packet has been sent by this server.
+   *
+   * @return Whether the join has been completed.
+   */
+  public boolean hasCompletedJoin() {
+    return hasCompletedJoin;
+  }
+
 }
