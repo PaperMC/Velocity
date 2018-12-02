@@ -233,7 +233,7 @@ public class VelocityServer implements ProxyServer {
           eventManager.register(instance.get(), instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
-              plugin.getDescription().getName(), e);
+              plugin.getDescription().getName().orElse(plugin.getDescription().getId()), e);
         }
       }
     }
