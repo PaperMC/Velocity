@@ -225,11 +225,16 @@ public class VelocityServer implements ProxyServer {
       logger.error("Couldn't load plugins", e);
     }
 
-    // Register the plugin main classes so that we may proceed with firing the proxy initialize event
+    // Register the plugin main classes so that we can fire the proxy initialize event
     for (PluginContainer plugin : pluginManager.getPlugins()) {
       Optional<?> instance = plugin.getInstance();
       if (instance.isPresent()) {
-        eventManager.register(instance.get(), instance.get());
+        try {
+          eventManager.register(instance.get(), instance.get());
+        } catch (Exception e) {
+          logger.error("Unable to register plugin listener for {}",
+              plugin.getDescription().getName(), e);
+        }
       }
     }
 
