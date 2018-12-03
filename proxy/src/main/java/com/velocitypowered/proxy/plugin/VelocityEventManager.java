@@ -123,14 +123,18 @@ public class VelocityEventManager implements EventManager {
     return eventFuture;
   }
 
+  private void unregisterHandler(EventHandler<?> handler) {
+    bus.unregister(s -> s instanceof KyoriToVelocityHandler &&
+        ((KyoriToVelocityHandler<?>) s).handler == handler);
+  }
+
   @Override
   public void unregisterListeners(Object plugin) {
     ensurePlugin(plugin);
     Collection<Object> listeners = registeredListenersByPlugin.removeAll(plugin);
     listeners.forEach(methodAdapter::unregister);
     Collection<EventHandler<?>> handlers = registeredHandlersByPlugin.removeAll(plugin);
-    handlers
-        .forEach(handler -> bus.unregister(new KyoriToVelocityHandler<>(handler, PostOrder.LAST)));
+    handlers.forEach(this::unregisterHandler);
   }
 
   @Override
@@ -146,7 +150,7 @@ public class VelocityEventManager implements EventManager {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(handler, "listener");
     registeredHandlersByPlugin.remove(plugin, handler);
-    bus.unregister(new KyoriToVelocityHandler<>(handler, PostOrder.LAST));
+    unregisterHandler(handler);
   }
 
   public boolean shutdown() throws InterruptedException {
@@ -195,27 +199,6 @@ public class VelocityEventManager implements EventManager {
     @Override
     public int postOrder() {
       return postOrder;
-    }
-
-    public EventHandler<E> getHandler() {
-      return handler;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      KyoriToVelocityHandler<?> that = (KyoriToVelocityHandler<?>) o;
-      return Objects.equals(handler, that.handler);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(handler);
     }
   }
 }
