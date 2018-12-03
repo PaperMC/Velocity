@@ -47,7 +47,13 @@ public class VelocityEventManager implements EventManager {
   public VelocityEventManager(PluginManager pluginManager) {
     PluginClassLoader cl = new PluginClassLoader(new URL[0]);
     cl.addToClassloaders();
-    this.bus = new SimpleEventBus<>(Object.class);
+    this.bus = new SimpleEventBus<Object>(Object.class) {
+      @Override
+      protected boolean shouldPost(@NonNull Object event, @NonNull EventSubscriber<?> subscriber) {
+        // Velocity doesn't use Cancellable or generic events, so we can skip those checks.
+        return true;
+      }
+    };
     this.methodAdapter = new SimpleMethodSubscriptionAdapter<>(bus,
         new ASMEventExecutorFactory<>(cl),
         new VelocityMethodScanner());
