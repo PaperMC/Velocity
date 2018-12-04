@@ -6,7 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
@@ -80,10 +80,11 @@ public class PluginMessageUtil {
    * @param channels the channels to register
    * @return the plugin message to send
    */
-  public static PluginMessage constructChannelsPacket(int protocolVersion,
-      Collection<String> channels) {
-    checkNotNull(channels, "channels");
-    String channelName = protocolVersion >= ProtocolConstants.MINECRAFT_1_13 ? REGISTER_CHANNEL
+
+  public static PluginMessage constructChannelsPacket(ProtocolVersion protocolVersion,
+                                                      Collection<String> channels) {
+    Preconditions.checkNotNull(channels, "channels");
+    String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0 ? REGISTER_CHANNEL
         : REGISTER_CHANNEL_LEGACY;
     PluginMessage message = new PluginMessage();
     message.setChannel(channelName);

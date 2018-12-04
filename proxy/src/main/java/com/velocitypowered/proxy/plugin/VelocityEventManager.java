@@ -70,6 +70,15 @@ public class VelocityEventManager implements EventManager {
     if (plugin == listener && registeredListenersByPlugin.containsEntry(plugin, plugin)) {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
+
+    for (Method method : listener.getClass().getDeclaredMethods()) {
+      if (method.isAnnotationPresent(com.google.common.eventbus.Subscribe.class)) {
+        throw new IllegalArgumentException("Method " + listener.getClass().getName() + "#"
+          + method.getName() + " has a Guava @Subscribe annotation. Use the Velocity @Subscribe "
+          + "annotation instead.");
+      }
+    }
+
     registeredListenersByPlugin.put(plugin, listener);
     methodAdapter.register(listener);
   }

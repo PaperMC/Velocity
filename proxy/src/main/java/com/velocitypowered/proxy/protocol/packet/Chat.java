@@ -1,9 +1,9 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
@@ -54,20 +54,20 @@ public class Chat implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     message = ProtocolUtils.readString(buf);
-    if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
       type = buf.readByte();
     }
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     if (message == null) {
       throw new IllegalStateException("Message is not specified");
     }
     ProtocolUtils.writeString(buf, message);
-    if (direction == ProtocolConstants.Direction.CLIENTBOUND) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
       buf.writeByte(type);
     }
   }

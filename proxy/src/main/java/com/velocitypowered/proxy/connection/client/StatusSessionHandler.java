@@ -5,11 +5,11 @@ import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
@@ -38,11 +38,12 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   public boolean handle(StatusRequest packet) {
     VelocityConfiguration configuration = server.getConfiguration();
 
-    int shownVersion = ProtocolConstants.isSupported(connection.getProtocolVersion())
-        ? connection.getProtocolVersion() : ProtocolConstants.MAXIMUM_GENERIC_VERSION;
+    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion()) ? connection
+        .getProtocolVersion() :
+        ProtocolVersion.MAXIMUM_VERSION;
     ServerPing initialPing = new ServerPing(
-        new ServerPing.Version(shownVersion,
-            "Velocity " + ProtocolConstants.SUPPORTED_GENERIC_VERSION_STRING),
+        new ServerPing.Version(shownVersion.getProtocol(),
+            "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotdComponent(),

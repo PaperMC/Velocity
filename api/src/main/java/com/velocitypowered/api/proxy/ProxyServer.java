@@ -99,7 +99,7 @@ public interface ProxyServer {
    *
    * @return the console command invoker
    */
-  CommandSource getConsoleCommandSource();
+  ConsoleCommandSource getConsoleCommandSource();
 
   /**
    * Gets the {@link PluginManager} instance.

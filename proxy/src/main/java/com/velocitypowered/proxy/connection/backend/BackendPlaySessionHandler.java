@@ -2,14 +2,14 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.forge.ForgeConstants;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
@@ -94,18 +94,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    if (!serverConn.hasCompletedJoin() && packet.getChannel()
-        .equals(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
-      if (!serverConn.isLegacyForge()) {
-        serverConn.setLegacyForge(true);
-
-        // We must always reset the handshake before a modded connection is established if
-        // we haven't done so already.
-        serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
-      }
-
-      // Always forward these messages during login.
-      return false;
+    if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
+      // Handled.
+      return true;
     }
 
     ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
@@ -160,8 +151,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect()) {
-      serverConn.getPlayer().handleConnectionException(serverConn.getServer(), Disconnect.create(
-          ConnectionMessages.UNEXPECTED_DISCONNECT));
+      serverConn.getPlayer().disconnect(ConnectionMessages.UNEXPECTED_DISCONNECT);
     }
   }
 
@@ -171,10 +161,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
     boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion() <= ProtocolConstants.MINECRAFT_1_12_2) {
+    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
       String channel = message.getChannel();
       minecraftOrFmlMessage = channel.startsWith("MC|") || channel
-          .startsWith(ForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+          .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
     } else {
       minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
     }

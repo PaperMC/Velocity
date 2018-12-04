@@ -10,6 +10,8 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.proxy.VelocityServer;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +24,8 @@ import net.kyori.text.event.HoverEvent;
 import net.kyori.text.event.HoverEvent.Action;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommand implements Command {
@@ -32,10 +36,11 @@ public class VelocityCommand implements Command {
    * Initializes the command object for /velocity.
    * @param server the Velocity server
    */
-  public VelocityCommand(ProxyServer server) {
+  public VelocityCommand(VelocityServer server) {
     this.subcommands = ImmutableMap.<String, Command>builder()
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
+        .put("reload", new Reload(server))
         .build();
   }
 
@@ -92,7 +97,7 @@ public class VelocityCommand implements Command {
   @Override
   public boolean hasPermission(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
-      return true;
+      return subcommands.values().stream().anyMatch(e -> e.hasPermission(source, args));
     }
     Command command = subcommands.get(args[0].toLowerCase(Locale.US));
     if (command == null) {
@@ -101,6 +106,39 @@ public class VelocityCommand implements Command {
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
     return command.hasPermission(source, actualArgs);
+  }
+
+  private static class Reload implements Command {
+
+    private static final Logger logger = LogManager.getLogger(Reload.class);
+    private final VelocityServer server;
+
+    private Reload(VelocityServer server) {
+      this.server = server;
+    }
+
+    @Override
+    public void execute(CommandSource source, String @NonNull [] args) {
+      try {
+        if (server.reloadConfiguration()) {
+          source.sendMessage(TextComponent.of("Configuration reloaded.", TextColor.GREEN));
+        } else {
+          source.sendMessage(TextComponent.of(
+              "Unable to reload your configuration. Check the console for more details.",
+              TextColor.RED));
+        }
+      } catch (Exception e) {
+        logger.error("Unable to reload configuration", e);
+        source.sendMessage(TextComponent.of(
+            "Unable to reload your configuration. Check the console for more details.",
+            TextColor.RED));
+      }
+    }
+
+    @Override
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+      return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
+    }
   }
 
   private static class Info implements Command {
@@ -113,6 +151,11 @@ public class VelocityCommand implements Command {
 
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
+      if (args.length != 0) {
+        source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
+        return;
+      }
+
       ProxyVersion version = server.getVersion();
 
       TextComponent velocity = TextComponent.builder(version.getName() + " ")

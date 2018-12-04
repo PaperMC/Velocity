@@ -1,10 +1,8 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.protocol.ProtocolConstants.MINECRAFT_1_12_2;
-
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
@@ -28,17 +26,17 @@ public class KeepAlive implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-    if (protocolVersion >= MINECRAFT_1_12_2) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
       randomId = buf.readLong();
     } else {
       randomId = ProtocolUtils.readVarInt(buf);
     }
-  }
+}
 
   @Override
-  public void encode(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-    if (protocolVersion >= MINECRAFT_1_12_2) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
       buf.writeLong(randomId);
     } else {
       ProtocolUtils.writeVarInt(buf, (int) randomId);

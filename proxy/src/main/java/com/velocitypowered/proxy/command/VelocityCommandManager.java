@@ -31,7 +31,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(command, "executor");
     for (int i = 0, length = aliases.length; i < length; i++) {
       final String alias = aliases[i];
-      Preconditions.checkNotNull(aliases, "alias at index %s", i);
+      Preconditions.checkNotNull(alias, "alias at index %s", i);
       this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
     }
   }
@@ -82,21 +82,29 @@ public class VelocityCommandManager implements CommandManager {
     return commands.containsKey(command);
   }
 
+  /**
+   * Offer suggestions to fill in the command.
+   * @param source the source for the command
+   * @param cmdLine the partially completed command
+   * @return a {@link List}, possibly empty
+   */
   public List<String> offerSuggestions(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     String[] split = cmdLine.split(" ", -1);
     if (split.length == 0) {
+      // No command available.
       return ImmutableList.of();
     }
 
     String alias = split[0];
     if (split.length == 1) {
+      // Offer to fill in commands.
       List<String> availableCommands = new ArrayList<>();
       for (Map.Entry<String, Command> entry : commands.entrySet()) {
-        if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length()) &&
-            entry.getValue().hasPermission(source, new String[0])) {
+        if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length())
+            && entry.getValue().hasPermission(source, new String[0])) {
           availableCommands.add("/" + entry.getKey());
         }
       }
@@ -107,6 +115,7 @@ public class VelocityCommandManager implements CommandManager {
     String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
+      // No such command, so we can't offer any tab complete suggestions.
       return ImmutableList.of();
     }
 

@@ -35,7 +35,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
   private String bind = "0.0.0.0:25577";
 
-  @Comment("What should be the MOTD? Legacy color codes and JSON are accepted.")
+  @Comment({"What should be the MOTD? This gets displayed when the player adds your server to",
+      "their server list. Legacy color codes and JSON are accepted."})
   private String motd = "&3A Velocity Server";
 
   @Comment({
@@ -406,14 +407,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   private static class Servers {
 
     @IsMap
-    @Comment("Configure your servers here.")
+    @Comment({"Configure your servers here. Each key represents the server's name, and the value",
+        "represents the IP address of the server to connect to."})
     private Map<String, String> servers = ImmutableMap.of(
         "lobby", "127.0.0.1:30066",
         "factions", "127.0.0.1:30067",
         "minigames", "127.0.0.1:30068"
     );
 
-    @Comment("In what order we should try servers when a player logs in or is kicked from a server.")
+    @Comment("In what order we should try servers when a player logs in or is kicked from a"
+        + "server.")
     @ConfigKey("try")
     private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
@@ -523,13 +526,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   private static class Advanced {
 
     @Comment({
-        "How large a Minecraft packet has to be before we compress it. Setting this to zero will compress all packets, and",
-        "setting it to -1 will disable compression entirely."
+        "How large a Minecraft packet has to be before we compress it. Setting this to zero will",
+        "compress all packets, and setting it to -1 will disable compression entirely."
     })
     @ConfigKey("compression-threshold")
     private int compressionThreshold = 1024;
 
-    @Comment("How much compression should be done (from 0-9). The default is -1, which uses zlib's default level of 6.")
+    @Comment({"How much compression should be done (from 0-9). The default is -1, which uses zlib's",
+        "default level of 6."})
     @ConfigKey("compression-level")
     private int compressionLevel = -1;
 

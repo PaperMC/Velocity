@@ -22,6 +22,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
@@ -29,13 +30,13 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.forge.ForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -48,6 +49,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -79,6 +81,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable ModInfo modInfo;
   private final VelocityTabList tabList;
   private final VelocityServer server;
+  private ClientConnectionPhase connectionPhase;
 
   @MonotonicNonNull
   private List<String> serversToTry = null;
@@ -91,6 +94,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connection = connection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
+    this.connectionPhase = connection.getType().getInitialClientPhase();
   }
 
   @Override
@@ -139,7 +143,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(modInfo);
   }
 
-  void setModInfo(ModInfo modInfo) {
+  public void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
     server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
   }
@@ -164,7 +168,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public int getProtocolVersion() {
+  public ProtocolVersion getProtocolVersion() {
     return connection.getProtocolVersion();
   }
 
@@ -176,7 +180,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     byte pos = (byte) position.ordinal();
     String json;
     if (position == MessagePosition.ACTION_BAR) {
-      if (getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_11) {
+      if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
         // We can use the title packet instead.
         TitlePacket pkt = new TitlePacket();
         pkt.setAction(TitlePacket.SET_ACTION_BAR);
@@ -286,6 +290,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connectedServer;
   }
 
+  public void resetInFlightConnection() {
+    connectionInFlight = null;
+  }
+
   public void handleConnectionException(RegisteredServer server, Throwable throwable) {
     if (throwable == null) {
       throw new NullPointerException("throwable");
@@ -375,7 +383,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  Optional<RegisteredServer> getNextServerToTry() {
+  public Optional<RegisteredServer> getNextServerToTry() {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
       serversToTry = server.getConfiguration().getForcedHosts()
@@ -405,10 +413,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   public void sendLegacyForgeHandshakeResetPacket() {
-    if (connection.canSendLegacyFmlResetPacket()) {
-      connection.write(ForgeConstants.resetPacket());
-      connection.setCanSendLegacyFmlResetPacket(false);
-    }
+    connectionPhase.resetConnectionPhase(this);
   }
 
   private MinecraftConnection ensureBackendConnection() {
@@ -465,6 +470,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ensureBackendConnection().write(Chat.createServerbound(input));
   }
 
+  /**
+   * Sends a {@link KeepAlive} packet to the player with a random ID.
+   * The response will be ignored by Velocity as it will not match the
+   * ID last sent by the server.
+   */
+  public void sendKeepAlive() {
+    if (connection.getState() == StateRegistry.PLAY) {
+      KeepAlive keepAlive = new KeepAlive();
+      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
+      connection.write(keepAlive);
+    }
+  }
+
+  /**
+   * Gets the current "phase" of the connection, mostly used for tracking
+   * modded negotiation for legacy forge servers and provides methods
+   * for performing phase specific actions.
+   *
+   * @return The {@link ClientConnectionPhase}
+   */
+  public ClientConnectionPhase getPhase() {
+    return connectionPhase;
+  }
+
+  /**
+   * Sets the current "phase" of the connection. See {@link #getPhase()}
+   *
+   * @param connectionPhase The {@link ClientConnectionPhase}
+   */
+  public void setPhase(ClientConnectionPhase connectionPhase) {
+    this.connectionPhase = connectionPhase;
+  }
+
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
@@ -481,7 +519,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
       Preconditions
           .checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
-      if (connectionInFlight != null) {
+      if (connectionInFlight != null || (connectedServer != null
+          && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
       if (connectedServer != null && connectedServer.getServer().equals(server)) {
@@ -516,8 +555,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               return CompletableFuture
                   .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
             }
-            return new VelocityServerConnection((VelocityRegisteredServer) rs,
-                ConnectedPlayer.this, server).connect();
+
+            VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
+            VelocityServerConnection con = new VelocityServerConnection(vrs, ConnectedPlayer.this,
+                server);
+            connectionInFlight = con;
+            return con.connect();
           });
     }
 

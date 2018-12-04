@@ -1,9 +1,9 @@
 package com.velocitypowered.proxy.console;
 
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
+import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.text.Component;
@@ -18,7 +18,7 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 
-public final class VelocityConsole extends SimpleTerminalConsole implements CommandSource {
+public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 

@@ -17,11 +17,6 @@ public class ShutdownCommand implements Command {
 
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
-    if (source != server.getConsoleCommandSource()) {
-      source
-          .sendMessage(TextComponent.of("You are not allowed to use this command.", TextColor.RED));
-      return;
-    }
     server.shutdown(true);
   }
 

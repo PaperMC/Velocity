@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.velocitypowered.api.network.ProtocolVersion;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

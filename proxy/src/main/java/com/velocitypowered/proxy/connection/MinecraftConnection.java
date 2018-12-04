@@ -10,13 +10,13 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolConstants;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherEncoder;
@@ -53,12 +53,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private SocketAddress remoteAddress;
   private StateRegistry state;
   private @Nullable MinecraftSessionHandler sessionHandler;
-  private int protocolVersion;
-  private int nextProtocolVersion;
+  private ProtocolVersion protocolVersion;
+  private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private boolean isLegacyForge;
   private final VelocityServer server;
-  private boolean canSendLegacyFmlResetPacket = false;
+  private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
 
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
@@ -204,14 +203,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.channel.pipeline().get(MinecraftDecoder.class).setState(state);
   }
 
-  public int getProtocolVersion() {
+  public ProtocolVersion getProtocolVersion() {
     return protocolVersion;
   }
 
-  public void setProtocolVersion(int protocolVersion) {
+  public void setProtocolVersion(ProtocolVersion protocolVersion) {
     this.protocolVersion = protocolVersion;
     this.nextProtocolVersion = protocolVersion;
-    if (protocolVersion != ProtocolConstants.LEGACY) {
+    if (protocolVersion != ProtocolVersion.LEGACY) {
       this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
       this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
     } else {
@@ -279,27 +278,27 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.association = association;
   }
 
-  public boolean isLegacyForge() {
-    return isLegacyForge;
-  }
-
-  public void setLegacyForge(boolean isForge) {
-    this.isLegacyForge = isForge;
-  }
-
-  public boolean canSendLegacyFmlResetPacket() {
-    return canSendLegacyFmlResetPacket;
-  }
-
-  public void setCanSendLegacyFmlResetPacket(boolean canSendLegacyFMLResetPacket) {
-    this.canSendLegacyFmlResetPacket = isLegacyForge && canSendLegacyFMLResetPacket;
-  }
-
-  public int getNextProtocolVersion() {
+  public ProtocolVersion getNextProtocolVersion() {
     return this.nextProtocolVersion;
   }
 
-  public void setNextProtocolVersion(int nextProtocolVersion) {
+  public void setNextProtocolVersion(ProtocolVersion nextProtocolVersion) {
     this.nextProtocolVersion = nextProtocolVersion;
+  }
+
+  /**
+   * Gets the detected {@link ConnectionType}
+   * @return The {@link ConnectionType}
+   */
+  public ConnectionType getType() {
+    return connectionType;
+  }
+
+  /**
+   * Sets the detected {@link ConnectionType}
+   * @param connectionType The {@link ConnectionType}
+   */
+  public void setType(ConnectionType connectionType) {
+    this.connectionType = connectionType;
   }
 }
