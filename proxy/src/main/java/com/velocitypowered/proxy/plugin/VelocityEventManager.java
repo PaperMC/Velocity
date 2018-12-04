@@ -110,7 +110,8 @@ public class VelocityEventManager implements EventManager {
       return CompletableFuture.completedFuture(event);
     }
 
-    Runnable runEvent = () -> {
+    CompletableFuture<E> eventFuture = new CompletableFuture<>();
+    service.execute(() -> {
       PostResult result = bus.post(event);
       if (!result.exceptions().isEmpty()) {
         logger.error("Some errors occurred whilst posting event {}.", event);
@@ -119,11 +120,6 @@ public class VelocityEventManager implements EventManager {
           logger.error("#{}: \n", ++i, exception);
         }
       }
-    };
-
-    CompletableFuture<E> eventFuture = new CompletableFuture<>();
-    service.execute(() -> {
-      runEvent.run();
       eventFuture.complete(event);
     });
     return eventFuture;
