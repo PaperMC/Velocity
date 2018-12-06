@@ -47,7 +47,13 @@ public class VelocityEventManager implements EventManager {
   public VelocityEventManager(PluginManager pluginManager) {
     PluginClassLoader cl = new PluginClassLoader(new URL[0]);
     cl.addToClassloaders();
-    this.bus = new SimpleEventBus<>(Object.class);
+    this.bus = new SimpleEventBus<Object>(Object.class) {
+      @Override
+      protected boolean shouldPost(@NonNull Object event, @NonNull EventSubscriber<?> subscriber) {
+        // Velocity doesn't use Cancellable or generic events, so we can skip those checks.
+        return true;
+      }
+    };
     this.methodAdapter = new SimpleMethodSubscriptionAdapter<>(bus,
         new ASMEventExecutorFactory<>(cl),
         new VelocityMethodScanner());
@@ -104,7 +110,8 @@ public class VelocityEventManager implements EventManager {
       return CompletableFuture.completedFuture(event);
     }
 
-    Runnable runEvent = () -> {
+    CompletableFuture<E> eventFuture = new CompletableFuture<>();
+    service.execute(() -> {
       PostResult result = bus.post(event);
       if (!result.exceptions().isEmpty()) {
         logger.error("Some errors occurred whilst posting event {}.", event);
@@ -113,14 +120,14 @@ public class VelocityEventManager implements EventManager {
           logger.error("#{}: \n", ++i, exception);
         }
       }
-    };
-
-    CompletableFuture<E> eventFuture = new CompletableFuture<>();
-    service.execute(() -> {
-      runEvent.run();
       eventFuture.complete(event);
     });
     return eventFuture;
+  }
+
+  private void unregisterHandler(EventHandler<?> handler) {
+    bus.unregister(s -> s instanceof KyoriToVelocityHandler &&
+        ((KyoriToVelocityHandler<?>) s).handler == handler);
   }
 
   @Override
@@ -129,8 +136,7 @@ public class VelocityEventManager implements EventManager {
     Collection<Object> listeners = registeredListenersByPlugin.removeAll(plugin);
     listeners.forEach(methodAdapter::unregister);
     Collection<EventHandler<?>> handlers = registeredHandlersByPlugin.removeAll(plugin);
-    handlers
-        .forEach(handler -> bus.unregister(new KyoriToVelocityHandler<>(handler, PostOrder.LAST)));
+    handlers.forEach(this::unregisterHandler);
   }
 
   @Override
@@ -146,7 +152,7 @@ public class VelocityEventManager implements EventManager {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(handler, "listener");
     registeredHandlersByPlugin.remove(plugin, handler);
-    bus.unregister(new KyoriToVelocityHandler<>(handler, PostOrder.LAST));
+    unregisterHandler(handler);
   }
 
   public boolean shutdown() throws InterruptedException {
@@ -163,12 +169,7 @@ public class VelocityEventManager implements EventManager {
 
     @Override
     public int postOrder(@NonNull Object listener, @NonNull Method method) {
-      Subscribe annotation = method.getAnnotation(Subscribe.class);
-      if (annotation == null) {
-        throw new IllegalStateException(
-            "Trying to determine post order for listener without @Subscribe annotation");
-      }
-      return annotation.order().ordinal();
+      return method.getAnnotation(Subscribe.class).order().ordinal();
     }
 
     @Override
@@ -195,27 +196,6 @@ public class VelocityEventManager implements EventManager {
     @Override
     public int postOrder() {
       return postOrder;
-    }
-
-    public EventHandler<E> getHandler() {
-      return handler;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      KyoriToVelocityHandler<?> that = (KyoriToVelocityHandler<?>) o;
-      return Objects.equals(handler, that.handler);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(handler);
     }
   }
 }
