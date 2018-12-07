@@ -200,14 +200,18 @@ public enum StateRegistry {
 
   public static class PacketRegistry {
 
-    private static final EnumMap<ProtocolVersion, ImmutableList<ProtocolVersion>> LINKED_PROTOCOL_VERSIONS = new EnumMap(ProtocolVersion.class);
+    private static final Map<ProtocolVersion, List<ProtocolVersion>> LINKED_PROTOCOL_VERSIONS
+        = new EnumMap<>(ProtocolVersion.class);
 
     static {
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, ImmutableList.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2, MINECRAFT_1_9_4));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableList.of(MINECRAFT_1_10, MINECRAFT_1_11, MINECRAFT_1_11_1));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, ImmutableList.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2,
+          MINECRAFT_1_9_4));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableList.of(MINECRAFT_1_10, MINECRAFT_1_11,
+          MINECRAFT_1_11_1));
       LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableList.of(MINECRAFT_1_12_1));
       LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableList.of(MINECRAFT_1_12_2));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableList.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableList.of(MINECRAFT_1_13_1,
+          MINECRAFT_1_13_2));
     }
 
     private final Direction direction;
@@ -217,9 +221,11 @@ public enum StateRegistry {
     PacketRegistry(Direction direction) {
       this.direction = direction;
 
-      EnumMap<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap(ProtocolVersion.class);
+      Map<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap<>(ProtocolVersion.class);
       for (ProtocolVersion version : ProtocolVersion.values()) {
-        mutableVersions.put(version, new ProtocolRegistry(version));
+        if (!version.isLegacy() && !version.isUnknown()) {
+          mutableVersions.put(version, new ProtocolRegistry(version));
+        }
       }
 
       this.versions = Collections.unmodifiableMap(mutableVersions);
@@ -252,7 +258,7 @@ public enum StateRegistry {
         }
         registry.packetClassToId.put(clazz, mapping.id);
 
-        ImmutableList<ProtocolVersion> linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
+        List<ProtocolVersion> linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
         if (linked != null) {
           links:
           for (int i = 0; i < linked.size(); i++) {

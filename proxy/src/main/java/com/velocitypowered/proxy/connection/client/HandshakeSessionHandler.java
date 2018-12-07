@@ -179,7 +179,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public ProtocolVersion getProtocolVersion() {
-      return ProtocolVersion.UNKNOWN;
+      return ProtocolVersion.LEGACY;
     }
   }
 }
