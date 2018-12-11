@@ -306,20 +306,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         wrapped = cause;
       }
     }
-    String error = ThrowableUtils.briefDescription(wrapped);
     String userMessage;
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
-      userMessage = "Exception in server " + server.getServerInfo().getName();
+      userMessage = "Your connection to " + server.getServerInfo().getName() + " encountered an "
+          + " error.";
     } else {
       logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(),
           wrapped);
-      userMessage = "Can't connect to server " + server.getServerInfo().getName();
+      userMessage = "Unable to connect to " + server.getServerInfo().getName() + ". Try again "
+          + "later.";
     }
-    handleConnectionException(server, null, TextComponent.builder()
-        .content(userMessage + ": ")
-        .color(TextColor.RED)
-        .append(TextComponent.of(error, TextColor.WHITE))
-        .build());
+    handleConnectionException(server, null, TextComponent.of(userMessage, TextColor.RED));
   }
 
   public void handleConnectionException(RegisteredServer server, Disconnect disconnect) {
