@@ -1,20 +1,15 @@
 package com.velocitypowered.proxy.plugin.util;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
 public class PluginDependencyUtils {
 
@@ -24,7 +19,7 @@ public class PluginDependencyUtils {
 
   /**
    * Attempts to topographically sort all plugins for the proxy to load by dependencies using
-   * Kahn's algorithm.
+   * a depth-first search.
    *
    * @param candidates the plugins to sort
    * @return the sorted list of plugins
@@ -49,72 +44,37 @@ public class PluginDependencyUtils {
       }
     }
 
-    // Find nodes that have no edges
-    Queue<PluginDescription> noEdges = getNoDependencyCandidates(graph);
-
-    // Actually run Kahn's algorithm
     List<PluginDescription> sorted = new ArrayList<>();
-    while (!noEdges.isEmpty()) {
-      PluginDescription candidate = noEdges.remove();
-      sorted.add(candidate);
+    Map<PluginDescription, Mark> marks = new HashMap<>();
 
-      for (PluginDescription node : ImmutableSet.copyOf(graph.adjacentNodes(candidate))) {
-        graph.removeEdge(node, candidate);
-
-        if (graph.adjacentNodes(node).isEmpty()) {
-          noEdges.add(node);
-        }
-      }
-    }
-
-    if (!graph.edges().isEmpty()) {
-      throw new IllegalStateException(
-          "Plugin circular dependency found: " + createLoopInformation(graph));
+    for (PluginDescription node : graph.nodes()) {
+      visitNode(graph, node, marks, sorted);
     }
 
     return sorted;
   }
 
-  private static Queue<PluginDescription> getNoDependencyCandidates(Graph<PluginDescription> graph) {
-    Queue<PluginDescription> found = new ArrayDeque<>();
-
-    for (PluginDescription node : graph.nodes()) {
-      if (graph.outDegree(node) == 0) {
-        found.add(node);
-      }
+  private static void visitNode(Graph<PluginDescription> dependencyGraph, PluginDescription node,
+      Map<PluginDescription, Mark> marks, List<PluginDescription> sorted) {
+    Mark mark = marks.getOrDefault(node, Mark.NOT_VISITED);
+    if (mark == Mark.PERMANENT) {
+      return;
+    } else if (mark == Mark.TEMPORARY) {
+      throw new IllegalStateException("Improper plugin dependency graph");
     }
 
-    return found;
+    marks.put(node, Mark.TEMPORARY);
+    for (PluginDescription edge : dependencyGraph.successors(node)) {
+      visitNode(dependencyGraph, edge, marks, sorted);
+    }
+
+    marks.put(node, Mark.PERMANENT);
+    sorted.add(node);
   }
 
-  private static String createLoopInformation(Graph<PluginDescription> graph) {
-    StringBuilder repr = new StringBuilder("{");
-    for (EndpointPair<PluginDescription> edge : graph.edges()) {
-      repr.append(edge.target().getId()).append(": [");
-      repr.append(dependencyLoopInfo(graph, edge.target(), new HashSet<>())).append("], ");
-    }
-    repr.setLength(repr.length() - 2);
-    repr.append("}");
-    return repr.toString();
-  }
-
-  private static String dependencyLoopInfo(Graph<PluginDescription> graph,
-      PluginDescription dependency, Set<PluginDescription> seen) {
-    StringBuilder repr = new StringBuilder();
-    for (PluginDescription pd : graph.adjacentNodes(dependency)) {
-      if (seen.add(pd)) {
-        repr.append(pd.getId()).append(": [").append(dependencyLoopInfo(graph, dependency, seen))
-            .append("], ");
-      } else {
-        repr.append(pd.getId()).append(", ");
-      }
-    }
-
-    if (repr.length() != 0) {
-      repr.setLength(repr.length() - 2);
-      return repr.toString();
-    } else {
-      return "<no depends>";
-    }
+  private enum Mark {
+    NOT_VISITED,
+    TEMPORARY,
+    PERMANENT
   }
 }

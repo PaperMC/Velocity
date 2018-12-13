@@ -8,6 +8,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +39,13 @@ class PluginDependencyUtilsTest {
           new PluginDependency("example2", "", false)
       ), null
   );
+  private static final PluginDescription TEST_WITH_DUPLICATE_DEPEND = new VelocityPluginDescription(
+      "dup-depend", "tuxed", "0.1", null, null, ImmutableList.of(),
+      ImmutableList.of(
+          new PluginDependency("multi-depend", "", false),
+          new PluginDependency("example2", "", false)
+      ), null
+  );
 
   private static final PluginDescription CIRCULAR_DEPENDENCY_1 = new VelocityPluginDescription(
       "circle", "tuxed", "0.1", null, null, ImmutableList.of(),
@@ -55,12 +63,13 @@ class PluginDependencyUtilsTest {
   // Note: Kahn's algorithm is non-unique in its return result, although the topological sort will have the correct
   // order.
   private static final List<PluginDescription> EXPECTED = ImmutableList.of(
+      NEVER_DEPENDED,
       NO_DEPENDENCY_1_EXAMPLE,
       NO_DEPENDENCY_2_EXAMPLE,
-      NEVER_DEPENDED,
+      MULTI_DEPENDENCY,
+      TEST_WITH_DUPLICATE_DEPEND,
       SOFT_DEPENDENCY_DOES_NOT_EXIST,
-      SOFT_DEPENDENCY_EXISTS,
-      MULTI_DEPENDENCY
+      SOFT_DEPENDENCY_EXISTS
   );
 
   @Test
@@ -72,6 +81,8 @@ class PluginDependencyUtilsTest {
     descriptionList.add(SOFT_DEPENDENCY_DOES_NOT_EXIST);
     descriptionList.add(SOFT_DEPENDENCY_EXISTS);
     descriptionList.add(MULTI_DEPENDENCY);
+    descriptionList.add(TEST_WITH_DUPLICATE_DEPEND);
+    descriptionList.sort(Comparator.comparing(PluginDescription::getId));
 
     assertEquals(EXPECTED, PluginDependencyUtils.sortCandidates(descriptionList));
   }
