@@ -43,14 +43,14 @@ public class PluginMessage implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.channel = ProtocolUtils.readString(buf);
     this.data = new byte[buf.readableBytes()];
     buf.readBytes(data);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }

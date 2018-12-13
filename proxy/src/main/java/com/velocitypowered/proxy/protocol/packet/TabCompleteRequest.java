@@ -60,9 +60,9 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.command = ProtocolUtils.readString(buf);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       this.assumeCommand = buf.readBoolean();
     }
     this.hasPosition = buf.readBoolean();
@@ -72,12 +72,12 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");
     }
     ProtocolUtils.writeString(buf, command);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       buf.writeBoolean(assumeCommand);
     }
     buf.writeBoolean(hasPosition);

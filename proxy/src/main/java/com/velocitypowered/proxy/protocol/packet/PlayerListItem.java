@@ -42,7 +42,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     action = ProtocolUtils.readVarInt(buf);
     int length = ProtocolUtils.readVarInt(buf);
 
@@ -84,7 +84,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, action);
     ProtocolUtils.writeVarInt(buf, items.size());
     for (Item item : items) {

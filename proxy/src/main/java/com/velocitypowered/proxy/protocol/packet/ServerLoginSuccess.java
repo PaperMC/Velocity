@@ -44,13 +44,13 @@ public class ServerLoginSuccess implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
     username = ProtocolUtils.readString(buf, 16);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
     }

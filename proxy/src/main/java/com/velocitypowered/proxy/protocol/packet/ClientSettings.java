@@ -93,20 +93,20 @@ public class ClientSettings implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.locale = ProtocolUtils.readString(buf, 16);
     this.viewDistance = buf.readByte();
     this.chatVisibility = ProtocolUtils.readVarInt(buf);
     this.chatColors = buf.readBoolean();
     this.skinParts = buf.readUnsignedByte();
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       this.mainHand = ProtocolUtils.readVarInt(buf);
     }
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (locale == null) {
       throw new IllegalStateException("No locale specified");
     }
@@ -116,7 +116,7 @@ public class ClientSettings implements MinecraftPacket {
     buf.writeBoolean(chatColors);
     buf.writeByte(skinParts);
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       ProtocolUtils.writeVarInt(buf, mainHand);
     }
   }

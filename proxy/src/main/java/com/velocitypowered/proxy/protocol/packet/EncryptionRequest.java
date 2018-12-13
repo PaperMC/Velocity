@@ -40,14 +40,14 @@ public class EncryptionRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.serverId = ProtocolUtils.readString(buf, 20);
     publicKey = ProtocolUtils.readByteArray(buf, 256);
     verifyToken = ProtocolUtils.readByteArray(buf, 16);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeString(buf, this.serverId);
     ProtocolUtils.writeByteArray(buf, publicKey);
     ProtocolUtils.writeByteArray(buf, verifyToken);

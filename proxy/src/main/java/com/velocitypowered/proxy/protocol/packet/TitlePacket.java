@@ -26,14 +26,14 @@ public class TitlePacket implements MinecraftPacket {
   private int fadeOut;
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     throw new UnsupportedOperationException(); // encode only
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, action);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // 1.11+ shifted the action enum by 1 to handle the action bar
       switch (action) {
         case SET_TITLE:
@@ -118,23 +118,23 @@ public class TitlePacket implements MinecraftPacket {
     this.fadeOut = fadeOut;
   }
 
-  public static TitlePacket hideForProtocolVersion(ProtocolVersion protocolVersion) {
+  public static TitlePacket hideForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.HIDE
+    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.HIDE
         : TitlePacket.HIDE_OLD);
     return packet;
   }
 
-  public static TitlePacket resetForProtocolVersion(ProtocolVersion protocolVersion) {
+  public static TitlePacket resetForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.RESET
+    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.RESET
         : TitlePacket.RESET_OLD);
     return packet;
   }
 
-  public static TitlePacket timesForProtocolVersion(ProtocolVersion protocolVersion) {
+  public static TitlePacket timesForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.SET_TIMES
+    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.SET_TIMES
         : TitlePacket.SET_TIMES_OLD);
     return packet;
   }

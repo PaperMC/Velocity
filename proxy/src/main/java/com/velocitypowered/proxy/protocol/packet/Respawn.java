@@ -66,7 +66,7 @@ public class Respawn implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.dimension = buf.readInt();
     this.difficulty = buf.readUnsignedByte();
     this.gamemode = buf.readUnsignedByte();
@@ -74,7 +74,7 @@ public class Respawn implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(dimension);
     buf.writeByte(difficulty);
     buf.writeByte(gamemode);

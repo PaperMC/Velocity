@@ -90,10 +90,10 @@ public class JoinGame implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
     this.gamemode = buf.readUnsignedByte();
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       this.dimension = buf.readInt();
     } else {
       this.dimension = buf.readByte();
@@ -105,10 +105,10 @@ public class JoinGame implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
       buf.writeByte(dimension);

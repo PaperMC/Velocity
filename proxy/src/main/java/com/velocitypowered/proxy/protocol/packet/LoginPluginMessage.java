@@ -49,7 +49,7 @@ public class LoginPluginMessage implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.id = ProtocolUtils.readVarInt(buf);
     this.channel = ProtocolUtils.readString(buf);
     if (buf.isReadable()) {
@@ -60,7 +60,7 @@ public class LoginPluginMessage implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified!");

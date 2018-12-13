@@ -39,13 +39,13 @@ public class EncryptionResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
     this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeByteArray(buf, sharedSecret);
     ProtocolUtils.writeByteArray(buf, verifyToken);
   }

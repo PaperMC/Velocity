@@ -24,7 +24,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     int offersAvailable = ProtocolUtils.readVarInt(buf);
     for (int i = 0; i < offersAvailable; i++) {
       offers.add(ProtocolUtils.readString(buf));
@@ -32,7 +32,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, offers.size());
     for (String offer : offers) {
       ProtocolUtils.writeString(buf, offer);
