@@ -1,8 +1,11 @@
 package com.velocitypowered.api.network;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents each Minecraft protocol version.
@@ -55,6 +58,23 @@ public enum ProtocolVersion {
     }
 
     ID_TO_PROTOCOL_CONSTANT = ImmutableMap.copyOf(versions);
+  }
+
+  /**
+   * A set containing all the protocols that the proxy actually supports, excluding special-purpose
+   * "versions" like {@link #LEGACY} and {@link #UNKNOWN}.
+   */
+  public static final Set<ProtocolVersion> SUPPORTED_VERSIONS;
+
+  static {
+    Set<ProtocolVersion> versions = EnumSet.noneOf(ProtocolVersion.class);
+    for (ProtocolVersion value : values()) {
+      if (!value.isUnknown() && !value.isLegacy()) {
+        versions.add(value);
+      }
+    }
+
+    SUPPORTED_VERSIONS = Sets.immutableEnumSet(versions);
   }
 
   ProtocolVersion(int protocol, String name) {
