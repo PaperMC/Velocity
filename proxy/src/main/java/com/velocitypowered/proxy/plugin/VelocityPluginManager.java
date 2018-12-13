@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -68,6 +69,11 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
+    // Sort the loaded plugins twice. First, sort the already-loaded plugins by their IDs, so as
+    // to make the topographic sort deterministic (since the order will differ depending on the
+    // first node chosen in the graph, which is the first plugin we found). Afterwards, we execute
+    // a depth-first search over the loaded plugins.
+    found.sort(Comparator.comparing(PluginDescription::getId));
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
     // Now load the plugins

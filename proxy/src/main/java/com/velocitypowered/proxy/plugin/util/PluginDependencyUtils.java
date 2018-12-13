@@ -26,12 +26,16 @@ public class PluginDependencyUtils {
    * @throws IllegalStateException if there is a circular loop in the dependency graph
    */
   public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
-    // Create our graph, we're going to be using this for Kahn's algorithm.
-    MutableGraph<PluginDescription> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
+    // Create a graph and populate it with plugin dependencies. Specifically, each graph has plugin
+    // nodes, and edges that represent the dependencies that plugin relies on. Non-existent plugins
+    // are ignored.
+    MutableGraph<PluginDescription> graph = GraphBuilder.directed()
+        .allowsSelfLoops(false)
+        .expectedNodeCount(candidates.size())
+        .build();
     Map<String, PluginDescription> candidateMap = Maps
         .uniqueIndex(candidates, d -> d == null ? null : d.getId());
 
-    // Add edges
     for (PluginDescription description : candidates) {
       graph.addNode(description);
 
@@ -44,6 +48,7 @@ public class PluginDependencyUtils {
       }
     }
 
+    // Now we do the depth-first search.
     List<PluginDescription> sorted = new ArrayList<>();
     Map<PluginDescription, Mark> marks = new HashMap<>();
 
