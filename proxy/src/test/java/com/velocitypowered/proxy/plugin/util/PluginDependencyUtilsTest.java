@@ -14,51 +14,30 @@ import org.junit.jupiter.api.Test;
 
 class PluginDependencyUtilsTest {
 
-  private static final PluginDescription NO_DEPENDENCY_1_EXAMPLE = new VelocityPluginDescription(
-      "example", "tuxed", "0.1", null, null, ImmutableList.of("example2"),
-      ImmutableList.of(), null
-  );
-  private static final PluginDescription NO_DEPENDENCY_2_EXAMPLE = new VelocityPluginDescription(
-      "example2", "tuxed", "0.1", null, null, ImmutableList.of(), ImmutableList.of(), null
-  );
-  private static final PluginDescription NEVER_DEPENDED = new VelocityPluginDescription(
-      "and-again", "tuxed", "0.1", null, null, ImmutableList.of(), ImmutableList.of(), null
-  );
-  private static final PluginDescription SOFT_DEPENDENCY_EXISTS = new VelocityPluginDescription(
-      "soft", "tuxed", "0.1", null, null, ImmutableList.of(),
-      ImmutableList.of(new PluginDependency("example", "", true)), null
-  );
-  private static final PluginDescription SOFT_DEPENDENCY_DOES_NOT_EXIST = new VelocityPluginDescription(
-      "fluffy", "tuxed", "0.1", null, null, ImmutableList.of(),
-      ImmutableList.of(new PluginDependency("i-dont-exist", "", false)), null
-  );
-  private static final PluginDescription MULTI_DEPENDENCY = new VelocityPluginDescription(
-      "multi-depend", "tuxed", "0.1", null, null, ImmutableList.of(),
+  private static final PluginDescription NO_DEPENDENCY_1_EXAMPLE = testDescription("example");
+  private static final PluginDescription NO_DEPENDENCY_2_EXAMPLE = testDescription("example2");
+  private static final PluginDescription NEVER_DEPENDED = testDescription("and-again");
+  private static final PluginDescription SOFT_DEPENDENCY_EXISTS = testDescription("soft",
+      ImmutableList.of(new PluginDependency("example", "", true)));
+  private static final PluginDescription SOFT_DEPENDENCY_DOES_NOT_EXIST = testDescription("fluffy",
+      ImmutableList.of(new PluginDependency("i-dont-exist", "", false)));
+  private static final PluginDescription MULTI_DEPENDENCY = testDescription("multi-depend",
       ImmutableList.of(
           new PluginDependency("example", "", false),
           new PluginDependency("example2", "", false)
-      ), null
+      )
   );
-  private static final PluginDescription TEST_WITH_DUPLICATE_DEPEND = new VelocityPluginDescription(
-      "dup-depend", "tuxed", "0.1", null, null, ImmutableList.of(),
+  private static final PluginDescription TEST_WITH_DUPLICATE_DEPEND = testDescription("dup-depend",
       ImmutableList.of(
           new PluginDependency("multi-depend", "", false),
           new PluginDependency("example2", "", false)
-      ), null
+      )
   );
 
-  private static final PluginDescription CIRCULAR_DEPENDENCY_1 = new VelocityPluginDescription(
-      "circle", "tuxed", "0.1", null, null, ImmutableList.of(),
-      ImmutableList.of(
-          new PluginDependency("oval", "", false)
-      ), null
-  );
-  private static final PluginDescription CIRCULAR_DEPENDENCY_2 = new VelocityPluginDescription(
-      "oval", "tuxed", "0.1", null, null, ImmutableList.of(),
-      ImmutableList.of(
-          new PluginDependency("circle", "", false)
-      ), null
-  );
+  private static final PluginDescription CIRCULAR_DEPENDENCY_1 = testDescription("circle",
+      ImmutableList.of(new PluginDependency("oval", "", false)));
+  private static final PluginDescription CIRCULAR_DEPENDENCY_2 = testDescription("oval",
+      ImmutableList.of(new PluginDependency("circle", "", false)));
 
   // Note: Kahn's algorithm is non-unique in its return result, although the topological sort will have the correct
   // order.
@@ -91,5 +70,16 @@ class PluginDependencyUtilsTest {
   void sortCandidatesCircularDependency() throws Exception {
     List<PluginDescription> descs = ImmutableList.of(CIRCULAR_DEPENDENCY_1, CIRCULAR_DEPENDENCY_2);
     assertThrows(IllegalStateException.class, () -> PluginDependencyUtils.sortCandidates(descs));
+  }
+
+  private static PluginDescription testDescription(String id) {
+    return testDescription(id, ImmutableList.of());
+  }
+
+  private static PluginDescription testDescription(String id, List<PluginDependency> dependencies) {
+    return new VelocityPluginDescription(
+        id, "tuxed", "0.1", null, null, ImmutableList.of(),
+        dependencies, null
+    );
   }
 }
