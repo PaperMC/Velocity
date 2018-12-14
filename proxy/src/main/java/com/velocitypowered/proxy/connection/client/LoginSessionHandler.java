@@ -1,9 +1,9 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
-import static com.velocitypowered.api.network.ProtocolVersion.*;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.UrlEscapers;
@@ -77,12 +77,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (server.getConfiguration().isOnlineMode()) {
       // In online-mode, follow Mojang's username rules.
       if (!VALID_MINECRAFT_USERNAME.matcher(packet.getUsername()).matches()) {
-        inbound.closeWith(Disconnect.create(VelocityMessages.INVALID_USERNAME));
-        return true;
-      }
-    } else {
-      // Offline mode accepts any username, as long as we don't exceed 16 characters.
-      if (packet.getUsername().length() > 16) {
         inbound.closeWith(Disconnect.create(VelocityMessages.INVALID_USERNAME));
         return true;
       }
