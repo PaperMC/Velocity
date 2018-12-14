@@ -6,7 +6,9 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,27 +55,38 @@ public class PluginDependencyUtils {
     Map<PluginDescription, Mark> marks = new HashMap<>();
 
     for (PluginDescription node : graph.nodes()) {
-      visitNode(graph, node, marks, sorted);
+      visitNode(graph, node, marks, sorted, new ArrayDeque<>());
     }
 
     return sorted;
   }
 
   private static void visitNode(Graph<PluginDescription> dependencyGraph, PluginDescription node,
-      Map<PluginDescription, Mark> marks, List<PluginDescription> sorted) {
+      Map<PluginDescription, Mark> marks, List<PluginDescription> sorted,
+      Deque<PluginDescription> currentIteration) {
     Mark mark = marks.getOrDefault(node, Mark.NOT_VISITED);
     if (mark == Mark.PERMANENT) {
       return;
     } else if (mark == Mark.TEMPORARY) {
-      throw new IllegalStateException("Improper plugin dependency graph");
+      // A circular dependency has been detected.
+      currentIteration.addLast(node);
+      StringBuilder loopGraph = new StringBuilder();
+      for (PluginDescription description : currentIteration) {
+        loopGraph.append(description.getId());
+        loopGraph.append(" -> ");
+      }
+      loopGraph.setLength(loopGraph.length() - 4);
+      throw new IllegalStateException("Circular dependency detected: " + loopGraph.toString());
     }
 
+    currentIteration.addLast(node);
     marks.put(node, Mark.TEMPORARY);
     for (PluginDescription edge : dependencyGraph.successors(node)) {
-      visitNode(dependencyGraph, edge, marks, sorted);
+      visitNode(dependencyGraph, edge, marks, sorted, currentIteration);
     }
 
     marks.put(node, Mark.PERMANENT);
+    currentIteration.removeLast();
     sorted.add(node);
   }
 
