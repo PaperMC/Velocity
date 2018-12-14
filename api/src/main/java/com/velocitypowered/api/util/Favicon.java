@@ -73,7 +73,7 @@ public final class Favicon {
   public static Favicon create(BufferedImage image) {
     Preconditions.checkNotNull(image, "image");
     Preconditions.checkArgument(image.getWidth() == 64 && image.getHeight() == 64,
-        "Image is not 64x64(found %sx%s)", image.getWidth(), image.getHeight());
+        "Image is not 64x64 (found %sx%s)", image.getWidth(),image.getHeight());
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     try {
       ImageIO.write(image, "PNG", os);
@@ -93,7 +93,11 @@ public final class Favicon {
    */
   public static Favicon create(Path path) throws IOException {
     try (InputStream stream = Files.newInputStream(path)) {
-      return create(ImageIO.read(stream));
+      BufferedImage image = ImageIO.read(stream);
+      if (image == null) {
+        throw new IOException("Unable to read the image.");
+      }
+      return create(image);
     }
   }
 }
