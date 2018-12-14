@@ -14,6 +14,8 @@ public class VelocityMessages {
       .of("No available servers", TextColor.RED);
   public static final Component ALREADY_CONNECTED = TextComponent
       .of("You are already connected to this proxy!", TextColor.RED);
+  public static final Component INVALID_USERNAME = TextComponent
+      .of("Trying to login with invalid username", TextColor.RED);
 
   private VelocityMessages() {
     throw new AssertionError();
