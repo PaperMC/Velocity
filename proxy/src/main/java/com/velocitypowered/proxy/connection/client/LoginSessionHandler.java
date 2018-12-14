@@ -6,6 +6,7 @@ import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP
 import static com.velocitypowered.api.network.ProtocolVersion.*;
 
 import com.google.common.base.Preconditions;
+import com.google.common.net.UrlEscapers;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -15,7 +16,6 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -121,7 +121,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           .generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) inbound.getRemoteAddress()).getHostString();
-      String url = String.format(MOJANG_HASJOINED_URL, login.getUsername(), serverId, playerIp);
+      String url = String.format(MOJANG_HASJOINED_URL,
+          UrlEscapers.urlFormParameterEscaper().escape(login.getUsername()), serverId,
+          UrlEscapers.urlFormParameterEscaper().escape(playerIp));
       server.getHttpClient()
           .get(new URL(url))
           .thenAcceptAsync(profileResponse -> {
