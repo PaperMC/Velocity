@@ -21,8 +21,8 @@ import org.apache.logging.log4j.Logger;
 
 public final class ConnectionManager {
 
-  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 16,
-      1 << 18);
+  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 21,
+      1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
   private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
   private final TransportType transportType;
