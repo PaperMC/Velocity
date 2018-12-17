@@ -43,7 +43,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.regex.Pattern;
 import net.kyori.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,7 +53,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
-  private static final Pattern VALID_MINECRAFT_USERNAME = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
 
   private final VelocityServer server;
   private final MinecraftConnection inbound;
@@ -73,15 +71,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLogin packet) {
-    // Disallow logins from invalid usernames.
-    if (server.getConfiguration().isOnlineMode()) {
-      // In online-mode, follow Mojang's username rules.
-      if (!VALID_MINECRAFT_USERNAME.matcher(packet.getUsername()).matches()) {
-        inbound.closeWith(Disconnect.create(VelocityMessages.INVALID_USERNAME));
-        return true;
-      }
-    }
-
     this.login = packet;
     if (inbound.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
       playerInfoId = ThreadLocalRandom.current().nextInt();
