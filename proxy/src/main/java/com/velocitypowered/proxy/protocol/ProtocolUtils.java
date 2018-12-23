@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.protocol;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
@@ -49,8 +51,10 @@ public enum ProtocolUtils {
 
   public static String readString(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
-    Preconditions
-        .checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkState(buf.isReadable(length),
+        "Trying to read a string that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
     return str;
@@ -68,8 +72,10 @@ public enum ProtocolUtils {
 
   public static byte[] readByteArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
-    Preconditions
-        .checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkState(buf.isReadable(length),
+        "Trying to read a string that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
     byte[] array = new byte[length];
     buf.readBytes(array);
     return array;
