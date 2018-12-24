@@ -11,6 +11,9 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider;
+import io.netty.resolver.dns.DnsAddressResolverGroup;
+import io.netty.resolver.dns.MultiDnsServerAddressStreamProvider;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +34,8 @@ public final class ConnectionManager {
   private final VelocityServer server;
   public final ServerChannelInitializerHolder serverChannelInitializer;
 
+  private final DnsAddressResolverGroup resolverGroup;
+
   public ConnectionManager(VelocityServer server) {
     this.server = server;
     this.transportType = TransportType.bestType();
@@ -38,6 +43,8 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
+    this.resolverGroup = new DnsAddressResolverGroup(this.transportType.datagramChannelClass,
+        DefaultDnsServerAddressStreamProvider.INSTANCE);
   }
 
   public void logChannelInformation() {
@@ -91,7 +98,8 @@ public final class ConnectionManager {
         .group(this.workerGroup)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            this.server.getConfiguration().getConnectTimeout());
+            this.server.getConfiguration().getConnectTimeout())
+        .resolver(this.resolverGroup);
   }
 
   public void close(InetSocketAddress oldBind) {
