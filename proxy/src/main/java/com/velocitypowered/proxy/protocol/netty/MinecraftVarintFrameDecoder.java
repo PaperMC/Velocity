@@ -16,12 +16,12 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    in.markReaderIndex();
+    int origReaderIndex = in.readerIndex();
 
     byte[] lenBuf = new byte[3];
     for (int i = 0; i < lenBuf.length; i++) {
       if (!in.isReadable()) {
-        in.resetReaderIndex();
+        in.readerIndex(origReaderIndex);
         return;
       }
 
@@ -33,7 +33,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         }
 
         if (in.readableBytes() < packetLength) {
-          in.resetReaderIndex();
+          in.readerIndex(origReaderIndex);
           return;
         }
 
