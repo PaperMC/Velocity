@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Modify as you need.
-MBEDTLS_ROOT=mbedtls-2.12.0
+MBEDTLS_ROOT=mbedtls
 CFLAGS="-O3 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/linux/ -fPIC -shared"
 gcc $CFLAGS -lz src/main/c/jni_util.c src/main/c/jni_zlib_deflate.c src/main/c/jni_zlib_inflate.c \
     -o src/main/resources/linux_x64/velocity-compress.so

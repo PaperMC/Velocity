@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Modify as you need.
-MBEDTLS_ROOT=mbedtls-2.12.0
+MBEDTLS_ROOT=mbedtls
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home
 CFLAGS="-O3 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/darwin/ -fPIC -shared"
 

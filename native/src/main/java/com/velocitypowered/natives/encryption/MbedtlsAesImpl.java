@@ -1,8 +1,10 @@
 package com.velocitypowered.natives.encryption;
 
-public class MbedtlsAesImpl {
+import java.security.GeneralSecurityException;
 
-  native long init(byte[] key);
+class MbedtlsAesImpl {
+
+  native long init(byte[] key) throws GeneralSecurityException;
 
   native void process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
       boolean encrypt);
