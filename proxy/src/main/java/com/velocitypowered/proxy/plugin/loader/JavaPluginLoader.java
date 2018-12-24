@@ -83,6 +83,7 @@ public class JavaPluginLoader implements PluginLoader {
 
   private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
       throws Exception {
+    boolean foundBungeeBukkitPluginFile = false;
     try (JarInputStream in = new JarInputStream(
         new BufferedInputStream(Files.newInputStream(source)))) {
       JarEntry entry;
@@ -93,6 +94,16 @@ public class JavaPluginLoader implements PluginLoader {
                 .fromJson(pluginInfoReader, SerializedPluginDescription.class));
           }
         }
+
+        if (entry.getName().equals("plugin.yml") || entry.getName().equals("bungee.yml")) {
+          foundBungeeBukkitPluginFile = true;
+        }
+      }
+
+      if (foundBungeeBukkitPluginFile) {
+        throw new InvalidPluginException("The plugin file " + source.getFileName() + " appears to "
+            + "be a Bukkit or BungeeCord plugin. Velocity does not support Bukkit or BungeeCord "
+            + "plugins.");
       }
 
       return Optional.empty();
