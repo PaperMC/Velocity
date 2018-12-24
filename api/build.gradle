@@ -80,7 +80,7 @@ publishing {
     repositories {
         maven {
             name = 'myRepo'
-            def base = project.ext.getCurrentBranchName() == "master" ? 'file:///maven-repo' : File.createTempDir().toURI().toURL().toString()
+            def base = 'file:///maven-repo'
             def releasesRepoUrl = "$base/releases"
             def snapshotsRepoUrl = "$base/snapshots"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
