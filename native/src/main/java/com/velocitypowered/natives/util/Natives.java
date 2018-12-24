@@ -6,6 +6,7 @@ import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.NativeVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
+import com.velocitypowered.natives.encryption.NativeVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,12 +59,12 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-          /*new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
+          new NativeCodeLoader.Variant<>(NativeCodeLoader.MACOS,
               copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
               NativeVelocityCipher.FACTORY),
             new NativeCodeLoader.Variant<>(NativeCodeLoader.LINUX,
               copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
-              NativeVelocityCipher.FACTORY),*/
+              NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )
