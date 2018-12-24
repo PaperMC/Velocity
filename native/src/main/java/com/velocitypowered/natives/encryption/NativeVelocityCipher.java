@@ -24,7 +24,7 @@ public class NativeVelocityCipher implements VelocityCipher {
   private final boolean encrypt;
   private boolean disposed = false;
 
-  private NativeVelocityCipher(boolean encrypt, SecretKey key) {
+  private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
     this.encrypt = encrypt;
     this.ctx = impl.init(key.getEncoded());
   }
