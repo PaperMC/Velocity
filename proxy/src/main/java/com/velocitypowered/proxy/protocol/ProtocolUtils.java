@@ -51,12 +51,18 @@ public enum ProtocolUtils {
 
   public static String readString(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
-    checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkArgument(length >= 0, "Got a negative-length string (%s)", length);
+    // `cap` is interpreted as a UTF-8 character length, hence the multiplication by 4 - this covers
+    // the full Unicode plane - a 4 byte character (surrogate) is the maximum. We do a later sanity
+    // check to make sure our optimistic guess was good enough.
+    checkArgument(length <= cap * 4, "Bad string size (got %s, maximum is %s)", length, cap);
     checkState(buf.isReadable(length),
         "Trying to read a string that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
+    checkState(str.length() <= cap, "Got a too-long string (got %s, max %s)",
+        str.length(), cap);
     return str;
   }
 
