@@ -90,6 +90,7 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectSorted*'
     exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
     exclude 'it/unimi/dsi/fastutil/shorts/**'
+    exclude 'org/checkerframework/checker/**'
 }
 
 artifacts {
