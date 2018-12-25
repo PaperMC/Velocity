@@ -12,7 +12,7 @@ public class LegacyDisconnect {
   }
 
   /**
-   * Converts a legacy response into a disconnect packet.
+   * Converts a legacy response into an legacy disconnect packet.
    * @param response the response to convert
    * @return the disconnect packet
    */
@@ -28,8 +28,16 @@ public class LegacyDisconnect {
     return new LegacyDisconnect(kickMessage);
   }
 
+  /**
+   * Converts a {@link TextComponent} into a legacy disconnect packet.
+   * @param component the component to convert
+   * @return the disconnect packet
+   */
   public static LegacyDisconnect from(TextComponent component) {
-    return new LegacyDisconnect(ComponentSerializers.LEGACY.serialize(component));
+    // We intentionally use the legacy serializers, because the old clients can't understand JSON.
+    @SuppressWarnings("deprecated")
+    String serialized = ComponentSerializers.LEGACY.serialize(component);
+    return new LegacyDisconnect(serialized);
   }
 
   public String getReason() {

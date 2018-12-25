@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -12,7 +13,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.velocitypowered.api.network.ProtocolVersion;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityChannelRegistrar implements ChannelRegistrar {
@@ -72,6 +72,11 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     return identifierMap.get(id);
   }
 
+  /**
+   * Returns all the channel names to register depending on the Minecraft protocol version.
+   * @param protocolVersion the protocol version in use
+   * @return the list of channels to register
+   */
   public Collection<String> getChannelsForProtocol(ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       return getModernChannelIds();

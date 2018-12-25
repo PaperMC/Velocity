@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
@@ -87,11 +86,11 @@ public class VelocityTabList implements TabList {
   }
 
   public void processBackendPacket(PlayerListItem packet) {
-    //Packets are already forwarded on, so no need to do that here
+    // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
       if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
-        //Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
+        // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;
       }
 
@@ -136,6 +135,9 @@ public class VelocityTabList implements TabList {
           }
           break;
         }
+        default:
+          // Nothing we can do here
+          break;
       }
     }
   }

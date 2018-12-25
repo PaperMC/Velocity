@@ -9,12 +9,12 @@ import io.netty.buffer.ByteBuf;
 public class LegacyPing implements MinecraftPacket {
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     throw new UnsupportedOperationException();
   }
 

@@ -17,6 +17,11 @@ public enum ProtocolUtils {
   ;
   private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
 
+  /**
+   * Reads a Minecraft-style VarInt from the specified {@code buf}.
+   * @param buf the buffer to read from
+   * @return the decoded VarInt
+   */
   public static int readVarInt(ByteBuf buf) {
     int i = 0;
     int j = 0;
@@ -33,6 +38,11 @@ public enum ProtocolUtils {
     return i;
   }
 
+  /**
+   * Writes a Minecraft-style VarInt to the specified {@code buf}.
+   * @param buf the buffer to read from
+   * @param value the integer to write
+   */
   public static void writeVarInt(ByteBuf buf, int value) {
     while (true) {
       if ((value & 0xFFFFFF80) == 0) {
@@ -49,6 +59,13 @@ public enum ProtocolUtils {
     return readString(buf, DEFAULT_MAX_STRING_SIZE);
   }
 
+  /**
+   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over
+   * {@code cap} size.
+   * @param buf the buffer to read from
+   * @param cap the maximum size of the string, in UTF-8 character length
+   * @return the decoded string
+   */
   public static String readString(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkArgument(length >= 0, "Got a negative-length string (%s)", length);
@@ -140,7 +157,7 @@ public enum ProtocolUtils {
 
     public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
                                                                     ProtocolVersion protocolVersion) {
-      return (this == SERVERBOUND ? state.SERVERBOUND : state.CLIENTBOUND)
+      return (this == SERVERBOUND ? state.serverbound : state.clientbound)
               .getProtocolRegistry(protocolVersion);
     }
   }
