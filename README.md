@@ -1,6 +1,6 @@
 # Velocity
 
-[![Build Status](https://img.shields.io/jenkins/s/https/ci.velocitypowered.com/job/velocity.svg)](https://ci.velocitypowered.com/job/velocity/job/master/)
+[![Build Status](https://img.shields.io/jenkins/s/https/ci.velocitypowered.com/job/velocity.svg)](https://ci.velocitypowered.com/job/velocity/)
 [![Join our Discord](https://img.shields.io/discord/472484458856185878.svg?logo=discord&label=)](https://discord.gg/8cB9Bgf)
 
 A Minecraft server proxy with unparalleled server support, scalability,
