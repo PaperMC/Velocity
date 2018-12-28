@@ -198,18 +198,17 @@ public enum StateRegistry {
 
   public static class PacketRegistry {
 
-    private static final Map<ProtocolVersion, List<ProtocolVersion>> LINKED_PROTOCOL_VERSIONS
+    private static final Map<ProtocolVersion, Collection<ProtocolVersion>> LINKED_PROTOCOL_VERSIONS
         = new EnumMap<>(ProtocolVersion.class);
 
     static {
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, ImmutableList.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2,
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9, EnumSet.of(MINECRAFT_1_9_1, MINECRAFT_1_9_2,
           MINECRAFT_1_9_4));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, ImmutableList.of(MINECRAFT_1_10, MINECRAFT_1_11,
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_9_4, EnumSet.of(MINECRAFT_1_10, MINECRAFT_1_11,
           MINECRAFT_1_11_1));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, ImmutableList.of(MINECRAFT_1_12_1));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, ImmutableList.of(MINECRAFT_1_12_2));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, ImmutableList.of(MINECRAFT_1_13_1,
-          MINECRAFT_1_13_2));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, EnumSet.of(MINECRAFT_1_12_1));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, EnumSet.of(MINECRAFT_1_12_2));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, EnumSet.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
     }
 
     private final Direction direction;
@@ -256,11 +255,10 @@ public enum StateRegistry {
         }
         registry.packetClassToId.put(clazz, mapping.id);
 
-        List<ProtocolVersion> linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
+        Collection<ProtocolVersion> linked = LINKED_PROTOCOL_VERSIONS.get(mapping.protocolVersion);
         if (linked != null) {
           links:
-          for (int i = 0; i < linked.size(); i++) {
-            ProtocolVersion linkedVersion = linked.get(i);
+          for (ProtocolVersion linkedVersion : linked) {
             // Make sure that later mappings override this one.
             for (PacketMapping m : mappings) {
               if (linkedVersion == m.protocolVersion) {
