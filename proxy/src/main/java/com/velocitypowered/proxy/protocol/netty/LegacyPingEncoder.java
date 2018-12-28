@@ -24,6 +24,6 @@ public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnect> {
 
   private static void writeLegacyString(ByteBuf out, String string) {
     out.writeShort(string.length());
-    out.writeBytes(string.getBytes(StandardCharsets.UTF_16BE));
+    out.writeCharSequence(string, StandardCharsets.UTF_16BE);
   }
 }

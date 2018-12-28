@@ -263,8 +263,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       if (isBasic) {
         return;
       }
-
-      writeString(buf, "plugins");
       
       StringBuilder pluginsString = new StringBuilder();
       pluginsString.append(serverVersion).append(':').append(' ');
@@ -279,7 +277,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         }
       }
 
-      writeString(buf, pluginsString.toString());
+      write("plugins", pluginsString.toString());
     }
   }
 }

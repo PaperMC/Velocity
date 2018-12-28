@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
-import com.google.common.base.Preconditions;
+import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
+
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
@@ -22,23 +23,24 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-    int uncompressedSize = ProtocolUtils.readVarInt(msg);
-    if (uncompressedSize == 0) {
+    int expectedUncompressedSize = ProtocolUtils.readVarInt(msg);
+    if (expectedUncompressedSize == 0) {
       // Strip the now-useless uncompressed size, this message is already uncompressed.
       out.add(msg.retainedSlice());
       msg.skipBytes(msg.readableBytes());
       return;
     }
 
-    Preconditions.checkState(uncompressedSize >= threshold,
+    checkFrame(expectedUncompressedSize >= threshold,
         "Uncompressed size %s is greater than threshold %s",
-        uncompressedSize, threshold);
+        expectedUncompressedSize, threshold);
     ByteBuf uncompressed = ctx.alloc()
-        .buffer(Math.min(uncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
+        .buffer(Math.min(expectedUncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
     try {
       compressor.inflate(msg, uncompressed);
-      Preconditions.checkState(uncompressedSize == uncompressed.readableBytes(),
-          "Mismatched compression sizes");
+      checkFrame(expectedUncompressedSize == uncompressed.readableBytes(),
+          "Mismatched compression sizes (got %s, expected %s)",
+          uncompressed.readableBytes(), expectedUncompressedSize);
       out.add(uncompressed);
     } catch (Exception e) {
       uncompressed.release();
