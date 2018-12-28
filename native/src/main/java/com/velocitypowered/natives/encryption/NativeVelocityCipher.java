@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.encryption;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
@@ -43,6 +44,18 @@ public class NativeVelocityCipher implements VelocityCipher {
 
     source.skipBytes(len);
     destination.writerIndex(destination.writerIndex() + len);
+  }
+
+  @Override
+  public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
+    ByteBuf out = ctx.alloc().directBuffer(source.readableBytes());
+    try {
+      process(source, out);
+      return out;
+    } catch (Exception e) {
+      out.release();
+      throw e;
+    }
   }
 
   @Override

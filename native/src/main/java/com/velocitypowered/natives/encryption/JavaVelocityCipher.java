@@ -2,6 +2,7 @@ package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -21,6 +22,9 @@ public class JavaVelocityCipher implements VelocityCipher {
       return new JavaVelocityCipher(false, key);
     }
   };
+  private static final int INITIAL_BUFFER_SIZE = 1024 * 16;
+  private static final ThreadLocal<byte[]> inBufLocal = ThreadLocal.withInitial(
+      () -> new byte[INITIAL_BUFFER_SIZE]);
 
   private final Cipher cipher;
   private boolean disposed = false;
@@ -35,13 +39,36 @@ public class JavaVelocityCipher implements VelocityCipher {
   public void process(ByteBuf source, ByteBuf destination) throws ShortBufferException {
     ensureNotDisposed();
 
-    byte[] sourceAsBytes = new byte[source.readableBytes()];
-    source.readBytes(sourceAsBytes);
+    int inBytes = source.readableBytes();
+    byte[] inBuf = slurp(source);
 
-    int outputSize = cipher.getOutputSize(sourceAsBytes.length);
-    byte[] destinationBytes = new byte[outputSize];
-    cipher.update(sourceAsBytes, 0, sourceAsBytes.length, destinationBytes);
-    destination.writeBytes(destinationBytes);
+    int outputSize = cipher.getOutputSize(inBytes);
+    byte[] outBuf = new byte[outputSize];
+    cipher.update(inBuf, 0, inBytes, outBuf);
+    destination.writeBytes(outBuf);
+  }
+
+  @Override
+  public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
+    ensureNotDisposed();
+
+    int inBytes = source.readableBytes();
+    byte[] inBuf = slurp(source);
+
+    ByteBuf out = ctx.alloc().heapBuffer(cipher.getOutputSize(inBytes));
+    out.writerIndex(cipher.update(inBuf, 0, inBytes, out.array(), out.arrayOffset()));
+    return out;
+  }
+
+  private static byte[] slurp(ByteBuf source) {
+    int inBytes = source.readableBytes();
+    byte[] inBuf = inBufLocal.get();
+    if (inBuf.length <= inBytes) {
+      inBuf = new byte[inBytes];
+      inBufLocal.set(inBuf);
+    }
+    source.readBytes(inBuf, 0, inBytes);
+    return inBuf;
   }
 
   @Override

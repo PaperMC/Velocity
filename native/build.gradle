@@ -8,7 +8,7 @@ apply from: '../gradle/checkstyle.gradle'
 
 dependencies {
     compile "com.google.guava:guava:${guavaVersion}"
-    compile "io.netty:netty-buffer:${nettyVersion}"
+    compile "io.netty:netty-handler:${nettyVersion}"
     compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
 
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"

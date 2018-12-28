@@ -17,14 +17,7 @@ public class MinecraftCipherDecoder extends ByteToMessageDecoder {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-    ByteBuf decrypted = ctx.alloc().buffer(in.readableBytes());
-    try {
-      cipher.process(in, decrypted);
-      out.add(decrypted);
-    } catch (Exception e) {
-      decrypted.release();
-      throw e;
-    }
+    out.add(cipher.process(ctx, in));
   }
 
   @Override
