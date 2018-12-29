@@ -1,5 +1,9 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -10,6 +14,8 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
@@ -126,6 +132,25 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(PlayerListItem packet) {
     serverConn.getPlayer().getTabList().processBackendPacket(packet);
     return false; //Forward packet to player
+  }
+
+  @Override
+  public boolean handle(AvailableCommands commands) {
+    // Inject commands from the proxy.
+    for (String command : server.getCommandManager().getAllRegisteredCommands()) {
+      if (!server.getCommandManager().hasPermission(serverConn.getPlayer(), command)) {
+        continue;
+      }
+
+      LiteralCommandNode<Object> root = LiteralArgumentBuilder.literal(command)
+          .then(RequiredArgumentBuilder.argument("args", StringArgumentType.greedyString())
+              .suggests(new ProtocolSuggestionProvider("minecraft:ask_server"))
+              .build())
+          .executes((ctx) -> 0)
+          .build();
+      commands.getRootNode().addChild(root);
+    }
+    return false;
   }
 
   @Override

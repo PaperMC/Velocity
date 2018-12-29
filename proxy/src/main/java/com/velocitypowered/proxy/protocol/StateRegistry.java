@@ -19,6 +19,7 @@ import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -83,7 +84,8 @@ public enum StateRegistry {
           map(0x14, MINECRAFT_1_8, false),
           map(0x01, MINECRAFT_1_9, false),
           map(0x02, MINECRAFT_1_12, false),
-          map(0x01, MINECRAFT_1_12_1, false));
+          map(0x01, MINECRAFT_1_12_1, false),
+          map(0x05, MINECRAFT_1_13, false));
       serverbound.register(Chat.class, Chat::new,
           map(0x01, MINECRAFT_1_8, false),
           map(0x02, MINECRAFT_1_9, false),
@@ -121,7 +123,10 @@ public enum StateRegistry {
       clientbound.register(TabCompleteResponse.class, TabCompleteResponse::new,
           map(0x3A, MINECRAFT_1_8, false),
           map(0x0E, MINECRAFT_1_9, false),
-          map(0x0E, MINECRAFT_1_12, false));
+          map(0x0E, MINECRAFT_1_12, false),
+          map(0x10, MINECRAFT_1_13, false));
+      clientbound.register(AvailableCommands.class, AvailableCommands::new,
+          map(0x11, MINECRAFT_1_13, false));
       clientbound.register(PluginMessage.class, PluginMessage::new,
           map(0x3F, MINECRAFT_1_8, false),
           map(0x18, MINECRAFT_1_9, false),

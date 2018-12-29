@@ -109,6 +109,22 @@ public enum ProtocolUtils {
     buf.writeBytes(array);
   }
 
+  public static int[] readIntegerArray(ByteBuf buf) {
+    int len = readVarInt(buf);
+    int[] array = new int[len];
+    for (int i = 0; i < len; i++) {
+      array[i] = readVarInt(buf);
+    }
+    return array;
+  }
+
+  public static void writeIntegerArray(ByteBuf buf, int[] array) {
+    writeVarInt(buf, array.length);
+    for (int i : array) {
+      writeVarInt(buf, i);
+    }
+  }
+
   public static UUID readUuid(ByteBuf buf) {
     long msb = buf.readLong();
     long lsb = buf.readLong();

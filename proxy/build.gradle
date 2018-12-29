@@ -47,6 +47,8 @@ dependencies {
     compile 'it.unimi.dsi:fastutil:8.2.1'
     compile 'net.kyori:event-method-asm:3.0.0'
 
+    compile 'com.mojang:brigadier:1.0.15'
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
@@ -78,16 +80,13 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Float*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntArray*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntAVL*'
-    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntLinked*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object*OpenCustom*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntRB*'
-    exclude 'it/unimi/dsi/fastutil/objects/*Object2IntSorted*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Long*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Object*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Reference*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Short*'
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectRB*'
-    exclude 'it/unimi/dsi/fastutil/objects/*ObjectSorted*'
     exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
     exclude 'it/unimi/dsi/fastutil/shorts/**'
     exclude 'org/checkerframework/checker/**'

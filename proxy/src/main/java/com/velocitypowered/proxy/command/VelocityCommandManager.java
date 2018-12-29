@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommandManager implements CommandManager {
@@ -68,6 +70,10 @@ public class VelocityCommandManager implements CommandManager {
     return commands.containsKey(command);
   }
 
+  public Set<String> getAllRegisteredCommands() {
+    return ImmutableSet.copyOf(commands.keySet());
+  }
+
   /**
    * Offer suggestions to fill in the command.
    * @param source the source for the command
@@ -111,6 +117,33 @@ public class VelocityCommandManager implements CommandManager {
       }
 
       return command.suggest(source, actualArgs);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "Unable to invoke suggestions for command " + alias + " for " + source, e);
+    }
+  }
+
+  public boolean hasPermission(CommandSource source, String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    String[] split = cmdLine.split(" ", -1);
+    if (split.length == 0) {
+      // No command available.
+      return false;
+    }
+
+    String alias = split[0];
+    @SuppressWarnings("nullness")
+    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
+    Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+    if (command == null) {
+      // No such command.
+      return false;
+    }
+
+    try {
+      return command.hasPermission(source, actualArgs);
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);
