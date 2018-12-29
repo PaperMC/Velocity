@@ -2,8 +2,8 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -181,18 +181,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         knownChannels.removeAll(channels);
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMcBrand(packet)) {
-        PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion());
-        backendConn.write(rewritten);
+        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
       } else if (!player.getPhase().handle(player, this, packet)) {
-
-        if (!player.getPhase().consideredComplete()
-            || !serverConn.getPhase().consideredComplete()) {
-
-            // The client is trying to send messages too early. This is primarily caused by mods, but
-            // it's further aggravated by Velocity. To work around these issues, we will queue any
-            // non-FML handshake messages to be sent once the FML handshake has completed or the JoinGame
-            // packet has been received by the proxy, whichever comes first.
-            loginPluginMessages.add(packet);
+        if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+            .consideredComplete()) {
+          // The client is trying to send messages too early. This is primarily caused by mods, but
+          // it's further aggravated by Velocity. To work around these issues, we will queue any
+          // non-FML handshake messages to be sent once the FML handshake has completed or the
+          // JoinGame packet has been received by the proxy, whichever comes first.
+          loginPluginMessages.add(packet);
         } else {
           ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
           if (id == null) {

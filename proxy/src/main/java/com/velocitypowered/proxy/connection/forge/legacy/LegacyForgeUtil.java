@@ -1,5 +1,9 @@
 package com.velocitypowered.proxy.connection.forge.legacy;
 
+import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL;
+import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA;
+import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.MOD_LIST_DISCRIMINATOR;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.ModInfo;
@@ -16,20 +20,16 @@ class LegacyForgeUtil {
   }
 
   /**
-   * Gets the discriminator from the FML|HS packet (the first byte in the data)
+   * Gets the discriminator from the FML|HS packet (the first byte in the data).
    *
    * @param message The message to analyse
    * @return The discriminator
    */
   static byte getHandshakePacketDiscriminator(PluginMessage message) {
-    Preconditions.checkArgument(
-        message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL));
-    ByteBuf buf = Unpooled.wrappedBuffer(message.getData());
-    try {
-      return buf.readByte();
-    } finally {
-      buf.release();
-    }
+    Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL));
+    byte[] data = message.getData();
+    Preconditions.checkArgument(data.length >= 1);
+    return data[0];
   }
 
   /**
@@ -41,14 +41,14 @@ class LegacyForgeUtil {
   static List<ModInfo.Mod> readModList(PluginMessage message) {
     Preconditions.checkNotNull(message, "message");
     Preconditions
-        .checkArgument(message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL),
+        .checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
             "message is not a FML HS plugin message");
 
     ByteBuf byteBuf = Unpooled.wrappedBuffer(message.getData());
     try {
       byte discriminator = byteBuf.readByte();
 
-      if (discriminator == LegacyForgeConstants.MOD_LIST_DISCRIMINATOR) {
+      if (discriminator == MOD_LIST_DISCRIMINATOR) {
         ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
         int modCount = ProtocolUtils.readVarInt(byteBuf);
 
@@ -74,8 +74,8 @@ class LegacyForgeUtil {
    */
   static PluginMessage resetPacket() {
     PluginMessage msg = new PluginMessage();
-    msg.setChannel(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    msg.setData(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone());
+    msg.setChannel(FORGE_LEGACY_HANDSHAKE_CHANNEL);
+    msg.setData(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone());
     return msg;
   }
 }

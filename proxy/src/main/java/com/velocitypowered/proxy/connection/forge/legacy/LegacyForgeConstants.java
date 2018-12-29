@@ -48,7 +48,7 @@ public class LegacyForgeConstants {
   static final int REGISTRY_DISCRIMINATOR = 3;
 
   /**
-   * The form of the data for the reset packet
+   * The payload for the reset packet.
    */
   static final byte[] FORGE_LEGACY_HANDSHAKE_RESET_DATA = new byte[]{RESET_DATA_DISCRIMINATOR, 0};
 

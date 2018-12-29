@@ -10,6 +10,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.Tristate;
@@ -22,7 +23,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
@@ -382,8 +382,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public Optional<RegisteredServer> getNextServerToTry() {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
-      serversToTry = server.getConfiguration().getForcedHosts()
-          .getOrDefault(virtualHostStr, Collections.emptyList());
+      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
+          Collections.emptyList());
     }
 
     if (serversToTry.isEmpty()) {

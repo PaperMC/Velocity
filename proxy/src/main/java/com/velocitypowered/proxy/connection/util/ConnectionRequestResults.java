@@ -15,6 +15,11 @@ public class ConnectionRequestResults {
     throw new AssertionError();
   }
 
+  /**
+   * Returns a plain result (one with a status but no reason).
+   * @param status the status to use
+   * @return the result
+   */
   public static ConnectionRequestBuilder.Result plainResult(
       ConnectionRequestBuilder.Status status) {
     return new ConnectionRequestBuilder.Result() {
@@ -35,6 +40,11 @@ public class ConnectionRequestResults {
     return forDisconnect(deserialized);
   }
 
+  /**
+   * Returns a disconnect result with a reason.
+   * @param component the reason for disconnecting from the server
+   * @return the result
+   */
   public static ConnectionRequestBuilder.Result forDisconnect(Component component) {
     return new ConnectionRequestBuilder.Result() {
       @Override

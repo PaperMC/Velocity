@@ -45,8 +45,12 @@ public class VelocityEventManager implements EventManager {
   private final PluginManager pluginManager;
 
   public VelocityEventManager(PluginManager pluginManager) {
+    // Expose the event executors to the plugins - required in order for the generated ASM classes
+    // to work.
     PluginClassLoader cl = new PluginClassLoader(new URL[0]);
     cl.addToClassloaders();
+
+    // Initialize the event bus.
     this.bus = new SimpleEventBus<Object>(Object.class) {
       @Override
       protected boolean shouldPost(@NonNull Object event, @NonNull EventSubscriber<?> subscriber) {
@@ -126,8 +130,8 @@ public class VelocityEventManager implements EventManager {
   }
 
   private void unregisterHandler(EventHandler<?> handler) {
-    bus.unregister(s -> s instanceof KyoriToVelocityHandler &&
-        ((KyoriToVelocityHandler<?>) s).handler == handler);
+    bus.unregister(s -> s instanceof KyoriToVelocityHandler
+        && ((KyoriToVelocityHandler<?>) s).handler == handler);
   }
 
   @Override

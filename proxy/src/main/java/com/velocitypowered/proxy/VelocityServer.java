@@ -144,7 +144,7 @@ public class VelocityServer implements ProxyServer {
 
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
-  public void start() {
+  void start() {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
 
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
@@ -160,12 +160,12 @@ public class VelocityServer implements ProxyServer {
       Path configPath = Paths.get("velocity.toml");
       configuration = VelocityConfiguration.read(configPath);
 
-      AnnotatedConfig
-              .saveConfig(configuration.dumpConfig(), configPath); // Resave config to add new values
+      // Resave config to add new values
+      AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath);
 
       if (!configuration.validate()) {
-        logger.error(
-            "Your configuration is invalid. Velocity will refuse to start up until the errors are resolved.");
+        logger.error("Your configuration is invalid. Velocity will not start up until the errors "
+            + "are resolved.");
         LogManager.shutdown();
         System.exit(1);
       }

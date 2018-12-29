@@ -39,8 +39,8 @@ class PluginDependencyUtilsTest {
   private static final PluginDescription CIRCULAR_DEPENDENCY_2 = testDescription("oval",
       ImmutableList.of(new PluginDependency("circle", "", false)));
 
-  // Note: Kahn's algorithm is non-unique in its return result, although the topological sort will have the correct
-  // order.
+  // Note: Kahn's algorithm is non-unique in its return result, although the topological sort will
+  // have the correct order.
   private static final List<PluginDescription> EXPECTED = ImmutableList.of(
       NEVER_DEPENDED,
       NO_DEPENDENCY_1_EXAMPLE,

@@ -3,8 +3,8 @@ package com.velocitypowered.proxy.protocol;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 

@@ -6,7 +6,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
- * Contains extra logic for {@link ConnectionTypes#LEGACY_FORGE}
+ * Contains extra logic for {@link ConnectionTypes#LEGACY_FORGE}.
  */
 public class LegacyForgeConnectionType extends ConnectionTypeImpl {
 
@@ -18,7 +18,8 @@ public class LegacyForgeConnectionType extends ConnectionTypeImpl {
   }
 
   @Override
-  public GameProfile addGameProfileTokensIfRequired(GameProfile original, PlayerInfoForwarding forwardingType) {
+  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
+      PlayerInfoForwarding forwardingType) {
     // We can't forward the FML token to the server when we are running in legacy forwarding mode,
     // since both use the "hostname" field in the handshake. We add a special property to the
     // profile instead, which will be ignored by non-Forge servers and can be intercepted by a

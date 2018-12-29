@@ -141,8 +141,7 @@ public abstract class AnnotatedConfig {
           @SuppressWarnings("unchecked")
           Map<String, ?> map = (Map<String, ?>) value;
           for (Entry<String, ?> entry : map.entrySet()) {
-            lines.add(
-                escapeKeyIfNeeded(entry.getKey()) + " = " + serialize(entry.getValue())); // Save map data
+            lines.add(escapeKeyIfNeeded(entry.getKey()) + " = " + serialize(entry.getValue()));
           }
           lines.add(""); // Add empty line
           continue;
@@ -165,7 +164,7 @@ public abstract class AnnotatedConfig {
   }
 
   /**
-   * Serializes <pre>value</pre> so it could be parsed by TOML specification
+   * Serializes <pre>value</pre> so it can be parsed as a TOML value.
    *
    * @param value object to serialize
    * @return Serialized object

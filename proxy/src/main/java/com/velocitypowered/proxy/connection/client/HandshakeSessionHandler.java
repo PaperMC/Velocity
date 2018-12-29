@@ -128,7 +128,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private ConnectionType checkForForge(Handshake handshake) {
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
-        && handshake.getProtocolVersion().getProtocol() < ProtocolVersion.MINECRAFT_1_13.getProtocol()) {
+        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       return ConnectionTypes.LEGACY_FORGE;
     } else {
       // For later: See if we can determine Forge 1.13+ here, else this will need to be UNDETERMINED

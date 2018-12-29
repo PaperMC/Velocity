@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.server;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
