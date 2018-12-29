@@ -14,6 +14,11 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
 
   private final String name;
 
+  /**
+   * Creates a new legacy channel identifier.
+   *
+   * @param name the name for the channel
+   */
   public LegacyChannelIdentifier(String name) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "provided name is empty");
     this.name = name;

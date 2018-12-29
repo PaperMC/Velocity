@@ -1,7 +1,7 @@
 package com.velocitypowered.api.proxy.messages;
 
 /**
- * Represents something that can send plugin messages.
+ * Represents something that can be sent plugin messages.
  */
 public interface ChannelMessageSink {
 

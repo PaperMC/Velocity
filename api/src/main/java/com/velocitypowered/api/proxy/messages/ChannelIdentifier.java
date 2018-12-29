@@ -1,7 +1,7 @@
 package com.velocitypowered.api.proxy.messages;
 
 /**
- * Represents a kind of channel identifier for use with plugin messaging.
+ * Represents a channel identifier for use with plugin messaging.
  */
 public interface ChannelIdentifier {
 

@@ -1,7 +1,7 @@
 package com.velocitypowered.api.proxy.messages;
 
 /**
- * A marker interface that indicates a source of plugin messages.
+ * Indicates that this may be a source of plugin messages.
  */
 public interface ChannelMessageSource {
 
