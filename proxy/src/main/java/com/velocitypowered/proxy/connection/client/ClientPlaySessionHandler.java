@@ -21,7 +21,6 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
-import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -246,11 +245,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(TextComponent.builder()
-        .content("An exception occurred in your connection: ")
-        .color(TextColor.RED)
-        .append(TextComponent.of(ThrowableUtils.briefDescription(throwable), TextColor.WHITE))
-        .build());
+    player.disconnect(TextComponent.of("Your connection has encountered an error. Try again later.",
+        TextColor.RED));
   }
 
   @Override

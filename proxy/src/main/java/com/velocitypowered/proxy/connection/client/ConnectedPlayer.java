@@ -41,7 +41,6 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
-import com.velocitypowered.proxy.util.ThrowableUtils;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
