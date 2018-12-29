@@ -31,7 +31,6 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
-import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -57,26 +56,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
   private final VelocityServer server;
-  private final MinecraftConnection inbound;
-  private final InboundConnection apiInbound;
+  private final MinecraftConnection mcConnection;
+  private final InitialInboundConnection inbound;
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private int playerInfoId;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
-  LoginSessionHandler(VelocityServer server, MinecraftConnection inbound,
-      InboundConnection apiInbound) {
+  LoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
+      InitialInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
+    this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
-    this.apiInbound = Preconditions.checkNotNull(apiInbound, "apiInbound");
   }
 
   @Override
   public boolean handle(ServerLogin packet) {
     this.login = packet;
-    if (inbound.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
+    if (mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
       playerInfoId = ThreadLocalRandom.current().nextInt();
-      inbound.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
+      mcConnection.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
           Unpooled.EMPTY_BUFFER));
     } else {
       beginPreLogin();
@@ -89,7 +88,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (packet.getId() == playerInfoId) {
       if (packet.isSuccess()) {
         // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
-        inbound.closeWith(Disconnect.create(VelocityMessages.NO_PROXY_BEHIND_PROXY));
+        inbound.disconnect(VelocityMessages.NO_PROXY_BEHIND_PROXY);
       } else {
         // Proceed with the regular login process.
         beginPreLogin();
@@ -119,14 +118,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
-      String playerIp = ((InetSocketAddress) inbound.getRemoteAddress()).getHostString();
+      String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
           UrlEscapers.urlFormParameterEscaper().escape(login.getUsername()), serverId,
           UrlEscapers.urlFormParameterEscaper().escape(playerIp));
       server.getHttpClient()
           .get(new URL(url))
           .thenAcceptAsync(profileResponse -> {
-            if (inbound.isClosed()) {
+            if (mcConnection.isClosed()) {
               // The player disconnected after we authenticated them.
               return;
             }
@@ -134,7 +133,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
             // is enabled.
             try {
-              inbound.enableEncryption(decryptedSharedSecret);
+              mcConnection.enableEncryption(decryptedSharedSecret);
             } catch (GeneralSecurityException e) {
               throw new RuntimeException(e);
             }
@@ -144,25 +143,23 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               initializePlayer(GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
             } else if (profileResponse.getCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
-              logger.warn("An offline-mode client ({} from {}) tried to connect!",
-                  login.getUsername(), playerIp);
-              inbound.closeWith(Disconnect.create(VelocityMessages.ONLINE_MODE_ONLY));
+              inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);
             } else {
               // Something else went wrong
               logger.error(
                   "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                   profileResponse.getCode(), login.getUsername(), playerIp);
-              inbound.close();
+              mcConnection.close();
             }
-          }, inbound.eventLoop())
+          }, mcConnection.eventLoop())
           .exceptionally(exception -> {
             logger.error("Unable to enable encryption", exception);
-            inbound.close();
+            mcConnection.close();
             return null;
           });
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
-      inbound.close();
+      mcConnection.close();
     } catch (MalformedURLException e) {
       throw new AssertionError(e);
     }
@@ -174,10 +171,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
-    PreLoginEvent event = new PreLoginEvent(apiInbound, login.getUsername());
+    PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
     server.getEventManager().fire(event)
         .thenRunAsync(() -> {
-          if (inbound.isClosed()) {
+          if (mcConnection.isClosed()) {
             // The player was disconnected
             return;
           }
@@ -185,7 +182,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Optional<Component> disconnectReason = result.getReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
-            inbound.closeWith(Disconnect.create(disconnectReason.get()));
+            mcConnection.closeWith(Disconnect.create(disconnectReason.get()));
             return;
           }
 
@@ -194,11 +191,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // Request encryption.
             EncryptionRequest request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-            inbound.write(request);
+            mcConnection.write(request);
           } else {
             initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
           }
-        }, inbound.eventLoop());
+        }, mcConnection.eventLoop());
   }
 
   private EncryptionRequest generateEncryptionRequest() {
@@ -213,21 +210,24 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private void initializePlayer(GameProfile profile, boolean onlineMode) {
     // Some connection types may need to alter the game profile.
-    profile = inbound.getType().addGameProfileTokensIfRequired(profile,
+    profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.getConfiguration().getPlayerInfoForwardingMode());
-    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(apiInbound, profile,
+    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
         onlineMode);
 
     server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
       // Initiate a regular connection and move over to it.
-      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(), inbound,
-          apiInbound.getVirtualHost().orElse(null));
+      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
+          mcConnection,
+          inbound.getVirtualHost().orElse(null));
       this.connectedPlayer = player;
 
       if (!server.registerConnection(player)) {
         player.disconnect(VelocityMessages.ALREADY_CONNECTED);
         return CompletableFuture.completedFuture(null);
       }
+
+      logger.info("{} has connected", player);
 
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
@@ -239,7 +239,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           })
           // then complete the connection
           .thenAcceptAsync(event -> {
-            if (inbound.isClosed()) {
+            if (mcConnection.isClosed()) {
               // The player was disconnected
               return;
             }
@@ -250,7 +250,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             } else {
               finishLogin(player);
             }
-          }, inbound.eventLoop());
+          }, mcConnection.eventLoop());
     });
 
   }
@@ -264,27 +264,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     int threshold = server.getConfiguration().getCompressionThreshold();
     if (threshold >= 0) {
-      inbound.write(new SetCompression(threshold));
-      inbound.setCompressionThreshold(threshold);
+      mcConnection.write(new SetCompression(threshold));
+      mcConnection.setCompressionThreshold(threshold);
     }
 
     ServerLoginSuccess success = new ServerLoginSuccess();
     success.setUsername(player.getUsername());
     success.setUuid(player.getUniqueId());
-    inbound.write(success);
+    mcConnection.write(success);
 
-    inbound.setAssociation(player);
-    inbound.setState(StateRegistry.PLAY);
+    mcConnection.setAssociation(player);
+    mcConnection.setState(StateRegistry.PLAY);
 
-    logger.info("{} has connected", player);
-    inbound.setSessionHandler(new InitialConnectSessionHandler(player));
+    mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
     server.getEventManager().fire(new PostLoginEvent(player))
         .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    throw new IllegalStateException("Unknown data " + ByteBufUtil.hexDump(buf));
+    mcConnection.close();
   }
 
   @Override

@@ -3,11 +3,19 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import net.kyori.text.Component;
+import net.kyori.text.serializer.ComponentSerializers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-class InitialInboundConnection implements InboundConnection {
+class InitialInboundConnection implements InboundConnection, MinecraftConnectionAssociation {
+
+  private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
 
   private final MinecraftConnection connection;
   private final String cleanedAddress;
@@ -38,5 +46,15 @@ class InitialInboundConnection implements InboundConnection {
   @Override
   public ProtocolVersion getProtocolVersion() {
     return connection.getProtocolVersion();
+  }
+
+  @Override
+  public String toString() {
+    return "[initial connection] " + connection.getRemoteAddress().toString();
+  }
+
+  public void disconnect(Component reason) {
+    logger.info("{} has disconnected: {}", this, ComponentSerializers.LEGACY.serialize(reason));
+    connection.closeWith(Disconnect.create(reason));
   }
 }

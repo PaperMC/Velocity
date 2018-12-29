@@ -4,9 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -75,6 +75,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(Handshake handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
+    connection.setAssociation(ic);
     switch (handshake.getNextStatus()) {
       case StateRegistry.STATUS_ID:
         connection.setState(StateRegistry.STATUS);

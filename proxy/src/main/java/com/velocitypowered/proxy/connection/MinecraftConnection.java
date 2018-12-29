@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -58,6 +59,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private @Nullable MinecraftConnectionAssociation association;
   private final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
+  private boolean knownDisconnect = false;
 
   /**
    * Initializes a new {@link MinecraftConnection} instance.
@@ -88,7 +90,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       sessionHandler.disconnected();
     }
 
-    if (association != null) {
+    if (association != null && !knownDisconnect) {
       logger.info("{} has disconnected", association);
     }
   }
@@ -191,6 +193,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
+      knownDisconnect = true;
       channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
     }
   }

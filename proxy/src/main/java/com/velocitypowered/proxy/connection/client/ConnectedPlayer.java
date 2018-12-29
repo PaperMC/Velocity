@@ -235,6 +235,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void disconnect(Component reason) {
+    logger.info("{} has disconnected: {}", this, ComponentSerializers.LEGACY.serialize(reason));
     connection.closeWith(Disconnect.create(reason));
   }
 
@@ -351,7 +352,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (nextServer.isPresent()) {
         createConnectionRequest(nextServer.get()).fireAndForget();
       } else {
-        connection.closeWith(Disconnect.create(friendlyReason));
+        disconnect(friendlyReason);
       }
     } else {
       KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
@@ -360,7 +361,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .thenAcceptAsync(event -> {
             if (event.getResult() instanceof DisconnectPlayer) {
               DisconnectPlayer res = (DisconnectPlayer) event.getResult();
-              connection.closeWith(Disconnect.create(res.getReason()));
+              disconnect(res.getReason());
             } else if (event.getResult() instanceof RedirectPlayer) {
               RedirectPlayer res = (RedirectPlayer) event.getResult();
               createConnectionRequest(res.getServer()).fireAndForget();
@@ -369,11 +370,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               if (event.kickedDuringServerConnect()) {
                 sendMessage(res.getMessage());
               } else {
-                connection.closeWith(Disconnect.create(res.getMessage()));
+                disconnect(res.getMessage());
               }
             } else {
               // In case someone gets creative, assume we want to disconnect the player.
-              connection.closeWith(Disconnect.create(friendlyReason));
+              disconnect(friendlyReason);
             }
           }, connection.eventLoop());
     }
