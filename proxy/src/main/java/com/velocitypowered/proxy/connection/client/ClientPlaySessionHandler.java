@@ -134,38 +134,47 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(TabCompleteRequest packet) {
-    // Record the request so that the outstanding request can be augmented later.
-    boolean is113 = player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0;
-    boolean isCommand = is113 || (!packet.isAssumeCommand() && packet.getCommand().startsWith("/"));
+    boolean isCommand = !packet.isAssumeCommand() && packet.getCommand().startsWith("/");
 
     if (!isCommand) {
-      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-      // tab list completion support for command names. In 1.13, Brigadier handles everything for
-      // us.
-      outstandingTabComplete = packet;
+      // We can't deal with anything else.
       return false;
     }
 
-    int spacePos = packet.getCommand().indexOf(' ');
-    if (spacePos > 0) {
-      String command = is113 ? packet.getCommand() : packet.getCommand().substring(1);
+    // See if this is a proxy command.
+    String command = packet.getCommand().substring(1);
+    int spacePos = command.indexOf(' ');
+    if (spacePos >= 0) {
       String commandLabel = command.substring(0, spacePos);
       if (server.getCommandManager().hasCommand(commandLabel)) {
         List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
         if (!suggestions.isEmpty()) {
+          int longestLength = 0;
           List<Offer> offers = new ArrayList<>();
           for (String suggestion : suggestions) {
             offers.add(new Offer(suggestion, null));
+            if (suggestion.length() > longestLength) {
+              longestLength = suggestion.length();
+            }
           }
           TabCompleteResponse resp = new TabCompleteResponse();
           resp.setTransactionId(packet.getTransactionId());
-          resp.setStart(spacePos);
-          resp.setLength(command.length() - spacePos);
+          resp.setStart(command.lastIndexOf(' ') + 2);
+          resp.setLength(longestLength);
           resp.getOffers().addAll(offers);
+
           player.getConnection().write(resp);
           return true;
         }
       }
+    }
+
+    boolean is113 = player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0;
+    if (!is113) {
+      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+      // tab list completion support for command names. In 1.13, Brigadier handles everything for
+      // us.
+      outstandingTabComplete = packet;
     }
 
     return false;
