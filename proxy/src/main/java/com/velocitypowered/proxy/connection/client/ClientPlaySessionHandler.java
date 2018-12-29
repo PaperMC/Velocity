@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -19,6 +21,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.ThrowableUtils;
@@ -133,23 +136,39 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(TabCompleteRequest packet) {
     // Record the request so that the outstanding request can be augmented later.
-    if (!packet.isAssumeCommand() && packet.getCommand().startsWith("/")) {
-      int spacePos = packet.getCommand().indexOf(' ');
-      if (spacePos > 0) {
-        String cmd = packet.getCommand().substring(1, spacePos);
-        if (server.getCommandManager().hasCommand(cmd)) {
-          List<String> suggestions = server.getCommandManager()
-              .offerSuggestions(player, packet.getCommand().substring(1));
-          if (!suggestions.isEmpty()) {
-            TabCompleteResponse resp = new TabCompleteResponse();
-            resp.getOffers().addAll(suggestions);
-            player.getConnection().write(resp);
-            return true;
+    boolean is113 = player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0;
+    boolean isCommand = is113 || (!packet.isAssumeCommand() && packet.getCommand().startsWith("/"));
+
+    if (!isCommand) {
+      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+      // tab list completion support for command names. In 1.13, Brigadier handles everything for
+      // us.
+      outstandingTabComplete = packet;
+      return false;
+    }
+
+    int spacePos = packet.getCommand().indexOf(' ');
+    if (spacePos > 0) {
+      String command = is113 ? packet.getCommand() : packet.getCommand().substring(1);
+      String commandLabel = command.substring(0, spacePos);
+      if (server.getCommandManager().hasCommand(commandLabel)) {
+        List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
+        if (!suggestions.isEmpty()) {
+          List<Offer> offers = new ArrayList<>();
+          for (String suggestion : suggestions) {
+            offers.add(new Offer(suggestion, null));
           }
+          TabCompleteResponse resp = new TabCompleteResponse();
+          resp.setTransactionId(packet.getTransactionId());
+          resp.setStart(spacePos);
+          resp.setLength(command.length() - spacePos);
+          resp.getOffers().addAll(offers);
+          player.getConnection().write(resp);
+          return true;
         }
       }
     }
-    outstandingTabComplete = packet;
+
     return false;
   }
 
@@ -323,7 +342,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     Collection<String> toRegister = new HashSet<>(knownChannels);
-    if (serverVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+    if (serverVersion.compareTo(MINECRAFT_1_13) >= 0) {
       toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
     } else {
       toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
@@ -362,7 +381,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           && outstandingTabComplete.getCommand().startsWith("/")) {
         String command = outstandingTabComplete.getCommand().substring(1);
         try {
-          response.getOffers().addAll(server.getCommandManager().offerSuggestions(player, command));
+          List<String> offers = server.getCommandManager().offerSuggestions(player, command);
+          for (String offer : offers) {
+            response.getOffers().add(new Offer(offer, null));
+          }
+          response.getOffers().sort(null);
         } catch (Exception e) {
           logger.error("Unable to provide tab list completions for {} for command '{}'",
               player.getUsername(),

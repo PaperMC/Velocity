@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -65,6 +66,10 @@ public interface MinecraftSessionHandler {
 
   default void writabilityChanged() {
 
+  }
+
+  default boolean handle(AvailableCommands commands) {
+    return false;
   }
 
   default boolean handle(BossBar packet) {
