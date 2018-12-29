@@ -50,7 +50,12 @@ import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -245,7 +250,7 @@ public enum StateRegistry {
       this.versions = Collections.unmodifiableMap(mutableVersions);
     }
 
-    public ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {
+    ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {
       ProtocolRegistry registry = versions.get(version);
       if (registry == null) {
         if (fallback) {
@@ -256,7 +261,7 @@ public enum StateRegistry {
       return registry;
     }
 
-    public <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
+    <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
         PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
@@ -301,6 +306,11 @@ public enum StateRegistry {
         this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
       }
 
+      /**
+       * Attempts to create a packet from the specified {@code id}.
+       * @param id the packet ID
+       * @return the packet instance, or {@code null} if the ID is not registered
+       */
       public @Nullable MinecraftPacket createPacket(final int id) {
         final Supplier<? extends MinecraftPacket> supplier = this.packetIdToSupplier.get(id);
         if (supplier == null) {
@@ -309,6 +319,12 @@ public enum StateRegistry {
         return supplier.get();
       }
 
+      /**
+       * Attempts to look up the packet ID for an {@code packet}.
+       * @param packet the packet to look up
+       * @return the packet ID
+       * @throws IllegalArgumentException if the packet ID is not found
+       */
       public int getPacketId(final MinecraftPacket packet) {
         final int id = this.packetClassToId.getInt(packet.getClass());
         if (id == Integer.MIN_VALUE) {
@@ -328,7 +344,7 @@ public enum StateRegistry {
     private final ProtocolVersion protocolVersion;
     private final boolean encodeOnly;
 
-    public PacketMapping(int id, ProtocolVersion protocolVersion, boolean packetDecoding) {
+    PacketMapping(int id, ProtocolVersion protocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.encodeOnly = packetDecoding;

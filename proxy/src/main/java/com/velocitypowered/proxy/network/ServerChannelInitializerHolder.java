@@ -20,6 +20,11 @@ public class ServerChannelInitializerHolder implements Supplier<ChannelInitializ
     return this.initializer;
   }
 
+  /**
+   * Sets the channel initializer.
+   * @param initializer the new initializer to use
+   * @deprecated Internal implementation detail
+   */
   @Deprecated
   public void set(final ChannelInitializer<Channel> initializer) {
     LOGGER.warn("The server channel initializer has been replaced by {}",

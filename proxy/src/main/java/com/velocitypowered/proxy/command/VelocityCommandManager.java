@@ -123,6 +123,12 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
+  /**
+   * Determines if the {@code source} has permission to run the {@code cmdLine}.
+   * @param source the source to check against
+   * @param cmdLine the command to run
+   * @return {@code true} if the command can be run, otherwise {@code false}
+   */
   public boolean hasPermission(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");

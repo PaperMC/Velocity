@@ -188,7 +188,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
-        logger.warn("Plugin message was sent while the backend was in PLAY. Channel: {}. Packet discarded.");
+        logger.warn("A plugin message was received while the backend server was not "
+            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> actuallyRegistered = new ArrayList<>();
         List<String> channels = PluginMessageUtil.getChannels(packet);

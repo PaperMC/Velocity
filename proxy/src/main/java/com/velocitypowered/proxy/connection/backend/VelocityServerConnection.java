@@ -53,6 +53,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private long lastPingId;
   private long lastPingSent;
 
+  /**
+   * Initializes a new server connection.
+   * @param registeredServer the server to connect to
+   * @param proxyPlayer the player connecting to the server
+   * @param server the Velocity proxy instance
+   */
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
       ConnectedPlayer proxyPlayer, VelocityServer server) {
     this.registeredServer = registeredServer;
@@ -60,6 +66,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     this.server = server;
   }
 
+  /**
+   * Connects to the server.
+   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
+   *         whether or not the connect succeeded
+   */
   public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
     CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
     server.initializeGenericBootstrap()
@@ -167,6 +178,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return proxyPlayer;
   }
 
+  /**
+   * Disconnects from the server.
+   */
   public void disconnect() {
     if (connection != null) {
       gracefulDisconnect = true;

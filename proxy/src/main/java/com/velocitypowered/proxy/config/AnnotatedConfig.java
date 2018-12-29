@@ -36,7 +36,10 @@ public abstract class AnnotatedConfig {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
   public @interface Table {
-
+    /**
+     * The table's name.
+     * @return the table's name
+     */
     String value();
   }
 
@@ -46,7 +49,10 @@ public abstract class AnnotatedConfig {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
   public @interface Comment {
-
+    /**
+     * The comments to include with this key. Each entry is considered a line.
+     * @return the comments
+     */
     String[] value();
   }
 
@@ -56,7 +62,10 @@ public abstract class AnnotatedConfig {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.TYPE})
   public @interface ConfigKey {
-
+    /**
+     * The name of this field in the configuration.
+     * @return the field's name
+     */
     String value();
   }
 

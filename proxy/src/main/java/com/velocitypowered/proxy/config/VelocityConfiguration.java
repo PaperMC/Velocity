@@ -356,6 +356,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         .toString();
   }
 
+  /**
+   * Reads the Velocity configuration from {@code path}.
+   * @param path the path to read from
+   * @return the deserialized Velocity configuration
+   * @throws IOException if we could not read from the {@code path}.
+   */
   public static VelocityConfiguration read(Path path) throws IOException {
     Toml toml;
     if (!path.toFile().exists()) {

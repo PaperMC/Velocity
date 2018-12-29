@@ -65,7 +65,12 @@ public class VelocityTabList implements TabList {
     return Optional.ofNullable(entry);
   }
 
-  public void clearAll() { // Note: this method is called upon server switch
+  /**
+   * Clears all entries from the tab list. Note that the entries are written with
+   * {@link MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit
+   * {@link MinecraftConnection#flush()}.
+   */
+  public void clearAll() {
     List<PlayerListItem.Item> items = new ArrayList<>();
     for (TabListEntry value : entries.values()) {
       items.add(PlayerListItem.Item.from(value));
@@ -85,6 +90,10 @@ public class VelocityTabList implements TabList {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
   }
 
+  /**
+   * Processes a tab list entry packet from the backend.
+   * @param packet the packet to process
+   */
   public void processBackendPacket(PlayerListItem packet) {
     // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {

@@ -14,7 +14,8 @@ public class LegacyForgeConnectionType extends ConnectionTypeImpl {
       new GameProfile.Property("forgeClient", "true", "");
 
   public LegacyForgeConnectionType() {
-    super(LegacyForgeHandshakeClientPhase.NOT_STARTED, LegacyForgeHandshakeBackendPhase.NOT_STARTED);
+    super(LegacyForgeHandshakeClientPhase.NOT_STARTED,
+        LegacyForgeHandshakeBackendPhase.NOT_STARTED);
   }
 
   @Override

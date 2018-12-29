@@ -8,7 +8,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.plugin.loader.JavaPluginLoader;
+import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;

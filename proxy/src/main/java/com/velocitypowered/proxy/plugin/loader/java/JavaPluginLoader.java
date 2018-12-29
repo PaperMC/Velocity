@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.plugin.loader;
+package com.velocitypowered.proxy.plugin.loader.java;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -10,6 +10,9 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
+import com.velocitypowered.proxy.plugin.loader.PluginLoader;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 import java.io.BufferedInputStream;

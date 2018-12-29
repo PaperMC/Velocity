@@ -83,6 +83,11 @@ public enum ProtocolUtils {
     return str;
   }
 
+  /**
+   * Writes the specified {@code str} to the {@code buf} with a VarInt prefix.
+   * @param buf the buffer to write to
+   * @param str the string to write
+   */
   public static void writeString(ByteBuf buf, String str) {
     int size = ByteBufUtil.utf8Bytes(str);
     writeVarInt(buf, size);
@@ -93,6 +98,13 @@ public enum ProtocolUtils {
     return readByteArray(buf, DEFAULT_MAX_STRING_SIZE);
   }
 
+  /**
+   * Reads a VarInt length-prefixed byte array from the {@code buf}, making sure to not go over
+   * {@code cap} size.
+   * @param buf the buffer to read from
+   * @param cap the maximum size of the string, in UTF-8 character length
+   * @return the byte array
+   */
   public static byte[] readByteArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
@@ -109,6 +121,11 @@ public enum ProtocolUtils {
     buf.writeBytes(array);
   }
 
+  /**
+   * Reads an VarInt-prefixed array of VarInt integers from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return an array of integers
+   */
   public static int[] readIntegerArray(ByteBuf buf) {
     int len = readVarInt(buf);
     int[] array = new int[len];
@@ -118,13 +135,11 @@ public enum ProtocolUtils {
     return array;
   }
 
-  public static void writeIntegerArray(ByteBuf buf, int[] array) {
-    writeVarInt(buf, array.length);
-    for (int i : array) {
-      writeVarInt(buf, i);
-    }
-  }
-
+  /**
+   * Reads an UUID from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return the UUID from the buffer
+   */
   public static UUID readUuid(ByteBuf buf) {
     long msb = buf.readLong();
     long lsb = buf.readLong();
@@ -136,6 +151,11 @@ public enum ProtocolUtils {
     buf.writeLong(uuid.getLeastSignificantBits());
   }
 
+  /**
+   * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
+   * @param buf the buffer to write to
+   * @param properties the properties to serialize
+   */
   public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
     writeVarInt(buf, properties.size());
     for (GameProfile.Property property : properties) {
@@ -151,6 +171,11 @@ public enum ProtocolUtils {
     }
   }
 
+  /**
+   * Reads a list of {@link com.velocitypowered.api.util.GameProfile.Property} from the buffer.
+   * @param buf the buffer to read from
+   * @return the read properties
+   */
   public static List<GameProfile.Property> readProperties(ByteBuf buf) {
     List<GameProfile.Property> properties = new ArrayList<>();
     int size = readVarInt(buf);
@@ -172,9 +197,9 @@ public enum ProtocolUtils {
     CLIENTBOUND;
 
     public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
-                                                                    ProtocolVersion protocolVersion) {
+                                                                    ProtocolVersion version) {
       return (this == SERVERBOUND ? state.serverbound : state.clientbound)
-              .getProtocolRegistry(protocolVersion);
+          .getProtocolRegistry(version);
     }
   }
 }

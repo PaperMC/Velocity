@@ -2,10 +2,10 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;

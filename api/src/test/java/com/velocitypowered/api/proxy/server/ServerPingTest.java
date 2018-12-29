@@ -1,6 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing.Players;

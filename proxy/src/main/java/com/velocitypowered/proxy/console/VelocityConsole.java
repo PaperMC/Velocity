@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.console;
 
+import static com.velocitypowered.api.permission.PermissionFunction.*;
+
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
@@ -26,7 +28,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 
   private final VelocityServer server;
-  private PermissionFunction permissionFunction = PermissionFunction.ALWAYS_TRUE;
+  private PermissionFunction permissionFunction = ALWAYS_TRUE;
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
@@ -43,20 +45,14 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   public void setupStreams() {
-    System.setOut(IoBuilder.forLogger(logger)
-        .setLevel(Level.INFO)
-        .buildPrintStream());
-    System.setErr(IoBuilder.forLogger(logger)
-        .setLevel(Level.ERROR)
-        .buildPrintStream());
+    System.setOut(IoBuilder.forLogger(logger).setLevel(Level.INFO).buildPrintStream());
+    System.setErr(IoBuilder.forLogger(logger).setLevel(Level.ERROR).buildPrintStream());
   }
 
   public void setupPermissions() {
-    PermissionsSetupEvent event = new PermissionsSetupEvent(this,
-        s -> PermissionFunction.ALWAYS_TRUE);
-    this.server.getEventManager().fire(event)
-        .join(); // this is called on startup, we can safely #join
-    this.permissionFunction = event.createFunction(this);
+    PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
+    // we can safely block here, this is before any listeners fire
+    this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
   }
 
   @Override

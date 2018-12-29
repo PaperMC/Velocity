@@ -20,6 +20,10 @@ jar {
     }
 }
 
+tasks.withType(Checkstyle) {
+    exclude('**/com/velocitypowered/proxy/protocol/packet/*.java')
+}
+
 dependencies {
     // Note: we depend on the API twice, first the main sourceset, and then the annotation processor.
     compile project(':velocity-api')

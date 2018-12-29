@@ -12,13 +12,13 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VelocityPluginModule implements Module {
+class VelocityPluginModule implements Module {
 
   private final ProxyServer server;
   private final JavaVelocityPluginDescription description;
   private final Path basePluginPath;
 
-  public VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
+  VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
       Path basePluginPath) {
     this.server = server;
     this.description = description;

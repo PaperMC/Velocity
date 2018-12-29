@@ -7,7 +7,7 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
 
 /**
- * Indicates the type of connection that has been made
+ * Indicates the type of connection that has been made.
  */
 public class ConnectionTypeImpl implements ConnectionType {
 
