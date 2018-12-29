@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class ResourcePackResponse implements MinecraftPacket {
 
+  private String hash = "";
   @MonotonicNonNull
   private Status status;
 
@@ -23,11 +24,17 @@ public class ResourcePackResponse implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+      this.hash = ProtocolUtils.readString(buf);
+    }
     this.status = Status.values()[ProtocolUtils.readVarInt(buf)];
   }
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+      ProtocolUtils.writeString(buf, hash);
+    }
     ProtocolUtils.writeVarInt(buf, status.ordinal());
   }
 
@@ -39,6 +46,7 @@ public class ResourcePackResponse implements MinecraftPacket {
   @Override
   public String toString() {
     return "ResourcePackResponse{"
+        + "hash=" + hash + ", "
         + "status=" + status
         + '}';
   }
