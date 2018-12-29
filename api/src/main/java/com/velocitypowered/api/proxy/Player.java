@@ -151,4 +151,20 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * @param input the chat input to send
    */
   void spoofChatInput(String input);
+
+  /**
+   * Sends the specified resource pack from {@code url} to the user. If at all possible, send the
+   * resource pack using {@link #sendResourcePack(String, byte[])}.
+   *
+   * @param url the URL for the resource pack
+   */
+  void sendResourcePack(String url);
+
+  /**
+   * Sends the specified resource pack from {@code url} to the user.
+   *
+   * @param url the URL for the resource pack
+   * @param hash the SHA-1 hash value for the resource pack
+   */
+  void sendResourcePack(String url, byte[] hash);
 }

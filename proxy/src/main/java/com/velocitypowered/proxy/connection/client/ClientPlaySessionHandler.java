@@ -4,6 +4,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -18,6 +19,7 @@ import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
@@ -233,6 +235,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     return true;
+  }
+
+  @Override
+  public boolean handle(ResourcePackResponse packet) {
+    server.getEventManager().fireAndForget(new PlayerResourcePackStatusEvent(player,
+        packet.getStatus()));
+    return false;
   }
 
   @Override

@@ -38,9 +38,11 @@ import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
+import io.netty.buffer.ByteBufUtil;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -465,6 +467,28 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
     ensureBackendConnection().write(Chat.createServerbound(input));
+  }
+
+  @Override
+  public void sendResourcePack(String url) {
+    Preconditions.checkNotNull(url, "url");
+
+    ResourcePackRequest request = new ResourcePackRequest();
+    request.setUrl(url);
+    request.setHash("");
+    connection.write(request);
+  }
+
+  @Override
+  public void sendResourcePack(String url, byte[] hash) {
+    Preconditions.checkNotNull(url, "url");
+    Preconditions.checkNotNull(hash, "hash");
+    Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
+
+    ResourcePackRequest request = new ResourcePackRequest();
+    request.setUrl(url);
+    request.setHash(ByteBufUtil.hexDump(hash));
+    connection.write(request);
   }
 
   /**

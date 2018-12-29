@@ -18,6 +18,8 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
@@ -173,6 +175,14 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(PlayerListItem packet) {
+    return false;
+  }
+
+  default boolean handle(ResourcePackRequest packet) {
+    return false;
+  }
+
+  default boolean handle(ResourcePackResponse packet) {
     return false;
   }
 }

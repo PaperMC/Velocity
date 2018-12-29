@@ -17,7 +17,6 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINIMUM_VERSION;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -34,6 +33,8 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
@@ -110,6 +111,11 @@ public enum StateRegistry {
           map(0x0C, MINECRAFT_1_12, false),
           map(0x0B, MINECRAFT_1_12_1, false),
           map(0x0E, MINECRAFT_1_13, false));
+      serverbound.register(ResourcePackResponse.class, ResourcePackResponse::new,
+          map(0x19, MINECRAFT_1_8, false),
+          map(0x16, MINECRAFT_1_9, false),
+          map(0x18, MINECRAFT_1_12, false),
+          map(0x1D, MINECRAFT_1_13, false));
 
       clientbound.register(BossBar.class, BossBar::new,
           map(0x0C, MINECRAFT_1_9, false),
@@ -153,6 +159,12 @@ public enum StateRegistry {
           map(0x34, MINECRAFT_1_12, true),
           map(0x35, MINECRAFT_1_12_2, true),
           map(0x38, MINECRAFT_1_13, true));
+      clientbound.register(ResourcePackRequest.class, ResourcePackRequest::new,
+          map(0x48, MINECRAFT_1_8, true),
+          map(0x32, MINECRAFT_1_9, true),
+          map(0x33, MINECRAFT_1_12, true),
+          map(0x34, MINECRAFT_1_12_1, true),
+          map(0x37, MINECRAFT_1_13, true));
       clientbound.register(HeaderAndFooter.class, HeaderAndFooter::new,
           map(0x47, MINECRAFT_1_8, true),
           map(0x48, MINECRAFT_1_9, true),
