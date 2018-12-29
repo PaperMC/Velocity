@@ -38,6 +38,11 @@ public class ArgumentPropertyRegistry {
     byId.put(identifier, serializer);
   }
 
+  /**
+   * Deserializes the {@link ArgumentType}.
+   * @param buf the buffer to deserialize
+   * @return the deserialized {@link ArgumentType}
+   */
   public static ArgumentType<?> deserialize(ByteBuf buf) {
     String identifier = ProtocolUtils.readString(buf);
     ArgumentPropertySerializer<?> serializer = byId.get(identifier);
@@ -53,6 +58,11 @@ public class ArgumentPropertyRegistry {
     }
   }
 
+  /**
+   * Serializes the {@code type} into the provided {@code buf}.
+   * @param buf the buffer to serialize into
+   * @param type the type to serialize
+   */
   public static void serialize(ByteBuf buf, ArgumentType<?> type) {
     if (type instanceof DummyProperty) {
       DummyProperty property = (DummyProperty) type;

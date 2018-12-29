@@ -25,13 +25,10 @@ import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegis
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -51,6 +48,10 @@ public class AvailableCommands implements MinecraftPacket {
   @MonotonicNonNull
   private RootCommandNode<Object> rootNode;
 
+  /**
+   * Returns the root node.
+   * @return the root node
+   */
   public RootCommandNode<Object> getRootNode() {
     if (rootNode == null) {
       throw new IllegalStateException("Packet not yet deserialized");
@@ -63,8 +64,7 @@ public class AvailableCommands implements MinecraftPacket {
     int commands = ProtocolUtils.readVarInt(buf);
     WireNode[] wireNodes = new WireNode[commands];
     for (int i = 0; i < commands; i++) {
-      WireNode node = deserializeNode(buf, i);
-      wireNodes[i] = node;
+      wireNodes[i] = deserializeNode(buf, i);
     }
 
     // Iterate over the deserialized nodes and attempt to form a graph. We also resolve any cycles
@@ -104,7 +104,7 @@ public class AvailableCommands implements MinecraftPacket {
       }
     }
 
-    // Now serialize the children
+    // Now serialize the children.
     ProtocolUtils.writeVarInt(buf, idMappings.size());
     for (CommandNode<Object> child : idMappings.keySet()) {
       serializeNode(child, buf, idMappings);
@@ -220,7 +220,7 @@ public class AvailableCommands implements MinecraftPacket {
       this.args = args;
     }
 
-    public boolean toNode(WireNode[] wireNodes) {
+    boolean toNode(WireNode[] wireNodes) {
       if (this.built == null) {
         // Ensure all children exist. Note that we delay checking if the node has been built yet;
         // that needs to come after this node is built.
