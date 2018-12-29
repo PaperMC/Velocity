@@ -146,6 +146,7 @@ public class VelocityServer implements ProxyServer {
       "console", "cm", "configuration"})
   void start() {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+    console.setupStreams();
 
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 

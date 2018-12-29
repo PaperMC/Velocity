@@ -38,6 +38,7 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+    compile "org.apache.logging.log4j:log4j-iostreams:${log4jVersion}"
 
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4' // command-line options
     compile 'net.minecrell:terminalconsoleappender:1.1.1'
@@ -63,11 +64,14 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/ints/IntAVL*'
     exclude 'it/unimi/dsi/fastutil/ints/IntArray*'
     exclude 'it/unimi/dsi/fastutil/ints/IntBi*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntLinked*'
     exclude 'it/unimi/dsi/fastutil/ints/IntList*'
     exclude 'it/unimi/dsi/fastutil/ints/IntOpen*'
     exclude 'it/unimi/dsi/fastutil/ints/IntRB*'
     exclude 'it/unimi/dsi/fastutil/ints/IntSet*'
     exclude 'it/unimi/dsi/fastutil/ints/IntSorted*'
+    exclude 'it/unimi/dsi/fastutil/ints/*Priority*'
+    exclude 'it/unimi/dsi/fastutil/ints/*BigList*'
     exclude 'it/unimi/dsi/fastutil/io/**'
     exclude 'it/unimi/dsi/fastutil/longs/**'
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectArray*'

@@ -5,14 +5,17 @@ import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
+import java.io.PrintWriter;
 import java.util.List;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.ComponentSerializers;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.io.IoBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
@@ -37,6 +40,15 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   public @NonNull Tristate getPermissionValue(@NonNull String permission) {
     return this.permissionFunction.getPermissionValue(permission);
+  }
+
+  public void setupStreams() {
+    System.setOut(IoBuilder.forLogger(logger)
+        .setLevel(Level.INFO)
+        .buildPrintStream());
+    System.setErr(IoBuilder.forLogger(logger)
+        .setLevel(Level.ERROR)
+        .buildPrintStream());
   }
 
   public void setupPermissions() {
