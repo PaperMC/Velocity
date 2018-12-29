@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
+import java.util.Objects;
 
 public final class ModInfo {
 
@@ -33,6 +34,23 @@ public final class ModInfo {
         + '}';
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ModInfo modInfo = (ModInfo) o;
+    return type.equals(modInfo.type) && modList.equals(modInfo.modList);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, modList);
+  }
+
   public static final class Mod {
 
     @SerializedName("modid")
@@ -58,6 +76,23 @@ public final class ModInfo {
           + "id='" + id + '\''
           + ", version='" + version + '\''
           + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Mod mod = (Mod) o;
+      return id.equals(mod.id) && version.equals(mod.version);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(id, version);
     }
   }
 }

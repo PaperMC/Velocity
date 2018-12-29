@@ -8,6 +8,7 @@ import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -73,8 +74,30 @@ public final class ServerPing {
         + "version=" + version
         + ", players=" + players
         + ", description=" + description
-        + ", favicon='" + favicon + '\''
+        + ", favicon=" + favicon
+        + ", modinfo=" + modinfo
         + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ServerPing ping = (ServerPing) o;
+    return Objects.equals(version, ping.version)
+        && Objects.equals(players, ping.players)
+        && Objects.equals(description, ping.description)
+        && Objects.equals(favicon, ping.favicon)
+        && Objects.equals(modinfo, ping.modinfo);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(version, players, description, favicon, modinfo);
   }
 
   /**
@@ -281,6 +304,23 @@ public final class ServerPing {
           + ", name='" + name + '\''
           + '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Version version = (Version) o;
+      return protocol == version.protocol && Objects.equals(name, version.name);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(protocol, name);
+    }
   }
 
   public static final class Players {
@@ -321,6 +361,24 @@ public final class ServerPing {
           + ", sample=" + sample
           + '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Players players = (Players) o;
+      return online == players.online && max == players.max
+          && Objects.equals(sample, players.sample);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(online, max, sample);
+    }
   }
 
   public static final class SamplePlayer {
@@ -347,6 +405,23 @@ public final class ServerPing {
           + "name='" + name + '\''
           + ", id=" + id
           + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      SamplePlayer that = (SamplePlayer) o;
+      return Objects.equals(name, that.name) && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, id);
     }
   }
 }
