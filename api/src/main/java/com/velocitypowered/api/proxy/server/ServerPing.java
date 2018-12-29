@@ -33,6 +33,7 @@ public final class ServerPing {
 
   /**
    * Constructs a ServerPing instance.
+   *
    * @param version the version of the server
    * @param players the players on the server
    * @param description the MOTD for the server
@@ -102,6 +103,9 @@ public final class ServerPing {
 
   /**
    * Returns a copy of this {@link ServerPing} instance as a builder so that it can be modified.
+   * It is guaranteed that {@code ping.asBuilder().ping().equals(ping)}: that is, if no other
+   * changes are made to the returned builder, the built instance will equal the original instance.
+   *
    * @return a copy of this instance as a {@link Builder}
    */
   public Builder asBuilder() {

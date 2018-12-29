@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,7 +30,8 @@ public final class QueryResponse {
   private final String proxyVersion;
   private final Collection<PluginInformation> plugins;
 
-  private QueryResponse(String hostname, String gameVersion, String map, int currentPlayers,
+  @VisibleForTesting
+  QueryResponse(String hostname, String gameVersion, String map, int currentPlayers,
       int maxPlayers, String proxyHost, int proxyPort, Collection<String> players,
       String proxyVersion, Collection<PluginInformation> plugins) {
     this.hostname = hostname;
@@ -138,7 +141,10 @@ public final class QueryResponse {
 
 
   /**
-   * Creates a new {@link Builder} instance from data represented by this response.
+   * Creates a new {@link Builder} instance from data represented by this response, so that you
+   * may create a new {@link QueryResponse} with new data. It is guaranteed that
+   * {@code queryResponse.toBuilder().build().equals(queryResponse)}: that is, if no other
+   * changes are made to the returned builder, the built instance will equal the original instance.
    *
    * @return {@link QueryResponse} builder
    */
@@ -163,6 +169,50 @@ public final class QueryResponse {
    */
   public static Builder builder() {
     return new Builder();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    QueryResponse response = (QueryResponse) o;
+    return currentPlayers == response.currentPlayers
+        && maxPlayers == response.maxPlayers
+        && proxyPort == response.proxyPort
+        && hostname.equals(response.hostname)
+        && gameVersion.equals(response.gameVersion)
+        && map.equals(response.map)
+        && proxyHost.equals(response.proxyHost)
+        && players.equals(response.players)
+        && proxyVersion.equals(response.proxyVersion)
+        && plugins.equals(response.plugins);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects
+        .hash(hostname, gameVersion, map, currentPlayers, maxPlayers, proxyHost, proxyPort, players,
+            proxyVersion, plugins);
+  }
+
+  @Override
+  public String toString() {
+    return "QueryResponse{"
+        + "hostname='" + hostname + '\''
+        + ", gameVersion='" + gameVersion + '\''
+        + ", map='" + map + '\''
+        + ", currentPlayers=" + currentPlayers
+        + ", maxPlayers=" + maxPlayers
+        + ", proxyHost='" + proxyHost + '\''
+        + ", proxyPort=" + proxyPort
+        + ", players=" + players
+        + ", proxyVersion='" + proxyVersion + '\''
+        + ", plugins=" + plugins
+        + '}';
   }
 
   /**
@@ -391,6 +441,23 @@ public final class QueryResponse {
           .add("name", name)
           .add("version", version)
           .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      PluginInformation that = (PluginInformation) o;
+      return name.equals(that.name) && Objects.equals(version, that.version);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, version);
     }
   }
 }
