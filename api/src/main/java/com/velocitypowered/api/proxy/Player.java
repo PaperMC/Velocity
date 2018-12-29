@@ -1,6 +1,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
@@ -154,14 +155,17 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
 
   /**
    * Sends the specified resource pack from {@code url} to the user. If at all possible, send the
-   * resource pack using {@link #sendResourcePack(String, byte[])}.
+   * resource pack using {@link #sendResourcePack(String, byte[])}. To monitor the status of the
+   * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
    */
   void sendResourcePack(String url);
 
   /**
-   * Sends the specified resource pack from {@code url} to the user.
+   * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
+   * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
