@@ -4,8 +4,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
-import com.velocitypowered.proxy.util.ThrowableUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -201,18 +200,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         knownChannels.removeAll(channels);
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMcBrand(packet)) {
-        PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion());
-        backendConn.write(rewritten);
+        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
       } else if (!player.getPhase().handle(player, this, packet)) {
-
-        if (!player.getPhase().consideredComplete()
-            || !serverConn.getPhase().consideredComplete()) {
-
-            // The client is trying to send messages too early. This is primarily caused by mods, but
-            // it's further aggravated by Velocity. To work around these issues, we will queue any
-            // non-FML handshake messages to be sent once the FML handshake has completed or the JoinGame
-            // packet has been received by the proxy, whichever comes first.
-            loginPluginMessages.add(packet);
+        if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+            .consideredComplete()) {
+          // The client is trying to send messages too early. This is primarily caused by mods, but
+          // it's further aggravated by Velocity. To work around these issues, we will queue any
+          // non-FML handshake messages to be sent once the FML handshake has completed or the
+          // JoinGame packet has been received by the proxy, whichever comes first.
+          loginPluginMessages.add(packet);
         } else {
           ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
           if (id == null) {
@@ -265,11 +261,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(TextComponent.builder()
-        .content("An exception occurred in your connection: ")
-        .color(TextColor.RED)
-        .append(TextComponent.of(ThrowableUtils.briefDescription(throwable), TextColor.WHITE))
-        .build());
+    player.disconnect(TextComponent.of("Your connection has encountered an error. Try again later.",
+        TextColor.RED));
   }
 
   @Override

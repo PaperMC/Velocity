@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -32,7 +33,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("config-version")
   private final String configVersion = "1.0";
 
-  @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.")
+  @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on"
+      + " port 25577.")
   private String bind = "0.0.0.0:25577";
 
   @Comment({"What should be the MOTD? This gets displayed when the player adds your server to",
@@ -53,12 +55,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Comment({
       "Should we forward IP addresses and other data to backend servers?",
       "Available options:",
-      "- \"none\":   No forwarding will be done. All players will appear to be connecting from the proxy",
-      "            and will have offline-mode UUIDs.",
-      "- \"legacy\": Forward player IPs and UUIDs in BungeeCord-compatible fashion. Use this if you run",
-      "            servers using Minecraft 1.12 or lower.",
-      "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's native",
-      "            forwarding. Only applicable for Minecraft 1.13 or higher."
+      "- \"none\":   No forwarding will be done. All players will appear to be connecting from the",
+      "            proxy and will have offline-mode UUIDs.",
+      "- \"legacy\": Forward player IPs and UUIDs in a BungeeCord-compatible format. Use this if",
+      "            you run servers using Minecraft 1.12 or lower.",
+      "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's ",
+      "            native forwarding. Only applicable for Minecraft 1.13 or higher."
   })
   @ConfigKey("player-info-forwarding-mode")
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
@@ -68,7 +70,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("forwarding-secret")
   private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
 
-  @Comment("Announce whether or not your server supports Forge/FML. If you run a modded server, we suggest turning this on.")
+  @Comment({"Announce whether or not your server supports Forge. If you run a modded server, we",
+      "suggest turning this on."})
   @ConfigKey("announce-forge")
   private boolean announceForge = false;
 
@@ -90,7 +93,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Ignore
   private @Nullable Favicon favicon;
 
-  public VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
+  private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
@@ -114,6 +117,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     this.query = query;
   }
 
+  /**
+   * Attempts to validate the configuration.
+   * @return {@code true} if the configuration is sound, {@code false} if not
+   */
   public boolean validate() {
     boolean valid = true;
     Logger logger = AnnotatedConfig.getLogger();
@@ -136,14 +143,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     switch (playerInfoForwardingMode) {
       case NONE:
-        logger.warn(
-            "Player info forwarding is disabled! All players will appear to be connecting from the proxy and will have offline-mode UUIDs.");
+        logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
+            + "from the proxy and will have offline-mode UUIDs.");
         break;
       case MODERN:
         if (forwardingSecret == null || forwardingSecret.length == 0) {
           logger.error("You don't have a forwarding secret set. This is required for security.");
           valid = false;
         }
+        break;
+      default:
         break;
     }
 
@@ -199,16 +208,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       logger.error("Invalid compression level {}", advanced.compressionLevel);
       valid = false;
     } else if (advanced.compressionLevel == 0) {
-      logger.warn(
-          "ALL packets going through the proxy will be uncompressed. This will increase bandwidth usage.");
+      logger.warn("ALL packets going through the proxy will be uncompressed. This will increase "
+          + "bandwidth usage.");
     }
 
     if (advanced.compressionThreshold < -1) {
       logger.error("Invalid compression threshold {}", advanced.compressionLevel);
       valid = false;
     } else if (advanced.compressionThreshold == 0) {
-      logger.warn(
-          "ALL packets going through the proxy will be compressed. This will compromise throughput and increase CPU usage!");
+      logger.warn("ALL packets going through the proxy will be compressed. This will compromise "
+          + "throughput and increase CPU usage!");
     }
 
     if (advanced.loginRatelimit < 0) {
@@ -366,14 +375,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     byte[] forwardingSecret = toml.getString("forwarding-secret", "5up3r53cr3t")
         .getBytes(StandardCharsets.UTF_8);
 
+    String forwardingModeName = toml.getString("player-info-forwarding-mode", "MODERN")
+        .toUpperCase(Locale.US);
+
     VelocityConfiguration configuration = new VelocityConfiguration(
         toml.getString("bind", "0.0.0.0:25577"),
         toml.getString("motd", "&3A Velocity Server"),
         toml.getLong("show-max-players", 500L).intValue(),
         toml.getBoolean("online-mode", true),
         toml.getBoolean("announce-forge", false),
-        PlayerInfoForwarding
-            .valueOf(toml.getString("player-info-forwarding-mode", "MODERN").toUpperCase()),
+        PlayerInfoForwarding.valueOf(forwardingModeName),
         forwardingSecret,
         servers,
         forcedHosts,
@@ -385,20 +396,15 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   private static void upgradeConfig(VelocityConfiguration configuration, Toml toml) {
-    switch (toml.getString("config-version", configuration.configVersion)) {
-      case "1.0":
-        //TODO: Upgrade a 1.0 config to a new version. Maybe add a recursive support in future.
-        break;
-      default:
-        break;
-    }
+    // Will be implemented once there has been a backwards-incompatible change in the config file
+    // format.
   }
 
-  private static String generateRandomString(int lenght) {
+  private static String generateRandomString(int length) {
     String chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
     StringBuilder builder = new StringBuilder();
     Random rnd = new Random();
-    for (int i = 0; i < lenght; i++) {
+    for (int i = 0; i < length; i++) {
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return builder.toString();
@@ -489,8 +495,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         Map<String, List<String>> forcedHosts = new HashMap<>();
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
-            forcedHosts
-                .put(unescapeKeyIfNeeded(entry.getKey()), ImmutableList.of((String) entry.getValue()));
+            forcedHosts.put(unescapeKeyIfNeeded(entry.getKey()), ImmutableList.of(
+                (String) entry.getValue()));
           } else if (entry.getValue() instanceof List) {
             forcedHosts.put(unescapeKeyIfNeeded(entry.getKey()),
                 ImmutableList.copyOf((List<String>) entry.getValue()));
@@ -532,14 +538,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("compression-threshold")
     private int compressionThreshold = 1024;
 
-    @Comment({"How much compression should be done (from 0-9). The default is -1, which uses zlib's",
+    @Comment({"How much compression should be done (from 0-9). The default is -1, which uses the",
         "default level of 6."})
     @ConfigKey("compression-level")
     private int compressionLevel = -1;
 
     @Comment({
-        "How fast (in miliseconds) are clients allowed to connect after the last connection? Default: 3000",
-        "Disable by setting to 0"
+        "How fast (in milliseconds) are clients allowed to connect after the last connection? By",
+        "default, this is three seconds. Disable this by setting this to 0."
     })
     @ConfigKey("login-ratelimit")
     private int loginRatelimit = 3000;
@@ -610,11 +616,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private static class Query {
 
-    @Comment("Whether to enable responding to GameSpy 4 query responses or not")
+    @Comment("Whether to enable responding to GameSpy 4 query responses or not.")
     @ConfigKey("enabled")
     private boolean queryEnabled = false;
 
-    @Comment("If query responding is enabled, on what port should query response listener listen on?")
+    @Comment("If query is enabled, on what port should the query protocol listen on?")
     @ConfigKey("port")
     private int queryPort = 25577;
 

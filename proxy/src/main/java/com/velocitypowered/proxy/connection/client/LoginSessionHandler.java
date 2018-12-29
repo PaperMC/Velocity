@@ -4,6 +4,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
+import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
+import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.UrlEscapers;
@@ -109,16 +111,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     try {
       KeyPair serverKeyPair = server.getServerKeyPair();
-      byte[] decryptedVerifyToken = EncryptionUtils
-          .decryptRsa(serverKeyPair, packet.getVerifyToken());
+      byte[] decryptedVerifyToken = decryptRsa(serverKeyPair, packet.getVerifyToken());
       if (!Arrays.equals(verify, decryptedVerifyToken)) {
         throw new IllegalStateException("Unable to successfully decrypt the verification token.");
       }
 
-      byte[] decryptedSharedSecret = EncryptionUtils
-          .decryptRsa(serverKeyPair, packet.getSharedSecret());
-      String serverId = EncryptionUtils
-          .generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
+      byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
+      String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) inbound.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,

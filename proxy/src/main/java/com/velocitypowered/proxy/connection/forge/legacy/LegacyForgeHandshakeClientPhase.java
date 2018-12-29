@@ -11,14 +11,13 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Allows for simple tracking of the phase that the Legacy
- * Forge handshake is in
+ * Allows for simple tracking of the phase that the Legacy Forge handshake is in.
  */
 public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
   /**
-   * No handshake packets have yet been sent.
-   * Transition to {@link #HELLO} when the ClientHello is sent.
+   * No handshake packets have yet been sent. Transition to {@link #HELLO} when the ClientHello
+   * is sent.
    */
   NOT_STARTED(LegacyForgeConstants.CLIENT_HELLO_DISCRIMINATOR) {
     @Override
@@ -49,8 +48,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   },
 
   /**
-   * Client and Server exchange pleasantries.
-   * Transition to {@link #MOD_LIST} when the ModList is sent.
+   * Client and Server exchange pleasantries. Transition to {@link #MOD_LIST} when the ModList is
+   * sent.
    */
   HELLO(LegacyForgeConstants.MOD_LIST_DISCRIMINATOR) {
     @Override
@@ -202,7 +201,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   }
 
   /**
-   * Handles the phase tasks
+   * Handles the phase tasks.
    *
    * @param player The player
    * @param handler The {@link ClientPlaySessionHandler} that is handling

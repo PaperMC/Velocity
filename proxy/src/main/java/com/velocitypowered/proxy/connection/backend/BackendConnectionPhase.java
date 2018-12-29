@@ -26,7 +26,7 @@ public interface BackendConnectionPhase {
   }
 
   /**
-   * Indicates whether the connection is considered complete
+   * Indicates whether the connection is considered complete.
    * @return true if so
    */
   default boolean consideredComplete() {

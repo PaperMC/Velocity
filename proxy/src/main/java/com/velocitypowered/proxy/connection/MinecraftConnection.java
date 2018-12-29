@@ -59,6 +59,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
 
+  /**
+   * Initializes a new {@link MinecraftConnection} instance.
+   * @param channel the channel on the connection
+   * @param server the Velocity instance
+   */
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
@@ -151,30 +156,48 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return channel.eventLoop();
   }
 
+  /**
+   * Writes and immediately flushes a message to the connection.
+   * @param msg the message to write
+   */
   public void write(Object msg) {
     if (channel.isActive()) {
       channel.writeAndFlush(msg, channel.voidPromise());
     }
   }
 
+  /**
+   * Writes, but does not flush, a message to the connection.
+   * @param msg the message to write
+   */
   public void delayedWrite(Object msg) {
     if (channel.isActive()) {
       channel.write(msg, channel.voidPromise());
     }
   }
 
+  /**
+   * Flushes the connection.
+   */
   public void flush() {
     if (channel.isActive()) {
       channel.flush();
     }
   }
 
+  /**
+   * Closes the connection after writing the {@code msg}.
+   * @param msg the message to write
+   */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
       channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
     }
   }
 
+  /**
+   * Immediately closes the connection.
+   */
   public void close() {
     if (channel.isActive()) {
       channel.close();
@@ -197,6 +220,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return state;
   }
 
+  /**
+   * Changes the state of the Minecraft connection.
+   * @param state the new state
+   */
   public void setState(StateRegistry state) {
     this.state = state;
     this.channel.pipeline().get(MinecraftEncoder.class).setState(state);
@@ -207,6 +234,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return protocolVersion;
   }
 
+  /**
+   * Sets the new protocol version for the connection.
+   * @param protocolVersion the protocol version to use
+   */
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
     this.protocolVersion = protocolVersion;
     this.nextProtocolVersion = protocolVersion;
@@ -225,6 +256,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return sessionHandler;
   }
 
+  /**
+   * Sets the session handler for this connection.
+   * @param sessionHandler the handler to use
+   */
   public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
     if (this.sessionHandler != null) {
       this.sessionHandler.deactivated();
@@ -237,6 +272,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     Preconditions.checkState(!isClosed(), "Connection is closed.");
   }
 
+  /**
+   * Sets the compression threshold on the connection. You are responsible for sending
+   * {@link com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * @param threshold the compression threshold to use
+   */
   public void setCompressionThreshold(int threshold) {
     ensureOpen();
 
@@ -255,6 +295,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
   }
 
+  /**
+   * Enables encryption on the connection.
+   * @param secret the secret key negotiated between the client and the server
+   * @throws GeneralSecurityException if encryption can't be enabled
+   */
   public void enableEncryption(byte[] secret) throws GeneralSecurityException {
     ensureOpen();
 
@@ -287,7 +332,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Gets the detected {@link ConnectionType}
+   * Gets the detected {@link ConnectionType}.
    * @return The {@link ConnectionType}
    */
   public ConnectionType getType() {
@@ -295,7 +340,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Sets the detected {@link ConnectionType}
+   * Sets the detected {@link ConnectionType}.
    * @param connectionType The {@link ConnectionType}
    */
   public void setType(ConnectionType connectionType) {

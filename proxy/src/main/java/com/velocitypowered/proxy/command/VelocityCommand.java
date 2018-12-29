@@ -231,7 +231,6 @@ public class VelocityCommand implements Command {
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
-      TextComponent pluginSelf = TextComponent.of(description.getId(), TextColor.GRAY);
       String pluginInfo = description.getName().orElse(description.getId())
           + description.getVersion().map(v -> " " + v).orElse("");
 
@@ -256,7 +255,8 @@ public class VelocityCommand implements Command {
         hoverText.append(TextComponent.of(pdesc));
       });
 
-      return pluginSelf.hoverEvent(new HoverEvent(Action.SHOW_TEXT, hoverText.build()));
+      return TextComponent.of(description.getId(), TextColor.GRAY)
+          .hoverEvent(new HoverEvent(Action.SHOW_TEXT, hoverText.build()));
     }
 
     @Override

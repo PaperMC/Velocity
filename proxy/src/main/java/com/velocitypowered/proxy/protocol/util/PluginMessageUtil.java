@@ -84,8 +84,8 @@ public class PluginMessageUtil {
   public static PluginMessage constructChannelsPacket(ProtocolVersion protocolVersion,
                                                       Collection<String> channels) {
     Preconditions.checkNotNull(channels, "channels");
-    String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0 ? REGISTER_CHANNEL
-        : REGISTER_CHANNEL_LEGACY;
+    String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
+        ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
     PluginMessage message = new PluginMessage();
     message.setChannel(channelName);
     message.setData(String.join("\0", channels).getBytes(StandardCharsets.UTF_8));
