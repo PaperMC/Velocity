@@ -51,8 +51,9 @@ public class JavaVelocityCipher implements VelocityCipher {
     } else {
       // If the destination we write to is an array, we can use the backing array directly.
       destination.ensureWritable(outputSize);
-      destination.writerIndex(cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes,
-          destination.array(), destination.arrayOffset()));
+      int produced = cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes,
+          destination.array(), destination.arrayOffset());
+      destination.writerIndex(destination.writerIndex() + produced);
     }
   }
 
