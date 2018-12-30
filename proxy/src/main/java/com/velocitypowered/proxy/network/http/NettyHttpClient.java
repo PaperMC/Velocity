@@ -53,8 +53,14 @@ public class NettyHttpClient {
           @Override
           public void channelCreated(Channel channel) throws Exception {
             if (key.getPort() == 443) {
-              SslContext context = SslContextBuilder.forClient().build();
-              SSLEngine engine = context.newEngine(channel.alloc());
+              SslContext context = SslContextBuilder.forClient().protocols("TLSv1.2").build();
+              // Unbelievably, Java doesn't automatically check the CN to make sure we're talking
+              // to the right host! Therefore, we provide the intended host name and port, along
+              // with asking Java very nicely if it could check the hostname in the certificate
+              // for us.
+              SSLEngine engine = context.newEngine(channel.alloc(), key.getHostString(),
+                  key.getPort());
+              engine.getSSLParameters().setEndpointIdentificationAlgorithm("HTTPS");
               channel.pipeline().addLast("ssl", new SslHandler(engine));
             }
             channel.pipeline().addLast("http", new HttpClientCodec());
