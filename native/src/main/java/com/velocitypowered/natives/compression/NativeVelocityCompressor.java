@@ -78,4 +78,9 @@ public class NativeVelocityCompressor implements VelocityCompressor {
     }
     disposed = true;
   }
+
+  @Override
+  public boolean isNative() {
+    return true;
+  }
 }

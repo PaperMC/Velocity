@@ -79,4 +79,9 @@ public class JavaVelocityCipher implements VelocityCipher {
   private void ensureNotDisposed() {
     Preconditions.checkState(!disposed, "Object already disposed");
   }
+
+  @Override
+  public boolean isNative() {
+    return false;
+  }
 }

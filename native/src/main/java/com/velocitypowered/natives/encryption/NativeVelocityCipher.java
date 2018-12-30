@@ -1,5 +1,6 @@
 package com.velocitypowered.natives.encryption;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
@@ -32,6 +33,7 @@ public class NativeVelocityCipher implements VelocityCipher {
 
   @Override
   public void process(ByteBuf source, ByteBuf destination) throws ShortBufferException {
+    ensureNotDisposed();
     source.memoryAddress();
     destination.memoryAddress();
 
@@ -64,5 +66,14 @@ public class NativeVelocityCipher implements VelocityCipher {
       impl.free(ctx);
     }
     disposed = true;
+  }
+
+  private void ensureNotDisposed() {
+    Preconditions.checkState(!disposed, "Object already disposed");
+  }
+
+  @Override
+  public boolean isNative() {
+    return true;
   }
 }
