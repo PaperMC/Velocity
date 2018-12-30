@@ -35,8 +35,7 @@ public class PluginDependencyUtils {
         .allowsSelfLoops(false)
         .expectedNodeCount(candidates.size())
         .build();
-    Map<String, PluginDescription> candidateMap = Maps
-        .uniqueIndex(candidates, d -> d == null ? null : d.getId());
+    Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(candidates, PluginDescription::getId);
 
     for (PluginDescription description : candidates) {
       graph.addNode(description);

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 class PluginDependencyUtilsTest {
 
   private static final PluginDescription NO_DEPENDENCY_1_EXAMPLE = testDescription("example");
-  private static final PluginDescription NO_DEPENDENCY_2_EXAMPLE = testDescription("example2");
   private static final PluginDescription NEVER_DEPENDED = testDescription("and-again");
   private static final PluginDescription SOFT_DEPENDENCY_EXISTS = testDescription("soft",
       ImmutableList.of(new PluginDependency("example", "", true)));
@@ -23,14 +22,12 @@ class PluginDependencyUtilsTest {
       ImmutableList.of(new PluginDependency("i-dont-exist", "", false)));
   private static final PluginDescription MULTI_DEPENDENCY = testDescription("multi-depend",
       ImmutableList.of(
-          new PluginDependency("example", "", false),
-          new PluginDependency("example2", "", false)
+          new PluginDependency("example", "", false)
       )
   );
   private static final PluginDescription TEST_WITH_DUPLICATE_DEPEND = testDescription("dup-depend",
       ImmutableList.of(
-          new PluginDependency("multi-depend", "", false),
-          new PluginDependency("example2", "", false)
+          new PluginDependency("multi-depend", "", false)
       )
   );
 
@@ -39,12 +36,9 @@ class PluginDependencyUtilsTest {
   private static final PluginDescription CIRCULAR_DEPENDENCY_2 = testDescription("oval",
       ImmutableList.of(new PluginDependency("circle", "", false)));
 
-  // Note: Kahn's algorithm is non-unique in its return result, although the topological sort will
-  // have the correct order.
   private static final List<PluginDescription> EXPECTED = ImmutableList.of(
       NEVER_DEPENDED,
       NO_DEPENDENCY_1_EXAMPLE,
-      NO_DEPENDENCY_2_EXAMPLE,
       MULTI_DEPENDENCY,
       TEST_WITH_DUPLICATE_DEPEND,
       SOFT_DEPENDENCY_DOES_NOT_EXIST,
@@ -55,7 +49,6 @@ class PluginDependencyUtilsTest {
   void sortCandidates() throws Exception {
     List<PluginDescription> descriptionList = new ArrayList<>();
     descriptionList.add(NO_DEPENDENCY_1_EXAMPLE);
-    descriptionList.add(NO_DEPENDENCY_2_EXAMPLE);
     descriptionList.add(NEVER_DEPENDED);
     descriptionList.add(SOFT_DEPENDENCY_DOES_NOT_EXIST);
     descriptionList.add(SOFT_DEPENDENCY_EXISTS);
