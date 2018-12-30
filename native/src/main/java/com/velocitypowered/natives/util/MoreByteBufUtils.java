@@ -25,7 +25,7 @@ public class MoreByteBufUtils {
       return buf.retain();
     }
 
-    // It's not, so we must make a memory copy.
+    // It's not, so we must make a direct copy.
     ByteBuf newBuf = alloc.directBuffer();
     newBuf.writeBytes(buf);
     return newBuf;

@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.encryption.VelocityCipher;
+import com.velocitypowered.natives.util.MoreByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -17,7 +18,12 @@ public class MinecraftCipherDecoder extends ByteToMessageDecoder {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-    out.add(cipher.process(ctx, in));
+    ByteBuf compatible = MoreByteBufUtils.ensureCompatible(ctx.alloc(), cipher, in);
+    try {
+      out.add(cipher.process(ctx, compatible));
+    } finally {
+      compatible.release();
+    }
   }
 
   @Override

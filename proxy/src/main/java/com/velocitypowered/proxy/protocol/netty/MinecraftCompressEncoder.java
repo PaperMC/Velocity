@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,7 +26,12 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
       out.writeBytes(msg);
     } else {
       ProtocolUtils.writeVarInt(out, uncompressed);
-      compressor.deflate(msg, out);
+      ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
+      try {
+        compressor.deflate(compatibleIn, out);
+      } finally {
+        compatibleIn.release();
+      }
     }
   }
 

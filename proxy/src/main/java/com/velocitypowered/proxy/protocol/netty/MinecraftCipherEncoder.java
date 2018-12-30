@@ -2,11 +2,13 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.encryption.VelocityCipher;
+import com.velocitypowered.natives.util.MoreByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.handler.codec.MessageToMessageEncoder;
+import java.util.List;
 
-public class MinecraftCipherEncoder extends MessageToByteEncoder<ByteBuf> {
+public class MinecraftCipherEncoder extends MessageToMessageEncoder<ByteBuf> {
 
   private final VelocityCipher cipher;
 
@@ -15,14 +17,13 @@ public class MinecraftCipherEncoder extends MessageToByteEncoder<ByteBuf> {
   }
 
   @Override
-  protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-    cipher.process(msg, out);
-  }
-
-  @Override
-  protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
-      throws Exception {
-    return ctx.alloc().directBuffer(msg.readableBytes());
+  protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+    ByteBuf compatible = MoreByteBufUtils.ensureCompatible(ctx.alloc(), cipher, msg);
+    try {
+      out.add(cipher.process(ctx, compatible));
+    } finally {
+      compatible.release();
+    }
   }
 
   @Override

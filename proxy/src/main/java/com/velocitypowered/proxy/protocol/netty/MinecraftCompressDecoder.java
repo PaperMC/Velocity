@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.protocol.netty;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,22 +23,23 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
   }
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-    int expectedUncompressedSize = ProtocolUtils.readVarInt(msg);
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    int expectedUncompressedSize = ProtocolUtils.readVarInt(in);
     if (expectedUncompressedSize == 0) {
       // Strip the now-useless uncompressed size, this message is already uncompressed.
-      out.add(msg.retainedSlice());
-      msg.skipBytes(msg.readableBytes());
+      out.add(in.retainedSlice());
+      in.skipBytes(in.readableBytes());
       return;
     }
 
     checkFrame(expectedUncompressedSize >= threshold,
         "Uncompressed size %s is greater than threshold %s",
         expectedUncompressedSize, threshold);
-    ByteBuf uncompressed = ctx.alloc()
-        .buffer(Math.min(expectedUncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE));
+    ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, in);
+    ByteBuf uncompressed = ctx.alloc().directBuffer(Math.min(expectedUncompressedSize,
+        MAXIMUM_INITIAL_BUFFER_SIZE));
     try {
-      compressor.inflate(msg, uncompressed);
+      compressor.inflate(compatibleIn, uncompressed);
       checkFrame(expectedUncompressedSize == uncompressed.readableBytes(),
           "Mismatched compression sizes (got %s, expected %s)",
           uncompressed.readableBytes(), expectedUncompressedSize);
@@ -45,6 +47,8 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     } catch (Exception e) {
       uncompressed.release();
       throw e;
+    } finally {
+      compatibleIn.release();
     }
   }
 
