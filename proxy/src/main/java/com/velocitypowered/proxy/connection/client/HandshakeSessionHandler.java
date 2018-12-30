@@ -138,8 +138,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
   }
 
-  private String cleanVhost(String hostname) {
-    // Clean out any anything after any zero byte
+  /**
+   * Cleans the specified virtual host hostname.
+   *
+   * @param hostname the host name to clean
+   * @return the cleaned hostname
+   */
+  static String cleanVhost(String hostname) {
+    // Clean out any anything after any zero bytes (this includes BungeeCord forwarding and the
+    // legacy Forge handshake indicator).
     String cleaned = hostname;
     int zeroIdx = cleaned.indexOf('\0');
     if (zeroIdx > -1) {
