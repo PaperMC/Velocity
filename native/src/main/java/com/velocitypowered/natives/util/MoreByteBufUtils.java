@@ -10,7 +10,7 @@ public class MoreByteBufUtils {
   }
 
   /**
-   * Ensures the {@code buf} will work with the specified {@code nativeThing}. After this function
+   * Ensures the {@code buf} will work with the specified {@code nativeStuff}. After this function
    * is called, you should decrement the reference count on the {@code buf} with
    * {@link ByteBuf#release()}.
    *
@@ -21,12 +21,13 @@ public class MoreByteBufUtils {
    */
   public static ByteBuf ensureCompatible(ByteBufAllocator alloc, Native nativeStuff, ByteBuf buf) {
     if (!nativeStuff.isNative() || buf.hasMemoryAddress()) {
-      // Will always work in either case.
+      // Will always work in either case. JNI code demands a memory address, and if we have a Java
+      // fallback, it uses byte arrays in all cases.
       return buf.retain();
     }
 
     // It's not, so we must make a direct copy.
-    ByteBuf newBuf = alloc.directBuffer();
+    ByteBuf newBuf = alloc.directBuffer(buf.readableBytes());
     newBuf.writeBytes(buf);
     return newBuf;
   }
