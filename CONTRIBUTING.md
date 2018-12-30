@@ -19,9 +19,9 @@ and the [Checker Framework annotations](https://checkerframework.org/)).
 While you can certainly work with the Velocity codebase without knowing any
 of this, it can be risky to proceed.
 
-Velocity tries to follow the [Google Code Style](https://google.github.io/styleguide/javaguide.html)
-for Java. As we have recently switched, some minor style issues currently
-remain, which will be fixed over time.
+Velocity follows the [Google Code Style](https://google.github.io/styleguide/javaguide.html)
+for Java. Velocity will not build if any Checkstyle issues are found, so make
+sure that you are properly adhering to the code style.
 
 # Notes on the build
 
@@ -30,6 +30,7 @@ and pull requests:
 
 * [Checker Framework](https://checkerframework.org/): an enhancement to Java's type
   system that is designed to help catch bugs. Velocity runs the _Nullness Checker_
-  and the _Optional Checker_.
+  and the _Optional Checker_. The build will fail if Checker Framework notices an
+  issue.
 * [Checkstyle](http://checkstyle.sourceforge.net/): ensures that your code is
-  correctly formatted.
+  correctly formatted. The build will fail if Checkstyle detects a problem.
