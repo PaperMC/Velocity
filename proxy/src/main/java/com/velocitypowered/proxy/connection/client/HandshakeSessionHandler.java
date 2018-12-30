@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
@@ -144,6 +145,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
    * @param hostname the host name to clean
    * @return the cleaned hostname
    */
+  @VisibleForTesting
   static String cleanVhost(String hostname) {
     // Clean out any anything after any zero bytes (this includes BungeeCord forwarding and the
     // legacy Forge handshake indicator).
