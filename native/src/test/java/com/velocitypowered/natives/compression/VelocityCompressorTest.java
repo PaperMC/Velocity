@@ -9,7 +9,9 @@ import com.velocitypowered.natives.util.Natives;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import java.io.IOException;
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,9 +20,12 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 
 class VelocityCompressorTest {
 
+  private static byte[] TEST_DATA = new byte[1 << 14];
+
   @BeforeAll
-  static void checkNatives() {
+  static void checkNatives() throws IOException {
     Natives.compress.getLoadedVariant();
+    new Random(1).nextBytes(TEST_DATA);
   }
 
   @Test
@@ -31,25 +36,30 @@ class VelocityCompressorTest {
       compressor.dispose();
       fail("Loaded regular compressor");
     }
-    check(compressor);
+    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length));
   }
 
   @Test
-  void javaIntegrityCheck() throws DataFormatException {
+  void javaIntegrityCheckDirect() throws DataFormatException {
     VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
-    check(compressor);
+    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length));
   }
 
-  private void check(VelocityCompressor compressor) throws DataFormatException {
-    ByteBuf source = Unpooled.directBuffer();
-    ByteBuf dest = Unpooled.directBuffer();
-    ByteBuf decompressed = Unpooled.directBuffer();
+  @Test
+  void javaIntegrityCheckHeap() throws DataFormatException {
+    VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
+        .create(Deflater.DEFAULT_COMPRESSION);
+    check(compressor, () -> Unpooled.buffer(TEST_DATA.length));
+  }
 
-    Random random = new Random(1);
-    byte[] randomBytes = new byte[1 << 16];
-    random.nextBytes(randomBytes);
-    source.writeBytes(randomBytes);
+  private void check(VelocityCompressor compressor, Supplier<ByteBuf> bufSupplier)
+      throws DataFormatException {
+    ByteBuf source = bufSupplier.get();
+    ByteBuf dest = bufSupplier.get();
+    ByteBuf decompressed = bufSupplier.get();
+
+    source.writeBytes(TEST_DATA);
 
     try {
       compressor.deflate(source, dest);

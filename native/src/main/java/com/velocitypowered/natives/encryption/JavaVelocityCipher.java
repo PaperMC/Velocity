@@ -2,6 +2,7 @@ package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
@@ -22,7 +23,7 @@ public class JavaVelocityCipher implements VelocityCipher {
       return new JavaVelocityCipher(false, key);
     }
   };
-  private static final int INITIAL_BUFFER_SIZE = 1024 * 16;
+  private static final int INITIAL_BUFFER_SIZE = 1024 * 8;
   private static final ThreadLocal<byte[]> inBufLocal = ThreadLocal.withInitial(
       () -> new byte[INITIAL_BUFFER_SIZE]);
 
@@ -40,12 +41,19 @@ public class JavaVelocityCipher implements VelocityCipher {
     ensureNotDisposed();
 
     int inBytes = source.readableBytes();
-    byte[] inBuf = slurp(source);
+    ByteBuf asHeapBuf = asHeapBuf(source);
 
     int outputSize = cipher.getOutputSize(inBytes);
-    byte[] outBuf = new byte[outputSize];
-    cipher.update(inBuf, 0, inBytes, outBuf);
-    destination.writeBytes(outBuf);
+    if (!destination.hasArray()) {
+      byte[] outBuf = new byte[outputSize];
+      cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, outBuf);
+      destination.writeBytes(outBuf);
+    } else {
+      // If the destination we write to is an array, we can use the backing array directly.
+      destination.ensureWritable(outputSize);
+      destination.writerIndex(cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes,
+          destination.array(), destination.arrayOffset()));
+    }
   }
 
   @Override
@@ -53,14 +61,20 @@ public class JavaVelocityCipher implements VelocityCipher {
     ensureNotDisposed();
 
     int inBytes = source.readableBytes();
-    byte[] inBuf = slurp(source);
+    ByteBuf asHeapBuf = asHeapBuf(source);
 
     ByteBuf out = ctx.alloc().heapBuffer(cipher.getOutputSize(inBytes));
-    out.writerIndex(cipher.update(inBuf, 0, inBytes, out.array(), out.arrayOffset()));
+    out.writerIndex(cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, out.array(),
+        out.arrayOffset()));
     return out;
   }
 
-  private static byte[] slurp(ByteBuf source) {
+  private static ByteBuf asHeapBuf(ByteBuf source) {
+    if (source.hasArray()) {
+      // If this byte buffer is backed by an array, we can just use this buffer directly.
+      return source;
+    }
+
     int inBytes = source.readableBytes();
     byte[] inBuf = inBufLocal.get();
     if (inBuf.length <= inBytes) {
@@ -68,7 +82,7 @@ public class JavaVelocityCipher implements VelocityCipher {
       inBufLocal.set(inBuf);
     }
     source.readBytes(inBuf, 0, inBytes);
-    return inBuf;
+    return Unpooled.wrappedBuffer(inBuf, 0, inBytes);
   }
 
   @Override

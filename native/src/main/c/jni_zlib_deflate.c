@@ -85,7 +85,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_process(JNIEnv *e
     jint sourceLength,
     jlong destinationAddress,
     jint destinationLength,
-    jboolean flush)
+    jboolean finish)
 {
     z_stream* stream = (z_stream*) ctx;
     stream->next_in = (Bytef *) sourceAddress;
@@ -93,7 +93,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_process(JNIEnv *e
     stream->avail_in = sourceLength;
     stream->avail_out = destinationLength;
 
-    int res = deflate(stream, flush ? Z_FINISH : Z_NO_FLUSH);
+    int res = deflate(stream, finish ? Z_FINISH : Z_NO_FLUSH);
     switch (res) {
         case Z_STREAM_END:
             // The stream has ended.

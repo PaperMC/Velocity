@@ -30,4 +30,31 @@ public class MoreByteBufUtils {
     newBuf.writeBytes(buf);
     return newBuf;
   }
+
+  /**
+   * Creates a {@link ByteBuf} that will have the best performance with the specified
+   * {@code nativeStuff}.
+   *
+   * @param alloc the {@link ByteBufAllocator} to use
+   * @param nativeStuff the native we are working with
+   * @return a buffer compatible with the native
+   */
+  public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff) {
+    return nativeStuff.isNative() ? alloc.directBuffer() : alloc.heapBuffer();
+  }
+
+  /**
+   * Creates a {@link ByteBuf} that will have the best performance with the specified
+   * {@code nativeStuff}.
+   *
+   * @param alloc the {@link ByteBufAllocator} to use
+   * @param nativeStuff the native we are working with
+   * @param initialCapacity the initial capacity to allocate
+   * @return a buffer compatible with the native
+   */
+  public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff,
+      int initialCapacity) {
+    return nativeStuff.isNative() ? alloc.directBuffer(initialCapacity) : alloc
+        .heapBuffer(initialCapacity);
+  }
 }

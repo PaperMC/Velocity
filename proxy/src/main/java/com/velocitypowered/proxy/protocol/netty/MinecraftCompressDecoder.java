@@ -1,9 +1,10 @@
 package com.velocitypowered.proxy.protocol.netty;
 
+import static com.velocitypowered.natives.util.MoreByteBufUtils.ensureCompatible;
+import static com.velocitypowered.natives.util.MoreByteBufUtils.preferredBuffer;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
-import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,9 +36,9 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     checkFrame(expectedUncompressedSize >= threshold,
         "Uncompressed size %s is greater than threshold %s",
         expectedUncompressedSize, threshold);
-    ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, in);
-    ByteBuf uncompressed = ctx.alloc().directBuffer(Math.min(expectedUncompressedSize,
-        MAXIMUM_INITIAL_BUFFER_SIZE));
+    ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);
+    int initialCapacity = Math.min(expectedUncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE);
+    ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, initialCapacity);
     try {
       compressor.inflate(compatibleIn, uncompressed);
       checkFrame(expectedUncompressedSize == uncompressed.readableBytes(),

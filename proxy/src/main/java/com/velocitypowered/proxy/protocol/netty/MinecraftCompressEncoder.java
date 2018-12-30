@@ -38,11 +38,9 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    if (msg.readableBytes() <= threshold) {
-      return ctx.alloc().directBuffer(msg.readableBytes() + 1);
-    }
-    // A reasonable assumption about compression savings
-    return ctx.alloc().directBuffer(msg.readableBytes() / 3);
+    int initialBufferSize = msg.readableBytes() <= threshold ? msg.readableBytes() + 1 :
+        msg.readableBytes() / 3;
+    return MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, initialBufferSize);
   }
 
   @Override

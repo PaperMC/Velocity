@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.security.GeneralSecurityException;
 import java.util.Random;
+import java.util.function.Supplier;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -16,11 +17,16 @@ import org.junit.jupiter.api.Test;
 
 class VelocityCipherTest {
 
-  private static final int ENCRYPT_DATA_SIZE = 1 << 16;
+  private static final int ENCRYPT_DATA_SIZE = 1 << 14;
+  private static byte[] TEST_DATA = new byte[ENCRYPT_DATA_SIZE];;
+  private static final byte[] AES_KEY = new byte[16];
 
   @BeforeAll
   static void checkNatives() {
     Natives.cipher.getLoadedVariant();
+    Random random = new Random(1);
+    random.nextBytes(TEST_DATA);
+    random.nextBytes(AES_KEY);
   }
 
   @Test
@@ -30,30 +36,30 @@ class VelocityCipherTest {
     if (factory == JavaVelocityCipher.FACTORY) {
       fail("Loaded regular cipher");
     }
-    check(factory);
+    check(factory, Unpooled::directBuffer);
   }
 
   @Test
-  void javaIntegrityCheck() throws GeneralSecurityException {
-    check(JavaVelocityCipher.FACTORY);
+  void javaIntegrityCheckDirect() throws GeneralSecurityException {
+    check(JavaVelocityCipher.FACTORY, Unpooled::directBuffer);
   }
 
-  private void check(VelocityCipherFactory factory) throws GeneralSecurityException {
+  @Test
+  void javaIntegrityCheckHeap() throws GeneralSecurityException {
+    check(JavaVelocityCipher.FACTORY, Unpooled::buffer);
+  }
+
+  private void check(VelocityCipherFactory factory, Supplier<ByteBuf> bufSupplier)
+      throws GeneralSecurityException {
     // Generate a random 16-byte key.
-    Random random = new Random(1);
-    byte[] key = new byte[16];
-    random.nextBytes(key);
+    VelocityCipher decrypt = factory.forDecryption(new SecretKeySpec(AES_KEY, "AES"));
+    VelocityCipher encrypt = factory.forEncryption(new SecretKeySpec(AES_KEY, "AES"));
 
-    VelocityCipher decrypt = factory.forDecryption(new SecretKeySpec(key, "AES"));
-    VelocityCipher encrypt = factory.forEncryption(new SecretKeySpec(key, "AES"));
+    ByteBuf source = bufSupplier.get();
+    ByteBuf dest = bufSupplier.get();
+    ByteBuf decryptionBuf = bufSupplier.get();
 
-    ByteBuf source = Unpooled.directBuffer(ENCRYPT_DATA_SIZE);
-    ByteBuf dest = Unpooled.directBuffer(ENCRYPT_DATA_SIZE);
-    ByteBuf decryptionBuf = Unpooled.directBuffer(ENCRYPT_DATA_SIZE);
-
-    byte[] randomBytes = new byte[ENCRYPT_DATA_SIZE];
-    random.nextBytes(randomBytes);
-    source.writeBytes(randomBytes);
+    source.writeBytes(TEST_DATA);
 
     try {
       encrypt.process(source, dest);

@@ -13,8 +13,7 @@ class NativeZlibDeflate {
   native long free(long ctx);
 
   native int process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
-      int destinationLength,
-      boolean flush);
+      int destinationLength, boolean finish);
 
   native void reset(long ctx);
 

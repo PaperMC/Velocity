@@ -27,9 +27,14 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   public void inflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
 
-    byte[] inData = new byte[source.readableBytes()];
-    source.readBytes(inData);
-    inflater.setInput(inData);
+    if (source.hasArray()) {
+      inflater.setInput(source.array(), source.arrayOffset(), source.readableBytes());
+    } else {
+      byte[] inData = new byte[source.readableBytes()];
+      source.readBytes(inData);
+      inflater.setInput(inData);
+    }
+
     while (!inflater.finished()) {
       int read = inflater.inflate(buf);
       destination.writeBytes(buf, 0, read);
@@ -41,9 +46,13 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
 
-    byte[] inData = new byte[source.readableBytes()];
-    source.readBytes(inData);
-    deflater.setInput(inData);
+    if (source.hasArray()) {
+      deflater.setInput(source.array(), source.arrayOffset(), source.readableBytes());
+    } else {
+      byte[] inData = new byte[source.readableBytes()];
+      source.readBytes(inData);
+      deflater.setInput(inData);
+    }
     deflater.finish();
     while (!deflater.finished()) {
       int bytes = deflater.deflate(buf);
