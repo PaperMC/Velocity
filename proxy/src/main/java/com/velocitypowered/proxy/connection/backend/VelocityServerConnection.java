@@ -212,6 +212,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return true;
   }
 
+  /**
+   * Indicates that we have completed the plugin process.
+   */
   public void completeJoin() {
     if (!hasCompletedJoin) {
       hasCompletedJoin = true;

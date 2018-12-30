@@ -15,6 +15,11 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   private StateRegistry state;
   private StateRegistry.PacketRegistry.ProtocolRegistry registry;
 
+  /**
+   * Creates a new {@code MinecraftEncoder} encoding packets for the specified {@code direction}.
+   *
+   * @param direction the direction to encode to
+   */
   public MinecraftEncoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
     this.registry = direction

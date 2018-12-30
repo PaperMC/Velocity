@@ -266,6 +266,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return motd;
   }
 
+  /**
+   * Returns the proxy's MOTD.
+   *
+   * @return the MOTD
+   */
   public Component getMotdComponent() {
     if (motdAsComponent == null) {
       if (motd.startsWith("{")) {

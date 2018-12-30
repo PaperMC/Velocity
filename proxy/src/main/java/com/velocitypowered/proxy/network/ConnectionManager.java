@@ -36,6 +36,11 @@ public final class ConnectionManager {
 
   private final DnsAddressResolverGroup resolverGroup;
 
+  /**
+   * Initalizes the {@code ConnectionManager}.
+   *
+   * @param server a reference to the Velocity server
+   */
   public ConnectionManager(VelocityServer server) {
     this.server = server;
     this.transportType = TransportType.bestType();
@@ -52,6 +57,11 @@ public final class ConnectionManager {
         Natives.compress.getLoadedVariant(), Natives.cipher.getLoadedVariant());
   }
 
+  /**
+   * Binds a Minecraft listener to the specified {@code address}.
+   *
+   * @param address the address to bind to
+   */
   public void bind(final InetSocketAddress address) {
     final ServerBootstrap bootstrap = new ServerBootstrap()
         .channel(this.transportType.serverSocketChannelClass)
@@ -73,6 +83,12 @@ public final class ConnectionManager {
         });
   }
 
+  /**
+   * Binds a GS4 listener to the specified {@code hostname} and {@code port}.
+   *
+   * @param hostname the hostname to bind to
+   * @param port the port to bind to
+   */
   public void queryBind(final String hostname, final int port) {
     InetSocketAddress address = new InetSocketAddress(hostname, port);
     final Bootstrap bootstrap = new Bootstrap()
@@ -92,6 +108,11 @@ public final class ConnectionManager {
         });
   }
 
+  /**
+   * Creates a TCP {@link Bootstrap} using Velocity's event loops.
+   *
+   * @return a new {@link Bootstrap}
+   */
   public Bootstrap createWorker() {
     return new Bootstrap()
         .channel(this.transportType.socketChannelClass)
@@ -102,6 +123,11 @@ public final class ConnectionManager {
         .resolver(this.resolverGroup);
   }
 
+  /**
+   * Closes the specified {@code oldBind} endpoint.
+   *
+   * @param oldBind the endpoint to close
+   */
   public void close(InetSocketAddress oldBind) {
     Channel serverChannel = endpoints.remove(oldBind);
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
@@ -109,6 +135,9 @@ public final class ConnectionManager {
     serverChannel.close().syncUninterruptibly();
   }
 
+  /**
+   * Closes all endpoints.
+   */
   public void shutdown() {
     for (final Channel endpoint : this.endpoints.values()) {
       try {

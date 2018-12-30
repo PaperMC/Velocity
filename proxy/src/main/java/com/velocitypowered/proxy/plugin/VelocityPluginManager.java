@@ -46,6 +46,11 @@ public class VelocityPluginManager implements PluginManager {
     }
   }
 
+  /**
+   * Loads all plugins from the specified {@code directory}.
+   * @param directory the directory to load from
+   * @throws IOException if we could not open the directory
+   */
   public void loadPlugins(Path directory) throws IOException {
     checkNotNull(directory, "directory");
     checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");

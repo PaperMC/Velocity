@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.scheduler;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
@@ -29,6 +32,11 @@ public class VelocityScheduler implements Scheduler {
   private final Multimap<Object, ScheduledTask> tasksByPlugin = Multimaps.synchronizedMultimap(
       Multimaps.newSetMultimap(new IdentityHashMap<>(), HashSet::new));
 
+  /**
+   * Initalizes the scheduler.
+   *
+   * @param pluginManager the Velocity plugin manager
+   */
   public VelocityScheduler(PluginManager pluginManager) {
     this.pluginManager = pluginManager;
     this.taskService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true)
@@ -40,13 +48,17 @@ public class VelocityScheduler implements Scheduler {
 
   @Override
   public TaskBuilder buildTask(Object plugin, Runnable runnable) {
-    Preconditions.checkNotNull(plugin, "plugin");
-    Preconditions.checkNotNull(runnable, "runnable");
-    Preconditions
-        .checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
+    checkNotNull(plugin, "plugin");
+    checkNotNull(runnable, "runnable");
+    checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
     return new TaskBuilderImpl(plugin, runnable);
   }
 
+  /**
+   * Shuts down the Velocity scheduler.
+   * @return {@code true} if all tasks finished, {@code false} otherwise
+   * @throws InterruptedException if the current thread was interrupted
+   */
   public boolean shutdown() throws InterruptedException {
     Collection<ScheduledTask> terminating;
     synchronized (tasksByPlugin) {
@@ -121,7 +133,7 @@ public class VelocityScheduler implements Scheduler {
       this.repeat = repeat;
     }
 
-    public void schedule() {
+    void schedule() {
       if (repeat == 0) {
         this.future = timerExecutionService.schedule(this, delay, TimeUnit.MILLISECONDS);
       } else {

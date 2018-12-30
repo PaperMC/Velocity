@@ -44,6 +44,11 @@ public class VelocityEventManager implements EventManager {
   private final ExecutorService service;
   private final PluginManager pluginManager;
 
+  /**
+   * Initializes the Velocity event manager.
+   *
+   * @param pluginManager a reference to the Velocity plugin manager
+   */
   public VelocityEventManager(PluginManager pluginManager) {
     // Expose the event executors to the plugins - required in order for the generated ASM classes
     // to work.

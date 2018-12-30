@@ -296,6 +296,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
   }
 
+  /**
+   * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
+   * switching servers in Velocity.
+   * @param joinGame the join game packet
+   */
   public void handleBackendJoinGame(JoinGame joinGame) {
     VelocityServerConnection serverConn = player.getConnectedServer();
     if (serverConn == null) {
@@ -387,6 +392,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return knownChannels;
   }
 
+  /**
+   * Handles additional tab complete for 1.12 and lower clients.
+   *
+   * @param response the tab complete response from the backend
+   */
   public void handleTabCompleteResponse(TabCompleteResponse response) {
     if (outstandingTabComplete != null) {
       if (!outstandingTabComplete.isAssumeCommand()

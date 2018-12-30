@@ -27,6 +27,11 @@ public class NettyHttpClient {
   private final ChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap;
   private final String userAgent;
 
+  /**
+   * Initializes the HTTP client.
+   *
+   * @param server the Velocity server
+   */
   public NettyHttpClient(VelocityServer server) {
     this.userAgent = server.getVersion().getName() + "/" + server.getVersion().getVersion();
     Bootstrap bootstrap = server.initializeGenericBootstrap();

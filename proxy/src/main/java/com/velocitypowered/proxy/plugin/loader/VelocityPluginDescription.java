@@ -25,6 +25,17 @@ public class VelocityPluginDescription implements PluginDescription {
   private final Map<String, PluginDependency> dependencies;
   private final Path source;
 
+  /**
+   * Creates a new plugin description.
+   * @param id the ID
+   * @param name the name of the plugin
+   * @param version the plugin version
+   * @param description a description of the plugin
+   * @param url the website for the plugin
+   * @param authors the authors of this plugin
+   * @param dependencies the dependencies for this plugin
+   * @param source the original source for the plugin
+   */
   public VelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
       @Nullable String description, @Nullable String url,
       @Nullable List<String> authors, Collection<PluginDependency> dependencies, Path source) {

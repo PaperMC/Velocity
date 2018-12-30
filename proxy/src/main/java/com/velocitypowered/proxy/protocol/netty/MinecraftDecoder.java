@@ -17,6 +17,11 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
   private StateRegistry state;
   private StateRegistry.PacketRegistry.ProtocolRegistry registry;
 
+  /**
+   * Creates a new {@code MinecraftDecoder} decoding packets from the specified {@code direction}.
+   *
+   * @param direction the direction from which we decode from
+   */
   public MinecraftDecoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
     this.registry = direction

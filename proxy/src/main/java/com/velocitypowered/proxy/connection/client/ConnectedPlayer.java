@@ -296,6 +296,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     connectionInFlight = null;
   }
 
+  /**
+   * Handles unexpected disconnects.
+   * @param server the server we disconnected from
+   * @param throwable the exception
+   */
   public void handleConnectionException(RegisteredServer server, Throwable throwable) {
     if (throwable == null) {
       throw new NullPointerException("throwable");
@@ -321,6 +326,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     handleConnectionException(server, null, TextComponent.of(userMessage, TextColor.RED));
   }
 
+  /**
+   * Handles unexpected disconnects.
+   * @param server the server we disconnected from
+   * @param disconnect the disconnect packet
+   */
   public void handleConnectionException(RegisteredServer server, Disconnect disconnect) {
     Component disconnectReason = ComponentSerializers.JSON.deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
@@ -382,6 +392,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
+  /**
+   * Finds another server to attempt to log into, if we were unexpectedly disconnected from the
+   * server.
+   * @return the next server to try
+   */
   public Optional<RegisteredServer> getNextServerToTry() {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
@@ -402,6 +417,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return server.getServer(toTryName);
   }
 
+  /**
+   * Sets the player's new connected server and clears the in-flight connection.
+   *
+   * @param serverConnection the new server connection
+   */
   public void setConnectedServer(@Nullable VelocityServerConnection serverConnection) {
     this.connectedServer = serverConnection;
     this.tryIndex = 0; // reset since we got connected to a server

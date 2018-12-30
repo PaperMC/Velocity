@@ -1,13 +1,12 @@
 package com.velocitypowered.proxy.console;
 
-import static com.velocitypowered.api.permission.PermissionFunction.*;
+import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
 
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
-import java.io.PrintWriter;
 import java.util.List;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -44,11 +43,17 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
     return this.permissionFunction.getPermissionValue(permission);
   }
 
+  /**
+   * Sets up {@code System.out} and {@code System.err} to redirect to log4j.
+   */
   public void setupStreams() {
     System.setOut(IoBuilder.forLogger(logger).setLevel(Level.INFO).buildPrintStream());
     System.setErr(IoBuilder.forLogger(logger).setLevel(Level.ERROR).buildPrintStream());
   }
 
+  /**
+   * Sets up permissions for the console.
+   */
   public void setupPermissions() {
     PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
     // we can safely block here, this is before any listeners fire

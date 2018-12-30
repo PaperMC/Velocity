@@ -104,18 +104,11 @@ public class VelocityServer implements ProxyServer {
   }
 
   public KeyPair getServerKeyPair() {
-    if (serverKeyPair == null) {
-      throw new AssertionError();
-    }
-    return serverKeyPair;
+    return ensureInitialized(serverKeyPair);
   }
 
   public VelocityConfiguration getConfiguration() {
-    VelocityConfiguration cfg = this.configuration;
-    if (cfg == null) {
-      throw new IllegalStateException("Configuration not initialized!");
-    }
-    return cfg;
+    return ensureInitialized(this.configuration);
   }
 
   @Override
@@ -250,6 +243,12 @@ public class VelocityServer implements ProxyServer {
     return shutdown;
   }
 
+  /**
+   * Reloads the proxy's configuration.
+   *
+   * @return {@code true} if successful, {@code false} if we can't read the configuration
+   * @throws IOException if we can't read {@code velocity.toml}
+   */
   public boolean reloadConfiguration() throws IOException {
     Path configPath = Paths.get("velocity.toml");
     VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
@@ -331,6 +330,11 @@ public class VelocityServer implements ProxyServer {
     return true;
   }
 
+  /**
+   * Shuts down the proxy.
+   *
+   * @param explicitExit whether the user explicitly shut down the proxy
+   */
   public void shutdown(boolean explicitExit) {
     if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
       throw new AssertionError();
@@ -365,19 +369,25 @@ public class VelocityServer implements ProxyServer {
   }
 
   public NettyHttpClient getHttpClient() {
-    if (httpClient == null) {
-      throw new IllegalStateException("HTTP client not initialized");
-    }
-    return httpClient;
+    return ensureInitialized(httpClient);
   }
 
   public Ratelimiter getIpAttemptLimiter() {
-    if (ipAttemptLimiter == null) {
-      throw new IllegalStateException("Ratelimiter not initialized");
-    }
-    return ipAttemptLimiter;
+    return ensureInitialized(ipAttemptLimiter);
   }
 
+  private static <T> T ensureInitialized(T o) {
+    if (o == null) {
+      throw new IllegalStateException("The proxy isn't fully initialized.");
+    }
+    return o;
+  }
+
+  /**
+   * Attempts to register the {@code connection} with the proxy.
+   * @param connection the connection to register
+   * @return {@code true} if we registered the connection, {@code false} if not
+   */
   public boolean registerConnection(ConnectedPlayer connection) {
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
     if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
