@@ -139,8 +139,19 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private String cleanVhost(String hostname) {
-    int zeroIdx = hostname.indexOf('\0');
-    return zeroIdx == -1 ? hostname : hostname.substring(0, zeroIdx);
+    // Clean out any anything after any zero byte
+    String cleaned = hostname;
+    int zeroIdx = cleaned.indexOf('\0');
+    if (zeroIdx > -1) {
+      cleaned = hostname.substring(0, zeroIdx);
+    }
+
+    // If we connect through an SRV record, there will be a period at the end (DNS usually elides
+    // this ending octet).
+    if (cleaned.endsWith(".")) {
+      cleaned = cleaned.substring(0, cleaned.length() - 1);
+    }
+    return cleaned;
   }
 
   @Override
