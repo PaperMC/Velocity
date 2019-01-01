@@ -10,7 +10,7 @@ class VoidArgumentPropertySerializer<T extends ArgumentType<?>>
 
   private final Supplier<T> argumentSupplier;
 
-  public VoidArgumentPropertySerializer(Supplier<T> argumentSupplier) {
+  private VoidArgumentPropertySerializer(Supplier<T> argumentSupplier) {
     this.argumentSupplier = argumentSupplier;
   }
 

@@ -25,25 +25,24 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-    int expectedUncompressedSize = ProtocolUtils.readVarInt(in);
-    if (expectedUncompressedSize == 0) {
+    int expectedSize = ProtocolUtils.readVarInt(in);
+    if (expectedSize == 0) {
       // Strip the now-useless uncompressed size, this message is already uncompressed.
       out.add(in.retainedSlice());
       in.skipBytes(in.readableBytes());
       return;
     }
 
-    checkFrame(expectedUncompressedSize >= threshold,
-        "Uncompressed size %s is greater than threshold %s",
-        expectedUncompressedSize, threshold);
+    checkFrame(expectedSize >= threshold, "Uncompressed size %s is greater than threshold %s",
+        expectedSize, threshold);
     ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);
-    int initialCapacity = Math.min(expectedUncompressedSize, MAXIMUM_INITIAL_BUFFER_SIZE);
+    int initialCapacity = Math.min(expectedSize, MAXIMUM_INITIAL_BUFFER_SIZE);
     ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, initialCapacity);
     try {
       compressor.inflate(compatibleIn, uncompressed);
-      checkFrame(expectedUncompressedSize == uncompressed.readableBytes(),
+      checkFrame(expectedSize == uncompressed.readableBytes(),
           "Mismatched compression sizes (got %s, expected %s)",
-          uncompressed.readableBytes(), expectedUncompressedSize);
+          uncompressed.readableBytes(), expectedSize);
       out.add(uncompressed);
     } catch (Exception e) {
       uncompressed.release();

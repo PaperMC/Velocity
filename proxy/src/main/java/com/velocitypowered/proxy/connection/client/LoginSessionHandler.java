@@ -74,6 +74,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLogin packet) {
     this.login = packet;
     if (mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
+      // To make sure the connecting client isn't Velocity, send a plugin message that Velocity will
+      // recognize and respond to.
       playerInfoId = ThreadLocalRandom.current().nextInt();
       mcConnection.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
           Unpooled.EMPTY_BUFFER));

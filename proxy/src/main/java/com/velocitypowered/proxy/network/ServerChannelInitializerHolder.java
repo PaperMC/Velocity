@@ -11,7 +11,7 @@ public class ServerChannelInitializerHolder implements Supplier<ChannelInitializ
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
   private ChannelInitializer<Channel> initializer;
 
-  public ServerChannelInitializerHolder(final ChannelInitializer<Channel> initializer) {
+  ServerChannelInitializerHolder(final ChannelInitializer<Channel> initializer) {
     this.initializer = initializer;
   }
 

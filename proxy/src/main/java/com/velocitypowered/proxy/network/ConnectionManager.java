@@ -13,12 +13,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
-import io.netty.resolver.dns.MultiDnsServerAddressStreamProvider;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,6 +29,9 @@ public final class ConnectionManager {
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
   private final VelocityServer server;
+  // This is intentionally made public for plugins like ViaVersion, which inject their own
+  // protocol logic into the proxy.
+  @SuppressWarnings("WeakerAccess")
   public final ServerChannelInitializerHolder serverChannelInitializer;
 
   private final DnsAddressResolverGroup resolverGroup;

@@ -52,7 +52,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
     connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
-    if (ServerChannelInitializer.this.server.getConfiguration().isProxyProtocol()) {
+    if (this.server.getConfiguration().isProxyProtocol()) {
       ch.pipeline().addFirst(new HAProxyMessageDecoder());
     }
   }
