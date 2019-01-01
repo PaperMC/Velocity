@@ -415,8 +415,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
         outstandingTabComplete = null;
       }
-      player.getConnection().write(response);
     }
+
+    player.getConnection().write(response);
   }
 
   /**
