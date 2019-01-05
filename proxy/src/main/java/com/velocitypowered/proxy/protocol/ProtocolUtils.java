@@ -69,9 +69,9 @@ public enum ProtocolUtils {
   public static String readString(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkArgument(length >= 0, "Got a negative-length string (%s)", length);
-    // `cap` is interpreted as a UTF-8 character length, hence the multiplication by 4 - this covers
-    // the full Unicode plane - a 4 byte character (surrogate) is the maximum. We do a later sanity
-    // check to make sure our optimistic guess was good enough.
+    // `cap` is interpreted as a UTF-8 character length. To cover the full Unicode plane, we must
+    // consider the length of a UTF-8 character, which can be up to a 4 bytes. We do an initial
+    // sanity check and then check again to make sure our optimistic guess was good.
     checkArgument(length <= cap * 4, "Bad string size (got %s, maximum is %s)", length, cap);
     checkState(buf.isReadable(length),
         "Trying to read a string that is too long (wanted %s, only have %s)", length,
@@ -107,9 +107,10 @@ public enum ProtocolUtils {
    */
   public static byte[] readByteArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
-    checkArgument(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkArgument(length >= 0, "Got a negative-length array (%s)", length);
+    checkArgument(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
     checkState(buf.isReadable(length),
-        "Trying to read a string that is too long (wanted %s, only have %s)", length,
+        "Trying to read an array that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
     byte[] array = new byte[length];
     buf.readBytes(array);
@@ -128,6 +129,7 @@ public enum ProtocolUtils {
    */
   public static int[] readIntegerArray(ByteBuf buf) {
     int len = readVarInt(buf);
+    checkArgument(len >= 0, "Got a negative-length integer array (%s)", len);
     int[] array = new int[len];
     for (int i = 0; i < len; i++) {
       array[i] = readVarInt(buf);
