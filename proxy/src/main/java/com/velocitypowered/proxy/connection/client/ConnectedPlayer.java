@@ -193,7 +193,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         // legacy message and then inject the legacy text into a component... yuck!
         JsonObject object = new JsonObject();
         object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
-        json = VelocityServer.GSON.toJson(object);
+        json = object.toString();
       }
     } else {
       json = ComponentSerializers.JSON.serialize(component);
