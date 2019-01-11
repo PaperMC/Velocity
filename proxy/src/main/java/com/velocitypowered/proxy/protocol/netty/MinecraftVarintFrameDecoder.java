@@ -6,9 +6,12 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
+import java.util.Arrays;
 import java.util.List;
 
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
+
+  private final byte[] lenBuf = new byte[3];
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -16,9 +19,9 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
+    Arrays.fill(lenBuf, (byte) 0);
     int origReaderIndex = in.readerIndex();
 
-    byte[] lenBuf = new byte[3];
     ByteBuf wrappedBuf = Unpooled.wrappedBuffer(lenBuf);
     for (int i = 0; i < lenBuf.length; i++) {
       if (!in.isReadable()) {
