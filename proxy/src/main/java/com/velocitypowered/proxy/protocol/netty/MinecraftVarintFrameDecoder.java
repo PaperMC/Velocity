@@ -19,6 +19,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     int origReaderIndex = in.readerIndex();
 
     byte[] lenBuf = new byte[3];
+    ByteBuf wrappedBuf = Unpooled.wrappedBuffer(lenBuf);
     for (int i = 0; i < lenBuf.length; i++) {
       if (!in.isReadable()) {
         in.readerIndex(origReaderIndex);
@@ -27,7 +28,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
       lenBuf[i] = in.readByte();
       if (lenBuf[i] > 0) {
-        int packetLength = ProtocolUtils.readVarInt(Unpooled.wrappedBuffer(lenBuf));
+        int packetLength = ProtocolUtils.readVarInt(wrappedBuf);
         if (packetLength == 0) {
           return;
         }
