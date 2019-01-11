@@ -84,7 +84,7 @@ public class NettyHttpClient {
     }
 
     CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
-    InetSocketAddress address = new InetSocketAddress(host, port);
+    InetSocketAddress address = InetSocketAddress.createUnresolved(host, port);
     poolMap.get(address)
         .acquire()
         .addListener(future -> {
