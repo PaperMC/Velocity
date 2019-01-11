@@ -36,7 +36,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     this.server = server;
     this.serverConn = serverConn;
 
-    MinecraftSessionHandler psh = serverConn.getPlayer().getConnection().getSessionHandler();
+    MinecraftSessionHandler psh = serverConn.getPlayer().getMinecraftConnection()
+        .getSessionHandler();
     if (!(psh instanceof ClientPlaySessionHandler)) {
       throw new IllegalStateException(
           "Initializing BackendPlaySessionHandler with no backing client play session handler!");
@@ -97,7 +98,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (PluginMessageUtil.isMcBrand(packet)) {
       PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet,
           server.getVersion());
-      serverConn.getPlayer().getConnection().write(rewritten);
+      serverConn.getPlayer().getMinecraftConnection().write(rewritten);
       return true;
     }
 
@@ -111,7 +112,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    MinecraftConnection clientConn = serverConn.getPlayer().getConnection();
+    MinecraftConnection clientConn = serverConn.getPlayer().getMinecraftConnection();
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
         packet.getData());
     server.getEventManager().fire(event)
@@ -156,12 +157,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    serverConn.getPlayer().getConnection().write(packet);
+    serverConn.getPlayer().getMinecraftConnection().write(packet);
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    serverConn.getPlayer().getConnection().write(buf.retain());
+    serverConn.getPlayer().getMinecraftConnection().write(buf.retain());
   }
 
   @Override

@@ -70,7 +70,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
-  private final MinecraftConnection connection;
+  private final MinecraftConnection minecraftConnection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
   private PermissionFunction permissionFunction;
@@ -87,15 +87,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @MonotonicNonNull
   private List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
-      @Nullable InetSocketAddress virtualHost) {
+  ConnectedPlayer(VelocityServer server, GameProfile profile,
+      MinecraftConnection minecraftConnection, @Nullable InetSocketAddress virtualHost) {
     this.server = server;
-    this.tabList = new VelocityTabList(connection);
+    this.tabList = new VelocityTabList(minecraftConnection);
     this.profile = profile;
-    this.connection = connection;
+    this.minecraftConnection = minecraftConnection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
-    this.connectionPhase = connection.getType().getInitialClientPhase();
+    this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
   }
 
   @Override
@@ -117,8 +117,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return profile;
   }
 
-  public MinecraftConnection getConnection() {
-    return connection;
+  public MinecraftConnection getMinecraftConnection() {
+    return minecraftConnection;
   }
 
   @Override
@@ -151,7 +151,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public InetSocketAddress getRemoteAddress() {
-    return (InetSocketAddress) connection.getRemoteAddress();
+    return (InetSocketAddress) minecraftConnection.getRemoteAddress();
   }
 
   @Override
@@ -165,12 +165,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public boolean isActive() {
-    return connection.getChannel().isActive();
+    return minecraftConnection.getChannel().isActive();
   }
 
   @Override
   public ProtocolVersion getProtocolVersion() {
-    return connection.getProtocolVersion();
+    return minecraftConnection.getProtocolVersion();
   }
 
   @Override
@@ -186,7 +186,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket pkt = new TitlePacket();
         pkt.setAction(TitlePacket.SET_ACTION_BAR);
         pkt.setComponent(ComponentSerializers.JSON.serialize(component));
-        connection.write(pkt);
+        minecraftConnection.write(pkt);
         return;
       } else {
         // Due to issues with action bar packets, we'll need to convert the text message into a
@@ -202,7 +202,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Chat chat = new Chat();
     chat.setType(pos);
     chat.setMessage(json);
-    connection.write(chat);
+    minecraftConnection.write(chat);
   }
 
   @Override
@@ -238,23 +238,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this, ComponentSerializers.LEGACY.serialize(reason));
-    connection.closeWith(Disconnect.create(reason));
+    minecraftConnection.closeWith(Disconnect.create(reason));
   }
 
   @Override
   public void sendTitle(Title title) {
     Preconditions.checkNotNull(title, "title");
 
+    ProtocolVersion protocolVersion = minecraftConnection.getProtocolVersion();
     if (title.equals(Titles.reset())) {
-      connection.write(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+      minecraftConnection.write(TitlePacket.resetForProtocolVersion(protocolVersion));
     } else if (title.equals(Titles.hide())) {
-      connection.write(TitlePacket.hideForProtocolVersion(connection.getProtocolVersion()));
+      minecraftConnection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
     } else if (title instanceof TextTitle) {
       TextTitle tt = (TextTitle) title;
 
       if (tt.isResetBeforeSend()) {
-        connection
-            .delayedWrite(TitlePacket.resetForProtocolVersion(connection.getProtocolVersion()));
+        minecraftConnection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
       }
 
       Optional<Component> titleText = tt.getTitle();
@@ -262,7 +262,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_TITLE);
         titlePkt.setComponent(ComponentSerializers.JSON.serialize(titleText.get()));
-        connection.delayedWrite(titlePkt);
+        minecraftConnection.delayedWrite(titlePkt);
       }
 
       Optional<Component> subtitleText = tt.getSubtitle();
@@ -270,17 +270,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_SUBTITLE);
         titlePkt.setComponent(ComponentSerializers.JSON.serialize(subtitleText.get()));
-        connection.delayedWrite(titlePkt);
+        minecraftConnection.delayedWrite(titlePkt);
       }
 
       if (tt.areTimesSet()) {
-        TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(connection.getProtocolVersion());
+        TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(protocolVersion);
         timesPkt.setFadeIn(tt.getFadeIn());
         timesPkt.setStay(tt.getStay());
         timesPkt.setFadeOut(tt.getFadeOut());
-        connection.delayedWrite(timesPkt);
+        minecraftConnection.delayedWrite(timesPkt);
       }
-      connection.flush();
+      minecraftConnection.flush();
     } else {
       throw new IllegalArgumentException("Unknown title class " + title.getClass().getName());
     }
@@ -388,7 +388,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               // In case someone gets creative, assume we want to disconnect the player.
               disconnect(friendlyReason);
             }
-          }, connection.eventLoop());
+          }, minecraftConnection.eventLoop());
     }
   }
 
@@ -477,7 +477,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     PluginMessage message = new PluginMessage();
     message.setChannel(identifier.getId());
     message.setData(data);
-    connection.write(message);
+    minecraftConnection.write(message);
     return true;
   }
 
@@ -496,7 +496,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ResourcePackRequest request = new ResourcePackRequest();
     request.setUrl(url);
     request.setHash("");
-    connection.write(request);
+    minecraftConnection.write(request);
   }
 
   @Override
@@ -508,7 +508,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ResourcePackRequest request = new ResourcePackRequest();
     request.setUrl(url);
     request.setHash(ByteBufUtil.hexDump(hash));
-    connection.write(request);
+    minecraftConnection.write(request);
   }
 
   /**
@@ -517,10 +517,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
+    if (minecraftConnection.getState() == StateRegistry.PLAY) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
-      connection.write(keepAlive);
+      minecraftConnection.write(keepAlive);
     }
   }
 
@@ -632,7 +632,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 // The only remaining value is successful (no need to do anything!)
                 break;
             }
-          }, connection.eventLoop())
+          }, minecraftConnection.eventLoop())
           .thenApply(Result::isSuccessful);
     }
 

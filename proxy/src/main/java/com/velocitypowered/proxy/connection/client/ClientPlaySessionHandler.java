@@ -68,7 +68,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public void activated() {
     PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(),
         server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion()));
-    player.getConnection().write(register);
+    player.getMinecraftConnection().write(register);
   }
 
   @Override
@@ -165,7 +165,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           resp.setLength(longestLength);
           resp.getOffers().addAll(offers);
 
-          player.getConnection().write(resp);
+          player.getMinecraftConnection().write(resp);
           return true;
         }
       }
@@ -288,7 +288,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public void writabilityChanged() {
     VelocityServerConnection serverConn = player.getConnectedServer();
     if (serverConn != null) {
-      boolean writable = player.getConnection().getChannel().isWritable();
+      boolean writable = player.getMinecraftConnection().getChannel().isWritable();
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
         smc.getChannel().config().setAutoRead(writable);
@@ -316,7 +316,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
-      player.getConnection().delayedWrite(joinGame);
+      player.getMinecraftConnection().delayedWrite(joinGame);
 
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
@@ -336,12 +336,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      player.getConnection().delayedWrite(joinGame);
+      player.getMinecraftConnection().delayedWrite(joinGame);
       int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-      player.getConnection().delayedWrite(
+      player.getMinecraftConnection().delayedWrite(
           new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
-      player.getConnection().delayedWrite(
+      player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
     }
@@ -352,7 +352,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       BossBar deletePacket = new BossBar();
       deletePacket.setUuid(serverBossBar);
       deletePacket.setAction(BossBar.REMOVE);
-      player.getConnection().delayedWrite(deletePacket);
+      player.getMinecraftConnection().delayedWrite(deletePacket);
     }
     serverBossBars.clear();
 
@@ -375,11 +375,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     // Clear any title from the previous server.
-    player.getConnection()
+    player.getMinecraftConnection()
         .delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
 
     // Flush everything
-    player.getConnection().flush();
+    player.getMinecraftConnection().flush();
     serverMc.flush();
     serverConn.completeJoin();
   }
@@ -417,7 +417,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    player.getConnection().write(response);
+    player.getMinecraftConnection().write(response);
   }
 
   /**
