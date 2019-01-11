@@ -56,7 +56,7 @@ public class NativeVelocityCompressor implements VelocityCompressor {
       int produced = deflate.process(deflateCtx, source.memoryAddress() + source.readerIndex(),
           source.readableBytes(),
           destination.memoryAddress() + destination.writerIndex(), destination.writableBytes(),
-          !source.isReadable());
+          true);
       source.readerIndex(source.readerIndex() + deflate.consumed);
       destination.writerIndex(destination.writerIndex() + produced);
     }

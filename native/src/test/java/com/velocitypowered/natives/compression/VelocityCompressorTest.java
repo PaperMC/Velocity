@@ -36,21 +36,21 @@ class VelocityCompressorTest {
       compressor.dispose();
       fail("Loaded regular compressor");
     }
-    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length));
+    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length + 32));
   }
 
   @Test
   void javaIntegrityCheckDirect() throws DataFormatException {
     VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
-    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length));
+    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length + 32));
   }
 
   @Test
   void javaIntegrityCheckHeap() throws DataFormatException {
     VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
-    check(compressor, () -> Unpooled.buffer(TEST_DATA.length));
+    check(compressor, () -> Unpooled.buffer(TEST_DATA.length + 32));
   }
 
   private void check(VelocityCompressor compressor, Supplier<ByteBuf> bufSupplier)
