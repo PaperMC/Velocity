@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <jni.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <zlib.h>
 #include "jni_util.h"
+#include "jni_zlib_common.h"
 
 static jfieldID finishedID;
 static jfieldID consumedID;
@@ -27,27 +29,28 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_init(JNIEnv *env,
         return 0;
     }
 
-    char *msg;
     int ret = deflateInit(stream, level);
-
-    switch (ret) {
-        case Z_OK:
-            return (jlong) stream;
-        case Z_MEM_ERROR:
-            free(stream);
-            throwException(env, "java/lang/OutOfMemoryError", "zlib init");
-            return 0;
-        case Z_STREAM_ERROR:
-            free(stream);
-            char message[32];
-            snprintf(message, 32, "invalid level %d", level);
-            throwException(env, "java/lang/IllegalArgumentException", message);
-            return 0;
-        default:
-            msg = stream->msg;
-            free(stream);
-            throwException(env, "java/util/zip/DataFormatException", msg);
-            return 0;
+    if (ret == Z_OK) {
+        return (jlong) stream;
+    } else {
+        char *zlib_msg = stream->msg;
+        free(stream);
+        switch (ret) {
+            case Z_MEM_ERROR:
+                throwException(env, "java/lang/OutOfMemoryError", "zlib init");
+                break;
+            case Z_STREAM_ERROR: {
+                // Thanks Ken and Ritchie!
+                char message[32];
+                snprintf(message, 32, "invalid level %d", level);
+                throwException(env, "java/lang/IllegalArgumentException", message);
+                break;
+            }
+            default:
+                throwException(env, "java/util/zip/DataFormatException", zlib_msg);
+                break;
+        }
+        return 0;
     }
 }
 
@@ -57,24 +60,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_free(JNIEnv *env,
     jlong ctx)
 {
     z_stream* stream = (z_stream*) ctx;
-    int ret = deflateEnd(stream);
-    char *msg = stream->msg;
-    free((void*) ctx);
-
-    switch (ret) {
-        case Z_OK:
-            break;
-        case Z_STREAM_ERROR:
-            if (msg == NULL) {
-                msg = "stream state inconsistent";
-            }
-        case Z_DATA_ERROR:
-            if (msg == NULL) {
-                msg = "data was discarded";
-            }
-            throwException(env, "java/lang/IllegalArgumentException", msg);
-            break;
-    }
+    check_zlib_free(env, stream, true);
 }
 
 JNIEXPORT int JNICALL

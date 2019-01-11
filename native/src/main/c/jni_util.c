@@ -1,7 +1,7 @@
 #include <jni.h>
 #include "jni_util.h"
 
-JNIEXPORT void JNICALL
+void JNICALL
 throwException(JNIEnv *env, const char *type, const char *msg)
 {
     jclass klazz = (*env)->FindClass(env, type);

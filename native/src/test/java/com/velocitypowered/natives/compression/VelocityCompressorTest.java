@@ -1,5 +1,6 @@
 package com.velocitypowered.natives.compression;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.condition.OS.LINUX;
@@ -26,6 +27,12 @@ class VelocityCompressorTest {
   static void checkNatives() throws IOException {
     Natives.compress.getLoadedVariant();
     new Random(1).nextBytes(TEST_DATA);
+  }
+
+  @Test
+  @EnabledOnOs({MAC, LINUX})
+  void sanityCheckNative() {
+    assertThrows(IllegalArgumentException.class, () -> Natives.compress.get().create(-42));
   }
 
   @Test
