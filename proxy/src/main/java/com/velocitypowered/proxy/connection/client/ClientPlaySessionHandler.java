@@ -11,6 +11,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.messages.VelocityChannelConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -222,7 +223,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           // JoinGame packet has been received by the proxy, whichever comes first.
           loginPluginMessages.add(packet);
         } else {
-          ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+          // No-no-no, not so fast.
+          String channel = packet.getChannel();
+          if (VelocityChannelConstants.CHANNEL_NAME.equals(channel)) {
+            player.disconnect(TextComponent.of("Received unexpected plugin message!", TextColor.RED));
+            return true;
+          }
+
+          ChannelIdentifier id = server.getChannelRegistrar().getFromId(channel);
           if (id == null) {
             backendConn.write(packet);
           } else {
