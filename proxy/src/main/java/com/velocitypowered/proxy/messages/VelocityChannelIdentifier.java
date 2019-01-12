@@ -226,6 +226,9 @@ public final class VelocityChannelIdentifier implements ChannelIdentifier {
                     response.writeByte(VelocityReplyCodes.SUCCESS);
                     break;
                 }
+                default:
+                    response.writeByte(VelocityReplyCodes.INVALID_ACTION);
+                    break;
             }
             responseArray = new byte[response.readableBytes()];
             response.readBytes(responseArray);
