@@ -13,6 +13,8 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
+import com.velocitypowered.proxy.messages.VelocityChannelConstants;
+import com.velocitypowered.proxy.messages.VelocityChannelIdentifier;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
@@ -107,7 +109,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+    String channel = packet.getChannel();
+    if (VelocityChannelConstants.CHANNEL_NAME.equals(channel)) {
+      serverConn.getPlayer().getMinecraftConnection()
+              .write(VelocityChannelIdentifier.createMessage(packet.getData()));
+      return true;
+    }
+
+    ChannelIdentifier id = server.getChannelRegistrar().getFromId(channel);
     if (id == null) {
       return false;
     }
