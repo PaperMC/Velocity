@@ -13,13 +13,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommandManager implements CommandManager {
 
-  private static final Pattern SPLIT_PATTERN = Pattern.compile(" ");
   private final Map<String, Command> commands = new HashMap<>();
 
   @Override
@@ -44,7 +41,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = SPLIT_PATTERN.split(cmdLine, -1);
+    String[] split = cmdLine.split(" ", -1);
     if (split.length == 0) {
       return false;
     }
@@ -87,7 +84,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = SPLIT_PATTERN.split(cmdLine, -1);
+    String[] split = cmdLine.split(" ", -1);
     if (split.length == 0) {
       // No command available.
       return ImmutableList.of();
@@ -136,7 +133,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = SPLIT_PATTERN.split(cmdLine, -1);
+    String[] split = cmdLine.split(" ", -1);
     if (split.length == 0) {
       // No command available.
       return false;
