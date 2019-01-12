@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.plugin;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -29,6 +30,12 @@ public class PluginClassLoader extends URLClassLoader {
     } catch (MalformedURLException e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Override
+  public void close() throws IOException {
+    loaders.remove(this);
+    super.close();
   }
 
   @Override
