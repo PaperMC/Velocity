@@ -47,13 +47,13 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     String alias = split[0];
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       return false;
     }
 
+    @SuppressWarnings("nullness")
+    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
       if (!command.hasPermission(source, actualArgs)) {
         return false;
@@ -103,14 +103,14 @@ public class VelocityCommandManager implements CommandManager {
       return availableCommands;
     }
 
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       // No such command, so we can't offer any tab complete suggestions.
       return ImmutableList.of();
     }
 
+    @SuppressWarnings("nullness")
+    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
       if (!command.hasPermission(source, actualArgs)) {
         return ImmutableList.of();
@@ -140,14 +140,14 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     String alias = split[0];
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       // No such command.
       return false;
     }
 
+    @SuppressWarnings("nullness")
+    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
       return command.hasPermission(source, actualArgs);
     } catch (Exception e) {
