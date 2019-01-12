@@ -226,7 +226,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           // No-no-no, not so fast.
           String channel = packet.getChannel();
           if (VelocityChannelConstants.CHANNEL_NAME.equals(channel)) {
-            player.disconnect(TextComponent.of("Received unexpected plugin message!", TextColor.RED));
+            player.disconnect(TextComponent
+                .of("Received unexpected plugin message!", TextColor.RED));
             return true;
           }
 
