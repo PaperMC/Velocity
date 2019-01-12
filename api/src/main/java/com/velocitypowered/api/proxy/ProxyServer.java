@@ -24,6 +24,10 @@ public abstract class ProxyServer {
 
   private static ProxyServer instance;
 
+  /**
+   * Sets an instance of {@link ProxyServer}
+   * @param instance the proxy server instance
+   */
   public static void setInstance(ProxyServer instance) {
     Preconditions.checkState(ProxyServer.instance == null, "Cannot redefine singleton ProxyServer");
     Preconditions.checkNotNull(instance, "instance");
