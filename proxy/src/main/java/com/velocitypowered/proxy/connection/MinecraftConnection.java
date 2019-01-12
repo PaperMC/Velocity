@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -136,7 +135,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if (ctx.channel().isActive()) {
       if (sessionHandler != null) {
-        sessionHandler.exception(cause);
+        try {
+          sessionHandler.exception(cause);
+        } catch (Exception ex) {
+          logger.error("{}: exception handling exception", (association != null ? association : channel.remoteAddress()), cause);
+        }
       }
 
       if (association != null) {

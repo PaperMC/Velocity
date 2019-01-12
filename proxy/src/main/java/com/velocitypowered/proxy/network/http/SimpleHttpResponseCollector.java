@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
 
-  private final StringBuilder buffer = new StringBuilder(1024);
+  private final StringBuilder buffer = new StringBuilder();
   private final CompletableFuture<SimpleHttpResponse> reply;
   private int httpCode;
   private boolean canKeepAlive;
