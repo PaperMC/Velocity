@@ -68,7 +68,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
-public class VelocityServer extends ProxyServer {
+public class VelocityServer implements ProxyServer {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GSON = new GsonBuilder()
@@ -95,6 +95,7 @@ public class VelocityServer extends ProxyServer {
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
+  private VelocityChannelIdentifier velocityChannel;
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -180,8 +181,7 @@ public class VelocityServer extends ProxyServer {
     httpClient = new NettyHttpClient(this);
     loadPlugins();
 
-    ProxyServer.setInstance(this);
-    VelocityChannelIdentifier.setProxy(this);
+    velocityChannel = new VelocityChannelIdentifier(this);
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
     // to fully initialize before we accept any connections to the server.
     eventManager.fire(new ProxyInitializeEvent()).join();
@@ -250,6 +250,10 @@ public class VelocityServer extends ProxyServer {
 
   public Bootstrap initializeGenericBootstrap() {
     return this.cm.createWorker();
+  }
+
+  public VelocityChannelIdentifier getVelocityChannel() {
+    return velocityChannel;
   }
 
   public boolean isShutdown() {

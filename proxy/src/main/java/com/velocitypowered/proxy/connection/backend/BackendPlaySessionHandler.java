@@ -112,7 +112,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     String channel = packet.getChannel();
     if (VelocityChannelConstants.CHANNEL_NAME.equals(channel)) {
       serverConn.getPlayer().getMinecraftConnection()
-              .write(VelocityChannelIdentifier.createMessage(packet.getData()));
+              .write(server.getVelocityChannel().createMessage(packet.getData()));
       return true;
     }
 
