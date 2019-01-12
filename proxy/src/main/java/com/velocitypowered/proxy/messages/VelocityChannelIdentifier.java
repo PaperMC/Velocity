@@ -63,8 +63,10 @@ public final class VelocityChannelIdentifier implements ChannelIdentifier {
       response.setData(API_MISMATCH);
       return response;
     }
+    int randomId = ProtocolUtils.readVarInt(data);
     byte[] responseArray;
     ByteBuf response = Unpooled.buffer();
+    ProtocolUtils.writeVarInt(response, randomId);
     try {
       byte action = data.readByte();
       switch (action) {
