@@ -3,6 +3,7 @@ package com.velocitypowered.proxy;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
@@ -26,6 +27,7 @@ import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
+import com.velocitypowered.proxy.messages.VelocityChannelIdentifier;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.network.http.NettyHttpClient;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
@@ -52,6 +54,7 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -65,7 +68,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
-public class VelocityServer implements ProxyServer {
+public class VelocityServer extends ProxyServer {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GSON = new GsonBuilder()
@@ -177,6 +180,8 @@ public class VelocityServer implements ProxyServer {
     httpClient = new NettyHttpClient(this);
     loadPlugins();
 
+    ProxyServer.setInstance(this);
+    VelocityChannelIdentifier.setProxy(this);
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
     // to fully initialize before we accept any connections to the server.
     eventManager.fire(new ProxyInitializeEvent()).join();
@@ -233,6 +238,14 @@ public class VelocityServer implements ProxyServer {
     }
 
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
+  }
+
+  public Set<UUID> getOnlineUuids() {
+    return ImmutableSet.copyOf(connectionsByUuid.keySet());
+  }
+
+  public Set<String> getOnlineNames() {
+    return ImmutableSet.copyOf(connectionsByName.keySet());
   }
 
   public Bootstrap initializeGenericBootstrap() {

@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
@@ -19,7 +20,22 @@ import net.kyori.text.Component;
 /**
  * Provides an interface to a Minecraft server proxy.
  */
-public interface ProxyServer {
+public abstract class ProxyServer {
+
+  private static ProxyServer instance;
+
+  public static void setInstance(ProxyServer instance) {
+    Preconditions.checkState(ProxyServer.instance == null, "Cannot redefine singleton ProxyServer");
+    Preconditions.checkNotNull(instance, "instance");
+    ProxyServer.instance = instance;
+  }
+
+  /**
+   * Returns an instance of running {@link ProxyServer}
+   */
+  public static ProxyServer getInstance() {
+    return instance;
+  }
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search
@@ -28,7 +44,7 @@ public interface ProxyServer {
    * @param username the username to search for
    * @return an {@link Optional} with the player, which may be empty
    */
-  Optional<Player> getPlayer(String username);
+  public abstract Optional<Player> getPlayer(String username);
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft UUID.
@@ -36,14 +52,14 @@ public interface ProxyServer {
    * @param uuid the UUID
    * @return an {@link Optional} with the player, which may be empty
    */
-  Optional<Player> getPlayer(UUID uuid);
+  public abstract Optional<Player> getPlayer(UUID uuid);
 
   /**
    * Broadcasts a message to all players currently online.
    *
    * @param component the message to send
    */
-  void broadcast(Component component);
+  public abstract void broadcast(Component component);
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot
@@ -51,14 +67,14 @@ public interface ProxyServer {
    *
    * @return the players online on this proxy
    */
-  Collection<Player> getAllPlayers();
+  public abstract Collection<Player> getAllPlayers();
 
   /**
    * Returns the number of players currently connected to this proxy.
    *
    * @return the players on this proxy
    */
-  int getPlayerCount();
+  public abstract int getPlayerCount();
 
   /**
    * Retrieves a registered {@link RegisteredServer} instance by its name. The search is
@@ -67,14 +83,14 @@ public interface ProxyServer {
    * @param name the name of the server
    * @return the registered server, which may be empty
    */
-  Optional<RegisteredServer> getServer(String name);
+  public abstract Optional<RegisteredServer> getServer(String name);
 
   /**
    * Retrieves all {@link RegisteredServer}s registered with this proxy.
    *
    * @return the servers registered with this proxy
    */
-  Collection<RegisteredServer> getAllServers();
+  public abstract Collection<RegisteredServer> getAllServers();
 
   /**
    * Registers a server with this proxy. A server with this name should not already exist.
@@ -82,14 +98,14 @@ public interface ProxyServer {
    * @param server the server to register
    * @return the newly registered server
    */
-  RegisteredServer registerServer(ServerInfo server);
+  public abstract RegisteredServer registerServer(ServerInfo server);
 
   /**
    * Unregisters this server from the proxy.
    *
    * @param server the server to unregister
    */
-  void unregisterServer(ServerInfo server);
+  public abstract void unregisterServer(ServerInfo server);
 
   /**
    * Returns an instance of {@link CommandSource} that can be used to determine if the command is
@@ -99,42 +115,42 @@ public interface ProxyServer {
    *
    * @return the console command invoker
    */
-  ConsoleCommandSource getConsoleCommandSource();
+  public abstract ConsoleCommandSource getConsoleCommandSource();
 
   /**
    * Gets the {@link PluginManager} instance.
    *
    * @return the plugin manager instance
    */
-  PluginManager getPluginManager();
+  public abstract PluginManager getPluginManager();
 
   /**
    * Gets the {@link EventManager} instance.
    *
    * @return the event manager instance
    */
-  EventManager getEventManager();
+  public abstract EventManager getEventManager();
 
   /**
    * Gets the {@link CommandManager} instance.
    *
    * @return the command manager
    */
-  CommandManager getCommandManager();
+  public abstract CommandManager getCommandManager();
 
   /**
    * Gets the {@link Scheduler} instance.
    *
    * @return the scheduler instance
    */
-  Scheduler getScheduler();
+  public abstract Scheduler getScheduler();
 
   /**
    * Gets the {@link ChannelRegistrar} instance.
    *
    * @return the channel registrar
    */
-  ChannelRegistrar getChannelRegistrar();
+  public abstract ChannelRegistrar getChannelRegistrar();
 
   /**
    * Gets the address that this proxy is bound to. This does not necessarily indicate the external
@@ -142,19 +158,19 @@ public interface ProxyServer {
    *
    * @return the address the proxy is bound to
    */
-  InetSocketAddress getBoundAddress();
+  public abstract InetSocketAddress getBoundAddress();
 
   /**
    * Gets the {@link ProxyConfig} instance.
    *
    * @return the proxy config
    */
-  ProxyConfig getConfiguration();
+  public abstract ProxyConfig getConfiguration();
 
   /**
    * Returns the version of the proxy.
    *
    * @return the proxy version
    */
-  ProxyVersion getVersion();
+  public abstract ProxyVersion getVersion();
 }
