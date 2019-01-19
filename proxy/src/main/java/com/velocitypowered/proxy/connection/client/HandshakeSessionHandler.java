@@ -2,15 +2,11 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
-import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -23,7 +19,6 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
-import com.velocitypowered.proxy.protocol.packet.LegacyPingResponse;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -45,23 +40,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyPing packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
-    VelocityConfiguration configuration = server.getConfiguration();
-    ServerPing ping = new ServerPing(
-        new ServerPing.Version(ProtocolVersion.MAXIMUM_VERSION.getProtocol(),
-            "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
-        new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
-            ImmutableList.of()),
-        configuration.getMotdComponent(),
-        null,
-        null
-    );
-    ProxyPingEvent event = new ProxyPingEvent(new LegacyInboundConnection(connection), ping);
-    server.getEventManager().fire(event)
-        .thenRunAsync(() -> {
-          // The disconnect packet is the same as the server response one.
-          LegacyPingResponse response = LegacyPingResponse.from(event.getPing());
-          connection.closeWith(LegacyDisconnect.fromPingResponse(response));
-        }, connection.eventLoop());
+    StatusSessionHandler handler = new StatusSessionHandler(server, connection,
+        new LegacyInboundConnection(connection, packet));
+    connection.setSessionHandler(handler);
+    handler.handle(packet);
     return true;
   }
 
@@ -178,9 +160,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static class LegacyInboundConnection implements InboundConnection {
 
     private final MinecraftConnection connection;
+    private final LegacyPing ping;
 
-    private LegacyInboundConnection(MinecraftConnection connection) {
+    private LegacyInboundConnection(MinecraftConnection connection,
+        LegacyPing ping) {
       this.connection = connection;
+      this.ping = ping;
     }
 
     @Override
@@ -190,7 +175,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public Optional<InetSocketAddress> getVirtualHost() {
-      return Optional.empty();
+      return Optional.ofNullable(ping.getVhost());
     }
 
     @Override

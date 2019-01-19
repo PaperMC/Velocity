@@ -10,6 +10,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
+import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
@@ -28,19 +30,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     this.inboundWrapper = inboundWrapper;
   }
 
-  @Override
-  public boolean handle(StatusPing packet) {
-    connection.closeWith(packet);
-    return true;
-  }
-
-  @Override
-  public boolean handle(StatusRequest packet) {
+  private ServerPing createInitialPing() {
     VelocityConfiguration configuration = server.getConfiguration();
-
     ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
-    ServerPing initialPing = new ServerPing(
+    return new ServerPing(
         new ServerPing.Version(shownVersion.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
@@ -49,7 +43,29 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
     );
+  }
 
+  @Override
+  public boolean handle(LegacyPing packet) {
+    ServerPing initialPing = createInitialPing();
+    ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
+    server.getEventManager().fire(event)
+        .thenRunAsync(() -> {
+          connection.closeWith(LegacyDisconnect.fromServerPing(event.getPing(),
+              packet.getVersion()));
+        }, connection.eventLoop());
+    return true;
+  }
+
+  @Override
+  public boolean handle(StatusPing packet) {
+    connection.closeWith(packet);
+    return true;
+  }
+
+  @Override
+  public boolean handle(StatusRequest packet) {
+    ServerPing initialPing = createInitialPing();
     ProxyPingEvent event = new ProxyPingEvent(inboundWrapper, initialPing);
     server.getEventManager().fire(event)
         .thenRunAsync(
