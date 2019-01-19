@@ -108,15 +108,21 @@ public final class ConnectionManager {
         });
   }
 
+  public Bootstrap createWorker() {
+    return this.createWorker(this.workerGroup);
+  }
+
   /**
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
+   * @param group the event loop group to use
+   *
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker() {
+  public Bootstrap createWorker(EventLoopGroup group) {
     return new Bootstrap()
         .channel(this.transportType.socketChannelClass)
-        .group(this.workerGroup)
+        .group(group)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())

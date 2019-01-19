@@ -71,7 +71,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    */
   public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
     CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
-    server.initializeGenericBootstrap()
+    // Note: we use the event loop for the connection the player is on. This reduces context
+    // switches.
+    server.initializeGenericBootstrap(proxyPlayer.getMinecraftConnection().eventLoop())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
