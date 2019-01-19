@@ -162,7 +162,7 @@ public enum StateRegistry {
           map(0x07, MINECRAFT_1_8, true),
           map(0x33, MINECRAFT_1_9, true),
           map(0x34, MINECRAFT_1_12, true),
-          map(0x35, MINECRAFT_1_12_2, true),
+          map(0x35, MINECRAFT_1_12_1, true),
           map(0x38, MINECRAFT_1_13, true));
       clientbound.register(ResourcePackRequest.class, ResourcePackRequest::new,
           map(0x48, MINECRAFT_1_8, true),
