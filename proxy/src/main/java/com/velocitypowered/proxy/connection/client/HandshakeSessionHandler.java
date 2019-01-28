@@ -139,7 +139,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     // If we connect through an SRV record, there will be a period at the end (DNS usually elides
     // this ending octet).
-    if (cleaned.endsWith(".")) {
+    if (!cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == '.') {
       cleaned = cleaned.substring(0, cleaned.length() - 1);
     }
     return cleaned;
