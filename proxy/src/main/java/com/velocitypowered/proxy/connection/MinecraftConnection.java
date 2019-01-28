@@ -102,32 +102,25 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       return;
     }
 
-    if (msg instanceof MinecraftPacket) {
+    try {
       if (sessionHandler.beforeHandle()) {
         return;
       }
 
-      MinecraftPacket pkt = (MinecraftPacket) msg;
-      if (!pkt.handle(sessionHandler)) {
-        sessionHandler.handleGeneric((MinecraftPacket) msg);
-      }
-    } else if (msg instanceof HAProxyMessage) {
-      if (sessionHandler.beforeHandle()) {
-        return;
-      }
-
-      HAProxyMessage proxyMessage = (HAProxyMessage) msg;
-      this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
-          proxyMessage.sourcePort());
-    } else if (msg instanceof ByteBuf) {
-      try {
-        if (sessionHandler.beforeHandle()) {
-          return;
+      if (msg instanceof MinecraftPacket) {
+        MinecraftPacket pkt = (MinecraftPacket) msg;
+        if (!pkt.handle(sessionHandler)) {
+          sessionHandler.handleGeneric((MinecraftPacket) msg);
         }
+      } else if (msg instanceof HAProxyMessage) {
+        HAProxyMessage proxyMessage = (HAProxyMessage) msg;
+        this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
+            proxyMessage.sourcePort());
+      } else if (msg instanceof ByteBuf) {
         sessionHandler.handleUnknown((ByteBuf) msg);
-      } finally {
-        ReferenceCountUtil.release(msg);
       }
+    } finally {
+      ReferenceCountUtil.release(msg);
     }
   }
 
