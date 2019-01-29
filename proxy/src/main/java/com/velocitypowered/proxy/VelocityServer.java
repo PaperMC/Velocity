@@ -389,6 +389,17 @@ public class VelocityServer implements ProxyServer {
   }
 
   /**
+   * Checks if the {@code connection} can be registered with the proxy.
+   * @param connection the connection to check
+   * @return {@code true} if we can register the connection, {@code false} if not
+   */
+  public boolean canRegisterConnection(ConnectedPlayer connection) {
+    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+    return !(connectionsByName.containsKey(lowerName)
+        || connectionsByUuid.containsKey(connection.getUniqueId()));
+  }
+  
+  /**
    * Attempts to register the {@code connection} with the proxy.
    * @param connection the connection to register
    * @return {@code true} if we registered the connection, {@code false} if not

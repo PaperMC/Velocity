@@ -15,7 +15,6 @@ import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
-import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -33,7 +32,6 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -223,8 +221,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           mcConnection,
           inbound.getVirtualHost().orElse(null));
       this.connectedPlayer = player;
-
-      if (!server.registerConnection(player)) {
+      if (!server.canRegisterConnection(player)) {
         player.disconnect(VelocityMessages.ALREADY_CONNECTED);
         return CompletableFuture.completedFuture(null);
       }
@@ -233,28 +230,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-          .thenCompose(event -> {
-            // wait for permissions to load, then set the players permission function
-            player.setPermissionFunction(event.createFunction(player));
-            // then call & wait for the login event
-            return server.getEventManager().fire(new LoginEvent(player));
-          })
-          // then complete the connection
           .thenAcceptAsync(event -> {
-            if (mcConnection.isClosed()) {
-              // The player was disconnected
-              return;
-            }
-
-            Optional<Component> reason = event.getResult().getReason();
-            if (reason.isPresent()) {
-              player.disconnect(reason.get());
-            } else {
+            if (!mcConnection.isClosed()) {
+              // wait for permissions to load, then set the players permission function
+              player.setPermissionFunction(event.createFunction(player));
               finishLogin(player);
             }
           }, mcConnection.eventLoop());
-    });
-
+    });  
   }
 
   private void finishLogin(ConnectedPlayer player) {
@@ -278,9 +261,27 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     mcConnection.setAssociation(player);
     mcConnection.setState(StateRegistry.PLAY);
 
-    mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
-    server.getEventManager().fire(new PostLoginEvent(player))
-        .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
+    server.getEventManager().fire(new LoginEvent(player))
+        .thenAcceptAsync(event -> {
+          if (mcConnection.isClosed()) {
+            // The player was disconnected
+            return;
+          }
+
+          Optional<Component> reason = event.getResult().getReason();
+          if (reason.isPresent()) {
+            player.disconnect(reason.get());
+          } else {
+            if (!server.registerConnection(player)) {
+              player.disconnect(VelocityMessages.ALREADY_CONNECTED);
+              return;
+            }
+            
+            mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
+            server.getEventManager().fire(new PostLoginEvent(player))
+                .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
+          }
+        }, mcConnection.eventLoop());
   }
 
   @Override
