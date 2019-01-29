@@ -226,11 +226,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return CompletableFuture.completedFuture(null);
       }
 
-      // Fire DisconnectEvent if player will be disconnected/kicked during login and next events. 
-      // This will protect us from bad plugins, those will store Player object from events
-      // and remove it on disconnect
-      mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
-      
       logger.info("{} has connected", player);
 
       return server.getEventManager()
@@ -283,7 +278,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               player.disconnect(VelocityMessages.ALREADY_CONNECTED);
               return;
             }
-
+            
+            mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
           }
