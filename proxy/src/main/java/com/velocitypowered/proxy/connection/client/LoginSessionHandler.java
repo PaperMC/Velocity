@@ -231,18 +231,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
           .thenAcceptAsync(event -> {
-            // wait for permissions to load, then set the players permission function
-            player.setPermissionFunction(event.createFunction(player));
-            finishLogin(player);
+            if (!mcConnection.isClosed()) {
+              // wait for permissions to load, then set the players permission function
+              player.setPermissionFunction(event.createFunction(player));
+              finishLogin(player);
+            }
           }, mcConnection.eventLoop());
     });  
   }
 
   private void finishLogin(ConnectedPlayer player) {
-    if (mcConnection.isClosed()) {
-      // The player was disconnected
-      return;
-    }
     Optional<RegisteredServer> toTry = player.getNextServerToTry();
     if (!toTry.isPresent()) {
       player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
