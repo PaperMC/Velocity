@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
+import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResult;
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
@@ -42,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
+import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBufUtil;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -367,29 +369,51 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         disconnect(friendlyReason);
       }
     } else {
+      boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
+      ServerKickResult result;
+      if (kickedFromCurrent) {
+        Optional<RegisteredServer> next = getNextServerToTry();
+        result = next.<ServerKickResult>map(RedirectPlayer::create)
+            .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
+      } else {
+        result = Notify.create(friendlyReason);
+      }
       KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
-          !connectedServer.getServer().equals(rs), friendlyReason);
-      server.getEventManager().fire(originalEvent)
-          .thenAcceptAsync(event -> {
-            if (event.getResult() instanceof DisconnectPlayer) {
-              DisconnectPlayer res = (DisconnectPlayer) event.getResult();
-              disconnect(res.getReason());
-            } else if (event.getResult() instanceof RedirectPlayer) {
-              RedirectPlayer res = (RedirectPlayer) event.getResult();
-              createConnectionRequest(res.getServer()).fireAndForget();
-            } else if (event.getResult() instanceof Notify) {
-              Notify res = (Notify) event.getResult();
-              if (event.kickedDuringServerConnect()) {
-                sendMessage(res.getMessage());
-              } else {
-                disconnect(res.getMessage());
-              }
-            } else {
-              // In case someone gets creative, assume we want to disconnect the player.
-              disconnect(friendlyReason);
-            }
-          }, minecraftConnection.eventLoop());
+          !kickedFromCurrent, result);
+      handleKickEvent(originalEvent, friendlyReason);
     }
+  }
+
+  private void handleKickEvent(KickedFromServerEvent originalEvent,
+      Component friendlyReason) {
+    server.getEventManager().fire(originalEvent)
+        .thenAcceptAsync(event -> {
+          if (event.getResult() instanceof DisconnectPlayer) {
+            DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+            disconnect(res.getReason());
+          } else if (event.getResult() instanceof RedirectPlayer) {
+            RedirectPlayer res = (RedirectPlayer) event.getResult();
+            createConnectionRequest(res.getServer())
+                .connectWithIndication()
+                .whenCompleteAsync((newResult, exception) -> {
+                  if (newResult == null || !newResult) {
+                    disconnect(friendlyReason);
+                  } else {
+                    sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER);
+                  }
+                }, minecraftConnection.eventLoop());
+          } else if (event.getResult() instanceof Notify) {
+            Notify res = (Notify) event.getResult();
+            if (event.kickedDuringServerConnect()) {
+              sendMessage(res.getMessage());
+            } else {
+              disconnect(res.getMessage());
+            }
+          } else {
+            // In case someone gets creative, assume we want to disconnect the player.
+            disconnect(friendlyReason);
+          }
+        }, minecraftConnection.eventLoop());
   }
 
   /**
@@ -408,13 +432,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       serversToTry = server.getConfiguration().getAttemptConnectionOrder();
     }
 
-    if (tryIndex >= serversToTry.size()) {
-      return Optional.empty();
-    }
+    for (; tryIndex < serversToTry.size(); tryIndex++) {
+      String toTryName = serversToTry.get(tryIndex);
+      if (connectedServer != null && toTryName.equals(connectedServer.getServerInfo().getName())) {
+        continue;
+      }
 
-    String toTryName = serversToTry.get(tryIndex);
-    tryIndex++;
-    return server.getServer(toTryName);
+      return server.getServer(toTryName);
+    }
+    return Optional.empty();
   }
 
   /**

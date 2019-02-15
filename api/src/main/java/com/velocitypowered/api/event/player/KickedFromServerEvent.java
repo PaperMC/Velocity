@@ -41,6 +41,25 @@ public final class KickedFromServerEvent implements
     this.result = new Notify(fancyReason);
   }
 
+  /**
+   * Creates a {@code KickedFromServerEvent} instance.
+   * @param player the player affected
+   * @param server the server the player disconnected from
+   * @param originalReason the reason for being kicked, optional
+   * @param duringServerConnect whether or not the player was kicked during the connection process
+   * @param result the initial result
+   */
+  public KickedFromServerEvent(Player player,
+      RegisteredServer server,
+      @Nullable Component originalReason, boolean duringServerConnect,
+      ServerKickResult result) {
+    this.player = Preconditions.checkNotNull(player, "player");
+    this.server = Preconditions.checkNotNull(server, "server");
+    this.originalReason = originalReason;
+    this.duringServerConnect = duringServerConnect;
+    this.result = Preconditions.checkNotNull(result, "result");
+  }
+
   @Override
   public ServerKickResult getResult() {
     return result;
