@@ -185,7 +185,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       startPos = packet.getCommand().length() + 1;
       length = longestLength;
     } else {
-      length = packet.getCommand().substring(startPos).indexOf(' ') + 1;
+      length = packet.getCommand().length() - startPos;
     }
 
     resp.setStart(startPos);
