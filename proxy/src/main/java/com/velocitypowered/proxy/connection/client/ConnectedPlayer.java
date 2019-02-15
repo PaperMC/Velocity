@@ -357,13 +357,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private void handleConnectionException(RegisteredServer rs, @Nullable Component kickReason,
       Component friendlyReason) {
-    // There can't be any connection in flight now.
-    connectionInFlight = null;
-
     if (connectedServer == null) {
       // The player isn't yet connected to a server.
-      Optional<RegisteredServer> nextServer = getNextServerToTry();
+      Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
       if (nextServer.isPresent()) {
+        // There can't be any connection in flight now.
+        connectionInFlight = null;
+
         createConnectionRequest(nextServer.get()).fireAndForget();
       } else {
         disconnect(friendlyReason);
@@ -372,7 +372,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
       ServerKickResult result;
       if (kickedFromCurrent) {
-        Optional<RegisteredServer> next = getNextServerToTry();
+        Optional<RegisteredServer> next = getNextServerToTry(rs);
         result = next.<ServerKickResult>map(RedirectPlayer::create)
             .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
       } else {
@@ -392,6 +392,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             DisconnectPlayer res = (DisconnectPlayer) event.getResult();
             disconnect(res.getReason());
           } else if (event.getResult() instanceof RedirectPlayer) {
+            // There can't be any connection in flight now.
+            connectionInFlight = null;
+
             RedirectPlayer res = (RedirectPlayer) event.getResult();
             createConnectionRequest(res.getServer())
                 .connectWithIndication()
@@ -419,9 +422,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   /**
    * Finds another server to attempt to log into, if we were unexpectedly disconnected from the
    * server.
+   *
    * @return the next server to try
    */
   public Optional<RegisteredServer> getNextServerToTry() {
+    return this.getNextServerToTry(null);
+  }
+
+  /**
+   * Finds another server to attempt to log into, if we were unexpectedly disconnected from the
+   * server.
+   *
+   * @param current the "current" server that the player is on, useful as an override
+   *
+   * @return the next server to try
+   */
+  private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
       serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
@@ -432,15 +448,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       serversToTry = server.getConfiguration().getAttemptConnectionOrder();
     }
 
-    for (; tryIndex < serversToTry.size(); tryIndex++) {
-      String toTryName = serversToTry.get(tryIndex);
-      if (connectedServer != null && toTryName.equals(connectedServer.getServerInfo().getName())) {
+    for (int i = tryIndex; i < serversToTry.size(); i++) {
+      String toTryName = serversToTry.get(i);
+      if ((connectedServer != null && hasSameName(connectedServer.getServer(), toTryName))
+          || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), toTryName))
+          || (current != null && hasSameName(current, toTryName))) {
         continue;
       }
 
+      tryIndex = i;
       return server.getServer(toTryName);
     }
     return Optional.empty();
+  }
+
+  private static boolean hasSameName(RegisteredServer server, String name) {
+    return server.getServerInfo().getName().equalsIgnoreCase(name);
   }
 
   /**

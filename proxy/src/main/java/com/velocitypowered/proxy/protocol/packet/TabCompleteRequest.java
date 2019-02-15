@@ -38,7 +38,7 @@ public class TabCompleteRequest implements MinecraftPacket {
     this.assumeCommand = assumeCommand;
   }
 
-  public boolean isHasPosition() {
+  public boolean hasPosition() {
     return hasPosition;
   }
 

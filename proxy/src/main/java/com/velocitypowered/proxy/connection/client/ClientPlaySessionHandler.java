@@ -57,7 +57,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Set<String> knownChannels = new HashSet<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
-  private @Nullable TabCompleteRequest outstandingTabComplete;
+  private @Nullable TabCompleteRequest legacyCommandTabComplete;
 
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
@@ -143,7 +143,63 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    // See if this is a proxy command.
+    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
+      return handleTabCompleteModern(packet);
+    } else {
+      return handleTabCompleteLegacy(packet);
+    }
+  }
+
+  private boolean handleTabCompleteModern(TabCompleteRequest packet) {
+    // In 1.13+, we need to do additional work for the richer suggestions available.
+    String command = packet.getCommand().substring(1);
+    int spacePos = command.indexOf(' ');
+    if (spacePos == -1) {
+      return false;
+    }
+
+    String commandLabel = command.substring(0, spacePos);
+    if (!server.getCommandManager().hasCommand(commandLabel)) {
+      return false;
+    }
+
+
+    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
+    if (suggestions.isEmpty()) {
+      return false;
+    }
+
+    List<Offer> offers = new ArrayList<>();
+    int longestLength = 0;
+    for (String suggestion : suggestions) {
+      offers.add(new Offer(suggestion));
+      if (suggestion.length() > longestLength) {
+        longestLength = suggestion.length();
+      }
+    }
+
+    TabCompleteResponse resp = new TabCompleteResponse();
+    resp.setTransactionId(packet.getTransactionId());
+
+    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+    int length;
+    if (startPos == 0) {
+      startPos = packet.getCommand().length() + 1;
+      length = longestLength;
+    } else {
+      length = packet.getCommand().substring(startPos).indexOf(' ') + 1;
+    }
+
+    resp.setStart(startPos);
+    resp.setLength(length);
+    resp.getOffers().addAll(offers);
+
+    player.getMinecraftConnection().write(resp);
+    return true;
+  }
+
+  private boolean handleTabCompleteLegacy(TabCompleteRequest packet) {
+    // Let us check for a possible proxy command.
     String command = packet.getCommand().substring(1);
     int spacePos = command.indexOf(' ');
     if (spacePos >= 0) {
@@ -151,18 +207,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (server.getCommandManager().hasCommand(commandLabel)) {
         List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
         if (!suggestions.isEmpty()) {
-          int longestLength = 0;
           List<Offer> offers = new ArrayList<>();
           for (String suggestion : suggestions) {
-            offers.add(new Offer(suggestion, null));
-            if (suggestion.length() > longestLength) {
-              longestLength = suggestion.length();
-            }
+            offers.add(new Offer(suggestion));
           }
           TabCompleteResponse resp = new TabCompleteResponse();
-          resp.setTransactionId(packet.getTransactionId());
-          resp.setStart(command.lastIndexOf(' ') + 2);
-          resp.setLength(longestLength);
           resp.getOffers().addAll(offers);
 
           player.getMinecraftConnection().write(resp);
@@ -171,13 +220,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    boolean is113 = player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0;
-    if (!is113) {
-      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-      // tab list completion support for command names. In 1.13, Brigadier handles everything for
-      // us.
-      outstandingTabComplete = packet;
-    }
+    // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+    // tab list completion support for command names. In 1.13, Brigadier handles everything for
+    // us.
+    legacyCommandTabComplete = packet;
 
     return false;
   }
@@ -398,23 +444,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param response the tab complete response from the backend
    */
   public void handleTabCompleteResponse(TabCompleteResponse response) {
-    if (outstandingTabComplete != null) {
-      if (!outstandingTabComplete.isAssumeCommand()
-          && outstandingTabComplete.getCommand().startsWith("/")) {
-        String command = outstandingTabComplete.getCommand().substring(1);
-        try {
-          List<String> offers = server.getCommandManager().offerSuggestions(player, command);
-          for (String offer : offers) {
-            response.getOffers().add(new Offer(offer, null));
-          }
-          response.getOffers().sort(null);
-        } catch (Exception e) {
-          logger.error("Unable to provide tab list completions for {} for command '{}'",
-              player.getUsername(),
-              command, e);
+    if (legacyCommandTabComplete != null) {
+      String command = legacyCommandTabComplete.getCommand().substring(1);
+      try {
+        List<String> offers = server.getCommandManager().offerSuggestions(player, command);
+        for (String offer : offers) {
+          response.getOffers().add(new Offer(offer, null));
         }
-        outstandingTabComplete = null;
+        response.getOffers().sort(null);
+      } catch (Exception e) {
+        logger.error("Unable to provide tab list completions for {} for command '{}'",
+            player.getUsername(),
+            command, e);
       }
+      legacyCommandTabComplete = null;
     }
 
     player.getMinecraftConnection().write(response);

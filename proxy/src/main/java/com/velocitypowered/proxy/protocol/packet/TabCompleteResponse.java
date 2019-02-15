@@ -112,6 +112,10 @@ public class TabCompleteResponse implements MinecraftPacket {
     @Nullable
     private final Component tooltip;
 
+    public Offer(String text) {
+      this(text, null);
+    }
+
     public Offer(String text,
         @Nullable Component tooltip) {
       this.text = text;
