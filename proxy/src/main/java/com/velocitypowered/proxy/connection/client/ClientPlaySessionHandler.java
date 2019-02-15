@@ -143,14 +143,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
-      return handleTabCompleteModern(packet);
-    } else {
-      return handleTabCompleteLegacy(packet);
-    }
-  }
-
-  private boolean handleTabCompleteModern(TabCompleteRequest packet) {
     // In 1.13+, we need to do additional work for the richer suggestions available.
     String command = packet.getCommand().substring(1);
     int spacePos = command.indexOf(' ');
@@ -160,6 +152,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String commandLabel = command.substring(0, spacePos);
     if (!server.getCommandManager().hasCommand(commandLabel)) {
+      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+        // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+        // tab list completion support for command names. In 1.13, Brigadier handles everything for
+        // us.
+        legacyCommandTabComplete = packet;
+      }
       return false;
     }
 
@@ -196,36 +194,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     player.getMinecraftConnection().write(resp);
     return true;
-  }
-
-  private boolean handleTabCompleteLegacy(TabCompleteRequest packet) {
-    // Let us check for a possible proxy command.
-    String command = packet.getCommand().substring(1);
-    int spacePos = command.indexOf(' ');
-    if (spacePos >= 0) {
-      String commandLabel = command.substring(0, spacePos);
-      if (server.getCommandManager().hasCommand(commandLabel)) {
-        List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
-        if (!suggestions.isEmpty()) {
-          List<Offer> offers = new ArrayList<>();
-          for (String suggestion : suggestions) {
-            offers.add(new Offer(suggestion));
-          }
-          TabCompleteResponse resp = new TabCompleteResponse();
-          resp.getOffers().addAll(offers);
-
-          player.getMinecraftConnection().write(resp);
-          return true;
-        }
-      }
-    }
-
-    // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-    // tab list completion support for command names. In 1.13, Brigadier handles everything for
-    // us.
-    legacyCommandTabComplete = packet;
-
-    return false;
   }
 
   @Override
