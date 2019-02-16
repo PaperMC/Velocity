@@ -19,6 +19,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import javax.net.ssl.SSLEngine;
 
@@ -118,6 +119,32 @@ public class NettyHttpClient {
     private HostAndSsl(InetSocketAddress address, boolean ssl) {
       this.address = address;
       this.ssl = ssl;
+    }
+
+    @Override
+    public String toString() {
+      return "HostAndSsl{"
+          + "address=" + address
+          + ", ssl=" + ssl
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      HostAndSsl that = (HostAndSsl) o;
+      return ssl == that.ssl
+          && Objects.equals(address, that.address);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(address, ssl);
     }
   }
 }
