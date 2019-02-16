@@ -85,7 +85,7 @@ public class NettyHttpClient {
 
     HostAndSsl key = new HostAndSsl(InetSocketAddress.createUnresolved(host, port), ssl);
 
-    CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();;
+    CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
     poolMap.get(key)
         .acquire()
         .addListener(future -> {
