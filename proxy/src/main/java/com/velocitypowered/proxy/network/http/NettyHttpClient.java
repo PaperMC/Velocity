@@ -24,7 +24,7 @@ import javax.net.ssl.SSLEngine;
 
 public class NettyHttpClient {
 
-  private final ChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap;
+  private final ChannelPoolMap<HostAndSsl, SimpleChannelPool> poolMap;
   private final String userAgent;
 
   /**
@@ -35,10 +35,10 @@ public class NettyHttpClient {
   public NettyHttpClient(VelocityServer server) {
     this.userAgent = server.getVersion().getName() + "/" + server.getVersion().getVersion();
     Bootstrap bootstrap = server.initializeGenericBootstrap();
-    this.poolMap = new AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool>() {
+    this.poolMap = new AbstractChannelPoolMap<HostAndSsl, SimpleChannelPool>() {
       @Override
-      protected SimpleChannelPool newPool(InetSocketAddress key) {
-        return new FixedChannelPool(bootstrap.remoteAddress(key), new ChannelPoolHandler() {
+      protected SimpleChannelPool newPool(HostAndSsl key) {
+        return new FixedChannelPool(bootstrap.remoteAddress(key.address), new ChannelPoolHandler() {
           @Override
           public void channelReleased(Channel channel) throws Exception {
             channel.pipeline().remove("collector");
@@ -52,14 +52,14 @@ public class NettyHttpClient {
 
           @Override
           public void channelCreated(Channel channel) throws Exception {
-            if (key.getPort() == 443) {
+            if (key.ssl) {
               SslContext context = SslContextBuilder.forClient().protocols("TLSv1.2").build();
               // Unbelievably, Java doesn't automatically check the CN to make sure we're talking
               // to the right host! Therefore, we provide the intended host name and port, along
               // with asking Java very nicely if it could check the hostname in the certificate
               // for us.
-              SSLEngine engine = context.newEngine(channel.alloc(), key.getHostString(),
-                  key.getPort());
+              SSLEngine engine = context.newEngine(channel.alloc(), key.address.getHostString(),
+                  key.address.getPort());
               engine.getSSLParameters().setEndpointIdentificationAlgorithm("HTTPS");
               channel.pipeline().addLast("ssl", new SslHandler(engine));
             }
@@ -83,9 +83,10 @@ public class NettyHttpClient {
       port = ssl ? 443 : 80;
     }
 
-    CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
-    InetSocketAddress address = InetSocketAddress.createUnresolved(host, port);
-    poolMap.get(address)
+    HostAndSsl key = new HostAndSsl(InetSocketAddress.createUnresolved(host, port), ssl);
+
+    CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();;
+    poolMap.get(key)
         .acquire()
         .addListener(future -> {
           if (future.isSuccess()) {
@@ -102,11 +103,21 @@ public class NettyHttpClient {
             channel.writeAndFlush(request);
 
             // Make sure to release this connection
-            reply.whenComplete((resp, err) -> poolMap.get(address).release(channel));
+            reply.whenComplete((resp, err) -> poolMap.get(key).release(channel));
           } else {
             reply.completeExceptionally(future.cause());
           }
         });
     return reply;
+  }
+
+  private static class HostAndSsl {
+    private final InetSocketAddress address;
+    private final boolean ssl;
+
+    private HostAndSsl(InetSocketAddress address, boolean ssl) {
+      this.address = address;
+      this.ssl = ssl;
+    }
   }
 }
