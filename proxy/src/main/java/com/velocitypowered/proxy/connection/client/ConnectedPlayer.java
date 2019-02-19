@@ -388,13 +388,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       Component friendlyReason) {
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
+          // There can't be any connection in flight now.
+          connectionInFlight = null;
+
           if (event.getResult() instanceof DisconnectPlayer) {
             DisconnectPlayer res = (DisconnectPlayer) event.getResult();
             disconnect(res.getReason());
           } else if (event.getResult() instanceof RedirectPlayer) {
-            // There can't be any connection in flight now.
-            connectionInFlight = null;
-
             RedirectPlayer res = (RedirectPlayer) event.getResult();
             createConnectionRequest(res.getServer())
                 .connectWithIndication()
