@@ -362,7 +362,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
       if (nextServer.isPresent()) {
         // There can't be any connection in flight now.
-        connectionInFlight = null;
+        resetInFlightConnection();
 
         createConnectionRequest(nextServer.get()).fireAndForget();
       } else {
@@ -376,6 +376,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         result = next.<ServerKickResult>map(RedirectPlayer::create)
             .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
       } else {
+        // If we were kicked by going to another server, the connection should not be in flight
+        if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
+          resetInFlightConnection();
+        }
         result = Notify.create(friendlyReason);
       }
       KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
