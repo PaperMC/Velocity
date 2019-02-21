@@ -78,9 +78,7 @@ public class VelocityRegisteredServer implements RegisteredServer {
                 .addLast(MINECRAFT_ENCODER,
                     new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-            MinecraftConnection connection = new MinecraftConnection(ch, server);
-            connection.setState(StateRegistry.HANDSHAKE);
-            ch.pipeline().addLast(HANDLER, connection);
+            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }
         })
         .connect(serverInfo.getAddress())

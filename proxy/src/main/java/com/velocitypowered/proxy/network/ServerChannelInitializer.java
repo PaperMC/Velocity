@@ -48,7 +48,6 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.CLIENTBOUND));
 
     final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
-    connection.setState(StateRegistry.HANDSHAKE);
     connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
