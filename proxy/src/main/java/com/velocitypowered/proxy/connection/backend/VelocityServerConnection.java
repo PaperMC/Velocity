@@ -80,7 +80,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             ch.pipeline()
                 .addLast(READ_TIMEOUT,
                     new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
-                        TimeUnit.SECONDS))
+                        TimeUnit.MILLISECONDS))
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
