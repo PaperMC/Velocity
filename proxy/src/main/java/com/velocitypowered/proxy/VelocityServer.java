@@ -50,13 +50,16 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.GsonComponentSerializer;
@@ -440,6 +443,34 @@ public class VelocityServer implements ProxyServer {
     for (ConnectedPlayer player : connectionsByUuid.values()) {
       player.getMinecraftConnection().write(chat);
     }
+  }
+
+  @Override
+  public Collection<Player> matchPlayer(String partialName) {
+    Objects.requireNonNull(partialName);
+
+    Optional<Player> exactMatch = getPlayer(partialName);
+    if (exactMatch.isPresent()) {
+      return Collections.singleton(exactMatch.get());
+    }
+
+    return getAllPlayers().stream().filter(p -> p.getUsername()
+            .regionMatches(true, 0, partialName, 0, partialName.length()))
+            .collect(Collectors.toList());
+  }
+
+  @Override
+  public Collection<RegisteredServer> matchServer(String partialName) {
+    Objects.requireNonNull(partialName);
+
+    Optional<RegisteredServer> exactMatch = getServer(partialName);
+    if (exactMatch.isPresent()) {
+      return Collections.singleton(exactMatch.get());
+    }
+
+    return getAllServers().stream().filter(s -> s.getServerInfo().getName()
+            .regionMatches(true, 0, partialName, 0, partialName.length()))
+            .collect(Collectors.toList());
   }
 
   @Override

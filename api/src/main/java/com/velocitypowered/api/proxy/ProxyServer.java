@@ -77,6 +77,22 @@ public interface ProxyServer {
   Collection<RegisteredServer> getAllServers();
 
   /**
+   * Matches all {@link Player}s whose names start with the provided partial name.
+   *
+   * @param partialName the partial name to check for
+   * @return a collection of mathed {@link Player}s
+   */
+  Collection<Player> matchPlayer(String partialName);
+
+  /**
+   * Matches all {@link RegisteredServer}s whose names start with the provided partial name.
+   *
+   * @param partialName the partial name to check for
+   * @return a collection of mathed {@link RegisteredServer}s
+   */
+  Collection<RegisteredServer> matchServer(String partialName);
+
+  /**
    * Registers a server with this proxy. A server with this name should not already exist.
    *
    * @param server the server to register
