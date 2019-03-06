@@ -31,10 +31,4 @@ public class LegacyForgeConnectionType extends ConnectionTypeImpl {
 
     return original;
   }
-
-  @Override
-  public boolean checkServerAddressIsValid(String address) {
-    return super.checkServerAddressIsValid(
-        address.replaceAll(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN, ""));
-  }
 }

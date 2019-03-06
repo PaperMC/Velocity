@@ -42,6 +42,6 @@ public interface ConnectionType {
    * @return true if valid.
    */
   default boolean checkServerAddressIsValid(String address) {
-    return !address.contains("\0");
+    return true;
   }
 }
