@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.PluginManager;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -121,17 +122,21 @@ public class VelocityEventManager implements EventManager {
 
     CompletableFuture<E> eventFuture = new CompletableFuture<>();
     service.execute(() -> {
-      PostResult result = bus.post(event);
-      if (!result.exceptions().isEmpty()) {
-        logger.error("Some errors occurred whilst posting event {}.", event);
-        int i = 0;
-        for (Throwable exception : result.exceptions().values()) {
-          logger.error("#{}: \n", ++i, exception);
-        }
-      }
+      fireEvent(event);
       eventFuture.complete(event);
     });
     return eventFuture;
+  }
+
+  private void fireEvent(Object event) {
+    PostResult result = bus.post(event);
+    if (!result.exceptions().isEmpty()) {
+      logger.error("Some errors occurred whilst posting event {}.", event);
+      int i = 0;
+      for (Throwable exception : result.exceptions().values()) {
+        logger.error("#{}: \n", ++i, exception);
+      }
+    }
   }
 
   private void unregisterHandler(EventHandler<?> handler) {
@@ -167,6 +172,11 @@ public class VelocityEventManager implements EventManager {
   public boolean shutdown() throws InterruptedException {
     service.shutdown();
     return service.awaitTermination(10, TimeUnit.SECONDS);
+  }
+
+  public void fireShutdownEvent() {
+    // We shut down the proxy already, so the fact this executes in the main thread is irrelevant.
+    fireEvent(new ProxyShutdownEvent());
   }
 
   private static class VelocityMethodScanner implements MethodScanner<Object> {

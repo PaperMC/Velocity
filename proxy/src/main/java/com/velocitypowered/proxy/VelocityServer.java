@@ -356,7 +356,6 @@ public class VelocityServer implements ProxyServer {
 
     this.cm.shutdown();
 
-    eventManager.fire(new ProxyShutdownEvent());
     try {
       if (!eventManager.shutdown() || !scheduler.shutdown()) {
         logger.error("Your plugins took over 10 seconds to shut down.");
@@ -365,6 +364,8 @@ public class VelocityServer implements ProxyServer {
       // Not much we can do about this...
       Thread.currentThread().interrupt();
     }
+
+    eventManager.fireShutdownEvent();
 
     shutdown = true;
 
