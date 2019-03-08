@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
+import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
@@ -34,6 +35,7 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
+import io.netty.handler.flow.FlowControlHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -83,6 +85,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+                .addLast(FLOW_HANDLER, new FlowControlHandler())
                 .addLast(MINECRAFT_DECODER,
                     new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
                 .addLast(MINECRAFT_ENCODER,
