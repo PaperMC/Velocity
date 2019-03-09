@@ -254,7 +254,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    *
    * @return whether or not the player is online
    */
-  boolean isActive() {
+  public boolean isActive() {
     return connection != null && !connection.isClosed() && !gracefulDisconnect
         && proxyPlayer.isActive();
   }

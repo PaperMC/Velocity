@@ -355,15 +355,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  private void handleConnectionException(RegisteredServer rs, @Nullable Component kickReason,
-      Component friendlyReason) {
+  private void handleConnectionException(RegisteredServer rs,
+      @Nullable Component kickReason, Component friendlyReason) {
     if (connectedServer == null) {
       // The player isn't yet connected to a server.
       Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
       if (nextServer.isPresent()) {
         // There can't be any connection in flight now.
         resetInFlightConnection();
-
         createConnectionRequest(nextServer.get()).fireAndForget();
       } else {
         disconnect(friendlyReason);
@@ -388,8 +387,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  private void handleKickEvent(KickedFromServerEvent originalEvent,
-      Component friendlyReason) {
+  private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
@@ -628,7 +626,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(toConnect);
       if (initialCheck.isPresent()) {
         return CompletableFuture
-            .completedFuture(ConnectionRequestResults.plainResult(initialCheck.get()));
+            .completedFuture(ConnectionRequestResults.plainResult(initialCheck.get(), toConnect));
       }
 
       // Otherwise, initiate the connection.
@@ -639,7 +637,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (!connectTo.isPresent()) {
               return CompletableFuture.completedFuture(
                   ConnectionRequestResults
-                      .plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED)
+                      .plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect)
               );
             }
 
@@ -647,7 +645,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
             if (lastCheck.isPresent()) {
               return CompletableFuture
-                  .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get()));
+                  .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get(), rs));
             }
 
             VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
@@ -663,9 +661,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return connect()
           .whenCompleteAsync((status, throwable) -> {
             if (throwable != null) {
-              handleConnectionException(toConnect, throwable);
+              // TODO: The exception handling from this is not very good. Find a better way.
+              handleConnectionException(status != null ? status.getAttemptedConnection()
+                  : toConnect, throwable);
               return;
             }
+
+            System.out.println(status);
 
             switch (status.getStatus()) {
               case ALREADY_CONNECTED:

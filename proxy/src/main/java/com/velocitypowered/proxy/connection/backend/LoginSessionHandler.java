@@ -88,7 +88,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet));
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
     return true;
   }
@@ -103,7 +103,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLoginSuccess packet) {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
+          serverConn.getServer()));
       serverConn.disconnect();
       return true;
     }
@@ -132,7 +133,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     server.getEventManager()
         .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
         .whenCompleteAsync((x, error) -> {
-          resultFuture.complete(ConnectionRequestResults.SUCCESSFUL);
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
           serverConn.getPlayer().setConnectedServer(serverConn);
           smc.getChannel().config().setAutoRead(true);

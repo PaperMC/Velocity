@@ -69,6 +69,13 @@ public interface ConnectionRequestBuilder {
      * @return the reason why the user could not connect to the server
      */
     Optional<Component> getReason();
+
+    /**
+     * Returns the server we actually tried to connect to.
+     *
+     * @return the server we actually tried to connect to
+     */
+    RegisteredServer getAttemptedConnection();
   }
 
   /**
