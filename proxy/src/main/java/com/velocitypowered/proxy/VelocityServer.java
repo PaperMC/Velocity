@@ -450,11 +450,6 @@ public class VelocityServer implements ProxyServer {
   public Collection<Player> matchPlayer(String partialName) {
     Objects.requireNonNull(partialName);
 
-    Optional<Player> exactMatch = getPlayer(partialName);
-    if (exactMatch.isPresent()) {
-      return Collections.singleton(exactMatch.get());
-    }
-
     return getAllPlayers().stream().filter(p -> p.getUsername()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
             .collect(Collectors.toList());
@@ -463,11 +458,6 @@ public class VelocityServer implements ProxyServer {
   @Override
   public Collection<RegisteredServer> matchServer(String partialName) {
     Objects.requireNonNull(partialName);
-
-    Optional<RegisteredServer> exactMatch = getServer(partialName);
-    if (exactMatch.isPresent()) {
-      return Collections.singleton(exactMatch.get());
-    }
 
     return getAllServers().stream().filter(s -> s.getServerInfo().getName()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
