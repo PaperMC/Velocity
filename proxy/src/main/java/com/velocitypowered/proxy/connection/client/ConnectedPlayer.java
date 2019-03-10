@@ -667,8 +667,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               return;
             }
 
-            System.out.println(status);
-
             switch (status.getStatus()) {
               case ALREADY_CONNECTED:
                 sendMessage(ConnectionMessages.ALREADY_CONNECTED);

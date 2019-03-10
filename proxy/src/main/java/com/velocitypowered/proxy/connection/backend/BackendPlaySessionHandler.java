@@ -31,6 +31,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
+  private boolean exceptionTriggered = false;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
@@ -167,6 +168,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
+    exceptionTriggered = true;
     serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable);
   }
 
@@ -177,7 +179,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void disconnected() {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
-    if (!serverConn.isGracefulDisconnect()) {
+    if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
       serverConn.getPlayer().disconnect(ConnectionMessages.UNEXPECTED_DISCONNECT);
     }
   }
