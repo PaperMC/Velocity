@@ -16,7 +16,6 @@ class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
   private final StringBuilder buffer = new StringBuilder();
   private final CompletableFuture<SimpleHttpResponse> reply;
   private int httpCode;
-  private boolean canKeepAlive;
 
   SimpleHttpResponseCollector(CompletableFuture<SimpleHttpResponse> reply) {
     this.reply = reply;
@@ -29,16 +28,13 @@ class SimpleHttpResponseCollector extends ChannelInboundHandlerAdapter {
         HttpResponse response = (HttpResponse) msg;
         HttpResponseStatus status = response.status();
         this.httpCode = status.code();
-        this.canKeepAlive = HttpUtil.isKeepAlive(response);
       }
 
       if (msg instanceof HttpContent) {
         buffer.append(((HttpContent) msg).content().toString(StandardCharsets.UTF_8));
 
         if (msg instanceof LastHttpContent) {
-          if (!canKeepAlive) {
-            ctx.close();
-          }
+          ctx.close();
           reply.complete(new SimpleHttpResponse(httpCode, buffer.toString()));
         }
       }

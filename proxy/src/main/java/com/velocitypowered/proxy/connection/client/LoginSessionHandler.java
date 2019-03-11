@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
@@ -120,10 +121,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
-          UrlEscapers.urlFormParameterEscaper().escape(login.getUsername()), serverId,
-          UrlEscapers.urlFormParameterEscaper().escape(playerIp));
+          urlFormParameterEscaper().escape(login.getUsername()), serverId,
+          urlFormParameterEscaper().escape(playerIp));
       server.getHttpClient()
-          .get(new URL(url))
+          .get(new URL(url), mcConnection.eventLoop())
           .thenAcceptAsync(profileResponse -> {
             if (mcConnection.isClosed()) {
               // The player disconnected after we authenticated them.
