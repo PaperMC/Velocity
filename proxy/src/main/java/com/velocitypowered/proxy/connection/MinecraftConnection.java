@@ -31,6 +31,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.ReferenceCountUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -96,13 +97,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    if (sessionHandler == null) {
-      // No session handler available, do nothing
-      ReferenceCountUtil.release(msg);
-      return;
-    }
-
     try {
+      if (sessionHandler == null) {
+        // No session handler available, do nothing
+        return;
+      }
+
       if (sessionHandler.beforeHandle()) {
         return;
       }
@@ -137,7 +137,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       }
 
       if (association != null) {
-        logger.error("{}: exception encountered", association, cause);
+        if (cause instanceof ReadTimeoutException) {
+          logger.error("{}: read timed out", association);
+        } else {
+          logger.error("{}: exception encountered", association, cause);
+        }
       }
 
       ctx.close();
