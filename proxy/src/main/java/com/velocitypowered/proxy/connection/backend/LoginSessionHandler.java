@@ -137,6 +137,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
           serverConn.getPlayer().setConnectedServer(serverConn);
           smc.getChannel().config().setAutoRead(true);
+          smc.getChannel().read();
         }, smc.eventLoop());
     return true;
   }
