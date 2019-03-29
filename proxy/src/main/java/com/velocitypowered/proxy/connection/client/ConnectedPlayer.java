@@ -114,7 +114,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(connectedServer);
   }
 
-  public GameProfile getProfile() {
+  @Override
+  public GameProfile getGameProfile() {
     return profile;
   }
 

@@ -109,8 +109,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           return false;
         }
       } catch (Exception e) {
-        logger
-            .info("Exception occurred while running command for {}", player.getProfile().getName(),
+        logger.info("Exception occurred while running command for {}", player.getUsername(),
                 e);
         player.sendMessage(
             TextComponent.of("An error occurred while running this command.", TextColor.RED));

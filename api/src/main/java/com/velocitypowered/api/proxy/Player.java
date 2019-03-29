@@ -107,6 +107,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
   void setGameProfileProperties(List<GameProfile.Property> properties);
 
   /**
+   * Returns the player's game profile.
+   */
+  GameProfile getGameProfile();
+
+  /**
    * Sets the tab list header and footer for the player.
    *
    * @param header the header component

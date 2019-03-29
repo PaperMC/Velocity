@@ -126,9 +126,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(proxyPlayer.getRemoteAddress().getHostString())
         .append('\0')
-        .append(proxyPlayer.getProfile().getUndashedId())
+        .append(proxyPlayer.getGameProfile().getUndashedId())
         .append('\0');
-    GSON.toJson(proxyPlayer.getProfile().getProperties(), data);
+    GSON.toJson(proxyPlayer.getGameProfile().getProperties(), data);
     return data.toString();
   }
 
@@ -192,8 +192,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public String toString() {
-    return "[server connection] " + proxyPlayer.getProfile().getName() + " -> " + registeredServer
-        .getServerInfo().getName();
+    return "[server connection] " + proxyPlayer.getGameProfile().getName() + " -> "
+        + registeredServer.getServerInfo().getName();
   }
 
   @Override

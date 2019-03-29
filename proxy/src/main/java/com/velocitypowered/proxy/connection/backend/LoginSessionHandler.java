@@ -72,7 +72,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       response.setId(packet.getId());
       response.setData(createForwardingData(configuration.getForwardingSecret(),
           serverConn.getPlayer().getRemoteAddress().getHostString(),
-          serverConn.getPlayer().getProfile()));
+          serverConn.getPlayer().getGameProfile()));
       mc.write(response);
       informationForwarded = true;
     } else {
