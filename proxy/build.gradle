@@ -1,12 +1,12 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
     id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
     id 'checkstyle'
 }
 
 apply from: '../gradle/checkerframework.gradle'
 apply from: '../gradle/checkstyle.gradle'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 jar {
     manifest {
