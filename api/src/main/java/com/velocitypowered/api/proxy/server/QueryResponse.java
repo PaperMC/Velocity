@@ -219,21 +219,11 @@ public final class QueryResponse {
    * A builder for {@link QueryResponse} objects.
    */
   public static final class Builder {
-
-    @MonotonicNonNull
-    private String hostname;
-
-    @MonotonicNonNull
-    private String gameVersion;
-
-    @MonotonicNonNull
-    private String map;
-
-    @MonotonicNonNull
-    private String proxyHost;
-
-    @MonotonicNonNull
-    private String proxyVersion;
+    private @MonotonicNonNull String hostname;
+    private @MonotonicNonNull String gameVersion;
+    private @MonotonicNonNull String map;
+    private @MonotonicNonNull String proxyHost;
+    private @MonotonicNonNull String proxyVersion;
 
     private int currentPlayers;
     private int maxPlayers;

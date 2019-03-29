@@ -12,8 +12,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class ResourcePackResponse implements MinecraftPacket {
 
   private String hash = "";
-  @MonotonicNonNull
-  private Status status;
+  private @MonotonicNonNull Status status;
 
   public Status getStatus() {
     if (status == null) {

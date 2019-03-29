@@ -9,8 +9,7 @@ class DummyProperty<T> implements ArgumentType<T> {
 
   private final String identifier;
   private final ArgumentPropertySerializer<T> serializer;
-  @Nullable
-  private final T result;
+  private final @Nullable T result;
 
   DummyProperty(String identifier, ArgumentPropertySerializer<T> serializer, @Nullable T result) {
     this.identifier = identifier;

@@ -160,8 +160,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     mc.write(new ServerLogin(proxyPlayer.getUsername()));
   }
 
-  @Nullable
-  public MinecraftConnection getConnection() {
+  public @Nullable MinecraftConnection getConnection() {
     return connection;
   }
 

@@ -86,8 +86,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
 
-  @MonotonicNonNull
-  private List<String> serversToTry = null;
+  private @MonotonicNonNull List<String> serversToTry = null;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile,
       MinecraftConnection minecraftConnection, @Nullable InetSocketAddress virtualHost) {
@@ -289,8 +288,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   }
 
-  @Nullable
-  public VelocityServerConnection getConnectedServer() {
+  public @Nullable VelocityServerConnection getConnectedServer() {
     return connectedServer;
   }
 

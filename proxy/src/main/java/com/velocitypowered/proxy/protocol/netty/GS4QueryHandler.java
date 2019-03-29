@@ -60,8 +60,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       .expireAfterWrite(30, TimeUnit.SECONDS)
       .build();
 
-  @MonotonicNonNull
-  private volatile List<QueryResponse.PluginInformation> pluginInformationList = null;
+  private volatile @MonotonicNonNull List<QueryResponse.PluginInformation> pluginInformationList
+      = null;
 
   private final VelocityServer server;
 

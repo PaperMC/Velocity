@@ -6,7 +6,6 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumen
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<FloatArgumentType> {
 
@@ -16,7 +15,6 @@ class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<Floa
 
   }
 
-  @Nullable
   @Override
   public FloatArgumentType deserialize(ByteBuf buf) {
     byte flags = buf.readByte();

@@ -12,8 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class LegacyPing implements MinecraftPacket {
 
   private final LegacyMinecraftPingVersion version;
-  @Nullable
-  private final InetSocketAddress vhost;
+  private final @Nullable InetSocketAddress vhost;
 
   public LegacyPing(LegacyMinecraftPingVersion version) {
     this.version = version;
@@ -29,8 +28,7 @@ public class LegacyPing implements MinecraftPacket {
     return version;
   }
 
-  @Nullable
-  public InetSocketAddress getVhost() {
+  public @Nullable InetSocketAddress getVhost() {
     return vhost;
   }
 

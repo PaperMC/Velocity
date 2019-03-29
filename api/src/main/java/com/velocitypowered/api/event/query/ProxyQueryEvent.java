@@ -3,7 +3,6 @@ package com.velocitypowered.api.event.query;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import java.net.InetAddress;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * This event is fired if proxy is getting queried over GS4 Query protocol.
@@ -32,7 +31,6 @@ public final class ProxyQueryEvent {
    *
    * @return query type
    */
-  @NonNull
   public QueryType getQueryType() {
     return queryType;
   }
@@ -42,7 +40,6 @@ public final class ProxyQueryEvent {
    *
    * @return querier address
    */
-  @NonNull
   public InetAddress getQuerierAddress() {
     return querierAddress;
   }
@@ -52,7 +49,6 @@ public final class ProxyQueryEvent {
    *
    * @return the current query response
    */
-  @NonNull
   public QueryResponse getResponse() {
     return response;
   }
@@ -62,7 +58,7 @@ public final class ProxyQueryEvent {
    *
    * @param response the new non-null query response
    */
-  public void setResponse(@NonNull QueryResponse response) {
+  public void setResponse(QueryResponse response) {
     this.response = Preconditions.checkNotNull(response, "response");
   }
 

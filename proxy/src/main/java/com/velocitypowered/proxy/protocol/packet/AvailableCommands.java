@@ -45,8 +45,7 @@ public class AvailableCommands implements MinecraftPacket {
   private static final byte FLAG_HAS_SUGGESTIONS = 0x10;
 
   // Note: Velocity doesn't use Brigadier for command handling. This may change in Velocity 2.0.0.
-  @MonotonicNonNull
-  private RootCommandNode<Object> rootNode;
+  private @MonotonicNonNull RootCommandNode<Object> rootNode;
 
   /**
    * Returns the root node.
@@ -206,10 +205,8 @@ public class AvailableCommands implements MinecraftPacket {
     private final byte flags;
     private final int[] children;
     private final int redirectTo;
-    @Nullable
-    private final ArgumentBuilder<Object, ?> args;
-    @MonotonicNonNull
-    private CommandNode<Object> built;
+    private final @Nullable ArgumentBuilder<Object, ?> args;
+    private @MonotonicNonNull CommandNode<Object> built;
 
     private WireNode(int idx, byte flags, int[] children, int redirectTo,
         @Nullable ArgumentBuilder<Object, ?> args) {

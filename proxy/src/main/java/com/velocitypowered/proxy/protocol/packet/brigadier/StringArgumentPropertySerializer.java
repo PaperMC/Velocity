@@ -3,7 +3,6 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Serializes properties for {@link StringArgumentType}.
@@ -17,7 +16,6 @@ class StringArgumentPropertySerializer implements ArgumentPropertySerializer<Str
 
   }
 
-  @Nullable
   @Override
   public StringArgumentType deserialize(ByteBuf buf) {
     int type = ProtocolUtils.readVarInt(buf);

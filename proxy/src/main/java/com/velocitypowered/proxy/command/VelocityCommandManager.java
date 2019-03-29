@@ -20,7 +20,7 @@ public class VelocityCommandManager implements CommandManager {
   private final Map<String, Command> commands = new HashMap<>();
 
   @Override
-  public void register(@NonNull final Command command, final String... aliases) {
+  public void register(final Command command, final String... aliases) {
     Preconditions.checkNotNull(aliases, "aliases");
     Preconditions.checkNotNull(command, "executor");
     for (int i = 0, length = aliases.length; i < length; i++) {
@@ -31,13 +31,13 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public void unregister(@NonNull final String alias) {
+  public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "name");
     this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
   }
 
   @Override
-  public boolean execute(@NonNull CommandSource source, @NonNull String cmdLine) {
+  public boolean execute(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 

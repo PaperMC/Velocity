@@ -75,8 +75,7 @@ public class PlayerListItem implements MinecraftPacket {
     }
   }
 
-  @Nullable
-  private static Component readOptionalComponent(ByteBuf buf) {
+  private static @Nullable Component readOptionalComponent(ByteBuf buf) {
     if (buf.readBoolean()) {
       return ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf));
     }

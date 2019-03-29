@@ -255,8 +255,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
   }
 
-  @Nullable
-  public MinecraftSessionHandler getSessionHandler() {
+  public @Nullable MinecraftSessionHandler getSessionHandler() {
     return sessionHandler;
   }
 
@@ -318,8 +317,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
   }
 
-  @Nullable
-  public MinecraftConnectionAssociation getAssociation() {
+  public @Nullable MinecraftConnectionAssociation getAssociation() {
     return association;
   }
 

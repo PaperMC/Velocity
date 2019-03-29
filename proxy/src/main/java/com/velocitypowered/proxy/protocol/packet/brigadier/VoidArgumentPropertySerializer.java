@@ -19,9 +19,8 @@ class VoidArgumentPropertySerializer<T extends ArgumentType<?>>
     return new VoidArgumentPropertySerializer<T>(supplier);
   }
 
-  @Nullable
   @Override
-  public T deserialize(ByteBuf buf) {
+  public @Nullable T deserialize(ByteBuf buf) {
     return argumentSupplier.get();
   }
 

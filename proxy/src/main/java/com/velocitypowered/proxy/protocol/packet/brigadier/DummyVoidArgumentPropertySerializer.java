@@ -14,9 +14,8 @@ class DummyVoidArgumentPropertySerializer implements ArgumentPropertySerializer<
   private DummyVoidArgumentPropertySerializer() {
   }
 
-  @Nullable
   @Override
-  public Void deserialize(ByteBuf buf) {
+  public @Nullable Void deserialize(ByteBuf buf) {
     return null;
   }
 

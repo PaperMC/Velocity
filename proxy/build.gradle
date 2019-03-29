@@ -52,7 +52,7 @@ dependencies {
     runtime 'net.java.dev.jna:jna:4.5.2' // Needed for JLine
     runtime 'com.lmax:disruptor:3.4.2' // Async loggers
 
-    compile 'it.unimi.dsi:fastutil:8.2.1'
+    compile 'it.unimi.dsi:fastutil:8.2.2'
     compile 'net.kyori:event-method-asm:3.0.0'
 
     compile 'com.mojang:brigadier:1.0.15'

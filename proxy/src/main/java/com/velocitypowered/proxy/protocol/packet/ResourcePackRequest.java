@@ -11,13 +11,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ResourcePackRequest implements MinecraftPacket {
 
-  @MonotonicNonNull
-  private String url;
-  @MonotonicNonNull
-  private String hash;
+  private @MonotonicNonNull String url;
+  private @MonotonicNonNull String hash;
 
-  @Nullable
-  public String getUrl() {
+  public @Nullable String getUrl() {
     return url;
   }
 
@@ -25,8 +22,7 @@ public class ResourcePackRequest implements MinecraftPacket {
     this.url = url;
   }
 
-  @Nullable
-  public String getHash() {
+  public @Nullable String getHash() {
     return hash;
   }
 

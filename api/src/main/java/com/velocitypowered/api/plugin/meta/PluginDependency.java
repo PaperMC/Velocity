@@ -14,8 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class PluginDependency {
 
   private final String id;
-  @Nullable
-  private final String version;
+  private final @Nullable String version;
 
   private final boolean optional;
 
