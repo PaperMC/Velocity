@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
     id 'checkstyle'
 }
 
@@ -18,6 +17,10 @@ jar {
         attributes 'Implementation-Version': version
         attributes 'Implementation-Vendor': "Velocity Contributors"
     }
+}
+
+shadowJar {
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer)
 }
 
 tasks.withType(Checkstyle) {
