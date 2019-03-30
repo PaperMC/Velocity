@@ -14,6 +14,7 @@ import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
+import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -41,14 +42,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     this.resultFuture = resultFuture;
   }
 
-  private MinecraftConnection ensureMinecraftConnection() {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      throw new IllegalStateException("Not connected to backend server!");
-    }
-    return mc;
-  }
-
   @Override
   public boolean beforeHandle() {
     if (!serverConn.isActive()) {
@@ -60,8 +53,14 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(KeepAlive packet) {
+    serverConn.ensureConnected().write(packet);
+    return true;
+  }
+
+  @Override
   public boolean handle(JoinGame packet) {
-    MinecraftConnection smc = ensureMinecraftConnection();
+    MinecraftConnection smc = serverConn.ensureConnected();
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
 
     if (existingConnection != null) {
