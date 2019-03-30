@@ -25,6 +25,12 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final CompletableFuture<Result> resultFuture;
   private final ClientPlaySessionHandler playerSessionHandler;
 
+  /**
+   * Creates the new transition handler.
+   * @param server the Velocity server instance
+   * @param serverConn the server connection
+   * @param resultFuture the result future
+   */
   public TransitionSessionHandler(VelocityServer server,
       VelocityServerConnection serverConn,
       CompletableFuture<Result> resultFuture) {
@@ -78,13 +84,19 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     server.getEventManager()
         .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
         .whenCompleteAsync((x, error) -> {
-          // Finish up our work
+          // Finish up our work. Set the new server and perform switching logic.
           serverConn.getPlayer().setConnectedServer(serverConn);
+          playerSessionHandler.handleBackendJoinGame(packet);
+
+          // Strap on the correct session handler for the server. We will have nothing more to do
+          // with this connection once this task finishes up.
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+
+          // Clean up disabling auto-read while the connected event was being processed.
           smc.getChannel().config().setAutoRead(true);
           smc.getChannel().read();
 
-          playerSessionHandler.handleBackendJoinGame(packet);
+          // We're done! :)
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop());
 
