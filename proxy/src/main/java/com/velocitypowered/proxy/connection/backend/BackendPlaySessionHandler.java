@@ -75,12 +75,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(JoinGame packet) {
-    playerSessionHandler.handleBackendJoinGame(packet);
-    return true;
-  }
-
-  @Override
   public boolean handle(BossBar packet) {
     if (packet.getAction() == BossBar.ADD) {
       playerSessionHandler.getServerBossBars().add(packet.getUuid());

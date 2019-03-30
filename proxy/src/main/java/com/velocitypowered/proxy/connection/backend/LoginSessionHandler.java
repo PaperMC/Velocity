@@ -109,36 +109,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    // The player has been logged on to the backend server.
+    // The player has been logged on to the backend server, but we're not done yet. There could be
+    // other problems that could arise before we get a JoinGame packet from the server.
+
+    // Move into the PLAY phase.
     MinecraftConnection smc = ensureMinecraftConnection();
     smc.setState(StateRegistry.PLAY);
+
+    // Do last-minute configuration for the connection.
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
     if (existingConnection == null) {
-      // Strap on the play session handler
+      // Strap on the play session handler.
       serverConn.getPlayer().getMinecraftConnection()
           .setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
     } else {
       // For Legacy Forge
       existingConnection.getPhase().onDepartForNewServer(serverConn, serverConn.getPlayer());
-
-      // Shut down the existing server connection.
-      serverConn.getPlayer().setConnectedServer(null);
-      existingConnection.disconnect();
-
-      // Send keep alive to try to avoid timeouts
-      serverConn.getPlayer().sendKeepAlive();
     }
 
-    smc.getChannel().config().setAutoRead(false);
-    server.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
-        .whenCompleteAsync((x, error) -> {
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-          serverConn.getPlayer().setConnectedServer(serverConn);
-          smc.getChannel().config().setAutoRead(true);
-          smc.getChannel().read();
-        }, smc.eventLoop());
+    // Switch to the transition handler.
+    smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
     return true;
   }
 
