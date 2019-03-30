@@ -80,13 +80,12 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
         .whenCompleteAsync((x, error) -> {
           // Finish up our work
           serverConn.getPlayer().setConnectedServer(serverConn);
-
-          playerSessionHandler.handleBackendJoinGame(packet);
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
           smc.getChannel().config().setAutoRead(true);
           smc.getChannel().read();
+
+          playerSessionHandler.handleBackendJoinGame(packet);
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop());
 
     return true;
@@ -94,8 +93,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     return true;
   }
 
