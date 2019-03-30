@@ -118,11 +118,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     // Do last-minute configuration for the connection.
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-    if (existingConnection == null) {
-      // Strap on the play session handler.
-      serverConn.getPlayer().getMinecraftConnection()
-          .setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
-    } else {
+    if (existingConnection != null) {
       // For Legacy Forge
       existingConnection.getPhase().onDepartForNewServer(serverConn, serverConn.getPlayer());
     }

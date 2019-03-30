@@ -36,6 +36,18 @@ public final class BackendConnectionPhases {
     }
   };
 
+  /**
+   * A special backend phase used to indicate that this connection is about to become
+   * obsolete (transfer to a new server, for instance) and that Forge messages ought to be
+   * forwarded on to an in-flight connection instead.
+   */
+  public static final BackendConnectionPhase IN_TRANSITION = new BackendConnectionPhase() {
+    @Override
+    public boolean consideredComplete() {
+      return false;
+    }
+  };
+
   private BackendConnectionPhases() {
     throw new AssertionError();
   }

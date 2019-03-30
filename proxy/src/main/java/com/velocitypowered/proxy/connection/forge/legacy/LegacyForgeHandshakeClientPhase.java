@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.connection.forge.legacy;
 
+import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
+import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.UNKNOWN;
+
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -151,6 +154,13 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
                      ClientPlaySessionHandler handler,
                      PluginMessage message,
                      MinecraftConnection backendConn) {
+      // If we are transitioning, we should move to the in-flight connection where possible.
+      VelocityServerConnection inFlight = player.getConnectionInFlight();
+      if (inFlight != null && inFlight.getPhase() != UNKNOWN) {
+        inFlight.ensureConnected().write(message);
+        return true;
+      }
+
       super.onHandle(player, handler, message, backendConn);
 
       // just in case the timing is awful

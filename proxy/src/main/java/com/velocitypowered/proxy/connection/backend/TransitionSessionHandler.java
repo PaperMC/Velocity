@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
+import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
+
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result;
@@ -23,7 +26,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Result> resultFuture;
-  private final ClientPlaySessionHandler playerSessionHandler;
 
   /**
    * Creates the new transition handler.
@@ -37,14 +39,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
-
-    MinecraftSessionHandler psh = serverConn.getPlayer().getMinecraftConnection()
-        .getSessionHandler();
-    if (!(psh instanceof ClientPlaySessionHandler)) {
-      throw new IllegalStateException(
-          "Initializing BackendPlaySessionHandler with no backing client play session handler!");
-    }
-    this.playerSessionHandler = (ClientPlaySessionHandler) psh;
   }
 
   private MinecraftConnection ensureMinecraftConnection() {
@@ -86,7 +80,18 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
         .whenCompleteAsync((x, error) -> {
           // Finish up our work. Set the new server and perform switching logic.
           serverConn.getPlayer().setConnectedServer(serverConn);
-          playerSessionHandler.handleBackendJoinGame(packet);
+
+          // Strap on the ClientPlaySessionHandler if required.
+          ClientPlaySessionHandler playHandler;
+          if (serverConn.getPlayer().getMinecraftConnection().getSessionHandler()
+              instanceof ClientPlaySessionHandler) {
+            playHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getMinecraftConnection()
+                .getSessionHandler();
+          } else {
+            playHandler = new ClientPlaySessionHandler(server, serverConn.getPlayer());
+            serverConn.getPlayer().getMinecraftConnection().setSessionHandler(playHandler);
+          }
+          playHandler.handleBackendJoinGame(packet);
 
           // Strap on the correct session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
@@ -118,7 +123,14 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // We always need to handle plugin messages, for Forge compatibility.
     if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
-      // Handled.
+      // Handled, but check the server connection phase.
+      if (serverConn.getPhase() == HELLO) {
+        VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+        if (existingConnection != null && existingConnection.getPhase() != IN_TRANSITION) {
+          // Indicate that this connection is "in transition"
+          existingConnection.setConnectionPhase(IN_TRANSITION);
+        }
+      }
       return true;
     }
 
@@ -146,7 +158,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
     }
     return minecraftOrFmlMessage
-        || playerSessionHandler.getKnownChannels().contains(message.getChannel())
         || server.getChannelRegistrar().registered(message.getChannel());
   }
 }

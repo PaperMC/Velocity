@@ -164,6 +164,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return connection;
   }
 
+  public MinecraftConnection ensureConnected() {
+    if (connection == null) {
+      throw new IllegalStateException("Not connected to server!");
+    }
+    return connection;
+  }
+
   @Override
   public VelocityRegisteredServer getServer() {
     return registeredServer;

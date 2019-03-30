@@ -293,6 +293,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connectedServer;
   }
 
+  public @Nullable VelocityServerConnection getConnectionInFlight() {
+    return connectionInFlight;
+  }
+
   public void resetInFlightConnection() {
     connectionInFlight = null;
   }
