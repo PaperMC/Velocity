@@ -547,7 +547,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         "compress all packets, and setting it to -1 will disable compression entirely."
     })
     @ConfigKey("compression-threshold")
-    private int compressionThreshold = 1024;
+    private int compressionThreshold = 256;
 
     @Comment({"How much compression should be done (from 0-9). The default is -1, which uses the",
         "default level of 6."})
@@ -579,7 +579,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     private Advanced(Toml toml) {
       if (toml != null) {
-        this.compressionThreshold = toml.getLong("compression-threshold", 1024L).intValue();
+        this.compressionThreshold = toml.getLong("compression-threshold", 256L).intValue();
         this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
         this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
         this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
