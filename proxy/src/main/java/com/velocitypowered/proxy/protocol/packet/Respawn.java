@@ -68,7 +68,9 @@ public class Respawn implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.dimension = buf.readInt();
-    this.difficulty = buf.readUnsignedByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+      this.difficulty = buf.readUnsignedByte();
+    }
     this.gamemode = buf.readUnsignedByte();
     this.levelType = ProtocolUtils.readString(buf, 16);
   }
@@ -76,7 +78,9 @@ public class Respawn implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(dimension);
-    buf.writeByte(difficulty);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+      buf.writeByte(difficulty);
+    }
     buf.writeByte(gamemode);
     ProtocolUtils.writeString(buf, levelType);
   }

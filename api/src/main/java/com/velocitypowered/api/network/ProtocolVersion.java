@@ -26,8 +26,9 @@ public enum ProtocolVersion {
   MINECRAFT_1_12_2(340, "1.12.2"),
   MINECRAFT_1_13(393, "1.13"),
   MINECRAFT_1_13_1(401, "1.13.1"),
-  MINECRAFT_1_13_2(404, "1.13.2");
-
+  MINECRAFT_1_13_2(404, "1.13.2"),
+  MINECRAFT_1_14(476, "1.14");
+  
   private final int protocol;
   private final String name;
 
@@ -38,7 +39,7 @@ public enum ProtocolVersion {
   /**
    * Represents the highest supported version.
    */
-  public static final ProtocolVersion MAXIMUM_VERSION = MINECRAFT_1_13_2;
+  public static final ProtocolVersion MAXIMUM_VERSION = MINECRAFT_1_14;
 
   /**
    * The user-friendly representation of the lowest and highest supported versions.
