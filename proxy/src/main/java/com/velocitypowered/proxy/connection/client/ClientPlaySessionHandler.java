@@ -11,7 +11,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
-import com.velocitypowered.proxy.connection.backend.BackendPlaySessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -234,12 +233,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           // We must bypass the currently-connected server when forwarding Forge packets.
           VelocityServerConnection inFlight = player.getConnectionInFlight();
           if (inFlight != null) {
-            player.getPhase().handle(player, this, packet, inFlight);
+            player.getPhase().handle(player, packet, inFlight);
           }
           return true;
         }
 
-        if (!player.getPhase().handle(player, this, packet, serverConn)) {
+        if (!player.getPhase().handle(player, packet, serverConn)) {
           if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
               .consideredComplete()) {
             // The client is trying to send messages too early. This is primarily caused by mods, but
