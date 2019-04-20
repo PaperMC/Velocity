@@ -121,13 +121,20 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     }
 
     // We always need to handle plugin messages, for Forge compatibility.
+    System.out.println("BACKEND Current phase: " + serverConn.getPhase());
+
     if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
+      System.out.println("BACKEND New phase: " + serverConn.getPhase());
+
       // Handled, but check the server connection phase.
       if (serverConn.getPhase() == HELLO) {
         VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
         if (existingConnection != null && existingConnection.getPhase() != IN_TRANSITION) {
           // Indicate that this connection is "in transition"
           existingConnection.setConnectionPhase(IN_TRANSITION);
+
+          // ..and reset the Forge handshake on the client.
+          serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
         }
       }
       return true;

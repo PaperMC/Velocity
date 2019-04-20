@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BackendPlaySessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -227,24 +228,38 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
-      } else if (!player.getPhase().handle(player, this, packet)) {
-        if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-            .consideredComplete()) {
-          // The client is trying to send messages too early. This is primarily caused by mods, but
-          // it's further aggravated by Velocity. To work around these issues, we will queue any
-          // non-FML handshake messages to be sent once the FML handshake has completed or the
-          // JoinGame packet has been received by the proxy, whichever comes first.
-          loginPluginMessages.add(packet);
-        } else {
-          ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-          if (id == null) {
-            backendConn.write(packet);
-          } else {
-            PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                packet.getData());
-            server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
-                backendConn.eventLoop());
+      } else {
+        System.out.println("CLIENT Current phase: " + player.getPhase());
+        if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
+          // We must bypass the currently-connected server when forwarding Forge packets.
+          VelocityServerConnection inFlight = player.getConnectionInFlight();
+          if (inFlight != null) {
+            player.getPhase().handle(player, this, packet, inFlight);
           }
+          return true;
+        }
+
+        if (!player.getPhase().handle(player, this, packet, serverConn)) {
+          if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+              .consideredComplete()) {
+            // The client is trying to send messages too early. This is primarily caused by mods, but
+            // it's further aggravated by Velocity. To work around these issues, we will queue any
+            // non-FML handshake messages to be sent once the FML handshake has completed or the
+            // JoinGame packet has been received by the proxy, whichever comes first.
+            loginPluginMessages.add(packet);
+          } else {
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            if (id == null) {
+              backendConn.write(packet);
+            } else {
+              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
+                  packet.getData());
+              server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
+                  backendConn.eventLoop());
+            }
+          }
+        } else {
+          System.out.println("CLIENT New phase: " + player.getPhase());
         }
       }
     }
