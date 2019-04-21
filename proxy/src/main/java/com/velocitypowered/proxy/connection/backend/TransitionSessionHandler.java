@@ -28,8 +28,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Result> resultFuture;
 
-  private BackendConnectionPhase priorConnectionPhase;
-
   /**
    * Creates the new transition handler.
    * @param server the Velocity server instance
@@ -132,9 +130,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       if (serverConn.getPhase() == HELLO) {
         VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
         if (existingConnection != null && existingConnection.getPhase() != IN_TRANSITION) {
-          // Save the current connection's phase so we can restore it later if we have to
-          this.priorConnectionPhase = existingConnection.getPhase();
-
           // Indicate that this connection is "in transition"
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
@@ -153,13 +148,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     resultFuture
         .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
-
-    if (this.priorConnectionPhase != null) {
-      VelocityServerConnection previousConn = serverConn.getPlayer().getConnectedServer();
-      if (previousConn != null && serverConn.getPlayer().getConnectedServer() != serverConn) {
-        previousConn.setConnectionPhase(this.priorConnectionPhase);
-      }
-    }
   }
 
   private boolean canForwardPluginMessage(PluginMessage message) {
