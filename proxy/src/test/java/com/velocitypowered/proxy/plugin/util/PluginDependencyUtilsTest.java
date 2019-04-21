@@ -36,7 +36,7 @@ class PluginDependencyUtilsTest {
   private static final PluginDescription CIRCULAR_DEPENDENCY_2 = testDescription("oval",
       ImmutableList.of(new PluginDependency("circle", "", false)));
 
-  private static final List<PluginDescription> EXPECTED = ImmutableList.of(
+  private static final ImmutableList<PluginDescription> EXPECTED = ImmutableList.of(
       NEVER_DEPENDED,
       NO_DEPENDENCY_1_EXAMPLE,
       MULTI_DEPENDENCY,

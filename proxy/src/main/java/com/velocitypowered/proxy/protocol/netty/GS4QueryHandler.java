@@ -46,7 +46,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       0x79, 0x65, 0x72, 0x5F, 0x00, 0x00};
 
   // Contents to add into basic stat response. See ResponseWriter class below
-  private static final Set<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
+  private static final ImmutableSet<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
       "hostname",
       "gametype",
       "map",
@@ -118,7 +118,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
           queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
           queryResponse.writeInt(sessionId);
           writeString(queryResponse, Integer.toString(challengeToken));
-          ctx.writeAndFlush(responsePacket);
+          ctx.writeAndFlush(responsePacket, ctx.voidPromise());
           break;
         }
 
@@ -169,7 +169,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
                 }
 
                 // Send the response
-                ctx.writeAndFlush(responsePacket);
+                ctx.writeAndFlush(responsePacket, ctx.voidPromise());
               }, ctx.channel().eventLoop());
 
           break;

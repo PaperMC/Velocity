@@ -93,14 +93,14 @@ public class VelocityCommandManager implements CommandManager {
     String alias = split[0];
     if (split.length == 1) {
       // Offer to fill in commands.
-      List<String> availableCommands = new ArrayList<>();
+      ImmutableList.Builder<String> availableCommands = ImmutableList.builder();
       for (Map.Entry<String, Command> entry : commands.entrySet()) {
         if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length())
             && entry.getValue().hasPermission(source, new String[0])) {
           availableCommands.add("/" + entry.getKey());
         }
       }
-      return availableCommands;
+      return availableCommands.build();
     }
 
     Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
@@ -116,7 +116,7 @@ public class VelocityCommandManager implements CommandManager {
         return ImmutableList.of();
       }
 
-      return command.suggest(source, actualArgs);
+      return ImmutableList.copyOf(command.suggest(source, actualArgs));
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);

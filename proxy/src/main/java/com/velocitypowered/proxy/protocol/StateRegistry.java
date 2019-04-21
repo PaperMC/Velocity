@@ -338,7 +338,7 @@ public enum StateRegistry {
     }
   }
 
-  public static class PacketMapping {
+  public static final class PacketMapping {
 
     private final int id;
     private final ProtocolVersion protocolVersion;

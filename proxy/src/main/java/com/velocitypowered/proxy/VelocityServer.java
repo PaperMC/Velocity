@@ -109,6 +109,7 @@ public class VelocityServer implements ProxyServer {
     return ensureInitialized(serverKeyPair);
   }
 
+  @Override
   public VelocityConfiguration getConfiguration() {
     return ensureInitialized(this.configuration);
   }

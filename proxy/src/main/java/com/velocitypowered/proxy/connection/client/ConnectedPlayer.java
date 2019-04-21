@@ -132,6 +132,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.ping = ping;
   }
 
+  @Override
   public PlayerSettings getPlayerSettings() {
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
@@ -142,6 +143,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
 
+  @Override
   public Optional<ModInfo> getModInfo() {
     return Optional.ofNullable(modInfo);
   }

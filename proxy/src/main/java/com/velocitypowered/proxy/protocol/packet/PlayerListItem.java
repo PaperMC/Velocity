@@ -175,8 +175,8 @@ public class PlayerListItem implements MinecraftPacket {
       return gameMode;
     }
 
-    public Item setGameMode(int gamemode) {
-      this.gameMode = gamemode;
+    public Item setGameMode(int gameMode) {
+      this.gameMode = gameMode;
       return this;
     }
 

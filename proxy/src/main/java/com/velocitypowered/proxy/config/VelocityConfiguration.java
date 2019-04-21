@@ -245,14 +245,17 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return AddressUtil.parseAddress(bind);
   }
 
+  @Override
   public boolean isQueryEnabled() {
     return query.isQueryEnabled();
   }
 
+  @Override
   public int getQueryPort() {
     return query.getQueryPort();
   }
 
+  @Override
   public String getQueryMap() {
     return query.getQueryMap();
   }
@@ -271,6 +274,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
    *
    * @return the MOTD
    */
+  @Override
   public Component getMotdComponent() {
     if (motdAsComponent == null) {
       if (motd.startsWith("{")) {
@@ -282,10 +286,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return motdAsComponent;
   }
 
+  @Override
   public int getShowMaxPlayers() {
     return showMaxPlayers;
   }
 
+  @Override
   public boolean isOnlineMode() {
     return onlineMode;
   }
@@ -298,42 +304,52 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return forwardingSecret;
   }
 
+  @Override
   public Map<String, String> getServers() {
     return servers.getServers();
   }
 
+  @Override
   public List<String> getAttemptConnectionOrder() {
     return servers.getAttemptConnectionOrder();
   }
 
+  @Override
   public Map<String, List<String>> getForcedHosts() {
     return forcedHosts.getForcedHosts();
   }
 
+  @Override
   public int getCompressionThreshold() {
     return advanced.getCompressionThreshold();
   }
 
+  @Override
   public int getCompressionLevel() {
     return advanced.getCompressionLevel();
   }
 
+  @Override
   public int getLoginRatelimit() {
     return advanced.getLoginRatelimit();
   }
 
+  @Override
   public Optional<Favicon> getFavicon() {
     return Optional.ofNullable(favicon);
   }
 
+  @Override
   public boolean isAnnounceForge() {
     return announceForge;
   }
 
+  @Override
   public int getConnectTimeout() {
     return advanced.getConnectionTimeout();
   }
 
+  @Override
   public int getReadTimeout() {
     return advanced.getReadTimeout();
   }
@@ -402,13 +418,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         advanced,
         query
     );
-    upgradeConfig(configuration, toml);
     return configuration;
-  }
-
-  private static void upgradeConfig(VelocityConfiguration configuration, Toml toml) {
-    // Will be implemented once there has been a backwards-incompatible change in the config file
-    // format.
   }
 
   private static String generateRandomString(int length) {
