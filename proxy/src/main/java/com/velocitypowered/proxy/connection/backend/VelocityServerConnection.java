@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
@@ -71,8 +72,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
    *         whether or not the connect succeeded
    */
-  public CompletableFuture<ConnectionRequestBuilder.Result> connect() {
-    CompletableFuture<ConnectionRequestBuilder.Result> result = new CompletableFuture<>();
+  public CompletableFuture<Impl> connect() {
+    CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
     server.initializeGenericBootstrap(proxyPlayer.getMinecraftConnection().eventLoop())

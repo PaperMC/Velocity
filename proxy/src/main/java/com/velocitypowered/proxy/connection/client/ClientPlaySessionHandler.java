@@ -11,8 +11,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
-import com.velocitypowered.proxy.connection.backend.BackendPlaySessionHandler;
-import com.velocitypowered.proxy.connection.backend.TransitionSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;

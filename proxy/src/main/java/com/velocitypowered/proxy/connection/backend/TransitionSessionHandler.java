@@ -5,22 +5,19 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHands
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import io.netty.buffer.ByteBuf;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -30,8 +27,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
-  private final CompletableFuture<Result> resultFuture;
-  private final Queue<Object> unknownPackets = new ArrayDeque<>();
+  private final CompletableFuture<Impl> resultFuture;
+  private boolean disconnected = false;
 
   /**
    * Creates the new transition handler.
@@ -39,9 +36,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  public TransitionSessionHandler(VelocityServer server,
+  TransitionSessionHandler(VelocityServer server,
       VelocityServerConnection serverConn,
-      CompletableFuture<Result> resultFuture) {
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -55,16 +52,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
-  }
-
-  @Override
-  public void handleGeneric(MinecraftPacket packet) {
-
-  }
-
-  @Override
-  public void handleUnknown(ByteBuf buf) {
-
   }
 
   @Override
@@ -123,8 +110,21 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
+    disconnected = true;
+
+    final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+
+    // If we were in the middle of the Forge handshake, it is not safe to proceed. We must kick
+    // the client.
+    if (connection.getType() == ConnectionTypes.LEGACY_FORGE
+        && !serverConn.getPhase().consideredComplete()) {
+      resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
+          serverConn.getServer()));
+    } else {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    }
+
     return true;
   }
 

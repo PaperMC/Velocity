@@ -9,6 +9,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -35,11 +36,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
-  private final CompletableFuture<ConnectionRequestBuilder.Result> resultFuture;
+  private final CompletableFuture<Impl> resultFuture;
   private boolean informationForwarded;
 
   LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-      CompletableFuture<ConnectionRequestBuilder.Result> resultFuture) {
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;

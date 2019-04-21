@@ -70,7 +70,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet);
+    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
     return true;
   }
 
@@ -163,7 +163,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     exceptionTriggered = true;
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable);
+    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable, true);
   }
 
   public VelocityServer getServer() {
