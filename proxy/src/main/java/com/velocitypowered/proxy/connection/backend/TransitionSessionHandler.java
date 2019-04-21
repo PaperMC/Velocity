@@ -98,6 +98,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Clean up disabling auto-read while the connected event was being processed.
           smc.getChannel().config().setAutoRead(true);
+          smc.getChannel().read();
 
           // We're done! :)
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
