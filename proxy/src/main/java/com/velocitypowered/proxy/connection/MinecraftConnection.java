@@ -228,6 +228,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return channel.config().isAutoRead();
   }
 
+  /**
+   * Determines whether or not the channel should continue reading data automaticaly.
+   * @param autoReading whether or not we should read data automatically
+   */
   public void setAutoReading(boolean autoReading) {
     channel.config().setAutoRead(autoReading);
     if (autoReading) {

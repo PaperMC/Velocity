@@ -329,7 +329,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
-    MinecraftConnection serverMc = destination.ensureConnected();
+    final MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
