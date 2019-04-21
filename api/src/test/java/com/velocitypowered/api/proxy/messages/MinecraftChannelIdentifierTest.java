@@ -1,6 +1,8 @@
 package com.velocitypowered.api.proxy.messages;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier.create;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,20 +10,20 @@ class MinecraftChannelIdentifierTest {
 
   @Test
   void createAllowsValidNamespaces() {
-    MinecraftChannelIdentifier.create("minecraft", "brand");
+    create("minecraft", "brand");
   }
 
   @Test
   void createAllowsEmptyName() {
-    MinecraftChannelIdentifier.create("minecraft", "");
+    create("minecraft", "");
   }
 
   @Test
   void createDisallowsNull() {
     assertAll(
-        () -> assertThrows(IllegalArgumentException.class, () -> MinecraftChannelIdentifier.create(null, "")),
-        () -> assertThrows(IllegalArgumentException.class, () -> MinecraftChannelIdentifier.create("", "")),
-        () -> assertThrows(IllegalArgumentException.class, () -> MinecraftChannelIdentifier.create("minecraft", null))
+        () -> assertThrows(IllegalArgumentException.class, () -> create(null, "")),
+        () -> assertThrows(IllegalArgumentException.class, () -> create("", "")),
+        () -> assertThrows(IllegalArgumentException.class, () -> create("minecraft", null))
     );
   }
 }
