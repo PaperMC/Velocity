@@ -116,13 +116,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = ensureMinecraftConnection();
     smc.setState(StateRegistry.PLAY);
 
-    // Do last-minute configuration for the connection.
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-    if (existingConnection != null) {
-      // For Legacy Forge
-      existingConnection.getPhase().onDepartForNewServer(serverConn, serverConn.getPlayer());
-    }
-
     // Switch to the transition handler.
     smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
     return true;

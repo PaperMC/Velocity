@@ -129,8 +129,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Indicate that this connection is "in transition"
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
-          // ..and reset the Forge handshake on the client.
-          serverConn.getPlayer().sendLegacyForgeHandshakeResetPacket();
+          // Tell the player that we're leaving and we just aren't coming back.
+          existingConnection.getPhase().onDepartForNewServer(existingConnection,
+              serverConn.getPlayer());
         }
       }
       return true;
