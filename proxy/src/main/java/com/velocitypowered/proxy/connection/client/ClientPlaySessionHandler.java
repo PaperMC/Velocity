@@ -66,14 +66,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     this.server = server;
   }
 
-  private VelocityServerConnection ensureHasServer() {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      throw new IllegalStateException("Player not yet connected to a server!");
-    }
-    return serverConnection;
-  }
-
   @Override
   public void activated() {
     PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(),
@@ -83,12 +75,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlive packet) {
-    VelocityServerConnection serverConnection = ensureHasServer();
-    MinecraftConnection smc = serverConnection.ensureConnected();
-
-    player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-    smc.write(packet);
-    serverConnection.resetLastPingId();
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
+      MinecraftConnection smc = serverConnection.getConnection();
+      if (smc != null) {
+        player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
+        smc.write(packet);
+        serverConnection.resetLastPingId();
+      }
+    }
     return true;
   }
 
@@ -100,7 +95,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Chat packet) {
-    MinecraftConnection smc = ensureHasServer().ensureConnected();
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      return true;
+    }
+    MinecraftConnection smc = serverConnection.getConnection();
+    if (smc == null) {
+      return true;
+    }
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
@@ -196,59 +198,63 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    VelocityServerConnection serverConn = ensureHasServer();
-    MinecraftConnection backendConn = serverConn.ensureConnected();
-
-    if (PluginMessageUtil.isRegister(packet)) {
-      List<String> actuallyRegistered = new ArrayList<>();
-      List<String> channels = PluginMessageUtil.getChannels(packet);
-      for (String channel : channels) {
-        if (knownChannels.size() >= MAX_PLUGIN_CHANNELS && !knownChannels.contains(channel)) {
-          throw new IllegalStateException("Too many plugin message channels registered");
+    VelocityServerConnection serverConn = player.getConnectedServer();
+    MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
+    if (serverConn != null && backendConn != null) {
+      if (backendConn.getState() != StateRegistry.PLAY) {
+        logger.warn("A plugin message was received while the backend server was not "
+            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
+      } else if (PluginMessageUtil.isRegister(packet)) {
+        List<String> actuallyRegistered = new ArrayList<>();
+        List<String> channels = PluginMessageUtil.getChannels(packet);
+        for (String channel : channels) {
+          if (knownChannels.size() >= MAX_PLUGIN_CHANNELS && !knownChannels.contains(channel)) {
+            throw new IllegalStateException("Too many plugin message channels registered");
+          }
+          if (knownChannels.add(channel)) {
+            actuallyRegistered.add(channel);
+          }
         }
-        if (knownChannels.add(channel)) {
-          actuallyRegistered.add(channel);
-        }
-      }
 
-      if (!actuallyRegistered.isEmpty()) {
-        PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(backendConn
-            .getProtocolVersion(), actuallyRegistered);
-        backendConn.write(newRegisterPacket);
-      }
-    } else if (PluginMessageUtil.isUnregister(packet)) {
-      List<String> channels = PluginMessageUtil.getChannels(packet);
-      knownChannels.removeAll(channels);
-      backendConn.write(packet);
-    } else if (PluginMessageUtil.isMcBrand(packet)) {
-      backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
-    } else {
-      if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
-        // We must bypass the currently-connected server when forwarding Forge packets.
-        VelocityServerConnection inFlight = player.getConnectionInFlight();
-        if (inFlight != null) {
-          player.getPhase().handle(player, this, packet, inFlight);
+        if (!actuallyRegistered.isEmpty()) {
+          PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(backendConn
+              .getProtocolVersion(), actuallyRegistered);
+          backendConn.write(newRegisterPacket);
         }
-        return true;
-      }
+      } else if (PluginMessageUtil.isUnregister(packet)) {
+        List<String> channels = PluginMessageUtil.getChannels(packet);
+        knownChannels.removeAll(channels);
+        backendConn.write(packet);
+      } else if (PluginMessageUtil.isMcBrand(packet)) {
+        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
+      } else {
+        if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
+          // We must bypass the currently-connected server when forwarding Forge packets.
+          VelocityServerConnection inFlight = player.getConnectionInFlight();
+          if (inFlight != null) {
+            player.getPhase().handle(player, this, packet, inFlight);
+          }
+          return true;
+        }
 
-      if (!player.getPhase().handle(player, this, packet, serverConn)) {
-        if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-            .consideredComplete()) {
-          // The client is trying to send messages too early. This is primarily caused by mods,
-          // but further aggravated by Velocity. To work around these issues, we will queue any
-          // non-FML handshake messages to be sent once the FML handshake has completed or the
-          // JoinGame packet has been received by the proxy, whichever comes first.
-          loginPluginMessages.add(packet);
-        } else {
-          ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-          if (id == null) {
-            backendConn.write(packet);
+        if (!player.getPhase().handle(player, this, packet, serverConn)) {
+          if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+              .consideredComplete()) {
+            // The client is trying to send messages too early. This is primarily caused by mods,
+            // but further aggravated by Velocity. To work around these issues, we will queue any
+            // non-FML handshake messages to be sent once the FML handshake has completed or the
+            // JoinGame packet has been received by the proxy, whichever comes first.
+            loginPluginMessages.add(packet);
           } else {
-            PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                packet.getData());
-            server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
-                backendConn.eventLoop());
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            if (id == null) {
+              backendConn.write(packet);
+            } else {
+              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
+                  packet.getData());
+              server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
+                  backendConn.eventLoop());
+            }
           }
         }
       }
