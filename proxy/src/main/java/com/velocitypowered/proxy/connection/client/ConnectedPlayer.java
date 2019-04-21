@@ -331,7 +331,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     String userMessage;
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       userMessage = "Your connection to " + server.getServerInfo().getName() + " encountered an "
-          + " error.";
+          + "error.";
     } else {
       logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(),
           wrapped);
