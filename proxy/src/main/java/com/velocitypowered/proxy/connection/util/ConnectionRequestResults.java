@@ -32,25 +32,24 @@ public class ConnectionRequestResults {
     return new Impl(status, null, server, true);
   }
 
-  public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
-    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, true);
-  }
-
-  public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
-    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
-  }
-
   /**
    * Returns a disconnect result with a reason.
    * @param component the reason for disconnecting from the server
    * @param server the server to use
    * @return the result
    */
-  public static Impl forDisconnect(Component component,
-      RegisteredServer server) {
+  public static Impl forDisconnect(Component component, RegisteredServer server) {
     return new Impl(Status.SERVER_DISCONNECTED, component, server, true);
+  }
+
+  public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
+    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    return forDisconnect(deserialized, server);
+  }
+
+  public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
+    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
   }
 
   public static class Impl implements ConnectionRequestBuilder.Result {
