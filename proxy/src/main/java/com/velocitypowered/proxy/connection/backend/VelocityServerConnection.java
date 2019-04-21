@@ -164,6 +164,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return connection;
   }
 
+  /**
+   * Ensures the connection is still active and throws an exception if it is not.
+   * @return the active connection
+   * @throws IllegalStateException if the connection is inactive
+   */
   public MinecraftConnection ensureConnected() {
     if (connection == null) {
       throw new IllegalStateException("Not connected to server!");

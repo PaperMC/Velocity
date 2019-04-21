@@ -38,7 +38,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
   }
 
   @Override
-  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+  public synchronized boolean process(Set<? extends TypeElement> annotations,
+      RoundEnvironment roundEnv) {
     if (roundEnv.processingOver()) {
       return false;
     }

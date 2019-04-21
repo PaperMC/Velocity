@@ -242,8 +242,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         if (!player.getPhase().handle(player, this, packet, serverConn)) {
           if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
               .consideredComplete()) {
-            // The client is trying to send messages too early. This is primarily caused by mods, but
-            // it's further aggravated by Velocity. To work around these issues, we will queue any
+            // The client is trying to send messages too early. This is primarily caused by mods,
+            // but further aggravated by Velocity. To work around these issues, we will queue any
             // non-FML handshake messages to be sent once the FML handshake has completed or the
             // JoinGame packet has been received by the proxy, whichever comes first.
             loginPluginMessages.add(packet);

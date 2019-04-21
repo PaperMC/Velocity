@@ -21,13 +21,13 @@ public class NativeConstraints {
     return NATIVES_ENABLED
         && CAN_GET_MEMORYADDRESS
         && System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X")
-        && System.getProperty("os.arch").equals("x86_64");
+        && System.getProperty("os.arch", "").equals("x86_64");
   };
 
   static final BooleanSupplier LINUX = () -> {
     return NATIVES_ENABLED
         && CAN_GET_MEMORYADDRESS
         && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
-        && System.getProperty("os.arch").equals("amd64");
+        && System.getProperty("os.arch", "").equals("amd64");
   };
 }
