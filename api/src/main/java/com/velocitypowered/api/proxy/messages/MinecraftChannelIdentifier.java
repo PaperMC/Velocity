@@ -12,7 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class MinecraftChannelIdentifier implements ChannelIdentifier {
 
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]+");
+  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]*");
 
   private final String namespace;
   private final String name;
@@ -42,7 +42,7 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
    */
   public static MinecraftChannelIdentifier create(String namespace, String name) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "namespace is null or empty");
+    Preconditions.checkArgument(name != null, "namespace is null or empty");
     Preconditions.checkArgument(VALID_IDENTIFIER_REGEX.matcher(namespace).matches(),
         "namespace is not valid");
     Preconditions
