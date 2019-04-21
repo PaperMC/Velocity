@@ -12,6 +12,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BackendPlaySessionHandler;
+import com.velocitypowered.proxy.connection.backend.TransitionSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -325,14 +326,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
    * switching servers in Velocity.
    * @param joinGame the join game packet
+   * @param destination the new server we are connecting to
    */
-  public void handleBackendJoinGame(JoinGame joinGame) {
-    VelocityServerConnection serverConn = player.getConnectedServer();
-    if (serverConn == null) {
-      throw new IllegalStateException(
-          "No server connection for " + player + ", but JoinGame packet received");
-    }
-    MinecraftConnection serverMc = serverConn.getConnection();
+  public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
+    MinecraftConnection serverMc = destination.getConnection();
     if (serverMc == null) {
       throw new IllegalStateException(
           "Server connection for " + player + " is disconnected, but JoinGame packet received");
@@ -406,7 +403,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Flush everything
     player.getMinecraftConnection().flush();
     serverMc.flush();
-    serverConn.completeJoin();
+    destination.completeJoin();
   }
 
   public List<UUID> getServerBossBars() {

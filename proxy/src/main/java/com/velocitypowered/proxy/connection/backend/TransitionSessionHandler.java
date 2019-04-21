@@ -77,9 +77,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     server.getEventManager()
         .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
         .whenCompleteAsync((x, error) -> {
-          // Finish up our work. Set the new server and perform switching logic.
-          serverConn.getPlayer().setConnectedServer(serverConn);
-
           // Strap on the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
           if (serverConn.getPlayer().getMinecraftConnection().getSessionHandler()
@@ -90,15 +87,17 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
             playHandler = new ClientPlaySessionHandler(server, serverConn.getPlayer());
             serverConn.getPlayer().getMinecraftConnection().setSessionHandler(playHandler);
           }
-          playHandler.handleBackendJoinGame(packet);
+          playHandler.handleBackendJoinGame(packet, serverConn);
 
           // Strap on the correct session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
 
+          // Now set the connected server.
+          serverConn.getPlayer().setConnectedServer(serverConn);
+
           // Clean up disabling auto-read while the connected event was being processed.
           smc.getChannel().config().setAutoRead(true);
-          smc.getChannel().read();
 
           // We're done! :)
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
