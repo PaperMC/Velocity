@@ -1,9 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
@@ -15,16 +13,11 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleGeneric(MinecraftPacket packet) {
-    // No-op: will never handle packets
-  }
-
-  @Override
   public boolean handle(PluginMessage packet) {
-    if (player.getConnectionInFlight() != null) {
-      MinecraftConnection connection = player.getConnectionInFlight().getConnection();
-      if (connection != null && connection.getState() == StateRegistry.PLAY) {
-        connection.write(packet);
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      if (!player.getPhase().handle(player, packet, serverConn)) {
+        serverConn.ensureConnected().write(packet);
       }
     }
     return true;

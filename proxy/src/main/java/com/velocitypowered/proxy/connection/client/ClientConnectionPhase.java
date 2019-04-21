@@ -17,16 +17,13 @@ public interface ClientConnectionPhase {
    * this phase.
    *
    * @param player The player
-   * @param handler The {@link ClientPlaySessionHandler} that is handling
-   *                packets
    * @param message The message to handle
    * @param server The backend connection to use
    * @return true if handled, false otherwise.
    */
   default boolean handle(ConnectedPlayer player,
-                         ClientPlaySessionHandler handler,
-                         PluginMessage message,
-                         VelocityServerConnection server) {
+      PluginMessage message,
+      VelocityServerConnection server) {
     return false;
   }
 

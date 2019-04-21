@@ -38,9 +38,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                     ClientPlaySessionHandler handler,
-                     PluginMessage message,
-                     MinecraftConnection backendConn) {
+        PluginMessage message,
+        MinecraftConnection backendConn) {
       // If we stay in this phase, we do nothing because it means the packet wasn't handled.
       // Returning false indicates this
       return false;
@@ -73,9 +72,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                  ClientPlaySessionHandler handler,
-                  PluginMessage message,
-                  MinecraftConnection backendConn) {
+        PluginMessage message,
+        MinecraftConnection backendConn) {
       // Read the mod list if we haven't already.
       if (!player.getModInfo().isPresent()) {
         List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(message);
@@ -84,7 +82,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
         }
       }
 
-      return super.onHandle(player, handler, message, backendConn);
+      return super.onHandle(player, message, backendConn);
     }
   },
 
@@ -148,14 +146,16 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                     ClientPlaySessionHandler handler,
-                     PluginMessage message,
-                     MinecraftConnection backendConn) {
-      super.onHandle(player, handler, message, backendConn);
+        PluginMessage message,
+        MinecraftConnection backendConn) {
+      super.onHandle(player, message, backendConn);
 
       // just in case the timing is awful
       player.sendKeepAlive();
-      handler.flushQueuedMessages();
+
+      if (backendConn.getSessionHandler() instanceof ClientPlaySessionHandler) {
+        ((ClientPlaySessionHandler) backendConn.getSessionHandler()).flushQueuedMessages();
+      }
 
       return true;
     }
@@ -178,9 +178,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
   @Override
   public final boolean handle(ConnectedPlayer player,
-                              ClientPlaySessionHandler handler,
-                              PluginMessage message,
-                              VelocityServerConnection server) {
+      PluginMessage message,
+      VelocityServerConnection server) {
     if (server != null) {
       MinecraftConnection backendConn = server.getConnection();
       if (backendConn != null
@@ -192,7 +191,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
         player.setPhase(newPhase);
 
         // Perform phase handling
-        return newPhase.onHandle(player, handler, message, backendConn);
+        return newPhase.onHandle(player, message, backendConn);
       }
     }
 
@@ -204,17 +203,14 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
    * Handles the phase tasks.
    *
    * @param player The player
-   * @param handler The {@link ClientPlaySessionHandler} that is handling
-   *                packets
    * @param message The message to handle
    * @param backendConn The backend connection to write to, if required.
    *
    * @return true if handled, false otherwise.
    */
   boolean onHandle(ConnectedPlayer player,
-                   ClientPlaySessionHandler handler,
-                   PluginMessage message,
-                   MinecraftConnection backendConn) {
+      PluginMessage message,
+      MinecraftConnection backendConn) {
     // Send the packet on to the server.
     backendConn.write(message);
 
