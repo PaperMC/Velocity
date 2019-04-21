@@ -12,11 +12,15 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import io.netty.buffer.ByteBuf;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -27,6 +31,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Result> resultFuture;
+  private final Queue<Object> unknownPackets = new ArrayDeque<>();
 
   /**
    * Creates the new transition handler.
@@ -50,6 +55,16 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public void handleGeneric(MinecraftPacket packet) {
+
+  }
+
+  @Override
+  public void handleUnknown(ByteBuf buf) {
+
   }
 
   @Override
@@ -93,12 +108,12 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // with this connection once this task finishes up.
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
 
-          // Now set the connected server.
-          serverConn.getPlayer().setConnectedServer(serverConn);
-
           // Clean up disabling auto-read while the connected event was being processed.
           smc.getChannel().config().setAutoRead(true);
           smc.getChannel().read();
+
+          // Now set the connected server.
+          serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
@@ -138,7 +153,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     }
 
     serverConn.getPlayer().getMinecraftConnection().write(packet);
-    return false;
+    return true;
   }
 
   @Override

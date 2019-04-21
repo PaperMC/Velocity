@@ -329,11 +329,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
-    MinecraftConnection serverMc = destination.getConnection();
-    if (serverMc == null) {
-      throw new IllegalStateException(
-          "Server connection for " + player + " is disconnected, but JoinGame packet received");
-    }
+    MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
       // Nothing special to do with regards to spawning the player

@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -9,7 +8,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
-import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -47,14 +45,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     this.resultFuture = resultFuture;
   }
 
-  private MinecraftConnection ensureMinecraftConnection() {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      throw new IllegalStateException("Not connected to backend server!");
-    }
-    return mc;
-  }
-
   @Override
   public boolean handle(EncryptionRequest packet) {
     throw new IllegalStateException("Backend server is online-mode!");
@@ -62,7 +52,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LoginPluginMessage packet) {
-    MinecraftConnection mc = ensureMinecraftConnection();
+    MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
         .getChannel()
@@ -95,7 +85,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SetCompression packet) {
-    ensureMinecraftConnection().setCompressionThreshold(packet.getThreshold());
+    serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
@@ -113,7 +103,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // other problems that could arise before we get a JoinGame packet from the server.
 
     // Move into the PLAY phase.
-    MinecraftConnection smc = ensureMinecraftConnection();
+    MinecraftConnection smc = serverConn.ensureConnected();
     smc.setState(StateRegistry.PLAY);
 
     // Switch to the transition handler.
