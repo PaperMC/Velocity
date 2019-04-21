@@ -88,7 +88,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
-    smc.getChannel().config().setAutoRead(false);
+    smc.setAutoReading(false);
     server.getEventManager()
         .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
         .whenCompleteAsync((x, error) -> {
@@ -109,8 +109,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
 
           // Clean up disabling auto-read while the connected event was being processed.
-          smc.getChannel().config().setAutoRead(true);
-          smc.getChannel().read();
+          smc.setAutoReading(true);
 
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);

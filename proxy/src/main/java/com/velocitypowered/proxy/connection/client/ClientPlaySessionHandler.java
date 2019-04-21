@@ -317,7 +317,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       boolean writable = player.getMinecraftConnection().getChannel().isWritable();
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
-        smc.getChannel().config().setAutoRead(writable);
+        smc.setAutoReading(writable);
       }
     }
   }
