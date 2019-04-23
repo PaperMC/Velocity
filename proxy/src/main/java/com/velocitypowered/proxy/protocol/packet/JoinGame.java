@@ -15,6 +15,7 @@ public class JoinGame implements MinecraftPacket {
   private short difficulty;
   private short maxPlayers;
   private @Nullable String levelType;
+  private int viewDistance; //1.14+
   private boolean reducedDebugInfo;
 
   public int getEntityId() {
@@ -68,6 +69,14 @@ public class JoinGame implements MinecraftPacket {
     this.levelType = levelType;
   }
 
+  public int getViewDistance() {
+    return viewDistance;
+  }
+
+  public void setViewDistance(int viewDistance) {
+    this.viewDistance = viewDistance;
+  }
+
   public boolean isReducedDebugInfo() {
     return reducedDebugInfo;
   }
@@ -85,6 +94,7 @@ public class JoinGame implements MinecraftPacket {
         + ", difficulty=" + difficulty
         + ", maxPlayers=" + maxPlayers
         + ", levelType='" + levelType + '\''
+        + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
         + '}';
   }
@@ -98,9 +108,14 @@ public class JoinGame implements MinecraftPacket {
     } else {
       this.dimension = buf.readByte();
     }
-    this.difficulty = buf.readUnsignedByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+      this.difficulty = buf.readUnsignedByte();
+    }
     this.maxPlayers = buf.readUnsignedByte();
     this.levelType = ProtocolUtils.readString(buf, 16);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
+      this.viewDistance = ProtocolUtils.readVarInt(buf);
+    }
     this.reducedDebugInfo = buf.readBoolean();
   }
 
@@ -113,12 +128,17 @@ public class JoinGame implements MinecraftPacket {
     } else {
       buf.writeByte(dimension);
     }
-    buf.writeByte(difficulty);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+      buf.writeByte(difficulty);
+    }
     buf.writeByte(maxPlayers);
     if (levelType == null) {
       throw new IllegalStateException("No level type specified.");
     }
     ProtocolUtils.writeString(buf, levelType);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
+      ProtocolUtils.writeVarInt(buf,viewDistance);
+    }
     buf.writeBoolean(reducedDebugInfo);
   }
 
