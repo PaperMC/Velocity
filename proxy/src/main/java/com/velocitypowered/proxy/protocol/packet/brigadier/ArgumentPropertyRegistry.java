@@ -109,6 +109,8 @@ public class ArgumentPropertyRegistry {
     dummy("minecraft:component", DUMMY);
     dummy("minecraft:message", DUMMY);
     dummy("minecraft:nbt", DUMMY);
+    dummy("minecraft:nbt_compound_tag", DUMMY); // added in 1.14
+    dummy("minecraft:nbt_tag", DUMMY); // added in 1.14
     dummy("minecraft:nbt_path", DUMMY);
     dummy("minecraft:objective", DUMMY);
     dummy("minecraft:objective_criteria", DUMMY);
@@ -128,5 +130,6 @@ public class ArgumentPropertyRegistry {
     dummy("minecraft:dimension", DUMMY);
     dummy("minecraft:int_range", DUMMY);
     dummy("minecraft:float_range", DUMMY);
+    dummy("minecraft:time", DUMMY); // added in 1.14
   }
 }
