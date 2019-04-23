@@ -25,8 +25,8 @@ class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<Floa
 
   @Override
   public void serialize(FloatArgumentType object, ByteBuf buf) {
-    boolean hasMinimum = object.getMinimum() != Float.MIN_VALUE;
-    boolean hasMaximum = object.getMaximum() != Float.MAX_VALUE;
+    boolean hasMinimum = Float.compare(object.getMinimum(), Float.MIN_VALUE) != 0;
+    boolean hasMaximum = Float.compare(object.getMaximum(), Float.MAX_VALUE) != 0;
     byte flag = getFlags(hasMinimum, hasMaximum);
 
     buf.writeByte(flag);

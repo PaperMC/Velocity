@@ -38,8 +38,9 @@ page.
 
 ## Status
 
-Velocity is currently in an alpha state: it is prone to change at any time and
-is currently only suitable for small servers and development/testing.
+Velocity is currently in beta. Production networks are successfully running
+Velocity with many hundreds of concurrent players online, but your mileage
+may vary.
 
 Velocity supports Minecraft 1.8-1.13.2. Velocity is best supported with Paper
 and SpongeVanilla. Minecraft Forge is fully supported but mod compatibility

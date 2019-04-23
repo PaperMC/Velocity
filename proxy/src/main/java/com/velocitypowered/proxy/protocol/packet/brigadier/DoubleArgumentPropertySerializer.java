@@ -24,8 +24,8 @@ class DoubleArgumentPropertySerializer implements ArgumentPropertySerializer<Dou
 
   @Override
   public void serialize(DoubleArgumentType object, ByteBuf buf) {
-    boolean hasMinimum = object.getMinimum() != Double.MIN_VALUE;
-    boolean hasMaximum = object.getMaximum() != Double.MAX_VALUE;
+    boolean hasMinimum = Double.compare(object.getMinimum(), Double.MIN_VALUE) != 0;
+    boolean hasMaximum = Double.compare(object.getMaximum(), Double.MAX_VALUE) != 0;
     byte flag = getFlags(hasMinimum, hasMaximum);
 
     buf.writeByte(flag);
