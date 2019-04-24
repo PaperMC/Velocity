@@ -19,6 +19,7 @@ import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -92,7 +93,7 @@ public class JavaPluginLoader implements PluginLoader {
       JarEntry entry;
       while ((entry = in.getNextJarEntry()) != null) {
         if (entry.getName().equals("velocity-plugin.json")) {
-          try (Reader pluginInfoReader = new InputStreamReader(in)) {
+          try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
             return Optional.of(VelocityServer.GSON
                 .fromJson(pluginInfoReader, SerializedPluginDescription.class));
           }

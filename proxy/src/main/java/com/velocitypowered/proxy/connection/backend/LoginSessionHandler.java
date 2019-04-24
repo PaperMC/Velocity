@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -9,8 +8,8 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
-import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -37,22 +36,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
-  private final CompletableFuture<ConnectionRequestBuilder.Result> resultFuture;
+  private final CompletableFuture<Impl> resultFuture;
   private boolean informationForwarded;
 
   LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-      CompletableFuture<ConnectionRequestBuilder.Result> resultFuture) {
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
-  }
-
-  private MinecraftConnection ensureMinecraftConnection() {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      throw new IllegalStateException("Not connected to backend server!");
-    }
-    return mc;
   }
 
   @Override
@@ -62,7 +53,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LoginPluginMessage packet) {
-    MinecraftConnection mc = ensureMinecraftConnection();
+    MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
         .getChannel()
@@ -95,7 +86,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SetCompression packet) {
-    ensureMinecraftConnection().setCompressionThreshold(packet.getThreshold());
+    serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
@@ -109,36 +100,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    // The player has been logged on to the backend server.
-    MinecraftConnection smc = ensureMinecraftConnection();
+    // The player has been logged on to the backend server, but we're not done yet. There could be
+    // other problems that could arise before we get a JoinGame packet from the server.
+
+    // Move into the PLAY phase.
+    MinecraftConnection smc = serverConn.ensureConnected();
     smc.setState(StateRegistry.PLAY);
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-    if (existingConnection == null) {
-      // Strap on the play session handler
-      serverConn.getPlayer().getMinecraftConnection()
-          .setSessionHandler(new ClientPlaySessionHandler(server, serverConn.getPlayer()));
-    } else {
-      // For Legacy Forge
-      existingConnection.getPhase().onDepartForNewServer(serverConn, serverConn.getPlayer());
 
-      // Shut down the existing server connection.
-      serverConn.getPlayer().setConnectedServer(null);
-      existingConnection.disconnect();
-
-      // Send keep alive to try to avoid timeouts
-      serverConn.getPlayer().sendKeepAlive();
-    }
-
-    smc.getChannel().config().setAutoRead(false);
-    server.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
-        .whenCompleteAsync((x, error) -> {
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-          serverConn.getPlayer().setConnectedServer(serverConn);
-          smc.getChannel().config().setAutoRead(true);
-          smc.getChannel().read();
-        }, smc.eventLoop());
+    // Switch to the transition handler.
+    smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
     return true;
   }
 

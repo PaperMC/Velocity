@@ -74,7 +74,7 @@ public class LegacyDisconnect {
    */
   public static LegacyDisconnect from(TextComponent component) {
     // We intentionally use the legacy serializers, because the old clients can't understand JSON.
-    @SuppressWarnings("deprecated")
+    @SuppressWarnings("deprecation")
     String serialized = ComponentSerializers.LEGACY.serialize(component);
     return new LegacyDisconnect(serialized);
   }

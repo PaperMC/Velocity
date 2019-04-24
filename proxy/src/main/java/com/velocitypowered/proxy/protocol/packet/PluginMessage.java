@@ -38,7 +38,7 @@ public class PluginMessage implements MinecraftPacket {
   public String toString() {
     return "PluginMessage{"
         + "channel='" + channel + '\''
-        + ", data=" + ByteBufUtil.hexDump(data)
+        + ", data=<removed>" +
         + '}';
   }
 

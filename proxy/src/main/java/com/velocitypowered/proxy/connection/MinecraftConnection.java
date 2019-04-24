@@ -224,6 +224,26 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return state;
   }
 
+  public boolean isAutoReading() {
+    return channel.config().isAutoRead();
+  }
+
+  /**
+   * Determines whether or not the channel should continue reading data automaticaly.
+   * @param autoReading whether or not we should read data automatically
+   */
+  public void setAutoReading(boolean autoReading) {
+    channel.config().setAutoRead(autoReading);
+    if (autoReading) {
+      // For some reason, the channel may not completely read its queued contents once autoread
+      // is turned back on, even though toggling autoreading on should handle things automatically.
+      // We will issue an explicit read after turning on autoread.
+      //
+      // Much thanks to @creeper123123321.
+      channel.read();
+    }
+  }
+
   /**
    * Changes the state of the Minecraft connection.
    * @param state the new state

@@ -33,6 +33,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
+import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -132,6 +133,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.ping = ping;
   }
 
+  @Override
   public PlayerSettings getPlayerSettings() {
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
@@ -142,6 +144,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
 
+  @Override
   public Optional<ModInfo> getModInfo() {
     return Optional.ofNullable(modInfo);
   }
@@ -293,6 +296,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connectedServer;
   }
 
+  public @Nullable VelocityServerConnection getConnectionInFlight() {
+    return connectionInFlight;
+  }
+
   public void resetInFlightConnection() {
     connectionInFlight = null;
   }
@@ -301,8 +308,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * Handles unexpected disconnects.
    * @param server the server we disconnected from
    * @param throwable the exception
+   * @param safe whether or not we can safely reconnect to a new server
    */
-  public void handleConnectionException(RegisteredServer server, Throwable throwable) {
+  public void handleConnectionException(RegisteredServer server, Throwable throwable,
+      boolean safe) {
+    if (!isActive()) {
+      // If the connection is no longer active, it makes no sense to try and recover it.
+      return;
+    }
+
     if (throwable == null) {
       throw new NullPointerException("throwable");
     }
@@ -317,22 +331,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     String userMessage;
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       userMessage = "Your connection to " + server.getServerInfo().getName() + " encountered an "
-          + " error.";
+          + "error.";
     } else {
       logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(),
           wrapped);
       userMessage = "Unable to connect to " + server.getServerInfo().getName() + ". Try again "
           + "later.";
     }
-    handleConnectionException(server, null, TextComponent.of(userMessage, TextColor.RED));
+    handleConnectionException(server, null, TextComponent.of(userMessage, TextColor.RED), safe);
   }
 
   /**
    * Handles unexpected disconnects.
    * @param server the server we disconnected from
    * @param disconnect the disconnect packet
+   * @param safe whether or not we can safely reconnect to a new server
    */
-  public void handleConnectionException(RegisteredServer server, Disconnect disconnect) {
+  public void handleConnectionException(RegisteredServer server, Disconnect disconnect,
+      boolean safe) {
+    if (!isActive()) {
+      // If the connection is no longer active, it makes no sense to try and recover it.
+      return;
+    }
+
     Component disconnectReason = ComponentSerializers.JSON.deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
@@ -342,7 +363,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .content("Kicked from " + server.getServerInfo().getName() + ": ")
           .color(TextColor.RED)
           .append(disconnectReason)
-          .build());
+          .build(), safe);
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
@@ -350,12 +371,25 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .content("Can't connect to server " + server.getServerInfo().getName() + ": ")
           .color(TextColor.RED)
           .append(disconnectReason)
-          .build());
+          .build(), safe);
     }
   }
 
   private void handleConnectionException(RegisteredServer rs,
-      @Nullable Component kickReason, Component friendlyReason) {
+      @Nullable Component kickReason, Component friendlyReason, boolean safe) {
+    if (!isActive()) {
+      // If the connection is no longer active, it makes no sense to try and recover it.
+      return;
+    }
+
+    if (!safe) {
+      // /!\ IT IS UNSAFE TO CONTINUE /!\
+      //
+      // This is usually triggered by a failed Forge handshake.
+      disconnect(friendlyReason);
+      return;
+    }
+
     if (connectedServer == null) {
       // The player isn't yet connected to a server.
       Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
@@ -620,8 +654,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return Optional.empty();
     }
 
-    @Override
-    public CompletableFuture<Result> connect() {
+    private CompletableFuture<Impl> internalConnect() {
       Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(toConnect);
       if (initialCheck.isPresent()) {
         return CompletableFuture
@@ -656,13 +689,25 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     @Override
+    public CompletableFuture<Result> connect() {
+      return this.internalConnect()
+          .whenCompleteAsync((status, throwable) -> {
+            if (status != null && !status.isSafe()) {
+              // If it's not safe to continue the connection we need to shut it down.
+              handleConnectionException(status.getAttemptedConnection(), throwable, true);
+            }
+          })
+          .thenApply(x -> x);
+    }
+
+    @Override
     public CompletableFuture<Boolean> connectWithIndication() {
-      return connect()
+      return internalConnect()
           .whenCompleteAsync((status, throwable) -> {
             if (throwable != null) {
               // TODO: The exception handling from this is not very good. Find a better way.
               handleConnectionException(status != null ? status.getAttemptedConnection()
-                  : toConnect, throwable);
+                  : toConnect, throwable, true);
               return;
             }
 
@@ -678,7 +723,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 break;
               case SERVER_DISCONNECTED:
                 handleConnectionException(toConnect, Disconnect.create(status.getReason()
-                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)));
+                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR)), status.isSafe());
                 break;
               default:
                 // The only remaining value is successful (no need to do anything!)

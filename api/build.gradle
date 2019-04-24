@@ -2,10 +2,11 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'checkstyle'
+    id "net.ltgt.errorprone" version "0.8"
 }
 
-apply from: '../gradle/checkerframework.gradle'
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/errorprone.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceSets {

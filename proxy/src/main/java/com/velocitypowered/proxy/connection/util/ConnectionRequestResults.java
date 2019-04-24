@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializers;
 
@@ -15,7 +16,7 @@ public class ConnectionRequestResults {
     throw new AssertionError();
   }
 
-  public static Result successful(RegisteredServer server) {
+  public static Impl successful(RegisteredServer server) {
     return plainResult(Status.SUCCESS, server);
   }
 
@@ -25,31 +26,10 @@ public class ConnectionRequestResults {
    * @param server the server to use
    * @return the result
    */
-  public static ConnectionRequestBuilder.Result plainResult(
+  public static Impl plainResult(
       ConnectionRequestBuilder.Status status,
       RegisteredServer server) {
-    return new ConnectionRequestBuilder.Result() {
-      @Override
-      public ConnectionRequestBuilder.Status getStatus() {
-        return status;
-      }
-
-      @Override
-      public Optional<Component> getReason() {
-        return Optional.empty();
-      }
-
-      @Override
-      public RegisteredServer getAttemptedConnection() {
-        return server;
-      }
-    };
-  }
-
-  public static ConnectionRequestBuilder.Result forDisconnect(Disconnect disconnect,
-      RegisteredServer server) {
-    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
-    return forDisconnect(deserialized, server);
+    return new Impl(status, null, server, true);
   }
 
   /**
@@ -58,23 +38,56 @@ public class ConnectionRequestResults {
    * @param server the server to use
    * @return the result
    */
-  public static ConnectionRequestBuilder.Result forDisconnect(Component component,
-      RegisteredServer server) {
-    return new ConnectionRequestBuilder.Result() {
-      @Override
-      public ConnectionRequestBuilder.Status getStatus() {
-        return ConnectionRequestBuilder.Status.SERVER_DISCONNECTED;
-      }
+  public static Impl forDisconnect(Component component, RegisteredServer server) {
+    return new Impl(Status.SERVER_DISCONNECTED, component, server, true);
+  }
 
-      @Override
-      public Optional<Component> getReason() {
-        return Optional.of(component);
-      }
+  public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
+    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    return forDisconnect(deserialized, server);
+  }
 
-      @Override
-      public RegisteredServer getAttemptedConnection() {
-        return server;
-      }
-    };
+  public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
+    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
+  }
+
+  public static class Impl implements ConnectionRequestBuilder.Result {
+
+    private final Status status;
+    private final @Nullable Component component;
+    private final RegisteredServer attemptedConnection;
+    private final boolean safe;
+
+    Impl(Status status, @Nullable Component component,
+        RegisteredServer attemptedConnection, boolean safe) {
+      this.status = status;
+      this.component = component;
+      this.attemptedConnection = attemptedConnection;
+      this.safe = safe;
+    }
+
+    @Override
+    public Status getStatus() {
+      return status;
+    }
+
+    @Override
+    public Optional<Component> getReason() {
+      return Optional.ofNullable(component);
+    }
+
+    @Override
+    public RegisteredServer getAttemptedConnection() {
+      return attemptedConnection;
+    }
+
+    /**
+     * Returns whether or not it is safe to attempt a reconnect.
+     * @return whether we can try to reconnect
+     */
+    public boolean isSafe() {
+      return safe;
+    }
   }
 }

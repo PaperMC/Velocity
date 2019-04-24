@@ -7,5 +7,3 @@ include(
 findProject(':api')?.name = 'velocity-api'
 findProject(':proxy')?.name = 'velocity-proxy'
 findProject(':native')?.name = 'velocity-native'
-
-enableFeaturePreview('STABLE_PUBLISHING')

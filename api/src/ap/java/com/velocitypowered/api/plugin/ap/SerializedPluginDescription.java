@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SerializedPluginDescription {
+public final class SerializedPluginDescription {
 
   public static final Pattern ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{0,63}");
 
@@ -123,7 +123,7 @@ public class SerializedPluginDescription {
         + '}';
   }
 
-  public static class Dependency {
+  public static final class Dependency {
 
     private final String id;
     private final boolean optional;

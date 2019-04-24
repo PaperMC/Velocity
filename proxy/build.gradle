@@ -1,10 +1,13 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
+
 plugins {
     id 'java'
     id 'checkstyle'
+    id "net.ltgt.errorprone" version "0.8"
 }
 
-apply from: '../gradle/checkerframework.gradle'
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/errorprone.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 jar {
@@ -20,7 +23,7 @@ jar {
 }
 
 shadowJar {
-    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer)
+    transform(Log4j2PluginsCacheFileTransformer)
 }
 
 tasks.withType(Checkstyle) {

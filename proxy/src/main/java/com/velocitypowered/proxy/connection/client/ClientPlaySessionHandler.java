@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -160,7 +161,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-
     List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
     if (suggestions.isEmpty()) {
       return false;
@@ -226,23 +226,34 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
-      } else if (!player.getPhase().handle(player, this, packet)) {
-        if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-            .consideredComplete()) {
-          // The client is trying to send messages too early. This is primarily caused by mods, but
-          // it's further aggravated by Velocity. To work around these issues, we will queue any
-          // non-FML handshake messages to be sent once the FML handshake has completed or the
-          // JoinGame packet has been received by the proxy, whichever comes first.
-          loginPluginMessages.add(packet);
-        } else {
-          ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-          if (id == null) {
-            backendConn.write(packet);
+      } else {
+        if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
+          // We must bypass the currently-connected server when forwarding Forge packets.
+          VelocityServerConnection inFlight = player.getConnectionInFlight();
+          if (inFlight != null) {
+            player.getPhase().handle(player, packet, inFlight);
+          }
+          return true;
+        }
+
+        if (!player.getPhase().handle(player, packet, serverConn)) {
+          if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+              .consideredComplete()) {
+            // The client is trying to send messages too early. This is primarily caused by mods,
+            // but further aggravated by Velocity. To work around these issues, we will queue any
+            // non-FML handshake messages to be sent once the FML handshake has completed or the
+            // JoinGame packet has been received by the proxy, whichever comes first.
+            loginPluginMessages.add(packet);
           } else {
-            PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                packet.getData());
-            server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
-                backendConn.eventLoop());
+            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            if (id == null) {
+              backendConn.write(packet);
+            } else {
+              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
+                  packet.getData());
+              server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
+                  backendConn.eventLoop());
+            }
           }
         }
       }
@@ -304,7 +315,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       boolean writable = player.getMinecraftConnection().getChannel().isWritable();
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
-        smc.getChannel().config().setAutoRead(writable);
+        smc.setAutoReading(writable);
       }
     }
   }
@@ -313,18 +324,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
    * switching servers in Velocity.
    * @param joinGame the join game packet
+   * @param destination the new server we are connecting to
    */
-  public void handleBackendJoinGame(JoinGame joinGame) {
-    VelocityServerConnection serverConn = player.getConnectedServer();
-    if (serverConn == null) {
-      throw new IllegalStateException(
-          "No server connection for " + player + ", but JoinGame packet received");
-    }
-    MinecraftConnection serverMc = serverConn.getConnection();
-    if (serverMc == null) {
-      throw new IllegalStateException(
-          "Server connection for " + player + " is disconnected, but JoinGame packet received");
-    }
+  public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
+    final MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
@@ -394,7 +397,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Flush everything
     player.getMinecraftConnection().flush();
     serverMc.flush();
-    serverConn.completeJoin();
+    destination.completeJoin();
   }
 
   public List<UUID> getServerBossBars() {

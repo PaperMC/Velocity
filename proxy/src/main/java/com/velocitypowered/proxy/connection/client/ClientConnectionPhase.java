@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 
@@ -16,14 +17,13 @@ public interface ClientConnectionPhase {
    * this phase.
    *
    * @param player The player
-   * @param handler The {@link ClientPlaySessionHandler} that is handling
-   *                packets
    * @param message The message to handle
+   * @param server The backend connection to use
    * @return true if handled, false otherwise.
    */
   default boolean handle(ConnectedPlayer player,
-                         ClientPlaySessionHandler handler,
-                         PluginMessage message) {
+      PluginMessage message,
+      VelocityServerConnection server) {
     return false;
   }
 

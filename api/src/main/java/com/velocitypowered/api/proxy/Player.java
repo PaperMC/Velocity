@@ -70,6 +70,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    *
    * @param component the chat message to send
    */
+  @Override
   default void sendMessage(Component component) {
     sendMessage(component, MessagePosition.CHAT);
   }
