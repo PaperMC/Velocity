@@ -28,7 +28,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
-  private boolean disconnected = false;
 
   /**
    * Creates the new transition handler.
@@ -110,8 +109,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    disconnected = true;
-
     final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
 
