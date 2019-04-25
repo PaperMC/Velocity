@@ -50,7 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
-  private static final int MAX_PLUGIN_CHANNELS = 1024;
+  static final int MAX_PLUGIN_CHANNELS = 1024;
 
   private final ConnectedPlayer player;
   private boolean spawned = false;
@@ -63,6 +63,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
+
+    if (player.getMinecraftConnection().getSessionHandler()
+        instanceof InitialConnectSessionHandler) {
+      this.knownChannels.addAll(((InitialConnectSessionHandler) player.getMinecraftConnection()
+          .getSessionHandler()).getKnownChannels());
+    }
   }
 
   @Override
