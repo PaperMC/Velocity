@@ -60,6 +60,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private @Nullable TabCompleteRequest legacyCommandTabComplete;
 
+  /**
+   * Constructs a client play session handler.
+   * @param server the Velocity server instance
+   * @param player the player
+   */
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
