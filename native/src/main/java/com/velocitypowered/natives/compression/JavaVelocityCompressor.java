@@ -28,7 +28,8 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     ensureNotDisposed();
 
     if (source.hasArray()) {
-      inflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(), source.readableBytes());
+      inflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(),
+          source.readableBytes());
     } else {
       byte[] inData = new byte[source.readableBytes()];
       source.readBytes(inData);
@@ -47,7 +48,8 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     ensureNotDisposed();
 
     if (source.hasArray()) {
-      deflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(), source.readableBytes());
+      deflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(),
+          source.readableBytes());
     } else {
       byte[] inData = new byte[source.readableBytes()];
       source.readBytes(inData);
