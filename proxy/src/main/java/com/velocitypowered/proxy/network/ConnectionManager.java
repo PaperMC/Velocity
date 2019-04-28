@@ -11,8 +11,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
-import io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
+import io.netty.resolver.dns.DnsNameResolverBuilder;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,8 +48,13 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
-    this.resolverGroup = new DnsAddressResolverGroup(this.transportType.datagramChannelClass,
-        DefaultDnsServerAddressStreamProvider.INSTANCE);
+    this.resolverGroup = new DnsAddressResolverGroup(
+        new DnsNameResolverBuilder()
+            .channelType(this.transportType.datagramChannelClass)
+            .ttl(300, 86400)
+            .negativeTtl(15)
+            .ndots(1)
+    );
   }
 
   public void logChannelInformation() {
