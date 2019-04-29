@@ -63,7 +63,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
     player.teardown();
   }
 
-  Set<String> getKnownChannels() {
+  public Set<String> getKnownChannels() {
     return knownChannels;
   }
 }

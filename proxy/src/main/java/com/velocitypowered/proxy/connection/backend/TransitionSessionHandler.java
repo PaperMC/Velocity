@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
@@ -10,6 +11,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.InitialConnectSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -18,6 +20,7 @@ import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -158,6 +161,19 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
         .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
   }
 
+  private Collection<String> getClientKnownPluginChannels() {
+    MinecraftSessionHandler handler = serverConn.getPlayer().getMinecraftConnection()
+        .getSessionHandler();
+
+    if (handler instanceof InitialConnectSessionHandler) {
+      return ((InitialConnectSessionHandler) handler).getKnownChannels();
+    } else if (handler instanceof ClientPlaySessionHandler) {
+      return ((ClientPlaySessionHandler) handler).getKnownChannels();
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
   private boolean canForwardPluginMessage(PluginMessage message) {
     MinecraftConnection mc = serverConn.getConnection();
     if (mc == null) {
@@ -172,6 +188,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
     }
     return minecraftOrFmlMessage
-        || server.getChannelRegistrar().registered(message.getChannel());
+        || server.getChannelRegistrar().registered(message.getChannel())
+        || getClientKnownPluginChannels().contains(message.getChannel());
   }
 }
