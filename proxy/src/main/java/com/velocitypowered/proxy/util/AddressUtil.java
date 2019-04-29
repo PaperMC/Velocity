@@ -10,12 +10,26 @@ public class AddressUtil {
   }
 
   /**
-   * Attempts to parse an IP address of the form <code>127.0.0.1:25565</code>.
+   * Attempts to parse an IP address of the form <code>127.0.0.1:25565</code>. The returned
+   * {@link InetSocketAddress} is not resolved.
    *
    * @param ip the IP to parse
    * @return the parsed address
    */
   public static InetSocketAddress parseAddress(String ip) {
+    Preconditions.checkNotNull(ip, "ip");
+    URI uri = URI.create("tcp://" + ip);
+    return InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort());
+  }
+
+  /**
+   * Attempts to parse an IP address of the form <code>127.0.0.1:25565</code>. The returned
+   * {@link InetSocketAddress} is resolved.
+   *
+   * @param ip the IP to parse
+   * @return the parsed address
+   */
+  public static InetSocketAddress parseAndResolveAddress(String ip) {
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
     return new InetSocketAddress(uri.getHost(), uri.getPort());

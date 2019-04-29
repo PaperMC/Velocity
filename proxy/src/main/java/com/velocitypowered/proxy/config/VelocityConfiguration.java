@@ -242,7 +242,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   public InetSocketAddress getBind() {
-    return AddressUtil.parseAddress(bind);
+    return AddressUtil.parseAndResolveAddress(bind);
   }
 
   @Override

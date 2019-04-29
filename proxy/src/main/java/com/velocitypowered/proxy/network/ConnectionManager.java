@@ -51,7 +51,6 @@ public final class ConnectionManager {
     this.resolverGroup = new DnsAddressResolverGroup(
         new DnsNameResolverBuilder()
             .channelType(this.transportType.datagramChannelClass)
-            .ttl(300, 86400)
             .negativeTtl(15)
             .ndots(1)
     );
