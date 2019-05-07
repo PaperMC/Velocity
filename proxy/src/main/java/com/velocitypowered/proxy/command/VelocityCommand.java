@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
-import net.kyori.text.Components;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
@@ -175,12 +174,12 @@ public class VelocityCommand implements Command {
             .append(TextComponent.builder("Velocity website")
                 .color(TextColor.GREEN)
                 .clickEvent(
-                    new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.velocitypowered.com"))
+                    ClickEvent.openUrl("https://www.velocitypowered.com"))
                 .build())
-            .append(TextComponent.of(" or the ").resetStyle())
+            .append(TextComponent.of(" or the "))
             .append(TextComponent.builder("Velocity GitHub")
                 .color(TextColor.GREEN)
-                .clickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
+                .clickEvent(ClickEvent.openUrl(
                     "https://github.com/VelocityPowered/Velocity"))
                 .build())
             .build();
@@ -237,11 +236,11 @@ public class VelocityCommand implements Command {
       TextComponent.Builder hoverText = TextComponent.builder(pluginInfo);
 
       description.getUrl().ifPresent(url -> {
-        hoverText.append(Components.newline());
+        hoverText.append(TextComponent.newline());
         hoverText.append(TextComponent.of("Website: " + url));
       });
       if (!description.getAuthors().isEmpty()) {
-        hoverText.append(Components.newline());
+        hoverText.append(TextComponent.newline());
         if (description.getAuthors().size() == 1) {
           hoverText.append(TextComponent.of("Author: " + description.getAuthors().get(0)));
         } else {
@@ -250,13 +249,13 @@ public class VelocityCommand implements Command {
         }
       }
       description.getDescription().ifPresent(pdesc -> {
-        hoverText.append(Components.newline());
-        hoverText.append(Components.newline());
+        hoverText.append(TextComponent.newline());
+        hoverText.append(TextComponent.newline());
         hoverText.append(TextComponent.of(pdesc));
       });
 
       return TextComponent.of(description.getId(), TextColor.GRAY)
-          .hoverEvent(new HoverEvent(Action.SHOW_TEXT, hoverText.build()));
+          .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
 
     @Override

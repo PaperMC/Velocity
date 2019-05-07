@@ -11,7 +11,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteResponse implements MinecraftPacket {
@@ -68,7 +68,7 @@ public class TabCompleteResponse implements MinecraftPacket {
       int offersAvailable = ProtocolUtils.readVarInt(buf);
       for (int i = 0; i < offersAvailable; i++) {
         String offer = ProtocolUtils.readString(buf);
-        Component tooltip = buf.readBoolean() ? ComponentSerializers.JSON.deserialize(
+        Component tooltip = buf.readBoolean() ? GsonComponentSerializer.INSTANCE.deserialize(
             ProtocolUtils.readString(buf)) : null;
         offers.add(new Offer(offer, tooltip));
       }
@@ -91,7 +91,7 @@ public class TabCompleteResponse implements MinecraftPacket {
         ProtocolUtils.writeString(buf, offer.text);
         buf.writeBoolean(offer.tooltip != null);
         if (offer.tooltip != null) {
-          ProtocolUtils.writeString(buf, ComponentSerializers.JSON.serialize(offer.tooltip));
+          ProtocolUtils.writeString(buf, GsonComponentSerializer.INSTANCE.serialize(offer.tooltip));
         }
       }
     } else {

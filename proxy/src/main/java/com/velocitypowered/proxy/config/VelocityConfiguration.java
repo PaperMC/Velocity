@@ -22,7 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -278,9 +279,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   public Component getMotdComponent() {
     if (motdAsComponent == null) {
       if (motd.startsWith("{")) {
-        motdAsComponent = ComponentSerializers.JSON.deserialize(motd);
+        motdAsComponent = GsonComponentSerializer.INSTANCE.deserialize(motd);
       } else {
-        motdAsComponent = ComponentSerializers.LEGACY.deserialize(motd, '&');
+        motdAsComponent = LegacyComponentSerializer.INSTANCE.deserialize(motd, '&');
       }
     }
     return motdAsComponent;

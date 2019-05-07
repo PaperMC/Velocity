@@ -3,7 +3,7 @@ package com.velocitypowered.api.event;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -102,7 +102,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         return "allowed";
       }
       if (reason != null) {
-        return "denied: " + ComponentSerializers.PLAIN.serialize(reason);
+        return "denied: " + PlainComponentSerializer.INSTANCE.serialize(reason);
       }
       return "denied";
     }

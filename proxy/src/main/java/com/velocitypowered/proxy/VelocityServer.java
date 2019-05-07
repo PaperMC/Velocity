@@ -60,7 +60,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.GsonComponentSerializer;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
@@ -70,8 +70,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 public class VelocityServer implements ProxyServer {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
-  public static final Gson GSON = new GsonBuilder()
-      .registerTypeHierarchyAdapter(Component.class, new GsonComponentSerializer())
+  public static final Gson GSON = GsonComponentSerializer.populate(new GsonBuilder())
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();

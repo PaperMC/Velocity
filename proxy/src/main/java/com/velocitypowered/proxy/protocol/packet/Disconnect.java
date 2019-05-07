@@ -7,7 +7,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Disconnect implements MinecraftPacket {
@@ -59,6 +59,6 @@ public class Disconnect implements MinecraftPacket {
 
   public static Disconnect create(Component component) {
     Preconditions.checkNotNull(component, "component");
-    return new Disconnect(ComponentSerializers.JSON.serialize(component));
+    return new Disconnect(GsonComponentSerializer.INSTANCE.serialize(component));
   }
 }

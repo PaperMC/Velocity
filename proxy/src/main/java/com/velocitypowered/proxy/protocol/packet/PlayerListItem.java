@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerListItem implements MinecraftPacket {
@@ -77,7 +77,7 @@ public class PlayerListItem implements MinecraftPacket {
 
   private static @Nullable Component readOptionalComponent(ByteBuf buf) {
     if (buf.readBoolean()) {
-      return ComponentSerializers.JSON.deserialize(ProtocolUtils.readString(buf));
+      return GsonComponentSerializer.INSTANCE.deserialize(ProtocolUtils.readString(buf));
     }
     return null;
   }
@@ -123,7 +123,7 @@ public class PlayerListItem implements MinecraftPacket {
   private void writeDisplayName(ByteBuf buf, @Nullable Component displayName) {
     buf.writeBoolean(displayName != null);
     if (displayName != null) {
-      ProtocolUtils.writeString(buf, ComponentSerializers.JSON.serialize(displayName));
+      ProtocolUtils.writeString(buf, GsonComponentSerializer.INSTANCE.serialize(displayName));
     }
   }
 

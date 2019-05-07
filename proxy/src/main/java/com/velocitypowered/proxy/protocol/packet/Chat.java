@@ -7,7 +7,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Chat implements MinecraftPacket {
@@ -83,7 +83,7 @@ public class Chat implements MinecraftPacket {
 
   public static Chat createClientbound(Component component, byte type) {
     Preconditions.checkNotNull(component, "component");
-    return new Chat(ComponentSerializers.JSON.serialize(component), type);
+    return new Chat(GsonComponentSerializer.INSTANCE.serialize(component), type);
   }
 
   public static Chat createServerbound(String message) {

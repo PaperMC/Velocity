@@ -10,7 +10,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.ComponentSerializer;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 
 public class HeaderAndFooter implements MinecraftPacket {
 
@@ -54,7 +54,7 @@ public class HeaderAndFooter implements MinecraftPacket {
   }
 
   public static HeaderAndFooter create(Component header, Component footer) {
-    ComponentSerializer<Component, Component, String> json = ComponentSerializers.JSON;
+    ComponentSerializer<Component, Component, String> json = GsonComponentSerializer.INSTANCE;
     return new HeaderAndFooter(json.serialize(header), json.serialize(footer));
   }
 
