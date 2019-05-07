@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -71,7 +71,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(ComponentSerializers.PLAIN
+        .hostname(PlainComponentSerializer.INSTANCE
             .serialize(server.getConfiguration().getMotdComponent()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())

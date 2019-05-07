@@ -11,7 +11,7 @@ import java.util.List;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +35,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(Component component) {
-    logger.info(ComponentSerializers.LEGACY.serialize(component));
+    logger.info(LegacyComponentSerializer.INSTANCE.serialize(component));
   }
 
   @Override

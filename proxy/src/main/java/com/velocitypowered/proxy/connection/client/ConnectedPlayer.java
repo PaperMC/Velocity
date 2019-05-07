@@ -58,8 +58,9 @@ import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.serializer.ComponentSerializers;
-import net.kyori.text.serializer.PlainComponentSerializer;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -190,18 +191,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         // We can use the title packet instead.
         TitlePacket pkt = new TitlePacket();
         pkt.setAction(TitlePacket.SET_ACTION_BAR);
-        pkt.setComponent(ComponentSerializers.JSON.serialize(component));
+        pkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(component));
         minecraftConnection.write(pkt);
         return;
       } else {
         // Due to issues with action bar packets, we'll need to convert the text message into a
         // legacy message and then inject the legacy text into a component... yuck!
         JsonObject object = new JsonObject();
-        object.addProperty("text", ComponentSerializers.LEGACY.serialize(component));
+        object.addProperty("text", LegacyComponentSerializer.INSTANCE.serialize(component));
         json = object.toString();
       }
     } else {
-      json = ComponentSerializers.JSON.serialize(component);
+      json = GsonComponentSerializer.INSTANCE.serialize(component);
     }
 
     Chat chat = new Chat();
@@ -242,7 +243,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void disconnect(Component reason) {
-    logger.info("{} has disconnected: {}", this, ComponentSerializers.LEGACY.serialize(reason));
+    logger.info("{} has disconnected: {}", this,
+        LegacyComponentSerializer.INSTANCE.serialize(reason));
     minecraftConnection.closeWith(Disconnect.create(reason));
   }
 
@@ -266,7 +268,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (titleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_TITLE);
-        titlePkt.setComponent(ComponentSerializers.JSON.serialize(titleText.get()));
+        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(titleText.get()));
         minecraftConnection.delayedWrite(titlePkt);
       }
 
@@ -274,7 +276,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (subtitleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_SUBTITLE);
-        titlePkt.setComponent(ComponentSerializers.JSON.serialize(subtitleText.get()));
+        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(subtitleText.get()));
         minecraftConnection.delayedWrite(titlePkt);
       }
 
@@ -354,7 +356,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    Component disconnectReason = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    Component disconnectReason = GsonComponentSerializer.INSTANCE.deserialize(
+        disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),

@@ -8,7 +8,7 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 
 public class ConnectionRequestResults {
 
@@ -43,12 +43,12 @@ public class ConnectionRequestResults {
   }
 
   public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    Component deserialized = GsonComponentSerializer.INSTANCE.deserialize(disconnect.getReason());
     return forDisconnect(deserialized, server);
   }
 
   public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = ComponentSerializers.JSON.deserialize(disconnect.getReason());
+    Component deserialized = GsonComponentSerializer.INSTANCE.deserialize(disconnect.getReason());
     return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
   }
 

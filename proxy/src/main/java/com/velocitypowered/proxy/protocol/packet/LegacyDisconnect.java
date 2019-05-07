@@ -1,14 +1,12 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import static net.kyori.text.serializer.ComponentSerializers.LEGACY;
-import static net.kyori.text.serializer.ComponentSerializers.PLAIN;
-
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.proxy.server.ServerPing.Players;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
 import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.ComponentSerializers;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
 public class LegacyDisconnect {
 
@@ -39,7 +37,7 @@ public class LegacyDisconnect {
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
-            cleanSectionSymbol(getFirstLine(PLAIN.serialize(response.getDescription()))),
+            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.INSTANCE.serialize(response.getDescription()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
       case MINECRAFT_1_4:
@@ -49,7 +47,7 @@ public class LegacyDisconnect {
             LEGACY_COLOR_CODE + "1",
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
-            getFirstLine(LEGACY.serialize(response.getDescription())),
+            getFirstLine(LegacyComponentSerializer.INSTANCE.serialize(response.getDescription())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
         ));
@@ -75,7 +73,7 @@ public class LegacyDisconnect {
   public static LegacyDisconnect from(TextComponent component) {
     // We intentionally use the legacy serializers, because the old clients can't understand JSON.
     @SuppressWarnings("deprecation")
-    String serialized = ComponentSerializers.LEGACY.serialize(component);
+    String serialized = LegacyComponentSerializer.INSTANCE.serialize(component);
     return new LegacyDisconnect(serialized);
   }
 

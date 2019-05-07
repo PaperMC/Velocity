@@ -62,13 +62,13 @@ public class ServerCommand implements Command {
         String playersText = rs.getPlayersConnected().size() + " player(s) online";
         if (rs.getServerInfo().getName().equals(currentServer)) {
           infoComponent = infoComponent.color(TextColor.GREEN)
-              .hoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+              .hoverEvent(HoverEvent.showText(
                   TextComponent.of("Currently connected to this server\n" + playersText)));
         } else {
           infoComponent = infoComponent.color(TextColor.GRAY)
-              .clickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+              .clickEvent(ClickEvent.runCommand(
                   "/server " + rs.getServerInfo().getName()))
-              .hoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+              .hoverEvent(HoverEvent.showText(
                   TextComponent.of("Click to connect to this server\n" + playersText)));
         }
         serverListBuilder.append(infoComponent);
