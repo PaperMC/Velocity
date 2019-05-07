@@ -79,7 +79,8 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
     if (this.epoll) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
+              this.server.getConfiguration().getTcpFastOpenMode());
     }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
@@ -107,7 +108,8 @@ public final class ConnectionManager {
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
     if (this.epoll) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
+              this.server.getConfiguration().getTcpFastOpenMode());
     }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
@@ -141,7 +143,8 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .resolver(this.resolverGroup);
     if (this.epoll) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
+              this.server.getConfiguration().getTcpFastOpenMode());
     }
     return bootstrap;
   }
