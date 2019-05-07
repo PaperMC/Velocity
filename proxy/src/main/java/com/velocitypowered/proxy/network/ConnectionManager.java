@@ -105,10 +105,6 @@ public final class ConnectionManager {
         .group(this.workerGroup)
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
-    if (this.transportType == TransportType.EPOLL) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
-              this.server.getConfiguration().getTcpFastOpenMode());
-    }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
@@ -133,18 +129,13 @@ public final class ConnectionManager {
    * @return a new {@link Bootstrap}
    */
   public Bootstrap createWorker(EventLoopGroup group) {
-    Bootstrap bootstrap = new Bootstrap()
+    return new Bootstrap()
         .channelFactory(this.transportType.clientChannelFactory)
         .group(group)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .resolver(this.resolverGroup);
-    if (this.transportType == TransportType.EPOLL) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
-              this.server.getConfiguration().getTcpFastOpenMode());
-    }
-    return bootstrap;
   }
 
   /**
