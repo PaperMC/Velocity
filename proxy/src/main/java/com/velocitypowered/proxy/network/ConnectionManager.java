@@ -79,6 +79,8 @@ public final class ConnectionManager {
     if (this.transportType == TransportType.EPOLL) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
               this.server.getConfiguration().getTcpFastOpenMode());
+      bootstrap.option(EpollChannelOption.SO_REUSEPORT,
+              this.server.getConfiguration().isReusePortEnabled());
     }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {

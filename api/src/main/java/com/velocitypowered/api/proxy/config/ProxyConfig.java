@@ -140,4 +140,11 @@ public interface ProxyConfig {
    * @return TCP Fast Open mode
    */
   int getTcpFastOpenMode();
+
+  /**
+   * Get whether proxy bind port can be reused.
+   *
+   * @return port reuse enabled
+   */
+  boolean isReusePortEnabled();
 }

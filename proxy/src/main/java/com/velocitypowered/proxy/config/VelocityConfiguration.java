@@ -53,10 +53,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("online-mode")
   private boolean onlineMode = true;
 
-  @Comment("What TCP Fast Open mode should be used? (Works only if Epoll is available)")
-  @ConfigKey("tcp-fast-open")
-  private int tcpFastOpenMode = 0;
-
   @Comment({
       "Should we forward IP addresses and other data to backend servers?",
       "Available options:",
@@ -98,6 +94,18 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Ignore
   private @Nullable Favicon favicon;
 
+  @Comment({"What TCP Fast Open mode should be used? (Works only if Epoll is available)",
+          "0 - disabled", "1 - TFO is only enabled for outgoing client",
+          "2 - TFO is only available on listening server",
+          "3 - includes 1 and 2"})
+  @ConfigKey("tcp-fast-open")
+  private int tcpFastOpenMode = 0;
+
+  @Comment({"Shuold port be reuseable for multiple proxy instances?",
+          "(Worls only if Epoll is available)"})
+  @ConfigKey("socket-reuse-port")
+  private boolean reusePort;
+
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query) {
     this.servers = servers;
@@ -108,7 +116,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
+      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query, int tcpFastOpenMode,
+      boolean reusePort) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -120,6 +129,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
+    this.tcpFastOpenMode = tcpFastOpenMode;
+    this.reusePort = reusePort;
   }
 
   /**
@@ -227,6 +238,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     if (advanced.loginRatelimit < 0) {
       logger.error("Invalid login ratelimit {}ms", advanced.loginRatelimit);
+      valid = false;
+    }
+
+    if (tcpFastOpenMode < 0 || tcpFastOpenMode > 3) {
+      logger.error("Invalid tcp fast open mode {}", tcpFastOpenMode);
       valid = false;
     }
 
@@ -364,6 +380,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return tcpFastOpenMode;
   }
 
+  @Override
+  public boolean isReusePortEnabled() {
+    return reusePort;
+  }
+
   public boolean isProxyProtocol() {
     return advanced.isProxyProtocol();
   }
@@ -395,7 +416,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
    */
   public static VelocityConfiguration read(Path path) throws IOException {
     Toml toml;
-    if (!path.toFile().exists()) {
+    if (!Files.exists(path)) {
       getLogger().info("No velocity.toml found, creating one for you...");
       return new VelocityConfiguration(new Servers(), new ForcedHosts(), new Advanced(),
           new Query());
@@ -426,7 +447,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         servers,
         forcedHosts,
         advanced,
-        query
+        query,
+        toml.getLong("tcp-fast-open", 3L).intValue(),
+        toml.getBoolean("socket-reuse-port", false)
     );
     return configuration;
   }
