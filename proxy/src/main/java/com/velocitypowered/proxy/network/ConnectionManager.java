@@ -11,6 +11,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
 import java.net.InetSocketAddress;
@@ -29,6 +30,7 @@ public final class ConnectionManager {
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
   private final VelocityServer server;
+  private final boolean epoll;
   // This is intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
@@ -44,6 +46,7 @@ public final class ConnectionManager {
   public ConnectionManager(VelocityServer server) {
     this.server = server;
     this.transportType = TransportType.bestType();
+    this.epoll = this.transportType == TransportType.EPOLL;
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
@@ -75,6 +78,9 @@ public final class ConnectionManager {
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
+    if (this.epoll) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+    }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
@@ -100,6 +106,9 @@ public final class ConnectionManager {
         .group(this.workerGroup)
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
+    if (this.epoll) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+    }
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
@@ -124,13 +133,17 @@ public final class ConnectionManager {
    * @return a new {@link Bootstrap}
    */
   public Bootstrap createWorker(EventLoopGroup group) {
-    return new Bootstrap()
+    Bootstrap bootstrap = new Bootstrap()
         .channel(this.transportType.socketChannelClass)
         .group(group)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .resolver(this.resolverGroup);
+    if (this.epoll) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, this.server.getConfiguration().getTcpFastOpenMode());
+    }
+    return bootstrap;
   }
 
   /**

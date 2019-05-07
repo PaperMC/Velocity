@@ -53,6 +53,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("online-mode")
   private boolean onlineMode = true;
 
+  @Comment("What TCP Fast Open mode should be used? (Works only if Epoll is available)")
+  @ConfigKey("tcp-fast-open")
+  private int tcpFastOpenMode = 0;
+
   @Comment({
       "Should we forward IP addresses and other data to backend servers?",
       "Available options:",
@@ -353,6 +357,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Override
   public int getReadTimeout() {
     return advanced.getReadTimeout();
+  }
+
+  @Override
+  public int getTcpFastOpenMode() {
+    return tcpFastOpenMode;
   }
 
   public boolean isProxyProtocol() {

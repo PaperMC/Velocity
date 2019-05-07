@@ -133,4 +133,11 @@ public interface ProxyConfig {
    * @return read timeout (in milliseconds)
    */
   int getReadTimeout();
+
+  /**
+   * Get whether TCP Fast Open mode is set.
+   *
+   * @return TCP Fast Open mode
+   */
+  int getTcpFastOpenMode();
 }
