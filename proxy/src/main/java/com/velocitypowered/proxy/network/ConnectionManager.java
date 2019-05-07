@@ -30,7 +30,6 @@ public final class ConnectionManager {
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
   private final VelocityServer server;
-  private final boolean epoll;
   // This is intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
@@ -46,7 +45,6 @@ public final class ConnectionManager {
   public ConnectionManager(VelocityServer server) {
     this.server = server;
     this.transportType = TransportType.bestType();
-    this.epoll = this.transportType == TransportType.EPOLL;
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
@@ -78,7 +76,7 @@ public final class ConnectionManager {
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
-    if (this.epoll) {
+    if (this.transportType == TransportType.EPOLL) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
               this.server.getConfiguration().getTcpFastOpenMode());
     }
@@ -107,7 +105,7 @@ public final class ConnectionManager {
         .group(this.workerGroup)
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
-    if (this.epoll) {
+    if (this.transportType == TransportType.EPOLL) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
               this.server.getConfiguration().getTcpFastOpenMode());
     }
@@ -142,7 +140,7 @@ public final class ConnectionManager {
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .resolver(this.resolverGroup);
-    if (this.epoll) {
+    if (this.transportType == TransportType.EPOLL) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN,
               this.server.getConfiguration().getTcpFastOpenMode());
     }
