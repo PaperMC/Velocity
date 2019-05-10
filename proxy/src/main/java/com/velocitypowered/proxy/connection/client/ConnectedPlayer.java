@@ -46,10 +46,14 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.VelocityMessages;
-import com.velocitypowered.proxy.util.collect.CappedCollection;
+import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -103,7 +107,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
-    this.knownChannels = CappedCollection.newCappedSet(MAX_PLUGIN_CHANNELS);
+    this.knownChannels = CappedSet.newCappedSet(MAX_PLUGIN_CHANNELS);
   }
 
   @Override
@@ -650,8 +654,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @return {@code true} if the message can be forwarded, {@code false} otherwise
    */
   public boolean canForwardPluginMessage(PluginMessage message) {
-    // If we're forwarding a plugin message onto the client, that implies that we have a backend connection
-    // already.
+    // If we're forwarding a plugin message onto the client, that implies that we have a backend
+    // connection already.
     MinecraftConnection mc = ensureBackendConnection();
 
     boolean minecraftOrFmlMessage;
