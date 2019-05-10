@@ -86,7 +86,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    if (!canForwardPluginMessage(packet)) {
+    if (!serverConn.getPlayer().canForwardPluginMessage(packet)) {
       return true;
     }
 
@@ -176,23 +176,5 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
       serverConn.getPlayer().disconnect(ConnectionMessages.UNEXPECTED_DISCONNECT);
     }
-  }
-
-  private boolean canForwardPluginMessage(PluginMessage message) {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      return false;
-    }
-    boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
-      String channel = message.getChannel();
-      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
-          .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    } else {
-      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
-    }
-    return minecraftOrFmlMessage
-        || playerSessionHandler.getKnownChannels().contains(message.getChannel())
-        || server.getChannelRegistrar().registered(message.getChannel());
   }
 }

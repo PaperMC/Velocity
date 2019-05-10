@@ -130,7 +130,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    if (!canForwardPluginMessage(packet)) {
+    if (!serverConn.getPlayer().canForwardPluginMessage(packet)) {
       return true;
     }
 
@@ -159,36 +159,5 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     resultFuture
         .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
-  }
-
-  private Collection<String> getClientKnownPluginChannels() {
-    MinecraftSessionHandler handler = serverConn.getPlayer().getMinecraftConnection()
-        .getSessionHandler();
-
-    if (handler instanceof InitialConnectSessionHandler) {
-      return ((InitialConnectSessionHandler) handler).getKnownChannels();
-    } else if (handler instanceof ClientPlaySessionHandler) {
-      return ((ClientPlaySessionHandler) handler).getKnownChannels();
-    } else {
-      return ImmutableList.of();
-    }
-  }
-
-  private boolean canForwardPluginMessage(PluginMessage message) {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      return false;
-    }
-    boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
-      String channel = message.getChannel();
-      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
-          .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    } else {
-      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
-    }
-    return minecraftOrFmlMessage
-        || server.getChannelRegistrar().registered(message.getChannel())
-        || getClientKnownPluginChannels().contains(message.getChannel());
   }
 }

@@ -31,6 +31,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -45,12 +46,10 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.VelocityMessages;
+import com.velocitypowered.proxy.util.collect.CappedCollection;
 import io.netty.buffer.ByteBufUtil;
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -68,12 +67,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
+  private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer(
       c -> "", TranslatableComponent::key);
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
+  /**
+   * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
+   */
   private final MinecraftConnection minecraftConnection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
@@ -87,6 +90,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final VelocityTabList tabList;
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
+  private final Collection<String> knownChannels;
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
@@ -99,6 +103,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
+    this.knownChannels = CappedCollection.newCappedSet(MAX_PLUGIN_CHANNELS);
   }
 
   @Override
@@ -629,6 +634,36 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public void setPhase(ClientConnectionPhase connectionPhase) {
     this.connectionPhase = connectionPhase;
+  }
+
+  /**
+   * Return all the plugin message channels "known" to the client.
+   * @return the channels
+   */
+  public Collection<String> getKnownChannels() {
+    return knownChannels;
+  }
+
+  /**
+   * Determines whether or not we can forward a plugin message onto the client.
+   * @param message the plugin message to forward to the client
+   * @return {@code true} if the message can be forwarded, {@code false} otherwise
+   */
+  public boolean canForwardPluginMessage(PluginMessage message) {
+    // If we're forwarding a plugin message onto the client, that implies that we have a backend connection
+    // already.
+    MinecraftConnection mc = ensureBackendConnection();
+
+    boolean minecraftOrFmlMessage;
+    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
+      String channel = message.getChannel();
+      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
+              .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+    } else {
+      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
+    }
+    return minecraftOrFmlMessage || knownChannels.contains(message.getChannel())
+            || server.getChannelRegistrar().registered(message.getChannel());
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
