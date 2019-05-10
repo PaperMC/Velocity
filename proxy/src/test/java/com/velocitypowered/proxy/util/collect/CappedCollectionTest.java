@@ -44,6 +44,9 @@ class CappedCollectionTest {
     assertTrue(coll.addAll(doesFill2), "did not add items");
     assertThrows(IllegalStateException.class, () -> coll.addAll(overfill),
         "items added to collection although it is too full");
+
+    assertFalse(coll.addAll(doesFill1), "added items?!?");
+
     assertEquals(3, coll.size(), "collection grew in size unexpectedly");
   }
 }
