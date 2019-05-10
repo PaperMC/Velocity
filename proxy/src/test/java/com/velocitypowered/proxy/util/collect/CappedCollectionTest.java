@@ -32,4 +32,18 @@ class CappedCollectionTest {
         "items added to collection although it is too full");
     assertEquals(3, coll.size(), "collection grew in size unexpectedly");
   }
+
+  @Test
+  void handlesSetBehaviorCorrectly() {
+    Set<String> doesFill1 = ImmutableSet.of("coffee", "tea");
+    Set<String> doesFill2 = ImmutableSet.of("coffee", "chocolate");
+    Set<String> overfill = ImmutableSet.of("coffee", "Coke", "Pepsi");
+
+    Collection<String> coll = CappedCollection.newCappedSet(3);
+    assertTrue(coll.addAll(doesFill1), "did not add items");
+    assertTrue(coll.addAll(doesFill2), "did not add items");
+    assertThrows(IllegalStateException.class, () -> coll.addAll(overfill),
+        "items added to collection although it is too full");
+    assertEquals(3, coll.size(), "collection grew in size unexpectedly");
+  }
 }

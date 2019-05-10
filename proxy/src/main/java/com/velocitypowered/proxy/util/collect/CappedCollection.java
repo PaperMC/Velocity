@@ -36,16 +36,16 @@ public class CappedCollection<T> extends ForwardingCollection<T> {
 
   @Override
   public boolean add(T element) {
-    Preconditions.checkState(this.delegate.size() + 1 <= upperSize, "collection is too large (%s)",
-        this.delegate.size());
+    if (this.delegate.size() >= upperSize) {
+      Preconditions.checkState(this.delegate.contains(element), "collection is too large (%s >= %s)",
+          this.delegate.size(), this.upperSize);
+      return false;
+    }
     return this.delegate.add(element);
   }
 
   @Override
   public boolean addAll(Collection<? extends T> collection) {
-    Preconditions.checkState(this.delegate.size() + collection.size() <= upperSize,
-        "collection would grow too large (%s + %s > %s)",
-        this.delegate.size(), collection.size(), upperSize);
     return this.standardAddAll(collection);
   }
 }
