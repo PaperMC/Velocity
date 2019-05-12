@@ -137,10 +137,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     }
 
     if (PluginMessageUtil.isRegister(packet)) {
-      System.out.println("[TSH] I CAN HAZ REGISTER: " + PluginMessageUtil.getChannels(packet));
       serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
     } else if (PluginMessageUtil.isUnregister(packet)) {
-      System.out.println("[TSH] I CAN HAZ UNREGISTER: " + PluginMessageUtil.getChannels(packet));
       serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
     }
 
