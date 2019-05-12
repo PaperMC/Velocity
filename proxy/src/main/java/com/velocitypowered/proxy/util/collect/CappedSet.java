@@ -38,7 +38,8 @@ public class CappedSet<T> extends ForwardingSet<T> {
   @Override
   public boolean add(T element) {
     if (this.delegate.size() >= upperSize) {
-      Preconditions.checkState(this.delegate.contains(element), "collection is too large (%s >= %s)",
+      Preconditions.checkState(this.delegate.contains(element),
+          "collection is too large (%s >= %s)",
           this.delegate.size(), this.upperSize);
       return false;
     }
