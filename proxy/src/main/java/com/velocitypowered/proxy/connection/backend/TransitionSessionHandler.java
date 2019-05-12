@@ -131,15 +131,16 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    if (!serverConn.getPlayer().canForwardPluginMessage(packet)) {
+    if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
+        .getProtocolVersion(), packet)) {
       return true;
     }
 
-    // We need to specially handle REGISTER and UNREGISTER packets. Later on, we'll write them to
-    // the client.
     if (PluginMessageUtil.isRegister(packet)) {
+      System.out.println("[TSH] I CAN HAZ REGISTER: " + PluginMessageUtil.getChannels(packet));
       serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
     } else if (PluginMessageUtil.isUnregister(packet)) {
+      System.out.println("[TSH] I CAN HAZ UNREGISTER: " + PluginMessageUtil.getChannels(packet));
       serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
     }
 

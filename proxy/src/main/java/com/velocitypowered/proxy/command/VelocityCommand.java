@@ -260,7 +260,7 @@ public class VelocityCommand implements Command {
 
     @Override
     public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return source.getPermissionValue("velocity.command.plugins").asBoolean();
     }
   }
 }

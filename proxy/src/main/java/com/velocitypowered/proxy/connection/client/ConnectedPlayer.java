@@ -43,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.VelocityMessages;
@@ -650,16 +651,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   /**
    * Determines whether or not we can forward a plugin message onto the client.
+   * @param version the Minecraft protocol version
    * @param message the plugin message to forward to the client
    * @return {@code true} if the message can be forwarded, {@code false} otherwise
    */
-  public boolean canForwardPluginMessage(PluginMessage message) {
-    // If we're forwarding a plugin message onto the client, that implies that we have a backend
-    // connection already.
-    MinecraftConnection mc = ensureBackendConnection();
-
+  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessage message) {
     boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
+
+    if (PluginMessageUtil.isRegister(message) || PluginMessageUtil.isUnregister(message)) {
+      return true;
+    }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
       String channel = message.getChannel();
       minecraftOrFmlMessage = channel.startsWith("MC|") || channel
               .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
