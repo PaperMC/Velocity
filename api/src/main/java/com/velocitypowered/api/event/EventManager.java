@@ -57,7 +57,9 @@ public interface EventManager {
    *
    * @param event the event to fire
    */
-  void fireAndForget(Object event);
+  default void fireAndForget(Object event) {
+    fire(event);
+  }
 
   /**
    * Unregisters all listeners for the specified {@code plugin}.
