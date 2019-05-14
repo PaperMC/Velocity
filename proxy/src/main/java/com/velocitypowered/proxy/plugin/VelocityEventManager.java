@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,7 +29,6 @@ import net.kyori.event.method.asm.ASMEventExecutorFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityEventManager implements EventManager {
 
@@ -85,14 +83,6 @@ public class VelocityEventManager implements EventManager {
     Preconditions.checkNotNull(listener, "listener");
     if (plugin == listener && registeredListenersByPlugin.containsEntry(plugin, plugin)) {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
-    }
-
-    for (Method method : listener.getClass().getDeclaredMethods()) {
-      if (method.isAnnotationPresent(com.google.common.eventbus.Subscribe.class)) {
-        throw new IllegalArgumentException("Method " + listener.getClass().getName() + "#"
-          + method.getName() + " has a Guava @Subscribe annotation. Use the Velocity @Subscribe "
-          + "annotation instead.");
-      }
     }
 
     registeredListenersByPlugin.put(plugin, listener);
