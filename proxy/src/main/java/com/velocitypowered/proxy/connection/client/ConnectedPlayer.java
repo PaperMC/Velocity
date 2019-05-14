@@ -108,7 +108,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
-    this.knownChannels = CappedSet.newCappedSet(MAX_PLUGIN_CHANNELS);
+    this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
   }
 
   @Override

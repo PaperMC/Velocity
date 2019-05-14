@@ -26,7 +26,7 @@ public class CappedSet<T> extends ForwardingSet<T> {
    * @param <T> the type of elements in the collection
    * @return the new collection
    */
-  public static <T> Set<T> newCappedSet(int maxSize) {
+  public static <T> Set<T> create(int maxSize) {
     return new CappedSet<>(new HashSet<>(), maxSize);
   }
 

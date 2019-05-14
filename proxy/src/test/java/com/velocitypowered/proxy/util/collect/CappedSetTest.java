@@ -14,7 +14,7 @@ class CappedSetTest {
 
   @Test
   void basicVerification() {
-    Collection<String> coll = CappedSet.newCappedSet(1);
+    Collection<String> coll = CappedSet.create(1);
     assertTrue(coll.add("coffee"), "did not add single item");
     assertThrows(IllegalStateException.class, () -> coll.add("tea"),
         "item was added to collection although it is too full");
@@ -27,7 +27,7 @@ class CappedSetTest {
     Set<String> doesFill2 = ImmutableSet.of("chocolate");
     Set<String> overfill = ImmutableSet.of("Coke", "Pepsi");
 
-    Collection<String> coll = CappedSet.newCappedSet(3);
+    Collection<String> coll = CappedSet.create(3);
     assertTrue(coll.addAll(doesFill1), "did not add items");
     assertTrue(coll.addAll(doesFill2), "did not add items");
     assertThrows(IllegalStateException.class, () -> coll.addAll(overfill),
@@ -41,7 +41,7 @@ class CappedSetTest {
     Set<String> doesFill2 = ImmutableSet.of("coffee", "chocolate");
     Set<String> overfill = ImmutableSet.of("coffee", "Coke", "Pepsi");
 
-    Collection<String> coll = CappedSet.newCappedSet(3);
+    Collection<String> coll = CappedSet.create(3);
     assertTrue(coll.addAll(doesFill1), "did not add items");
     assertTrue(coll.addAll(doesFill2), "did not add items");
     assertThrows(IllegalStateException.class, () -> coll.addAll(overfill),
