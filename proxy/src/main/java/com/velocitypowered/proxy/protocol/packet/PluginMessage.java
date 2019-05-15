@@ -47,7 +47,7 @@ public class PluginMessage implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.channel = ProtocolUtils.readString(buf);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       this.channel = transformLegacyToModernChannel(this.channel);
     }
     this.data = new byte[buf.readableBytes()];
@@ -59,8 +59,11 @@ public class PluginMessage implements MinecraftPacket {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }
-    ProtocolUtils.writeString(buf, version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
-        ? channel : transformLegacyToModernChannel(this.channel));
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+      ProtocolUtils.writeString(buf, transformLegacyToModernChannel(this.channel));
+    } else {
+      ProtocolUtils.writeString(buf, this.channel);
+    }
     buf.writeBytes(data);
   }
 
