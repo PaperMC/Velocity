@@ -658,17 +658,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessage message) {
     boolean minecraftOrFmlMessage;
 
-    // We should _always_ pass on new channels the server wishes to register (or unregister) with
-    // us.
-    if (PluginMessageUtil.isRegister(message) || PluginMessageUtil.isUnregister(message)) {
-      return true;
-    }
-
     // By default, all internal Minecraft and Forge channels are forwarded from the server.
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
       String channel = message.getChannel();
-      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
-              .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
+      minecraftOrFmlMessage = channel.startsWith("MC|")
+          || channel.startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)
+          || PluginMessageUtil.isLegacyRegister(message)
+          || PluginMessageUtil.isLegacyUnregister(message);
     } else {
       minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
     }
