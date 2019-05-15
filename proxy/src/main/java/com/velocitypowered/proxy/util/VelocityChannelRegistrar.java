@@ -57,6 +57,11 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     }
   }
 
+  /**
+   * Returns all legacy channel IDs.
+   *
+   * @return all legacy channel IDs
+   */
   public Collection<String> getLegacyChannelIds() {
     Collection<String> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {

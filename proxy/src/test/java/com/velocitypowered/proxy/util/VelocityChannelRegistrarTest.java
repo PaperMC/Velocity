@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.util;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -28,8 +28,10 @@ class VelocityChannelRegistrarTest {
 
     // Two channels cover the modern channel (velocity:test) and the legacy-mapped channel
     // (legacy:velocitytest). Make sure they're what we expect.
-    assertEquals(ImmutableSet.of(MODERN.getId(), SIMPLE_LEGACY_REMAPPED), registrar.getModernChannelIds());
-    assertEquals(ImmutableSet.of(SIMPLE_LEGACY.getId(), MODERN.getId()), registrar.getLegacyChannelIds());
+    assertEquals(ImmutableSet.of(MODERN.getId(), SIMPLE_LEGACY_REMAPPED), registrar
+        .getModernChannelIds());
+    assertEquals(ImmutableSet.of(SIMPLE_LEGACY.getId(), MODERN.getId()), registrar
+        .getLegacyChannelIds());
   }
 
   @Test
