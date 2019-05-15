@@ -15,7 +15,6 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import javax.net.ssl.SSLEngine;
 

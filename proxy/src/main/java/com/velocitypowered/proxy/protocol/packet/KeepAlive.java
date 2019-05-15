@@ -32,7 +32,7 @@ public class KeepAlive implements MinecraftPacket {
     } else {
       randomId = ProtocolUtils.readVarInt(buf);
     }
-}
+  }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {

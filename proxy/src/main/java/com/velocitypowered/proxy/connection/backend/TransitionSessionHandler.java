@@ -19,6 +19,7 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -130,8 +131,15 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    if (!canForwardPluginMessage(packet)) {
+    if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
+        .getProtocolVersion(), packet)) {
       return true;
+    }
+
+    if (PluginMessageUtil.isRegister(packet)) {
+      serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+    } else if (PluginMessageUtil.isUnregister(packet)) {
+      serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
     }
 
     // We always need to handle plugin messages, for Forge compatibility.
@@ -159,36 +167,5 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     resultFuture
         .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
-  }
-
-  private Collection<String> getClientKnownPluginChannels() {
-    MinecraftSessionHandler handler = serverConn.getPlayer().getMinecraftConnection()
-        .getSessionHandler();
-
-    if (handler instanceof InitialConnectSessionHandler) {
-      return ((InitialConnectSessionHandler) handler).getKnownChannels();
-    } else if (handler instanceof ClientPlaySessionHandler) {
-      return ((ClientPlaySessionHandler) handler).getKnownChannels();
-    } else {
-      return ImmutableList.of();
-    }
-  }
-
-  private boolean canForwardPluginMessage(PluginMessage message) {
-    MinecraftConnection mc = serverConn.getConnection();
-    if (mc == null) {
-      return false;
-    }
-    boolean minecraftOrFmlMessage;
-    if (mc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
-      String channel = message.getChannel();
-      minecraftOrFmlMessage = channel.startsWith("MC|") || channel
-          .startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    } else {
-      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
-    }
-    return minecraftOrFmlMessage
-        || server.getChannelRegistrar().registered(message.getChannel())
-        || getClientKnownPluginChannels().contains(message.getChannel());
   }
 }

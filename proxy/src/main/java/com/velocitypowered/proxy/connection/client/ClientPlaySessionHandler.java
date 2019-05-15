@@ -50,12 +50,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
-  static final int MAX_PLUGIN_CHANNELS = 1024;
 
   private final ConnectedPlayer player;
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
-  private final Set<String> knownChannels = new HashSet<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest legacyCommandTabComplete;
@@ -68,19 +66,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
-
-    if (player.getMinecraftConnection().getSessionHandler()
-        instanceof InitialConnectSessionHandler) {
-      this.knownChannels.addAll(((InitialConnectSessionHandler) player.getMinecraftConnection()
-          .getSessionHandler()).getKnownChannels());
-    }
   }
 
   @Override
   public void activated() {
+    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
+        .getProtocolVersion());
     PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(),
-        server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion()));
+        channels);
     player.getMinecraftConnection().write(register);
+    player.getKnownChannels().addAll(channels);
   }
 
   @Override
@@ -215,25 +210,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
-        List<String> actuallyRegistered = new ArrayList<>();
-        List<String> channels = PluginMessageUtil.getChannels(packet);
-        for (String channel : channels) {
-          if (knownChannels.size() >= MAX_PLUGIN_CHANNELS && !knownChannels.contains(channel)) {
-            throw new IllegalStateException("Too many plugin message channels registered");
-          }
-          if (knownChannels.add(channel)) {
-            actuallyRegistered.add(channel);
-          }
-        }
-
-        if (!actuallyRegistered.isEmpty()) {
-          PluginMessage newRegisterPacket = PluginMessageUtil.constructChannelsPacket(backendConn
-              .getProtocolVersion(), actuallyRegistered);
-          backendConn.write(newRegisterPacket);
-        }
+        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+        backendConn.write(packet);
       } else if (PluginMessageUtil.isUnregister(packet)) {
-        List<String> channels = PluginMessageUtil.getChannels(packet);
-        knownChannels.removeAll(channels);
+        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
         backendConn.write(packet);
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
@@ -385,14 +365,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
-    Collection<String> toRegister = new HashSet<>(knownChannels);
-    if (serverVersion.compareTo(MINECRAFT_1_13) >= 0) {
-      toRegister.addAll(server.getChannelRegistrar().getModernChannelIds());
-    } else {
-      toRegister.addAll(server.getChannelRegistrar().getIdsForLegacyConnections());
-    }
-    if (!toRegister.isEmpty()) {
-      serverMc.delayedWrite(PluginMessageUtil.constructChannelsPacket(serverVersion, toRegister));
+    if (!player.getKnownChannels().isEmpty()) {
+      serverMc.delayedWrite(PluginMessageUtil.constructChannelsPacket(serverVersion,
+          player.getKnownChannels()));
     }
 
     // If we had plugin messages queued during login/FML handshake, send them now.
@@ -413,10 +388,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   public List<UUID> getServerBossBars() {
     return serverBossBars;
-  }
-
-  public Set<String> getKnownChannels() {
-    return knownChannels;
   }
 
   /**
