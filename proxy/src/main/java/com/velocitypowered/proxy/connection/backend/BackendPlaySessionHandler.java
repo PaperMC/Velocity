@@ -95,12 +95,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     // the client.
     if (PluginMessageUtil.isRegister(packet)) {
       serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-      serverConn.getPlayer().getMinecraftConnection().write(packet);
-      return true;
+      return false;
     } else if (PluginMessageUtil.isUnregister(packet)) {
       serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-      serverConn.getPlayer().getMinecraftConnection().write(packet);
-      return true;
+      return false;
     }
 
     if (PluginMessageUtil.isMcBrand(packet)) {
