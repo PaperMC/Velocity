@@ -1,15 +1,15 @@
 package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 
-import java.util.ArrayList;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,7 +28,13 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     }
 
     for (ChannelIdentifier identifier : identifiers) {
-      identifierMap.put(identifier.getId(), identifier);
+      if (identifier instanceof MinecraftChannelIdentifier) {
+        identifierMap.put(identifier.getId(), identifier);
+      } else {
+        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.getId());
+        identifierMap.put(identifier.getId(), identifier);
+        identifierMap.put(rewritten, identifier);
+      }
     }
   }
 
@@ -41,12 +47,22 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     }
 
     for (ChannelIdentifier identifier : identifiers) {
-      identifierMap.remove(identifier.getId());
+      if (identifier instanceof MinecraftChannelIdentifier) {
+        identifierMap.remove(identifier.getId());
+      } else {
+        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.getId());
+        identifierMap.remove(identifier.getId());
+        identifierMap.remove(rewritten);
+      }
     }
   }
 
-  public Collection<String> getIdsForLegacyConnections() {
-    return ImmutableList.copyOf(identifierMap.keySet());
+  public Collection<String> getLegacyChannelIds() {
+    Collection<String> ids = new HashSet<>();
+    for (ChannelIdentifier value : identifierMap.values()) {
+      ids.add(value.getId());
+    }
+    return ids;
   }
 
   /**
@@ -55,17 +71,15 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    * @return the channel IDs for Minecraft 1.13 and above
    */
   public Collection<String> getModernChannelIds() {
-    Collection<String> ids = new ArrayList<>();
+    Collection<String> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
       if (value instanceof MinecraftChannelIdentifier) {
         ids.add(value.getId());
+      } else {
+        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.getId()));
       }
     }
     return ids;
-  }
-
-  public boolean registered(String id) {
-    return identifierMap.containsKey(id);
   }
 
   public @Nullable ChannelIdentifier getFromId(String id) {
@@ -81,6 +95,6 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       return getModernChannelIds();
     }
-    return getIdsForLegacyConnections();
+    return getLegacyChannelIds();
   }
 }

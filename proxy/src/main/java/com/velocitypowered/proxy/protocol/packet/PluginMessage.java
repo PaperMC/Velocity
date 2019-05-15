@@ -1,11 +1,13 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
+import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.transformLegacyToModernChannel;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,13 +40,16 @@ public class PluginMessage implements MinecraftPacket {
   public String toString() {
     return "PluginMessage{"
         + "channel='" + channel + '\''
-        + ", data=<removed>" +
+        + ", data=<removed>"
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.channel = ProtocolUtils.readString(buf);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+      this.channel = transformLegacyToModernChannel(this.channel);
+    }
     this.data = new byte[buf.readableBytes()];
     buf.readBytes(data);
   }
@@ -54,7 +59,8 @@ public class PluginMessage implements MinecraftPacket {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }
-    ProtocolUtils.writeString(buf, channel);
+    ProtocolUtils.writeString(buf, version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
+        ? channel : transformLegacyToModernChannel(this.channel));
     buf.writeBytes(data);
   }
 

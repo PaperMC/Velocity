@@ -14,6 +14,8 @@ import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class PluginMessageUtil {
 
@@ -141,6 +143,42 @@ public class PluginMessageUtil {
     newMsg.setChannel(message.getChannel());
     newMsg.setData(rewrittenData);
     return newMsg;
+  }
+
+  private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");
+
+  /**
+   * Transform a plugin message channel from a "legacy" (<1.13) form to a modern one.
+   * @param name the existing name
+   * @return the new name
+   */
+  public static String transformLegacyToModernChannel(String name) {
+    checkNotNull(name, "name");
+
+    if (name.indexOf(':') != -1) {
+      // Probably valid. We won't check this for now and go on faith.
+      return name;
+    }
+
+    // Before falling into the fallback, explicitly rewrite certain messages.
+    switch (name) {
+      case REGISTER_CHANNEL_LEGACY:
+        return REGISTER_CHANNEL;
+      case UNREGISTER_CHANNEL_LEGACY:
+        return UNREGISTER_CHANNEL;
+      case BRAND_CHANNEL_LEGACY:
+        return BRAND_CHANNEL;
+      case "BungeeCord":
+        // This is a special historical case we are compelled to support for the benefit of
+        // BungeeQuack.
+        return "bungeecord:main";
+      default:
+        // This is very likely a legacy name, so transform it. Velocity uses the same scheme as
+        // BungeeCord does to transform channels, but also removes clearly invalid characters as
+        // well.
+        String lower = name.toLowerCase(Locale.ROOT);
+        return "legacy:" + INVALID_IDENTIFIER_REGEX.matcher(lower).replaceAll("");
+    }
   }
 
 }

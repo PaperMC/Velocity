@@ -671,8 +671,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     // Otherwise, we need to see if the player already knows this channel or it's known by the
     // proxy.
-    return minecraftOrFmlMessage || knownChannels.contains(message.getChannel())
-            || server.getChannelRegistrar().registered(message.getChannel());
+    return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
