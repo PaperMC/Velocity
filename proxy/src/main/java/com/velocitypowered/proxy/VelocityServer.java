@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.proxy.command.GlistCommand;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
@@ -151,6 +152,7 @@ public class VelocityServer implements ProxyServer {
     commandManager.register(new VelocityCommand(this), "velocity");
     commandManager.register(new ServerCommand(this), "server");
     commandManager.register(new ShutdownCommand(this), "shutdown", "end");
+    commandManager.register(new GlistCommand(this), "glist");
 
     try {
       Path configPath = Paths.get("velocity.toml");
