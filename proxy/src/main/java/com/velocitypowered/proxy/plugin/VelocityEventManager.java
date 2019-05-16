@@ -118,6 +118,18 @@ public class VelocityEventManager implements EventManager {
     return eventFuture;
   }
 
+  @Override
+  public void fireAndForget(Object event) {
+    if (event == null) {
+      throw new NullPointerException("event");
+    }
+    if (!bus.hasSubscribers(event.getClass())) {
+      // Optimization: nobody's listening.
+      return;
+    }
+    service.execute(() -> fireEvent(event));
+  }
+
   private void fireEvent(Object event) {
     PostResult result = bus.post(event);
     if (!result.exceptions().isEmpty()) {
