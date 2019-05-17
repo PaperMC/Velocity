@@ -97,6 +97,8 @@ public class VelocityEventManager implements EventManager {
     Preconditions.checkNotNull(eventClass, "eventClass");
     Preconditions.checkNotNull(postOrder, "postOrder");
     Preconditions.checkNotNull(handler, "listener");
+
+    registeredHandlersByPlugin.put(plugin, handler);
     bus.register(eventClass, new KyoriToVelocityHandler<>(handler, postOrder));
   }
 
