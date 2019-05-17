@@ -134,11 +134,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   private void startHandshake() {
-    MinecraftConnection mc = connection;
-    if (mc == null) {
-      throw new IllegalStateException("No connection established!");
-    }
-
+    final MinecraftConnection mc = ensureConnected();
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
@@ -214,10 +210,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
 
-    MinecraftConnection mc = connection;
-    if (mc == null) {
-      throw new IllegalStateException("Not connected to a server!");
-    }
+    MinecraftConnection mc = ensureConnected();
 
     PluginMessage message = new PluginMessage();
     message.setChannel(identifier.getId());
