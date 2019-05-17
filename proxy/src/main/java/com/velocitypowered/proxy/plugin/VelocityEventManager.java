@@ -97,6 +97,8 @@ public class VelocityEventManager implements EventManager {
     Preconditions.checkNotNull(eventClass, "eventClass");
     Preconditions.checkNotNull(postOrder, "postOrder");
     Preconditions.checkNotNull(handler, "listener");
+
+    registeredHandlersByPlugin.put(plugin, handler);
     bus.register(eventClass, new KyoriToVelocityHandler<>(handler, postOrder));
   }
 
@@ -159,16 +161,18 @@ public class VelocityEventManager implements EventManager {
   public void unregisterListener(Object plugin, Object listener) {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(listener, "listener");
-    registeredListenersByPlugin.remove(plugin, listener);
-    methodAdapter.unregister(listener);
+    if (registeredListenersByPlugin.remove(plugin, listener)) {
+      methodAdapter.unregister(listener);
+    }
   }
 
   @Override
   public <E> void unregister(Object plugin, EventHandler<E> handler) {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(handler, "listener");
-    registeredHandlersByPlugin.remove(plugin, handler);
-    unregisterHandler(handler);
+    if (registeredHandlersByPlugin.remove(plugin, handler)) {
+      unregisterHandler(handler);
+    }
   }
 
   public boolean shutdown() throws InterruptedException {
