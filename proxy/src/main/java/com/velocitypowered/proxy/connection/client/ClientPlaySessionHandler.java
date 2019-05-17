@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
@@ -72,10 +73,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public void activated() {
     Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
         .getProtocolVersion());
-    PluginMessage register = PluginMessageUtil.constructChannelsPacket(player.getProtocolVersion(),
-        channels);
-    player.getMinecraftConnection().write(register);
-    player.getKnownChannels().addAll(channels);
+    if (!channels.isEmpty()) {
+      PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
+      player.getMinecraftConnection().write(register);
+      player.getKnownChannels().addAll(channels);
+    }
   }
 
   @Override
@@ -366,8 +368,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     if (!player.getKnownChannels().isEmpty()) {
-      serverMc.delayedWrite(PluginMessageUtil.constructChannelsPacket(serverVersion,
-          player.getKnownChannels()));
+      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels()));
     }
 
     // If we had plugin messages queued during login/FML handshake, send them now.

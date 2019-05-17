@@ -93,6 +93,11 @@ public class PluginMessageUtil {
     checkNotNull(message, "message");
     checkArgument(isRegister(message) || isUnregister(message), "Unknown channel type %s",
             message.getChannel());
+    if (message.getData().length == 0) {
+      // If we try to split this, we will get an one-element array with the empty string, which
+      // has caused issues with 1.13+ compatibility. Just return an empty list.
+      return ImmutableList.of();
+    }
     String channels = new String(message.getData(), StandardCharsets.UTF_8);
     return ImmutableList.copyOf(channels.split("\0"));
   }
@@ -103,10 +108,10 @@ public class PluginMessageUtil {
    * @param channels the channels to register
    * @return the plugin message to send
    */
-
   public static PluginMessage constructChannelsPacket(ProtocolVersion protocolVersion,
                                                       Collection<String> channels) {
     Preconditions.checkNotNull(channels, "channels");
+    Preconditions.checkArgument(channels.size() > 0, "no channels specified");
     String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
         ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
     PluginMessage message = new PluginMessage();
