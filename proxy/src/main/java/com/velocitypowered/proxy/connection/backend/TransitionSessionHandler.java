@@ -112,6 +112,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
               serverConn.getServerInfo().getName(),
               serverConn.getPlayer().getUsername(), exc);
           serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+          resultFuture.completeExceptionally(exc);
           return null;
         });
 
