@@ -3,16 +3,13 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.client.InitialConnectSessionHandler;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
@@ -21,13 +18,16 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A special session handler that catches "last minute" disconnects.
  */
 public class TransitionSessionHandler implements MinecraftSessionHandler {
+
+  private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -106,7 +106,14 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // We're done! :)
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-        }, smc.eventLoop());
+        }, smc.eventLoop())
+        .exceptionally(exc -> {
+          logger.error("Unable to switch to new server {} for {}",
+              serverConn.getServerInfo().getName(),
+              serverConn.getPlayer().getUsername(), exc);
+          serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+          return null;
+        });
 
     return true;
   }
