@@ -31,14 +31,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
+  private final MinecraftConnection playerConnection;
   private boolean exceptionTriggered = false;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
     this.serverConn = serverConn;
+    this.playerConnection = serverConn.getPlayer().getMinecraftConnection();
 
-    MinecraftSessionHandler psh = serverConn.getPlayer().getMinecraftConnection()
-        .getSessionHandler();
+    MinecraftSessionHandler psh = playerConnection.getSessionHandler();
     if (!(psh instanceof ClientPlaySessionHandler)) {
       throw new IllegalStateException(
           "Initializing BackendPlaySessionHandler with no backing client play session handler!");
@@ -104,7 +105,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (PluginMessageUtil.isMcBrand(packet)) {
       PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet,
           server.getVersion());
-      serverConn.getPlayer().getMinecraftConnection().write(rewritten);
+      playerConnection.write(rewritten);
       return true;
     }
 
@@ -118,15 +119,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    MinecraftConnection clientConn = serverConn.getPlayer().getMinecraftConnection();
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
         packet.getData());
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
-          if (pme.getResult().isAllowed() && !clientConn.isClosed()) {
-            clientConn.write(packet);
+          if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
+            playerConnection.write(packet);
           }
-        }, clientConn.eventLoop());
+        }, playerConnection.eventLoop());
     return true;
   }
 
@@ -163,12 +163,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    serverConn.getPlayer().getMinecraftConnection().write(packet);
+    playerConnection.write(packet);
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    serverConn.getPlayer().getMinecraftConnection().write(buf.retain());
+    playerConnection.write(buf.retain());
   }
 
   @Override
