@@ -51,6 +51,7 @@ public class NativeVelocityCipher implements VelocityCipher {
   @Override
   public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
     ensureNotDisposed();
+    source.memoryAddress(); // sanity check
 
     int len = source.readableBytes();
     ByteBuf out = ctx.alloc().directBuffer(len);
