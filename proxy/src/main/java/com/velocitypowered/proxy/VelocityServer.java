@@ -355,30 +355,36 @@ public class VelocityServer implements ProxyServer {
     if (!shutdownInProgress.compareAndSet(false, true)) {
       return;
     }
-    logger.info("Shutting down the proxy...");
 
-    for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
-      player.disconnect(TextComponent.of("Proxy shutting down."));
-    }
+    Runnable shutdownProcess = () -> {
+      logger.info("Shutting down the proxy...");
 
-    this.cm.shutdown();
-
-    try {
-      if (!eventManager.shutdown() || !scheduler.shutdown()) {
-        logger.error("Your plugins took over 10 seconds to shut down.");
+      for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
+        player.disconnect(TextComponent.of("Proxy shutting down."));
       }
-    } catch (InterruptedException e) {
-      // Not much we can do about this...
-      Thread.currentThread().interrupt();
-    }
 
-    eventManager.fireShutdownEvent();
+      this.cm.shutdown();
 
-    shutdown = true;
+      try {
+        if (!eventManager.shutdown() || !scheduler.shutdown()) {
+          logger.error("Your plugins took over 10 seconds to shut down.");
+        }
+      } catch (InterruptedException e) {
+        // Not much we can do about this...
+        Thread.currentThread().interrupt();
+      }
 
-    if (explicitExit) {
-      System.exit(0);
-    }
+      eventManager.fireShutdownEvent();
+
+      shutdown = true;
+
+      if (explicitExit) {
+        System.exit(0);
+      }
+    };
+
+    Thread thread = new Thread(shutdownProcess);
+    thread.start();
   }
 
   public NettyHttpClient getHttpClient() {
