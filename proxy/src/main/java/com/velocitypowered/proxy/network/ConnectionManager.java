@@ -160,6 +160,10 @@ public final class ConnectionManager {
     }
   }
 
+  public EventLoopGroup getBossGroup() {
+    return bossGroup;
+  }
+
   public ServerChannelInitializerHolder getServerChannelInitializer() {
     return this.serverChannelInitializer;
   }

@@ -138,6 +138,10 @@ public class VelocityServer implements ProxyServer {
     return commandManager;
   }
 
+  void awaitProxyShutdown() {
+    cm.getBossGroup().terminationFuture().syncUninterruptibly();
+  }
+
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
