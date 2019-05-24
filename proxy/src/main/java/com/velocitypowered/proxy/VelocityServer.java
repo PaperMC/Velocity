@@ -203,6 +203,8 @@ public class VelocityServer implements ProxyServer {
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
+
+    Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
   }
 
   @RequiresNonNull({"pluginManager", "eventManager"})
@@ -241,6 +243,10 @@ public class VelocityServer implements ProxyServer {
     }
 
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
+  }
+
+  public EventLoopGroup getWorkerGroup() {
+    return this.cm.getWorkerGroup();
   }
 
   public Bootstrap initializeGenericBootstrap() {

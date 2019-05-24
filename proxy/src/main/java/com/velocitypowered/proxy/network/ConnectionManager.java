@@ -164,6 +164,10 @@ public final class ConnectionManager {
     return bossGroup;
   }
 
+  public EventLoopGroup getWorkerGroup() {
+    return workerGroup;
+  }
+
   public ServerChannelInitializerHolder getServerChannelInitializer() {
     return this.serverChannelInitializer;
   }
