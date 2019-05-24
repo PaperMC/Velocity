@@ -9,12 +9,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class StatusResponse implements MinecraftPacket {
 
-  private @Nullable String status;
+  private @Nullable CharSequence status;
 
   public StatusResponse() {
   }
 
-  public StatusResponse(String status) {
+  public StatusResponse(CharSequence status) {
     this.status = status;
   }
 
@@ -22,7 +22,7 @@ public class StatusResponse implements MinecraftPacket {
     if (status == null) {
       throw new IllegalStateException("Status is not specified");
     }
-    return status;
+    return status.toString();
   }
 
   @Override

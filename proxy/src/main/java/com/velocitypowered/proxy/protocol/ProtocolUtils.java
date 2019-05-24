@@ -88,7 +88,7 @@ public enum ProtocolUtils {
    * @param buf the buffer to write to
    * @param str the string to write
    */
-  public static void writeString(ByteBuf buf, String str) {
+  public static void writeString(ByteBuf buf, CharSequence str) {
     int size = ByteBufUtil.utf8Bytes(str);
     writeVarInt(buf, size);
     ByteBufUtil.writeUtf8(buf, str);
