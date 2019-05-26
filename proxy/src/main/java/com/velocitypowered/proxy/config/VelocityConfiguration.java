@@ -731,11 +731,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @Ignore
     private boolean fromConfig;
 
-    public Metrics() {
+    private Metrics() {
       this.fromConfig = false;
     }
 
-    public Metrics(Toml toml) {
+    private Metrics(Toml toml) {
       if (toml != null) {
         this.enabled = toml.getBoolean("enabled", false);
         this.id = toml.getString("id", UUID.randomUUID().toString());

@@ -524,7 +524,6 @@ public class Metrics {
 
     @Override
     protected JsonObject getChartData() throws Exception {
-      JsonObject data = new JsonObject();
       JsonObject values = new JsonObject();
       Map<String, int[]> map = callable.call();
       if (map == null || map.isEmpty()) {
@@ -547,6 +546,7 @@ public class Metrics {
         // Null = skip the chart
         return null;
       }
+      JsonObject data = new JsonObject();
       data.add("values", values);
       return data;
     }
