@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -88,6 +89,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Table("[query]")
   private final Query query;
 
+  @Table("[metrics]")
+  private final Metrics metrics;
+
   @Ignore
   private @MonotonicNonNull Component motdAsComponent;
 
@@ -95,16 +99,17 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query) {
+      Query query, Metrics metrics) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
+    this.metrics = metrics;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
+      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -116,6 +121,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
+    this.metrics = metrics;
   }
 
   /**
@@ -359,6 +365,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return advanced.isProxyProtocol();
   }
 
+  public Metrics getMetrics() {
+    return metrics;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -389,7 +399,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     if (!path.toFile().exists()) {
       getLogger().info("No velocity.toml found, creating one for you...");
       return new VelocityConfiguration(new Servers(), new ForcedHosts(), new Advanced(),
-          new Query());
+          new Query(), new Metrics());
     } else {
       try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
         toml = new Toml().read(reader);
@@ -400,13 +410,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     ForcedHosts forcedHosts = new ForcedHosts(toml.getTable("forced-hosts"));
     Advanced advanced = new Advanced(toml.getTable("advanced"));
     Query query = new Query(toml.getTable("query"));
+    Metrics metrics = new Metrics(toml.getTable("metrics"));
     byte[] forwardingSecret = toml.getString("forwarding-secret", "5up3r53cr3t")
         .getBytes(StandardCharsets.UTF_8);
 
     String forwardingModeName = toml.getString("player-info-forwarding-mode", "MODERN")
         .toUpperCase(Locale.US);
 
-    VelocityConfiguration configuration = new VelocityConfiguration(
+    return new VelocityConfiguration(
         toml.getString("bind", "0.0.0.0:25577"),
         toml.getString("motd", "&3A Velocity Server"),
         toml.getLong("show-max-players", 500L).intValue(),
@@ -417,9 +428,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         servers,
         forcedHosts,
         advanced,
-        query
+        query,
+        metrics
     );
-    return configuration;
   }
 
   private static String generateRandomString(int length) {
@@ -697,6 +708,56 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           + ", queryMap='" + queryMap + '\''
           + ", showPlugins=" + showPlugins
           + '}';
+    }
+  }
+
+  public static class Metrics {
+
+    @Comment({"Whether metrics will be reported to bStats (https://bstats.org).",
+        "bStats collects some basic information, like how many people use Velocity and their",
+        "player count. We recommend keeping bStats enabled, but if you're not comfortable with",
+        "this, you can turn this setting off. There is no performance penalty associated with",
+        "having metrics enabled, and data sent to bStats can't identify your server."})
+    @ConfigKey("enabled")
+    private boolean enabled = true;
+
+    @Comment("A unique, anonymous ID to identify this proxy with.")
+    @ConfigKey("id")
+    private String id = UUID.randomUUID().toString();
+
+    @ConfigKey("log-failure")
+    private boolean logFailure = false;
+
+    @Ignore
+    private boolean fromConfig;
+
+    public Metrics() {
+      this.fromConfig = false;
+    }
+
+    public Metrics(Toml toml) {
+      if (toml != null) {
+        this.enabled = toml.getBoolean("enabled", false);
+        this.id = toml.getString("id", UUID.randomUUID().toString());
+        this.logFailure = toml.getBoolean("log-failure", false);
+        this.fromConfig = true;
+      }
+    }
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    public boolean isLogFailure() {
+      return logFailure;
+    }
+
+    public boolean isFromConfig() {
+      return fromConfig;
     }
   }
 }
