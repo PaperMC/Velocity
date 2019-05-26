@@ -142,8 +142,6 @@ public class NettyHttpClient {
             request.headers().add(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
             decorator.accept(request);
 
-            System.out.println(request);
-
             channel.writeAndFlush(request, channel.voidPromise());
           } else {
             body.release();
