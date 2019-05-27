@@ -404,15 +404,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (connectedServer == null) {
-      // The player isn't yet connected to a server.
-      Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
-      if (nextServer.isPresent()) {
-        // There can't be any connection in flight now.
-        resetInFlightConnection();
-        createConnectionRequest(nextServer.get()).fireAndForget();
-      } else {
-        disconnect(friendlyReason);
-      }
+      // The player isn't yet connected to a server. Note that we need to do this in a future run
+      // of the event loop due to an issue with the Netty kqueue transport.
+      minecraftConnection.eventLoop().execute(() -> {
+        Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
+        if (nextServer.isPresent()) {
+          // There can't be any connection in flight now.
+          resetInFlightConnection();
+          createConnectionRequest(nextServer.get()).fireAndForget();
+        } else {
+          disconnect(friendlyReason);
+        }
+      });
     } else {
       boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
       ServerKickResult result;
