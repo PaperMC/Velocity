@@ -11,6 +11,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13_1;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14_1;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_1;
@@ -94,7 +95,7 @@ public enum StateRegistry {
           map(0x02, MINECRAFT_1_12, false),
           map(0x01, MINECRAFT_1_12_1, false),
           map(0x05, MINECRAFT_1_13, false),
-          map(0x06, MINECRAFT_1_14, false));  
+          map(0x06, MINECRAFT_1_14, false));
       serverbound.register(Chat.class, Chat::new,
           map(0x01, MINECRAFT_1_8, false),
           map(0x02, MINECRAFT_1_9, false),
@@ -254,7 +255,7 @@ public enum StateRegistry {
       LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12, EnumSet.of(MINECRAFT_1_12_1));
       LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_12_1, EnumSet.of(MINECRAFT_1_12_2));
       LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_13, EnumSet.of(MINECRAFT_1_13_1, MINECRAFT_1_13_2));
-      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_14, EnumSet.of(MINECRAFT_1_14_1));
+      LINKED_PROTOCOL_VERSIONS.put(MINECRAFT_1_14, EnumSet.of(MINECRAFT_1_14_1, MINECRAFT_1_14_2));
     }
 
     private final Direction direction;
@@ -286,7 +287,7 @@ public enum StateRegistry {
     }
 
     <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
-        PacketMapping... mappings) {
+                                              PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
       }
@@ -332,6 +333,7 @@ public enum StateRegistry {
 
       /**
        * Attempts to create a packet from the specified {@code id}.
+       *
        * @param id the packet ID
        * @return the packet instance, or {@code null} if the ID is not registered
        */
@@ -345,6 +347,7 @@ public enum StateRegistry {
 
       /**
        * Attempts to look up the packet ID for an {@code packet}.
+       *
        * @param packet the packet to look up
        * @return the packet ID
        * @throws IllegalArgumentException if the packet ID is not found
@@ -416,7 +419,7 @@ public enum StateRegistry {
   }
 
   private static PacketMapping[] genericMappings(int id) {
-    return new PacketMapping[]{
+    return new PacketMapping[] {
         map(id, MINECRAFT_1_8, false),
         map(id, MINECRAFT_1_9, false),
         map(id, MINECRAFT_1_12, false),
