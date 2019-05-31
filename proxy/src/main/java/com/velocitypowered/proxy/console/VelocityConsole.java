@@ -35,7 +35,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(Component component) {
-    logger.info(LegacyComponentSerializer.INSTANCE.serialize(component));
+    logger.info(LegacyComponentSerializer.legacy().serialize(component));
   }
 
   @Override

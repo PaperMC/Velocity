@@ -287,7 +287,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       if (motd.startsWith("{")) {
         motdAsComponent = GsonComponentSerializer.INSTANCE.deserialize(motd);
       } else {
-        motdAsComponent = LegacyComponentSerializer.INSTANCE.deserialize(motd, '&');
+        motdAsComponent = LegacyComponentSerializer.legacy().deserialize(motd, '&');
       }
     }
     return motdAsComponent;

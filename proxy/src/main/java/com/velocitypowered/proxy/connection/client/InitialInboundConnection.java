@@ -55,7 +55,7 @@ class InitialInboundConnection implements InboundConnection, MinecraftConnection
 
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.INSTANCE.serialize(reason));
+        LegacyComponentSerializer.legacy().serialize(reason));
     connection.closeWith(Disconnect.create(reason));
   }
 }

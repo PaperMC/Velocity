@@ -26,7 +26,6 @@ public class LegacyDisconnect {
    * @param version the requesting clients' version
    * @return the disconnect packet
    */
-  @SuppressWarnings("deprecation") // we use these on purpose to service older clients!
   public static LegacyDisconnect fromServerPing(ServerPing response,
       LegacyMinecraftPingVersion version) {
     Players players = response.getPlayers().orElse(FAKE_PLAYERS);
@@ -47,7 +46,7 @@ public class LegacyDisconnect {
             LEGACY_COLOR_CODE + "1",
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
-            getFirstLine(LegacyComponentSerializer.INSTANCE.serialize(response.getDescription())),
+            getFirstLine(LegacyComponentSerializer.legacy().serialize(response.getDescription())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
         ));
@@ -72,8 +71,7 @@ public class LegacyDisconnect {
    */
   public static LegacyDisconnect from(TextComponent component) {
     // We intentionally use the legacy serializers, because the old clients can't understand JSON.
-    @SuppressWarnings("deprecation")
-    String serialized = LegacyComponentSerializer.INSTANCE.serialize(component);
+    String serialized = LegacyComponentSerializer.legacy().serialize(component);
     return new LegacyDisconnect(serialized);
   }
 
