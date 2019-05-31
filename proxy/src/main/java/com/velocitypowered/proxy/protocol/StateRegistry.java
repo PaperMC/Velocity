@@ -271,6 +271,18 @@ public enum StateRegistry {
             throw new IllegalArgumentException("Unknown protocol version "
                 + current.protocolVersion);
           }
+
+          if (registry.packetIdToSupplier.containsKey(current.id)) {
+            throw new IllegalArgumentException("Can not register class " + clazz.getSimpleName()
+                + " with id " + current.id + " for " + registry.version
+                + " because another packet is already registered");
+          }
+
+          if (registry.packetClassToId.containsKey(clazz)) {
+            throw new IllegalArgumentException(clazz.getSimpleName()
+                + " is already registered for version " + registry.version);
+          }
+
           if (!current.encodeOnly) {
             registry.packetIdToSupplier.put(current.id, packetSupplier);
           }
@@ -370,8 +382,8 @@ public enum StateRegistry {
   /**
    * Creates a PacketMapping using the provided arguments.
    *
-   * @param id Packet Id
-   * @param version Protocol version
+   * @param id         Packet Id
+   * @param version    Protocol version
    * @param encodeOnly When true packet decoding will be disabled
    * @return PacketMapping with the provided arguments
    */

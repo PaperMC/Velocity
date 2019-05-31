@@ -11,10 +11,12 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
+import com.velocitypowered.proxy.protocol.packet.StatusPing;
 
 import org.junit.jupiter.api.Test;
 
@@ -52,6 +54,8 @@ class PacketRegistryTest {
         "Registry did not return the correct packet ID");
     assertEquals(1, registry.getProtocolRegistry(MINECRAFT_1_11).getPacketId(packet),
         "Registry did not return the correct packet ID");
+    assertNull(registry.getProtocolRegistry(MINECRAFT_1_14_2).createPacket(0x01),
+        "Registry should return a null");
   }
 
   @Test
@@ -76,6 +80,20 @@ class PacketRegistryTest {
         () -> registry.register(Handshake.class, Handshake::new,
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_13, false),
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_13, false)));
+  }
+
+  @Test
+  void failOnDuplicate() {
+    StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
+        ProtocolUtils.Direction.CLIENTBOUND);
+    registry.register(Handshake.class, Handshake::new,
+        new StateRegistry.PacketMapping(0x00, MINECRAFT_1_8, false));
+    assertThrows(IllegalArgumentException.class,
+        () -> registry.register(Handshake.class, Handshake::new,
+            new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12, false)));
+    assertThrows(IllegalArgumentException.class,
+        () -> registry.register(StatusPing.class, StatusPing::new,
+            new StateRegistry.PacketMapping(0x00, MINECRAFT_1_13, false)));
   }
 
   @Test
