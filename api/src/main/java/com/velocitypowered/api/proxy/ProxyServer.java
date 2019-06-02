@@ -1,8 +1,5 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.util.bossbar.BossBar;
-import com.velocitypowered.api.util.bossbar.BossBarColor;
-import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
@@ -13,6 +10,9 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.bossbar.BossBar;
+import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
