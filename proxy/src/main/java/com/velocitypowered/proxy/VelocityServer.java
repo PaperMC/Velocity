@@ -17,6 +17,9 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.bossbar.BossBar;
+import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.command.GlistCommand;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -38,6 +41,7 @@ import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
+import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
@@ -66,6 +70,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
@@ -131,6 +136,15 @@ public class VelocityServer implements ProxyServer {
     }
 
     return new ProxyVersion(implName, implVendor, implVersion);
+  }
+
+  @Override
+  public @NonNull BossBar createBossBar(
+      @NonNull Component title,
+      @NonNull BossBarColor color,
+      @NonNull BossBarOverlay overlay,
+      float progress) {
+    return new VelocityBossBar(title, color, overlay, progress);
   }
 
   @Override
