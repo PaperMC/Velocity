@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.bossbar;
 
-import com.velocitypowered.api.bossbar.BarColor;
-import com.velocitypowered.api.bossbar.BarStyle;
+import com.velocitypowered.api.bossbar.BossBarColor;
+import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -24,22 +24,22 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   private boolean visible;
   private Component title;
   private float progress;
-  private BarColor color;
-  private BarStyle style;
+  private BossBarColor color;
+  private BossBarOverlay overlay;
   private final VelocityBossBarManager manager;
 
   public VelocityBossBar(
       VelocityBossBarManager manager,
       Component title,
-      BarColor color,
-      BarStyle style,
+      BossBarColor color,
+      BossBarOverlay overlay,
       float progress,
       UUID uuid) {
     this.title = title;
     this.color = color;
-    this.style = style;
+    this.overlay = overlay;
     this.progress = progress;
-    if (progress > 1) {
+    if (progress > 1 || progress < 0) {
       throw new IllegalArgumentException("Progress not between 0 and 1");
     }
     this.uuid = uuid;
@@ -53,7 +53,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   }
 
   @Override
-  public void addAll(@NonNull Collection<Player> players) {
+  public void addPlayers(@NonNull Iterable<Player> players) {
     players.forEach(this::addPlayer);
   }
 
@@ -76,7 +76,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   }
 
   @Override
-  public void removeAll(@NonNull Collection<Player> players) {
+  public void removePlayers(@NonNull Iterable<Player> players) {
     players.forEach(this::removePlayer);
     if (players.equals(this.players)) {
       manager.removeFromMap(uuid);
@@ -85,8 +85,8 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   }
 
   @Override
-  public void removeAllAdded() {
-    removeAll(players);
+  public void removeAllPlayers() {
+    removePlayers(players);
   }
 
   @Override
@@ -116,7 +116,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   @Override
   public void setProgress(float progress) {
-    if (progress > 1) {
+    if (progress > 1 || progress < 0) {
       throw new IllegalArgumentException("Progress not between 0 and 1");
     }
     this.progress = progress;
@@ -143,32 +143,33 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   }
 
   @Override
-  public @NonNull BarColor getColor() {
+  public @NonNull BossBarColor getColor() {
     return color;
   }
 
   @Override
-  public void setColor(@NonNull BarColor color) {
+  public void setColor(@NonNull BossBarColor color) {
     this.color = color;
-    setDivisions(color, style);
+    setDivisions(color, overlay);
   }
 
   @Override
-  public @NonNull BarStyle getStyle() {
-    return style;
+  public @NonNull BossBarOverlay getOverlay() {
+    return overlay;
   }
 
   @Override
-  public void setStyle(@NonNull BarStyle style) {
-    this.style = style;
-    setDivisions(color, style);
+  public void setOverlay(@NonNull BossBarOverlay overlay) {
+    this.overlay = overlay;
+    setDivisions(color, overlay);
   }
 
-  private void setDivisions(BarColor color, BarStyle style) {
+  private void setDivisions(BossBarColor color, BossBarOverlay overlay) {
     BossBar bar = new BossBar();
     bar.setUuid(uuid);
-    bar.setColor(color.getIntValue());
-    bar.setOverlay(style.getIntValue());
+    bar.setAction(BossBar.UPDATE_STYLE);
+    bar.setColor(color.ordinal());
+    bar.setOverlay(overlay.ordinal());
     players.forEach(
         player -> {
           if (player.isActive() && visible) {
@@ -185,7 +186,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   @Override
   public void setVisible(boolean visible) {
     if (!visible) {
-      removeAllAdded();
+      removeAllPlayers();
     }
     this.visible = visible;
   }
@@ -195,8 +196,8 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     bossBar.setUuid(uuid);
     bossBar.setAction(BossBar.ADD);
     bossBar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
-    bossBar.setColor(color.getIntValue());
-    bossBar.setOverlay(style.getIntValue());
+    bossBar.setColor(color.ordinal());
+    bossBar.setOverlay(overlay.ordinal());
     bossBar.setPercent(progress);
     return bossBar;
   }

@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.bossbar;
 
-import com.velocitypowered.api.bossbar.BarColor;
-import com.velocitypowered.api.bossbar.BarStyle;
+import com.velocitypowered.api.bossbar.BossBarColor;
+import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.bossbar.BossBar;
 import com.velocitypowered.api.bossbar.BossBarManager;
 import net.kyori.text.Component;
@@ -20,13 +20,13 @@ public class VelocityBossBarManager implements BossBarManager {
 
   @Override
   public @NonNull BossBar create(
-      @NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style) {
+    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style) {
     return create(title, color, style, 1);
   }
 
   @Override
   public @NonNull BossBar create(
-      @NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style, float progress) {
+    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style, float progress) {
     VelocityBossBar bossBar =
         new VelocityBossBar(this, title, color, style, progress, UUID.randomUUID());
     bossBars.put(bossBar.getUUID(), bossBar);
@@ -36,8 +36,8 @@ public class VelocityBossBarManager implements BossBarManager {
   @Override
   public @Nullable BossBar create(
       @NonNull Component title,
-      @NonNull BarColor color,
-      @NonNull BarStyle style,
+      @NonNull BossBarColor color,
+      @NonNull BossBarOverlay style,
       float progress,
       @NonNull UUID uuid) {
     if (bossBars.containsKey(uuid)) {
@@ -59,7 +59,7 @@ public class VelocityBossBarManager implements BossBarManager {
     if (bar == null) {
       return false;
     }
-    bar.removeAllAdded();
+    bar.removeAllPlayers();
     return true;
   }
 
@@ -69,7 +69,7 @@ public class VelocityBossBarManager implements BossBarManager {
 
   @Override
   public boolean remove(@NonNull BossBar bossBar) {
-    bossBar.removeAllAdded();
+    bossBar.removeAllPlayers();
     return true;
   }
 

@@ -20,7 +20,7 @@ public interface BossBar {
    * @param players players
    * @see #addPlayer(Player)
    */
-  void addAll(@NonNull Collection<Player> players);
+  void addPlayers(@NonNull Iterable<Player> players);
 
   /**
    * Adds player to this boss bar. This adds the player to the {@link #getPlayers()} and makes him
@@ -44,14 +44,14 @@ public interface BossBar {
    * @param players players
    * @see #removePlayer(Player)
    */
-  void removeAll(@NonNull Collection<Player> players);
+  void removePlayers(@NonNull Iterable<Player> players);
 
   /**
    * Removes all players, that see this boss bar.
    *
    * @see #removePlayer(Player)
    */
-  void removeAllAdded();
+  void removeAllPlayers();
 
   /**
    * Gets the title of this boss bar.
@@ -105,29 +105,29 @@ public interface BossBar {
    * @return boss bar color
    */
   @NonNull
-  BarColor getColor();
+  BossBarColor getColor();
 
   /**
    * Sets a new color of the boss bar
    *
    * @param color the color you wish the boss bar be displayed with
    */
-  void setColor(@NonNull BarColor color);
+  void setColor(@NonNull BossBarColor color);
 
   /**
-   * Gets the style of the boss bar.
+   * Gets the overlay of the boss bar.
    *
-   * @return boss bar style
+   * @return boss bar overlay
    */
   @NonNull
-  BarStyle getStyle();
+  BossBarOverlay getOverlay();
 
   /**
-   * Sets a new style of the boss bar
+   * Sets a new overlay of the boss bar
    *
-   * @param style the style you wish the boss bar be displayed with
+   * @param overlay the overlay you wish the boss bar be displayed with
    */
-  void setStyle(@NonNull BarStyle style);
+  void setOverlay(@NonNull BossBarOverlay overlay);
 
   /**
    * Returns whenever this boss bar is visible to all added {@link #getPlayers()}. By default, it

@@ -19,7 +19,7 @@ public interface BossBarManager {
    * @return a fresh boss bar
    */
   @NonNull
-  BossBar create(@NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style);
+  BossBar create(@NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style);
 
   /**
    * Creates a new {@link BossBar}
@@ -33,7 +33,7 @@ public interface BossBarManager {
    */
   @NonNull
   BossBar create(
-      @NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style, float progress);
+    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style, float progress);
 
   /**
    * Creates a new {@link BossBar}
@@ -49,8 +49,8 @@ public interface BossBarManager {
   @Nullable
   BossBar create(
       @NonNull Component title,
-      @NonNull BarColor color,
-      @NonNull BarStyle style,
+      @NonNull BossBarColor color,
+      @NonNull BossBarOverlay style,
       float progress,
       @NonNull UUID uuid);
 
