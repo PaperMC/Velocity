@@ -26,10 +26,8 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   private float progress;
   private BossBarColor color;
   private BossBarOverlay overlay;
-  private final VelocityBossBarManager manager;
 
   public VelocityBossBar(
-      VelocityBossBarManager manager,
       Component title,
       BossBarColor color,
       BossBarOverlay overlay,
@@ -45,7 +43,6 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     this.uuid = uuid;
     visible = true;
     players = new ArrayList<>();
-    this.manager = manager;
   }
 
   @Override
@@ -75,7 +72,6 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   public void removePlayers(@NonNull Iterable<Player> players) {
     players.forEach(this::removePlayer);
     if (players.equals(this.players)) {
-      manager.removeFromSet(this);
       this.players.clear();
     }
   }

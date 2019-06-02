@@ -5,7 +5,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.velocitypowered.api.bossbar.BossBarManager;
+import com.velocitypowered.api.bossbar.BossBar;
+import com.velocitypowered.api.bossbar.BossBarColor;
+import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
@@ -18,7 +20,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.proxy.bossbar.VelocityBossBarManager;
+import com.velocitypowered.proxy.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.command.GlistCommand;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -68,6 +70,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
@@ -96,7 +99,6 @@ public class VelocityServer implements ProxyServer {
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
-  private final BossBarManager bossBarManager = new VelocityBossBarManager();
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -137,8 +139,9 @@ public class VelocityServer implements ProxyServer {
   }
 
   @Override
-  public BossBarManager getBossBarManager() {
-    return bossBarManager;
+  public @NonNull BossBar createBossBar(@NonNull Component title, @NonNull BossBarColor color,
+      @NonNull BossBarOverlay overlay, float progress) {
+    return new VelocityBossBar(title, color, overlay, progress, UUID.randomUUID());
   }
 
   @Override

@@ -1,6 +1,8 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.bossbar.BossBarManager;
+import com.velocitypowered.api.bossbar.BossBar;
+import com.velocitypowered.api.bossbar.BossBarColor;
+import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
@@ -16,6 +18,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Provides an interface to a Minecraft server proxy.
@@ -176,9 +179,15 @@ public interface ProxyServer {
   ProxyVersion getVersion();
 
   /**
-   * Gets the manager of all {@link com.velocitypowered.api.bossbar.BossBar}'s
+   * Creates a new {@link BossBar}
    *
-   * @return boss bar manager
+   * @param title boss bar title
+   * @param color boss bar color
+   * @param overlay boss bar overlay
+   * @param progress boss bar progress
+   * @return a completely new and fresh boss bar
    */
-  BossBarManager getBossBarManager();
+  @NonNull
+  BossBar createBossBar(@NonNull Component title, @NonNull BossBarColor color,
+      @NonNull BossBarOverlay overlay, float progress);
 }
