@@ -4,13 +4,17 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarFlag;
 import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
@@ -20,6 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.BossBar {
 
   private final List<Player> players;
+  private final Set<BossBarFlag> flags;
   private final UUID uuid;
   private boolean visible;
   private Component title;
@@ -39,6 +44,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     this.uuid = uuid;
     visible = true;
     players = new ArrayList<>();
+    flags = new HashSet<>();
   }
 
   @Override
@@ -172,6 +178,37 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
       players.forEach(this::removePlayer);
     }
     this.visible = visible;
+  }
+
+  @Override
+  public Collection<BossBarFlag> getFlags() {
+    return ImmutableList.copyOf(flags);
+  }
+
+  @Override
+  public void addFlags(BossBarFlag... flags) {
+
+  }
+
+  @Override
+  public void removeFlag(BossBarFlag flag) {
+
+  }
+
+  @Override
+  public void removeFlags(BossBarFlag... flags) {
+
+  }
+
+  private byte get(BossBarFlag flag) {
+    switch (flag) {
+      case DARKEN_SKY:
+        return 0x01;
+      case DRAGON_BAR:
+        return 0x02;
+      default:
+        return 0x04;
+    }
   }
 
   private BossBar addPacket() {

@@ -5,9 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.velocitypowered.api.util.bossbar.BossBar;
-import com.velocitypowered.api.util.bossbar.BossBarColor;
-import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
@@ -20,6 +17,9 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.bossbar.BossBar;
+import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.command.GlistCommand;
 import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
@@ -139,8 +139,11 @@ public class VelocityServer implements ProxyServer {
   }
 
   @Override
-  public @NonNull BossBar createBossBar(@NonNull Component title, @NonNull BossBarColor color,
-      @NonNull BossBarOverlay overlay, float progress) {
+  public @NonNull BossBar createBossBar(
+      @NonNull Component title,
+      @NonNull BossBarColor color,
+      @NonNull BossBarOverlay overlay,
+      float progress) {
     return new VelocityBossBar(title, color, overlay, progress, UUID.randomUUID());
   }
 

@@ -132,4 +132,32 @@ public interface BossBar {
    * @param visible boss bar visibility value
    */
   void setVisible(boolean visible);
+
+  /**
+   * Returns a copy of of the {@link Collection} of all {@link BossBarFlag}s added to the boss bar.
+   *
+   * @return flags
+   */
+  Collection<BossBarFlag> getFlags();
+
+  /**
+   * Adds new flags to the boss bar.
+   *
+   * @param flags the flags you wish to add
+   */
+  void addFlags(BossBarFlag... flags);
+
+  /**
+   * Removes flag from the boss bar.
+   *
+   * @param flag the flag you wish to remove
+   */
+  void removeFlag(BossBarFlag flag);
+
+  /**
+   * Removes flags from the boss bar.
+   *
+   * @param flags the flags you wish to remove
+   */
+  void removeFlags(BossBarFlag... flags);
 }
