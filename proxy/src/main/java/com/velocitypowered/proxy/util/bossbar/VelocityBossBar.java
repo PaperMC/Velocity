@@ -202,14 +202,14 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   @Override
   public void removeFlag(BossBarFlag flag) {
     Preconditions.checkNotNull(flag, "flag");
-    if (this.flags.remove(flag)) {
+    if (this.flags.remove(flag) && visible) {
       sendToAffected(updateFlags());
     }
   }
 
   @Override
   public void removeFlags(BossBarFlag... flags) {
-    if (this.flags.removeAll(Arrays.asList(flags))) {
+    if (this.flags.removeAll(Arrays.asList(flags)) && visible) {
       sendToAffected(updateFlags());
     }
   }
