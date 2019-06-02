@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.util.bossbar;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
@@ -12,7 +13,7 @@ import com.velocitypowered.proxy.protocol.packet.BossBar;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -44,16 +45,20 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     this.uuid = uuid;
     visible = true;
     players = new ArrayList<>();
-    flags = new HashSet<>();
+    flags = EnumSet.noneOf(BossBarFlag.class);
   }
 
   @Override
   public void addPlayers(@NonNull Iterable<Player> players) {
-    players.forEach(this::addPlayer);
+    Preconditions.checkNotNull(players, "players");
+    for (Player player : players) {
+      addPlayer(player);
+    }
   }
 
   @Override
   public void addPlayer(@NonNull Player player) {
+    Preconditions.checkNotNull(player, "player");
     if (!players.contains(player)) {
       players.add(player);
     }
@@ -64,6 +69,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void removePlayer(@NonNull Player player) {
+    Preconditions.checkNotNull(player, "player");
     players.remove(player);
     if (player.isActive()) {
       sendPacket(player, removePacket());
@@ -72,15 +78,15 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void removePlayers(@NonNull Iterable<Player> players) {
-    players.forEach(this::removePlayer);
-    if (players.equals(this.players)) {
-      this.players.clear();
+    Preconditions.checkNotNull(players, "players");
+    for (Player player : players) {
+      removePlayer(player);
     }
   }
 
   @Override
   public void removeAllPlayers() {
-    removePlayers(players);
+    removePlayers(ImmutableList.copyOf(players));
   }
 
   @Override
@@ -90,17 +96,15 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setTitle(@NonNull Component title) {
+    Preconditions.checkNotNull(title, "title");
     this.title = title;
-    BossBar bar = new BossBar();
-    bar.setUuid(uuid);
-    bar.setAction(BossBar.UPDATE_NAME);
-    bar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
-    players.forEach(
-        player -> {
-          if (player.isActive() && visible) {
-            sendPacket(player, bar);
-          }
-        });
+    if (visible) {
+      BossBar bar = new BossBar();
+      bar.setUuid(uuid);
+      bar.setAction(BossBar.UPDATE_NAME);
+      bar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
+      sendToAffected(bar);
+    }
   }
 
   @Override
@@ -111,19 +115,16 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   @Override
   public void setProgress(float progress) {
     if (progress > 1 || progress < 0) {
-      throw new IllegalArgumentException("Progress not between 0 and 1");
+      throw new IllegalArgumentException("Progress should be between 0 and 1");
     }
     this.progress = progress;
-    BossBar bar = new BossBar();
-    bar.setUuid(uuid);
-    bar.setAction(BossBar.UPDATE_PERCENT);
-    bar.setPercent(progress);
-    players.forEach(
-        player -> {
-          if (player.isActive() && visible) {
-            sendPacket(player, bar);
-          }
-        });
+    if (visible) {
+      BossBar bar = new BossBar();
+      bar.setUuid(uuid);
+      bar.setAction(BossBar.UPDATE_PERCENT);
+      bar.setPercent(progress);
+      sendToAffected(bar);
+    }
   }
 
   @Override
@@ -138,8 +139,11 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setColor(@NonNull BossBarColor color) {
+    Preconditions.checkNotNull(color, "color");
     this.color = color;
-    setDivisions(color, overlay);
+    if (visible) {
+      sendDivisions(color, overlay);
+    }
   }
 
   @Override
@@ -149,22 +153,20 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setOverlay(@NonNull BossBarOverlay overlay) {
+    Preconditions.checkNotNull(overlay, "overlay");
     this.overlay = overlay;
-    setDivisions(color, overlay);
+    if (visible) {
+      sendDivisions(color, overlay);
+    }
   }
 
-  private void setDivisions(BossBarColor color, BossBarOverlay overlay) {
+  private void sendDivisions(BossBarColor color, BossBarOverlay overlay) {
     BossBar bar = new BossBar();
     bar.setUuid(uuid);
     bar.setAction(BossBar.UPDATE_STYLE);
     bar.setColor(color.ordinal());
     bar.setOverlay(overlay.ordinal());
-    players.forEach(
-        player -> {
-          if (player.isActive() && visible) {
-            sendPacket(player, bar);
-          }
-        });
+    sendToAffected(bar);
   }
 
   @Override
@@ -174,8 +176,13 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setVisible(boolean visible) {
-    if (!visible) {
-      players.forEach(this::removePlayer);
+    boolean previous = this.visible;
+    if (previous && !visible) {
+      // The bar is being hidden
+      sendToAffected(removePacket());
+    } else if (!previous && visible) {
+      // The bar is being shown
+      sendToAffected(addPacket());
     }
     this.visible = visible;
   }
@@ -187,28 +194,38 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void addFlags(BossBarFlag... flags) {
-
+    if (this.flags.addAll(Arrays.asList(flags)) && visible) {
+      sendToAffected(updateFlags());
+    }
   }
 
   @Override
   public void removeFlag(BossBarFlag flag) {
-
+    Preconditions.checkNotNull(flag, "flag");
+    if (this.flags.remove(flag)) {
+      sendToAffected(updateFlags());
+    }
   }
 
   @Override
   public void removeFlags(BossBarFlag... flags) {
-
+    if (this.flags.removeAll(Arrays.asList(flags))) {
+      sendToAffected(updateFlags());
+    }
   }
 
-  private byte get(BossBarFlag flag) {
-    switch (flag) {
-      case DARKEN_SKY:
-        return 0x01;
-      case DRAGON_BAR:
-        return 0x02;
-      default:
-        return 0x04;
+  private short serializeFlags() {
+    short flagMask = 0x0;
+    if (flags.contains(BossBarFlag.DARKEN_SKY)) {
+      flagMask |= 0x1;
     }
+    if (flags.contains(BossBarFlag.DRAGON_BAR)) {
+      flagMask |= 0x2;
+    }
+    if (flags.contains(BossBarFlag.CREATE_FOG)) {
+      flagMask |= 0x4;
+    }
+    return flagMask;
   }
 
   private BossBar addPacket() {
@@ -219,6 +236,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     bossBar.setColor(color.ordinal());
     bossBar.setOverlay(overlay.ordinal());
     bossBar.setPercent(progress);
+    bossBar.setFlags(serializeFlags());
     return bossBar;
   }
 
@@ -229,12 +247,25 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     return bossBar;
   }
 
+  private BossBar updateFlags() {
+    BossBar bossBar = new BossBar();
+    bossBar.setUuid(uuid);
+    bossBar.setAction(BossBar.UPDATE_PROPERTIES);
+    bossBar.setFlags(serializeFlags());
+    return bossBar;
+  }
+
+  private void sendToAffected(MinecraftPacket packet) {
+    for (Player player : players) {
+      if (player.isActive() && player.getProtocolVersion().getProtocol()
+          >= ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
+        sendPacket(player, packet);
+      }
+    }
+  }
+
   private void sendPacket(Player player, MinecraftPacket packet) {
     ConnectedPlayer connected = (ConnectedPlayer) player;
-    if (connected.getMinecraftConnection().getProtocolVersion().getProtocol()
-        < ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
-      throw new IllegalArgumentException("Boss bars cannot be send on versions under 1.9!");
-    }
     connected.getMinecraftConnection().write(packet);
   }
 }
