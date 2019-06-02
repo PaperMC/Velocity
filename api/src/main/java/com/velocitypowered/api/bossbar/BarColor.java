@@ -5,9 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Represents a color of a {@link BossBar}
- */
+/** Represents a color of a {@link BossBar} */
 public enum BarColor {
   PINK(0),
   BLUE(1),
@@ -20,7 +18,7 @@ public enum BarColor {
   private static final Map<Integer, BarColor> byInteger = new ConcurrentHashMap<>();
 
   static {
-    for(BarColor color : BarColor.values()) {
+    for (BarColor color : BarColor.values()) {
       byInteger.put(color.getIntValue(), color);
     }
   }

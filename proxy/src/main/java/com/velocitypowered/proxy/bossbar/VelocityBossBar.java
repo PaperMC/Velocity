@@ -28,12 +28,18 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   private BarStyle style;
   private final VelocityBossBarManager manager;
 
-  public VelocityBossBar(VelocityBossBarManager manager, Component title, BarColor color, BarStyle style, float progress, UUID uuid) {
+  public VelocityBossBar(
+      VelocityBossBarManager manager,
+      Component title,
+      BarColor color,
+      BarStyle style,
+      float progress,
+      UUID uuid) {
     this.title = title;
     this.color = color;
     this.style = style;
     this.progress = progress;
-    if(progress > 1) {
+    if (progress > 1) {
       throw new IllegalArgumentException("Progress not between 0 and 1");
     }
     this.uuid = uuid;
@@ -53,10 +59,10 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   @Override
   public void addPlayer(@NonNull Player player) {
-    if(!players.contains(player)) {
+    if (!players.contains(player)) {
       players.add(player);
     }
-    if(player.isActive() && visible) {
+    if (player.isActive() && visible) {
       sendPacket(player, addPacket());
     }
   }
@@ -64,7 +70,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   @Override
   public void removePlayer(@NonNull Player player) {
     players.remove(player);
-    if(player.isActive()) {
+    if (player.isActive()) {
       sendPacket(player, removePacket());
     }
   }
@@ -72,7 +78,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   @Override
   public void removeAll(@NonNull Collection<Player> players) {
     players.forEach(this::removePlayer);
-    if(players.equals(this.players)) {
+    if (players.equals(this.players)) {
       manager.removeFromMap(uuid);
       this.players.clear();
     }
@@ -95,11 +101,12 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     bar.setUuid(uuid);
     bar.setAction(BossBar.UPDATE_NAME);
     bar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
-    players.forEach(player -> {
-      if(player.isActive() && visible) {
-        sendPacket(player, bar);
-      }
-    });
+    players.forEach(
+        player -> {
+          if (player.isActive() && visible) {
+            sendPacket(player, bar);
+          }
+        });
   }
 
   @Override
@@ -109,7 +116,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   @Override
   public void setProgress(float progress) {
-    if(progress > 1) {
+    if (progress > 1) {
       throw new IllegalArgumentException("Progress not between 0 and 1");
     }
     this.progress = progress;
@@ -117,11 +124,12 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     bar.setUuid(uuid);
     bar.setAction(BossBar.UPDATE_PERCENT);
     bar.setPercent(progress);
-    players.forEach(player -> {
-      if(player.isActive() && visible) {
-        sendPacket(player, bar);
-      }
-    });
+    players.forEach(
+        player -> {
+          if (player.isActive() && visible) {
+            sendPacket(player, bar);
+          }
+        });
   }
 
   @Override
@@ -161,11 +169,12 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     bar.setUuid(uuid);
     bar.setColor(color.getIntValue());
     bar.setOverlay(style.getIntValue());
-    players.forEach(player -> {
-      if(player.isActive() && visible) {
-        sendPacket(player, bar);
-      }
-    });
+    players.forEach(
+        player -> {
+          if (player.isActive() && visible) {
+            sendPacket(player, bar);
+          }
+        });
   }
 
   @Override
@@ -175,7 +184,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   @Override
   public void setVisible(boolean visible) {
-    if(!visible) {
+    if (!visible) {
       removeAllAdded();
     }
     this.visible = visible;

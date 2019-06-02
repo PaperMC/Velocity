@@ -9,9 +9,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 /**
- * Represents a boss bar, which can be send to a (group of) player(s)
- * <b>WARNING!!!</b> This works only on 1.9+.
- * <b>YOU ARE ON YOUR OWN IF YOU USE THIS ON 1.8</b>
+ * Represents a boss bar, which can be send to a (group of) player(s) <b>WARNING!!!</b> This works
+ * only on 1.9+. <b>YOU ARE ON YOUR OWN IF YOU USE THIS ON 1.8</b>
  */
 public interface BossBar {
 
@@ -24,16 +23,16 @@ public interface BossBar {
   void addAll(@NonNull Collection<Player> players);
 
   /**
-   * Adds player to this boss bar. This adds the player to the
-   * {@link #getPlayers()} and makes him see the boss bar
+   * Adds player to this boss bar. This adds the player to the {@link #getPlayers()} and makes him
+   * see the boss bar
    *
    * @param player the player you wish to add
    */
   void addPlayer(@NonNull Player player);
 
   /**
-   * Removes player from this boss bar. This removes the player
-   * from {@link #getPlayers()} and makes him not see the boss bar
+   * Removes player from this boss bar. This removes the player from {@link #getPlayers()} and makes
+   * him not see the boss bar
    *
    * @param player the player you wish to remove
    */
@@ -70,16 +69,14 @@ public interface BossBar {
   void setTitle(@NonNull Component title);
 
   /**
-   * Gets the boss bar's progress. In Minecraft, this is called
-   * 'health' of the boss bar
+   * Gets the boss bar's progress. In Minecraft, this is called 'health' of the boss bar
    *
    * @return progress
    */
   float getProgress();
 
   /**
-   * Sets a new progress of the boss bar. In Minecraft, this is
-   * called 'health' of the boss bar.
+   * Sets a new progress of the boss bar. In Minecraft, this is called 'health' of the boss bar.
    *
    * @param progress a float between 0 and 1, representing boss bar's progress
    * @throws IllegalArgumentException if the new progress is not between 0 and 1
@@ -87,8 +84,7 @@ public interface BossBar {
   void setProgress(float progress);
 
   /**
-   * Returns a unmodifiable {@link Collection} of all {@link Player} added
-   * to the boss bar.
+   * Returns a unmodifiable {@link Collection} of all {@link Player} added to the boss bar.
    *
    * @return players
    */
@@ -134,9 +130,8 @@ public interface BossBar {
   void setStyle(@NonNull BarStyle style);
 
   /**
-   * Returns whenever this boss bar is visible to all
-   * added {@link #getPlayers()}. By default, it returns
-   * <code>true</code>
+   * Returns whenever this boss bar is visible to all added {@link #getPlayers()}. By default, it
+   * returns <code>true</code>
    *
    * @return <code>true</code> if visible, otherwise <code>false</code>
    */

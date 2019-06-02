@@ -5,9 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Represents a style of a {@link BossBar}
- */
+/** Represents a style of a {@link BossBar} */
 public enum BarStyle {
   SOLID(0),
   SEGMENTED_6(1),
@@ -18,7 +16,7 @@ public enum BarStyle {
   private static final Map<Integer, BarStyle> byInteger = new ConcurrentHashMap<>();
 
   static {
-    for(BarStyle style : BarStyle.values()) {
+    for (BarStyle style : BarStyle.values()) {
       byInteger.put(style.getIntValue(), style);
     }
   }

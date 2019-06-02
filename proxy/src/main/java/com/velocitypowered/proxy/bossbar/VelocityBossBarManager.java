@@ -19,20 +19,28 @@ public class VelocityBossBarManager implements BossBarManager {
   private final Map<UUID, BossBar> bossBars = new ConcurrentHashMap<>();
 
   @Override
-  public @NonNull BossBar create(@NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style) {
+  public @NonNull BossBar create(
+      @NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style) {
     return create(title, color, style, 1);
   }
 
   @Override
-  public @NonNull BossBar create(@NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style, float progress) {
-    VelocityBossBar bossBar = new VelocityBossBar(this, title, color, style, progress, UUID.randomUUID());
+  public @NonNull BossBar create(
+      @NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style, float progress) {
+    VelocityBossBar bossBar =
+        new VelocityBossBar(this, title, color, style, progress, UUID.randomUUID());
     bossBars.put(bossBar.getUUID(), bossBar);
     return bossBar;
   }
 
   @Override
-  public @Nullable BossBar create(@NonNull Component title, @NonNull BarColor color, @NonNull BarStyle style, float progress, @NonNull UUID uuid) {
-    if(bossBars.containsKey(uuid)) {
+  public @Nullable BossBar create(
+      @NonNull Component title,
+      @NonNull BarColor color,
+      @NonNull BarStyle style,
+      float progress,
+      @NonNull UUID uuid) {
+    if (bossBars.containsKey(uuid)) {
       return null;
     }
     VelocityBossBar bossBar = new VelocityBossBar(this, title, color, style, progress, uuid);
@@ -48,7 +56,7 @@ public class VelocityBossBarManager implements BossBarManager {
   @Override
   public boolean remove(@NonNull UUID uuid) {
     BossBar bar = get(uuid);
-    if(bar == null) {
+    if (bar == null) {
       return false;
     }
     bar.removeAllAdded();
