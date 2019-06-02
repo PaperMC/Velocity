@@ -66,19 +66,19 @@ public interface BossBar {
   void setTitle(@NonNull Component title);
 
   /**
-   * Gets the boss bar's progress. In Minecraft, this is called 'health' of the boss bar.
+   * Gets the boss bar's percent.
    *
-   * @return progress
+   * @return percent
    */
-  float getProgress();
+  float getPercent();
 
   /**
-   * Sets a new progress of the boss bar. In Minecraft, this is called 'health' of the boss bar.
+   * Sets a new percent of the boss bar.
    *
-   * @param progress a float between 0 and 1, representing boss bar's progress
-   * @throws IllegalArgumentException if the new progress is not between 0 and 1
+   * @param percent a float between 0 and 1, representing boss bar's percent
+   * @throws IllegalArgumentException if the new percent is not between 0 and 1
    */
-  void setProgress(float progress);
+  void setPercent(float percent);
 
   /**
    * Returns a copy of the {@link Collection} of all {@link Player} added to the boss bar.

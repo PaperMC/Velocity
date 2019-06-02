@@ -30,7 +30,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   private final UUID uuid;
   private boolean visible;
   private Component title;
-  private float progress;
+  private float percent;
   private BossBarColor color;
   private BossBarOverlay overlay;
 
@@ -39,17 +39,15 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
    * @param title the title for the bar
    * @param color the color of the bar
    * @param overlay the overlay to use
-   * @param progress the progress of the bar
+   * @param percent the percent of the bar
    */
   public VelocityBossBar(
-      Component title, BossBarColor color, BossBarOverlay overlay, float progress) {
+      Component title, BossBarColor color, BossBarOverlay overlay, float percent) {
     this.title = checkNotNull(title, "title");
     this.color = checkNotNull(color, "color");
     this.overlay = checkNotNull(overlay, "overlay");
-    this.progress = progress;
-    if (progress > 1 || progress < 0) {
-      throw new IllegalArgumentException("Progress not between 0 and 1");
-    }
+    this.percent = percent;
+    checkPercent(percent);
     this.uuid = UUID.randomUUID();
     visible = true;
     players = new ArrayList<>();
@@ -115,22 +113,26 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public float getProgress() {
-    return progress;
+  public float getPercent() {
+    return percent;
   }
 
   @Override
-  public void setProgress(float progress) {
-    if (progress > 1 || progress < 0) {
-      throw new IllegalArgumentException("Progress should be between 0 and 1");
-    }
-    this.progress = progress;
+  public void setPercent(float percent) {
+    checkPercent(percent);
+    this.percent = percent;
     if (visible) {
       BossBar bar = new BossBar();
       bar.setUuid(uuid);
       bar.setAction(BossBar.UPDATE_PERCENT);
-      bar.setPercent(progress);
+      bar.setPercent(percent);
       sendToAffected(bar);
+    }
+  }
+
+  private void checkPercent(final float percent) {
+    if (percent < 0f || percent > 1f) {
+      throw new IllegalArgumentException("Percent must be between 0 and 1");
     }
   }
 
@@ -221,13 +223,13 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   private short serializeFlags() {
     short flagMask = 0x0;
-    if (flags.contains(BossBarFlag.DARKEN_SKY)) {
+    if (flags.contains(BossBarFlag.DARKEN_SCREEN)) {
       flagMask |= 0x1;
     }
-    if (flags.contains(BossBarFlag.DRAGON_BAR)) {
+    if (flags.contains(BossBarFlag.PLAY_BOSS_MUSIC)) {
       flagMask |= 0x2;
     }
-    if (flags.contains(BossBarFlag.CREATE_FOG)) {
+    if (flags.contains(BossBarFlag.CREATE_WORLD_FOG)) {
       flagMask |= 0x4;
     }
     return flagMask;
@@ -240,7 +242,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     bossBar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
     bossBar.setColor(color.ordinal());
     bossBar.setOverlay(overlay.ordinal());
-    bossBar.setPercent(progress);
+    bossBar.setPercent(percent);
     bossBar.setFlags(serializeFlags());
     return bossBar;
   }
