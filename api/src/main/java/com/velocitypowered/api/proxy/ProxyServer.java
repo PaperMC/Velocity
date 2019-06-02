@@ -1,5 +1,6 @@
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.bossbar.BossBarManager;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;
@@ -173,4 +174,11 @@ public interface ProxyServer {
    * @return the proxy version
    */
   ProxyVersion getVersion();
+
+  /**
+   * Gets the manager of all {@link com.velocitypowered.api.bossbar.BossBar}'s
+   *
+   * @return boss bar manager
+   */
+  BossBarManager getBossBarManager();
 }
