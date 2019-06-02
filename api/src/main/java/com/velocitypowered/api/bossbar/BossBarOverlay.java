@@ -1,7 +1,7 @@
 package com.velocitypowered.api.bossbar;
 
 /**
- * Represents a overlay of a {@link BossBar}
+ * Represents a overlay of a {@link BossBar}.
  */
 public enum BossBarOverlay {
   SOLID,

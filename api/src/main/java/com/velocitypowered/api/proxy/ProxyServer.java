@@ -179,7 +179,7 @@ public interface ProxyServer {
   ProxyVersion getVersion();
 
   /**
-   * Creates a new {@link BossBar}
+   * Creates a new {@link BossBar}.
    *
    * @param title boss bar title
    * @param color boss bar color
