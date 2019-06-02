@@ -20,8 +20,6 @@ import java.util.Set;
 import java.util.UUID;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.BossBar {
 
@@ -55,7 +53,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public void addPlayers(@NonNull Iterable<Player> players) {
+  public void addPlayers(Iterable<Player> players) {
     checkNotNull(players, "players");
     for (Player player : players) {
       addPlayer(player);
@@ -63,7 +61,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public void addPlayer(@NonNull Player player) {
+  public void addPlayer(Player player) {
     checkNotNull(player, "player");
     if (!players.contains(player)) {
       players.add(player);
@@ -74,7 +72,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public void removePlayer(@NonNull Player player) {
+  public void removePlayer(Player player) {
     checkNotNull(player, "player");
     players.remove(player);
     if (player.isActive()) {
@@ -83,7 +81,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public void removePlayers(@NonNull Iterable<Player> players) {
+  public void removePlayers(Iterable<Player> players) {
     checkNotNull(players, "players");
     for (Player player : players) {
       removePlayer(player);
@@ -96,12 +94,12 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public @NonNull Component getTitle() {
+  public Component getTitle() {
     return title;
   }
 
   @Override
-  public void setTitle(@NonNull Component title) {
+  public void setTitle(Component title) {
     this.title = checkNotNull(title, "title");
     if (visible) {
       BossBar bar = new BossBar();
@@ -137,17 +135,17 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public @Nullable Collection<Player> getPlayers() {
+  public Collection<Player> getPlayers() {
     return ImmutableList.copyOf(players);
   }
 
   @Override
-  public @NonNull BossBarColor getColor() {
+  public BossBarColor getColor() {
     return color;
   }
 
   @Override
-  public void setColor(@NonNull BossBarColor color) {
+  public void setColor(BossBarColor color) {
     this.color = checkNotNull(color, "color");
     if (visible) {
       sendDivisions(color, overlay);
@@ -155,12 +153,12 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   @Override
-  public @NonNull BossBarOverlay getOverlay() {
+  public BossBarOverlay getOverlay() {
     return overlay;
   }
 
   @Override
-  public void setOverlay(@NonNull BossBarOverlay overlay) {
+  public void setOverlay(BossBarOverlay overlay) {
     this.overlay = checkNotNull(overlay, "overlay");
     if (visible) {
       sendDivisions(color, overlay);

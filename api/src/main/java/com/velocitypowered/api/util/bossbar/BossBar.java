@@ -3,7 +3,6 @@ package com.velocitypowered.api.util.bossbar;
 import com.velocitypowered.api.proxy.Player;
 import java.util.Collection;
 import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Represents a boss bar, which can be send to a (group of) player(s).
@@ -25,7 +24,7 @@ public interface BossBar {
    *
    * @param player the player you wish to add
    */
-  void addPlayer(@NonNull Player player);
+  void addPlayer(Player player);
 
   /**
    * Removes player from this boss bar. This removes the player from {@link #getPlayers()} and makes
@@ -33,7 +32,7 @@ public interface BossBar {
    *
    * @param player the player you wish to remove
    */
-  void removePlayer(@NonNull Player player);
+  void removePlayer(Player player);
 
   /**
    * Removes all specified players from this boss bar.
@@ -55,7 +54,6 @@ public interface BossBar {
    *
    * @return title
    */
-  @NonNull
   Component getTitle();
 
   /**
@@ -63,7 +61,7 @@ public interface BossBar {
    *
    * @param title new title
    */
-  void setTitle(@NonNull Component title);
+  void setTitle(Component title);
 
   /**
    * Gets the boss bar's percent.
@@ -93,7 +91,6 @@ public interface BossBar {
    *
    * @return boss bar color
    */
-  @NonNull
   BossBarColor getColor();
 
   /**
@@ -101,14 +98,13 @@ public interface BossBar {
    *
    * @param color the color you wish the boss bar be displayed with
    */
-  void setColor(@NonNull BossBarColor color);
+  void setColor(BossBarColor color);
 
   /**
    * Gets the overlay of the boss bar.
    *
    * @return boss bar overlay
    */
-  @NonNull
   BossBarOverlay getOverlay();
 
   /**
@@ -116,7 +112,7 @@ public interface BossBar {
    *
    * @param overlay the overlay you wish the boss bar be displayed with
    */
-  void setOverlay(@NonNull BossBarOverlay overlay);
+  void setOverlay(BossBarOverlay overlay);
 
   /**
    * Returns whenever this boss bar is visible to all added {@link #getPlayers()}. By default, it
