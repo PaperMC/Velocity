@@ -165,10 +165,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param msg the message to write
    */
   public void write(Object msg) {
-    if (msg instanceof BossBar && protocolVersion.getProtocol() < ProtocolVersion.MINECRAFT_1_9
-        .getProtocol()) { // just to be sure
-      throw new IllegalArgumentException("Boss bars cannot be sent on versions under 1.9");
-    }
     if (channel.isActive()) {
       channel.writeAndFlush(msg, channel.voidPromise());
     }

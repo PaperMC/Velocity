@@ -1,14 +1,15 @@
 package com.velocitypowered.proxy.bossbar;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.bossbar.BossBarColor;
 import com.velocitypowered.api.bossbar.BossBarOverlay;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.text.Component;
@@ -47,10 +48,6 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
     this.manager = manager;
   }
 
-  private VelocityBossBar() {
-    throw new UnsupportedOperationException("This class cannot be instanced.");
-  }
-
   @Override
   public void addPlayers(@NonNull Iterable<Player> players) {
     players.forEach(this::addPlayer);
@@ -78,7 +75,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   public void removePlayers(@NonNull Iterable<Player> players) {
     players.forEach(this::removePlayer);
     if (players.equals(this.players)) {
-      manager.removeFromMap(uuid);
+      manager.removeFromSet(this);
       this.players.clear();
     }
   }
@@ -133,12 +130,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   @Override
   public @Nullable Collection<Player> getPlayers() {
-    return Collections.unmodifiableCollection(players);
-  }
-
-  @Override
-  public @NonNull UUID getUUID() {
-    return uuid;
+    return ImmutableList.copyOf(players);
   }
 
   @Override
@@ -185,7 +177,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   @Override
   public void setVisible(boolean visible) {
     if (!visible) {
-      removeAllPlayers();
+      players.forEach(this::removePlayer);
     }
     this.visible = visible;
   }
@@ -210,6 +202,9 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   private void sendPacket(Player player, MinecraftPacket packet) {
     ConnectedPlayer connected = (ConnectedPlayer) player;
+    if (connected.getMinecraftConnection().getProtocolVersion().getProtocol() < ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
+      throw new IllegalArgumentException("Boss bars cannot be send on versions under 1.9!");
+    }
     connected.getMinecraftConnection().write(packet);
   }
 }
