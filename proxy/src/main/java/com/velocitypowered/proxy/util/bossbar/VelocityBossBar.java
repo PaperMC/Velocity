@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.util.bossbar;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
@@ -33,16 +34,23 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   private BossBarColor color;
   private BossBarOverlay overlay;
 
+  /**
+   * Creates a new boss bar.
+   * @param title the title for the bar
+   * @param color the color of the bar
+   * @param overlay the overlay to use
+   * @param progress the progress of the bar
+   */
   public VelocityBossBar(
-      Component title, BossBarColor color, BossBarOverlay overlay, float progress, UUID uuid) {
-    this.title = title;
-    this.color = color;
-    this.overlay = overlay;
+      Component title, BossBarColor color, BossBarOverlay overlay, float progress) {
+    this.title = checkNotNull(title, "title");
+    this.color = checkNotNull(color, "color");
+    this.overlay = checkNotNull(overlay, "overlay");
     this.progress = progress;
     if (progress > 1 || progress < 0) {
       throw new IllegalArgumentException("Progress not between 0 and 1");
     }
-    this.uuid = uuid;
+    this.uuid = UUID.randomUUID();
     visible = true;
     players = new ArrayList<>();
     flags = EnumSet.noneOf(BossBarFlag.class);
@@ -50,7 +58,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void addPlayers(@NonNull Iterable<Player> players) {
-    Preconditions.checkNotNull(players, "players");
+    checkNotNull(players, "players");
     for (Player player : players) {
       addPlayer(player);
     }
@@ -58,7 +66,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void addPlayer(@NonNull Player player) {
-    Preconditions.checkNotNull(player, "player");
+    checkNotNull(player, "player");
     if (!players.contains(player)) {
       players.add(player);
     }
@@ -69,7 +77,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void removePlayer(@NonNull Player player) {
-    Preconditions.checkNotNull(player, "player");
+    checkNotNull(player, "player");
     players.remove(player);
     if (player.isActive()) {
       sendPacket(player, removePacket());
@@ -78,7 +86,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void removePlayers(@NonNull Iterable<Player> players) {
-    Preconditions.checkNotNull(players, "players");
+    checkNotNull(players, "players");
     for (Player player : players) {
       removePlayer(player);
     }
@@ -96,8 +104,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setTitle(@NonNull Component title) {
-    Preconditions.checkNotNull(title, "title");
-    this.title = title;
+    this.title = checkNotNull(title, "title");
     if (visible) {
       BossBar bar = new BossBar();
       bar.setUuid(uuid);
@@ -139,8 +146,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setColor(@NonNull BossBarColor color) {
-    Preconditions.checkNotNull(color, "color");
-    this.color = color;
+    this.color = checkNotNull(color, "color");
     if (visible) {
       sendDivisions(color, overlay);
     }
@@ -153,8 +159,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void setOverlay(@NonNull BossBarOverlay overlay) {
-    Preconditions.checkNotNull(overlay, "overlay");
-    this.overlay = overlay;
+    this.overlay = checkNotNull(overlay, "overlay");
     if (visible) {
       sendDivisions(color, overlay);
     }
@@ -201,7 +206,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   @Override
   public void removeFlag(BossBarFlag flag) {
-    Preconditions.checkNotNull(flag, "flag");
+    checkNotNull(flag, "flag");
     if (this.flags.remove(flag) && visible) {
       sendToAffected(updateFlags());
     }
