@@ -1,8 +1,8 @@
 package com.velocitypowered.api.proxy;
 
-import com.velocitypowered.api.bossbar.BossBar;
-import com.velocitypowered.api.bossbar.BossBarColor;
-import com.velocitypowered.api.bossbar.BossBarOverlay;
+import com.velocitypowered.api.util.bossbar.BossBar;
+import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.EventManager;

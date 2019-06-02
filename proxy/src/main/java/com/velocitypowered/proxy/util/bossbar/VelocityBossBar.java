@@ -1,10 +1,10 @@
-package com.velocitypowered.proxy.bossbar;
+package com.velocitypowered.proxy.util.bossbar;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.bossbar.BossBarColor;
-import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.util.bossbar.BossBarColor;
+import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -17,7 +17,7 @@ import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar {
+public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.BossBar {
 
   private final List<Player> players;
   private final UUID uuid;
@@ -28,11 +28,7 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
   private BossBarOverlay overlay;
 
   public VelocityBossBar(
-      Component title,
-      BossBarColor color,
-      BossBarOverlay overlay,
-      float progress,
-      UUID uuid) {
+      Component title, BossBarColor color, BossBarOverlay overlay, float progress, UUID uuid) {
     this.title = title;
     this.color = color;
     this.overlay = overlay;
@@ -198,7 +194,8 @@ public class VelocityBossBar implements com.velocitypowered.api.bossbar.BossBar 
 
   private void sendPacket(Player player, MinecraftPacket packet) {
     ConnectedPlayer connected = (ConnectedPlayer) player;
-    if (connected.getMinecraftConnection().getProtocolVersion().getProtocol() < ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
+    if (connected.getMinecraftConnection().getProtocolVersion().getProtocol()
+        < ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
       throw new IllegalArgumentException("Boss bars cannot be send on versions under 1.9!");
     }
     connected.getMinecraftConnection().write(packet);

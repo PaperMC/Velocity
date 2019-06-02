@@ -1,4 +1,4 @@
-package com.velocitypowered.api.bossbar;
+package com.velocitypowered.api.util.bossbar;
 
 import com.velocitypowered.api.proxy.Player;
 import java.util.Collection;

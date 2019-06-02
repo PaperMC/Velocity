@@ -1,4 +1,4 @@
-package com.velocitypowered.api.bossbar;
+package com.velocitypowered.api.util.bossbar;
 
 /**
  * Represents a overlay of a {@link BossBar}.

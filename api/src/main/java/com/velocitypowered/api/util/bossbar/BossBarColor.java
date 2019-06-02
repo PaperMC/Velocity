@@ -1,4 +1,4 @@
-package com.velocitypowered.api.bossbar;
+package com.velocitypowered.api.util.bossbar;
 
 /**
  * Represents a color of a {@link BossBar}.
