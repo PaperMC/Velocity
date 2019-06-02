@@ -1,13 +1,14 @@
 package com.velocitypowered.api.bossbar;
 
+import java.util.Collection;
+import java.util.UUID;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Collection;
-import java.util.UUID;
-
-/** Represents a boss bar manager */
+/**
+ * Represents a boss bar manager
+ */
 public interface BossBarManager {
 
   /**
@@ -15,32 +16,34 @@ public interface BossBarManager {
    *
    * @param title boss bar title
    * @param color boss bar color
-   * @param style boss bar style
+   * @param overlay boss bar overlay
    * @return a fresh boss bar
    */
   @NonNull
-  BossBar create(@NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style);
+  BossBar create(@NonNull Component title, @NonNull BossBarColor color,
+      @NonNull BossBarOverlay overlay);
 
   /**
    * Creates a new {@link BossBar}
    *
    * @param title boss bar title
    * @param color boss bar color
-   * @param style boss bar style
+   * @param overlay boss bar overlay
    * @param progress boss bar progress
    * @return a fresh boss bar
    * @throws IllegalArgumentException if progress not between 0 and 1
    */
   @NonNull
   BossBar create(
-    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style, float progress);
+      @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay overlay,
+      float progress);
 
   /**
    * Creates a new {@link BossBar}
    *
    * @param title boss bar title
    * @param color boss bar color
-   * @param style boss bar style
+   * @param overlay boss bar overlay
    * @param progress boss bar progress
    * @param uuid uuid of the boss bar
    * @return a fresh boss bar, <b>or null if there's already a boss bar with this uuid</b>
@@ -50,7 +53,7 @@ public interface BossBarManager {
   BossBar create(
       @NonNull Component title,
       @NonNull BossBarColor color,
-      @NonNull BossBarOverlay style,
+      @NonNull BossBarOverlay overlay,
       float progress,
       @NonNull UUID uuid);
 

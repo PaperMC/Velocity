@@ -1,18 +1,17 @@
 package com.velocitypowered.proxy.bossbar;
 
-import com.velocitypowered.api.bossbar.BossBarColor;
-import com.velocitypowered.api.bossbar.BossBarOverlay;
 import com.velocitypowered.api.bossbar.BossBar;
+import com.velocitypowered.api.bossbar.BossBarColor;
 import com.velocitypowered.api.bossbar.BossBarManager;
-import net.kyori.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
+import com.velocitypowered.api.bossbar.BossBarOverlay;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityBossBarManager implements BossBarManager {
 
@@ -20,15 +19,16 @@ public class VelocityBossBarManager implements BossBarManager {
 
   @Override
   public @NonNull BossBar create(
-    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style) {
-    return create(title, color, style, 1);
+      @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay overlay) {
+    return create(title, color, overlay, 1);
   }
 
   @Override
   public @NonNull BossBar create(
-    @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay style, float progress) {
+      @NonNull Component title, @NonNull BossBarColor color, @NonNull BossBarOverlay overlay,
+      float progress) {
     VelocityBossBar bossBar =
-        new VelocityBossBar(this, title, color, style, progress, UUID.randomUUID());
+        new VelocityBossBar(this, title, color, overlay, progress, UUID.randomUUID());
     bossBars.put(bossBar.getUUID(), bossBar);
     return bossBar;
   }
@@ -37,13 +37,13 @@ public class VelocityBossBarManager implements BossBarManager {
   public @Nullable BossBar create(
       @NonNull Component title,
       @NonNull BossBarColor color,
-      @NonNull BossBarOverlay style,
+      @NonNull BossBarOverlay overlay,
       float progress,
       @NonNull UUID uuid) {
     if (bossBars.containsKey(uuid)) {
       return null;
     }
-    VelocityBossBar bossBar = new VelocityBossBar(this, title, color, style, progress, uuid);
+    VelocityBossBar bossBar = new VelocityBossBar(this, title, color, overlay, progress, uuid);
     bossBars.put(uuid, bossBar);
     return bossBar;
   }

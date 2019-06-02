@@ -1,12 +1,11 @@
 package com.velocitypowered.api.bossbar;
 
 import com.velocitypowered.api.proxy.Player;
+import java.util.Collection;
+import java.util.UUID;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.Collection;
-import java.util.UUID;
 
 /**
  * Represents a boss bar, which can be send to a (group of) player(s) <b>WARNING!!!</b> This works
