@@ -5,26 +5,27 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.event.server.ServerChatEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
+import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
+import java.util.Optional;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
@@ -158,6 +159,42 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           .build();
       commands.getRootNode().addChild(root);
     }
+    return false;
+  }
+
+  @Override
+  public boolean handle(Chat chat) {
+    VelocityRegisteredServer serverConnection = serverConn.getServer();
+    if (serverConnection == null) {
+      return true;
+    }
+    ServerChatEvent event = new ServerChatEvent(serverConnection, chat.getMessage());
+    MinecraftConnection packetConnection = serverConn.getConnection();
+    if (packetConnection == null) {
+      return true;
+    }
+    server
+        .getEventManager()
+        .fire(event)
+        .thenAcceptAsync(
+            calledEvent -> {
+              ServerChatEvent.ServerChatResult result = calledEvent.getResult();
+              if (result.isAllowed()) {
+                Optional<String> message = result.getMessage();
+                if (message.isPresent()) {
+                  String probablyNewMessage = message.get();
+                  if (!probablyNewMessage.equalsIgnoreCase(chat.getMessage())) {
+                    // only send a new packet when the message got changed
+                    packetConnection.write(Chat.createServerbound(probablyNewMessage));
+                  } else {
+                    packetConnection.write(chat);
+                  }
+                } else {
+                  packetConnection.write(chat);
+                }
+              }
+            },
+            packetConnection.eventLoop());
     return false;
   }
 
