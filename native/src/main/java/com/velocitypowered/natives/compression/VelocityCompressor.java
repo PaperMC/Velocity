@@ -9,7 +9,7 @@ import java.util.zip.DataFormatException;
  * Provides an interface to inflate and deflate {@link ByteBuf}s using zlib.
  */
 public interface VelocityCompressor extends Disposable, Native {
-  void inflate(ByteBuf source, ByteBuf destination) throws DataFormatException;
+  void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException;
 
   void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException;
 }

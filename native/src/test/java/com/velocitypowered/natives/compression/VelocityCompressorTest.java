@@ -70,7 +70,7 @@ class VelocityCompressorTest {
 
     try {
       compressor.deflate(source, dest);
-      compressor.inflate(dest, decompressed);
+      compressor.inflate(dest, decompressed, Integer.MAX_VALUE);
       source.readerIndex(0);
       assertTrue(ByteBufUtil.equals(source, decompressed));
     } finally {

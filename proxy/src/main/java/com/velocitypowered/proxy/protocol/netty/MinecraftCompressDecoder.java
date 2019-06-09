@@ -13,7 +13,7 @@ import java.util.List;
 
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
-  private static final int MAXIMUM_INITIAL_BUFFER_SIZE = 65536; // 64KiB
+  private static final int MAXIMUM_UNCOMPRESSED_SIZE = 2 * 1024 * 1024; // 2MiB
 
   private final int threshold;
   private final VelocityCompressor compressor;
@@ -35,14 +35,12 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     checkFrame(expectedSize >= threshold, "Uncompressed size %s is greater than threshold %s",
         expectedSize, threshold);
+    checkFrame(expectedSize <= MAXIMUM_UNCOMPRESSED_SIZE, "Expected uncompressed size"
+        + "%s is larger than protocol maximum of %s", expectedSize, MAXIMUM_UNCOMPRESSED_SIZE);
     ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);
-    int initialCapacity = Math.min(expectedSize, MAXIMUM_INITIAL_BUFFER_SIZE);
-    ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, initialCapacity);
+    ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, expectedSize);
     try {
-      compressor.inflate(compatibleIn, uncompressed);
-      checkFrame(expectedSize == uncompressed.readableBytes(),
-          "Mismatched compression sizes (got %s, expected %s)",
-          uncompressed.readableBytes(), expectedSize);
+      compressor.inflate(compatibleIn, uncompressed, expectedSize);
       out.add(uncompressed);
     } catch (Exception e) {
       uncompressed.release();

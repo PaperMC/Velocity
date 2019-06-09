@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.compression;
 
-import static com.velocitypowered.natives.util.NativeConstants.ZLIB_BUFFER_SIZE;
+import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFER_SIZE;
+import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
@@ -22,18 +23,19 @@ public class NativeVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void inflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
+  public void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException {
     ensureNotDisposed();
     source.memoryAddress();
     destination.memoryAddress();
 
     while (!inflate.finished && source.isReadable()) {
       if (!destination.isWritable()) {
+        ensureMaxSize(destination, max);
         destination.ensureWritable(ZLIB_BUFFER_SIZE);
       }
       int produced = inflate.process(inflateCtx, source.memoryAddress() + source.readerIndex(),
-          source.readableBytes(),
-          destination.memoryAddress() + destination.writerIndex(), destination.writableBytes());
+          source.readableBytes(), destination.memoryAddress() + destination.writerIndex(),
+          destination.writableBytes());
       source.readerIndex(source.readerIndex() + inflate.consumed);
       destination.writerIndex(destination.writerIndex() + produced);
     }

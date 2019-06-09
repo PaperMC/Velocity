@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.compression;
 
-import static com.velocitypowered.natives.util.NativeConstants.ZLIB_BUFFER_SIZE;
+import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFER_SIZE;
+import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
@@ -24,7 +25,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void inflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
+  public void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException {
     ensureNotDisposed();
 
     if (source.hasArray()) {
@@ -37,6 +38,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     }
 
     while (!inflater.finished()) {
+      ensureMaxSize(destination, max);
       int read = inflater.inflate(buf);
       destination.writeBytes(buf, 0, read);
     }
