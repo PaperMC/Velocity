@@ -13,7 +13,12 @@ apply plugin: 'com.github.johnrengelman.shadow'
 jar {
     manifest {
         def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"
-        def version = "${project.version} (git-${project.ext.getCurrentShortRevision()}-b${buildNumber})"
+        def version
+        if (project.version.endsWith("-SNAPSHOT")) {
+            version = "${project.version} (git-${project.ext.getCurrentShortRevision()}-b${buildNumber})"
+        } else {
+            version = "${project.version}"
+        }
 
         attributes 'Main-Class': 'com.velocitypowered.proxy.Velocity'
         attributes 'Implementation-Title': "Velocity"
