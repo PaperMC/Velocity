@@ -33,7 +33,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
       return;
     }
 
-    checkFrame(expectedSize >= threshold, "Uncompressed size %s is greater than threshold %s",
+    checkFrame(expectedSize >= threshold, "Uncompressed size %s is less than threshold %s",
         expectedSize, threshold);
     checkFrame(expectedSize <= MAXIMUM_UNCOMPRESSED_SIZE, "Expected uncompressed size"
         + "%s is larger than protocol maximum of %s", expectedSize, MAXIMUM_UNCOMPRESSED_SIZE);
