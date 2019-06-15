@@ -21,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityTabList implements TabList {
 
   private final MinecraftConnection connection;
-  private final Map<UUID, TabListEntry> entries = new ConcurrentHashMap<>();
+  private final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
   public VelocityTabList(MinecraftConnection connection) {
     this.connection = connection;
@@ -46,11 +46,13 @@ public class VelocityTabList implements TabList {
         "The provided entry was not created by this tab list");
     Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
         "this TabList already contains an entry with the same uuid");
+    Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
+        "Not a Velocity tab list entry");
 
     PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
     connection.write(
         new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
-    entries.put(entry.getProfile().getId(), entry);
+    entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
 
   @Override
@@ -111,7 +113,7 @@ public class VelocityTabList implements TabList {
           if (name == null || properties == null) {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
-          entries.put(item.getUuid(), TabListEntry.builder()
+          entries.put(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, name, properties))
               .displayName(item.getDisplayName())
@@ -124,23 +126,23 @@ public class VelocityTabList implements TabList {
           entries.remove(uuid);
           break;
         case PlayerListItem.UPDATE_DISPLAY_NAME: {
-          TabListEntry entry = entries.get(uuid);
+          VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
-            entry.setDisplayName(item.getDisplayName());
+            entry.setDisplayNameInternal(item.getDisplayName());
           }
           break;
         }
         case PlayerListItem.UPDATE_LATENCY: {
-          TabListEntry entry = entries.get(uuid);
+          VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
-            entry.setLatency(item.getLatency());
+            entry.setLatencyInternal(item.getLatency());
           }
           break;
         }
         case PlayerListItem.UPDATE_GAMEMODE: {
-          TabListEntry entry = entries.get(uuid);
+          VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
-            entry.setLatency(item.getGameMode());
+            entry.setGameModeInternal(item.getGameMode());
           }
           break;
         }

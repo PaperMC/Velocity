@@ -47,6 +47,10 @@ public class VelocityTabListEntry implements TabListEntry {
     return this;
   }
 
+  void setDisplayNameInternal(@Nullable Component displayName) {
+    this.displayName = displayName;
+  }
+
   @Override
   public int getLatency() {
     return latency;
@@ -59,6 +63,10 @@ public class VelocityTabListEntry implements TabListEntry {
     return this;
   }
 
+  void setLatencyInternal(int latency) {
+    this.latency = latency;
+  }
+
   @Override
   public int getGameMode() {
     return gameMode;
@@ -69,5 +77,9 @@ public class VelocityTabListEntry implements TabListEntry {
     this.gameMode = gameMode;
     tabList.updateEntry(PlayerListItem.UPDATE_GAMEMODE, this);
     return this;
+  }
+
+  void setGameModeInternal(int gameMode) {
+    this.gameMode = gameMode;
   }
 }
