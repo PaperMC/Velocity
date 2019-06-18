@@ -27,6 +27,10 @@ dependencies {
     compile 'com.google.inject:guice:4.2.0'
     compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
 
+    compile "org.spongepowered:configurate-hocon:${configurateVersion}"
+    compile "org.spongepowered:configurate-yaml:${configurateVersion}"
+    compile "org.spongepowered:configurate-gson:${configurateVersion}"
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
