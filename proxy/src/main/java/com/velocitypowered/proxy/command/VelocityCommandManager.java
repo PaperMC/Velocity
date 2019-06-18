@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.RawCommand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,11 +56,20 @@ public class VelocityCommandManager implements CommandManager {
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      if (!command.hasPermission(source, actualArgs)) {
-        return false;
+      if (command instanceof RawCommand) {
+        RawCommand rc = (RawCommand) command;
+        int firstSpace = cmdLine.indexOf(' ');
+        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
+        if (!rc.hasPermission(source, line)) {
+          return false;
+        }
+        rc.execute(source, line);
+      } else {
+        if (!command.hasPermission(source, actualArgs)) {
+          return false;
+        }
+        command.execute(source, actualArgs);
       }
-
-      command.execute(source, actualArgs);
       return true;
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -112,11 +122,20 @@ public class VelocityCommandManager implements CommandManager {
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      if (!command.hasPermission(source, actualArgs)) {
-        return ImmutableList.of();
+      if (command instanceof RawCommand) {
+        RawCommand rc = (RawCommand) command;
+        int firstSpace = cmdLine.indexOf(' ');
+        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
+        if (!rc.hasPermission(source, line)) {
+          return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(rc.suggest(source, line));
+      } else {
+        if (!command.hasPermission(source, actualArgs)) {
+          return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(command.suggest(source, actualArgs));
       }
-
-      return ImmutableList.copyOf(command.suggest(source, actualArgs));
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);
@@ -149,7 +168,14 @@ public class VelocityCommandManager implements CommandManager {
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      return command.hasPermission(source, actualArgs);
+      if (command instanceof RawCommand) {
+        RawCommand rc = (RawCommand) command;
+        int firstSpace = cmdLine.indexOf(' ');
+        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
+        return rc.hasPermission(source, line);
+      } else {
+        return command.hasPermission(source, actualArgs);
+      }
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);
