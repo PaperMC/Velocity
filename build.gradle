@@ -54,6 +54,12 @@ allprojects {
         maven {
             url "https://libraries.minecraft.net"
         }
+
+        // Configurate
+        maven {
+            name = 'sponge'
+            url = 'https://repo.spongepowered.org/maven'
+        }
     }
 
     test {

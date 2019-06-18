@@ -38,6 +38,7 @@ public interface RawCommand extends Command {
     return suggest(source, String.join(" ", currentArgs));
   }
 
+  @Override
   default boolean hasPermission(CommandSource source, String @NonNull [] args) {
     return hasPermission(source, String.join(" ", args));
   }
