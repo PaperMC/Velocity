@@ -167,10 +167,10 @@ public class VelocityServer implements ProxyServer {
     cm.logChannelInformation();
 
     // Initialize commands first
-    commandManager.register(new VelocityCommand(this), "velocity");
-    commandManager.register(new ServerCommand(this), "server");
-    commandManager.register(new ShutdownCommand(this), "shutdown", "end");
-    commandManager.register(new GlistCommand(this), "glist");
+    commandManager.register("velocity", new VelocityCommand(this));
+    commandManager.register("server", new ServerCommand(this));
+    commandManager.register("shutdown", new ShutdownCommand(this),"end");
+    commandManager.register("glist", new GlistCommand(this));
 
     try {
       Path configPath = Paths.get("velocity.toml");

@@ -7,27 +7,35 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, Command> commands = new HashMap<>();
 
   @Override
+  @Deprecated
   public void register(final Command command, final String... aliases) {
-    Preconditions.checkNotNull(aliases, "aliases");
+    Preconditions.checkArgument(aliases.length > 0, "no aliases provided");
+    register(aliases[0], command, Arrays.copyOfRange(aliases, 1, aliases.length));
+  }
+
+  @Override
+  public void register(String alias, Command command, String... otherAliases) {
+    Preconditions.checkNotNull(alias, "alias");
+    Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkNotNull(command, "executor");
-    for (int i = 0, length = aliases.length; i < length; i++) {
-      final String alias = aliases[i];
-      Preconditions.checkNotNull(alias, "alias at index %s", i);
-      this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
+    this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
+
+    for (int i = 0, length = otherAliases.length; i < length; i++) {
+      final String alias1 = otherAliases[i];
+      Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
+      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), command);
     }
   }
 
