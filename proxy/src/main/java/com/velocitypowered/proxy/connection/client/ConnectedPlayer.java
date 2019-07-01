@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
+import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
@@ -102,7 +103,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile,
       MinecraftConnection minecraftConnection, @Nullable InetSocketAddress virtualHost) {
     this.server = server;
-    this.tabList = new VelocityTabList(minecraftConnection);
+    if (minecraftConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.tabList = new VelocityTabList(minecraftConnection);
+    } else {
+      this.tabList = new VelocityTabListLegacy(minecraftConnection);
+    }
     this.profile = profile;
     this.minecraftConnection = minecraftConnection;
     this.virtualHost = virtualHost;

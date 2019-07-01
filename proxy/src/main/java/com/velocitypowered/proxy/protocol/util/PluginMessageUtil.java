@@ -126,27 +126,34 @@ public class PluginMessageUtil {
    * @param version the proxy version
    * @return the rewritten plugin message
    */
-  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version) {
+  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version,
+      ProtocolVersion protocolVersion) {
     checkNotNull(message, "message");
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
     String toAppend = " (" + version.getName() + ")";
 
-    byte[] rewrittenData;
-    ByteBuf rewrittenBuf = Unpooled.buffer();
-    try {
-      String currentBrand = ProtocolUtils.readString(Unpooled.wrappedBuffer(message.getData()));
-      ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
-      rewrittenData = new byte[rewrittenBuf.readableBytes()];
-      rewrittenBuf.readBytes(rewrittenData);
-    } finally {
-      rewrittenBuf.release();
-    }
-
     PluginMessage newMsg = new PluginMessage();
     newMsg.setChannel(message.getChannel());
+
+    byte[] rewrittenData;
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ByteBuf rewrittenBuf = Unpooled.buffer();
+      try {
+        String currentBrand = ProtocolUtils.readString(Unpooled.wrappedBuffer(message.getData()));
+        ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
+        rewrittenData = new byte[rewrittenBuf.readableBytes()];
+        rewrittenBuf.readBytes(rewrittenData);
+      } finally {
+        rewrittenBuf.release();
+      }
+    } else {
+      String currentBrand = new String(message.getData(), StandardCharsets.UTF_8);
+      rewrittenData = (currentBrand + toAppend).getBytes();
+    }
     newMsg.setData(rewrittenData);
+
     return newMsg;
   }
 

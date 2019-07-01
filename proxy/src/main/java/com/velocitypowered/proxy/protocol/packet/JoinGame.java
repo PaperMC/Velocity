@@ -116,7 +116,9 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
     }
-    this.reducedDebugInfo = buf.readBoolean();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.reducedDebugInfo = buf.readBoolean();
+    }
   }
 
   @Override
@@ -137,9 +139,11 @@ public class JoinGame implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, levelType);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
-      ProtocolUtils.writeVarInt(buf,viewDistance);
+      ProtocolUtils.writeVarInt(buf, viewDistance);
     }
-    buf.writeBoolean(reducedDebugInfo);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      buf.writeBoolean(reducedDebugInfo);
+    }
   }
 
   @Override

@@ -13,6 +13,8 @@ import java.util.Set;
 public enum ProtocolVersion {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
+  MINECRAFT_1_7_2(4, "1.7.2"),
+  MINECRAFT_1_7_6(5, "1.7.6"),
   MINECRAFT_1_8(47, "1.8"),
   MINECRAFT_1_9(107, "1.9"),
   MINECRAFT_1_9_1(108, "1.9.1"),
@@ -38,7 +40,7 @@ public enum ProtocolVersion {
   /**
    * Represents the lowest supported version.
    */
-  public static final ProtocolVersion MINIMUM_VERSION = MINECRAFT_1_8;
+  public static final ProtocolVersion MINIMUM_VERSION = MINECRAFT_1_7_2;
   /**
    * Represents the highest supported version.
    */

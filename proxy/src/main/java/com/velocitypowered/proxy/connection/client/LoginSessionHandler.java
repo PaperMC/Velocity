@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
@@ -249,7 +250,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     int threshold = server.getConfiguration().getCompressionThreshold();
-    if (threshold >= 0) {
+    if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
       mcConnection.write(new SetCompression(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }

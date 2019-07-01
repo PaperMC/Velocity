@@ -7,9 +7,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PluginMessage implements MinecraftPacket {
@@ -50,8 +48,12 @@ public class PluginMessage implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       this.channel = transformLegacyToModernChannel(this.channel);
     }
-    this.data = new byte[buf.readableBytes()];
-    buf.readBytes(data);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.data = new byte[buf.readableBytes()];
+      buf.readBytes(data);
+    } else {
+      data = ProtocolUtils.readByteArray17(buf);
+    }
   }
 
   @Override
@@ -64,7 +66,11 @@ public class PluginMessage implements MinecraftPacket {
     } else {
       ProtocolUtils.writeString(buf, this.channel);
     }
-    buf.writeBytes(data);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      buf.writeBytes(data);
+    } else {
+      ProtocolUtils.writeByteArray17(data, buf, true); // True for Forge support
+    }
   }
 
   @Override

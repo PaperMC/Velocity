@@ -1,8 +1,11 @@
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
 /**
  * Provides connection phase specific actions.

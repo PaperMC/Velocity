@@ -3,11 +3,11 @@ package com.velocitypowered.proxy.protocol;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the decoded VarInt
    */
@@ -40,6 +41,7 @@ public enum ProtocolUtils {
 
   /**
    * Writes a Minecraft-style VarInt to the specified {@code buf}.
+   *
    * @param buf the buffer to read from
    * @param value the integer to write
    */
@@ -60,8 +62,9 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over
-   * {@code cap} size.
+   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over {@code
+   * cap} size.
+   *
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the decoded string
@@ -85,6 +88,7 @@ public enum ProtocolUtils {
 
   /**
    * Writes the specified {@code str} to the {@code buf} with a VarInt prefix.
+   *
    * @param buf the buffer to write to
    * @param str the string to write
    */
@@ -101,6 +105,7 @@ public enum ProtocolUtils {
   /**
    * Reads a VarInt length-prefixed byte array from the {@code buf}, making sure to not go over
    * {@code cap} size.
+   *
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the byte array
@@ -124,6 +129,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads an VarInt-prefixed array of VarInt integers from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return an array of integers
    */
@@ -139,6 +145,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads an UUID from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the UUID from the buffer
    */
@@ -155,6 +162,7 @@ public enum ProtocolUtils {
 
   /**
    * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
+   *
    * @param buf the buffer to write to
    * @param properties the properties to serialize
    */
@@ -175,6 +183,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads a list of {@link com.velocitypowered.api.util.GameProfile.Property} from the buffer.
+   *
    * @param buf the buffer to read from
    * @return the read properties
    */
@@ -194,12 +203,93 @@ public enum ProtocolUtils {
     return properties;
   }
 
+  private static final int FORGE_MAX_ARRAY_LENGTH = Integer.MAX_VALUE & 0x1FFF9A;
+
+  /**
+   * Reads an byte array for legacy version 1.7 from the specified {@code buf}
+   *
+   * @param buf the buffer to read from
+   * @return the read byte array
+   */
+  public static byte[] readByteArray17(ByteBuf buf) {
+    // Read in a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
+    // Forge only)
+    // No vanilla packet should give a 3 byte packet
+    int len = readExtendedForgeShort(buf);
+
+    Preconditions.checkArgument(len <= (FORGE_MAX_ARRAY_LENGTH),
+        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+
+    byte[] ret = new byte[len];
+    buf.readBytes(ret);
+    return ret;
+  }
+
+  /**
+   * Writes an byte array for legacy version 1.7 to the specified {@code buf}
+   *
+   * @param b array
+   * @param buf buf
+   * @param allowExtended forge
+   */
+  public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
+    if (allowExtended) {
+      Preconditions
+          .checkArgument(b.length <= (FORGE_MAX_ARRAY_LENGTH),
+              "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+              b.length);
+    } else {
+      Preconditions.checkArgument(b.length <= Short.MAX_VALUE,
+          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.length);
+    }
+    // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
+    // Forge only)
+    // No vanilla packet should give a 3 byte packet, this method will still retain vanilla
+    // behaviour.
+    writeExtendedForgeShort(buf, b.length);
+    buf.writeBytes(b);
+  }
+
+  /**
+   * Reads a Minecraft-style extended short from the specified {@code buf}.
+   *
+   * @param buf buf to write
+   * @return read extended short
+   */
+  public static int readExtendedForgeShort(ByteBuf buf) {
+    int low = buf.readUnsignedShort();
+    int high = 0;
+    if ((low & 0x8000) != 0) {
+      low = low & 0x7FFF;
+      high = buf.readUnsignedByte();
+    }
+    return ((high & 0xFF) << 15) | low;
+  }
+
+  /**
+   * Writes a Minecraft-style extended short to the specified {@code buf}.
+   *
+   * @param buf buf to write
+   * @param toWrite the extended short to write
+   */
+  public static void writeExtendedForgeShort(ByteBuf buf, int toWrite) {
+    int low = toWrite & 0x7FFF;
+    int high = (toWrite & 0x7F8000) >> 15;
+    if (high != 0) {
+      low = low | 0x8000;
+    }
+    buf.writeShort(low);
+    if (high != 0) {
+      buf.writeByte(high);
+    }
+  }
+
   public enum Direction {
     SERVERBOUND,
     CLIENTBOUND;
 
     public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
-                                                                    ProtocolVersion version) {
+        ProtocolVersion version) {
       return (this == SERVERBOUND ? state.serverbound : state.clientbound)
           .getProtocolRegistry(version);
     }
