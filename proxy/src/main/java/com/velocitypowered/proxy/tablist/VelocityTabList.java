@@ -57,6 +57,8 @@ public class VelocityTabList implements TabList {
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
+    Preconditions.checkNotNull(uuid, "uuid");
+
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
       PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
@@ -65,6 +67,12 @@ public class VelocityTabList implements TabList {
     }
 
     return Optional.ofNullable(entry);
+  }
+
+  @Override
+  public boolean containsEntry(UUID uuid) {
+    Preconditions.checkNotNull(uuid, "uuid");
+    return entries.containsKey(uuid);
   }
 
   /**
