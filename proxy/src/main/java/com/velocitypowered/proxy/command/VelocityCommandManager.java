@@ -60,6 +60,9 @@ public class VelocityCommandManager implements CommandManager {
       args = cmdLine.substring(firstSpace).trim();
     }
     RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+    if (command == null) {
+      return false;
+    }
 
     try {
       if (!command.hasPermission(source, args)) {
@@ -140,6 +143,9 @@ public class VelocityCommandManager implements CommandManager {
       args = cmdLine.substring(firstSpace).trim();
     }
     RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+    if (command == null) {
+      return false;
+    }
 
     try {
       return command.hasPermission(source, args);
