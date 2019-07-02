@@ -90,8 +90,6 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    System.out.println("\"" + cmdLine + "\"");
-
     int firstSpace = cmdLine.indexOf(' ');
     if (firstSpace == -1) {
       // Offer to fill in commands.
