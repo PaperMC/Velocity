@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class VelocityCommandManager implements CommandManager {
 
-  private final Map<String, Command> commands = new HashMap<>();
+  private final Map<String, RawCommand> commands = new HashMap<>();
 
   @Override
   @Deprecated
@@ -30,12 +30,14 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "alias");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkNotNull(command, "executor");
-    this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
+
+    RawCommand rawCmd = RegularCommandWrapper.wrap(command);
+    this.commands.put(alias.toLowerCase(Locale.ENGLISH), rawCmd);
 
     for (int i = 0, length = otherAliases.length; i < length; i++) {
       final String alias1 = otherAliases[i];
       Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
-      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), command);
+      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), rawCmd);
     }
   }
 
@@ -50,34 +52,20 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = cmdLine.split(" ", -1);
-    if (split.length == 0) {
-      return false;
+    String alias = cmdLine;
+    String args = "";
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace != -1) {
+      alias = cmdLine.substring(0, firstSpace);
+      args = cmdLine.substring(firstSpace).trim();
     }
+    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
 
-    String alias = split[0];
-    Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      return false;
-    }
-
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      if (command instanceof RawCommand) {
-        RawCommand rc = (RawCommand) command;
-        int firstSpace = cmdLine.indexOf(' ');
-        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
-        if (!rc.hasPermission(source, line)) {
-          return false;
-        }
-        rc.execute(source, line);
-      } else {
-        if (!command.hasPermission(source, actualArgs)) {
-          return false;
-        }
-        command.execute(source, actualArgs);
+      if (!command.hasPermission(source, args)) {
+        return false;
       }
+      command.execute(source, args);
       return true;
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -102,18 +90,14 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = cmdLine.split(" ", -1);
-    if (split.length == 0) {
-      // No command available.
-      return ImmutableList.of();
-    }
+    System.out.println("\"" + cmdLine + "\"");
 
-    String alias = split[0];
-    if (split.length == 1) {
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace == -1) {
       // Offer to fill in commands.
       ImmutableList.Builder<String> availableCommands = ImmutableList.builder();
-      for (Map.Entry<String, Command> entry : commands.entrySet()) {
-        if (entry.getKey().regionMatches(true, 0, alias, 0, alias.length())
+      for (Map.Entry<String, RawCommand> entry : commands.entrySet()) {
+        if (entry.getKey().regionMatches(true, 0, cmdLine, 0, cmdLine.length())
             && entry.getValue().hasPermission(source, new String[0])) {
           availableCommands.add("/" + entry.getKey());
         }
@@ -121,32 +105,22 @@ public class VelocityCommandManager implements CommandManager {
       return availableCommands.build();
     }
 
-    Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+    String alias = cmdLine.substring(0, firstSpace);
+    String args = cmdLine.substring(firstSpace).trim();
+    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       // No such command, so we can't offer any tab complete suggestions.
       return ImmutableList.of();
     }
 
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      if (command instanceof RawCommand) {
-        RawCommand rc = (RawCommand) command;
-        int firstSpace = cmdLine.indexOf(' ');
-        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
-        if (!rc.hasPermission(source, line)) {
-          return ImmutableList.of();
-        }
-        return ImmutableList.copyOf(rc.suggest(source, line));
-      } else {
-        if (!command.hasPermission(source, actualArgs)) {
-          return ImmutableList.of();
-        }
-        return ImmutableList.copyOf(command.suggest(source, actualArgs));
+      if (!command.hasPermission(source, args)) {
+        return ImmutableList.of();
       }
+      return ImmutableList.copyOf(command.suggest(source, args));
     } catch (Exception e) {
       throw new RuntimeException(
-          "Unable to invoke suggestions for command " + alias + " for " + source, e);
+          "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
     }
   }
 
@@ -160,33 +134,51 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String[] split = cmdLine.split(" ", -1);
-    if (split.length == 0) {
-      // No command available.
-      return false;
+    String alias = cmdLine;
+    String args = "";
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace != -1) {
+      alias = cmdLine.substring(0, firstSpace);
+      args = cmdLine.substring(firstSpace).trim();
     }
+    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
 
-    String alias = split[0];
-    Command command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      // No such command.
-      return false;
-    }
-
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(split, 1, split.length);
     try {
-      if (command instanceof RawCommand) {
-        RawCommand rc = (RawCommand) command;
-        int firstSpace = cmdLine.indexOf(' ');
-        String line = firstSpace == -1 ? "" : cmdLine.substring(firstSpace + 1);
-        return rc.hasPermission(source, line);
-      } else {
-        return command.hasPermission(source, actualArgs);
-      }
+      return command.hasPermission(source, args);
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);
+    }
+  }
+
+  private static class RegularCommandWrapper implements RawCommand {
+
+    private final Command delegate;
+
+    private RegularCommandWrapper(Command delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public void execute(CommandSource source, String commandLine) {
+      delegate.execute(source, commandLine.split(" ", -1));
+    }
+
+    @Override
+    public List<String> suggest(CommandSource source, String currentLine) {
+      return delegate.suggest(source, currentLine.split(" ", -1));
+    }
+
+    @Override
+    public boolean hasPermission(CommandSource source, String commandLine) {
+      return delegate.hasPermission(source, commandLine.split(" ", -1));
+    }
+
+    static RawCommand wrap(Command command) {
+      if (command instanceof RawCommand) {
+        return (RawCommand) command;
+      }
+      return new RegularCommandWrapper(command);
     }
   }
 }
