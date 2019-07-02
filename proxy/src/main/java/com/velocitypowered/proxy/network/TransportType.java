@@ -19,6 +19,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
@@ -60,10 +61,7 @@ enum TransportType {
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
-    return new ThreadFactoryBuilder()
-        .setNameFormat("Netty " + name + ' ' + type.toString() + " #%d")
-        .setDaemon(true)
-        .build();
+    return new DefaultThreadFactory("Netty " + name + ' ' + type.toString(), false);
   }
 
   public static TransportType bestType() {
