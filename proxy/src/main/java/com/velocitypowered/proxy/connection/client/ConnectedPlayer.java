@@ -57,6 +57,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -96,6 +97,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
   private final Collection<String> knownChannels;
+  private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
@@ -553,7 +555,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connectedServer.disconnect();
     }
     server.unregisterConnection(this);
-    server.getEventManager().fireAndForget(new DisconnectEvent(this));
+    server.getEventManager().fire(new DisconnectEvent(this))
+            .thenRun(() -> this.teardownFuture.complete(null));
+  }
+
+  public CompletableFuture<Void> getTeardownFuture() {
+    return teardownFuture;
   }
 
   @Override
