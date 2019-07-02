@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.network;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.proxy.util.concurrent.VelocityNettyThreadFactory;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
@@ -19,7 +19,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
@@ -61,7 +60,7 @@ enum TransportType {
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
-    return new DefaultThreadFactory("Netty " + name + ' ' + type.toString(), false);
+    return new VelocityNettyThreadFactory("Netty " + name + ' ' + type.toString() + " #%d");
   }
 
   public static TransportType bestType() {
