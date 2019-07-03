@@ -49,6 +49,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -570,9 +571,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessage message = new PluginMessage();
-    message.setChannel(identifier.getId());
-    message.setData(data);
+    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
     minecraftConnection.write(message);
     return true;
   }

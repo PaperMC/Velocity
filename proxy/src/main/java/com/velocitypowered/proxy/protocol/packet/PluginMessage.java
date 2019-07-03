@@ -1,21 +1,29 @@
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.transformLegacyToModernChannel;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PluginMessage implements MinecraftPacket {
+public class PluginMessage extends DeferredByteBufHolder implements MinecraftPacket {
 
   private @Nullable String channel;
-  private byte[] data = EMPTY_BYTE_ARRAY;
+
+  public PluginMessage() {
+    super(null);
+  }
+
+  public PluginMessage(String channel,
+      @MonotonicNonNull ByteBuf backing) {
+    super(backing);
+    this.channel = channel;
+  }
 
   public String getChannel() {
     if (channel == null) {
@@ -28,19 +36,11 @@ public class PluginMessage implements MinecraftPacket {
     this.channel = channel;
   }
 
-  public byte[] getData() {
-    return data;
-  }
-
-  public void setData(byte[] data) {
-    this.data = data;
-  }
-
   @Override
   public String toString() {
     return "PluginMessage{"
         + "channel='" + channel + '\''
-        + ", data=<removed>"
+        + ", data=" + super.toString()
         + '}';
   }
 
@@ -50,8 +50,7 @@ public class PluginMessage implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       this.channel = transformLegacyToModernChannel(this.channel);
     }
-    this.data = new byte[buf.readableBytes()];
-    buf.readBytes(data);
+    this.replace(buf.readRetainedSlice(buf.readableBytes()));
   }
 
   @Override
@@ -64,11 +63,51 @@ public class PluginMessage implements MinecraftPacket {
     } else {
       ProtocolUtils.writeString(buf, this.channel);
     }
-    buf.writeBytes(data);
+    buf.writeBytes(content());
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public PluginMessage copy() {
+    return (PluginMessage) super.copy();
+  }
+
+  @Override
+  public PluginMessage duplicate() {
+    return (PluginMessage) super.duplicate();
+  }
+
+  @Override
+  public PluginMessage retainedDuplicate() {
+    return (PluginMessage) super.retainedDuplicate();
+  }
+
+  @Override
+  public PluginMessage replace(ByteBuf content) {
+    return (PluginMessage) super.replace(content);
+  }
+
+  @Override
+  public PluginMessage retain() {
+    return (PluginMessage) super.retain();
+  }
+
+  @Override
+  public PluginMessage retain(int increment) {
+    return (PluginMessage) super.retain(increment);
+  }
+
+  @Override
+  public PluginMessage touch() {
+    return (PluginMessage) super.touch();
+  }
+
+  @Override
+  public PluginMessage touch(Object hint) {
+    return (PluginMessage) super.touch(hint);
   }
 }

@@ -27,9 +27,8 @@ class LegacyForgeUtil {
    */
   static byte getHandshakePacketDiscriminator(PluginMessage message) {
     Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL));
-    byte[] data = message.getData();
-    Preconditions.checkArgument(data.length >= 1);
-    return data[0];
+    Preconditions.checkArgument(message.content().isReadable());
+    return message.content().getByte(0);
   }
 
   /**
@@ -44,7 +43,7 @@ class LegacyForgeUtil {
         .checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
             "message is not a FML HS plugin message");
 
-    ByteBuf byteBuf = Unpooled.wrappedBuffer(message.getData());
+    ByteBuf byteBuf = message.content().retainedSlice();
     try {
       byte discriminator = byteBuf.readByte();
 
@@ -75,7 +74,7 @@ class LegacyForgeUtil {
   static PluginMessage resetPacket() {
     PluginMessage msg = new PluginMessage();
     msg.setChannel(FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    msg.setData(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone());
+    msg.replace(Unpooled.wrappedBuffer(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone()));
     return msg;
   }
 }

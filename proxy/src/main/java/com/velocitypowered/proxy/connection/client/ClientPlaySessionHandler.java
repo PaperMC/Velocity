@@ -29,6 +29,9 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCountUtil;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,6 +80,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
       player.getMinecraftConnection().write(register);
       player.getKnownChannels().addAll(channels);
+    }
+  }
+
+  @Override
+  public void deactivated() {
+    for (PluginMessage message : loginPluginMessages) {
+      ReferenceCountUtil.release(message);
     }
   }
 
@@ -213,10 +223,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-        backendConn.write(packet);
+        backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-        backendConn.write(packet);
+        backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
       } else {
@@ -236,16 +246,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // but further aggravated by Velocity. To work around these issues, we will queue any
             // non-FML handshake messages to be sent once the FML handshake has completed or the
             // JoinGame packet has been received by the proxy, whichever comes first.
-            loginPluginMessages.add(packet);
+            //
+            // We also need to make sure to retain these packets so they can be flushed
+            // appropriately.
+            loginPluginMessages.add(packet.retain());
           } else {
             ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
             if (id == null) {
-              backendConn.write(packet);
+              backendConn.write(packet.retain());
             } else {
+              byte[] copy = ByteBufUtil.getBytes(packet.content());
               PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                  packet.getData());
-              server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
-                  backendConn.eventLoop());
+                  ByteBufUtil.getBytes(packet.content()));
+              server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+                PluginMessage message = new PluginMessage(packet.getChannel(),
+                    Unpooled.wrappedBuffer(copy));
+                backendConn.write(message);
+              }, backendConn.eventLoop());
             }
           }
         }
@@ -272,6 +289,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
+      if (packet instanceof PluginMessage) {
+        ((PluginMessage) packet).retain();
+      }
       smc.write(packet);
     }
   }

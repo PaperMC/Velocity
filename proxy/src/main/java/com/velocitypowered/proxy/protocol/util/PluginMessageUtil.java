@@ -11,7 +11,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.util.ByteProcessor;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -93,12 +95,12 @@ public class PluginMessageUtil {
     checkNotNull(message, "message");
     checkArgument(isRegister(message) || isUnregister(message), "Unknown channel type %s",
             message.getChannel());
-    if (message.getData().length == 0) {
+    if (!message.content().isReadable()) {
       // If we try to split this, we will get an one-element array with the empty string, which
       // has caused issues with 1.13+ compatibility. Just return an empty list.
       return ImmutableList.of();
     }
-    String channels = new String(message.getData(), StandardCharsets.UTF_8);
+    String channels = message.content().toString(StandardCharsets.UTF_8);
     return ImmutableList.copyOf(channels.split("\0"));
   }
 
@@ -114,10 +116,9 @@ public class PluginMessageUtil {
     Preconditions.checkArgument(channels.size() > 0, "no channels specified");
     String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
         ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
-    PluginMessage message = new PluginMessage();
-    message.setChannel(channelName);
-    message.setData(String.join("\0", channels).getBytes(StandardCharsets.UTF_8));
-    return message;
+    ByteBuf contents = Unpooled.buffer();
+    contents.writeCharSequence(String.join("\0", channels), StandardCharsets.UTF_8);
+    return new PluginMessage(channelName, contents);
   }
 
   /**
@@ -133,21 +134,11 @@ public class PluginMessageUtil {
 
     String toAppend = " (" + version.getName() + ")";
 
-    byte[] rewrittenData;
     ByteBuf rewrittenBuf = Unpooled.buffer();
-    try {
-      String currentBrand = ProtocolUtils.readString(Unpooled.wrappedBuffer(message.getData()));
-      ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
-      rewrittenData = new byte[rewrittenBuf.readableBytes()];
-      rewrittenBuf.readBytes(rewrittenData);
-    } finally {
-      rewrittenBuf.release();
-    }
+    String currentBrand = ProtocolUtils.readString(message.content().slice());
+    ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
 
-    PluginMessage newMsg = new PluginMessage();
-    newMsg.setChannel(message.getChannel());
-    newMsg.setData(rewrittenData);
-    return newMsg;
+    return new PluginMessage(message.getChannel(), rewrittenBuf);
   }
 
   private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");
@@ -185,5 +176,4 @@ public class PluginMessageUtil {
         return "legacy:" + INVALID_IDENTIFIER_REGEX.matcher(lower).replaceAll("");
     }
   }
-
 }
