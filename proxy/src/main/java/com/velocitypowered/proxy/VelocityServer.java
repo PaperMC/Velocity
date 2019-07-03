@@ -384,6 +384,10 @@ public class VelocityServer implements ProxyServer {
     Runnable shutdownProcess = () -> {
       logger.info("Shutting down the proxy...");
 
+      // Shutdown the connection manager, this should be
+      // done first to refuse new connections
+      cm.shutdown();
+
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {
         player.disconnect(TextComponent.of("Proxy shutting down."));
@@ -405,10 +409,8 @@ public class VelocityServer implements ProxyServer {
           timedOut = true;
         }
 
-        this.cm.shutdown();
-
-        timedOut = !this.eventManager.shutdown() || timedOut;
-        timedOut = !this.scheduler.shutdown() || timedOut;
+        timedOut = !eventManager.shutdown() || timedOut;
+        timedOut = !scheduler.shutdown() || timedOut;
 
         if (timedOut) {
           logger.error("Your plugins took over 10 seconds to shut down.");
