@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -37,7 +36,7 @@ public class TranslationManager {
      * about the country or variations.
      */
     final @Nullable TranslationRegistry fallback;
-    final Map<String, Translation> translations = new ConcurrentHashMap<>();
+    final Map<String, Translation> translations = new HashMap<>();
 
     TranslationRegistry(@Nullable TranslationRegistry fallback) {
       this.fallback = fallback;
@@ -55,11 +54,21 @@ public class TranslationManager {
     }
 
     @Nullable Translation get(String key) {
+      Translation translation = getDirect(key);
+      if (translation != null) {
+        return translation;
+      }
+      TranslationRegistry fallback = TranslationManager.this.fallback;
+      return fallback != null && fallback != this && fallback != this.fallback
+          ? fallback.getDirect(key) : null;
+    }
+
+    @Nullable Translation getDirect(String key) {
       Translation translation = this.translations.get(key);
       if (translation != null) {
         return translation;
       }
-      return this.fallback != null ? this.fallback.get(key) : null;
+      return this.fallback != null ? this.fallback.getDirect(key) : null;
     }
   }
 
@@ -104,7 +113,7 @@ public class TranslationManager {
     }
   }
 
-  private TranslationRegistry getRegistry(Locale locale) {
+  private TranslationRegistry getOrCreateRegistry(Locale locale) {
     TranslationRegistry registry = this.registries.get(locale);
     if (registry != null) {
       return registry;
@@ -128,7 +137,7 @@ public class TranslationManager {
    * @param resourceBundle The resource bundle to add
    */
   public void addBundle(Locale locale, ResourceBundle resourceBundle) {
-    TranslationRegistry registry = getRegistry(locale);
+    TranslationRegistry registry = getOrCreateRegistry(locale);
     for (String key : resourceBundle.keySet()) {
       String value = resourceBundle.getString(key);
 
@@ -154,7 +163,7 @@ public class TranslationManager {
    * @param jsonObject The json object to add
    */
   public void addJson(Locale locale, JsonObject jsonObject) {
-    TranslationRegistry registry = getRegistry(locale);
+    TranslationRegistry registry = getOrCreateRegistry(locale);
     for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
       String key = entry.getKey();
       JsonElement json = entry.getValue();
@@ -219,25 +228,22 @@ public class TranslationManager {
    */
   private @Nullable String translateIfFound(Locale locale, String key, Object... arguments) {
     Translation translation = getTranslation(locale, key);
-    return translation == null ? null : String.format(locale, translation.plain, arguments);
+    return translation == null ? null : String.format(translation.plain, arguments);
   }
 
   private @Nullable Translation getTranslation(Locale locale, String key) {
-    TranslationRegistry registry = getRegistry(locale);
-    Translation translation = null;
+    return getRegistry(locale).get(key);
+  }
+
+  private TranslationRegistry getRegistry(Locale locale) {
+    TranslationRegistry registry = this.registries.get(locale);
     if (registry != null) {
-      translation = registry.get(key);
-      if (registry == this.fallback) {
-        return null;
-      }
+      return registry;
     }
-    if (translation == null) {
-      if (this.fallback == null) {
-        return null;
-      }
-      translation = this.fallback.get(key);
+    if (!locale.getCountry().isEmpty() || !locale.getVariant().isEmpty()) {
+      registry = this.registries.get(new Locale(locale.getLanguage()));
     }
-    return translation;
+    return registry != null ? registry : this.fallback;
   }
 
   /**
@@ -248,24 +254,30 @@ public class TranslationManager {
    * @return The translated component
    */
   public Component translateComponent(Locale locale, Component component) {
-    Component translated = translateComponentIfNeeded(locale, component);
+    return translateComponent(getRegistry(locale), component);
+  }
+
+  private Component translateComponent(
+      TranslationRegistry registry, Component component) {
+    Component translated = translateComponentIfNeeded(registry, component);
     return translated != null ? translated : component;
   }
 
-  private @Nullable Component translateComponentIfNeeded(Locale locale, Component component) {
+  private @Nullable Component translateComponentIfNeeded(
+      TranslationRegistry registry, Component component) {
     List<Component> children = component.children();
-    List<Component> translatedChildren = translateComponentsIfNeeded(locale, children);
+    List<Component> translatedChildren = translateComponentsIfNeeded(registry, children);
 
     if (component instanceof TranslatableComponent) {
       TranslatableComponent translatable = (TranslatableComponent) component;
 
       String key = translatable.key();
-      Translation translation = getTranslation(locale, key);
+      Translation translation = registry.get(key);
       if (translation != null) {
         List<Component> components = translatable.args();
         Object[] arguments = new Object[components.size()];
         for (int i = 0; i < components.size(); i++) {
-          Component translated = translateComponent(locale, components.get(i));
+          Component translated = translateComponent(registry, components.get(i));
           arguments[i] = PlainComponentSerializer.INSTANCE.serialize(translated);
         }
         TextComponent.Builder builder;
@@ -283,10 +295,10 @@ public class TranslationManager {
         } else if (translation instanceof ComponentTranslation) {
           ComponentTranslation componentTranslation = (ComponentTranslation) translation;
           Component formatted = GsonComponentSerializer.INSTANCE
-              .deserialize(String.format(locale, componentTranslation.json, arguments));
+              .deserialize(String.format(componentTranslation.json, arguments));
           builder = TextComponent.builder().append(formatted);
         } else {
-          builder = TextComponent.builder(String.format(locale, translation.plain, arguments));
+          builder = TextComponent.builder(String.format(translation.plain, arguments));
         }
         return builder
                 .style(component.style())
@@ -302,11 +314,12 @@ public class TranslationManager {
     return null;
   }
 
-  private @Nullable List<Component> translateComponentsIfNeeded(Locale locale, List<Component> components) {
+  private @Nullable List<Component> translateComponentsIfNeeded(
+      TranslationRegistry registry, List<Component> components) {
     List<Component> modified = null;
     for (int i = 0; i < components.size(); i++) {
       Component component = components.get(i);
-      Component translated = translateComponentIfNeeded(locale, component);
+      Component translated = translateComponentIfNeeded(registry, component);
       if (translated != null) {
         if (modified == null) {
           modified = new ArrayList<>(components);
