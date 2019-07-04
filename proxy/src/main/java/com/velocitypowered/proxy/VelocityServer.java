@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
@@ -42,6 +41,7 @@ import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.translation.TranslationManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import com.velocitypowered.proxy.util.FileSystemUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
@@ -49,8 +49,6 @@ import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -170,13 +168,20 @@ public class VelocityServer implements ProxyServer {
     cm.getBossGroup().terminationFuture().syncUninterruptibly();
   }
 
-  private void loadTranslations(String locale) {
-    try (InputStream is = VelocityServer.class
-        .getResourceAsStream("/translations/" + locale + ".json")) {
-      JsonObject jsonObject = GSON.fromJson(new InputStreamReader(is), JsonObject.class);
-      translationManager.addJson(Locale.forLanguageTag(locale), jsonObject);
+  private void loadTranslations() {
+    try {
+      FileSystemUtils.visitResources(VelocityServer.class,
+          Paths.get("translations"), path -> {
+            logger.info("Loading translations");
+            try {
+              this.translationManager.loadDirectory(path);
+            } catch (IOException e) {
+              logger.error("Failed to load translations", e);
+            }
+          });
+      this.translationManager.setFallback(Locale.US);
     } catch (IOException e) {
-      logger.error("Failed to load translation file for {}", locale, e);
+      logger.error("Failed to load translations", e);
     }
   }
 
@@ -196,8 +201,7 @@ public class VelocityServer implements ProxyServer {
     commandManager.register("shutdown", new ShutdownCommand(this),"end");
     commandManager.register("glist", new GlistCommand(this));
 
-    loadTranslations("en_us");
-    loadTranslations("nl_be");
+    loadTranslations();
 
     try {
       Path configPath = Paths.get("velocity.toml");

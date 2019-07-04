@@ -6,11 +6,18 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.proxy.Player;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 import net.kyori.text.Component;
@@ -19,11 +26,14 @@ import net.kyori.text.TranslatableComponent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TranslationManager {
 
-  private static final Gson GSON = new Gson();
+  private static final Logger logger = LogManager.getLogger(TranslationManager.class);
+  private static final Gson gson = new Gson();
 
   /**
    * The fallback registry, if no bundle or translation
@@ -117,6 +127,10 @@ public class TranslationManager {
     }
   }
 
+  public void setFallback(Locale locale) {
+    this.fallback = getOrCreateRegistry(locale);
+  }
+
   private TranslationRegistry getOrCreateRegistry(Locale locale) {
     TranslationRegistry registry = this.registries.get(locale);
     if (registry != null) {
@@ -133,6 +147,62 @@ public class TranslationManager {
   }
 
   /**
+   * Loads a directory with translation files.
+   *
+   * @param path The path of the directory
+   * @throws IOException If something goes wrong
+   */
+  public void loadDirectory(Path path) throws IOException {
+    Files.walk(path).forEach(file -> {
+      if (!Files.isRegularFile(file)) {
+        return;
+      }
+      String fileName = file.getFileName().toString();
+      int index = fileName.lastIndexOf('.');
+      if (index == -1) {
+        return;
+      }
+      String extension = fileName.substring(index + 1);
+      Locale locale = Locale.forLanguageTag(fileName.substring(0, index).replace('_', '-'));
+      logger.info("Loading file: " + fileName.substring(0, index) + " -> " + locale);
+      if (extension.equals("properties")) {
+        Properties properties = new Properties();
+        try (InputStream is = Files.newInputStream(file)) {
+          properties.load(is);
+          addBundle(locale, properties);
+        } catch (IOException e) {
+          logger.error("Failed to load translations properties file", e);
+        }
+      } else if (extension.equals("json")) {
+        try (BufferedReader reader = Files.newBufferedReader(file)) {
+          addBundle(locale, gson.fromJson(reader, JsonObject.class));
+        } catch (IOException e) {
+          logger.error("Failed to load translations json file", e);
+        }
+      }
+    });
+  }
+
+  /**
+   * Adds the properties for the given locale.
+   *
+   * <p>The first call to this method will also set the fallback locale.</p>
+   *
+   * @param locale The locale to register the resource bundle for
+   * @param properties The properties to add
+   */
+  public void addBundle(Locale locale, Properties properties) {
+    checkNotNull(locale, "locale");
+    checkNotNull(properties, "properties");
+
+    Map<String, String> entries = new HashMap<>();
+    for (Object key : properties.keySet()) {
+      entries.put(key.toString(), properties.getProperty(key.toString()));
+    }
+    addBundle(locale, entries);
+  }
+
+  /**
    * Adds a resource bundle for the given locale.
    *
    * <p>The first call to this method will also set the fallback locale.</p>
@@ -144,9 +214,28 @@ public class TranslationManager {
     checkNotNull(locale, "locale");
     checkNotNull(resourceBundle, "resourceBundle");
 
-    TranslationRegistry registry = getOrCreateRegistry(locale);
+    Map<String, String> entries = new HashMap<>();
     for (String key : resourceBundle.keySet()) {
-      String value = resourceBundle.getString(key);
+      entries.put(key, resourceBundle.getString(key));
+    }
+    addBundle(locale, entries);
+  }
+
+  /**
+   * Adds a json object for the given locale.
+   *
+   * <p>The first call to this method will also set the fallback locale.</p>
+   *
+   * @param locale The locale to register the resource bundle for
+   * @param entries The entries to add
+   */
+  public void addBundle(Locale locale, Map<String, String> entries) {
+    checkNotNull(locale, "locale");
+    checkNotNull(entries, "entries");
+
+    TranslationRegistry registry = getOrCreateRegistry(locale);
+    for (Map.Entry<String, String> entry : entries.entrySet()) {
+      String value = entry.getValue();
 
       Translation translation;
       if (hasNoArguments(value)) {
@@ -154,7 +243,7 @@ public class TranslationManager {
       } else {
         translation = new Translation(value);
       }
-      registry.put(key, translation);
+      registry.put(entry.getKey(), translation);
     }
     if (fallback == null) {
       fallback = registry;
@@ -169,7 +258,7 @@ public class TranslationManager {
    * @param locale The locale to register the resource bundle for
    * @param jsonObject The json object to add
    */
-  public void addJson(Locale locale, JsonObject jsonObject) {
+  public void addBundle(Locale locale, JsonObject jsonObject) {
     checkNotNull(locale, "locale");
     checkNotNull(jsonObject, "jsonObject");
 
@@ -181,7 +270,7 @@ public class TranslationManager {
         continue;
       }
       Translation translation;
-      String value = json.isJsonPrimitive() ? json.getAsString() : GSON.toJson(json);
+      String value = json.isJsonPrimitive() ? json.getAsString() : gson.toJson(json);
       if (hasNoArguments(value)) {
         if (json.isJsonPrimitive()) {
           translation = new FixedTranslation(value, TextComponent.of(value));
@@ -205,11 +294,14 @@ public class TranslationManager {
     }
   }
 
-  private final Pattern formatSpecifierPattern = Pattern
-      .compile("%(\\d+\\$)?([-#+ 0,(<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])");
-
   private boolean hasNoArguments(String format) {
-    return !formatSpecifierPattern.matcher(format).matches();
+    try {
+      //noinspection RedundantStringFormatCall,unused
+      String ignored = String.format(format);
+      return true;
+    } catch (IllegalFormatException ex) {
+      return false;
+    }
   }
 
   /**
