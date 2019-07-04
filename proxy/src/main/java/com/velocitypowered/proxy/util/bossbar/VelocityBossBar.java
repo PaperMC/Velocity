@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.bossbar.BossBarColor;
 import com.velocitypowered.api.util.bossbar.BossBarFlag;
 import com.velocitypowered.api.util.bossbar.BossBarOverlay;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -15,14 +16,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 
 public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.BossBar {
 
+  private final VelocityServer server;
   private final List<Player> players;
   private final Set<BossBarFlag> flags;
   private final UUID uuid;
@@ -34,13 +40,16 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   /**
    * Creates a new boss bar.
+   *
+   * @param server the server
    * @param title the title for the bar
    * @param color the color of the bar
    * @param overlay the overlay to use
    * @param percent the percent of the bar
    */
-  public VelocityBossBar(
+  public VelocityBossBar(VelocityServer server,
       Component title, BossBarColor color, BossBarOverlay overlay, float percent) {
+    this.server = checkNotNull(server, "server");
     this.title = checkNotNull(title, "title");
     this.color = checkNotNull(color, "color");
     this.overlay = checkNotNull(overlay, "overlay");
@@ -67,7 +76,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
       players.add(player);
     }
     if (player.isActive() && visible) {
-      sendPacket(player, addPacket());
+      sendPacket(player, addPacket(player.getPlayerSettings().getLocale()));
     }
   }
 
@@ -102,12 +111,20 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   public void setTitle(Component title) {
     this.title = checkNotNull(title, "title");
     if (visible) {
-      BossBar bar = new BossBar();
-      bar.setUuid(uuid);
-      bar.setAction(BossBar.UPDATE_NAME);
-      bar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
-      sendToAffected(bar);
+      Map<Locale, BossBar> byLocale = new HashMap<>();
+      sendToAffected(player -> byLocale
+          .computeIfAbsent(player.getPlayerSettings().getLocale(), this::updateTitle));
     }
+  }
+
+  private BossBar updateTitle(Locale locale) {
+    BossBar bar = new BossBar();
+    bar.setUuid(uuid);
+    bar.setAction(BossBar.UPDATE_NAME);
+    Component translatedTitle = server.getTranslationManager()
+        .translateComponent(locale, title);
+    bar.setName(GsonComponentSerializer.INSTANCE.serialize(translatedTitle));
+    return bar;
   }
 
   @Override
@@ -187,7 +204,9 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
       sendToAffected(removePacket());
     } else if (!previous && visible) {
       // The bar is being shown
-      sendToAffected(addPacket());
+      Map<Locale, BossBar> byLocale = new HashMap<>();
+      sendToAffected(player -> byLocale
+          .computeIfAbsent(player.getPlayerSettings().getLocale(), this::addPacket));
     }
     this.visible = visible;
   }
@@ -233,11 +252,13 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     return flagMask;
   }
 
-  private BossBar addPacket() {
+  private BossBar addPacket(Locale locale) {
     BossBar bossBar = new BossBar();
     bossBar.setUuid(uuid);
     bossBar.setAction(BossBar.ADD);
-    bossBar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
+    Component translatedTitle = server.getTranslationManager()
+        .translateComponent(locale, title);
+    bossBar.setName(GsonComponentSerializer.INSTANCE.serialize(translatedTitle));
     bossBar.setColor(color.ordinal());
     bossBar.setOverlay(overlay.ordinal());
     bossBar.setPercent(percent);
@@ -261,10 +282,14 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   }
 
   private void sendToAffected(MinecraftPacket packet) {
+    sendToAffected(player -> packet);
+  }
+
+  private void sendToAffected(Function<Player, MinecraftPacket> packetSupplier) {
     for (Player player : players) {
       if (player.isActive() && player.getProtocolVersion().getProtocol()
           >= ProtocolVersion.MINECRAFT_1_9.getProtocol()) {
-        sendPacket(player, packet);
+        sendPacket(player, packetSupplier.apply(player));
       }
     }
   }

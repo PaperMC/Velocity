@@ -199,10 +199,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(component, "component");
     Preconditions.checkNotNull(position, "position");
 
-    Locale locale = getPlayerSettings().getLocale();
-
-    TranslationManager translationManager = this.server.getTranslationManager();
-    component = translationManager.translateComponent(locale, component);
+    TranslationManager translationManager = server.getTranslationManager();
+    component = translationManager.translateComponent(this, component);
 
     byte pos = (byte) position.ordinal();
     String json;
@@ -288,7 +286,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (titleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_TITLE);
-        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(titleText.get()));
+        Component translated = server.getTranslationManager()
+            .translateComponent(this, titleText.get());
+        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(translated));
         minecraftConnection.delayedWrite(titlePkt);
       }
 
@@ -296,7 +296,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (subtitleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_SUBTITLE);
-        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(subtitleText.get()));
+        Component translated = server.getTranslationManager()
+            .translateComponent(this, subtitleText.get());
+        titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(translated));
         minecraftConnection.delayedWrite(titlePkt);
       }
 

@@ -158,7 +158,7 @@ public class VelocityServer implements ProxyServer {
       @NonNull BossBarColor color,
       @NonNull BossBarOverlay overlay,
       float progress) {
-    return new VelocityBossBar(title, color, overlay, progress);
+    return new VelocityBossBar(this, title, color, overlay, progress);
   }
 
   @Override

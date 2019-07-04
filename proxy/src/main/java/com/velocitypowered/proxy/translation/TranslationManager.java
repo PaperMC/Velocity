@@ -1,8 +1,10 @@
 package com.velocitypowered.proxy.translation;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.proxy.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -16,14 +18,15 @@ import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TranslationManager {
 
   private static final Gson GSON = new Gson();
 
   /**
-   * The fallback bundle, if no bundle or translation
-   * was found for the a locale.
+   * The fallback registry, if no bundle or translation
+   * was found for a specific locale.
    */
   private @Nullable TranslationRegistry fallback;
 
@@ -35,8 +38,8 @@ public class TranslationManager {
      * A language specific registry as fallback. The fallback won't care
      * about the country or variations.
      */
-    final @Nullable TranslationRegistry fallback;
-    final Map<String, Translation> translations = new HashMap<>();
+    private final @Nullable TranslationRegistry fallback;
+    private final Map<String, Translation> translations = new HashMap<>();
 
     TranslationRegistry(@Nullable TranslationRegistry fallback) {
       this.fallback = fallback;
@@ -49,7 +52,7 @@ public class TranslationManager {
       }
     }
 
-    void putIfAbsent(String key, Translation translation) {
+    private void putIfAbsent(String key, Translation translation) {
       this.translations.putIfAbsent(key, translation);
     }
 
@@ -137,12 +140,15 @@ public class TranslationManager {
    * @param resourceBundle The resource bundle to add
    */
   public void addBundle(Locale locale, ResourceBundle resourceBundle) {
+    checkNotNull(locale, "locale");
+    checkNotNull(resourceBundle, "resourceBundle");
+
     TranslationRegistry registry = getOrCreateRegistry(locale);
     for (String key : resourceBundle.keySet()) {
       String value = resourceBundle.getString(key);
 
       Translation translation;
-      if (!hasArguments(value)) {
+      if (hasNoArguments(value)) {
         translation = new FixedTranslation(value, TextComponent.of(value));
       } else {
         translation = new Translation(value);
@@ -163,6 +169,9 @@ public class TranslationManager {
    * @param jsonObject The json object to add
    */
   public void addJson(Locale locale, JsonObject jsonObject) {
+    checkNotNull(locale, "locale");
+    checkNotNull(jsonObject, "jsonObject");
+
     TranslationRegistry registry = getOrCreateRegistry(locale);
     for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
       String key = entry.getKey();
@@ -172,7 +181,7 @@ public class TranslationManager {
       }
       Translation translation;
       String value = json.isJsonPrimitive() ? json.getAsString() : GSON.toJson(json);
-      if (!hasArguments(value)) {
+      if (hasNoArguments(value)) {
         if (json.isJsonPrimitive()) {
           translation = new FixedTranslation(value, TextComponent.of(value));
         } else {
@@ -195,13 +204,13 @@ public class TranslationManager {
     }
   }
 
-  private boolean hasArguments(String format) {
+  private boolean hasNoArguments(String format) {
     try {
       //noinspection RedundantStringFormatCall,ResultOfMethodCallIgnored
       String.format(format); // Check if any arguments are required for the translation
-      return false;
-    } catch (IllegalFormatException ex) {
       return true;
+    } catch (IllegalFormatException ex) {
+      return false;
     }
   }
 
@@ -214,6 +223,10 @@ public class TranslationManager {
    * @return The translated string, if the key is supported, otherwise the key
    */
   public String translate(Locale locale, String key, Object... arguments) {
+    checkNotNull(locale, "locale");
+    checkNotNull(key, "key");
+    checkNotNull(arguments, "arguments");
+
     String translated = translateIfFound(locale, key, arguments);
     return translated != null ? translated : key;
   }
@@ -247,6 +260,18 @@ public class TranslationManager {
   }
 
   /**
+   * Translates the {@link Component} for the given {@link Player}.
+   *
+   * @param player The player
+   * @param component The component to translate
+   * @return The translated component
+   */
+  public Component translateComponent(Player player, Component component) {
+    checkNotNull(player, "player");
+    return translateComponent(player.getPlayerSettings().getLocale(), component);
+  }
+
+  /**
    * Translates the {@link Component}.
    *
    * @param locale The locale
@@ -254,6 +279,8 @@ public class TranslationManager {
    * @return The translated component
    */
   public Component translateComponent(Locale locale, Component component) {
+    checkNotNull(locale, "locale");
+    checkNotNull(component, "component");
     return translateComponent(getRegistry(locale), component);
   }
 
