@@ -19,8 +19,6 @@ public class GlistCommand implements Command {
 
   private static final Component USAGE = TranslatableComponent
       .of("velocity.command.glist.usage");
-  private static final Component TOO_MANY_ARGUMENTS = TranslatableComponent
-      .of("velocity.command.too-many-arguments");
 
   private final ProxyServer server;
 
@@ -49,7 +47,7 @@ public class GlistCommand implements Command {
         sendServerPlayers(source, registeredServer.get(), false);
       }
     } else {
-      source.sendMessage(TOO_MANY_ARGUMENTS);
+      source.sendMessage(CommandMessages.TOO_MANY_ARGUMENTS);
     }
   }
 

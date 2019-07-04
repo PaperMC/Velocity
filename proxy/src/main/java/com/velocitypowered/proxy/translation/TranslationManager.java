@@ -16,6 +16,7 @@ import java.util.ResourceBundle;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -295,6 +296,15 @@ public class TranslationManager {
     List<Component> children = component.children();
     List<Component> translatedChildren = translateComponentsIfNeeded(registry, children);
 
+    HoverEvent hoverEvent = component.style().hoverEvent();
+    HoverEvent translatedHoverEvent = null;
+    if (hoverEvent != null) {
+      Component translated = translateComponentIfNeeded(registry, hoverEvent.value());
+      if (translated != null) {
+        translatedHoverEvent = HoverEvent.of(hoverEvent.action(), translated);
+      }
+    }
+
     if (component instanceof TranslatableComponent) {
       TranslatableComponent translatable = (TranslatableComponent) component;
 
@@ -327,15 +337,24 @@ public class TranslationManager {
         } else {
           builder = TextComponent.builder(String.format(translation.plain, arguments));
         }
-        return builder
-                .style(component.style())
-                .append(translatedChildren != null ? translatedChildren : children)
-                .build();
+        builder
+            .style(component.style())
+            .append(translatedChildren != null ? translatedChildren : children);
+        if (translatedHoverEvent != null) {
+          builder.hoverEvent(translatedHoverEvent);
+        }
+        return builder.build();
       }
     }
 
-    if (translatedChildren != null) {
-      return component.children(translatedChildren);
+    if (translatedChildren != null || translatedHoverEvent != null) {
+      if (translatedChildren != null) {
+        component = component.children(translatedChildren);
+      }
+      if (translatedHoverEvent != null) {
+        component = component.hoverEvent(translatedHoverEvent);
+      }
+      return component;
     }
 
     return null;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
@@ -48,12 +49,12 @@ public class ServerCommand implements Command {
       String currentServer = player.getCurrentServer().map(ServerConnection::getServerInfo)
           .map(ServerInfo::getName)
           .orElse("<unknown>");
-      player.sendMessage(TextComponent
-          .of("You are currently connected to " + currentServer + ".", TextColor.YELLOW));
+      player.sendMessage(TranslatableComponent
+          .of("velocity.command.server.currently-connected-to", TextComponent.of(currentServer)));
 
       // Assemble the list of servers as components
-      TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
-          .color(TextColor.YELLOW);
+      TranslatableComponent.Builder serverListBuilder = TranslatableComponent
+          .builder("velocity.command.server.available-servers");
       List<RegisteredServer> infos = ImmutableList.copyOf(server.getAllServers());
       for (int i = 0; i < infos.size(); i++) {
         RegisteredServer rs = infos.get(i);

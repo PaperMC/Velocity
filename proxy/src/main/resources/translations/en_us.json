@@ -64,6 +64,16 @@
     "text": "Only players may run this command.",
     "color": "red"
   },
+  "velocity.command.server.currently-connected-to": {
+    "text": "You are currently connected to %s.",
+    "color": "yellow"
+  },
+  "velocity.command.server.available-servers": {
+    "text": "Available servers: %s",
+    "color": "yellow"
+  },
+  "velocity.command.server.server-players": "Currently connected to this server\n%s player(s) online",
+  "velocity.command.server.click-to-connect": "Click to connect to this server\n%s player(s) online",
   "velocity.command.plugins.no-plugins-installed": {
     "text": "No plugins installed.",
     "color": "yellow"
