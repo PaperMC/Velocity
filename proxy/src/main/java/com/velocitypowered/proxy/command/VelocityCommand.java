@@ -11,16 +11,16 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
-import net.kyori.text.event.HoverEvent.Action;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
@@ -195,6 +195,9 @@ public class VelocityCommand implements Command {
 
   private static class Plugins implements Command {
 
+    private static final Component NO_PLUGINS_INSTALLED = TranslatableComponent
+        .of("velocity.command.plugins.no-plugins-installed");
+
     private final ProxyServer server;
 
     private Plugins(ProxyServer server) {
@@ -212,21 +215,23 @@ public class VelocityCommand implements Command {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(TextComponent.of("No plugins installed.", TextColor.YELLOW));
+        source.sendMessage(NO_PLUGINS_INSTALLED);
         return;
       }
 
-      TextComponent.Builder output = TextComponent.builder("Plugins: ")
-          .color(TextColor.YELLOW);
+      TextComponent.Builder pluginsComponent = TextComponent.builder();
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        output.append(componentForPlugin(plugin.getDescription()));
+        pluginsComponent.append(componentForPlugin(plugin.getDescription()));
         if (i + 1 < pluginCount) {
-          output.append(TextComponent.of(", "));
+          pluginsComponent.append(TextComponent.of(", "));
         }
       }
 
-      source.sendMessage(output.build());
+      TranslatableComponent output = TranslatableComponent
+          .of("velocity.command.plugins.plugins-output", pluginsComponent.build());
+
+      source.sendMessage(output);
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {

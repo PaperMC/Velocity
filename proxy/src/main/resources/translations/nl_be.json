@@ -1,0 +1,59 @@
+{
+  "velocity.only-online-mode": {
+    "text": "Deze server accepteert enkel verbindingen van clients met online modus.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nIs je gebruikersnaam gewijzigd? Log uit van Minecraft, log terug in, en probeer opnieuw.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-proxy-behind-proxy": {
+    "text": "Velocity achter Velocity laten draaien wordt niet ondersteund.",
+    "color": "red"
+  },
+  "velocity.no-available-servers": {
+    "text": "Er zijn geen beschikbare servers.",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "Je bent al verbonden met deze proxy!",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "Je werd verplaatst van de server omdat je eruit werd gezet.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "Er zijn ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " speler(s) ingelogd."
+    ]
+  },
+  "velocity.command.glist.usage": {
+    "text": "Om alle spelers op de servers te bekijken, gebruik ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Te veel argumenten.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "De server %s bestaat niet.",
+    "color": "red"
+  }
+}

@@ -55,5 +55,21 @@
   "velocity.command.too-many-arguments": {
     "text": "Too many arguments.",
     "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "The server %s doesn't exist.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Only players may run this command.",
+    "color": "red"
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "No plugins installed.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.plugins-output": {
+    "text": "Plugins: %s",
+    "color": "yellow"
   }
 }

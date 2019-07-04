@@ -197,7 +197,7 @@ public class VelocityServer implements ProxyServer {
     commandManager.register("glist", new GlistCommand(this));
 
     loadTranslations("en_us");
-    loadTranslations("nl_nl");
+    loadTranslations("nl_be");
 
     try {
       Path configPath = Paths.get("velocity.toml");

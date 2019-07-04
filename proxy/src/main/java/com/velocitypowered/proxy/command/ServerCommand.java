@@ -29,7 +29,7 @@ public class ServerCommand implements Command {
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
     if (!(source instanceof Player)) {
-      source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
+      source.sendMessage(CommandMessages.ONLY_PLAYERS_CAN_EXECUTE);
       return;
     }
 
@@ -39,8 +39,7 @@ public class ServerCommand implements Command {
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
-        player.sendMessage(
-            TextComponent.of("Server " + serverName + " doesn't exist.", TextColor.RED));
+        player.sendMessage(CommandMessages.serverDoesntExist(serverName));
         return;
       }
 

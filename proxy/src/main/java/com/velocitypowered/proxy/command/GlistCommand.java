@@ -43,8 +43,7 @@ public class GlistCommand implements Command {
       } else {
         Optional<RegisteredServer> registeredServer = server.getServer(arg);
         if (!registeredServer.isPresent()) {
-          source.sendMessage(TranslatableComponent
-                  .of("velocity.command.glist.invalid-server", TextComponent.of(arg)));
+          source.sendMessage(CommandMessages.serverDoesntExist(arg));
           return;
         }
         sendServerPlayers(source, registeredServer.get(), false);

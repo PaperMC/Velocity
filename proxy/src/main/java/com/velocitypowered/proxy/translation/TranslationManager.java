@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -25,9 +26,42 @@ public class TranslationManager {
    * The fallback bundle, if no bundle or translation
    * was found for the a locale.
    */
-  private @Nullable Map<String, Translation> fallback;
+  private @Nullable TranslationRegistry fallback;
 
-  private final Map<Locale, Map<String, Translation>> translations = new HashMap<>();
+  private final Map<Locale, TranslationRegistry> registries = new HashMap<>();
+
+  class TranslationRegistry {
+
+    /**
+     * A language specific registry as fallback. The fallback won't care
+     * about the country or variations.
+     */
+    final @Nullable TranslationRegistry fallback;
+    final Map<String, Translation> translations = new ConcurrentHashMap<>();
+
+    TranslationRegistry(@Nullable TranslationRegistry fallback) {
+      this.fallback = fallback;
+    }
+
+    void put(String key, Translation translation) {
+      this.translations.put(key, translation);
+      if (this.fallback != null) {
+        this.fallback.putIfAbsent(key, translation);
+      }
+    }
+
+    void putIfAbsent(String key, Translation translation) {
+      this.translations.putIfAbsent(key, translation);
+    }
+
+    @Nullable Translation get(String key) {
+      Translation translation = this.translations.get(key);
+      if (translation != null) {
+        return translation;
+      }
+      return this.fallback != null ? this.fallback.get(key) : null;
+    }
+  }
 
   /**
    * Represents a translation.
@@ -70,6 +104,21 @@ public class TranslationManager {
     }
   }
 
+  private TranslationRegistry getRegistry(Locale locale) {
+    TranslationRegistry registry = this.registries.get(locale);
+    if (registry != null) {
+      return registry;
+    }
+    TranslationRegistry fallback = null;
+    if (!locale.getCountry().isEmpty() || !locale.getVariant().isEmpty()) {
+      fallback = this.registries.computeIfAbsent(new Locale(locale.getLanguage()),
+          langLocale -> new TranslationRegistry(null));
+    }
+    registry = new TranslationRegistry(fallback);
+    this.registries.put(locale, registry);
+    return registry;
+  }
+
   /**
    * Adds a resource bundle for the given locale.
    *
@@ -79,8 +128,7 @@ public class TranslationManager {
    * @param resourceBundle The resource bundle to add
    */
   public void addBundle(Locale locale, ResourceBundle resourceBundle) {
-    Map<String, Translation> translations = this.translations
-            .computeIfAbsent(locale, locale1 -> new HashMap<>());
+    TranslationRegistry registry = getRegistry(locale);
     for (String key : resourceBundle.keySet()) {
       String value = resourceBundle.getString(key);
 
@@ -90,10 +138,10 @@ public class TranslationManager {
       } else {
         translation = new Translation(value);
       }
-      translations.put(key, translation);
+      registry.put(key, translation);
     }
     if (fallback == null) {
-      fallback = translations;
+      fallback = registry;
     }
   }
 
@@ -106,8 +154,7 @@ public class TranslationManager {
    * @param jsonObject The json object to add
    */
   public void addJson(Locale locale, JsonObject jsonObject) {
-    Map<String, Translation> translations = this.translations
-        .computeIfAbsent(locale, locale1 -> new HashMap<>());
+    TranslationRegistry registry = getRegistry(locale);
     for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
       String key = entry.getKey();
       JsonElement json = entry.getValue();
@@ -132,10 +179,10 @@ public class TranslationManager {
           translation = new ComponentTranslation(value, plain);
         }
       }
-      translations.put(key, translation);
+      registry.put(key, translation);
     }
     if (fallback == null) {
-      fallback = translations;
+      fallback = registry;
     }
   }
 
@@ -176,10 +223,13 @@ public class TranslationManager {
   }
 
   private @Nullable Translation getTranslation(Locale locale, String key) {
-    Map<String, Translation> translations = this.translations.get(locale);
+    TranslationRegistry registry = getRegistry(locale);
     Translation translation = null;
-    if (translations != null) {
-      translation = translations.get(key);
+    if (registry != null) {
+      translation = registry.get(key);
+      if (registry == this.fallback) {
+        return null;
+      }
     }
     if (translation == null) {
       if (this.fallback == null) {
