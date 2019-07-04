@@ -7,15 +7,20 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class GlistCommand implements Command {
+
+  private static final Component USAGE = TranslatableComponent
+      .of("velocity.command.glist.usage");
+  private static final Component TOO_MANY_ARGUMENTS = TranslatableComponent
+      .of("velocity.command.too-many-arguments");
 
   private final ProxyServer server;
 
@@ -27,11 +32,7 @@ public class GlistCommand implements Command {
   public void execute(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
       sendTotalProxyCount(source);
-      source.sendMessage(
-          TextComponent.builder("To view all players on servers, use ", TextColor.YELLOW)
-              .append("/glist all", TextColor.DARK_AQUA)
-              .append(".", TextColor.YELLOW)
-              .build());
+      source.sendMessage(USAGE);
     } else if (args.length == 1) {
       String arg = args[0];
       if (arg.equalsIgnoreCase("all")) {
@@ -42,22 +43,21 @@ public class GlistCommand implements Command {
       } else {
         Optional<RegisteredServer> registeredServer = server.getServer(arg);
         if (!registeredServer.isPresent()) {
-          source.sendMessage(
-              TextComponent.of("Server " + arg + " doesn't exist.", TextColor.RED));
+          source.sendMessage(TranslatableComponent
+                  .of("velocity.command.glist.invalid-server", TextComponent.of(arg)));
           return;
         }
         sendServerPlayers(source, registeredServer.get(), false);
       }
     } else {
-      source.sendMessage(TextComponent.of("Too many arguments.", TextColor.RED));
+      source.sendMessage(TOO_MANY_ARGUMENTS);
     }
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    target.sendMessage(TextComponent.builder("There are ", TextColor.YELLOW)
-        .append(Integer.toString(server.getAllPlayers().size()), TextColor.GREEN)
-        .append(" player(s) online.", TextColor.YELLOW)
-        .build());
+    int playersOnline = server.getAllPlayers().size();
+    target.sendMessage(TranslatableComponent
+        .of("velocity.command.glist.players-online", TextComponent.of(playersOnline)));
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {

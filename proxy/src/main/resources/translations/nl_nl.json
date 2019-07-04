@@ -1,0 +1,25 @@
+{
+  "velocity.command.glist.players-online": {
+    "text": "Er zijn ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " speler(s) aangemeld."
+    ]
+  },
+  "velocity.command.glist.usage": {
+    "text": "Om alle spelers op de servers te bekijken, gebruik ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  }
+}

@@ -1,27 +1,20 @@
 package com.velocitypowered.proxy.util;
 
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.text.TranslatableComponent;
 
 public class VelocityMessages {
 
-  public static final Component ONLINE_MODE_ONLY = TextComponent
-      .builder("This server only accepts connections from online-mode clients.")
-      .color(TextColor.RED)
-      .append(
-          TextComponent.of("\n\nDid you change your username? Sign out of Minecraft, sign back in, "
-              + "and try again.", TextColor.GRAY)
-      )
-      .build();
-  public static final Component NO_PROXY_BEHIND_PROXY = TextComponent
-      .of("Running Velocity behind Velocity isn't supported.", TextColor.RED);
-  public static final Component NO_AVAILABLE_SERVERS = TextComponent
-      .of("No available servers", TextColor.RED);
-  public static final Component ALREADY_CONNECTED = TextComponent
-      .of("You are already connected to this proxy!", TextColor.RED);
-  public static final Component MOVED_TO_NEW_SERVER = TextComponent
-      .of("You were moved from the server you were on because you were kicked", TextColor.RED);
+  public static final Component ONLINE_MODE_ONLY = TranslatableComponent
+      .of("velocity.only-online-mode");
+  public static final Component NO_PROXY_BEHIND_PROXY = TranslatableComponent
+      .of("velocity.no-proxy-behind-proxy");
+  public static final Component NO_AVAILABLE_SERVERS = TranslatableComponent
+      .of("velocity.no-available-servers");
+  public static final Component ALREADY_CONNECTED = TranslatableComponent
+      .of("velocity.already-connected");
+  public static final Component MOVED_TO_NEW_SERVER = TranslatableComponent
+      .of("velocity.moved-to-new-server");
 
   private VelocityMessages() {
     throw new AssertionError();

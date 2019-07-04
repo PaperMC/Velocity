@@ -35,6 +35,7 @@ import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.translation.TranslationManager;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -54,6 +55,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -196,6 +198,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendMessage(Component component, MessagePosition position) {
     Preconditions.checkNotNull(component, "component");
     Preconditions.checkNotNull(position, "position");
+
+    Locale locale = getPlayerSettings().getLocale();
+
+    TranslationManager translationManager = this.server.getTranslationManager();
+    component = translationManager.translateComponent(locale, component);
 
     byte pos = (byte) position.ordinal();
     String json;

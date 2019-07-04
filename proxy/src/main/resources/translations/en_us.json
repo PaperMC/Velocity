@@ -1,0 +1,59 @@
+{
+  "velocity.only-online-mode": {
+    "text": "This server only accepts connections from online-mode clients.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nDid you change your username? Sign out of Minecraft, sign back in, and try again.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-proxy-behind-proxy": {
+    "text": "Running Velocity behind Velocity isn't supported.",
+    "color": "red"
+  },
+  "velocity.no-available-servers": {
+    "text": "No available servers.",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "You are already connected to this proxy!",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "You were moved from the server you were on because you were kicked.",
+    "color": "red"
+  },
+  "velocity.command.glist.invalid-server": {
+    "text": "The server %s doesn't exist.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "There are ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " player(s) online."
+    ]
+  },
+  "velocity.command.glist.usage": {
+    "text": "To view all players on servers, use ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Too many arguments.",
+    "color": "red"
+  }
+}

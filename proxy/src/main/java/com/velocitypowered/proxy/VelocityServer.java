@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
@@ -38,6 +39,7 @@ import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
+import com.velocitypowered.proxy.translation.TranslationManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
@@ -47,6 +49,8 @@ import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -96,6 +100,7 @@ public class VelocityServer implements ProxyServer {
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
+  private final TranslationManager translationManager = new TranslationManager();
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -117,6 +122,10 @@ public class VelocityServer implements ProxyServer {
 
   public KeyPair getServerKeyPair() {
     return ensureInitialized(serverKeyPair);
+  }
+
+  public TranslationManager getTranslationManager() {
+    return translationManager;
   }
 
   @Override
@@ -161,6 +170,16 @@ public class VelocityServer implements ProxyServer {
     cm.getBossGroup().terminationFuture().syncUninterruptibly();
   }
 
+  private void loadTranslations(String locale) {
+    try (InputStream is = VelocityServer.class
+        .getResourceAsStream("/translations/" + locale + ".json")) {
+      JsonObject jsonObject = GSON.fromJson(new InputStreamReader(is), JsonObject.class);
+      translationManager.addJson(Locale.forLanguageTag(locale), jsonObject);
+    } catch (IOException e) {
+      logger.error("Failed to load translation file for {}", locale, e);
+    }
+  }
+
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
@@ -176,6 +195,9 @@ public class VelocityServer implements ProxyServer {
     commandManager.register("server", new ServerCommand(this));
     commandManager.register("shutdown", new ShutdownCommand(this),"end");
     commandManager.register("glist", new GlistCommand(this));
+
+    loadTranslations("en_us");
+    loadTranslations("nl_nl");
 
     try {
       Path configPath = Paths.get("velocity.toml");
