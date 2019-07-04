@@ -26,7 +26,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
       }
-      serverConn.ensureConnected().write(packet);
+      serverConn.ensureConnected().write(packet.retain());
     }
     return true;
   }
