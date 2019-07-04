@@ -58,18 +58,23 @@ public class ServerCommand implements Command {
       List<RegisteredServer> infos = ImmutableList.copyOf(server.getAllServers());
       for (int i = 0; i < infos.size(); i++) {
         RegisteredServer rs = infos.get(i);
-        TextComponent infoComponent = TextComponent.of(rs.getServerInfo().getName());
-        String playersText = rs.getPlayersConnected().size() + " player(s) online";
+        TextComponent serverName = TextComponent.of(rs.getServerInfo().getName());
+        TextComponent playersOnline = TextComponent.of(rs.getPlayersConnected().size());
+        TranslatableComponent infoComponent;
         if (rs.getServerInfo().getName().equals(currentServer)) {
-          infoComponent = infoComponent.color(TextColor.GREEN)
-              .hoverEvent(HoverEvent.showText(
-                  TextComponent.of("Currently connected to this server\n" + playersText)));
+          infoComponent = TranslatableComponent.builder("velocity.command.server.current-server")
+              .args(serverName)
+              .hoverEvent(HoverEvent.showText(TranslatableComponent
+                  .of("velocity.command.server.current-server.hover", playersOnline)))
+              .build();
         } else {
-          infoComponent = infoComponent.color(TextColor.GRAY)
+          infoComponent = TranslatableComponent.builder("velocity.command.server.other-server")
+              .args(serverName)
               .clickEvent(ClickEvent.runCommand(
                   "/server " + rs.getServerInfo().getName()))
-              .hoverEvent(HoverEvent.showText(
-                  TextComponent.of("Click to connect to this server\n" + playersText)));
+              .hoverEvent(HoverEvent.showText(TranslatableComponent
+                  .of("velocity.command.server.other-server.hover", playersOnline)))
+              .build();
         }
         serverListBuilder.append(infoComponent);
         if (i != infos.size() - 1) {

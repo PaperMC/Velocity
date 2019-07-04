@@ -69,17 +69,37 @@
     "color": "yellow"
   },
   "velocity.command.server.available-servers": {
-    "text": "Available servers: %s",
+    "text": "Available servers: ",
     "color": "yellow"
   },
-  "velocity.command.server.server-players": "Currently connected to this server\n%s player(s) online",
-  "velocity.command.server.click-to-connect": "Click to connect to this server\n%s player(s) online",
+  "velocity.command.server.current-server": {
+    "text": "%s",
+    "color": "green"
+  },
+  "velocity.command.server.current-server.hover": "Currently connected to this server\n%s player(s) online",
+  "velocity.command.server.other-server": {
+    "text": "%s",
+    "color": "gray"
+  },
+  "velocity.command.server.other-server.hover": "Click to connect to this server\n%s player(s) online",
   "velocity.command.plugins.no-plugins-installed": {
     "text": "No plugins installed.",
     "color": "yellow"
   },
-  "velocity.command.plugins.plugins-output": {
-    "text": "Plugins: %s",
+  "velocity.command.plugins.usage": {
+    "text": "/velocity plugins",
+    "color": "red"
+  },
+  "velocity.command.plugins.plugins": {
+    "text": "Plugins: ",
     "color": "yellow"
+  },
+  "velocity.command.reload.success": {
+    "text": "Configuration reloaded.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Unable to reload your configuration. Check the console for more details.",
+    "color": "red"
   }
 }

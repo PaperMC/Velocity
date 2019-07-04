@@ -109,6 +109,11 @@ public class VelocityCommand implements Command {
 
   private static class Reload implements Command {
 
+    private static final Component SUCCESS = TranslatableComponent
+        .of("velocity.command.reload.success");
+    private static final Component FAILURE = TranslatableComponent
+        .of("velocity.command.reload.failure");
+
     private static final Logger logger = LogManager.getLogger(Reload.class);
     private final VelocityServer server;
 
@@ -120,17 +125,13 @@ public class VelocityCommand implements Command {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(TextComponent.of("Configuration reloaded.", TextColor.GREEN));
+          source.sendMessage(SUCCESS);
         } else {
-          source.sendMessage(TextComponent.of(
-              "Unable to reload your configuration. Check the console for more details.",
-              TextColor.RED));
+          source.sendMessage(FAILURE);
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
-        source.sendMessage(TextComponent.of(
-            "Unable to reload your configuration. Check the console for more details.",
-            TextColor.RED));
+        source.sendMessage(FAILURE);
       }
     }
 
@@ -197,6 +198,8 @@ public class VelocityCommand implements Command {
 
     private static final Component NO_PLUGINS_INSTALLED = TranslatableComponent
         .of("velocity.command.plugins.no-plugins-installed");
+    private static final Component USAGE = TranslatableComponent
+        .of("velocity.command.plugins.usage");
 
     private final ProxyServer server;
 
@@ -207,7 +210,7 @@ public class VelocityCommand implements Command {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity plugins", TextColor.RED));
+        source.sendMessage(USAGE);
         return;
       }
 
@@ -219,19 +222,18 @@ public class VelocityCommand implements Command {
         return;
       }
 
-      TextComponent.Builder pluginsComponent = TextComponent.builder();
+      TranslatableComponent.Builder output = TranslatableComponent
+          .builder("velocity.command.plugins.plugins");
+
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        pluginsComponent.append(componentForPlugin(plugin.getDescription()));
+        output.append(componentForPlugin(plugin.getDescription()));
         if (i + 1 < pluginCount) {
-          pluginsComponent.append(TextComponent.of(", "));
+          output.append(TextComponent.of(", "));
         }
       }
 
-      TranslatableComponent output = TranslatableComponent
-          .of("velocity.command.plugins.plugins-output", pluginsComponent.build());
-
-      source.sendMessage(output);
+      source.sendMessage(output.build());
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
