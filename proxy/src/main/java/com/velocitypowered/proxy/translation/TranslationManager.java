@@ -8,11 +8,11 @@ import com.google.gson.JsonObject;
 import com.velocitypowered.api.proxy.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -205,14 +205,11 @@ public class TranslationManager {
     }
   }
 
+  private final Pattern formatSpecifierPattern = Pattern
+      .compile("%(\\d+\\$)?([-#+ 0,(<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])");
+
   private boolean hasNoArguments(String format) {
-    try {
-      //noinspection RedundantStringFormatCall,ResultOfMethodCallIgnored
-      String.format(format); // Check if any arguments are required for the translation
-      return true;
-    } catch (IllegalFormatException ex) {
-      return false;
-    }
+    return !formatSpecifierPattern.matcher(format).matches();
   }
 
   /**
