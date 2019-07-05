@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.command.Command;
@@ -158,28 +157,32 @@ public class VelocityCommandManager implements CommandManager {
 
   private static class RegularCommandWrapper implements RawCommand {
 
-    private static final Splitter ARGS_SPLITTER = Splitter.on(' ').omitEmptyStrings();
     private final Command delegate;
 
     private RegularCommandWrapper(Command delegate) {
       this.delegate = delegate;
     }
 
+    private static String[] split(String line) {
+      if (line.isEmpty()) {
+        return new String[0];
+      }
+      return line.split(" ", -1);
+    }
+
     @Override
     public void execute(CommandSource source, String commandLine) {
-      delegate.execute(source, ARGS_SPLITTER.splitToList(commandLine).toArray(new String[0]));
+      delegate.execute(source, split(commandLine));
     }
 
     @Override
     public List<String> suggest(CommandSource source, String currentLine) {
-      return delegate.suggest(source, ARGS_SPLITTER.splitToList(currentLine)
-          .toArray(new String[0]));
+      return delegate.suggest(source, split(currentLine));
     }
 
     @Override
     public boolean hasPermission(CommandSource source, String commandLine) {
-      return delegate.hasPermission(source, ARGS_SPLITTER.splitToList(commandLine)
-          .toArray(new String[0]));
+      return delegate.hasPermission(source, split(commandLine));
     }
 
     static RawCommand wrap(Command command) {
