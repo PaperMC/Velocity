@@ -4,14 +4,25 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-public class LoginPluginResponse implements MinecraftPacket {
+public class LoginPluginResponse extends DeferredByteBufHolder implements MinecraftPacket {
 
   private int id;
   private boolean success;
-  private ByteBuf data = Unpooled.EMPTY_BUFFER;
+
+  public LoginPluginResponse() {
+    super(Unpooled.EMPTY_BUFFER);
+  }
+
+  public LoginPluginResponse(int id, boolean success, @MonotonicNonNull ByteBuf buf) {
+    super(buf);
+    this.id = id;
+    this.success = success;
+  }
 
   public int getId() {
     return id;
@@ -29,20 +40,12 @@ public class LoginPluginResponse implements MinecraftPacket {
     this.success = success;
   }
 
-  public ByteBuf getData() {
-    return data;
-  }
-
-  public void setData(ByteBuf data) {
-    this.data = data;
-  }
-
   @Override
   public String toString() {
     return "LoginPluginResponse{"
         + "id=" + id
         + ", success=" + success
-        + ", data=" + data
+        + ", data=" + super.toString()
         + '}';
   }
 
@@ -51,9 +54,9 @@ public class LoginPluginResponse implements MinecraftPacket {
     this.id = ProtocolUtils.readVarInt(buf);
     this.success = buf.readBoolean();
     if (buf.isReadable()) {
-      this.data = buf.readSlice(buf.readableBytes());
+      this.replace(buf.readSlice(buf.readableBytes()));
     } else {
-      this.data = Unpooled.EMPTY_BUFFER;
+      this.replace(Unpooled.EMPTY_BUFFER);
     }
   }
 
@@ -61,7 +64,7 @@ public class LoginPluginResponse implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     buf.writeBoolean(success);
-    buf.writeBytes(data);
+    buf.writeBytes(content());
   }
 
   @Override

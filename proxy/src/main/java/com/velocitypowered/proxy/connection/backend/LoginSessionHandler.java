@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -56,23 +55,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
-        .getChannel()
-        .equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
-      LoginPluginResponse response = new LoginPluginResponse();
-      response.setSuccess(true);
-      response.setId(packet.getId());
-      response.setData(createForwardingData(configuration.getForwardingSecret(),
+        .getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+      ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
           serverConn.getPlayer().getRemoteAddress().getHostString(),
-          serverConn.getPlayer().getGameProfile()));
+          serverConn.getPlayer().getGameProfile());
+      LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
     } else {
       // Don't understand
-      LoginPluginResponse response = new LoginPluginResponse();
-      response.setSuccess(false);
-      response.setId(packet.getId());
-      response.setData(Unpooled.EMPTY_BUFFER);
-      mc.write(response);
+      mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
     }
     return true;
   }
