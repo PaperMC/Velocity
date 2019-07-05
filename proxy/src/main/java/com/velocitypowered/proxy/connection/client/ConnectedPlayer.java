@@ -50,6 +50,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,6 +59,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -97,6 +99,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
   private final Collection<String> knownChannels;
+  private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
@@ -409,18 +412,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (connectedServer == null) {
-      // The player isn't yet connected to a server. Note that we need to do this in a future run
-      // of the event loop due to an issue with the Netty kqueue transport.
-      minecraftConnection.eventLoop().execute(() -> {
-        Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
-        if (nextServer.isPresent()) {
-          // There can't be any connection in flight now.
-          resetInFlightConnection();
-          createConnectionRequest(nextServer.get()).fireAndForget();
-        } else {
-          disconnect(friendlyReason);
-        }
-      });
+      Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
+      if (nextServer.isPresent()) {
+        // There can't be any connection in flight now.
+        resetInFlightConnection();
+        createConnectionRequest(nextServer.get()).fireAndForget();
+      } else {
+        disconnect(friendlyReason);
+      }
     } else {
       boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
       ServerKickResult result;
@@ -562,7 +561,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connectedServer.disconnect();
     }
     server.unregisterConnection(this);
-    server.getEventManager().fireAndForget(new DisconnectEvent(this));
+    server.getEventManager().fire(new DisconnectEvent(this))
+            .thenRun(() -> this.teardownFuture.complete(null));
+  }
+
+  public CompletableFuture<Void> getTeardownFuture() {
+    return teardownFuture;
   }
 
   @Override
@@ -579,9 +583,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessage message = new PluginMessage();
-    message.setChannel(identifier.getId());
-    message.setData(data);
+    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
     minecraftConnection.write(message);
     return true;
   }

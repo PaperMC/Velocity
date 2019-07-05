@@ -59,9 +59,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -379,14 +384,35 @@ public class VelocityServer implements ProxyServer {
     Runnable shutdownProcess = () -> {
       logger.info("Shutting down the proxy...");
 
-      for (ConnectedPlayer player : ImmutableList.copyOf(connectionsByUuid.values())) {
+      // Shutdown the connection manager, this should be
+      // done first to refuse new connections
+      cm.shutdown();
+
+      ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
+      for (ConnectedPlayer player : players) {
         player.disconnect(TextComponent.of("Proxy shutting down."));
       }
 
-      this.cm.shutdown();
-
       try {
-        if (!eventManager.shutdown() || !scheduler.shutdown()) {
+        boolean timedOut = false;
+
+        try {
+          // Wait for the connections finish tearing down, this
+          // makes sure that all the disconnect events are being fired
+
+          CompletableFuture<Void> playersTeardownFuture = CompletableFuture.allOf(players.stream()
+                  .map(ConnectedPlayer::getTeardownFuture)
+                  .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
+
+          playersTeardownFuture.get(10, TimeUnit.SECONDS);
+        } catch (TimeoutException | ExecutionException e) {
+          timedOut = true;
+        }
+
+        timedOut = !eventManager.shutdown() || timedOut;
+        timedOut = !scheduler.shutdown() || timedOut;
+
+        if (timedOut) {
           logger.error("Your plugins took over 10 seconds to shut down.");
         }
       } catch (InterruptedException e) {

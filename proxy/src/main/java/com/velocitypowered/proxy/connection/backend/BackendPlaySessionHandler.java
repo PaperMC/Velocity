@@ -22,6 +22,8 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
@@ -116,12 +118,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
+    byte[] copy = ByteBufUtil.getBytes(packet.content());
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
-        packet.getData());
+        copy);
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
           if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
-            playerConnection.write(packet);
+            PluginMessage copied = new PluginMessage(packet.getChannel(),
+                Unpooled.wrappedBuffer(copy));
+            playerConnection.write(copied);
           }
         }, playerConnection.eventLoop());
     return true;
@@ -160,6 +165,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
+    if (packet instanceof PluginMessage) {
+      ((PluginMessage) packet).retain();
+    }
     playerConnection.write(packet);
   }
 

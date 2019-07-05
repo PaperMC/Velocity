@@ -131,8 +131,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         try {
           sessionHandler.exception(cause);
         } catch (Exception ex) {
-          logger.error("{}: exception handling exception", (association != null ? association :
-              channel.remoteAddress()), cause);
+          logger.error("{}: exception handling exception in {}",
+              (association != null ? association : channel.remoteAddress()), sessionHandler, cause);
         }
       }
 
@@ -140,7 +140,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
-          logger.error("{}: exception encountered", association, cause);
+          logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
         }
       }
 

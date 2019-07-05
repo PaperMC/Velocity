@@ -167,7 +167,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    serverConn.getPlayer().getMinecraftConnection().write(packet);
+    serverConn.getPlayer().getMinecraftConnection().write(packet.retain());
     return true;
   }
 

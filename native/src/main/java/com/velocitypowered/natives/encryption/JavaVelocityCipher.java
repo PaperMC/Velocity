@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.FastThreadLocal;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,8 +25,12 @@ public class JavaVelocityCipher implements VelocityCipher {
     }
   };
   private static final int INITIAL_BUFFER_SIZE = 1024 * 8;
-  private static final ThreadLocal<byte[]> inBufLocal = ThreadLocal.withInitial(
-      () -> new byte[INITIAL_BUFFER_SIZE]);
+  private static final FastThreadLocal<byte[]> inBufLocal = new FastThreadLocal<byte[]>() {
+    @Override
+    protected byte[] initialValue() {
+      return new byte[INITIAL_BUFFER_SIZE];
+    }
+  };
 
   private final Cipher cipher;
   private boolean disposed = false;

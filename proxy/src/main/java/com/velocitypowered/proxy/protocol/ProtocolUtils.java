@@ -226,6 +226,24 @@ public enum ProtocolUtils {
   }
 
   /**
+   * Reads a retained {@link ByteBuf} slice of the specified {@code buf} with the 1.7 style length.
+   *
+   * @param buf the buffer to read from
+   * @return the retained slice
+   */
+  public static ByteBuf readRetainedByteBufSlice17(ByteBuf buf) {
+    // Read in a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
+    // Forge only)
+    // No vanilla packet should give a 3 byte packet
+    int len = readExtendedForgeShort(buf);
+
+    Preconditions.checkArgument(len <= (FORGE_MAX_ARRAY_LENGTH),
+        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+
+    return buf.readRetainedSlice(len);
+  }
+
+  /**
    * Writes an byte array for legacy version 1.7 to the specified {@code buf}
    *
    * @param b array
@@ -247,6 +265,31 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet, this method will still retain vanilla
     // behaviour.
     writeExtendedForgeShort(buf, b.length);
+    buf.writeBytes(b);
+  }
+
+  /**
+   * Writes an {@link ByteBuf} for legacy version 1.7 to the specified {@code buf}
+   *
+   * @param b array
+   * @param buf buf
+   * @param allowExtended forge
+   */
+  public static void writeByteBuf17(ByteBuf b, ByteBuf buf, boolean allowExtended) {
+    if (allowExtended) {
+      Preconditions
+          .checkArgument(b.readableBytes() <= (FORGE_MAX_ARRAY_LENGTH),
+              "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+              b.readableBytes());
+    } else {
+      Preconditions.checkArgument(b.readableBytes() <= Short.MAX_VALUE,
+          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.readableBytes());
+    }
+    // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
+    // Forge only)
+    // No vanilla packet should give a 3 byte packet, this method will still retain vanilla
+    // behaviour.
+    writeExtendedForgeShort(buf, b.readableBytes());
     buf.writeBytes(b);
   }
 
@@ -282,6 +325,31 @@ public enum ProtocolUtils {
     if (high != 0) {
       buf.writeByte(high);
     }
+  }
+
+  /**
+   * Reads a non length-prefixed string from the {@code buf}. We need this for the legacy 1.7
+   * version, being inconsistent when sending the brand.
+   *
+   * @param buf the buffer to read from
+   * @return the decoded string
+   */
+  public static String readStringWithoutLength(ByteBuf buf) {
+    int length = buf.readableBytes();
+    int cap = DEFAULT_MAX_STRING_SIZE;
+    checkArgument(length >= 0, "Got a negative-length string (%s)", length);
+    // `cap` is interpreted as a UTF-8 character length. To cover the full Unicode plane, we must
+    // consider the length of a UTF-8 character, which can be up to a 4 bytes. We do an initial
+    // sanity check and then check again to make sure our optimistic guess was good.
+    checkArgument(length <= cap * 4, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkState(buf.isReadable(length),
+        "Trying to read a string that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
+    String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
+    buf.skipBytes(length);
+    checkState(str.length() <= cap, "Got a too-long string (got %s, max %s)",
+        str.length(), cap);
+    return str;
   }
 
   public enum Direction {
