@@ -13,7 +13,7 @@ class CommandMessages {
 
   public static Component serverDoesntExist(String serverName) {
     return TranslatableComponent
-        .of("velocity.command.only-players-can-execute", TextComponent.of(serverName));
+        .of("velocity.command.server-doesnt-exist", TextComponent.of(serverName));
   }
 
   private CommandMessages() {
