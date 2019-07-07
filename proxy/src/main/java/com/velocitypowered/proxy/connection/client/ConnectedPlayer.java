@@ -46,7 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
-import com.velocitypowered.proxy.translation.TranslationManager;
+import com.velocitypowered.proxy.text.translation.TranslationManager;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;

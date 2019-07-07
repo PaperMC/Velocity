@@ -9,17 +9,32 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.proxy.text.TextJoiner;
+import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import net.kyori.text.TextComponent;
+import java.util.stream.Stream;
+import net.kyori.text.Component;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
-import net.kyori.text.format.TextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ServerCommand implements Command {
+
+  private static final Translatable CURRENTLY_CONNECTED_TO = Translatable
+      .of("velocity.command.server.currently-connected-to");
+  private static final Translatable AVAILABLE_SERVERS = Translatable
+      .of("velocity.command.server.available-servers");
+  private static final Translatable CURRENT_SERVER = Translatable
+      .of("velocity.command.server.current-server");
+  private static final Translatable CURRENT_SERVER_HOVER = Translatable
+      .of("velocity.command.server.current-server.hover");
+  private static final Translatable OTHER_SERVER = Translatable
+      .of("velocity.command.server.other-server");
+  private static final Translatable OTHER_SERVER_HOVER = Translatable
+      .of("velocity.command.server.other-server.hover");
 
   private final ProxyServer server;
 
@@ -30,7 +45,7 @@ public class ServerCommand implements Command {
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
     if (!(source instanceof Player)) {
-      source.sendMessage(CommandMessages.ONLY_PLAYERS_CAN_EXECUTE);
+      source.sendMessage(CommandMessages.ONLY_PLAYERS_CAN_EXECUTE.get());
       return;
     }
 
@@ -40,7 +55,7 @@ public class ServerCommand implements Command {
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
-        player.sendMessage(CommandMessages.serverDoesntExist(serverName));
+        player.sendMessage(CommandMessages.SERVER_DOESNT_EXIST.with(serverName));
         return;
       }
 
@@ -49,38 +64,30 @@ public class ServerCommand implements Command {
       String currentServer = player.getCurrentServer().map(ServerConnection::getServerInfo)
           .map(ServerInfo::getName)
           .orElse("<unknown>");
-      player.sendMessage(TranslatableComponent
-          .of("velocity.command.server.currently-connected-to", TextComponent.of(currentServer)));
+      player.sendMessage(CURRENTLY_CONNECTED_TO.with(currentServer));
 
       // Assemble the list of servers as components
-      TranslatableComponent.Builder serverListBuilder = TranslatableComponent
-          .builder("velocity.command.server.available-servers");
-      List<RegisteredServer> infos = ImmutableList.copyOf(server.getAllServers());
-      for (int i = 0; i < infos.size(); i++) {
-        RegisteredServer rs = infos.get(i);
-        TextComponent serverName = TextComponent.of(rs.getServerInfo().getName());
-        TextComponent playersOnline = TextComponent.of(rs.getPlayersConnected().size());
-        TranslatableComponent infoComponent;
-        if (rs.getServerInfo().getName().equals(currentServer)) {
-          infoComponent = TranslatableComponent.builder("velocity.command.server.current-server")
-              .args(serverName)
-              .hoverEvent(HoverEvent.showText(TranslatableComponent
-                  .of("velocity.command.server.current-server.hover", playersOnline)))
-              .build();
-        } else {
-          infoComponent = TranslatableComponent.builder("velocity.command.server.other-server")
-              .args(serverName)
-              .clickEvent(ClickEvent.runCommand(
-                  "/server " + rs.getServerInfo().getName()))
-              .hoverEvent(HoverEvent.showText(TranslatableComponent
-                  .of("velocity.command.server.other-server.hover", playersOnline)))
-              .build();
-        }
-        serverListBuilder.append(infoComponent);
-        if (i != infos.size() - 1) {
-          serverListBuilder.append(TextComponent.of(", ", TextColor.GRAY));
-        }
-      }
+      TranslatableComponent.Builder serverListBuilder = AVAILABLE_SERVERS.builder();
+
+      Stream<Component> infos = ImmutableList.copyOf(server.getAllServers()).stream()
+          .map(rs -> {
+            String serverName = rs.getServerInfo().getName();
+            int playersOnline = rs.getPlayersConnected().size();
+            if (serverName.equals(currentServer)) {
+              return CURRENT_SERVER
+                  .builderWith(serverName)
+                  .hoverEvent(HoverEvent.showText(CURRENT_SERVER_HOVER.with(playersOnline)))
+                  .build();
+            } else {
+              return OTHER_SERVER
+                  .builderWith(serverName)
+                  .clickEvent(ClickEvent.runCommand(
+                      "/server " + rs.getServerInfo().getName()))
+                  .hoverEvent(HoverEvent.showText(OTHER_SERVER_HOVER.with(playersOnline)))
+                  .build();
+            }
+          });
+      TextJoiner.on(", ").appendTo(serverListBuilder, infos);
 
       player.sendMessage(serverListBuilder.build());
     }

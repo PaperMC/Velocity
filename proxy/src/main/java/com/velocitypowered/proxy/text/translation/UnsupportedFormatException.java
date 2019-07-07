@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.translation;
+package com.velocitypowered.proxy.text.translation;
 
 public class UnsupportedFormatException extends RuntimeException {
 

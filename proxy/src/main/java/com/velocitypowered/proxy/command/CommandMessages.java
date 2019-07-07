@@ -1,20 +1,15 @@
 package com.velocitypowered.proxy.command;
 
-import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.TranslatableComponent;
+import com.velocitypowered.proxy.text.translation.Translatable;
 
 class CommandMessages {
 
-  public static final Component ONLY_PLAYERS_CAN_EXECUTE = TranslatableComponent
+  public static final Translatable ONLY_PLAYERS_CAN_EXECUTE = Translatable
       .of("velocity.command.only-players-can-execute");
-  public static final Component TOO_MANY_ARGUMENTS = TranslatableComponent
+  public static final Translatable TOO_MANY_ARGUMENTS = Translatable
       .of("velocity.command.too-many-arguments");
-
-  public static Component serverDoesntExist(String serverName) {
-    return TranslatableComponent
-        .of("velocity.command.server-doesnt-exist", TextComponent.of(serverName));
-  }
+  public static final Translatable SERVER_DOESNT_EXIST = Translatable
+      .of("velocity.command.server-doesnt-exist");
 
   private CommandMessages() {
     throw new AssertionError();

@@ -69,8 +69,14 @@
     "color": "yellow"
   },
   "velocity.command.server.available-servers": {
-    "text": "Available servers: ",
-    "color": "yellow"
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Available servers: ",
+        "color": "yellow"
+      }
+    ]
   },
   "velocity.command.server.current-server": {
     "text": "%s",

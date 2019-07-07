@@ -7,6 +7,7 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.text.Component;
@@ -19,6 +20,9 @@ public class GlistCommand implements Command {
 
   private static final Component USAGE = TranslatableComponent
       .of("velocity.command.glist.usage");
+
+  private static final Translatable PLAYERS_ONLINE = Translatable
+      .of("velocity.command.glist.players-online");
 
   private final ProxyServer server;
 
@@ -41,20 +45,19 @@ public class GlistCommand implements Command {
       } else {
         Optional<RegisteredServer> registeredServer = server.getServer(arg);
         if (!registeredServer.isPresent()) {
-          source.sendMessage(CommandMessages.serverDoesntExist(arg));
+          source.sendMessage(CommandMessages.SERVER_DOESNT_EXIST.with(arg));
           return;
         }
         sendServerPlayers(source, registeredServer.get(), false);
       }
     } else {
-      source.sendMessage(CommandMessages.TOO_MANY_ARGUMENTS);
+      source.sendMessage(CommandMessages.TOO_MANY_ARGUMENTS.get());
     }
   }
 
   private void sendTotalProxyCount(CommandSource target) {
     int playersOnline = server.getAllPlayers().size();
-    target.sendMessage(TranslatableComponent
-        .of("velocity.command.glist.players-online", TextComponent.of(playersOnline)));
+    target.sendMessage(PLAYERS_ONLINE.with(playersOnline));
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
