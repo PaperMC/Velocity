@@ -21,6 +21,11 @@ public final class Translatable {
     this.key = key;
   }
 
+  /**
+   * Gets the {@link TranslatableComponent} without any arguments.
+   *
+   * @return The translatable component
+   */
   public TranslatableComponent get() {
     if (this.withoutArgs == null) {
       this.withoutArgs = TranslatableComponent.of(this.key);

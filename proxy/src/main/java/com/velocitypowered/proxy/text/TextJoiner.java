@@ -44,6 +44,12 @@ public final class TextJoiner {
     return join(components.iterator());
   }
 
+  /**
+   * Joins the components of the {@link Iterable}.
+   *
+   * @param components The component iterable
+   * @return The joined component
+   */
   public Component join(Iterator<?> components) {
     if (components.hasNext()) {
       Component first = wrapIfNeeded(components.next());
@@ -77,11 +83,27 @@ public final class TextJoiner {
     return appendTo(appendable, components.iterator());
   }
 
+  /**
+   * Joins the components of the {@link Iterable} and
+   * appends the result to {@link A}.
+   *
+   * @param appendable The appendable
+   * @param components The component iterable
+   * @return The joined component
+   */
   public <A extends ComponentBuilder<?, A>> A appendTo(
       A appendable, Iterable<?> components) {
     return appendTo(appendable, components.iterator());
   }
 
+  /**
+   * Joins the components of the {@link Iterator} and
+   * appends the result to {@link A}.
+   *
+   * @param appendable The appendable
+   * @param components The component iterator
+   * @return The joined component
+   */
   public <A extends ComponentBuilder<?, A>> A appendTo(
       A appendable, Iterator<?> components) {
     if (components.hasNext()) {
@@ -98,7 +120,7 @@ public final class TextJoiner {
     return object instanceof Component ? (Component) object : TextComponent.of(object.toString());
   }
 
-  public static Iterable<Object> iterable(Object first, Object second, Object[] rest) {
+  private static Iterable<Object> iterable(Object first, Object second, Object[] rest) {
     return new AbstractList<Object>() {
 
       @Override

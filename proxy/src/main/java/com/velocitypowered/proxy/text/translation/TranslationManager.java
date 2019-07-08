@@ -18,12 +18,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
+import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
+import net.kyori.text.format.Style;
+import net.kyori.text.format.TextColor;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -105,14 +109,16 @@ public class TranslationManager {
    */
   class FixedTranslation extends Translation {
 
-    final boolean plainComponent;
-
     FixedTranslation(Component component) {
       super(component);
-      this.plainComponent = isPlainComponent(component);
     }
   }
 
+  /**
+   * Sets the fallback {@link Locale}.
+   *
+   * @param locale The fallback locale
+   */
   public void setFallback(Locale locale) {
     this.fallback = getOrCreateRegistry(locale);
   }
@@ -143,13 +149,13 @@ public class TranslationManager {
       if (!Files.isRegularFile(file)) {
         return;
       }
-      String fileName = file.getFileName().toString();
-      int index = fileName.lastIndexOf('.');
-      if (index == -1) {
+      String fullName = file.getFileName().toString();
+      String extension = com.google.common.io.Files.getFileExtension(fullName);
+      if (extension.isEmpty()) {
         return;
       }
-      String extension = fileName.substring(index + 1);
-      Locale locale = Locale.forLanguageTag(fileName.substring(0, index).replace('_', '-'));
+      String name = com.google.common.io.Files.getNameWithoutExtension(fullName);
+      Locale locale = Locale.forLanguageTag(name.replace('_', '-'));
       if (extension.equals("properties")) {
         Properties properties = new Properties();
         try (InputStream is = Files.newInputStream(file)) {
@@ -221,11 +227,8 @@ public class TranslationManager {
     TranslationRegistry registry = getOrCreateRegistry(locale);
     for (Map.Entry<String, String> entry : entries.entrySet()) {
       String value = entry.getValue();
-
-      TextComponent component = TextComponent.of(value);
-      Translation translation = hasNoArguments(value) ? new FixedTranslation(component) :
-          new Translation(component);
-
+      Translation translation = createTranslation(value,
+          TextComponent::of);
       registry.put(entry.getKey(), translation);
     }
     if (fallback == null) {
@@ -253,11 +256,8 @@ public class TranslationManager {
         continue;
       }
       String value = gson.toJson(element);
-
-      Component component = GsonComponentSerializer.INSTANCE.deserialize(value);
-      Translation translation = hasNoArguments(value) ? new FixedTranslation(component) :
-          new Translation(component);
-
+      Translation translation = createTranslation(value,
+          GsonComponentSerializer.INSTANCE::deserialize);
       registry.put(key, translation);
     }
     if (fallback == null) {
@@ -265,8 +265,12 @@ public class TranslationManager {
     }
   }
 
-  private boolean hasNoArguments(String format) {
-    return !this.formatPattern.matcher(format).find();
+  private Translation createTranslation(String value, Function<String, Component> function) {
+    Component component = function.apply(value);
+    if (this.formatPattern.matcher(value).find()) {
+      return new Translation(component);
+    }
+    return new FixedTranslation(component);
   }
 
   /**
@@ -282,25 +286,16 @@ public class TranslationManager {
     checkNotNull(key, "key");
     checkNotNull(arguments, "arguments");
 
-    String translated = translateIfFound(locale, key, arguments);
-    return translated != null ? translated : key;
-  }
+    Component[] components = new Component[arguments.length];
+    for (int i = 0; i < arguments.length; i++) {
+      Object argument = arguments[i];
+      components[i] = argument instanceof Component ? (Component) argument :
+          TextComponent.of(argument.toString());
+    }
 
-  /**
-   * Translates the translation for the given key and arguments.
-   *
-   * @param locale The locale
-   * @param key The key of the translation
-   * @param arguments The arguments
-   * @return The translated string, if the key is supported, otherwise null
-   */
-  private @Nullable String translateIfFound(Locale locale, String key, Object... arguments) {
-    Translation translation = getTranslation(locale, key);
-    return translation == null ? null : String.format(translation.plain, arguments);
-  }
-
-  private @Nullable Translation getTranslation(Locale locale, String key) {
-    return getRegistry(locale).get(key);
+    Component translated = translateComponent(
+        locale, TranslatableComponent.of(key, components));
+    return PlainComponentSerializer.INSTANCE.serialize(translated);
   }
 
   private TranslationRegistry getRegistry(Locale locale) {
@@ -336,18 +331,32 @@ public class TranslationManager {
   public Component translateComponent(Locale locale, Component component) {
     checkNotNull(locale, "locale");
     checkNotNull(component, "component");
-    return translateComponent(getRegistry(locale), component);
+    return translateComponent(getRegistry(locale), component, null);
+  }
+
+  /**
+   * Translates the {@link Component}, returns the provided {@link Component}
+   * if it's not needed to translate the component.
+   *
+   * @param registry The translation registry
+   * @param component The component to translate
+   * @param formattingContext The current formatting context
+   * @return The translated component
+   */
+  private Component translateComponent(
+      TranslationRegistry registry, Component component,
+      @Nullable FormattingContext formattingContext) {
+    Component translated = translateComponentIfNeeded(registry, component, formattingContext);
+    return translated != null ? translated : component;
   }
 
   private final Pattern formatPattern = Pattern
       .compile("%(?:(\\d+)\\$)?([A-Za-z%]|$)");
 
-  private Component translateComponent(
-      TranslationRegistry registry, Component component) {
-    Component translated = translateComponentIfNeeded(registry, component, null);
-    return translated != null ? translated : component;
-  }
-
+  /**
+   * Represents a formatting context. This context is used
+   * when formatting a translation with arguments.
+   */
   private static class FormattingContext {
 
     private final List<Component> arguments;
@@ -355,6 +364,10 @@ public class TranslationManager {
 
     private FormattingContext(List<Component> arguments) {
       this.arguments = arguments;
+    }
+
+    Component argument(@Nullable String index) {
+      return this.arguments.get(index == null ? this.nextArgument++ : Integer.parseInt(index));
     }
   }
 
@@ -375,9 +388,15 @@ public class TranslationManager {
    */
   private static class TextAppender {
 
-    TextComponent.Builder builder = TextComponent.builder();
-
+    private TextComponent.@Nullable Builder builder = null;
     private StringBuilder text = null;
+
+    TextComponent.Builder builder() {
+      if (this.builder == null) {
+        this.builder = TextComponent.builder();
+      }
+      return this.builder;
+    }
 
     void append(String text) {
       if (this.text == null) {
@@ -387,19 +406,32 @@ public class TranslationManager {
       }
     }
 
+    void append(String text, int start, int end) {
+      if (this.text == null) {
+        this.text = new StringBuilder(text.substring(start, end));
+      } else {
+        this.text.append(text, start, end);
+      }
+    }
+
     void append(Component component) {
       if (isPlainComponent(component)) {
         append(((TextComponent) component).content());
       } else {
         appendRemaining();
-        this.builder.append(component);
+        builder().append(component);
       }
     }
 
-    private void appendRemaining() {
+    void appendRemaining() {
       if (this.text != null && this.text.length() > 0) {
-        this.builder.append(this.text.toString());
+        String value = this.text.toString();
         this.text.setLength(0);
+        if (this.builder == null) {
+          this.builder = TextComponent.builder(value);
+        } else {
+          this.builder.append(value);
+        }
       }
     }
   }
@@ -435,18 +467,14 @@ public class TranslationManager {
         }
         int start = matcher.start();
         if (start != end) {
-          appender.append(content.substring(end, start));
+          appender.append(content, end, start);
         }
         end = matcher.end();
 
-        String format = matcher.group(2);
-        char code = format.charAt(0);
+        char code = matcher.group(2).charAt(0);
         if (code == 's') {
-          String argumentIndex = matcher.group(1);
-          int index = argumentIndex != null ? Integer.parseInt(argumentIndex) :
-              formattingContext.nextArgument++;
-          Component argument = formattingContext.arguments.get(index);
-          appender.append(translateComponent(registry, argument));
+          Component argument = formattingContext.argument(matcher.group(1));
+          appender.append(translateComponent(registry, argument, null));
         } else if (code == '%') {
           appender.append("%");
         } else {
@@ -456,11 +484,11 @@ public class TranslationManager {
 
       if (appender != null) {
         if (end != content.length()) {
-          appender.append(content.substring(end));
+          appender.append(content, end, content.length());
         }
 
         appender.appendRemaining();
-        TextComponent.Builder builder = appender.builder;
+        TextComponent.Builder builder = appender.builder();
         builder.style(component.style());
 
         List<Component> translatedChildren = translateComponentsIfNeeded(
@@ -489,44 +517,29 @@ public class TranslationManager {
       String key = translatable.key();
       Translation translation = registry.get(key);
       if (translation != null) {
-        TextComponent.Builder builder;
+        Component formatted;
         if (translation instanceof FixedTranslation) {
           FixedTranslation fixedTranslation = (FixedTranslation) translation;
-          Component fixed = fixedTranslation.component;
-          if (children.isEmpty() && !component.hasStyling()) {
-            return fixed;
-          }
-          if (fixedTranslation.plainComponent) {
-            builder = TextComponent.builder(((TextComponent) fixed).content());
-          } else {
-            builder = TextComponent.builder().append(fixed);
-          }
+          formatted = fixedTranslation.component;
         } else {
           List<Component> arguments = translatable.args();
           FormattingContext context = new FormattingContext(arguments);
-          Component formatted = translateComponentIfNeeded(
-              registry, translation.component, context);
-          if (formatted == null) {
-            formatted = translation.component;
-          }
-          if (isPlainComponent(formatted)) {
-            formatted = formatted.style(component.style())
-                .children(component.children());
-            if (translatedHoverEvent != null) {
-              formatted = formatted.hoverEvent(translatedHoverEvent);
-            }
+          formatted = translateComponent(registry, translation.component, context);
+        }
+        if (children.isEmpty()) {
+          if (!component.hasStyling()) {
             return formatted;
           }
-          builder = TextComponent.builder()
-              .append(formatted);
+        } else {
+          children = translatedChildren != null ? translatedChildren :
+              new ArrayList<>(children);
+          children.addAll(0, formatted.children());
+          formatted = formatted.children(children);
         }
-        builder
-            .style(component.style())
-            .append(translatedChildren != null ? translatedChildren : children);
         if (translatedHoverEvent != null) {
-          builder.hoverEvent(translatedHoverEvent);
+          formatted = formatted.hoverEvent(translatedHoverEvent);
         }
-        return builder.build();
+        return formatted.style(mergeStyle(component.style(), formatted.style()));
       }
     }
 
@@ -541,6 +554,29 @@ public class TranslationManager {
     }
 
     return null;
+  }
+
+  // TODO: Replace with text library method once added
+  private static Style mergeStyle(Style first, Style second) {
+    first = first.mergeDecorations(second);
+
+    TextColor color = second.color();
+    if (color != null) {
+      first = first.color(color);
+    }
+
+    HoverEvent hoverEvent = second.hoverEvent();
+    if (hoverEvent != null) {
+      first = first.hoverEvent(hoverEvent);
+    }
+
+    ClickEvent clickEvent = second.clickEvent();
+    if (clickEvent != null) {
+      first = first.clickEvent(clickEvent);
+    }
+
+    String insertion = second.insertion();
+    return insertion != null ? first.insertion(insertion) : first;
   }
 
   private @Nullable List<Component> translateComponentsIfNeeded(
