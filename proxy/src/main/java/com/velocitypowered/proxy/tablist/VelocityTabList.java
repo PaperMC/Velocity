@@ -41,7 +41,7 @@ public class VelocityTabList implements TabList {
    * components on the client.
    */
   public void updateTranslations() {
-    Locale locale = this.player.getPlayerSettings().getLocale();
+    Locale locale = this.player.getLocale();
     TranslationManager translationManager = this.server.getTranslationManager();
 
     Component header = this.header;
@@ -86,7 +86,7 @@ public class VelocityTabList implements TabList {
     this.footer = footer;
 
     TranslationManager translationManager = this.server.getTranslationManager();
-    Locale locale = this.player.getPlayerSettings().getLocale();
+    Locale locale = this.player.getLocale();
 
     Component translatedHeader = translationManager.translateComponent(locale, header);
     Component translatedFooter = translationManager.translateComponent(locale, footer);
@@ -237,7 +237,7 @@ public class VelocityTabList implements TabList {
     Component displayName = entry.getDisplayName().orElse(null);
     if (displayName != null) {
       displayName = this.server.getTranslationManager().translateComponent(
-          this.player.getPlayerSettings().getLocale(), displayName);
+          this.player.getLocale(), displayName);
     }
     return itemFrom(entry, displayName);
   }

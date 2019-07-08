@@ -318,7 +318,7 @@ public class TranslationManager {
    */
   public Component translateComponent(Player player, Component component) {
     checkNotNull(player, "player");
-    return translateComponent(player.getPlayerSettings().getLocale(), component);
+    return translateComponent(player.getLocale(), component);
   }
 
   /**
@@ -408,10 +408,9 @@ public class TranslationManager {
 
     void append(String text, int start, int end) {
       if (this.text == null) {
-        this.text = new StringBuilder(text.substring(start, end));
-      } else {
-        this.text.append(text, start, end);
+        this.text = new StringBuilder(end - start + 16);
       }
+      this.text.append(text, start, end);
     }
 
     void append(Component component) {

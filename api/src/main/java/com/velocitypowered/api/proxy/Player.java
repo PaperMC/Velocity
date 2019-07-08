@@ -12,6 +12,7 @@ import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.Title;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.text.Component;
@@ -29,7 +30,6 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    */
   String getUsername();
 
-
   /**
    * Returns the player's UUID.
    *
@@ -43,6 +43,15 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * @return an {@link Optional} the server that the player is connected to, which may be empty
    */
   Optional<ServerConnection> getCurrentServer();
+
+  /**
+   * Gets the player's locale.
+   *
+   * @return the locale
+   */
+  default Locale getLocale() {
+    return getPlayerSettings().getLocale();
+  }
 
   /**
    * Returns the player's client settings.

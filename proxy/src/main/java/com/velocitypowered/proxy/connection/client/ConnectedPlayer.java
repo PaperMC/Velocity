@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
@@ -48,6 +50,7 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.text.translation.TranslationManager;
 import com.velocitypowered.proxy.util.VelocityMessages;
+import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -56,10 +59,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -100,6 +103,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private ClientConnectionPhase connectionPhase;
   private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
+  private final Set<VelocityBossBar> bossBars = Sets.newConcurrentHashSet();
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
@@ -113,6 +117,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
+  }
+
+  public Set<VelocityBossBar> getBossBars() {
+    return bossBars;
+  }
+
+  /**
+   * Cleanup references of boss bars to this player.
+   */
+  private void cleanupBossBarReferences() {
+    for (VelocityBossBar bossBar : ImmutableSet.copyOf(this.bossBars)) {
+      bossBar.removePlayer(this);
+    }
   }
 
   @Override
@@ -156,10 +173,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   void setPlayerSettings(ClientSettings settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
-    tabList.updateTranslations();
-    // TODO: Update boss bars
-    minecraftConnection.flush();
+    updateTranslations();
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
+  }
+
+  private void updateTranslations() {
+    tabList.updateTranslations();
+    bossBars.forEach(bossBar -> bossBar.updateTranslationsFor(this));
+    minecraftConnection.flush();
   }
 
   @Override
@@ -568,7 +589,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
     server.unregisterConnection(this);
     server.getEventManager().fire(new DisconnectEvent(this))
-            .thenRun(() -> this.teardownFuture.complete(null));
+            .thenRun(this::finishTeardown);
+  }
+
+  private void finishTeardown() {
+    cleanupBossBarReferences();
+    this.teardownFuture.complete(null);
   }
 
   public CompletableFuture<Void> getTeardownFuture() {

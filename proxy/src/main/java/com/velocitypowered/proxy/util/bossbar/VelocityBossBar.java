@@ -12,12 +12,11 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +28,7 @@ import net.kyori.text.serializer.gson.GsonComponentSerializer;
 public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.BossBar {
 
   private final VelocityServer server;
-  private final List<Player> players;
+  private final Set<Player> players;
   private final Set<BossBarFlag> flags;
   private final UUID uuid;
   private boolean visible;
@@ -57,8 +56,17 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     checkPercent(percent);
     this.uuid = UUID.randomUUID();
     visible = true;
-    players = new ArrayList<>();
+    players = new HashSet<>();
     flags = EnumSet.noneOf(BossBarFlag.class);
+  }
+
+  public void updateTranslationsFor(ConnectedPlayer player) {
+    Component translatedTitle = server.getTranslationManager()
+        .translateComponent(player.getLocale(), title);
+    if (translatedTitle != title) {
+      player.getMinecraftConnection().delayedWrite(
+          updateTitlePacket(translatedTitle));
+    }
   }
 
   @Override
@@ -72,20 +80,22 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
   @Override
   public void addPlayer(Player player) {
     checkNotNull(player, "player");
-    if (!players.contains(player)) {
-      players.add(player);
-    }
-    if (player.isActive() && visible) {
-      sendPacket(player, addPacket(player.getPlayerSettings().getLocale()));
+    if (players.add(player)) {
+      ((ConnectedPlayer) player).getBossBars().add(this);
+      if (player.isActive() && visible) {
+        sendPacket(player, addPacket(player.getLocale()));
+      }
     }
   }
 
   @Override
   public void removePlayer(Player player) {
     checkNotNull(player, "player");
-    players.remove(player);
-    if (player.isActive()) {
-      sendPacket(player, removePacket());
+    if (players.remove(player)) {
+      ((ConnectedPlayer) player).getBossBars().remove(this);
+      if (player.isActive()) {
+        sendPacket(player, removePacket());
+      }
     }
   }
 
@@ -113,17 +123,21 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     if (visible) {
       Map<Locale, BossBar> byLocale = new HashMap<>();
       sendToAffected(player -> byLocale
-          .computeIfAbsent(player.getPlayerSettings().getLocale(), this::updateTitle));
+          .computeIfAbsent(player.getLocale(), this::updateTitlePacket));
     }
   }
 
-  private BossBar updateTitle(Locale locale) {
+  private BossBar updateTitlePacket(Locale locale) {
+    Component translatedTitle = server.getTranslationManager()
+        .translateComponent(locale, title);
+    return updateTitlePacket(translatedTitle);
+  }
+
+  private BossBar updateTitlePacket(Component title) {
     BossBar bar = new BossBar();
     bar.setUuid(uuid);
     bar.setAction(BossBar.UPDATE_NAME);
-    Component translatedTitle = server.getTranslationManager()
-        .translateComponent(locale, title);
-    bar.setName(GsonComponentSerializer.INSTANCE.serialize(translatedTitle));
+    bar.setName(GsonComponentSerializer.INSTANCE.serialize(title));
     return bar;
   }
 
@@ -206,7 +220,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
       // The bar is being shown
       Map<Locale, BossBar> byLocale = new HashMap<>();
       sendToAffected(player -> byLocale
-          .computeIfAbsent(player.getPlayerSettings().getLocale(), this::addPacket));
+          .computeIfAbsent(player.getLocale(), this::addPacket));
     }
     this.visible = visible;
   }
