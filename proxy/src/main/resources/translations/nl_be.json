@@ -25,6 +25,22 @@
     "text": "Je werd verplaatst van de server omdat je eruit werd gezet.",
     "color": "red"
   },
+  "velocity.command.not-found": {
+    "text": "Commando niet gevonden.",
+    "color": "red"
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Te veel argumenten.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "De server %s bestaat niet.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Enkel spelers mogen dit commando uitvoeren.",
+    "color": "red"
+  },
   "velocity.command.glist.players-online": {
     "text": "Er zijn ",
     "color": "yellow",
@@ -48,12 +64,58 @@
       "."
     ]
   },
-  "velocity.command.too-many-arguments": {
-    "text": "Te veel argumenten.",
-    "color": "red"
+  "velocity.command.server.currently-connected-to": {
+    "text": "Je bent al verbonden met %s.",
+    "color": "yellow"
   },
-  "velocity.command.server-doesnt-exist": {
-    "text": "De server %s bestaat niet.",
+  "velocity.command.server.server-list": {
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Beschikbare servers: ",
+        "color": "yellow"
+      },
+      "%s"
+    ]
+  },
+  "velocity.command.server.server-list.entry.current.hover": "Momenteel verbonden met deze server\n%s speler(s) online",
+  "velocity.command.server.server-list.entry.other.hover": "Klik om te verbinden met deze server\n%s speler(s) online",
+  "velocity.command.info.copyright": "Copyright 2018-2019 %s. %s is vrij gelicentieerd onder de voorwaarden van de MIT License.",
+  "velocity.command.info.website": {
+    "text": "Bezoek de ",
+    "extra": [
+      {
+        "text": "Velocity Website",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " of de ",
+      {
+        "text": "Velocity GitHub",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "Er zijn geen plugins geïnstalleerd.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.plugin-list.entry.author": "\nAuteur: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nAuteurs: %s",
+  "velocity.command.reload.success": {
+    "text": "Je configuratie werd opnieuw geladen.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Het is niet mogelijk om je configuratie opnieuw te laden. Controleer de console voor details.",
     "color": "red"
   }
 }

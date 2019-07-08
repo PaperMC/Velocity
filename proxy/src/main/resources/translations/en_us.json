@@ -25,32 +25,13 @@
     "text": "You were moved from the server you were on because you were kicked.",
     "color": "red"
   },
-  "velocity.command.glist.invalid-server": {
-    "text": "The server %s doesn't exist.",
+  "velocity.command.usage": {
+    "text": "/velocity <%s>",
     "color": "red"
   },
-  "velocity.command.glist.players-online": {
-    "text": "There are ",
-    "color": "yellow",
-    "extra": [
-      {
-        "text": "%s",
-        "color": "green"
-      },
-      " player(s) online."
-    ]
-  },
-  "velocity.command.glist.usage": {
-    "text": "To view all players on servers, use ",
-    "color": "yellow",
-    "extra": [
-      {
-        "text": "/glist all",
-        "color": "dark_aqua",
-        "insertion": "/glist all"
-      },
-      "."
-    ]
+  "velocity.command.not-found": {
+    "text": "Command not found.",
+    "color": "red"
   },
   "velocity.command.too-many-arguments": {
     "text": "Too many arguments.",
@@ -64,30 +45,107 @@
     "text": "Only players may run this command.",
     "color": "red"
   },
+  "velocity.command.glist.players-online": {
+    "text": "There are ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " player(s) online."
+    ]
+  },
+  "velocity.command.glist.player-list": [
+    "",
+    {
+      "text": "[%s] ",
+      "color": "dark_aqua"
+    },
+    {
+      "text": "(%s)",
+      "color": "gray"
+    },
+    ": %s"
+  ],
+  "velocity.command.glist.player-list.entry": "%s",
+  "velocity.command.glist.player-list.entry.separator": ", ",
+  "velocity.command.glist.usage": {
+    "text": "To view all players on servers, use ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
   "velocity.command.server.currently-connected-to": {
     "text": "You are currently connected to %s.",
     "color": "yellow"
   },
-  "velocity.command.server.available-servers": {
+  "velocity.command.server.server-list": {
     "text": "",
     "color": "gray",
     "extra": [
       {
         "text": "Available servers: ",
         "color": "yellow"
-      }
+      },
+      "%s"
     ]
   },
-  "velocity.command.server.current-server": {
+  "velocity.command.server.server-list.entry.separator": ", ",
+  "velocity.command.server.server-list.entry.current": {
     "text": "%s",
     "color": "green"
   },
-  "velocity.command.server.current-server.hover": "Currently connected to this server\n%s player(s) online",
-  "velocity.command.server.other-server": {
+  "velocity.command.server.server-list.entry.current.hover": "Currently connected to this server\n%s player(s) online",
+  "velocity.command.server.server-list.entry.other": {
     "text": "%s",
     "color": "gray"
   },
-  "velocity.command.server.other-server.hover": "Click to connect to this server\n%s player(s) online",
+  "velocity.command.server.server-list.entry.other.hover": "Click to connect to this server\n%s player(s) online",
+  "velocity.command.info.usage": {
+    "text": "/velocity version",
+    "color": "red"
+  },
+  "velocity.command.info.velocity": {
+    "text": "%s ",
+    "color": "dark_aqua",
+    "bold": true,
+    "extra": [
+      {
+        "text": "%s",
+        "bold": false
+      }
+    ]
+  },
+  "velocity.command.info.copyright": "Copyright 2018-2019 %s. %s is freely licensed under the terms of the MIT License.",
+  "velocity.command.info.website": {
+    "text": "Visit the ",
+    "extra": [
+      {
+        "text": "Velocity Website",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " or the ",
+      {
+        "text": "Velocity GitHub",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
   "velocity.command.plugins.no-plugins-installed": {
     "text": "No plugins installed.",
     "color": "yellow"
@@ -96,10 +154,36 @@
     "text": "/velocity plugins",
     "color": "red"
   },
-  "velocity.command.plugins.plugins": {
+  "velocity.command.plugins.plugin-list": {
     "text": "Plugins: ",
-    "color": "yellow"
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "white"
+      }
+    ]
   },
+  "velocity.command.plugins.plugin-list.entry": {
+    "text": "%s",
+    "color": "gray",
+    "hoverEvent": {
+      "action": "show_text",
+      "value": [
+        "",
+        "%s %s",
+        "%s",
+        "%s",
+        "%s"
+      ]
+    }
+  },
+  "velocity.command.plugins.plugin-list.entry.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.url": "\nWebsite: %s",
+  "velocity.command.plugins.plugin-list.entry.author": "\nAuthor: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nAuthors: %s",
+  "velocity.command.plugins.plugin-list.entry.authors.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.description": "\n\n%s",
   "velocity.command.reload.success": {
     "text": "Configuration reloaded.",
     "color": "green"

@@ -14,7 +14,6 @@ import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.kyori.text.Component;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.event.ClickEvent;
@@ -25,16 +24,18 @@ public class ServerCommand implements Command {
 
   private static final Translatable CURRENTLY_CONNECTED_TO = Translatable
       .of("velocity.command.server.currently-connected-to");
-  private static final Translatable AVAILABLE_SERVERS = Translatable
-      .of("velocity.command.server.available-servers");
+  private static final Translatable SERVER_LIST = Translatable
+      .of("velocity.command.server.server-list");
+  private static final TextJoiner SERVER_LIST_ENTRY_JOINER = TextJoiner.on(TranslatableComponent
+      .of("velocity.command.server.server-list.entry.separator"));
   private static final Translatable CURRENT_SERVER = Translatable
-      .of("velocity.command.server.current-server");
+      .of("velocity.command.server.server-list.entry.current");
   private static final Translatable CURRENT_SERVER_HOVER = Translatable
-      .of("velocity.command.server.current-server.hover");
+      .of("velocity.command.server.server-list.entry.current.hover");
   private static final Translatable OTHER_SERVER = Translatable
-      .of("velocity.command.server.other-server");
+      .of("velocity.command.server.server-list.entry.other");
   private static final Translatable OTHER_SERVER_HOVER = Translatable
-      .of("velocity.command.server.other-server.hover");
+      .of("velocity.command.server.server-list.entry.other.hover");
 
   private final ProxyServer server;
 
@@ -66,30 +67,28 @@ public class ServerCommand implements Command {
           .orElse("<unknown>");
       player.sendMessage(CURRENTLY_CONNECTED_TO.with(currentServer));
 
-      // Assemble the list of servers as components
-      TranslatableComponent.Builder serverListBuilder = AVAILABLE_SERVERS.builder();
+      Component entriesComponent = SERVER_LIST_ENTRY_JOINER
+          .join(ImmutableList.copyOf(server.getAllServers()).stream()
+              .map(rs -> {
+                String serverName = rs.getServerInfo().getName();
+                int playersOnline = rs.getPlayersConnected().size();
+                if (serverName.equals(currentServer)) {
+                  return CURRENT_SERVER
+                      .builderWith(serverName)
+                      .hoverEvent(HoverEvent.showText(CURRENT_SERVER_HOVER.with(playersOnline)))
+                      .build();
+                } else {
+                  return OTHER_SERVER
+                      .builderWith(serverName)
+                      .clickEvent(ClickEvent.runCommand(
+                          "/server " + rs.getServerInfo().getName()))
+                      .hoverEvent(HoverEvent.showText(OTHER_SERVER_HOVER.with(playersOnline)))
+                      .build();
+                }
+              }));
+      Component serverListComponent = SERVER_LIST.with(entriesComponent);
 
-      Stream<Component> infos = ImmutableList.copyOf(server.getAllServers()).stream()
-          .map(rs -> {
-            String serverName = rs.getServerInfo().getName();
-            int playersOnline = rs.getPlayersConnected().size();
-            if (serverName.equals(currentServer)) {
-              return CURRENT_SERVER
-                  .builderWith(serverName)
-                  .hoverEvent(HoverEvent.showText(CURRENT_SERVER_HOVER.with(playersOnline)))
-                  .build();
-            } else {
-              return OTHER_SERVER
-                  .builderWith(serverName)
-                  .clickEvent(ClickEvent.runCommand(
-                      "/server " + rs.getServerInfo().getName()))
-                  .hoverEvent(HoverEvent.showText(OTHER_SERVER_HOVER.with(playersOnline)))
-                  .build();
-            }
-          });
-      TextJoiner.on(", ").appendTo(serverListBuilder, infos);
-
-      player.sendMessage(serverListBuilder.build());
+      player.sendMessage(serverListComponent);
     }
   }
 

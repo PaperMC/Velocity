@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.Command;
@@ -11,6 +10,8 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.text.TextJoiner;
+import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -19,15 +20,14 @@ import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
-import net.kyori.text.event.ClickEvent;
-import net.kyori.text.event.HoverEvent;
-import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommand implements Command {
+
+  private static final Translatable USAGE = Translatable
+      .of("velocity.command.usage");
 
   private final Map<String, Command> subcommands;
 
@@ -49,7 +49,7 @@ public class VelocityCommand implements Command {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(TextComponent.of(commandText, TextColor.RED));
+    source.sendMessage(USAGE.with(commandText));
   }
 
   @Override
@@ -143,6 +143,15 @@ public class VelocityCommand implements Command {
 
   private static class Info implements Command {
 
+    private static final Component USAGE = TranslatableComponent
+        .of("velocity.command.info.usage");
+    private static final Translatable VELOCITY = Translatable
+        .of("velocity.command.info.velocity");
+    private static final Translatable COPYRIGHT = Translatable
+        .of("velocity.command.info.copyright");
+    private static final Component WEBSITE = TranslatableComponent
+        .of("velocity.command.info.website");
+
     private final ProxyServer server;
 
     private Info(ProxyServer server) {
@@ -152,39 +161,17 @@ public class VelocityCommand implements Command {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
+        source.sendMessage(USAGE);
         return;
       }
 
       ProxyVersion version = server.getVersion();
 
-      TextComponent velocity = TextComponent.builder(version.getName() + " ")
-          .decoration(TextDecoration.BOLD, true)
-          .color(TextColor.DARK_AQUA)
-          .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
-          .build();
-      TextComponent copyright = TextComponent
-          .of("Copyright 2018-2019 " + version.getVendor() + ". " + version.getName()
-              + " is freely licensed under the terms of the MIT License.");
-      source.sendMessage(velocity);
-      source.sendMessage(copyright);
+      source.sendMessage(VELOCITY.with(version.getName(), version.getVersion()));
+      source.sendMessage(COPYRIGHT.with(version.getVendor(), version.getName()));
 
       if (version.getName().equals("Velocity")) {
-        TextComponent velocityWebsite = TextComponent.builder()
-            .content("Visit the ")
-            .append(TextComponent.builder("Velocity website")
-                .color(TextColor.GREEN)
-                .clickEvent(
-                    ClickEvent.openUrl("https://www.velocitypowered.com"))
-                .build())
-            .append(TextComponent.of(" or the "))
-            .append(TextComponent.builder("Velocity GitHub")
-                .color(TextColor.GREEN)
-                .clickEvent(ClickEvent.openUrl(
-                    "https://github.com/VelocityPowered/Velocity"))
-                .build())
-            .build();
-        source.sendMessage(velocityWebsite);
+        source.sendMessage(WEBSITE);
       }
     }
 
@@ -200,6 +187,22 @@ public class VelocityCommand implements Command {
         .of("velocity.command.plugins.no-plugins-installed");
     private static final Component USAGE = TranslatableComponent
         .of("velocity.command.plugins.usage");
+    private static final Translatable PLUGIN_LIST = Translatable
+        .of("velocity.command.plugins.plugin-list");
+    private static final Translatable PLUGIN = Translatable
+        .of("velocity.command.plugins.plugin-list.entry");
+    private static final TextJoiner PLUGIN_JOINER = TextJoiner.on(TranslatableComponent
+        .of("velocity.command.plugins.plugin-list.entry.separator"));
+    private static final Translatable PLUGIN_URL = Translatable
+        .of("velocity.command.plugins.plugin-list.entry.url");
+    private static final Translatable PLUGIN_AUTHOR = Translatable
+        .of("velocity.command.plugins.plugin-list.entry.author");
+    private static final Translatable PLUGIN_AUTHORS = Translatable
+        .of("velocity.command.plugins.plugin-list.entry.authors");
+    private static final TextJoiner PLUGIN_AUTHOR_JOINER = TextJoiner
+        .on("velocity.command.plugins.plugin-list.entry.authors.separator");
+    private static final Translatable PLUGIN_DESCRIPTION = Translatable
+        .of("velocity.command.plugins.plugin-list.entry.description");
 
     private final ProxyServer server;
 
@@ -222,47 +225,36 @@ public class VelocityCommand implements Command {
         return;
       }
 
-      TranslatableComponent.Builder output = TranslatableComponent
-          .builder("velocity.command.plugins.plugins");
+      Component pluginsComponent = PLUGIN_JOINER.join(plugins.stream()
+          .map(plugin -> componentForPlugin(plugin.getDescription())));
+      Component outputComponent = PLUGIN_LIST.with(pluginsComponent);
 
-      for (int i = 0; i < pluginCount; i++) {
-        PluginContainer plugin = plugins.get(i);
-        output.append(componentForPlugin(plugin.getDescription()));
-        if (i + 1 < pluginCount) {
-          output.append(TextComponent.of(", "));
-        }
-      }
-
-      source.sendMessage(output.build());
+      source.sendMessage(outputComponent);
     }
 
-    private TextComponent componentForPlugin(PluginDescription description) {
-      String pluginInfo = description.getName().orElse(description.getId())
-          + description.getVersion().map(v -> " " + v).orElse("");
+    private Component componentForPlugin(PluginDescription description) {
+      String id = description.getId();
+      String name = description.getName().orElse(id);
+      String version = description.getVersion().orElse("");
 
-      TextComponent.Builder hoverText = TextComponent.builder(pluginInfo);
+      Component urlComponent = description.getUrl()
+          .<Component>map(PLUGIN_URL::with)
+          .orElse(TextComponent.empty());
+      Component authorsComponent = TextComponent.empty();
+      Component descriptionComponent = description.getDescription()
+          .<Component>map(PLUGIN_DESCRIPTION::with)
+          .orElse(TextComponent.empty());
 
-      description.getUrl().ifPresent(url -> {
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.of("Website: " + url));
-      });
-      if (!description.getAuthors().isEmpty()) {
-        hoverText.append(TextComponent.newline());
-        if (description.getAuthors().size() == 1) {
-          hoverText.append(TextComponent.of("Author: " + description.getAuthors().get(0)));
+      List<String> authors = description.getAuthors();
+      if (!authors.isEmpty()) {
+        if (authors.size() == 1) {
+          authorsComponent = PLUGIN_AUTHOR.with(authors.get(0));
         } else {
-          hoverText.append(TextComponent.of("Authors: " + Joiner.on(", ")
-              .join(description.getAuthors())));
+          authorsComponent = PLUGIN_AUTHORS.with(PLUGIN_AUTHOR_JOINER.join(authors));
         }
       }
-      description.getDescription().ifPresent(pdesc -> {
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.of(pdesc));
-      });
 
-      return TextComponent.of(description.getId(), TextColor.GRAY)
-          .hoverEvent(HoverEvent.showText(hoverText.build()));
+      return PLUGIN.with(id, name, version, urlComponent, authorsComponent, descriptionComponent);
     }
 
     @Override

@@ -9,8 +9,7 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
@@ -23,6 +22,9 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
+
+  private static final TranslatableComponent COMMAND_NOT_FOUND =
+      TranslatableComponent.of("velocity.command.not-found");
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 
@@ -92,7 +94,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   protected void runCommand(String command) {
     try {
       if (!this.server.getCommandManager().execute(this, command)) {
-        sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+        sendMessage(COMMAND_NOT_FOUND);
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);
