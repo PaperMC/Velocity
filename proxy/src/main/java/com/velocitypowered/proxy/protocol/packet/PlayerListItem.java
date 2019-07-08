@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -138,15 +137,6 @@ public class PlayerListItem implements MinecraftPacket {
 
     public Item(UUID uuid) {
       this.uuid = uuid;
-    }
-
-    public static Item from(TabListEntry entry) {
-      return new Item(entry.getProfile().getId())
-          .setName(entry.getProfile().getName())
-          .setProperties(entry.getProfile().getProperties())
-          .setLatency(entry.getLatency())
-          .setGameMode(entry.getGameMode())
-          .setDisplayName(entry.getDisplayName().orElse(null));
     }
 
     public UUID getUuid() {

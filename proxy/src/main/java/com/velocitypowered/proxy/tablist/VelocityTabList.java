@@ -4,13 +4,17 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.text.translation.TranslationManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,23 +24,82 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
 
-  private final MinecraftConnection connection;
+  private final VelocityServer server;
+  private final ConnectedPlayer player;
   private final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
-  public VelocityTabList(MinecraftConnection connection) {
-    this.connection = connection;
+  private @Nullable Component header;
+  private @Nullable Component footer;
+
+  public VelocityTabList(VelocityServer server, ConnectedPlayer player) {
+    this.server = server;
+    this.player = player;
+  }
+
+  /**
+   * Sends packets to update translated
+   * components on the client.
+   */
+  public void updateTranslations() {
+    Locale locale = this.player.getPlayerSettings().getLocale();
+    TranslationManager translationManager = this.server.getTranslationManager();
+
+    Component header = this.header;
+    if (header != null) {
+      header = translationManager.translateComponent(locale, header);
+    }
+
+    Component footer = this.footer;
+    if (footer != null) {
+      footer = translationManager.translateComponent(locale, footer);
+    }
+
+    if (header != this.header || footer != this.footer) {
+      player.getMinecraftConnection().delayedWrite(HeaderAndFooter.create(header, footer));
+    }
+
+    List<PlayerListItem.Item> displayNameUpdates = null;
+    for (VelocityTabListEntry entry : this.entries.values()) {
+      Component displayName = entry.getDisplayName().orElse(null);
+      if (displayName != null) {
+        Component translated = translationManager.translateComponent(locale, displayName);
+        if (displayName != translated) {
+          if (displayNameUpdates == null) {
+            displayNameUpdates = new ArrayList<>();
+          }
+          displayNameUpdates.add(itemFrom(entry, translated));
+        }
+      }
+    }
+    if (displayNameUpdates != null) {
+      player.getMinecraftConnection().delayedWrite(
+          new PlayerListItem(PlayerListItem.UPDATE_DISPLAY_NAME, displayNameUpdates));
+    }
   }
 
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooter.create(header, footer));
+
+    this.header = header;
+    this.footer = footer;
+
+    TranslationManager translationManager = this.server.getTranslationManager();
+    Locale locale = this.player.getPlayerSettings().getLocale();
+
+    Component translatedHeader = translationManager.translateComponent(locale, header);
+    Component translatedFooter = translationManager.translateComponent(locale, footer);
+
+    player.getMinecraftConnection().write(
+        HeaderAndFooter.create(translatedHeader, translatedFooter));
   }
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    header = null;
+    footer = null;
+    player.getMinecraftConnection().write(HeaderAndFooter.reset());
   }
 
   @Override
@@ -49,8 +112,8 @@ public class VelocityTabList implements TabList {
     Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
         "Not a Velocity tab list entry");
 
-    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-    connection.write(
+    PlayerListItem.Item packetItem = itemFrom(entry);
+    player.getMinecraftConnection().write(
         new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
@@ -61,8 +124,8 @@ public class VelocityTabList implements TabList {
 
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(
+      PlayerListItem.Item packetItem = itemFrom(entry);
+      player.getMinecraftConnection().write(
           new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
     }
 
@@ -83,10 +146,11 @@ public class VelocityTabList implements TabList {
   public void clearAll() {
     List<PlayerListItem.Item> items = new ArrayList<>();
     for (TabListEntry value : entries.values()) {
-      items.add(PlayerListItem.Item.from(value));
+      items.add(itemFrom(value));
     }
     entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    player.getMinecraftConnection().delayedWrite(
+        new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override
@@ -163,8 +227,27 @@ public class VelocityTabList implements TabList {
 
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
+      PlayerListItem.Item packetItem = itemFrom(entry);
+      player.getMinecraftConnection().write(
+          new PlayerListItem(action, Collections.singletonList(packetItem)));
     }
+  }
+
+  PlayerListItem.Item itemFrom(TabListEntry entry) {
+    Component displayName = entry.getDisplayName().orElse(null);
+    if (displayName != null) {
+      displayName = this.server.getTranslationManager().translateComponent(
+          this.player.getPlayerSettings().getLocale(), displayName);
+    }
+    return itemFrom(entry, displayName);
+  }
+
+  static PlayerListItem.Item itemFrom(TabListEntry entry, @Nullable Component displayName) {
+    return new PlayerListItem.Item(entry.getProfile().getId())
+        .setName(entry.getProfile().getName())
+        .setProperties(entry.getProfile().getProperties())
+        .setLatency(entry.getLatency())
+        .setGameMode(entry.getGameMode())
+        .setDisplayName(displayName);
   }
 }

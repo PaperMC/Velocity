@@ -106,7 +106,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile,
       MinecraftConnection minecraftConnection, @Nullable InetSocketAddress virtualHost) {
     this.server = server;
-    this.tabList = new VelocityTabList(minecraftConnection);
+    this.tabList = new VelocityTabList(server, this);
     this.profile = profile;
     this.minecraftConnection = minecraftConnection;
     this.virtualHost = virtualHost;
@@ -156,6 +156,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   void setPlayerSettings(ClientSettings settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
+    tabList.updateTranslations();
+    // TODO: Update boss bars
+    minecraftConnection.flush();
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
 
