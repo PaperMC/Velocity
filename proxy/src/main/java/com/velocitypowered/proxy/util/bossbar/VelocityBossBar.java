@@ -60,6 +60,13 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     flags = EnumSet.noneOf(BossBarFlag.class);
   }
 
+  /**
+   * Updates the translations of this boss bar for the given player.
+   *
+   * <p>This method doesn't flush any of the written packets.</p>
+   *
+   * @param player The player
+   */
   public void updateTranslationsFor(ConnectedPlayer player) {
     Component translatedTitle = server.getTranslationManager()
         .translateComponent(player.getLocale(), title);
