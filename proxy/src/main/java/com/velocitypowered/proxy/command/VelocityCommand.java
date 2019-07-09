@@ -10,8 +10,8 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.text.TextComponents;
 import com.velocitypowered.proxy.text.TextJoiner;
-import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommand implements Command {
 
-  private static final Translatable USAGE = Translatable
+  private static final TranslatableComponent USAGE = TranslatableComponent
       .of("velocity.command.usage");
 
   private final Map<String, Command> subcommands;
@@ -49,7 +49,7 @@ public class VelocityCommand implements Command {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(USAGE.with(commandText));
+    source.sendMessage(USAGE.args(TextComponent.of(commandText)));
   }
 
   @Override
@@ -143,13 +143,13 @@ public class VelocityCommand implements Command {
 
   private static class Info implements Command {
 
-    private static final Component USAGE = TranslatableComponent
+    private static final TranslatableComponent USAGE = TranslatableComponent
         .of("velocity.command.info.usage");
-    private static final Translatable VELOCITY = Translatable
+    private static final TranslatableComponent VELOCITY = TranslatableComponent
         .of("velocity.command.info.velocity");
-    private static final Translatable COPYRIGHT = Translatable
+    private static final TranslatableComponent COPYRIGHT = TranslatableComponent
         .of("velocity.command.info.copyright");
-    private static final Component WEBSITE = TranslatableComponent
+    private static final TranslatableComponent WEBSITE = TranslatableComponent
         .of("velocity.command.info.website");
 
     private final ProxyServer server;
@@ -167,8 +167,8 @@ public class VelocityCommand implements Command {
 
       ProxyVersion version = server.getVersion();
 
-      source.sendMessage(VELOCITY.with(version.getName(), version.getVersion()));
-      source.sendMessage(COPYRIGHT.with(version.getVendor(), version.getName()));
+      source.sendMessage(VELOCITY.args(TextComponents.of(version.getName(), version.getVersion())));
+      source.sendMessage(COPYRIGHT.args(TextComponents.of(version.getVendor(), version.getName())));
 
       if (version.getName().equals("Velocity")) {
         source.sendMessage(WEBSITE);
@@ -183,25 +183,25 @@ public class VelocityCommand implements Command {
 
   private static class Plugins implements Command {
 
-    private static final Component NO_PLUGINS_INSTALLED = TranslatableComponent
+    private static final TranslatableComponent NO_PLUGINS_INSTALLED = TranslatableComponent
         .of("velocity.command.plugins.no-plugins-installed");
-    private static final Component USAGE = TranslatableComponent
+    private static final TranslatableComponent USAGE = TranslatableComponent
         .of("velocity.command.plugins.usage");
-    private static final Translatable PLUGIN_LIST = Translatable
+    private static final TranslatableComponent PLUGIN_LIST = TranslatableComponent
         .of("velocity.command.plugins.plugin-list");
-    private static final Translatable PLUGIN = Translatable
+    private static final TranslatableComponent PLUGIN = TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry");
     private static final TextJoiner PLUGIN_JOINER = TextJoiner.on(TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry.separator"));
-    private static final Translatable PLUGIN_URL = Translatable
+    private static final TranslatableComponent PLUGIN_URL = TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry.url");
-    private static final Translatable PLUGIN_AUTHOR = Translatable
+    private static final TranslatableComponent PLUGIN_AUTHOR = TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry.author");
-    private static final Translatable PLUGIN_AUTHORS = Translatable
+    private static final TranslatableComponent PLUGIN_AUTHORS = TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry.authors");
     private static final TextJoiner PLUGIN_AUTHOR_JOINER = TextJoiner
         .on("velocity.command.plugins.plugin-list.entry.authors.separator");
-    private static final Translatable PLUGIN_DESCRIPTION = Translatable
+    private static final TranslatableComponent PLUGIN_DESCRIPTION = TranslatableComponent
         .of("velocity.command.plugins.plugin-list.entry.description");
 
     private final ProxyServer server;
@@ -227,7 +227,7 @@ public class VelocityCommand implements Command {
 
       Component pluginsComponent = PLUGIN_JOINER.join(plugins.stream()
           .map(plugin -> componentForPlugin(plugin.getDescription())));
-      Component outputComponent = PLUGIN_LIST.with(pluginsComponent);
+      Component outputComponent = PLUGIN_LIST.args(pluginsComponent);
 
       source.sendMessage(outputComponent);
     }
@@ -238,23 +238,25 @@ public class VelocityCommand implements Command {
       String version = description.getVersion().orElse("");
 
       Component urlComponent = description.getUrl()
-          .<Component>map(PLUGIN_URL::with)
+          .<Component>map(url -> PLUGIN_URL.args(TextComponent.of(url)))
           .orElse(TextComponent.empty());
       Component authorsComponent = TextComponent.empty();
       Component descriptionComponent = description.getDescription()
-          .<Component>map(PLUGIN_DESCRIPTION::with)
+          .<Component>map(desc -> PLUGIN_DESCRIPTION.args(TextComponent.of(desc)))
           .orElse(TextComponent.empty());
 
       List<String> authors = description.getAuthors();
       if (!authors.isEmpty()) {
         if (authors.size() == 1) {
-          authorsComponent = PLUGIN_AUTHOR.with(authors.get(0));
+          authorsComponent = PLUGIN_AUTHOR.args(TextComponent.of(authors.get(0)));
         } else {
-          authorsComponent = PLUGIN_AUTHORS.with(PLUGIN_AUTHOR_JOINER.join(authors));
+          authorsComponent = PLUGIN_AUTHORS.args(PLUGIN_AUTHOR_JOINER
+              .join(TextComponents.iterableOf(authors)));
         }
       }
 
-      return PLUGIN.with(id, name, version, urlComponent, authorsComponent, descriptionComponent);
+      return PLUGIN.args(TextComponents
+          .of(id, name, version, urlComponent, authorsComponent, descriptionComponent));
     }
 
     @Override

@@ -10,13 +10,29 @@ import net.kyori.text.Component;
 import net.kyori.text.ComponentBuilder;
 import net.kyori.text.TextComponent;
 
+/**
+ * A joiner similar to {@link com.google.common.base.Joiner}
+ * but for {@link Component}s.
+ */
 public final class TextJoiner {
 
+  /**
+   * Constructs a new {@link TextJoiner} from the given separator.
+   *
+   * @param separator The separator
+   * @return The text joiner
+   */
   public static TextJoiner on(String separator) {
     checkNotNull(separator, "separator");
     return new TextJoiner(TextComponent.of(separator));
   }
 
+  /**
+   * Constructs a new {@link TextJoiner} from the given separator.
+   *
+   * @param separator The separator
+   * @return The text joiner
+   */
   public static TextJoiner on(Component separator) {
     checkNotNull(separator, "separator");
     return new TextJoiner(separator);
@@ -28,37 +44,63 @@ public final class TextJoiner {
     this.separator = separator;
   }
 
-  public Component join(Object[] components) {
+  /**
+   * Joins the array of components.
+   *
+   * @param components The component array
+   * @return The joined component
+   */
+  public Component join(Component[] components) {
     return join(Arrays.asList(components));
   }
 
-  public Component join(Object first, Object second, Object... rest) {
-    return join(iterable(first, second, rest));
+  /**
+   * Joins the components.
+   *
+   * @param first The first component
+   * @param second The second component
+   * @param more More components
+   * @return The joined component
+   */
+  public Component join(Component first, Component second, Component... more) {
+    return join(iterable(first, second, more));
   }
 
-  public Component join(Stream<?> components) {
-    return join(components.iterator());
-  }
-
-  public Component join(Iterable<?> components) {
+  /**
+   * Joins the stream of components.
+   *
+   * @param components The component array
+   * @return The joined component
+   */
+  public Component join(Stream<? extends Component> components) {
     return join(components.iterator());
   }
 
   /**
-   * Joins the components of the {@link Iterable}.
+   * Joins the components.
    *
-   * @param components The component iterable
+   * @param components The components
    * @return The joined component
    */
-  public Component join(Iterator<?> components) {
+  public Component join(Iterable<? extends Component> components) {
+    return join(components.iterator());
+  }
+
+  /**
+   * Joins the component iterator.
+   *
+   * @param components The components
+   * @return The joined component
+   */
+  public Component join(Iterator<? extends Component> components) {
     if (components.hasNext()) {
-      Component first = wrapIfNeeded(components.next());
+      Component first = components.next();
       if (components.hasNext()) {
         TextComponent.Builder builder = TextComponent.builder();
         builder.append(first);
         while (components.hasNext()) {
           builder.append(this.separator);
-          builder.append(wrapIfNeeded(components.next()));
+          builder.append(components.next());
         }
         return builder.build();
       } else {
@@ -69,17 +111,17 @@ public final class TextJoiner {
   }
 
   public <A extends ComponentBuilder<?, A>> A appendTo(
-      A appendable, Object[] components) {
+      A appendable, Component[] components) {
     return appendTo(appendable, Arrays.asList(components));
   }
 
   public <A extends ComponentBuilder<?, A>> A appendTo(
-      A appendable, Object first, Object second, Object... rest) {
+      A appendable, Component first, Component second, Component... rest) {
     return appendTo(appendable, iterable(first, second, rest));
   }
 
   public <A extends ComponentBuilder<?, A>> A appendTo(
-      A appendable, Stream<?> components) {
+      A appendable, Stream<? extends Component> components) {
     return appendTo(appendable, components.iterator());
   }
 
@@ -92,7 +134,7 @@ public final class TextJoiner {
    * @return The joined component
    */
   public <A extends ComponentBuilder<?, A>> A appendTo(
-      A appendable, Iterable<?> components) {
+      A appendable, Iterable<? extends Component> components) {
     return appendTo(appendable, components.iterator());
   }
 
@@ -105,26 +147,22 @@ public final class TextJoiner {
    * @return The joined component
    */
   public <A extends ComponentBuilder<?, A>> A appendTo(
-      A appendable, Iterator<?> components) {
+      A appendable, Iterator<? extends Component> components) {
     if (components.hasNext()) {
-      appendable.append(wrapIfNeeded(components.next()));
+      appendable.append(components.next());
       while (components.hasNext()) {
         appendable.append(this.separator);
-        appendable.append(wrapIfNeeded(components.next()));
+        appendable.append(components.next());
       }
     }
     return appendable;
   }
 
-  private static Component wrapIfNeeded(Object object) {
-    return object instanceof Component ? (Component) object : TextComponent.of(object.toString());
-  }
-
-  private static Iterable<Object> iterable(Object first, Object second, Object[] rest) {
-    return new AbstractList<Object>() {
+  private static Iterable<Component> iterable(Component first, Component second, Component[] rest) {
+    return new AbstractList<Component>() {
 
       @Override
-      public Object get(int index) {
+      public Component get(int index) {
         return index == 0 ? first : index == 2 ? second : rest[index - 1];
       }
 

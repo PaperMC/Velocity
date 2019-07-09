@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.proxy.text.TextComponents;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -286,13 +287,7 @@ public class TranslationManager {
     checkNotNull(key, "key");
     checkNotNull(arguments, "arguments");
 
-    Component[] components = new Component[arguments.length];
-    for (int i = 0; i < arguments.length; i++) {
-      Object argument = arguments[i];
-      components[i] = argument instanceof Component ? (Component) argument :
-          TextComponent.of(argument.toString());
-    }
-
+    Component[] components = TextComponents.of(arguments);
     Component translated = translateComponent(
         locale, TranslatableComponent.of(key, components));
     return PlainComponentSerializer.INSTANCE.serialize(translated);
@@ -367,7 +362,11 @@ public class TranslationManager {
     }
 
     Component argument(@Nullable String index) {
-      return this.arguments.get(index == null ? this.nextArgument++ : Integer.parseInt(index));
+      int i = index == null ? this.nextArgument++ : Integer.parseInt(index);
+      if (i >= 0 && i < this.arguments.size()) {
+        return this.arguments.get(i);
+      }
+      return TextComponent.of("<unknown arg " + i + ">");
     }
   }
 

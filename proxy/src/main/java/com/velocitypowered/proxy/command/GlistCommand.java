@@ -7,11 +7,12 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.text.TextComponents;
 import com.velocitypowered.proxy.text.TextJoiner;
-import com.velocitypowered.proxy.text.translation.Translatable;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -19,13 +20,11 @@ public class GlistCommand implements Command {
 
   private static final Component USAGE = TranslatableComponent
       .of("velocity.command.glist.usage");
-
-  private static final Translatable PLAYERS_ONLINE = Translatable
+  private static final TranslatableComponent PLAYERS_ONLINE = TranslatableComponent
       .of("velocity.command.glist.players-online");
-
-  private static final Translatable PLAYER_LIST = Translatable
+  private static final TranslatableComponent PLAYER_LIST = TranslatableComponent
       .of("velocity.command.glist.player-list");
-  private static final Translatable PLAYER_LIST_ENTRY = Translatable
+  private static final TranslatableComponent PLAYER_LIST_ENTRY = TranslatableComponent
       .of("velocity.command.glist.player-list.entry");
   private static final TextJoiner PLAYER_LIST_ENTRY_JOINER = TextJoiner
       .on(TranslatableComponent.of("velocity.command.glist.player-list.entry.separator"));
@@ -51,19 +50,20 @@ public class GlistCommand implements Command {
       } else {
         Optional<RegisteredServer> registeredServer = server.getServer(arg);
         if (!registeredServer.isPresent()) {
-          source.sendMessage(CommandMessages.SERVER_DOESNT_EXIST.with(arg));
+          source.sendMessage(CommandMessages.SERVER_DOESNT_EXIST
+              .args(TextComponent.of(arg)));
           return;
         }
         sendServerPlayers(source, registeredServer.get(), false);
       }
     } else {
-      source.sendMessage(CommandMessages.TOO_MANY_ARGUMENTS.get());
+      source.sendMessage(CommandMessages.TOO_MANY_ARGUMENTS);
     }
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    int playersOnline = server.getAllPlayers().size();
-    target.sendMessage(PLAYERS_ONLINE.with(playersOnline));
+    Component playersOnline = TextComponent.of(server.getAllPlayers().size());
+    target.sendMessage(PLAYERS_ONLINE.args(playersOnline));
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
@@ -73,9 +73,9 @@ public class GlistCommand implements Command {
     }
 
     Component playersComponent = PLAYER_LIST_ENTRY_JOINER.join(onServer.stream()
-        .map(player -> PLAYER_LIST_ENTRY.with(player.getUsername())));
-    Component playerListComponent = PLAYER_LIST
-        .with(server.getServerInfo().getName(), onServer.size(), playersComponent);
+        .map(player -> PLAYER_LIST_ENTRY.args(TextComponent.of(player.getUsername()))));
+    Component playerListComponent = PLAYER_LIST.args(TextComponents
+        .of(server.getServerInfo().getName(), onServer.size(), playersComponent));
 
     target.sendMessage(playerListComponent);
   }
