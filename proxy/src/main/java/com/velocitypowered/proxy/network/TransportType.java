@@ -56,6 +56,10 @@ enum TransportType {
   }
 
   public static TransportType bestType() {
+    if (Boolean.getBoolean("velocity.disable-native-transport")) {
+      return NIO;
+    }
+
     if (Epoll.isAvailable()) {
       return EPOLL;
     } else {
