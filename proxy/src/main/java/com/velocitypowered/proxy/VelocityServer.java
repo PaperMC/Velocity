@@ -70,6 +70,7 @@ import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -454,6 +455,9 @@ public class VelocityServer implements ProxyServer {
    * @return {@code true} if we can register the connection, {@code false} if not
    */
   public boolean canRegisterConnection(ConnectedPlayer connection) {
+    if (configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()) {
+      return true;
+    }
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
     return !(connectionsByName.containsKey(lowerName)
         || connectionsByUuid.containsKey(connection.getUniqueId()));
@@ -466,12 +470,24 @@ public class VelocityServer implements ProxyServer {
    */
   public boolean registerConnection(ConnectedPlayer connection) {
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
-    if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
-      return false;
-    }
-    if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
-      connectionsByName.remove(lowerName, connection);
-      return false;
+
+    if (!this.configuration.isOnlineModeKickExistingPlayers()) {
+      if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+        return false;
+      }
+      if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+        connectionsByName.remove(lowerName, connection);
+        return false;
+      }
+    } else {
+      ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
+      if (existing != null) {
+        existing.disconnect(TranslatableComponent.of("multiplayer.disconnect.duplicate_login"));
+      }
+
+      // We can now replace the entries as needed.
+      connectionsByName.put(lowerName, connection);
+      connectionsByUuid.put(connection.getUniqueId(), connection);
     }
     return true;
   }

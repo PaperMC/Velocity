@@ -77,6 +77,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("announce-forge")
   private boolean announceForge = false;
 
+  @Comment({"If enabled (default is false) and the proxy is in online mode, Velocity will kick",
+      "any existing player who is online if a duplicate connection attempt is made."})
+  @ConfigKey("kick-existing-players")
+  private boolean onlineModeKickExistingPlayers = false;
+
   @Table("[servers]")
   private final Servers servers;
 
@@ -109,7 +114,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      boolean onlineModeKickExistingPlayers, Servers servers, ForcedHosts forcedHosts,
+      Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -117,6 +123,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     this.announceForge = announceForge;
     this.playerInfoForwardingMode = playerInfoForwardingMode;
     this.forwardingSecret = forwardingSecret;
+    this.onlineModeKickExistingPlayers = onlineModeKickExistingPlayers;
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
@@ -425,6 +432,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         toml.getBoolean("announce-forge", false),
         PlayerInfoForwarding.valueOf(forwardingModeName),
         forwardingSecret,
+        toml.getBoolean("kick-existing-players", false),
         servers,
         forcedHosts,
         advanced,
@@ -441,6 +449,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return builder.toString();
+  }
+
+  public boolean isOnlineModeKickExistingPlayers() {
+    return onlineModeKickExistingPlayers;
   }
 
   private static class Servers {
