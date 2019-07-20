@@ -265,15 +265,11 @@ public class VelocityServer implements ProxyServer {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public EventLoopGroup getWorkerGroup() {
-    return this.cm.getWorkerGroup();
-  }
-
-  public Bootstrap initializeGenericBootstrap() {
+  public Bootstrap createBootstrap() {
     return this.cm.createWorker();
   }
 
-  public Bootstrap initializeGenericBootstrap(EventLoopGroup group) {
+  public Bootstrap createBootstrap(EventLoopGroup group) {
     return this.cm.createWorker(group);
   }
 

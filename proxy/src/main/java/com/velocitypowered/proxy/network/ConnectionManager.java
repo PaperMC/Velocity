@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
 
@@ -113,23 +114,23 @@ public final class ConnectionManager {
   }
 
   public Bootstrap createWorker() {
-    return this.createWorker(this.workerGroup);
+    return this.createWorker(null);
   }
 
   /**
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
-   * @param group the event loop group to use
+   * @param group the event loop group to use. Use {@code null} for the default worker group.
    *
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker(EventLoopGroup group) {
+  public Bootstrap createWorker(@Nullable EventLoopGroup group) {
     return new Bootstrap()
         .channel(this.transportType.socketChannelClass)
-        .group(group)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
+        .group(group == null ? this.workerGroup : group)
         .resolver(this.resolverGroup);
   }
 
@@ -162,10 +163,6 @@ public final class ConnectionManager {
 
   public EventLoopGroup getBossGroup() {
     return bossGroup;
-  }
-
-  public EventLoopGroup getWorkerGroup() {
-    return workerGroup;
   }
 
   public ServerChannelInitializerHolder getServerChannelInitializer() {

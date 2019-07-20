@@ -9,7 +9,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -22,6 +21,7 @@ import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLEngine;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClient {
 
@@ -38,7 +38,7 @@ public class NettyHttpClient {
     this.server = server;
   }
 
-  private ChannelFuture establishConnection(URL url, EventLoop loop) {
+  private ChannelFuture establishConnection(URL url, @Nullable EventLoop loop) {
     String host = url.getHost();
     int port = url.getPort();
     boolean ssl = url.getProtocol().equals("https");
@@ -47,7 +47,7 @@ public class NettyHttpClient {
     }
 
     InetSocketAddress address = InetSocketAddress.createUnresolved(host, port);
-    return server.initializeGenericBootstrap(loop)
+    return server.createBootstrap(loop)
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
@@ -74,7 +74,7 @@ public class NettyHttpClient {
    * @param loop the event loop to use
    * @return a future representing the response
    */
-  public CompletableFuture<SimpleHttpResponse> get(URL url, EventLoop loop) {
+  public CompletableFuture<SimpleHttpResponse> get(URL url, @Nullable EventLoop loop) {
     CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
     establishConnection(url, loop)
         .addListener((ChannelFutureListener) future -> {
@@ -109,18 +109,18 @@ public class NettyHttpClient {
    */
   public CompletableFuture<SimpleHttpResponse> post(URL url, ByteBuf body,
       Consumer<HttpRequest> decorator) {
-    return post(url, server.getWorkerGroup().next(), body, decorator);
+    return post(url, null, body, decorator);
   }
 
   /**
    * Attempts an HTTP POST request to the specified URL.
    * @param url the URL to fetch
    * @param loop the event loop to use
-   * @param body the body to post
+   * @param body the body to post - the HTTP client takes ownership of the buffer
    * @param decorator a consumer that can modify the request as required
    * @return a future representing the response
    */
-  public CompletableFuture<SimpleHttpResponse> post(URL url, EventLoop loop, ByteBuf body,
+  public CompletableFuture<SimpleHttpResponse> post(URL url, @Nullable EventLoop loop, ByteBuf body,
       Consumer<HttpRequest> decorator) {
     CompletableFuture<SimpleHttpResponse> reply = new CompletableFuture<>();
     establishConnection(url, loop)
