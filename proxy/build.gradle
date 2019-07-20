@@ -57,11 +57,11 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-iostreams:${log4jVersion}"
 
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4' // command-line options
-    compile 'net.minecrell:terminalconsoleappender:1.1.1'
-    runtime 'net.java.dev.jna:jna:4.5.2' // Needed for JLine
+    compile 'net.minecrell:terminalconsoleappender:1.2.0-SNAPSHOT'
+    runtime 'org.jline:jline-terminal-jansi:3.12.1' // Needed for JLine
     runtime 'com.lmax:disruptor:3.4.2' // Async loggers
 
-    compile 'it.unimi.dsi:fastutil:8.2.2'
+    compile 'it.unimi.dsi:fastutil:8.2.3'
     compile 'net.kyori:event-method-asm:3.0.0'
 
     compile 'com.mojang:brigadier:1.0.15'
