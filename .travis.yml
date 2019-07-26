@@ -7,4 +7,5 @@ cache:
   - $HOME/.gradle/caches/
   - $HOME/.gradle/wrapper/
 jdk:
-  - oraclejdk8
+  - openjdk8
+  - openjdk11
