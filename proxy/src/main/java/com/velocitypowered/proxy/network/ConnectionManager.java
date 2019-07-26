@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.network;
 
+import static org.asynchttpclient.Dsl.asyncHttpClient;
+import static org.asynchttpclient.Dsl.config;
+
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
@@ -18,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Dsl;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
@@ -36,6 +41,7 @@ public final class ConnectionManager {
   public final ServerChannelInitializerHolder serverChannelInitializer;
 
   private final DnsAddressResolverGroup resolverGroup;
+  private final AsyncHttpClient httpClient;
 
   /**
    * Initalizes the {@code ConnectionManager}.
@@ -55,6 +61,10 @@ public final class ConnectionManager {
             .negativeTtl(15)
             .ndots(1)
     );
+    this.httpClient = asyncHttpClient(config()
+        .setEventLoopGroup(this.workerGroup)
+        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .build());
   }
 
   public void logChannelInformation() {
@@ -167,5 +177,9 @@ public final class ConnectionManager {
 
   public ServerChannelInitializerHolder getServerChannelInitializer() {
     return this.serverChannelInitializer;
+  }
+
+  public AsyncHttpClient getHttpClient() {
+    return httpClient;
   }
 }

@@ -30,7 +30,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.network.ConnectionManager;
-import com.velocitypowered.proxy.network.http.NettyHttpClient;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.packet.Chat;
@@ -74,6 +73,7 @@ import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -90,7 +90,6 @@ public class VelocityServer implements ProxyServer {
   private final ConnectionManager cm;
   private final ProxyOptions options;
   private @MonotonicNonNull VelocityConfiguration configuration;
-  private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
   private final VelocityCommandManager commandManager = new VelocityCommandManager();
@@ -202,7 +201,6 @@ public class VelocityServer implements ProxyServer {
     }
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
-    httpClient = new NettyHttpClient(this);
     loadPlugins();
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
@@ -430,8 +428,8 @@ public class VelocityServer implements ProxyServer {
     thread.start();
   }
 
-  public NettyHttpClient getHttpClient() {
-    return ensureInitialized(httpClient);
+  public AsyncHttpClient getAsyncHttpClient() {
+    return ensureInitialized(cm).getHttpClient();
   }
 
   public Ratelimiter getIpAttemptLimiter() {
