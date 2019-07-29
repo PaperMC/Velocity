@@ -452,7 +452,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   if (newResult == null || !newResult) {
                     disconnect(friendlyReason);
                   } else {
-                    sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER);
+                    sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER.append(friendlyReason));
                   }
                 }, minecraftConnection.eventLoop());
           } else if (event.getResult() instanceof Notify) {

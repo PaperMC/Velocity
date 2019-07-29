@@ -21,7 +21,7 @@ public class VelocityMessages {
   public static final Component ALREADY_CONNECTED = TextComponent
       .of("You are already connected to this proxy!", TextColor.RED);
   public static final Component MOVED_TO_NEW_SERVER = TextComponent
-      .of("You were moved from the server you were on because you were kicked", TextColor.RED);
+      .of("The server you were on kicked you: ", TextColor.RED);
 
   private VelocityMessages() {
     throw new AssertionError();
