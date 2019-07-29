@@ -22,7 +22,11 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.Dsl;
+import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.filter.FilterContext;
+import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
+import org.asynchttpclient.filter.FilterException;
+import org.asynchttpclient.filter.RequestFilter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
@@ -55,15 +59,26 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
-    this.resolverGroup = new DnsAddressResolverGroup(
-        new DnsNameResolverBuilder()
-            .channelType(this.transportType.datagramChannelClass)
-            .negativeTtl(15)
-            .ndots(1)
-    );
+
+    DnsNameResolverBuilder builder = new DnsNameResolverBuilder()
+        .channelType(this.transportType.datagramChannelClass)
+        .negativeTtl(15)
+        .ndots(1);
+
+    this.resolverGroup = new DnsAddressResolverGroup(builder);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
         .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .addRequestFilter(new RequestFilter() {
+          @Override
+          public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
+            return new FilterContextBuilder<>(ctx)
+                .request(new RequestBuilder(ctx.getRequest())
+                    .setNameResolver(builder.eventLoop(workerGroup.next()).build())
+                    .build())
+                .build();
+          }
+        })
         .build());
   }
 
