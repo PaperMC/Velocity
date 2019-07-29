@@ -6,6 +6,7 @@ import static org.asynchttpclient.Dsl.config;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.network.netty.DnsAddressResolverGroupNameResolverAdapter;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -16,6 +17,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
+import io.netty.util.concurrent.EventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,13 +61,10 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
-
-    DnsNameResolverBuilder builder = new DnsNameResolverBuilder()
+    this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
         .channelType(this.transportType.datagramChannelClass)
         .negativeTtl(15)
-        .ndots(1);
-
-    this.resolverGroup = new DnsAddressResolverGroup(builder);
+        .ndots(1));
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
         .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
@@ -74,7 +73,9 @@ public final class ConnectionManager {
           public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
             return new FilterContextBuilder<>(ctx)
                 .request(new RequestBuilder(ctx.getRequest())
-                    .setNameResolver(builder.eventLoop(workerGroup.next()).build())
+                    .setNameResolver(
+                        new DnsAddressResolverGroupNameResolverAdapter(resolverGroup, workerGroup)
+                    )
                     .build())
                 .build();
           }
