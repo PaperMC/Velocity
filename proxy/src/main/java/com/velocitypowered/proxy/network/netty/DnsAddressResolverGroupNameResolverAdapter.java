@@ -17,6 +17,11 @@ public class DnsAddressResolverGroupNameResolverAdapter extends InetNameResolver
   private final DnsAddressResolverGroup resolverGroup;
   private final EventLoopGroup group;
 
+  /**
+   * Creates a DnsAddressResolverGroupNameResolverAdapter.
+   * @param resolverGroup the resolver group to use
+   * @param group the event loop group
+   */
   public DnsAddressResolverGroupNameResolverAdapter(
       DnsAddressResolverGroup resolverGroup, EventLoopGroup group) {
     super(ImmediateEventExecutor.INSTANCE);
