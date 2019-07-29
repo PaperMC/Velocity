@@ -150,11 +150,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
     }
     handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
-    mc.write(handshake);
+    mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
-    mc.write(new ServerLogin(proxyPlayer.getUsername()));
+    mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername()));
+    mc.flush();
   }
 
   public @Nullable MinecraftConnection getConnection() {

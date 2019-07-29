@@ -34,10 +34,12 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
     handshake.setPort(server.getServerInfo().getAddress().getPort());
     handshake.setProtocolVersion(ProtocolVersion.MINIMUM_VERSION);
-    connection.write(handshake);
+    connection.delayedWrite(handshake);
 
     connection.setState(StateRegistry.STATUS);
-    connection.write(StatusRequest.INSTANCE);
+    connection.delayedWrite(StatusRequest.INSTANCE);
+
+    connection.flush();
   }
 
   @Override
