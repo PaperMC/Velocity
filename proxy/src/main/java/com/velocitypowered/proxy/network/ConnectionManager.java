@@ -15,6 +15,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
 import io.netty.util.concurrent.EventExecutor;
@@ -102,6 +103,11 @@ public final class ConnectionManager {
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
+
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    }
+
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
@@ -151,13 +157,17 @@ public final class ConnectionManager {
    * @return a new {@link Bootstrap}
    */
   public Bootstrap createWorker(@Nullable EventLoopGroup group) {
-    return new Bootstrap()
+    Bootstrap bootstrap = new Bootstrap()
         .channel(this.transportType.socketChannelClass)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolverGroup);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    }
+    return bootstrap;
   }
 
   /**

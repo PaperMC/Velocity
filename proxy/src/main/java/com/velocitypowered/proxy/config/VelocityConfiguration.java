@@ -372,6 +372,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return advanced.isProxyProtocol();
   }
 
+  public boolean useTcpFastOpen() {
+    return advanced.tcpFastOpen;
+  }
+
   public Metrics getMetrics() {
     return metrics;
   }
@@ -608,6 +612,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("proxy-protocol")
     private boolean proxyProtocol = false;
 
+    @Comment("Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.")
+    @ConfigKey("tcp-fast-open")
+    private boolean tcpFastOpen = false;
+
     private Advanced() {
     }
 
@@ -619,6 +627,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
         this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
         this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
+        this.tcpFastOpen = toml.getBoolean("tcp-fast-open", false);
       }
     }
 
@@ -646,6 +655,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       return proxyProtocol;
     }
 
+    public boolean isTcpFastOpen() {
+      return tcpFastOpen;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -655,6 +668,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
           + ", proxyProtocol=" + proxyProtocol
+          + ", tcpFastOpen=" + tcpFastOpen
           + '}';
     }
   }
