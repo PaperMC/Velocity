@@ -157,71 +157,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean isCommand = !packet.isAssumeCommand() && packet.getCommand().startsWith("/");
 
     if (isCommand) {
-      return this.handleTabCompleteForCommand(packet);
+      return this.handleCommandTabComplete(packet);
     } else {
       return this.handleRegularTabComplete(packet);
     }
-  }
-
-  private boolean handleTabCompleteForCommand(TabCompleteRequest packet) {
-    // In 1.13+, we need to do additional work for the richer suggestions available.
-    String command = packet.getCommand().substring(1);
-    int spacePos = command.indexOf(' ');
-    if (spacePos == -1) {
-      spacePos = command.length();
-    }
-
-    String commandLabel = command.substring(0, spacePos);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
-      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
-        // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-        // additional tab completion support.
-        outstandingTabComplete = packet;
-      }
-      return false;
-    }
-
-    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
-    if (suggestions.isEmpty()) {
-      return false;
-    }
-
-    List<Offer> offers = new ArrayList<>();
-    int longestLength = 0;
-    for (String suggestion : suggestions) {
-      offers.add(new Offer(suggestion));
-      if (suggestion.length() > longestLength) {
-        longestLength = suggestion.length();
-      }
-    }
-
-    TabCompleteResponse resp = new TabCompleteResponse();
-    resp.setTransactionId(packet.getTransactionId());
-
-    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-    int length;
-    if (startPos == 0) {
-      startPos = packet.getCommand().length() + 1;
-      length = longestLength;
-    } else {
-      length = packet.getCommand().length() - startPos;
-    }
-
-    resp.setStart(startPos);
-    resp.setLength(length);
-    resp.getOffers().addAll(offers);
-
-    player.getMinecraftConnection().write(resp);
-    return true;
-  }
-
-  private boolean handleRegularTabComplete(TabCompleteRequest packet) {
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
-      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-      // additional tab completion support.
-      outstandingTabComplete = packet;
-    }
-    return false;
   }
 
   @Override
@@ -420,6 +359,68 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   public List<UUID> getServerBossBars() {
     return serverBossBars;
+  }
+
+
+  private boolean handleCommandTabComplete(TabCompleteRequest packet) {
+    // In 1.13+, we need to do additional work for the richer suggestions available.
+    String command = packet.getCommand().substring(1);
+    int spacePos = command.indexOf(' ');
+    if (spacePos == -1) {
+      spacePos = command.length();
+    }
+
+    String commandLabel = command.substring(0, spacePos);
+    if (!server.getCommandManager().hasCommand(commandLabel)) {
+      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+        // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+        // additional tab completion support.
+        outstandingTabComplete = packet;
+      }
+      return false;
+    }
+
+    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
+    if (suggestions.isEmpty()) {
+      return false;
+    }
+
+    List<Offer> offers = new ArrayList<>();
+    int longestLength = 0;
+    for (String suggestion : suggestions) {
+      offers.add(new Offer(suggestion));
+      if (suggestion.length() > longestLength) {
+        longestLength = suggestion.length();
+      }
+    }
+
+    TabCompleteResponse resp = new TabCompleteResponse();
+    resp.setTransactionId(packet.getTransactionId());
+
+    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+    int length;
+    if (startPos == 0) {
+      startPos = packet.getCommand().length() + 1;
+      length = longestLength;
+    } else {
+      length = packet.getCommand().length() - startPos;
+    }
+
+    resp.setStart(startPos);
+    resp.setLength(length);
+    resp.getOffers().addAll(offers);
+
+    player.getMinecraftConnection().write(resp);
+    return true;
+  }
+
+  private boolean handleRegularTabComplete(TabCompleteRequest packet) {
+    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+      // additional tab completion support.
+      outstandingTabComplete = packet;
+    }
+    return false;
   }
 
   /**
