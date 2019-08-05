@@ -56,7 +56,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
-
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
@@ -68,7 +67,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private int playerInfoId;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
-  private final long loginProcessBegan = System.currentTimeMillis();
 
   LoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
       InitialInboundConnection inbound) {
