@@ -15,6 +15,12 @@ public class TabCompleteEvent {
   private final String partialMessage;
   private final List<String> suggestions;
 
+  /**
+   * Constructs a new TabCompleteEvent instance.
+   * @param player the player
+   * @param partialMessage the partial message
+   * @param suggestions the initial list of suggestions
+   */
   public TabCompleteEvent(Player player, String partialMessage, List<String> suggestions) {
     this.player = checkNotNull(player, "player");
     this.partialMessage = checkNotNull(partialMessage, "partialMessage");
@@ -31,12 +37,16 @@ public class TabCompleteEvent {
 
   /**
    * Returns the message being partially completed.
-   * @return
+   * @return the partial message
    */
   public String getPartialMessage() {
     return partialMessage;
   }
 
+  /**
+   * Returns all the suggestions provided to the user, as a mutable list.
+   * @return the suggestions
+   */
   public List<String> getSuggestions() {
     return suggestions;
   }
