@@ -24,19 +24,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private final VelocityServer server;
   private final MinecraftConnection connection;
-  private final InboundConnection inboundWrapper;
+  private final InboundConnection inbound;
 
   StatusSessionHandler(VelocityServer server, MinecraftConnection connection,
-      InboundConnection inboundWrapper) {
+      InboundConnection inbound) {
     this.server = server;
     this.connection = connection;
-    this.inboundWrapper = inboundWrapper;
+    this.inbound = inbound;
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
@@ -50,20 +49,6 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
     );
-  }
-
-  private CompletableFuture<ServerPing> createInitialPing() {
-    VelocityConfiguration configuration = server.getConfiguration();
-    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
-        ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
-
-    PingPassthroughMode passthrough = configuration.getPingPassthrough();
-    if (passthrough == PingPassthroughMode.DISABLED) {
-      return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
-    } else {
-      return attemptPingPassthrough(configuration.getPingPassthrough(),
-          configuration.getAttemptConnectionOrder(), shownVersion);
-    }
   }
 
   private CompletableFuture<ServerPing> attemptPingPassthrough(PingPassthroughMode mode,
@@ -88,20 +73,27 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       case ALL:
         return pingResponses.thenApply(responses -> {
           // Find the first non-fallback
-          return responses.stream()
-              .filter(ping -> ping != fallback)
-              .findFirst()
-              .orElse(fallback);
+          for (ServerPing response : responses) {
+            if (response == fallback) {
+              continue;
+            }
+            return response;
+          }
+          return fallback;
         });
       case MODS:
         return pingResponses.thenApply(responses -> {
-          // Find the first non-fallback that contains a non-empty mod list
-          Optional<ModInfo> modInfo = responses.stream()
-              .filter(ping -> ping != fallback)
-              .map(ServerPing::getModinfo)
-              .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
-              .findFirst();
-          return modInfo.map(mi -> fallback.asBuilder().mods(mi).build()).orElse(fallback);
+          // Find the first non-fallback that contains a mod list
+          for (ServerPing response : responses) {
+            if (response == fallback) {
+              continue;
+            }
+            Optional<ModInfo> modInfo = response.getModinfo();
+            if (modInfo.isPresent()) {
+              return fallback.asBuilder().mods(modInfo.get()).build();
+            }
+          }
+          return fallback;
         });
       default:
         // Not possible, but covered for completeness.
@@ -109,11 +101,24 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
   }
 
+  private CompletableFuture<ServerPing> getInitialPing() {
+    VelocityConfiguration configuration = server.getConfiguration();
+    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
+        ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
+    PingPassthroughMode passthrough = configuration.getPingPassthrough();
+
+    if (passthrough == PingPassthroughMode.DISABLED) {
+      return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
+    } else {
+      return attemptPingPassthrough(configuration.getPingPassthrough(),
+          configuration.getAttemptConnectionOrder(), shownVersion);
+    }
+  }
+
   @Override
   public boolean handle(LegacyPing packet) {
-    createInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inboundWrapper,
-            ping)))
+    getInitialPing()
+        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> {
           connection.closeWith(LegacyDisconnect.fromServerPing(event.getPing(),
               packet.getVersion()));
@@ -129,9 +134,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(StatusRequest packet) {
-    createInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inboundWrapper,
-            ping)))
+    getInitialPing()
+        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
