@@ -79,7 +79,7 @@ public interface ProxyConfig {
   List<String> getAttemptConnectionOrder();
 
   /**
-   * Get the order of servers that mod info will be retrieved from
+   * Get the order of servers that mod info will be retrieved from.
    *
    * @return mod info order list
    */
