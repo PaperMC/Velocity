@@ -322,6 +322,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   @Override
+  public List<String> getAttemptModInfoOrder() {
+    return servers.getAttemptModInfoOrder();
+  }
+
+  @Override
   public Map<String, List<String>> getForcedHosts() {
     return forcedHosts.getForcedHosts();
   }
@@ -459,6 +464,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("try")
     private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
+    @Comment("In what order we should try servers when retrieving the mod list (only important when mods are installed)")
+    @ConfigKey("tryModInfo")
+    private List<String> attemptModInfoOrder = Arrays.asList("lobby");
+
     private Servers() {
     }
 
@@ -469,7 +478,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           if (entry.getValue() instanceof String) {
             servers.put(entry.getKey(), (String) entry.getValue());
           } else {
-            if (!entry.getKey().equalsIgnoreCase("try")) {
+            if (!entry.getKey().equalsIgnoreCase("try") && !entry.getKey().equalsIgnoreCase("tryModInfo")) {
               throw new IllegalArgumentException(
                   "Server entry " + entry.getKey() + " is not a string!");
             }
@@ -477,6 +486,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         }
         this.servers = ImmutableMap.copyOf(servers);
         this.attemptConnectionOrder = toml.getList("try", attemptConnectionOrder);
+        this.attemptModInfoOrder = toml.getList("tryModInfo", attemptConnectionOrder);
       }
     }
 
@@ -499,6 +509,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
       this.attemptConnectionOrder = attemptConnectionOrder;
+    }
+
+    public List<String> getAttemptModInfoOrder() {
+      return attemptModInfoOrder;
+    }
+
+    public void setAttemptModInfoOrder(List<String> attemptModInfoOrder) {
+      this.attemptModInfoOrder = attemptModInfoOrder;
     }
 
     @Override

@@ -79,6 +79,13 @@ public interface ProxyConfig {
   List<String> getAttemptConnectionOrder();
 
   /**
+   * Get the order of servers that mod info will be retrieved from
+   *
+   * @return mod info order list
+   */
+  List<String> getAttemptModInfoOrder();
+
+  /**
    * Get forced servers mapped to a given virtual host.
    *
    * @return list of server names
