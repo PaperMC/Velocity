@@ -66,6 +66,8 @@ dependencies {
     compile 'com.mojang:brigadier:1.0.15'
     
     compile 'org.asynchttpclient:async-http-client:2.10.1'
+    
+    compile 'com.spotify:completable-futures:0.3.2'
 
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"

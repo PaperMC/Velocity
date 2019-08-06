@@ -77,6 +77,7 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
@@ -263,11 +264,7 @@ public class VelocityServer implements ProxyServer {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public Bootstrap createBootstrap() {
-    return this.cm.createWorker();
-  }
-
-  public Bootstrap createBootstrap(EventLoopGroup group) {
+  public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
     return this.cm.createWorker(group);
   }
 

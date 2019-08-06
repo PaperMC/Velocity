@@ -145,10 +145,6 @@ public final class ConnectionManager {
         });
   }
 
-  public Bootstrap createWorker() {
-    return this.createWorker(null);
-  }
-
   /**
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
