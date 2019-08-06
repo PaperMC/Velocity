@@ -52,12 +52,18 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   private ModInfo getModInfo(boolean isAnnounceForge) {
     for (String serverName : server.getConfiguration().getAttemptModInfoOrder()) {
       Optional<RegisteredServer> registeredServer = server.getServer(serverName);
-      if (!registeredServer.isPresent()) continue;
+      if (!registeredServer.isPresent()) {
+        continue;
+      }
       try {
         ServerPing serverPing = registeredServer.get().ping().get();
-        if (serverPing == null) continue;
+        if (serverPing == null) {
+          continue;
+        }
         Optional<ModInfo> modInfo = serverPing.getModinfo();
-        if (!modInfo.isPresent()) continue;
+        if (!modInfo.isPresent()) {
+          continue;
+        }
         return modInfo.get();
       } catch (InterruptedException | ExecutionException ignored) {
       }

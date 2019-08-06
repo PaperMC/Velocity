@@ -464,7 +464,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("try")
     private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
-    @Comment("In what order we should try servers when retrieving the mod list (only important when mods are installed)")
+    @Comment("In what order we should try servers when retrieving the mod list" +
+        "(only important when mods are installed)")
     @ConfigKey("tryModInfo")
     private List<String> attemptModInfoOrder = Arrays.asList("lobby");
 
@@ -478,7 +479,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           if (entry.getValue() instanceof String) {
             servers.put(entry.getKey(), (String) entry.getValue());
           } else {
-            if (!entry.getKey().equalsIgnoreCase("try") && !entry.getKey().equalsIgnoreCase("tryModInfo")) {
+            if (!entry.getKey().equalsIgnoreCase("try")
+                && !entry.getKey().equalsIgnoreCase("tryModInfo")) {
               throw new IllegalArgumentException(
                   "Server entry " + entry.getKey() + " is not a string!");
             }
