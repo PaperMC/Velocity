@@ -20,7 +20,9 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -110,8 +112,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     if (passthrough == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      return attemptPingPassthrough(configuration.getPingPassthrough(),
-          configuration.getAttemptConnectionOrder(), shownVersion);
+      String virtualHostStr = inbound.getVirtualHost().map(InetSocketAddress::getHostString)
+          .orElse("");
+      List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
+          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+      return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);
     }
   }
 

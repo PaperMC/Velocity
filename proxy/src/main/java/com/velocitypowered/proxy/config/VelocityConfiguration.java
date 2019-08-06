@@ -93,8 +93,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "- \"disabled\": No pass-through will be done. The velocity.toml and server-icon.png",
       "              will determine the initial server list ping response.",
       "- \"mods\":     Passes only the mod list from your backend server into the response.",
-      "              This is the recommended replacement for announce-forge = true. If no backend",
-      "              servers can be contacted, Velocity will not display any mod information.",
+      "              The first server in your try list (or forced host) with a mod list will be",
+      "              used. If no backend servers can be contacted, Velocity will not display any",
+      "              mod information.",
       "- \"all\":      Passes everything from the backend server into the response. The Velocity",
       "              configuration is used if no servers could be contacted."
   })
