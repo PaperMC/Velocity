@@ -84,6 +84,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
+                .addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
+                    DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES, true))
                 .addLast(READ_TIMEOUT,
                     new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
@@ -93,9 +95,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .addLast(MINECRAFT_DECODER,
                     new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
                 .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND))
-                .addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
-                    DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES, true));
+                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
           }
         })
         .connect(registeredServer.getServerInfo().getAddress())
