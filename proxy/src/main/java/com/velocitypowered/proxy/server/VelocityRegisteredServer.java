@@ -9,6 +9,7 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -27,6 +28,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoop;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.Collection;
 import java.util.Set;
@@ -58,11 +60,22 @@ public class VelocityRegisteredServer implements RegisteredServer {
 
   @Override
   public CompletableFuture<ServerPing> ping() {
+    return ping(null, ProtocolVersion.UNKNOWN);
+  }
+
+  /**
+   * Pings the specified server using the specified event {@code loop}, claiming to be
+   * {@code version}.
+   * @param loop the event loop to use
+   * @param version the version to report
+   * @return the server list ping response
+   */
+  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, ProtocolVersion version) {
     if (server == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap()
+    server.createBootstrap(loop)
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
@@ -86,8 +99,8 @@ public class VelocityRegisteredServer implements RegisteredServer {
           public void operationComplete(ChannelFuture future) throws Exception {
             if (future.isSuccess()) {
               MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
-              conn.setSessionHandler(
-                  new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn));
+              conn.setSessionHandler(new PingSessionHandler(
+                  pingFuture, VelocityRegisteredServer.this, conn, version));
             } else {
               pingFuture.completeExceptionally(future.cause());
             }

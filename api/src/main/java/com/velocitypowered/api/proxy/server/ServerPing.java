@@ -182,6 +182,19 @@ public final class ServerPing {
       return this;
     }
 
+    /**
+     * Uses the modified {@code mods} list in the response.
+     * @param mods the mods list to use
+     * @return this build, for chaining
+     */
+    public Builder mods(ModInfo mods) {
+      Preconditions.checkNotNull(mods, "mods");
+      this.modType = mods.getType();
+      this.mods.clear();
+      this.mods.addAll(mods.getMods());
+      return this;
+    }
+
     public Builder clearMods() {
       this.mods.clear();
       return this;
