@@ -4,13 +4,13 @@ import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
 import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION_AMOUNT;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
-import static io.netty.handler.flush.FlushConsolidationHandler.DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -85,7 +85,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
                 .addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
-                    DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES, true))
+                    FLUSH_CONSOLIDATION_AMOUNT, true))
                 .addLast(READ_TIMEOUT,
                     new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))

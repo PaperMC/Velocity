@@ -17,6 +17,8 @@ public class Connections {
   public static final String READ_TIMEOUT = "read-timeout";
   public static final String FLUSH_CONSOLIDATION = "flush-consolidation";
 
+  public static final int FLUSH_CONSOLIDATION_AMOUNT = 10;
+
   private Connections() {
     throw new AssertionError();
   }

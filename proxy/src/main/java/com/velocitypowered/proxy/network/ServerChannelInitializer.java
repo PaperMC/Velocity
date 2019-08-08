@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.network;
 
 import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION_AMOUNT;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_DECODER;
@@ -8,7 +9,6 @@ import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
-import static io.netty.handler.flush.FlushConsolidationHandler.DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES;
 
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -40,7 +40,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
   protected void initChannel(final Channel ch) {
     ch.pipeline()
         .addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
-            DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES, true))
+            FLUSH_CONSOLIDATION_AMOUNT, true))
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
