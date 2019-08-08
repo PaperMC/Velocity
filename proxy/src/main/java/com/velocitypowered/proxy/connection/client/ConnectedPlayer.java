@@ -746,8 +746,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (status != null && !status.isSafe()) {
               // If it's not safe to continue the connection we need to shut it down.
               handleConnectionException(status.getAttemptedConnection(), throwable, true);
+            } else if ((status != null && !status.isSuccessful())) {
+              resetInFlightConnection();
             }
-          })
+          }, minecraftConnection.eventLoop())
           .thenApply(x -> x);
     }
 
