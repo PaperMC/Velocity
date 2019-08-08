@@ -15,6 +15,7 @@ public class Connections {
   public static final String MINECRAFT_DECODER = "minecraft-decoder";
   public static final String MINECRAFT_ENCODER = "minecraft-encoder";
   public static final String READ_TIMEOUT = "read-timeout";
+  public static final String FLUSH_CONSOLIDATION = "flush-consolidation";
 
   private Connections() {
     throw new AssertionError();
