@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
 
-  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 21,
+  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
       1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
   private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
