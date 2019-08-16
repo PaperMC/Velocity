@@ -1,11 +1,8 @@
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
 /**
  * Provides connection phase specific actions.
@@ -16,8 +13,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 public interface ClientConnectionPhase {
 
   /**
-   * Handle a plugin message in the context of
-   * this phase.
+   * Handle a plugin message in the context of this phase.
    *
    * @param player The player
    * @param message The message to handle
@@ -31,8 +27,7 @@ public interface ClientConnectionPhase {
   }
 
   /**
-   * Instruct Velocity to reset the connection phase
-   * back to its default for the connection type.
+   * Instruct Velocity to reset the connection phase back to its default for the connection type.
    *
    * @param player The player
    */
@@ -40,8 +35,7 @@ public interface ClientConnectionPhase {
   }
 
   /**
-   * Perform actions just as the player joins the
-   * server.
+   * Perform actions just as the player joins the server.
    *
    * @param player The player
    */
@@ -50,6 +44,7 @@ public interface ClientConnectionPhase {
 
   /**
    * Indicates whether the connection is considered complete.
+   *
    * @return true if so
    */
   default boolean consideredComplete() {
