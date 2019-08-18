@@ -76,7 +76,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getMinecraftConnection().eventLoop())
+    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
@@ -138,13 +138,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
-    ProtocolVersion protocolVersion = proxyPlayer.getMinecraftConnection().getNextProtocolVersion();
+    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getMinecraftConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
