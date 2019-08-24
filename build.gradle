@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
     group 'com.velocitypowered'
-    version '1.0.3-SNAPSHOT'
+    version '1.0.3'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
