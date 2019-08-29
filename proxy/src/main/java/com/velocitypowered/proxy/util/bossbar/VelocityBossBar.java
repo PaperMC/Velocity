@@ -271,6 +271,6 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
 
   private void sendPacket(Player player, MinecraftPacket packet) {
     ConnectedPlayer connected = (ConnectedPlayer) player;
-    connected.getMinecraftConnection().write(packet);
+    connected.getConnection().write(packet);
   }
 }

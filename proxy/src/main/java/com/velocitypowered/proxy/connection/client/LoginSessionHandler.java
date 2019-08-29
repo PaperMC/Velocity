@@ -8,6 +8,8 @@ import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_
 import static com.velocitypowered.proxy.connection.VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL;
 import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
+import static org.asynchttpclient.Dsl.asyncHttpClient;
+import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.UrlEscapers;
@@ -43,10 +45,14 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.Dsl;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
@@ -124,46 +130,50 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId,
           urlFormParameterEscaper().escape(playerIp));
-      server.getHttpClient()
-          .get(new URL(url), mcConnection.eventLoop())
-          .thenAcceptAsync(profileResponse -> {
-            if (mcConnection.isClosed()) {
-              // The player disconnected after we authenticated them.
-              return;
-            }
 
-            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-            // is enabled.
-            try {
-              mcConnection.enableEncryption(decryptedSharedSecret);
-            } catch (GeneralSecurityException e) {
-              throw new RuntimeException(e);
-            }
+      ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
+          .execute();
+      hasJoinedResponse.addListener(() -> {
+        if (mcConnection.isClosed()) {
+          // The player disconnected after we authenticated them.
+          return;
+        }
 
-            if (profileResponse.getCode() == 200) {
-              // All went well, initialize the session.
-              initializePlayer(GSON.fromJson(profileResponse.getBody(), GameProfile.class), true);
-            } else if (profileResponse.getCode() == 204) {
-              // Apparently an offline-mode user logged onto this online-mode proxy.
-              inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);
-            } else {
-              // Something else went wrong
-              logger.error(
-                  "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                  profileResponse.getCode(), login.getUsername(), playerIp);
-              mcConnection.close();
-            }
-          }, mcConnection.eventLoop())
-          .exceptionally(exception -> {
-            logger.error("Unable to enable encryption", exception);
+        // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+        // is enabled.
+        try {
+          mcConnection.enableEncryption(decryptedSharedSecret);
+        } catch (GeneralSecurityException e) {
+          throw new RuntimeException(e);
+        }
+
+        try {
+          Response profileResponse = hasJoinedResponse.get();
+          if (profileResponse.getStatusCode() == 200) {
+            // All went well, initialize the session.
+            initializePlayer(GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class),
+                true);
+          } else if (profileResponse.getStatusCode() == 204) {
+            // Apparently an offline-mode user logged onto this online-mode proxy.
+            inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);
+          } else {
+            // Something else went wrong
+            logger.error(
+                "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                profileResponse.getStatusCode(), login.getUsername(), playerIp);
             mcConnection.close();
-            return null;
-          });
+          }
+        } catch (ExecutionException e) {
+          logger.error("Unable to authenticate with Mojang", e);
+          mcConnection.close();
+        } catch (InterruptedException e) {
+          // not much we can do usefully
+          Thread.currentThread().interrupt();
+        }
+      }, mcConnection.eventLoop());
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
       mcConnection.close();
-    } catch (MalformedURLException e) {
-      throw new AssertionError(e);
     }
     return true;
   }
@@ -180,6 +190,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // The player was disconnected
             return;
           }
+
           PreLoginComponentResult result = event.getResult();
           Optional<Component> disconnectReason = result.getReason();
           if (disconnectReason.isPresent()) {
@@ -278,7 +289,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               player.disconnect(VelocityMessages.ALREADY_CONNECTED);
               return;
             }
-            
+
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());

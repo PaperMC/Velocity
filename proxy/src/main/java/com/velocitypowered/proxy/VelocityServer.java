@@ -30,7 +30,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.network.ConnectionManager;
-import com.velocitypowered.proxy.network.http.NettyHttpClient;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.packet.Chat;
@@ -70,12 +69,15 @@ import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
@@ -89,7 +91,6 @@ public class VelocityServer implements ProxyServer {
   private final ConnectionManager cm;
   private final ProxyOptions options;
   private @MonotonicNonNull VelocityConfiguration configuration;
-  private @MonotonicNonNull NettyHttpClient httpClient;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
   private final VelocityCommandManager commandManager = new VelocityCommandManager();
@@ -201,7 +202,6 @@ public class VelocityServer implements ProxyServer {
     }
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
-    httpClient = new NettyHttpClient(this);
     loadPlugins();
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
@@ -264,15 +264,7 @@ public class VelocityServer implements ProxyServer {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public EventLoopGroup getWorkerGroup() {
-    return this.cm.getWorkerGroup();
-  }
-
-  public Bootstrap initializeGenericBootstrap() {
-    return this.cm.createWorker();
-  }
-
-  public Bootstrap initializeGenericBootstrap(EventLoopGroup group) {
+  public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
     return this.cm.createWorker(group);
   }
 
@@ -433,8 +425,8 @@ public class VelocityServer implements ProxyServer {
     thread.start();
   }
 
-  public NettyHttpClient getHttpClient() {
-    return ensureInitialized(httpClient);
+  public AsyncHttpClient getAsyncHttpClient() {
+    return ensureInitialized(cm).getHttpClient();
   }
 
   public Ratelimiter getIpAttemptLimiter() {
@@ -454,6 +446,9 @@ public class VelocityServer implements ProxyServer {
    * @return {@code true} if we can register the connection, {@code false} if not
    */
   public boolean canRegisterConnection(ConnectedPlayer connection) {
+    if (configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()) {
+      return true;
+    }
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
     return !(connectionsByName.containsKey(lowerName)
         || connectionsByUuid.containsKey(connection.getUniqueId()));
@@ -466,12 +461,24 @@ public class VelocityServer implements ProxyServer {
    */
   public boolean registerConnection(ConnectedPlayer connection) {
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
-    if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
-      return false;
-    }
-    if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
-      connectionsByName.remove(lowerName, connection);
-      return false;
+
+    if (!this.configuration.isOnlineModeKickExistingPlayers()) {
+      if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+        return false;
+      }
+      if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+        connectionsByName.remove(lowerName, connection);
+        return false;
+      }
+    } else {
+      ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
+      if (existing != null) {
+        existing.disconnect(TranslatableComponent.of("multiplayer.disconnect.duplicate_login"));
+      }
+
+      // We can now replace the entries as needed.
+      connectionsByName.put(lowerName, connection);
+      connectionsByUuid.put(connection.getUniqueId(), connection);
     }
     return true;
   }
@@ -498,7 +505,7 @@ public class VelocityServer implements ProxyServer {
     Preconditions.checkNotNull(component, "component");
     Chat chat = Chat.createClientbound(component);
     for (ConnectedPlayer player : connectionsByUuid.values()) {
-      player.getMinecraftConnection().write(chat);
+      player.getConnection().write(chat);
     }
   }
 

@@ -1,8 +1,12 @@
 package com.velocitypowered.proxy.network;
 
+import static org.asynchttpclient.Dsl.asyncHttpClient;
+import static org.asynchttpclient.Dsl.config;
+
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.network.netty.DnsAddressResolverGroupNameResolverAdapter;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -11,17 +15,26 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
+import io.netty.util.concurrent.EventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.filter.FilterContext;
+import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
+import org.asynchttpclient.filter.FilterException;
+import org.asynchttpclient.filter.RequestFilter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
 
-  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 21,
+  private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
       1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
   private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
@@ -35,6 +48,7 @@ public final class ConnectionManager {
   public final ServerChannelInitializerHolder serverChannelInitializer;
 
   private final DnsAddressResolverGroup resolverGroup;
+  private final AsyncHttpClient httpClient;
 
   /**
    * Initalizes the {@code ConnectionManager}.
@@ -48,12 +62,26 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
-    this.resolverGroup = new DnsAddressResolverGroup(
-        new DnsNameResolverBuilder()
-            .channelType(this.transportType.datagramChannelClass)
-            .negativeTtl(15)
-            .ndots(1)
-    );
+    this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
+        .channelType(this.transportType.datagramChannelClass)
+        .negativeTtl(15)
+        .ndots(1));
+    this.httpClient = asyncHttpClient(config()
+        .setEventLoopGroup(this.workerGroup)
+        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .addRequestFilter(new RequestFilter() {
+          @Override
+          public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
+            return new FilterContextBuilder<>(ctx)
+                .request(new RequestBuilder(ctx.getRequest())
+                    .setNameResolver(
+                        new DnsAddressResolverGroupNameResolverAdapter(resolverGroup, workerGroup)
+                    )
+                    .build())
+                .build();
+          }
+        })
+        .build());
   }
 
   public void logChannelInformation() {
@@ -75,6 +103,11 @@ public final class ConnectionManager {
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
+
+    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    }
+
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
@@ -112,25 +145,25 @@ public final class ConnectionManager {
         });
   }
 
-  public Bootstrap createWorker() {
-    return this.createWorker(this.workerGroup);
-  }
-
   /**
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
-   * @param group the event loop group to use
+   * @param group the event loop group to use. Use {@code null} for the default worker group.
    *
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker(EventLoopGroup group) {
-    return new Bootstrap()
+  public Bootstrap createWorker(@Nullable EventLoopGroup group) {
+    Bootstrap bootstrap = new Bootstrap()
         .channel(this.transportType.socketChannelClass)
-        .group(group)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
+        .group(group == null ? this.workerGroup : group)
         .resolver(this.resolverGroup);
+    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    }
+    return bootstrap;
   }
 
   /**
@@ -164,11 +197,11 @@ public final class ConnectionManager {
     return bossGroup;
   }
 
-  public EventLoopGroup getWorkerGroup() {
-    return workerGroup;
-  }
-
   public ServerChannelInitializerHolder getServerChannelInitializer() {
     return this.serverChannelInitializer;
+  }
+
+  public AsyncHttpClient getHttpClient() {
+    return httpClient;
   }
 }

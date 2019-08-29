@@ -7,6 +7,7 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.construc
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -59,7 +60,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final List<UUID> serverBossBars = new ArrayList<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
-  private @Nullable TabCompleteRequest legacyCommandTabComplete;
+  private @Nullable TabCompleteRequest outstandingTabComplete;
 
   /**
    * Constructs a client play session handler.
@@ -77,7 +78,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
-      player.getMinecraftConnection().write(register);
+      player.getConnection().write(register);
       player.getKnownChannels().addAll(channels);
     }
   }
@@ -155,61 +156,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(TabCompleteRequest packet) {
     boolean isCommand = !packet.isAssumeCommand() && packet.getCommand().startsWith("/");
 
-    if (!isCommand) {
-      // We can't deal with anything else.
-      return false;
-    }
-
-    // In 1.13+, we need to do additional work for the richer suggestions available.
-    String command = packet.getCommand().substring(1);
-    int spacePos = command.indexOf(' ');
-    if (spacePos == -1) {
-      return false;
-    }
-
-    String commandLabel = command.substring(0, spacePos);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
-      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
-        // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
-        // tab list completion support for command names. In 1.13, Brigadier handles everything for
-        // us.
-        legacyCommandTabComplete = packet;
-      }
-      return false;
-    }
-
-    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
-    if (suggestions.isEmpty()) {
-      return false;
-    }
-
-    List<Offer> offers = new ArrayList<>();
-    int longestLength = 0;
-    for (String suggestion : suggestions) {
-      offers.add(new Offer(suggestion));
-      if (suggestion.length() > longestLength) {
-        longestLength = suggestion.length();
-      }
-    }
-
-    TabCompleteResponse resp = new TabCompleteResponse();
-    resp.setTransactionId(packet.getTransactionId());
-
-    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-    int length;
-    if (startPos == 0) {
-      startPos = packet.getCommand().length() + 1;
-      length = longestLength;
+    if (isCommand) {
+      return this.handleCommandTabComplete(packet);
     } else {
-      length = packet.getCommand().length() - startPos;
+      return this.handleRegularTabComplete(packet);
     }
-
-    resp.setStart(startPos);
-    resp.setLength(length);
-    resp.getOffers().addAll(offers);
-
-    player.getMinecraftConnection().write(resp);
-    return true;
   }
 
   @Override
@@ -325,7 +276,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public void writabilityChanged() {
     VelocityServerConnection serverConn = player.getConnectedServer();
     if (serverConn != null) {
-      boolean writable = player.getMinecraftConnection().getChannel().isWritable();
+      boolean writable = player.getConnection().getChannel().isWritable();
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
         smc.setAutoReading(writable);
@@ -345,7 +296,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
-      player.getMinecraftConnection().delayedWrite(joinGame);
+      player.getConnection().delayedWrite(joinGame);
 
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
@@ -365,12 +316,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      player.getMinecraftConnection().delayedWrite(joinGame);
+      player.getConnection().delayedWrite(joinGame);
       int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-      player.getMinecraftConnection().delayedWrite(
+      player.getConnection().delayedWrite(
           new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
-      player.getMinecraftConnection().delayedWrite(
+      player.getConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
     }
@@ -381,7 +332,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       BossBar deletePacket = new BossBar();
       deletePacket.setUuid(serverBossBar);
       deletePacket.setAction(BossBar.REMOVE);
-      player.getMinecraftConnection().delayedWrite(deletePacket);
+      player.getConnection().delayedWrite(deletePacket);
     }
     serverBossBars.clear();
 
@@ -399,12 +350,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      player.getMinecraftConnection()
+      player.getConnection()
           .delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
     }
 
     // Flush everything
-    player.getMinecraftConnection().flush();
+    player.getConnection().flush();
     serverMc.flush();
     destination.completeJoin();
   }
@@ -413,29 +364,116 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return serverBossBars;
   }
 
+
+  private boolean handleCommandTabComplete(TabCompleteRequest packet) {
+    // In 1.13+, we need to do additional work for the richer suggestions available.
+    String command = packet.getCommand().substring(1);
+    int spacePos = command.indexOf(' ');
+    if (spacePos == -1) {
+      spacePos = command.length();
+    }
+
+    String commandLabel = command.substring(0, spacePos);
+    if (!server.getCommandManager().hasCommand(commandLabel)) {
+      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+        // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+        // additional tab completion support.
+        outstandingTabComplete = packet;
+      }
+      return false;
+    }
+
+    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
+    if (suggestions.isEmpty()) {
+      return false;
+    }
+
+    List<Offer> offers = new ArrayList<>();
+    int longestLength = 0;
+    for (String suggestion : suggestions) {
+      offers.add(new Offer(suggestion));
+      if (suggestion.length() > longestLength) {
+        longestLength = suggestion.length();
+      }
+    }
+
+    TabCompleteResponse resp = new TabCompleteResponse();
+    resp.setTransactionId(packet.getTransactionId());
+
+    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+    int length;
+    if (startPos == 0) {
+      startPos = packet.getCommand().length() + 1;
+      length = longestLength;
+    } else {
+      length = packet.getCommand().length() - startPos;
+    }
+
+    resp.setStart(startPos);
+    resp.setLength(length);
+    resp.getOffers().addAll(offers);
+
+    player.getConnection().write(resp);
+    return true;
+  }
+
+  private boolean handleRegularTabComplete(TabCompleteRequest packet) {
+    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+      // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
+      // additional tab completion support.
+      outstandingTabComplete = packet;
+    }
+    return false;
+  }
+
   /**
-   * Handles additional tab complete for 1.12 and lower clients.
+   * Handles additional tab complete.
    *
    * @param response the tab complete response from the backend
    */
   public void handleTabCompleteResponse(TabCompleteResponse response) {
-    if (legacyCommandTabComplete != null) {
-      String command = legacyCommandTabComplete.getCommand().substring(1);
-      try {
-        List<String> offers = server.getCommandManager().offerSuggestions(player, command);
-        for (String offer : offers) {
-          response.getOffers().add(new Offer(offer, null));
-        }
-        response.getOffers().sort(null);
-      } catch (Exception e) {
-        logger.error("Unable to provide tab list completions for {} for command '{}'",
-            player.getUsername(),
-            command, e);
+    if (outstandingTabComplete != null) {
+      if (outstandingTabComplete.isAssumeCommand()) {
+        return; // used for command blocks which can't run Velocity commands anyway
       }
-      legacyCommandTabComplete = null;
+      if (outstandingTabComplete.getCommand().startsWith("/")) {
+        this.finishCommandTabComplete(outstandingTabComplete, response);
+      } else {
+        this.finishRegularTabComplete(outstandingTabComplete, response);
+      }
+      outstandingTabComplete = null;
     }
+  }
 
-    player.getMinecraftConnection().write(response);
+  private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
+    String command = request.getCommand().substring(1);
+    try {
+      List<String> offers = server.getCommandManager().offerSuggestions(player, command);
+      for (String offer : offers) {
+        response.getOffers().add(new Offer(offer, null));
+      }
+      response.getOffers().sort(null);
+      player.getConnection().write(response);
+    } catch (Exception e) {
+      logger.error("Unable to provide tab list completions for {} for command '{}'",
+          player.getUsername(),
+          command, e);
+    }
+  }
+
+  private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
+    List<String> offers = new ArrayList<>();
+    for (Offer offer : response.getOffers()) {
+      offers.add(offer.getText());
+    }
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+        .thenAcceptAsync(e -> {
+          response.getOffers().clear();
+          for (String s : e.getSuggestions()) {
+            response.getOffers().add(new Offer(s));
+          }
+          player.getConnection().write(response);
+        }, player.getConnection().eventLoop());
   }
 
   /**

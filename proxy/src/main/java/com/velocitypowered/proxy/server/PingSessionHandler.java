@@ -18,13 +18,15 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private final CompletableFuture<ServerPing> result;
   private final RegisteredServer server;
   private final MinecraftConnection connection;
+  private final ProtocolVersion version;
   private boolean completed = false;
 
   PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
-      MinecraftConnection connection) {
+      MinecraftConnection connection, ProtocolVersion version) {
     this.result = result;
     this.server = server;
     this.connection = connection;
+    this.version = version;
   }
 
   @Override
@@ -33,11 +35,13 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     handshake.setNextStatus(StateRegistry.STATUS_ID);
     handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
     handshake.setPort(server.getServerInfo().getAddress().getPort());
-    handshake.setProtocolVersion(ProtocolVersion.MINIMUM_VERSION);
-    connection.write(handshake);
+    handshake.setProtocolVersion(version);
+    connection.delayedWrite(handshake);
 
     connection.setState(StateRegistry.STATUS);
-    connection.write(StatusRequest.INSTANCE);
+    connection.delayedWrite(StatusRequest.INSTANCE);
+
+    connection.flush();
   }
 
   @Override
