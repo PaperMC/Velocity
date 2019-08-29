@@ -19,7 +19,6 @@ public enum ProtocolUtils {
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.
-   *
    * @param buf the buffer to read from
    * @return the decoded VarInt
    */
@@ -41,7 +40,6 @@ public enum ProtocolUtils {
 
   /**
    * Writes a Minecraft-style VarInt to the specified {@code buf}.
-   *
    * @param buf the buffer to read from
    * @param value the integer to write
    */
@@ -62,9 +60,8 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over {@code
-   * cap} size.
-   *
+   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over
+   * {@code cap} size.
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the decoded string
@@ -88,7 +85,6 @@ public enum ProtocolUtils {
 
   /**
    * Writes the specified {@code str} to the {@code buf} with a VarInt prefix.
-   *
    * @param buf the buffer to write to
    * @param str the string to write
    */
@@ -105,7 +101,6 @@ public enum ProtocolUtils {
   /**
    * Reads a VarInt length-prefixed byte array from the {@code buf}, making sure to not go over
    * {@code cap} size.
-   *
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the byte array
@@ -129,7 +124,6 @@ public enum ProtocolUtils {
 
   /**
    * Reads an VarInt-prefixed array of VarInt integers from the {@code buf}.
-   *
    * @param buf the buffer to read from
    * @return an array of integers
    */
@@ -145,7 +139,6 @@ public enum ProtocolUtils {
 
   /**
    * Reads an UUID from the {@code buf}.
-   *
    * @param buf the buffer to read from
    * @return the UUID from the buffer
    */
@@ -162,7 +155,6 @@ public enum ProtocolUtils {
 
   /**
    * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
-   *
    * @param buf the buffer to write to
    * @param properties the properties to serialize
    */
@@ -183,7 +175,6 @@ public enum ProtocolUtils {
 
   /**
    * Reads a list of {@link com.velocitypowered.api.util.GameProfile.Property} from the buffer.
-   *
    * @param buf the buffer to read from
    * @return the read properties
    */
