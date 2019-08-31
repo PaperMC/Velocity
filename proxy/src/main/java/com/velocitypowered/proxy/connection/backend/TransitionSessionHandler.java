@@ -80,7 +80,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer()))
+        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer(),
+            existingConnection != null ? existingConnection.getServer() : null))
         .whenCompleteAsync((x, error) -> {
           // Strap on the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
