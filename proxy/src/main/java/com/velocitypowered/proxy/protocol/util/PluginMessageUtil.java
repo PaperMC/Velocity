@@ -11,9 +11,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.util.ByteProcessor;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -127,7 +125,8 @@ public class PluginMessageUtil {
    * @param version the proxy version
    * @return the rewritten plugin message
    */
-  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version) {
+  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version,
+      ProtocolVersion protocolVersion) {
     checkNotNull(message, "message");
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
@@ -135,8 +134,14 @@ public class PluginMessageUtil {
     String toAppend = " (" + version.getName() + ")";
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
-    String currentBrand = ProtocolUtils.readString(message.content().slice());
-    ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
+
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      String currentBrand = ProtocolUtils.readString(message.content().slice());
+      ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
+    } else {
+      String currentBrand = ProtocolUtils.readStringWithoutLength(message.content().slice());
+      rewrittenBuf.writeBytes((currentBrand + toAppend).getBytes());
+    }
 
     return new PluginMessage(message.getChannel(), rewrittenBuf);
   }

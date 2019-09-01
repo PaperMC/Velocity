@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 
 import com.google.common.base.MoreObjects;
@@ -83,9 +84,11 @@ public class TabCompleteRequest implements MinecraftPacket {
       if (version.compareTo(MINECRAFT_1_9) >= 0) {
         this.assumeCommand = buf.readBoolean();
       }
-      this.hasPosition = buf.readBoolean();
-      if (hasPosition) {
-        this.position = buf.readLong();
+      if (version.compareTo(MINECRAFT_1_8) >= 0) {
+        this.hasPosition = buf.readBoolean();
+        if (hasPosition) {
+          this.position = buf.readLong();
+        }
       }
     }
   }
@@ -104,9 +107,11 @@ public class TabCompleteRequest implements MinecraftPacket {
       if (version.compareTo(MINECRAFT_1_9) >= 0) {
         buf.writeBoolean(assumeCommand);
       }
-      buf.writeBoolean(hasPosition);
-      if (hasPosition) {
-        buf.writeLong(position);
+      if (version.compareTo(MINECRAFT_1_8) >= 0) {
+        buf.writeBoolean(hasPosition);
+        if (hasPosition) {
+          buf.writeLong(position);
+        }
       }
     }
   }

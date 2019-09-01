@@ -50,7 +50,12 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       this.channel = transformLegacyToModernChannel(this.channel);
     }
-    this.replace(buf.readRetainedSlice(buf.readableBytes()));
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.replace(buf.readRetainedSlice(buf.readableBytes()));
+    } else {
+      this.replace(ProtocolUtils.readRetainedByteBufSlice17(buf));
+    }
+
   }
 
   @Override
@@ -63,7 +68,12 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
     } else {
       ProtocolUtils.writeString(buf, this.channel);
     }
-    buf.writeBytes(content());
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      buf.writeBytes(content());
+    } else {
+      ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
+    }
+
   }
 
   @Override
