@@ -232,7 +232,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
           mcConnection,
-          inbound.getVirtualHost().orElse(null));
+          inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect(VelocityMessages.ALREADY_CONNECTED);
