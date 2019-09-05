@@ -52,6 +52,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
           Collections.singletonList(PlayerListItem.Item.from(value))));
     }
     entries.clear();
+    nameMapping.clear();
   }
 
   @Override
