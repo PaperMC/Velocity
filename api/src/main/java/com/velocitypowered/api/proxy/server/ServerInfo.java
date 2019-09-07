@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * ServerInfo represents a server that a player can connect to. This object is immutable and safe
  * for concurrent access.
  */
-public final class ServerInfo {
+public final class ServerInfo implements Comparable<ServerInfo> {
 
   private final String name;
   private final InetSocketAddress address;
@@ -57,5 +57,10 @@ public final class ServerInfo {
   @Override
   public final int hashCode() {
     return Objects.hash(name, address);
+  }
+
+  @Override
+  public int compareTo(ServerInfo o) {
+    return this.name.compareTo(o.getName());
   }
 }
