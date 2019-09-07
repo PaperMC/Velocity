@@ -56,7 +56,7 @@ public class Chat implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     message = ProtocolUtils.readString(buf);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       type = buf.readByte();
     }
   }
@@ -67,7 +67,7 @@ public class Chat implements MinecraftPacket {
       throw new IllegalStateException("Message is not specified");
     }
     ProtocolUtils.writeString(buf, message);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       buf.writeByte(type);
     }
   }

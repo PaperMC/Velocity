@@ -90,7 +90,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   @Nullable private final Integer packetToAdvanceOn;
 
   /**
-   * Creates an instance of the {@link LegacyForgeHandshakeClientPhase}.
+   * Creates an instance of the {@link LegacyForgeHandshakeBackendPhase}.
    *
    * @param packetToAdvanceOn The ID of the packet discriminator that indicates
    *                          that the server has moved onto a new phase, and

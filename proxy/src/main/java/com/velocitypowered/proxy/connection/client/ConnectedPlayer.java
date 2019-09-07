@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
+import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
@@ -89,6 +90,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private PermissionFunction permissionFunction;
   private int tryIndex = 0;
   private long ping = -1;
+  private final boolean onlineMode;
   private @Nullable VelocityServerConnection connectedServer;
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
@@ -101,16 +103,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityServer server, GameProfile profile,
-      MinecraftConnection connection, @Nullable InetSocketAddress virtualHost) {
+  ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
+      @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    this.tabList = new VelocityTabList(connection);
+    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.tabList = new VelocityTabList(connection);
+    } else {
+      this.tabList = new VelocityTabListLegacy(connection);
+    }
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
+    this.onlineMode = onlineMode;
   }
 
   @Override
@@ -144,6 +151,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   void setPing(long ping) {
     this.ping = ping;
+  }
+
+  @Override
+  public boolean isOnlineMode() {
+    return onlineMode;
   }
 
   @Override
