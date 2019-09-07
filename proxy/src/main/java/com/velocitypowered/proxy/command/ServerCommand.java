@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.command;
 
+import static net.kyori.text.TextComponent.of;
+import static net.kyori.text.event.HoverEvent.showText;
+
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
@@ -9,12 +12,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
-import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -29,7 +33,7 @@ public class ServerCommand implements Command {
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
     if (!(source instanceof Player)) {
-      source.sendMessage(TextComponent.of("Only players may run this command.", TextColor.RED));
+      source.sendMessage(of("Only players may run this command.", TextColor.RED));
       return;
     }
 
@@ -40,45 +44,52 @@ public class ServerCommand implements Command {
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
         player.sendMessage(
-            TextComponent.of("Server " + serverName + " doesn't exist.", TextColor.RED));
+            of("Server " + serverName + " doesn't exist.", TextColor.RED));
         return;
       }
 
       player.createConnectionRequest(toConnect.get()).fireAndForget();
     } else {
-      String currentServer = player.getCurrentServer().map(ServerConnection::getServerInfo)
-          .map(ServerInfo::getName)
-          .orElse("<unknown>");
-      player.sendMessage(TextComponent
-          .of("You are currently connected to " + currentServer + ".", TextColor.YELLOW));
-
-      // Assemble the list of servers as components
-      TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
-          .color(TextColor.YELLOW);
-      List<RegisteredServer> infos = ImmutableList.copyOf(server.getAllServers());
-      for (int i = 0; i < infos.size(); i++) {
-        RegisteredServer rs = infos.get(i);
-        TextComponent infoComponent = TextComponent.of(rs.getServerInfo().getName());
-        String playersText = rs.getPlayersConnected().size() + " player(s) online";
-        if (rs.getServerInfo().getName().equals(currentServer)) {
-          infoComponent = infoComponent.color(TextColor.GREEN)
-              .hoverEvent(HoverEvent.showText(
-                  TextComponent.of("Currently connected to this server\n" + playersText)));
-        } else {
-          infoComponent = infoComponent.color(TextColor.GRAY)
-              .clickEvent(ClickEvent.runCommand(
-                  "/server " + rs.getServerInfo().getName()))
-              .hoverEvent(HoverEvent.showText(
-                  TextComponent.of("Click to connect to this server\n" + playersText)));
-        }
-        serverListBuilder.append(infoComponent);
-        if (i != infos.size() - 1) {
-          serverListBuilder.append(TextComponent.of(", ", TextColor.GRAY));
-        }
-      }
-
-      player.sendMessage(serverListBuilder.build());
+      outputServerInformation(player);
     }
+  }
+
+  private void outputServerInformation(Player executor) {
+    String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
+        .map(ServerInfo::getName).orElse("<unknown>");
+    executor.sendMessage(of("You are currently connected to " + currentServer + ".",
+        TextColor.YELLOW));
+
+    // Assemble the list of servers as components
+    TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
+        .color(TextColor.YELLOW);
+    List<RegisteredServer> servers = new ArrayList<>(server.getAllServers());
+    servers.sort(Comparator.comparing(RegisteredServer::getServerInfo));
+    for (int i = 0; i < servers.size(); i++) {
+      RegisteredServer rs = servers.get(i);
+      serverListBuilder.append(formatServerComponent(currentServer, rs));
+      if (i != servers.size() - 1) {
+        serverListBuilder.append(of(", ", TextColor.GRAY));
+      }
+    }
+
+    executor.sendMessage(serverListBuilder.build());
+  }
+
+  private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {
+    ServerInfo serverInfo = server.getServerInfo();
+    TextComponent serverTextComponent = of(serverInfo.getName());
+
+    String playersText = server.getPlayersConnected().size() + " player(s) online";
+    if (serverInfo.getName().equals(currentPlayerServer)) {
+      serverTextComponent = serverTextComponent.color(TextColor.GREEN)
+          .hoverEvent(showText(of("Currently connected to this server\n" + playersText)));
+    } else {
+      serverTextComponent = serverTextComponent.color(TextColor.GRAY)
+          .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
+          .hoverEvent(showText(of("Click to connect to this server\n" + playersText)));
+    }
+    return serverTextComponent;
   }
 
   @Override
