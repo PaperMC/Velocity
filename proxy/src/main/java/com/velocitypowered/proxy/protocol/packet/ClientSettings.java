@@ -13,6 +13,7 @@ public class ClientSettings implements MinecraftPacket {
   private byte viewDistance;
   private int chatVisibility;
   private boolean chatColors;
+  private byte difficulty; // 1.7 Protocol
   private short skinParts;
   private int mainHand;
 
@@ -98,6 +99,11 @@ public class ClientSettings implements MinecraftPacket {
     this.viewDistance = buf.readByte();
     this.chatVisibility = ProtocolUtils.readVarInt(buf);
     this.chatColors = buf.readBoolean();
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+      this.difficulty = buf.readByte();
+    }
+
     this.skinParts = buf.readUnsignedByte();
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
@@ -114,6 +120,11 @@ public class ClientSettings implements MinecraftPacket {
     buf.writeByte(viewDistance);
     ProtocolUtils.writeVarInt(buf, chatVisibility);
     buf.writeBoolean(chatColors);
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+      buf.writeByte(difficulty);
+    }
+
     buf.writeByte(skinParts);
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {

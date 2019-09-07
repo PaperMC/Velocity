@@ -7,6 +7,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.PlayerListItem.Item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,8 +21,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
 
-  private final MinecraftConnection connection;
-  private final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
+  protected final MinecraftConnection connection;
+  protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
   public VelocityTabList(MinecraftConnection connection) {
     this.connection = connection;
@@ -76,9 +77,9 @@ public class VelocityTabList implements TabList {
   }
 
   /**
-   * Clears all entries from the tab list. Note that the entries are written with
-   * {@link MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit
-   * {@link MinecraftConnection#flush()}.
+   * Clears all entries from the tab list. Note that the entries are written with {@link
+   * MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit {@link
+   * MinecraftConnection#flush()}.
    */
   public void clearAll() {
     List<PlayerListItem.Item> items = new ArrayList<>();
@@ -86,7 +87,9 @@ public class VelocityTabList implements TabList {
       items.add(PlayerListItem.Item.from(value));
     }
     entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    if (!items.isEmpty()) {
+      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    }
   }
 
   @Override
@@ -102,12 +105,14 @@ public class VelocityTabList implements TabList {
 
   /**
    * Processes a tab list entry packet from the backend.
+   *
    * @param packet the packet to process
    */
   public void processBackendPacket(PlayerListItem packet) {
     // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
+
       if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;

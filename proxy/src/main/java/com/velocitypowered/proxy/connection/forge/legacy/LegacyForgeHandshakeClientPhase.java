@@ -135,7 +135,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   COMPLETE(null) {
     @Override
     public void resetConnectionPhase(ConnectedPlayer player) {
-      player.getMinecraftConnection().write(LegacyForgeUtil.resetPacket());
+      player.getConnection().write(LegacyForgeUtil.resetPacket());
       player.setPhase(LegacyForgeHandshakeClientPhase.NOT_STARTED);
     }
 

@@ -33,7 +33,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
       return;
     }
 
-    checkFrame(expectedSize >= threshold, "Uncompressed size %s is greater than threshold %s",
+    checkFrame(expectedSize >= threshold, "Uncompressed size %s is less than threshold %s",
         expectedSize, threshold);
     int initialCapacity = Math.min(expectedSize, MAXIMUM_UNCOMPRESSED_SIZE);
     ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);

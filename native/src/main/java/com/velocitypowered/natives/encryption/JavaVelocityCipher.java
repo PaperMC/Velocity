@@ -2,9 +2,8 @@ package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.FastThreadLocal;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,13 +23,6 @@ public class JavaVelocityCipher implements VelocityCipher {
       return new JavaVelocityCipher(false, key);
     }
   };
-  private static final int INITIAL_BUFFER_SIZE = 1024 * 8;
-  private static final FastThreadLocal<byte[]> inBufLocal = new FastThreadLocal<byte[]>() {
-    @Override
-    protected byte[] initialValue() {
-      return new byte[INITIAL_BUFFER_SIZE];
-    }
-  };
 
   private final Cipher cipher;
   private boolean disposed = false;
@@ -46,20 +38,12 @@ public class JavaVelocityCipher implements VelocityCipher {
     ensureNotDisposed();
 
     int inBytes = source.readableBytes();
-    ByteBuf asHeapBuf = asHeapBuf(source);
+    byte[] asBytes = ByteBufUtil.getBytes(source);
 
     int outputSize = cipher.getOutputSize(inBytes);
-    if (!destination.hasArray()) {
-      byte[] outBuf = new byte[outputSize];
-      cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, outBuf);
-      destination.writeBytes(outBuf);
-    } else {
-      // If the destination we write to is an array, we can use the backing array directly.
-      destination.ensureWritable(outputSize);
-      int produced = cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes,
-          destination.array(), destination.arrayOffset());
-      destination.writerIndex(destination.writerIndex() + produced);
-    }
+    byte[] outBuf = new byte[outputSize];
+    cipher.update(asBytes, 0, inBytes, outBuf);
+    destination.writeBytes(outBuf);
   }
 
   @Override
@@ -67,28 +51,31 @@ public class JavaVelocityCipher implements VelocityCipher {
     ensureNotDisposed();
 
     int inBytes = source.readableBytes();
-    ByteBuf asHeapBuf = asHeapBuf(source);
-
+    ByteBuf asHeapBuf = toHeap(source);
     ByteBuf out = ctx.alloc().heapBuffer(cipher.getOutputSize(inBytes));
-    out.writerIndex(cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, out.array(),
-        out.arrayOffset()));
-    return out;
+    try {
+      out.writerIndex(
+          cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset() + asHeapBuf.readerIndex(),
+              inBytes, out.array(), out.arrayOffset() + out.writerIndex()));
+      return out;
+    } catch (ShortBufferException e) {
+      out.release();
+      throw e;
+    } finally {
+      asHeapBuf.release();
+    }
   }
 
-  private static ByteBuf asHeapBuf(ByteBuf source) {
-    if (source.hasArray()) {
-      // If this byte buffer is backed by an array, we can just use this buffer directly.
-      return source;
+  private static ByteBuf toHeap(ByteBuf src) {
+    if (src.hasArray()) {
+      return src.retain();
     }
 
-    int inBytes = source.readableBytes();
-    byte[] inBuf = inBufLocal.get();
-    if (inBuf.length <= inBytes) {
-      inBuf = new byte[inBytes];
-      inBufLocal.set(inBuf);
-    }
-    source.readBytes(inBuf, 0, inBytes);
-    return Unpooled.wrappedBuffer(inBuf, 0, inBytes);
+    // Copy into a temporary heap buffer. We could use a local buffer, but Netty pools all buffers,
+    // so we'd lose more than we gain.
+    ByteBuf asHeapBuf = src.alloc().heapBuffer(src.readableBytes());
+    asHeapBuf.writeBytes(src);
+    return asHeapBuf;
   }
 
   @Override

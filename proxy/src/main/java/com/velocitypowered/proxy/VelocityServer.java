@@ -505,7 +505,7 @@ public class VelocityServer implements ProxyServer {
     Preconditions.checkNotNull(component, "component");
     Chat chat = Chat.createClientbound(component);
     for (ConnectedPlayer player : connectionsByUuid.values()) {
-      player.getMinecraftConnection().write(chat);
+      player.getConnection().write(chat);
     }
   }
 

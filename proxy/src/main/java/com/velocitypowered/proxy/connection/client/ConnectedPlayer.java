@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
+import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
@@ -58,7 +59,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -84,12 +84,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   /**
    * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
    */
-  private final MinecraftConnection minecraftConnection;
+  private final MinecraftConnection connection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
   private PermissionFunction permissionFunction;
   private int tryIndex = 0;
   private long ping = -1;
+  private final boolean onlineMode;
   private @Nullable VelocityServerConnection connectedServer;
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
@@ -102,16 +103,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityServer server, GameProfile profile,
-      MinecraftConnection minecraftConnection, @Nullable InetSocketAddress virtualHost) {
+  ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
+      @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    this.tabList = new VelocityTabList(minecraftConnection);
+    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.tabList = new VelocityTabList(connection);
+    } else {
+      this.tabList = new VelocityTabListLegacy(connection);
+    }
     this.profile = profile;
-    this.minecraftConnection = minecraftConnection;
+    this.connection = connection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
-    this.connectionPhase = minecraftConnection.getType().getInitialClientPhase();
+    this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
+    this.onlineMode = onlineMode;
   }
 
   @Override
@@ -134,8 +140,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return profile;
   }
 
-  public MinecraftConnection getMinecraftConnection() {
-    return minecraftConnection;
+  public MinecraftConnection getConnection() {
+    return connection;
   }
 
   @Override
@@ -145,6 +151,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   void setPing(long ping) {
     this.ping = ping;
+  }
+
+  @Override
+  public boolean isOnlineMode() {
+    return onlineMode;
   }
 
   @Override
@@ -170,7 +181,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public InetSocketAddress getRemoteAddress() {
-    return (InetSocketAddress) minecraftConnection.getRemoteAddress();
+    return (InetSocketAddress) connection.getRemoteAddress();
   }
 
   @Override
@@ -184,12 +195,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public boolean isActive() {
-    return minecraftConnection.getChannel().isActive();
+    return connection.getChannel().isActive();
   }
 
   @Override
   public ProtocolVersion getProtocolVersion() {
-    return minecraftConnection.getProtocolVersion();
+    return connection.getProtocolVersion();
   }
 
   @Override
@@ -205,7 +216,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket pkt = new TitlePacket();
         pkt.setAction(TitlePacket.SET_ACTION_BAR);
         pkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(component));
-        minecraftConnection.write(pkt);
+        connection.write(pkt);
         return;
       } else {
         // Due to issues with action bar packets, we'll need to convert the text message into a
@@ -221,7 +232,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Chat chat = new Chat();
     chat.setType(pos);
     chat.setMessage(json);
-    minecraftConnection.write(chat);
+    connection.write(chat);
   }
 
   @Override
@@ -258,23 +269,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
-    minecraftConnection.closeWith(Disconnect.create(reason));
+    connection.closeWith(Disconnect.create(reason));
   }
 
   @Override
   public void sendTitle(Title title) {
     Preconditions.checkNotNull(title, "title");
 
-    ProtocolVersion protocolVersion = minecraftConnection.getProtocolVersion();
+    ProtocolVersion protocolVersion = connection.getProtocolVersion();
     if (title.equals(Titles.reset())) {
-      minecraftConnection.write(TitlePacket.resetForProtocolVersion(protocolVersion));
+      connection.write(TitlePacket.resetForProtocolVersion(protocolVersion));
     } else if (title.equals(Titles.hide())) {
-      minecraftConnection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
+      connection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
     } else if (title instanceof TextTitle) {
       TextTitle tt = (TextTitle) title;
 
       if (tt.isResetBeforeSend()) {
-        minecraftConnection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
+        connection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
       }
 
       Optional<Component> titleText = tt.getTitle();
@@ -282,7 +293,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_TITLE);
         titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(titleText.get()));
-        minecraftConnection.delayedWrite(titlePkt);
+        connection.delayedWrite(titlePkt);
       }
 
       Optional<Component> subtitleText = tt.getSubtitle();
@@ -290,7 +301,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_SUBTITLE);
         titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(subtitleText.get()));
-        minecraftConnection.delayedWrite(titlePkt);
+        connection.delayedWrite(titlePkt);
       }
 
       if (tt.areTimesSet()) {
@@ -298,9 +309,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         timesPkt.setFadeIn(tt.getFadeIn());
         timesPkt.setStay(tt.getStay());
         timesPkt.setFadeOut(tt.getFadeOut());
-        minecraftConnection.delayedWrite(timesPkt);
+        connection.delayedWrite(timesPkt);
       }
-      minecraftConnection.flush();
+      connection.flush();
     } else {
       throw new IllegalArgumentException("Unknown title class " + title.getClass().getName());
     }
@@ -454,7 +465,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   } else {
                     sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER.append(friendlyReason));
                   }
-                }, minecraftConnection.eventLoop());
+                }, connection.eventLoop());
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
             if (event.kickedDuringServerConnect()) {
@@ -466,7 +477,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             // In case someone gets creative, assume we want to disconnect the player.
             disconnect(friendlyReason);
           }
-        }, minecraftConnection.eventLoop());
+        }, connection.eventLoop());
   }
 
   /**
@@ -579,7 +590,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
     PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
-    minecraftConnection.write(message);
+    connection.write(message);
     return true;
   }
 
@@ -598,7 +609,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ResourcePackRequest request = new ResourcePackRequest();
     request.setUrl(url);
     request.setHash("");
-    minecraftConnection.write(request);
+    connection.write(request);
   }
 
   @Override
@@ -610,7 +621,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ResourcePackRequest request = new ResourcePackRequest();
     request.setUrl(url);
     request.setHash(ByteBufUtil.hexDump(hash));
-    minecraftConnection.write(request);
+    connection.write(request);
   }
 
   /**
@@ -619,10 +630,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (minecraftConnection.getState() == StateRegistry.PLAY) {
+    if (connection.getState() == StateRegistry.PLAY) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
-      minecraftConnection.write(keepAlive);
+      connection.write(keepAlive);
     }
   }
 
@@ -749,7 +760,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             } else if ((status != null && !status.isSuccessful())) {
               resetInFlightConnection();
             }
-          }, minecraftConnection.eventLoop())
+          }, connection.eventLoop())
           .thenApply(x -> x);
     }
 
@@ -782,7 +793,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 // The only remaining value is successful (no need to do anything!)
                 break;
             }
-          }, minecraftConnection.eventLoop())
+          }, connection.eventLoop())
           .thenApply(Result::isSuccessful);
     }
 

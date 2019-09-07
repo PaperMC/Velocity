@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -40,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
-import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +78,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
-      player.getMinecraftConnection().write(register);
+      player.getConnection().write(register);
       player.getKnownChannels().addAll(channels);
     }
   }
@@ -178,7 +178,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
-        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion()));
+        backendConn.write(PluginMessageUtil
+            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
       } else {
         if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
           // We must bypass the currently-connected server when forwarding Forge packets.
@@ -275,7 +276,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public void writabilityChanged() {
     VelocityServerConnection serverConn = player.getConnectedServer();
     if (serverConn != null) {
-      boolean writable = player.getMinecraftConnection().getChannel().isWritable();
+      boolean writable = player.getConnection().getChannel().isWritable();
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
         smc.setAutoReading(writable);
@@ -295,7 +296,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
-      player.getMinecraftConnection().delayedWrite(joinGame);
+      player.getConnection().delayedWrite(joinGame);
 
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
@@ -315,12 +316,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      player.getMinecraftConnection().delayedWrite(joinGame);
+      player.getConnection().delayedWrite(joinGame);
       int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-      player.getMinecraftConnection().delayedWrite(
+      player.getConnection().delayedWrite(
           new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
-      player.getMinecraftConnection().delayedWrite(
+      player.getConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(),
               joinGame.getLevelType()));
     }
@@ -331,7 +332,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       BossBar deletePacket = new BossBar();
       deletePacket.setUuid(serverBossBar);
       deletePacket.setAction(BossBar.REMOVE);
-      player.getMinecraftConnection().delayedWrite(deletePacket);
+      player.getConnection().delayedWrite(deletePacket);
     }
     serverBossBars.clear();
 
@@ -348,11 +349,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     // Clear any title from the previous server.
-    player.getMinecraftConnection()
-        .delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
+    if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
+      player.getConnection()
+          .delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
+    }
 
     // Flush everything
-    player.getMinecraftConnection().flush();
+    player.getConnection().flush();
     serverMc.flush();
     destination.completeJoin();
   }
@@ -410,7 +413,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     resp.setLength(length);
     resp.getOffers().addAll(offers);
 
-    player.getMinecraftConnection().write(resp);
+    player.getConnection().write(resp);
     return true;
   }
 
@@ -450,7 +453,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         response.getOffers().add(new Offer(offer, null));
       }
       response.getOffers().sort(null);
-      player.getMinecraftConnection().write(response);
+      player.getConnection().write(response);
     } catch (Exception e) {
       logger.error("Unable to provide tab list completions for {} for command '{}'",
           player.getUsername(),
@@ -469,8 +472,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           for (String s : e.getSuggestions()) {
             response.getOffers().add(new Offer(s));
           }
-          player.getMinecraftConnection().write(response);
-        }, player.getMinecraftConnection().eventLoop());
+          player.getConnection().write(response);
+        }, player.getConnection().eventLoop());
   }
 
   /**
