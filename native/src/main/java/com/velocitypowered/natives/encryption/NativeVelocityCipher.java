@@ -56,11 +56,16 @@ public class NativeVelocityCipher implements VelocityCipher {
     int len = source.readableBytes();
     ByteBuf out = ctx.alloc().directBuffer(len);
 
-    impl.process(this.ctx, source.memoryAddress() + source.readerIndex(), len,
-        out.memoryAddress(), encrypt);
-    source.skipBytes(len);
-    out.writerIndex(len);
-    return out;
+    try {
+      impl.process(this.ctx, source.memoryAddress() + source.readerIndex(), len,
+          out.memoryAddress(), encrypt);
+      source.skipBytes(len);
+      out.writerIndex(len);
+      return out;
+    } catch (Exception e) {
+      out.release();
+      throw e;
+    }
   }
 
   @Override

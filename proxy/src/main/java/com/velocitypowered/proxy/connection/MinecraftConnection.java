@@ -131,8 +131,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         try {
           sessionHandler.exception(cause);
         } catch (Exception ex) {
-          logger.error("{}: exception handling exception", (association != null ? association :
-              channel.remoteAddress()), cause);
+          logger.error("{}: exception handling exception in {}",
+              (association != null ? association : channel.remoteAddress()), sessionHandler, cause);
         }
       }
 
@@ -140,7 +140,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
-          logger.error("{}: exception encountered", association, cause);
+          logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
         }
       }
 
@@ -153,6 +153,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (sessionHandler != null) {
       sessionHandler.writabilityChanged();
     }
+  }
+
+  private void ensureInEventLoop() {
+    Preconditions.checkState(this.channel.eventLoop().inEventLoop(), "Not in event loop");
   }
 
   public EventLoop eventLoop() {
@@ -233,6 +237,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param autoReading whether or not we should read data automatically
    */
   public void setAutoReading(boolean autoReading) {
+    ensureInEventLoop();
+
     channel.config().setAutoRead(autoReading);
     if (autoReading) {
       // For some reason, the channel may not completely read its queued contents once autoread
@@ -249,6 +255,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param state the new state
    */
   public void setState(StateRegistry state) {
+    ensureInEventLoop();
+
     this.state = state;
     this.channel.pipeline().get(MinecraftEncoder.class).setState(state);
     this.channel.pipeline().get(MinecraftDecoder.class).setState(state);
@@ -263,6 +271,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param protocolVersion the protocol version to use
    */
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
+    ensureInEventLoop();
+
     this.protocolVersion = protocolVersion;
     this.nextProtocolVersion = protocolVersion;
     if (protocolVersion != ProtocolVersion.LEGACY) {
@@ -284,6 +294,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param sessionHandler the handler to use
    */
   public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
+    ensureInEventLoop();
+
     if (this.sessionHandler != null) {
       this.sessionHandler.deactivated();
     }
@@ -302,6 +314,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void setCompressionThreshold(int threshold) {
     ensureOpen();
+    ensureInEventLoop();
 
     if (threshold == -1) {
       channel.pipeline().remove(COMPRESSION_DECODER);
@@ -325,6 +338,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void enableEncryption(byte[] secret) throws GeneralSecurityException {
     ensureOpen();
+    ensureInEventLoop();
 
     SecretKey key = new SecretKeySpec(secret, "AES");
 
@@ -342,6 +356,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   public void setAssociation(MinecraftConnectionAssociation association) {
+    ensureInEventLoop();
     this.association = association;
   }
 

@@ -3,12 +3,9 @@ package com.velocitypowered.proxy;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -21,11 +18,14 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
 
 /**
  * bStats collects some data for plugin authors.
@@ -185,40 +185,44 @@ public class Metrics {
     }
 
     // Compress the data to save bandwidth
-    ByteBuf reqBody = createResponseBody(data);
-
-    server.getHttpClient().post(new URL(URL), reqBody, request -> {
-      request.headers().add(HttpHeaderNames.CONTENT_ENCODING, "gzip");
-      request.headers().add(HttpHeaderNames.ACCEPT, "application/json");
-      request.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/json");
-    })
-        .whenCompleteAsync((resp, exc) -> {
-          if (logFailedRequests) {
-            if (exc != null) {
-              logger.error("Unable to send metrics to bStats", exc);
-            } else if (resp.getCode() != 429) {
-              logger.error("Got HTTP status code {} when sending metrics to bStats",
-                  resp.getCode());
-            }
+    ListenableFuture<Response> future = server.getAsyncHttpClient()
+        .preparePost(URL)
+        .addHeader(HttpHeaderNames.CONTENT_ENCODING, "gzip")
+        .addHeader(HttpHeaderNames.ACCEPT, "application/json")
+        .addHeader(HttpHeaderNames.CONTENT_TYPE, "application/json")
+        .setBody(createResponseBody(data))
+        .execute();
+    future.addListener(() -> {
+      if (logFailedRequests) {
+        try {
+          Response r = future.get();
+          if (r.getStatusCode() != 429) {
+            logger.error("Got HTTP status code {} when sending metrics to bStats",
+                r.getStatusCode());
           }
-        });
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+          logger.error("Unable to send metrics to bStats", e);
+        }
+      }
+    }, null);
   }
 
-  private static ByteBuf createResponseBody(JsonObject object) throws IOException {
-    ByteBuf buf = Unpooled.buffer();
+  private static byte[] createResponseBody(JsonObject object) throws IOException {
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
     try (Writer writer =
         new BufferedWriter(
             new OutputStreamWriter(
-                new GZIPOutputStream(new ByteBufOutputStream(buf)), StandardCharsets.UTF_8
+                new GZIPOutputStream(os), StandardCharsets.UTF_8
             )
         )
     ) {
       VelocityServer.GSON.toJson(object, writer);
     } catch (IOException e) {
-      buf.release();
       throw e;
     }
-    return buf;
+    return os.toByteArray();
   }
 
   /**

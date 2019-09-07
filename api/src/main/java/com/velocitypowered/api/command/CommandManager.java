@@ -10,8 +10,21 @@ public interface CommandManager {
    *
    * @param command the command to register
    * @param aliases the alias to use
+   *
+   * @deprecated This method requires at least one alias, but this is only enforced at runtime.
+   *             Prefer {@link #register(String, Command, String...)} instead.
    */
+  @Deprecated
   void register(Command command, String... aliases);
+
+  /**
+   * Registers the specified command with the manager with the specified aliases.
+   *
+   * @param alias the first alias to register
+   * @param command the command to register
+   * @param otherAliases the other aliases to use
+   */
+  void register(String alias, Command command, String... otherAliases);
 
   /**
    * Unregisters a command.

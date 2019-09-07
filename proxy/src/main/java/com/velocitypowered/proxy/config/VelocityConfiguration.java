@@ -72,10 +72,35 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @ConfigKey("forwarding-secret")
   private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
 
-  @Comment({"Announce whether or not your server supports Forge. If you run a modded server, we",
-      "suggest turning this on."})
+  @Comment({
+      "Announce whether or not your server supports Forge. If you run a modded server, we",
+      "suggest turning this on.",
+      "",
+      "If your network runs one modpack consistently, consider using ping-passthrough = \"mods\"",
+      "instead for a nicer display in the server list."
+  })
   @ConfigKey("announce-forge")
   private boolean announceForge = false;
+
+  @Comment({"If enabled (default is false) and the proxy is in online mode, Velocity will kick",
+      "any existing player who is online if a duplicate connection attempt is made."})
+  @ConfigKey("kick-existing-players")
+  private boolean onlineModeKickExistingPlayers = false;
+
+  @Comment({
+      "Should Velocity pass server list ping requests to a backend server?",
+      "Available options:",
+      "- \"disabled\": No pass-through will be done. The velocity.toml and server-icon.png",
+      "              will determine the initial server list ping response.",
+      "- \"mods\":     Passes only the mod list from your backend server into the response.",
+      "              The first server in your try list (or forced host) with a mod list will be",
+      "              used. If no backend servers can be contacted, Velocity will not display any",
+      "              mod information.",
+      "- \"all\":      Passes everything from the backend server into the response. The Velocity",
+      "              configuration is used if no servers could be contacted."
+  })
+  @ConfigKey("ping-passthrough")
+  private PingPassthroughMode pingPassthrough;
 
   @Table("[servers]")
   private final Servers servers;
@@ -109,7 +134,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-      Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -117,6 +143,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     this.announceForge = announceForge;
     this.playerInfoForwardingMode = playerInfoForwardingMode;
     this.forwardingSecret = forwardingSecret;
+    this.onlineModeKickExistingPlayers = onlineModeKickExistingPlayers;
+    this.pingPassthrough = pingPassthrough;
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
@@ -365,8 +393,16 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return advanced.isProxyProtocol();
   }
 
+  public boolean useTcpFastOpen() {
+    return advanced.tcpFastOpen;
+  }
+
   public Metrics getMetrics() {
     return metrics;
+  }
+
+  public PingPassthroughMode getPingPassthrough() {
+    return pingPassthrough;
   }
 
   @Override
@@ -416,6 +452,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     String forwardingModeName = toml.getString("player-info-forwarding-mode", "MODERN")
         .toUpperCase(Locale.US);
+    String passThroughName = toml.getString("ping-passthrough", "DISABLED")
+        .toUpperCase(Locale.US);
 
     return new VelocityConfiguration(
         toml.getString("bind", "0.0.0.0:25577"),
@@ -425,6 +463,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         toml.getBoolean("announce-forge", false),
         PlayerInfoForwarding.valueOf(forwardingModeName),
         forwardingSecret,
+        toml.getBoolean("kick-existing-players", false),
+        PingPassthroughMode.valueOf(passThroughName),
         servers,
         forcedHosts,
         advanced,
@@ -441,6 +481,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return builder.toString();
+  }
+
+  public boolean isOnlineModeKickExistingPlayers() {
+    return onlineModeKickExistingPlayers;
   }
 
   private static class Servers {
@@ -596,6 +640,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("proxy-protocol")
     private boolean proxyProtocol = false;
 
+    @Comment("Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.")
+    @ConfigKey("tcp-fast-open")
+    private boolean tcpFastOpen = false;
+
     private Advanced() {
     }
 
@@ -607,6 +655,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
         this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
         this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
+        this.tcpFastOpen = toml.getBoolean("tcp-fast-open", false);
       }
     }
 
@@ -634,6 +683,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       return proxyProtocol;
     }
 
+    public boolean isTcpFastOpen() {
+      return tcpFastOpen;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -643,6 +696,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
           + ", proxyProtocol=" + proxyProtocol
+          + ", tcpFastOpen=" + tcpFastOpen
           + '}';
     }
   }

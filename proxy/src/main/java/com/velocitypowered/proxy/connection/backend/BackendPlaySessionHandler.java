@@ -5,26 +5,25 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
@@ -37,7 +36,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
     this.serverConn = serverConn;
-    this.playerConnection = serverConn.getPlayer().getMinecraftConnection();
+    this.playerConnection = serverConn.getPlayer().getConnection();
 
     MinecraftSessionHandler psh = playerConnection.getSessionHandler();
     if (!(psh instanceof ClientPlaySessionHandler)) {
@@ -119,12 +118,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
+    byte[] copy = ByteBufUtil.getBytes(packet.content());
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
-        packet.getData());
+        copy);
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
           if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
-            playerConnection.write(packet);
+            PluginMessage copied = new PluginMessage(packet.getChannel(),
+                Unpooled.wrappedBuffer(copy));
+            playerConnection.write(copied);
           }
         }, playerConnection.eventLoop());
     return true;
@@ -163,6 +165,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
+    if (packet instanceof PluginMessage) {
+      ((PluginMessage) packet).retain();
+    }
     playerConnection.write(packet);
   }
 
@@ -185,7 +190,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
-      serverConn.getPlayer().disconnect(ConnectionMessages.UNEXPECTED_DISCONNECT);
+      serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
+          Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT), true);
     }
   }
 }

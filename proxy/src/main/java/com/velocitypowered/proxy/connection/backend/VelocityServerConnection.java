@@ -12,7 +12,6 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -33,6 +32,7 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
@@ -76,7 +76,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.initializeGenericBootstrap(proxyPlayer.getMinecraftConnection().eventLoop())
+    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
@@ -138,23 +138,24 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
-    ProtocolVersion protocolVersion = proxyPlayer.getMinecraftConnection().getNextProtocolVersion();
+    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getMinecraftConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
     }
     handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
-    mc.write(handshake);
+    mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
-    mc.write(new ServerLogin(proxyPlayer.getUsername()));
+    mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername()));
+    mc.flush();
   }
 
   public @Nullable MinecraftConnection getConnection() {
@@ -212,9 +213,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessage message = new PluginMessage();
-    message.setChannel(identifier.getId());
-    message.setData(data);
+    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
     mc.write(message);
     return true;
   }

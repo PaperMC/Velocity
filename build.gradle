@@ -13,20 +13,21 @@ plugins {
 
 allprojects {
     group 'com.velocitypowered'
-    version '1.0.0-SNAPSHOT'
+    version '1.1.0-SNAPSHOT'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
     ext {
         // dependency versions
-        textVersion = '3.0.1'
+        textVersion = '3.0.2'
         junitVersion = '5.3.0-M1'
         slf4jVersion = '1.7.25'
         log4jVersion = '2.11.2'
-        nettyVersion = '4.1.35.Final'
+        nettyVersion = '4.1.38.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '2.7.0'
+        configurateVersion = '3.6'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
@@ -52,6 +53,12 @@ allprojects {
         // Brigadier
         maven {
             url "https://libraries.minecraft.net"
+        }
+
+        // Configurate
+        maven {
+            name = 'sponge'
+            url = 'https://repo.spongepowered.org/maven'
         }
     }
 

@@ -37,11 +37,19 @@ public interface TabList {
    * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile} identified with
    * the specified {@link UUID}.
    *
-   * @param uuid of the
+   * @param uuid of the entry
    * @return {@link Optional} containing the removed {@link TabListEntry} if present, otherwise
    * {@link Optional#empty()}
    */
   Optional<TabListEntry> removeEntry(UUID uuid);
+
+  /**
+   * Determines if the specified entry exists in the tab list.
+   *
+   * @param uuid the UUID of the entry
+   * @return {@code true} if it exists, {@code false} if it does not
+   */
+  boolean containsEntry(UUID uuid);
 
   /**
    * Returns an immutable {@link Collection} of the {@link TabListEntry}s in the tab list.

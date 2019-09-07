@@ -84,13 +84,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
         .whenCompleteAsync((x, error) -> {
           // Strap on the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
-          if (serverConn.getPlayer().getMinecraftConnection().getSessionHandler()
+          if (serverConn.getPlayer().getConnection().getSessionHandler()
               instanceof ClientPlaySessionHandler) {
-            playHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getMinecraftConnection()
+            playHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
                 .getSessionHandler();
           } else {
             playHandler = new ClientPlaySessionHandler(server, serverConn.getPlayer());
-            serverConn.getPlayer().getMinecraftConnection().setSessionHandler(playHandler);
+            serverConn.getPlayer().getConnection().setSessionHandler(playHandler);
           }
           playHandler.handleBackendJoinGame(packet, serverConn);
 
@@ -167,7 +167,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    serverConn.getPlayer().getMinecraftConnection().write(packet);
+    serverConn.getPlayer().getConnection().write(packet.retain());
     return true;
   }
 

@@ -1,17 +1,12 @@
 package com.velocitypowered.proxy.network;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.proxy.util.concurrent.VelocityNettyThreadFactory;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.kqueue.KQueue;
-import io.netty.channel.kqueue.KQueueDatagramChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.kqueue.KQueueServerSocketChannel;
-import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
@@ -27,10 +22,7 @@ enum TransportType {
       (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
   EPOLL("epoll", EpollServerSocketChannel.class, EpollSocketChannel.class,
       EpollDatagramChannel.class,
-      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type))),
-  KQUEUE("Kqueue", KQueueServerSocketChannel.class, KQueueSocketChannel.class,
-      KQueueDatagramChannel.class,
-      (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)));
+      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
   final Class<? extends ServerSocketChannel> serverSocketChannelClass;
@@ -60,17 +52,16 @@ enum TransportType {
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
-    return new ThreadFactoryBuilder()
-        .setNameFormat("Netty " + name + ' ' + type.toString() + " #%d")
-        .setDaemon(true)
-        .build();
+    return new VelocityNettyThreadFactory("Netty " + name + ' ' + type.toString() + " #%d");
   }
 
   public static TransportType bestType() {
+    if (Boolean.getBoolean("velocity.disable-native-transport")) {
+      return NIO;
+    }
+
     if (Epoll.isAvailable()) {
       return EPOLL;
-    } else if (KQueue.isAvailable()) {
-      return KQUEUE;
     } else {
       return NIO;
     }

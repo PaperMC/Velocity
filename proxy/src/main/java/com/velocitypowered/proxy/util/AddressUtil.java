@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.net.InetAddresses;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
@@ -19,7 +21,12 @@ public class AddressUtil {
   public static InetSocketAddress parseAddress(String ip) {
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
-    return InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort());
+    try {
+      InetAddress ia = InetAddresses.forUriString(uri.getHost());
+      return new InetSocketAddress(ia, uri.getPort());
+    } catch (IllegalArgumentException e) {
+      return InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort());
+    }
   }
 
   /**

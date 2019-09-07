@@ -135,7 +135,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   COMPLETE(null) {
     @Override
     public void resetConnectionPhase(ConnectedPlayer player) {
-      player.getMinecraftConnection().write(LegacyForgeUtil.resetPacket());
+      player.getConnection().write(LegacyForgeUtil.resetPacket());
       player.setPhase(LegacyForgeHandshakeClientPhase.NOT_STARTED);
     }
 
@@ -212,7 +212,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
       PluginMessage message,
       MinecraftConnection backendConn) {
     // Send the packet on to the server.
-    backendConn.write(message);
+    backendConn.write(message.retain());
 
     // We handled the packet. No need to continue processing.
     return true;
