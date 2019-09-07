@@ -67,7 +67,7 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   private static ByteBuf toHeap(ByteBuf src) {
-    if (!src.isDirect()) {
+    if (src.hasArray()) {
       return src.retain();
     }
 
