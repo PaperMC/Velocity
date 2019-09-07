@@ -35,7 +35,7 @@ public class GlistCommand implements Command {
     } else if (args.length == 1) {
       String arg = args[0];
       if (arg.equalsIgnoreCase("all")) {
-        for (RegisteredServer server : server.getAllServers()) {
+        for (RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
           sendServerPlayers(source, server, true);
         }
         sendTotalProxyCount(source);

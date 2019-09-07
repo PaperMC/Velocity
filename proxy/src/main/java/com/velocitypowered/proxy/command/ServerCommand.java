@@ -63,8 +63,7 @@ public class ServerCommand implements Command {
     // Assemble the list of servers as components
     TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
         .color(TextColor.YELLOW);
-    List<RegisteredServer> servers = new ArrayList<>(server.getAllServers());
-    servers.sort(Comparator.comparing(RegisteredServer::getServerInfo));
+    List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     for (int i = 0; i < servers.size(); i++) {
       RegisteredServer rs = servers.get(i);
       serverListBuilder.append(formatServerComponent(currentServer, rs));
