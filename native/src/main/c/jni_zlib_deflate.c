@@ -33,7 +33,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_init(JNIEnv *env,
     if (ret == Z_OK) {
         return (jlong) stream;
     } else {
-        char *zlib_msg = stream->msg;
+        const char *zlib_msg = stream->msg;
         free(stream);
         switch (ret) {
             case Z_MEM_ERROR:
