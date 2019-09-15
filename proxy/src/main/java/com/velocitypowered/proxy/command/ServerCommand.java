@@ -12,6 +12,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
@@ -83,13 +84,12 @@ public class ServerCommand implements Command {
 
   @Override
   public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+    Stream<String> possibilities = Stream.concat(Stream.of("all"), server.getAllServers()
+        .stream().map(rs -> rs.getServerInfo().getName()));
     if (currentArgs.length == 0) {
-      return server.getAllServers().stream()
-          .map(rs -> rs.getServerInfo().getName())
-          .collect(Collectors.toList());
+      return possibilities.collect(Collectors.toList());
     } else if (currentArgs.length == 1) {
-      return server.getAllServers().stream()
-          .map(rs -> rs.getServerInfo().getName())
+      return possibilities
           .filter(name -> name.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
           .collect(Collectors.toList());
     } else {
