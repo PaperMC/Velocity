@@ -11,35 +11,36 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-    int lastReaderIndex = in.readerIndex();
-    find_packets: while (in.isReadable()) {
-      for (int i = 0; i < 3; i++) {
-        if (!in.isReadable()) {
-          break;
-        }
-
-        byte read = in.readByte();
-        if (read >= 0) {
-          // Make sure reader index of length buffer is returned to the beginning
-          in.readerIndex(lastReaderIndex);
-          int packetLength = ProtocolUtils.readVarInt(in);
-          if (packetLength == 0) {
-            continue find_packets;
-          }
-
-          if (in.readableBytes() < packetLength) {
-            break find_packets;
-          }
-
-          out.add(in.readRetainedSlice(packetLength));
-          lastReaderIndex = in.readerIndex();
-          continue find_packets;
-        }
-      }
-
-      throw new CorruptedFrameException("VarInt too big");
+    if (!in.isReadable()) {
+      return;
     }
 
-    in.readerIndex(lastReaderIndex);
+    int origReaderIndex = in.readerIndex();
+    for (int i = 0; i < 3; i++) {
+      if (!in.isReadable()) {
+        in.readerIndex(origReaderIndex);
+        return;
+      }
+
+      byte read = in.readByte();
+      if (read >= 0) {
+        // Make sure reader index of length buffer is returned to the beginning
+        in.readerIndex(origReaderIndex);
+        int packetLength = ProtocolUtils.readVarInt(in);
+        if (packetLength == 0) {
+          return;
+        }
+
+        if (in.readableBytes() < packetLength) {
+          in.readerIndex(origReaderIndex);
+          return;
+        }
+
+        out.add(in.readRetainedSlice(packetLength));
+        return;
+      }
+    }
+
+    throw new CorruptedFrameException("VarInt too big");
   }
 }
