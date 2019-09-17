@@ -24,7 +24,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
           in.readerIndex(lastReaderIndex);
           int packetLength = ProtocolUtils.readVarInt(in);
           if (packetLength == 0) {
-            break find_packets;
+            continue find_packets;
           }
 
           if (in.readableBytes() < packetLength) {
