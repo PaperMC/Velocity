@@ -31,6 +31,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
+  private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
@@ -44,6 +45,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           "Initializing BackendPlaySessionHandler with no backing client play session handler!");
     }
     this.playerSessionHandler = (ClientPlaySessionHandler) psh;
+
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+        serverConn.getPlayer());
   }
 
   @Override
@@ -86,6 +90,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
+    if (bungeecordMessageResponder.process(packet)) {
+      return true;
+    }
+
     if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
         .getProtocolVersion(), packet)) {
       return true;

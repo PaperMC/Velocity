@@ -135,6 +135,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(connectedServer);
   }
 
+  public VelocityServerConnection ensureAndGetCurrentServer() {
+    VelocityServerConnection con = this.connectedServer;
+    if (con == null) {
+      throw new IllegalStateException("Not connected to server!");
+    }
+    return con;
+  }
+
   @Override
   public GameProfile getGameProfile() {
     return profile;
