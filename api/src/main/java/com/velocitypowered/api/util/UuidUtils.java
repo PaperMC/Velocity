@@ -1,7 +1,6 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
@@ -23,11 +22,7 @@ public final class UuidUtils {
    */
   public static UUID fromUndashed(final String string) {
     Objects.requireNonNull(string, "string");
-    Preconditions.checkArgument(string.length() == 32, "Length is incorrect");
-    return new UUID(
-        Long.parseUnsignedLong(string.substring(0, 16), 16),
-        Long.parseUnsignedLong(string.substring(16), 16)
-    );
+    return FastUuidSansHyphens.parseUuid(string);
   }
 
   /**
@@ -38,10 +33,7 @@ public final class UuidUtils {
    */
   public static String toUndashed(final UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
-    String msbStr = Long.toHexString(uuid.getMostSignificantBits());
-    String lsbStr = Long.toHexString(uuid.getLeastSignificantBits());
-    return Strings.padStart(msbStr, 16, '0') + Strings.padStart(lsbStr,
-        16, '0');
+    return FastUuidSansHyphens.toString(uuid);
   }
 
   /**
