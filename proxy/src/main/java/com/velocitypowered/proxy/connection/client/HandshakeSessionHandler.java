@@ -26,8 +26,12 @@ import java.util.Optional;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
+
+  private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
 
   private final MinecraftConnection connection;
   private final VelocityServer server;
@@ -58,11 +62,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(Handshake handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    connection.setAssociation(ic);
     switch (handshake.getNextStatus()) {
       case StateRegistry.STATUS_ID:
         connection.setState(StateRegistry.STATUS);
         connection.setProtocolVersion(handshake.getProtocolVersion());
+        connection.setAssociation(ic);
         connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
         return true;
       case StateRegistry.LOGIN_ID:
@@ -101,11 +105,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
           return true;
         }
 
+        connection.setAssociation(ic);
         server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
         connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
         return true;
       default:
-        throw new IllegalArgumentException("Invalid state " + handshake.getNextStatus());
+        LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
+        connection.close();
+        return true;
     }
   }
 
