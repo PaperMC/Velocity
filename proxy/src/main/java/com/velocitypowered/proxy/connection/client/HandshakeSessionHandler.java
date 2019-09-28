@@ -28,6 +28,7 @@ import net.kyori.text.TranslatableComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
@@ -62,68 +63,79 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(Handshake handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    switch (handshake.getNextStatus()) {
+    StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+    if (nextState == null) {
+      LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
+      connection.close();
+    } else {
+      connection.setState(nextState);
+      connection.setProtocolVersion(handshake.getProtocolVersion());
+      connection.setAssociation(ic);
+
+      switch (nextState) {
+        case STATUS:
+          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+          break;
+        case LOGIN:
+          this.handleLogin(handshake, ic);
+          break;
+        default:
+          // If you get this, it's a bug in Velocity.
+          throw new AssertionError("getStateForProtocol provided invalid state!");
+      }
+    }
+
+    return true;
+  }
+
+  private static @Nullable StateRegistry getStateForProtocol(int status) {
+    switch (status) {
       case StateRegistry.STATUS_ID:
-        connection.setState(StateRegistry.STATUS);
-        connection.setProtocolVersion(handshake.getProtocolVersion());
-        connection.setAssociation(ic);
-        connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
-        return true;
+        return StateRegistry.STATUS;
       case StateRegistry.LOGIN_ID:
-        connection.setState(StateRegistry.LOGIN);
-        connection.setProtocolVersion(handshake.getProtocolVersion());
-
-        if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
-          connection.closeWith(Disconnect
-              .create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
-          return true;
-        }
-
-        InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-        if (!server.getIpAttemptLimiter().attempt(address)) {
-          connection.closeWith(
-              Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
-          return true;
-        }
-
-        ConnectionType type = checkForForge(handshake);
-        connection.setType(type);
-
-        // Make sure legacy forwarding is not in use on this connection.
-        if (!type.checkServerAddressIsValid(handshake.getServerAddress())) {
-          connection.closeWith(Disconnect
-              .create(TextComponent.of("Running Velocity behind Velocity is unsupported.")));
-          return true;
-        }
-
-        // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
-        // and lower, otherwise IP information will never get forwarded.
-        if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-            && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
-          connection.closeWith(Disconnect
-              .create(TextComponent.of("This server is only compatible with 1.13 and above.")));
-          return true;
-        }
-
-        connection.setAssociation(ic);
-        server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
-        connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
-        return true;
+        return StateRegistry.LOGIN;
       default:
-        LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
-        connection.close();
-        return true;
+        return null;
     }
   }
 
-  private ConnectionType checkForForge(Handshake handshake) {
+  private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
+    if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
+      connection.closeWith(Disconnect
+          .create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
+      return;
+    }
+
+    InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
+    if (!server.getIpAttemptLimiter().attempt(address)) {
+      connection.closeWith(
+          Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
+      return;
+    }
+
+    connection.setType(getHandshakeConnectionType(handshake));
+
+    // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
+    // and lower, otherwise IP information will never get forwarded.
+    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+      connection.closeWith(Disconnect
+          .create(TextComponent.of("This server is only compatible with 1.13 and above.")));
+      return;
+    }
+
+    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+    connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+  }
+
+  private ConnectionType getHandshakeConnectionType(Handshake handshake) {
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       return ConnectionTypes.LEGACY_FORGE;
     } else {
-      // For later: See if we can determine Forge 1.13+ here, else this will need to be UNDETERMINED
-      // until later in the cycle (most likely determinable during the LOGIN phase)
+      // Note for future implementation: Forge 1.13+ identifies itself using a slightly different
+      // hostname token.
       return ConnectionTypes.VANILLA;
     }
   }
