@@ -87,5 +87,5 @@ run/
 plugins/
 
 ### Natives stuff ###
-natives/mbedtls
-natives/zlib-ng
+native/mbedtls
+native/zlib-ng
