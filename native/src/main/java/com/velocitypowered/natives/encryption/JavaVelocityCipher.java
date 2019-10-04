@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -88,7 +89,7 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public boolean isNative() {
-    return false;
+  public BufferPreference preferredBufferType() {
+    return BufferPreference.HEAP_PREFERRED;
   }
 }

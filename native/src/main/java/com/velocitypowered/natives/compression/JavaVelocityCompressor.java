@@ -4,6 +4,7 @@ import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFE
 import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -77,7 +78,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public boolean isNative() {
-    return false;
+  public BufferPreference preferredBufferType() {
+    return BufferPreference.HEAP_PREFERRED;
   }
 }

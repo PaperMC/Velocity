@@ -20,9 +20,8 @@ public class MoreByteBufUtils {
    * @return a buffer compatible with the native
    */
   public static ByteBuf ensureCompatible(ByteBufAllocator alloc, Native nativeStuff, ByteBuf buf) {
-    if (!nativeStuff.isNative() || buf.hasMemoryAddress()) {
-      // Will always work in either case. JNI code demands a memory address, and if we have a Java
-      // fallback, it uses byte arrays in all cases.
+    if (nativeStuff.preferredBufferType() != BufferPreference.DIRECT_REQUIRED
+        || buf.hasMemoryAddress()) {
       return buf.retain();
     }
 
@@ -41,7 +40,8 @@ public class MoreByteBufUtils {
    * @return a buffer compatible with the native
    */
   public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff) {
-    return nativeStuff.isNative() ? alloc.directBuffer() : alloc.heapBuffer();
+    return nativeStuff.preferredBufferType() != BufferPreference.HEAP_PREFERRED
+        ? alloc.directBuffer() : alloc.heapBuffer();
   }
 
   /**
@@ -55,7 +55,7 @@ public class MoreByteBufUtils {
    */
   public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff,
       int initialCapacity) {
-    return nativeStuff.isNative() ? alloc.directBuffer(initialCapacity) : alloc
-        .heapBuffer(initialCapacity);
+    return nativeStuff.preferredBufferType() != BufferPreference.HEAP_PREFERRED
+        ? alloc.directBuffer(initialCapacity) : alloc.heapBuffer(initialCapacity);
   }
 }
