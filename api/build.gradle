@@ -73,6 +73,9 @@ javadoc {
 
     // Disable the crazy super-strict doclint tool in Java 8
     options.addStringOption('Xdoclint:none', '-quiet')
+    
+    // Mark sources as Java 8 source compatible
+    options.source = '8'
 }
 
 publishing {
