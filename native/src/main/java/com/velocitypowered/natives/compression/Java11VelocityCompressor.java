@@ -80,6 +80,9 @@ public class Java11VelocityCompressor implements VelocityCompressor {
 
       inflater.reset();
     } catch (Throwable e) {
+      if (e instanceof DataFormatException) {
+        throw (DataFormatException) e;
+      }
       throw new RuntimeException(e);
     }
   }
@@ -111,6 +114,9 @@ public class Java11VelocityCompressor implements VelocityCompressor {
 
       deflater.reset();
     } catch (Throwable e) {
+      if (e instanceof DataFormatException) {
+        throw (DataFormatException) e;
+      }
       throw new RuntimeException(e);
     }
   }
