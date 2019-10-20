@@ -35,48 +35,23 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public void process(ByteBuf source, ByteBuf destination) throws ShortBufferException {
+  public void process(ByteBuf source) {
     ensureNotDisposed();
+    Preconditions.checkArgument(source.hasArray(), "No source array");
 
     int inBytes = source.readableBytes();
-    byte[] asBytes = ByteBufUtil.getBytes(source);
 
-    int outputSize = cipher.getOutputSize(inBytes);
-    byte[] outBuf = new byte[outputSize];
-    cipher.update(asBytes, 0, inBytes, outBuf);
-    destination.writeBytes(outBuf);
-  }
-
-  @Override
-  public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
-    ensureNotDisposed();
-
-    int inBytes = source.readableBytes();
-    ByteBuf asHeapBuf = toHeap(source);
-    ByteBuf out = ctx.alloc().heapBuffer(cipher.getOutputSize(inBytes));
     try {
-      out.writerIndex(
-          cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset() + asHeapBuf.readerIndex(),
-              inBytes, out.array(), out.arrayOffset() + out.writerIndex()));
-      return out;
-    } catch (ShortBufferException e) {
-      out.release();
-      throw e;
-    } finally {
-      asHeapBuf.release();
+      cipher.update(source.array(), source.arrayOffset(), inBytes, source.array(),
+          source.arrayOffset());
+    } catch (ShortBufferException ex) {
+      /* This _really_ shouldn't happen - AES CFB8 will work in place.
+         If you run into this, that means that for whatever reason the Java Runtime has determined
+         that the output buffer needs more bytes than the input buffer. When we are working with
+         AES-CFB8, the output size is equal to the input size. See the problem? */
+      throw new AssertionError("Cipher update did not operate in place and requested a larger "
+              + "buffer than the source buffer");
     }
-  }
-
-  private static ByteBuf toHeap(ByteBuf src) {
-    if (src.hasArray()) {
-      return src.retain();
-    }
-
-    // Copy into a temporary heap buffer. We could use a local buffer, but Netty pools all buffers,
-    // so we'd lose more than we gain.
-    ByteBuf asHeapBuf = src.alloc().heapBuffer(src.readableBytes());
-    asHeapBuf.writeBytes(src);
-    return asHeapBuf;
   }
 
   @Override
@@ -90,6 +65,6 @@ public class JavaVelocityCipher implements VelocityCipher {
 
   @Override
   public BufferPreference preferredBufferType() {
-    return BufferPreference.HEAP_PREFERRED;
+    return BufferPreference.HEAP_REQUIRED;
   }
 }
