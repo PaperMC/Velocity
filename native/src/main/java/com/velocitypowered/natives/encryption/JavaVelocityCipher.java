@@ -37,12 +37,13 @@ public class JavaVelocityCipher implements VelocityCipher {
   @Override
   public void process(ByteBuf source) {
     ensureNotDisposed();
+    Preconditions.checkArgument(source.hasArray(), "No source array");
 
     int inBytes = source.readableBytes();
-    byte[] asBytes = ByteBufUtil.getBytes(source);
 
     try {
-      cipher.update(asBytes, 0, inBytes, asBytes);
+      cipher.update(source.array(), source.arrayOffset(), inBytes, source.array(),
+          source.arrayOffset());
     } catch (ShortBufferException ex) {
       /* This _really_ shouldn't happen - AES CFB8 will work in place.
          If you run into this, that means that for whatever reason the Java Runtime has determined
@@ -64,6 +65,6 @@ public class JavaVelocityCipher implements VelocityCipher {
 
   @Override
   public BufferPreference preferredBufferType() {
-    return BufferPreference.HEAP_PREFERRED;
+    return BufferPreference.HEAP_REQUIRED;
   }
 }
