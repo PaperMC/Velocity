@@ -20,9 +20,11 @@ public class MinecraftCipherDecoder extends ByteToMessageDecoder {
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     ByteBuf compatible = MoreByteBufUtils.ensureCompatible(ctx.alloc(), cipher, in);
     try {
-      out.add(cipher.process(ctx, compatible));
-    } finally {
-      compatible.release();
+      cipher.process(compatible);
+      out.add(compatible);
+    } catch (Exception e) {
+      compatible.release(); // compatible will never be used if we throw an exception
+      throw e;
     }
   }
 
