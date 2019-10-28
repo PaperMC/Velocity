@@ -20,7 +20,7 @@ public final class ServerConnectedEvent {
    * Constructs a ServerConnectedEvent.
    * @param player the player that was connected
    * @param server the server the player was connected to
-   * @param previousServer the server the player was previously connected to
+   * @param previousServer the server the player was previously connected to, null if none
    */
   public ServerConnectedEvent(Player player, RegisteredServer server,
       @Nullable RegisteredServer previousServer) {
