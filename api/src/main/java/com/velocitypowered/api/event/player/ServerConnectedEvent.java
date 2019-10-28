@@ -37,9 +37,10 @@ public final class ServerConnectedEvent {
 
   @Override
   public String toString() {
-    return "ServerConnectedEvent{"
-        + "player=" + player
-        + ", server=" + server
-        + '}';
+    return "ServerConnectedEvent{" +
+        "player=" + player +
+        ", server=" + server +
+        ", previousServer=" + previousServer +
+        '}';
   }
 }
