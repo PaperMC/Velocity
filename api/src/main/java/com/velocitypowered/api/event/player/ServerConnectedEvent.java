@@ -16,6 +16,12 @@ public final class ServerConnectedEvent {
   private final RegisteredServer server;
   private final @Nullable RegisteredServer previousServer;
 
+  /**
+   * Constructs a ServerConnectedEvent.
+   * @param player the player that was connected
+   * @param server the server the player was connected to
+   * @param previousServer the server the player was previously connected to
+   */
   public ServerConnectedEvent(Player player, RegisteredServer server,
       @Nullable RegisteredServer previousServer) {
     this.player = Preconditions.checkNotNull(player, "player");
@@ -37,10 +43,10 @@ public final class ServerConnectedEvent {
 
   @Override
   public String toString() {
-    return "ServerConnectedEvent{" +
-        "player=" + player +
-        ", server=" + server +
-        ", previousServer=" + previousServer +
-        '}';
+    return "ServerConnectedEvent{"
+        + "player=" + player
+        + ", server=" + server
+        + ", previousServer=" + previousServer
+        + '}';
   }
 }
