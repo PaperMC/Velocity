@@ -29,6 +29,11 @@ public final class ServerConnectedEvent {
     this.previousServer = previousServer;
   }
 
+  @Deprecated
+  public ServerConnectedEvent(Player player, RegisteredServer server) {
+    this(player, server, null);
+  }
+
   public Player getPlayer() {
     return player;
   }
