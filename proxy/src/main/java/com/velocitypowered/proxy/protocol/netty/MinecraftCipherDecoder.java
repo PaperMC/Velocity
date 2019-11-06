@@ -5,10 +5,10 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.util.MoreByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
-public class MinecraftCipherDecoder extends ByteToMessageDecoder {
+public class MinecraftCipherDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private final VelocityCipher cipher;
 
@@ -30,7 +30,7 @@ public class MinecraftCipherDecoder extends ByteToMessageDecoder {
   }
 
   @Override
-  protected void handlerRemoved0(ChannelHandlerContext ctx) throws Exception {
+  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
     cipher.dispose();
   }
 }
