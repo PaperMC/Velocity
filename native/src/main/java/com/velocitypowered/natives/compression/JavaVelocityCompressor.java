@@ -16,19 +16,37 @@ public class JavaVelocityCompressor implements VelocityCompressor {
 
   private final Deflater deflater;
   private final Inflater inflater;
-  private final byte[] buf;
+  private byte[] buf = new byte[0];
   private boolean disposed = false;
 
   private JavaVelocityCompressor(int level) {
     this.deflater = new Deflater(level);
     this.inflater = new Inflater();
-    this.buf = new byte[ZLIB_BUFFER_SIZE];
   }
 
   @Override
   public void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException {
     ensureNotDisposed();
 
+    final int available = source.readableBytes();
+    this.setInflaterInput(source);
+
+    if (destination.hasArray()) {
+      this.inflateDestinationIsHeap(destination, available, max);
+    } else {
+      if (buf.length == 0) {
+        buf = new byte[ZLIB_BUFFER_SIZE];
+      }
+      while (!inflater.finished() && inflater.getBytesRead() < available) {
+        ensureMaxSize(destination, max);
+        int read = inflater.inflate(buf);
+        destination.writeBytes(buf, 0, read);
+      }
+    }
+    inflater.reset();
+  }
+
+  private void setInflaterInput(ByteBuf source) {
     final int available = source.readableBytes();
     if (source.hasArray()) {
       inflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(), available);
@@ -37,19 +55,45 @@ public class JavaVelocityCompressor implements VelocityCompressor {
       source.readBytes(inData);
       inflater.setInput(inData);
     }
+  }
 
+  private void inflateDestinationIsHeap(ByteBuf destination, int available, int max)
+      throws DataFormatException {
     while (!inflater.finished() && inflater.getBytesRead() < available) {
+      if (!destination.isWritable()) {
+        ensureMaxSize(destination, max);
+        destination.ensureWritable(ZLIB_BUFFER_SIZE);
+      }
+
       ensureMaxSize(destination, max);
-      int read = inflater.inflate(buf);
-      destination.writeBytes(buf, 0, read);
+      int produced = inflater.inflate(destination.array(), destination.arrayOffset()
+          + destination.writerIndex(), destination.writableBytes());
+      destination.writerIndex(destination.writerIndex() + produced);
     }
-    inflater.reset();
   }
 
   @Override
   public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
 
+    this.setDeflaterInput(source);
+    deflater.finish();
+
+    if (destination.hasArray()) {
+      this.deflateDestinationIsHeap(destination);
+    } else {
+      if (buf.length == 0) {
+        buf = new byte[ZLIB_BUFFER_SIZE];
+      }
+      while (!deflater.finished()) {
+        int bytes = deflater.deflate(buf);
+        destination.writeBytes(buf, 0, bytes);
+      }
+    }
+    deflater.reset();
+  }
+
+  private void setDeflaterInput(ByteBuf source) {
     if (source.hasArray()) {
       deflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(),
           source.readableBytes());
@@ -58,12 +102,18 @@ public class JavaVelocityCompressor implements VelocityCompressor {
       source.readBytes(inData);
       deflater.setInput(inData);
     }
-    deflater.finish();
+  }
+
+  private void deflateDestinationIsHeap(ByteBuf destination) {
     while (!deflater.finished()) {
-      int bytes = deflater.deflate(buf);
-      destination.writeBytes(buf, 0, bytes);
+      if (!destination.isWritable()) {
+        destination.ensureWritable(ZLIB_BUFFER_SIZE);
+      }
+
+      int produced = deflater.deflate(destination.array(), destination.arrayOffset()
+          + destination.writerIndex(), destination.writableBytes());
+      destination.writerIndex(destination.writerIndex() + produced);
     }
-    deflater.reset();
   }
 
   @Override
