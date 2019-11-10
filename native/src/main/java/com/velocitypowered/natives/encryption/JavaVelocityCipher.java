@@ -40,10 +40,10 @@ public class JavaVelocityCipher implements VelocityCipher {
     Preconditions.checkArgument(source.hasArray(), "No source array");
 
     int inBytes = source.readableBytes();
+    int baseOffset = source.arrayOffset() + source.readerIndex();
 
     try {
-      cipher.update(source.array(), source.arrayOffset(), inBytes, source.array(),
-          source.arrayOffset());
+      cipher.update(source.array(), baseOffset, inBytes, source.array(), baseOffset);
     } catch (ShortBufferException ex) {
       /* This _really_ shouldn't happen - AES CFB8 will work in place.
          If you run into this, that means that for whatever reason the Java Runtime has determined
