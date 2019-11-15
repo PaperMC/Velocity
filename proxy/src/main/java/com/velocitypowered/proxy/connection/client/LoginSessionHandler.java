@@ -66,7 +66,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private final InitialInboundConnection inbound;
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
-  private int playerInfoId;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
   LoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
@@ -79,29 +78,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerLogin packet) {
     this.login = packet;
-    if (mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_13) >= 0) {
-      // To make sure the connecting client isn't Velocity, send a plugin message that Velocity will
-      // recognize and respond to.
-      playerInfoId = ThreadLocalRandom.current().nextInt();
-      mcConnection.write(new LoginPluginMessage(playerInfoId, VELOCITY_IP_FORWARDING_CHANNEL,
-          Unpooled.EMPTY_BUFFER));
-    } else {
-      beginPreLogin();
-    }
-    return true;
-  }
-
-  @Override
-  public boolean handle(LoginPluginResponse packet) {
-    if (packet.getId() == playerInfoId) {
-      if (packet.isSuccess()) {
-        // Uh oh, someone's trying to run Velocity behind Velocity. We don't want that happening.
-        inbound.disconnect(VelocityMessages.NO_PROXY_BEHIND_PROXY);
-      } else {
-        // Proceed with the regular login process.
-        beginPreLogin();
-      }
-    }
+    beginPreLogin();
     return true;
   }
 
