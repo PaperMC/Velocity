@@ -125,6 +125,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   @Override
+  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    if (sessionHandler != null) {
+      sessionHandler.readCompleted();
+    }
+  }
+
+  @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if (ctx.channel().isActive()) {
       if (sessionHandler != null) {

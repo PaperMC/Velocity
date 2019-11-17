@@ -168,12 +168,17 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (packet instanceof PluginMessage) {
       ((PluginMessage) packet).retain();
     }
-    playerConnection.write(packet);
+    playerConnection.delayedWrite(packet);
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    playerConnection.write(buf.retain());
+    playerConnection.delayedWrite(buf.retain());
+  }
+
+  @Override
+  public void readCompleted() {
+    playerConnection.flush();
   }
 
   @Override
