@@ -100,7 +100,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "              configuration is used if no servers could be contacted."
   })
   @ConfigKey("ping-passthrough")
-  private PingPassthroughMode pingPassthrough;
+  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
 
   @Table("[servers]")
   private final Servers servers;
