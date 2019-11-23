@@ -18,6 +18,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -59,6 +60,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   private final Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
       .expireAfterWrite(30, TimeUnit.SECONDS)
       .build();
+  private final SecureRandom random;
 
   private volatile @MonotonicNonNull List<QueryResponse.PluginInformation> pluginInformationList
       = null;
@@ -67,6 +69,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   public GS4QueryHandler(VelocityServer server) {
     this.server = server;
+    this.random = new SecureRandom();
   }
 
   private QueryResponse createInitialResponse() {
@@ -111,7 +114,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       switch (type) {
         case QUERY_TYPE_HANDSHAKE: {
           // Generate new challenge token and put it into the sessions cache
-          int challengeToken = ThreadLocalRandom.current().nextInt();
+          int challengeToken = random.nextInt();
           sessions.put(senderAddress, challengeToken);
 
           // Respond with challenge token
