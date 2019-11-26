@@ -34,6 +34,7 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -210,12 +211,22 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+    return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
+  }
+
+  /**
+   * Sends a plugin message to the server through this connection.
+   * @param identifier the channel ID to use
+   * @param data the data
+   * @return whether or not the message was sent
+   */
+  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
+    PluginMessage message = new PluginMessage(identifier.getId(), data);
     mc.write(message);
     return true;
   }

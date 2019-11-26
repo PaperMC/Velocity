@@ -18,12 +18,16 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -119,8 +123,18 @@ public class VelocityRegisteredServer implements RegisteredServer {
 
   @Override
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+    return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
+  }
+
+  /**
+   * Sends a plugin message to the server through this connection.
+   * @param identifier the channel ID to use
+   * @param data the data
+   * @return whether or not the message was sent
+   */
+  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players) {
-      ServerConnection connection = player.getConnectedServer();
+      VelocityServerConnection connection = player.getConnectedServer();
       if (connection != null && connection.getServerInfo().equals(serverInfo)) {
         return connection.sendPluginMessage(identifier, data);
       }
