@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.plugin;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Joiner;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -101,6 +102,8 @@ public class VelocityPluginManager implements PluginManager {
         continue;
       }
 
+      logger.info("Loaded plugin {} {} by {}", plugin.getId(), plugin.getVersion()
+          .orElse("<UNKNOWN>"), Joiner.on(", ").join(plugin.getAuthors()));
       registerPlugin(pluginObject);
     }
   }

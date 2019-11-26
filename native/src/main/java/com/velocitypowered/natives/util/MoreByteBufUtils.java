@@ -20,28 +20,30 @@ public class MoreByteBufUtils {
    * @return a buffer compatible with the native
    */
   public static ByteBuf ensureCompatible(ByteBufAllocator alloc, Native nativeStuff, ByteBuf buf) {
-    if (!nativeStuff.isNative() || buf.hasMemoryAddress()) {
-      // Will always work in either case. JNI code demands a memory address, and if we have a Java
-      // fallback, it uses byte arrays in all cases.
+    if (isCompatible(nativeStuff, buf)) {
       return buf.retain();
     }
 
     // It's not, so we must make a direct copy.
-    ByteBuf newBuf = alloc.directBuffer(buf.readableBytes());
+    ByteBuf newBuf = preferredBuffer(alloc, nativeStuff, buf.readableBytes());
     newBuf.writeBytes(buf);
     return newBuf;
   }
 
-  /**
-   * Creates a {@link ByteBuf} that will have the best performance with the specified
-   * {@code nativeStuff}.
-   *
-   * @param alloc the {@link ByteBufAllocator} to use
-   * @param nativeStuff the native we are working with
-   * @return a buffer compatible with the native
-   */
-  public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff) {
-    return nativeStuff.isNative() ? alloc.directBuffer() : alloc.heapBuffer();
+  private static boolean isCompatible(Native nativeStuff, ByteBuf buf) {
+    BufferPreference preferred = nativeStuff.preferredBufferType();
+    switch (preferred) {
+      case DIRECT_PREFERRED:
+      case HEAP_PREFERRED:
+        // The native prefers this type, but doesn't strictly require we provide it.
+        return true;
+      case DIRECT_REQUIRED:
+        return buf.hasMemoryAddress();
+      case HEAP_REQUIRED:
+        return buf.hasArray();
+      default:
+        throw new AssertionError("Preferred buffer type unknown");
+    }
   }
 
   /**
@@ -55,7 +57,15 @@ public class MoreByteBufUtils {
    */
   public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff,
       int initialCapacity) {
-    return nativeStuff.isNative() ? alloc.directBuffer(initialCapacity) : alloc
-        .heapBuffer(initialCapacity);
+    switch (nativeStuff.preferredBufferType()) {
+      case HEAP_REQUIRED:
+      case HEAP_PREFERRED:
+        return alloc.heapBuffer(initialCapacity);
+      case DIRECT_PREFERRED:
+      case DIRECT_REQUIRED:
+        return alloc.directBuffer(initialCapacity);
+      default:
+        throw new AssertionError("Preferred buffer type unknown");
+    }
   }
 }

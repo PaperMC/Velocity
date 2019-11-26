@@ -425,33 +425,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    if (connectedServer == null) {
-      Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
-      if (nextServer.isPresent()) {
-        // There can't be any connection in flight now.
-        resetInFlightConnection();
-        createConnectionRequest(nextServer.get()).fireAndForget();
-      } else {
-        disconnect(friendlyReason);
-      }
+    boolean kickedFromCurrent = connectedServer == null || connectedServer.getServer().equals(rs);
+    ServerKickResult result;
+    if (kickedFromCurrent) {
+      Optional<RegisteredServer> next = getNextServerToTry(rs);
+      result = next.<ServerKickResult>map(RedirectPlayer::create)
+          .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
     } else {
-      boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
-      ServerKickResult result;
-      if (kickedFromCurrent) {
-        Optional<RegisteredServer> next = getNextServerToTry(rs);
-        result = next.<ServerKickResult>map(RedirectPlayer::create)
-            .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
-      } else {
-        // If we were kicked by going to another server, the connection should not be in flight
-        if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
-          resetInFlightConnection();
-        }
-        result = Notify.create(friendlyReason);
+      // If we were kicked by going to another server, the connection should not be in flight
+      if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
+        resetInFlightConnection();
       }
-      KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
-          !kickedFromCurrent, result);
-      handleKickEvent(originalEvent, friendlyReason);
+      result = Notify.create(friendlyReason);
     }
+    KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
+        !kickedFromCurrent, result);
+    handleKickEvent(originalEvent, friendlyReason);
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
@@ -471,7 +460,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   if (newResult == null || !newResult) {
                     disconnect(friendlyReason);
                   } else {
-                    sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER.append(friendlyReason));
+                    if (res.getMessage() == null) {
+                      sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER.append(friendlyReason));
+                    } else {
+                      sendMessage(res.getMessage());
+                    }
                   }
                 }, connection.eventLoop());
           } else if (event.getResult() instanceof Notify) {

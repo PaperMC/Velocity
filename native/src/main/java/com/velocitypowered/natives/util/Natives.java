@@ -2,6 +2,7 @@ package com.velocitypowered.natives.util;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
+import com.velocitypowered.natives.compression.Java11VelocityCompressor;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.NativeVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
@@ -52,6 +53,8 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
               copyAndLoadNative("/linux_x64/velocity-compress.so"), "native (Linux amd64)",
               NativeVelocityCompressor.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.JAVA_11, () -> {
+          }, "Java 11", () -> Java11VelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCompressor.FACTORY)
       )

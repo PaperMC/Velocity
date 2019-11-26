@@ -34,14 +34,4 @@ public interface ConnectionType {
    */
   GameProfile addGameProfileTokensIfRequired(GameProfile original,
                                              PlayerInfoForwarding forwardingType);
-
-  /**
-   * Tests whether the hostname is the handshake packet is valid.
-   *
-   * @param address The address to check
-   * @return true if valid.
-   */
-  default boolean checkServerAddressIsValid(String address) {
-    return true;
-  }
 }

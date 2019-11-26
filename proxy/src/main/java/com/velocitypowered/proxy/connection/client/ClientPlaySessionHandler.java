@@ -304,26 +304,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Clear tab list to avoid duplicate entries
       player.getTabList().clearAll();
 
-      // In order to handle switching to another server, you will need to send three packets:
+      // In order to handle switching to another server, you will need to send two packets:
       //
-      // - The join game packet from the backend server
-      // - A respawn packet with a different dimension
-      // - Another respawn with the correct dimension
-      //
-      // The two respawns with different dimensions are required, otherwise the client gets
-      // confused.
+      // - The join game packet from the backend server, with a different dimension
+      // - A respawn with the correct dimension
       //
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
+      int realDim = joinGame.getDimension();
+      joinGame.setDimension(getFakeTemporaryDimensionId(realDim));
       player.getConnection().delayedWrite(joinGame);
-      int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
       player.getConnection().delayedWrite(
-          new Respawn(tempDim, joinGame.getDifficulty(), joinGame.getGamemode(),
-              joinGame.getLevelType()));
-      player.getConnection().delayedWrite(
-          new Respawn(joinGame.getDimension(), joinGame.getDifficulty(), joinGame.getGamemode(),
-              joinGame.getLevelType()));
+          new Respawn(realDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
+              joinGame.getGamemode(), joinGame.getLevelType()));
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
@@ -360,10 +354,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     destination.completeJoin();
   }
 
+  private static int getFakeTemporaryDimensionId(int dim) {
+    return dim == 0 ? -1 : 0;
+  }
+
   public List<UUID> getServerBossBars() {
     return serverBossBars;
   }
-
 
   private boolean handleCommandTabComplete(TabCompleteRequest packet) {
     // In 1.13+, we need to do additional work for the richer suggestions available.
@@ -389,31 +386,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     List<Offer> offers = new ArrayList<>();
-    int longestLength = 0;
     for (String suggestion : suggestions) {
       offers.add(new Offer(suggestion));
-      if (suggestion.length() > longestLength) {
-        longestLength = suggestion.length();
-      }
     }
-
-    TabCompleteResponse resp = new TabCompleteResponse();
-    resp.setTransactionId(packet.getTransactionId());
 
     int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-    int length;
-    if (startPos == 0) {
-      startPos = packet.getCommand().length() + 1;
-      length = longestLength;
-    } else {
-      length = packet.getCommand().length() - startPos;
+    if (startPos > 0) {
+      TabCompleteResponse resp = new TabCompleteResponse();
+      resp.setTransactionId(packet.getTransactionId());
+      resp.setStart(startPos);
+      resp.setLength(packet.getCommand().length() - startPos);
+      resp.getOffers().addAll(offers);
+      player.getConnection().write(resp);
     }
-
-    resp.setStart(startPos);
-    resp.setLength(length);
-    resp.getOffers().addAll(offers);
-
-    player.getConnection().write(resp);
     return true;
   }
 
