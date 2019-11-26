@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
+
+import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -53,6 +56,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
+    MinecraftConnection serverMc = serverConn.ensureConnected();
+    serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
+        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+    ));
   }
 
   @Override

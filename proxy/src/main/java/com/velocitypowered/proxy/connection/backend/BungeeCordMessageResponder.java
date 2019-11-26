@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -15,10 +14,8 @@ import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 
 class BungeeCordMessageResponder {
@@ -46,10 +43,8 @@ class BungeeCordMessageResponder {
     String playerName = in.readUTF();
     String serverName = in.readUTF();
 
-    proxy.getPlayer(playerName).ifPresent(player -> {
-      proxy.getServer(serverName).ifPresent(server -> player.createConnectionRequest(server)
-          .fireAndForget());
-    });
+    proxy.getPlayer(playerName).flatMap(player -> proxy.getServer(serverName))
+        .ifPresent(server -> player.createConnectionRequest(server).fireAndForget());
   }
 
   private void processIp(ByteBufDataInput in) {
@@ -120,7 +115,7 @@ class BungeeCordMessageResponder {
     }
   }
 
-  private void processGetServers(ByteBufDataInput in) {
+  private void processGetServers() {
     StringJoiner joiner = new StringJoiner(", ");
     for (RegisteredServer server : proxy.getAllServers()) {
       joiner.add(server.getServerInfo().getName());
@@ -148,7 +143,7 @@ class BungeeCordMessageResponder {
     }
   }
 
-  private void processGetServer(ByteBufDataInput in) {
+  private void processGetServer() {
     ByteBuf buf = Unpooled.buffer();
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
@@ -158,7 +153,7 @@ class BungeeCordMessageResponder {
     sendResponse(buf);
   }
 
-  private void processUuid(ByteBufDataInput in) {
+  private void processUuid() {
     ByteBuf buf = Unpooled.buffer();
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
@@ -243,11 +238,15 @@ class BungeeCordMessageResponder {
     sendResponse(this.player, buf);
   }
 
+  static String getBungeeCordChannel(ProtocolVersion version) {
+    return version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0 ? MODERN_CHANNEL.getId()
+        : LEGACY_CHANNEL.getId();
+  }
+
   // Note: this method will always release the buffer!
   private static void sendResponse(ConnectedPlayer player, ByteBuf buf) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
-    String chan = serverConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13)
-        >= 0 ? MODERN_CHANNEL.getId() : LEGACY_CHANNEL.getId();
+    String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
 
     PluginMessage msg = null;
     boolean released = false;
@@ -269,7 +268,7 @@ class BungeeCordMessageResponder {
     }
   }
 
-  public boolean process(PluginMessage message) {
+  boolean process(PluginMessage message) {
     if (!MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
         .equals(message.getChannel())) {
       return false;
@@ -277,47 +276,52 @@ class BungeeCordMessageResponder {
 
     ByteBufDataInput in = new ByteBufDataInput(message.content());
     String subChannel = in.readUTF();
-    if (subChannel.equals("ForwardToPlayer")) {
-      this.processForwardToPlayer(in);
-    }
-    if (subChannel.equals("Forward")) {
-      this.processForwardToServer(in);
-    }
-    if (subChannel.equals("Connect")) {
-      this.processConnect(in);
-    }
-    if (subChannel.equals("ConnectOther")) {
-      this.processConnectOther(in);
-    }
-    if (subChannel.equals("IP")) {
-      this.processIp(in);
-    }
-    if (subChannel.equals("PlayerCount")) {
-      this.processPlayerCount(in);
-    }
-    if (subChannel.equals("PlayerList")) {
-      this.processPlayerList(in);
-    }
-    if (subChannel.equals("GetServers")) {
-      this.processGetServers(in);
-    }
-    if (subChannel.equals("Message")) {
-      this.processMessage(in);
-    }
-    if (subChannel.equals("GetServer")) {
-      this.processGetServer(in);
-    }
-    if (subChannel.equals("UUID")) {
-      this.processUuid(in);
-    }
-    if (subChannel.equals("UUIDOther")) {
-      this.processUuidOther(in);
-    }
-    if (subChannel.equals("ServerIP")) {
-      this.processServerIp(in);
-    }
-    if (subChannel.equals("KickPlayer")) {
-      this.processKick(in);
+    switch (subChannel) {
+      case "ForwardToPlayer":
+        this.processForwardToPlayer(in);
+        break;
+      case "Forward":
+        this.processForwardToServer(in);
+        break;
+      case "Connect":
+        this.processConnect(in);
+        break;
+      case "ConnectOther":
+        this.processConnectOther(in);
+        break;
+      case "IP":
+        this.processIp(in);
+        break;
+      case "PlayerCount":
+        this.processPlayerCount(in);
+        break;
+      case "PlayerList":
+        this.processPlayerList(in);
+        break;
+      case "GetServers":
+        this.processGetServers();
+        break;
+      case "Message":
+        this.processMessage(in);
+        break;
+      case "GetServer":
+        this.processGetServer();
+        break;
+      case "UUID":
+        this.processUuid();
+        break;
+      case "UUIDOther":
+        this.processUuidOther(in);
+        break;
+      case "ServerIP":
+        this.processServerIp(in);
+        break;
+      case "KickPlayer":
+        this.processKick(in);
+        break;
+      default:
+        // Do nothing, unknown command
+        break;
     }
 
     return true;
