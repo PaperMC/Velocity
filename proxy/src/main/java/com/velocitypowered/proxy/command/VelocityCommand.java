@@ -72,7 +72,10 @@ public class VelocityCommand implements Command {
   @Override
   public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
     if (currentArgs.length == 0) {
-      return ImmutableList.copyOf(subcommands.keySet());
+      return subcommands.entrySet().stream()
+              .filter(e -> e.getValue().hasPermission(source, new String[0]))
+              .map(Map.Entry::getKey)
+              .collect(ImmutableList.toImmutableList());
     }
 
     if (currentArgs.length == 1) {
@@ -81,7 +84,7 @@ public class VelocityCommand implements Command {
               currentArgs[0].length()))
           .filter(e -> e.getValue().hasPermission(source, new String[0]))
           .map(Map.Entry::getKey)
-          .collect(Collectors.toList());
+          .collect(ImmutableList.toImmutableList());
     }
 
     Command command = subcommands.get(currentArgs[0].toLowerCase(Locale.US));
