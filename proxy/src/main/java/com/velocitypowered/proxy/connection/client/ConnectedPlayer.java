@@ -135,6 +135,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(connectedServer);
   }
 
+  /**
+   * Makes sure the player is connected to a server and returns the server they are connected to.
+   * @return the server the player is connected to
+   */
   public VelocityServerConnection ensureAndGetCurrentServer() {
     VelocityServerConnection con = this.connectedServer;
     if (con == null) {

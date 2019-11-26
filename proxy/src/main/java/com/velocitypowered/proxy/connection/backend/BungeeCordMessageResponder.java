@@ -53,7 +53,7 @@ class BungeeCordMessageResponder {
     out.writeUTF("IP");
     out.writeUTF(player.getRemoteAddress().getHostString());
     out.writeInt(player.getRemoteAddress().getPort());
-    sendResponse(buf);
+    sendResponseOnConnection(buf);
   }
 
   private void processPlayerCount(ByteBufDataInput in) {
@@ -75,7 +75,7 @@ class BungeeCordMessageResponder {
     }
 
     if (buf.isReadable()) {
-      sendResponse(buf);
+      sendResponseOnConnection(buf);
     } else {
       buf.release();
     }
@@ -109,7 +109,7 @@ class BungeeCordMessageResponder {
     }
 
     if (buf.isReadable()) {
-      sendResponse(buf);
+      sendResponseOnConnection(buf);
     } else {
       buf.release();
     }
@@ -126,7 +126,7 @@ class BungeeCordMessageResponder {
     out.writeUTF("GetServers");
     out.writeUTF(joiner.toString());
 
-    sendResponse(buf);
+    sendResponseOnConnection(buf);
   }
 
   private void processMessage(ByteBufDataInput in) {
@@ -150,7 +150,7 @@ class BungeeCordMessageResponder {
     out.writeUTF("GetServer");
     out.writeUTF(player.ensureAndGetCurrentServer().getServerInfo().getName());
 
-    sendResponse(buf);
+    sendResponseOnConnection(buf);
   }
 
   private void processUuid() {
@@ -160,7 +160,7 @@ class BungeeCordMessageResponder {
     out.writeUTF("UUID");
     out.writeUTF(UuidUtils.toUndashed(player.getUniqueId()));
 
-    sendResponse(buf);
+    sendResponseOnConnection(buf);
   }
 
   private void processUuidOther(ByteBufDataInput in) {
@@ -172,7 +172,7 @@ class BungeeCordMessageResponder {
       out.writeUTF(player.getUsername());
       out.writeUTF(UuidUtils.toUndashed(player.getUniqueId()));
 
-      sendResponse(buf);
+      sendResponseOnConnection(buf);
     });
   }
 
@@ -186,7 +186,7 @@ class BungeeCordMessageResponder {
       out.writeUTF(info.getServerInfo().getAddress().getHostString());
       out.writeShort(info.getServerInfo().getAddress().getPort());
 
-      sendResponse(buf);
+      sendResponseOnConnection(buf);
     });
   }
 
@@ -212,7 +212,7 @@ class BungeeCordMessageResponder {
   private void processForwardToPlayer(ByteBufDataInput in) {
     proxy.getPlayer(in.readUTF())
         .flatMap(Player::getCurrentServer)
-        .ifPresent(server -> sendResponse(player, prepareForwardMessage(in)));
+        .ifPresent(server -> sendServerResponse(player, prepareForwardMessage(in)));
   }
 
   private void processForwardToServer(ByteBufDataInput in) {
@@ -234,8 +234,8 @@ class BungeeCordMessageResponder {
   }
 
   // Note: this method will always release the buffer!
-  private void sendResponse(ByteBuf buf) {
-    sendResponse(this.player, buf);
+  private void sendResponseOnConnection(ByteBuf buf) {
+    sendServerResponse(this.player, buf);
   }
 
   static String getBungeeCordChannel(ProtocolVersion version) {
@@ -244,7 +244,7 @@ class BungeeCordMessageResponder {
   }
 
   // Note: this method will always release the buffer!
-  private static void sendResponse(ConnectedPlayer player, ByteBuf buf) {
+  private static void sendServerResponse(ConnectedPlayer player, ByteBuf buf) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
     String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
 

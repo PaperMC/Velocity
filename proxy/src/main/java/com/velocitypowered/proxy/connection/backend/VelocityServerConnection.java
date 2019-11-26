@@ -214,6 +214,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
   }
 
+  /**
+   * Sends a plugin message to the server through this connection.
+   * @param identifier the channel ID to use
+   * @param data the data
+   * @return whether or not the message was sent
+   */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
