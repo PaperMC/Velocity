@@ -175,31 +175,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     List<Offer> offers = new ArrayList<>();
-    int longestLength = 0;
     for (String suggestion : suggestions) {
       offers.add(new Offer(suggestion));
-      if (suggestion.length() > longestLength) {
-        longestLength = suggestion.length();
-      }
     }
-
-    TabCompleteResponse resp = new TabCompleteResponse();
-    resp.setTransactionId(packet.getTransactionId());
 
     int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-    int length;
-    if (startPos == 0) {
-      startPos = packet.getCommand().length() + 1;
-      length = longestLength;
-    } else {
-      length = packet.getCommand().length() - startPos;
+    if (startPos > 0) {
+      TabCompleteResponse resp = new TabCompleteResponse();
+      resp.setTransactionId(packet.getTransactionId());
+      resp.setStart(startPos);
+      resp.setLength(packet.getCommand().length() - startPos);
+      resp.getOffers().addAll(offers);
+      player.getMinecraftConnection().write(resp);
     }
-
-    resp.setStart(startPos);
-    resp.setLength(length);
-    resp.getOffers().addAll(offers);
-
-    player.getMinecraftConnection().write(resp);
     return true;
   }
 
