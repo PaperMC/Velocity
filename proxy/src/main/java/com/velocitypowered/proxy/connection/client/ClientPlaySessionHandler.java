@@ -316,8 +316,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       joinGame.setDimension(getFakeTemporaryDimensionId(realDim));
       player.getConnection().delayedWrite(joinGame);
       player.getConnection().delayedWrite(
-          new Respawn(realDim, joinGame.getDifficulty(), joinGame.getGamemode(),
-              joinGame.getLevelType()));
+          new Respawn(realDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
+              joinGame.getGamemode(), joinGame.getLevelType()));
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
