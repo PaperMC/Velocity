@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
+import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
+
+import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -31,6 +34,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
+  private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
@@ -44,11 +48,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           "Initializing BackendPlaySessionHandler with no backing client play session handler!");
     }
     this.playerSessionHandler = (ClientPlaySessionHandler) psh;
+
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+        serverConn.getPlayer());
   }
 
   @Override
   public void activated() {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
+    MinecraftConnection serverMc = serverConn.ensureConnected();
+    serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
+        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+    ));
   }
 
   @Override
@@ -86,6 +97,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
+    if (bungeecordMessageResponder.process(packet)) {
+      return true;
+    }
+
     if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
         .getProtocolVersion(), packet)) {
       return true;

@@ -135,6 +135,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return Optional.ofNullable(connectedServer);
   }
 
+  /**
+   * Makes sure the player is connected to a server and returns the server they are connected to.
+   * @return the server the player is connected to
+   */
+  public VelocityServerConnection ensureAndGetCurrentServer() {
+    VelocityServerConnection con = this.connectedServer;
+    if (con == null) {
+      throw new IllegalStateException("Not connected to server!");
+    }
+    return con;
+  }
+
   @Override
   public GameProfile getGameProfile() {
     return profile;
@@ -417,33 +429,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    if (connectedServer == null) {
-      Optional<RegisteredServer> nextServer = getNextServerToTry(rs);
-      if (nextServer.isPresent()) {
-        // There can't be any connection in flight now.
-        resetInFlightConnection();
-        createConnectionRequest(nextServer.get()).fireAndForget();
-      } else {
-        disconnect(friendlyReason);
-      }
+    boolean kickedFromCurrent = connectedServer == null || connectedServer.getServer().equals(rs);
+    ServerKickResult result;
+    if (kickedFromCurrent) {
+      Optional<RegisteredServer> next = getNextServerToTry(rs);
+      result = next.<ServerKickResult>map(RedirectPlayer::create)
+          .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
     } else {
-      boolean kickedFromCurrent = connectedServer.getServer().equals(rs);
-      ServerKickResult result;
-      if (kickedFromCurrent) {
-        Optional<RegisteredServer> next = getNextServerToTry(rs);
-        result = next.<ServerKickResult>map(RedirectPlayer::create)
-            .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
-      } else {
-        // If we were kicked by going to another server, the connection should not be in flight
-        if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
-          resetInFlightConnection();
-        }
-        result = Notify.create(friendlyReason);
+      // If we were kicked by going to another server, the connection should not be in flight
+      if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
+        resetInFlightConnection();
       }
-      KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
-          !kickedFromCurrent, result);
-      handleKickEvent(originalEvent, friendlyReason);
+      result = Notify.create(friendlyReason);
     }
+    KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
+        !kickedFromCurrent, result);
+    handleKickEvent(originalEvent, friendlyReason);
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {

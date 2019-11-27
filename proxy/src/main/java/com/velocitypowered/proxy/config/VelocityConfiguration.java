@@ -100,7 +100,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "              configuration is used if no servers could be contacted."
   })
   @ConfigKey("ping-passthrough")
-  private PingPassthroughMode pingPassthrough;
+  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
 
   @Table("[servers]")
   private final Servers servers;
@@ -192,42 +192,36 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     if (servers.getServers().isEmpty()) {
-      logger.error("You have no servers configured. :(");
-      valid = false;
-    } else {
-      if (servers.getAttemptConnectionOrder().isEmpty()) {
-        logger.error("No fallback servers are configured!");
+      logger.warn("You don't have any servers configured.");
+    }
+
+    for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
+      try {
+        AddressUtil.parseAddress(entry.getValue());
+      } catch (IllegalArgumentException e) {
+        logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
       }
+    }
 
-      for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
-        try {
-          AddressUtil.parseAddress(entry.getValue());
-        } catch (IllegalArgumentException e) {
-          logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
-          valid = false;
-        }
+    for (String s : servers.getAttemptConnectionOrder()) {
+      if (!servers.getServers().containsKey(s)) {
+        logger.error("Fallback server " + s + " is not registered in your configuration!");
+        valid = false;
+      }
+    }
+
+    for (Map.Entry<String, List<String>> entry : forcedHosts.getForcedHosts().entrySet()) {
+      if (entry.getValue().isEmpty()) {
+        logger.error("Forced host '{}' does not contain any servers", entry.getKey());
+        valid = false;
+        continue;
       }
 
-      for (String s : servers.getAttemptConnectionOrder()) {
-        if (!servers.getServers().containsKey(s)) {
-          logger.error("Fallback server " + s + " is not registered in your configuration!");
+      for (String server : entry.getValue()) {
+        if (!servers.getServers().containsKey(server)) {
+          logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
           valid = false;
-        }
-      }
-
-      for (Map.Entry<String, List<String>> entry : forcedHosts.getForcedHosts().entrySet()) {
-        if (entry.getValue().isEmpty()) {
-          logger.error("Forced host '{}' does not contain any servers", entry.getKey());
-          valid = false;
-          continue;
-        }
-
-        for (String server : entry.getValue()) {
-          if (!servers.getServers().containsKey(server)) {
-            logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
-            valid = false;
-          }
         }
       }
     }

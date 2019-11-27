@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 public class Respawn implements MinecraftPacket {
 
   private int dimension;
+  private long partialHashedSeed;
   private short difficulty;
   private short gamemode;
   private String levelType = "";
@@ -16,8 +17,10 @@ public class Respawn implements MinecraftPacket {
   public Respawn() {
   }
 
-  public Respawn(int dimension, short difficulty, short gamemode, String levelType) {
+  public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
+      String levelType) {
     this.dimension = dimension;
+    this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
     this.gamemode = gamemode;
     this.levelType = levelType;
@@ -29,6 +32,14 @@ public class Respawn implements MinecraftPacket {
 
   public void setDimension(int dimension) {
     this.dimension = dimension;
+  }
+
+  public long getPartialHashedSeed() {
+    return partialHashedSeed;
+  }
+
+  public void setPartialHashedSeed(long partialHashedSeed) {
+    this.partialHashedSeed = partialHashedSeed;
   }
 
   public short getDifficulty() {
@@ -59,6 +70,7 @@ public class Respawn implements MinecraftPacket {
   public String toString() {
     return "Respawn{"
         + "dimension=" + dimension
+        + ", partialHashedSeed=" + partialHashedSeed
         + ", difficulty=" + difficulty
         + ", gamemode=" + gamemode
         + ", levelType='" + levelType + '\''
@@ -71,6 +83,9 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       this.difficulty = buf.readUnsignedByte();
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      this.partialHashedSeed = buf.readLong();
+    }
     this.gamemode = buf.readUnsignedByte();
     this.levelType = ProtocolUtils.readString(buf, 16);
   }
@@ -80,6 +95,9 @@ public class Respawn implements MinecraftPacket {
     buf.writeInt(dimension);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       buf.writeByte(difficulty);
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      buf.writeLong(partialHashedSeed);
     }
     buf.writeByte(gamemode);
     ProtocolUtils.writeString(buf, levelType);
