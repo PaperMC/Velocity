@@ -433,6 +433,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         this.finishRegularTabComplete(outstandingTabComplete, response);
       }
       outstandingTabComplete = null;
+    } else {
+      // Nothing to do
+      player.getConnection().write(response);
     }
   }
 
