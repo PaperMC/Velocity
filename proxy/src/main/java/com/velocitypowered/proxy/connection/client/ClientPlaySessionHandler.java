@@ -423,10 +423,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param response the tab complete response from the backend
    */
   public void handleTabCompleteResponse(TabCompleteResponse response) {
-    if (outstandingTabComplete != null) {
-      if (outstandingTabComplete.isAssumeCommand()) {
-        return; // used for command blocks which can't run Velocity commands anyway
-      }
+    if (outstandingTabComplete != null && !outstandingTabComplete.isAssumeCommand()) {
       if (outstandingTabComplete.getCommand().startsWith("/")) {
         this.finishCommandTabComplete(outstandingTabComplete, response);
       } else {
