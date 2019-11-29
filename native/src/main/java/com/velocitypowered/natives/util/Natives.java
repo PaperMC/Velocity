@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 public class Natives {
@@ -23,12 +24,12 @@ public class Natives {
   private static Runnable copyAndLoadNative(String path) {
     return () -> {
       try {
-        Path tempFile = Files.createTempFile("native-", path.substring(path.lastIndexOf('.')));
         InputStream nativeLib = Natives.class.getResourceAsStream(path);
         if (nativeLib == null) {
           throw new IllegalStateException("Native library " + path + " not found.");
         }
 
+        Path tempFile = createTemporaryNativeFilename(path.substring(path.lastIndexOf('.')));
         Files.copy(nativeLib, tempFile, StandardCopyOption.REPLACE_EXISTING);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
           try {
@@ -47,6 +48,15 @@ public class Natives {
         throw new NativeSetupException("Unable to copy natives", e);
       }
     };
+  }
+
+  private static Path createTemporaryNativeFilename(String ext) throws IOException {
+    String temporaryFolderPath = System.getProperty("velocity.natives-tmpdir");
+    if (temporaryFolderPath != null) {
+      return Files.createTempFile(Paths.get(temporaryFolderPath), "native-", ext);
+    } else {
+      return Files.createTempFile("native-", ext);
+    }
   }
 
   public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
