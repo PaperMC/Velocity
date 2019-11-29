@@ -38,7 +38,12 @@ public class Natives {
             // Well, it doesn't matter...
           }
         }));
-        System.load(tempFile.toAbsolutePath().toString());
+
+        try {
+          System.load(tempFile.toAbsolutePath().toString());
+        } catch (UnsatisfiedLinkError e) {
+          throw new NativeSetupException("Unable to load native " + tempFile.toAbsolutePath(), e);
+        }
       } catch (IOException e) {
         throw new NativeSetupException("Unable to copy natives", e);
       }
