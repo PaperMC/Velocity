@@ -7,6 +7,7 @@ import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import io.netty.util.concurrent.Promise;
+import io.netty.util.internal.ThreadExecutorMap;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -61,13 +62,7 @@ public class DnsAddressResolverGroupNameResolverAdapter extends InetNameResolver
   }
 
   private EventExecutor findExecutor() {
-    for (EventExecutor executor : group) {
-      if (executor.inEventLoop()) {
-        return executor;
-      }
-    }
-
-    // otherwise, pick one
-    return group.next();
+    EventExecutor current = ThreadExecutorMap.currentExecutor();
+    return current == null ? group.next() : current;
   }
 }
