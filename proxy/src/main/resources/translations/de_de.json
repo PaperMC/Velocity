@@ -1,0 +1,195 @@
+{
+  "velocity.only-online-mode": {
+    "text": "Dieser Server akzeptiert nur Verbindungen von Spielern im Online-Modus.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nHast Du deinen Benutzernamen geändert? Melde dich bei Minecraft ab und an und versuche es erneut.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-proxy-behind-proxy": {
+    "text": "Velocity hinter Velocity zu betreiben wird nicht unterstüzt.",
+    "color": "red"
+  },
+  "velocity.no-available-servers": {
+    "text": "Keine verfügbaren Server.",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "Du bist bereits mit diesem Proxy verbunden!",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "Du wurdest von dem Server auf dem Du warst gekickt.",
+    "color": "red"
+  },
+  "velocity.command.usage": {
+    "text": "/velocity <%s>",
+    "color": "red"
+  },
+  "velocity.command.not-found": {
+    "text": "Unbekannter Befehl.",
+    "color": "red"
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Zu viele Argumente.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "Der Server %s existert nicht.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Nur Spieler dürfen diesen Befehl ausführen.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "Es sind ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " Spieler online."
+    ]
+  },
+  "velocity.command.glist.player-list": [
+    "",
+    {
+      "text": "[%s] ",
+      "color": "dark_aqua"
+    },
+    {
+      "text": "(%s)",
+      "color": "gray"
+    },
+    ": %s"
+  ],
+  "velocity.command.glist.player-list.entry": "%s",
+  "velocity.command.glist.player-list.entry.separator": ", ",
+  "velocity.command.glist.usage": {
+    "text": "Um alle Spieler auf dem Server anzuzeigen, verwende ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.server.currently-connected-to": {
+    "text": "Du bist derzeit verbunden mit %s.",
+    "color": "yellow"
+  },
+  "velocity.command.server.server-list": {
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Verfügbare Server: ",
+        "color": "yellow"
+      },
+      "%s"
+    ]
+  },
+  "velocity.command.server.server-list.entry.separator": ", ",
+  "velocity.command.server.server-list.entry.current": {
+    "text": "%s",
+    "color": "green"
+  },
+  "velocity.command.server.server-list.entry.current.hover": "Derzeit mit diesem Server verbundenen\n%s Spieler online",
+  "velocity.command.server.server-list.entry.other": {
+    "text": "%s",
+    "color": "gray"
+  },
+  "velocity.command.server.server-list.entry.other.hover": "Klicke hier, um sich mit diesem Server zu verbinden\n%s Spieler online",
+  "velocity.command.info.usage": {
+    "text": "/velocity version",
+    "color": "red"
+  },
+  "velocity.command.info.velocity": {
+    "text": "%s ",
+    "color": "dark_aqua",
+    "bold": true,
+    "extra": [
+      {
+        "text": "%s",
+        "bold": false
+      }
+    ]
+  },
+  "velocity.command.info.copyright": "Copyright 2018-2019 %s. %s ist lizenziert unter den Bedingungen der MIT-Lizenz.",
+  "velocity.command.info.website": {
+    "text": "Besuche die ",
+    "extra": [
+      {
+        "text": "Velocity Website",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " oder ",
+      {
+        "text": "Velocity auf GitHub",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "Es sind keine Plugins installiert.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.usage": {
+    "text": "/velocity plugins",
+    "color": "red"
+  },
+  "velocity.command.plugins.plugin-list": {
+    "text": "Plugins: ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "white"
+      }
+    ]
+  },
+  "velocity.command.plugins.plugin-list.entry": {
+    "text": "%s",
+    "color": "gray",
+    "hoverEvent": {
+      "action": "show_text",
+      "value": [
+        "",
+        "%s %s",
+        "%s",
+        "%s",
+        "%s"
+      ]
+    }
+  },
+  "velocity.command.plugins.plugin-list.entry.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.url": "\nWebsite: %s",
+  "velocity.command.plugins.plugin-list.entry.author": "\nAutor: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nAutoren: %s",
+  "velocity.command.plugins.plugin-list.entry.authors.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.description": "\n\n%s",
+  "velocity.command.reload.success": {
+    "text": "Konfiguration neu geladen.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Deine Konfiguration kann nicht neu geladen werden. Überprüfe die Konsole für weitere Details.",
+    "color": "red"
+  }
+}
