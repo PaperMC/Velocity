@@ -22,7 +22,7 @@
     "color": "red"
   },
   "velocity.moved-to-new-server": {
-    "text": "Du wurdest von dem Server auf dem Du warst gekickt.",
+    "text": "Du wurdest von dem Server, auf dem Du vorher warst, geworfen.",
     "color": "red"
   },
   "velocity.command.usage": {
@@ -38,7 +38,7 @@
     "color": "red"
   },
   "velocity.command.server-doesnt-exist": {
-    "text": "Der Server %s existert nicht.",
+    "text": "Der Server %s existiert nicht.",
     "color": "red"
   },
   "velocity.command.only-players-can-execute": {
