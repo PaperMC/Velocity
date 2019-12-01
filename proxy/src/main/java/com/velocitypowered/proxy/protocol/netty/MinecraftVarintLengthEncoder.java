@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
+import com.velocitypowered.natives.encryption.JavaVelocityCipher;
+import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -11,6 +13,7 @@ import java.util.List;
 public class MinecraftVarintLengthEncoder extends MessageToMessageEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
+  private static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
 
   private MinecraftVarintLengthEncoder() {
   }
@@ -18,7 +21,7 @@ public class MinecraftVarintLengthEncoder extends MessageToMessageEncoder<ByteBu
   @Override
   protected void encode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> list)
       throws Exception {
-    ByteBuf lengthBuf = ctx.alloc().buffer(5); // the maximum size of a varint
+    ByteBuf lengthBuf = IS_JAVA_CIPHER ? ctx.alloc().heapBuffer(5) : ctx.alloc().directBuffer(5);
     ProtocolUtils.writeVarInt(lengthBuf, buf.readableBytes());
     list.add(lengthBuf);
     list.add(buf.retain());

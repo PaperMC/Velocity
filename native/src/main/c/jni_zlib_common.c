@@ -8,7 +8,7 @@ void JNICALL
 check_zlib_free(JNIEnv *env, z_stream *stream, bool deflate)
 {
     int ret = deflate ? deflateEnd(stream) : inflateEnd(stream);
-    char *msg = stream->msg;
+    const char *msg = stream->msg;
     free((void*) stream);
 
     switch (ret) {

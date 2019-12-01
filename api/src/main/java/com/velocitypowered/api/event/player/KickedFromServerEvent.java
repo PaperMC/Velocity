@@ -147,10 +147,12 @@ public final class KickedFromServerEvent implements
    */
   public static final class RedirectPlayer implements ServerKickResult {
 
+    private final Component message;
     private final RegisteredServer server;
 
-    private RedirectPlayer(RegisteredServer server) {
+    private RedirectPlayer(RegisteredServer server, @Nullable Component message) {
       this.server = Preconditions.checkNotNull(server, "server");
+      this.message = message;
     }
 
     @Override
@@ -162,14 +164,23 @@ public final class KickedFromServerEvent implements
       return server;
     }
 
+    @Nullable
+    public Component getMessage() {
+      return message;
+    }
+
     /**
      * Creates a new redirect result to forward the player to the specified {@code server}.
      *
      * @param server the server to send the player to
      * @return the redirect result
      */
-    public static RedirectPlayer create(RegisteredServer server) {
-      return new RedirectPlayer(server);
+    public static RedirectPlayer create(RegisteredServer server, @Nullable Component message) {
+      return new RedirectPlayer(server, message);
+    }
+
+    public static ServerKickResult create(RegisteredServer server) {
+      return create(server, null);
     }
   }
 

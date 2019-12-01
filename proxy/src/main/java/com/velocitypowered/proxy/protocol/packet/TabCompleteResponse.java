@@ -133,5 +133,9 @@ public class TabCompleteResponse implements MinecraftPacket {
     public int compareTo(Offer o) {
       return this.text.compareTo(o.text);
     }
+
+    public String getText() {
+      return text;
+    }
   }
 }

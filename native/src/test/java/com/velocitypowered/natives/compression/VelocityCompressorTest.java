@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.condition.OS.LINUX;
 import static org.junit.jupiter.api.condition.OS.MAC;
 
+import com.velocitypowered.natives.util.BufferPreference;
 import com.velocitypowered.natives.util.Natives;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -17,7 +18,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.JRE;
 
 class VelocityCompressorTest {
 
@@ -39,7 +42,7 @@ class VelocityCompressorTest {
   @EnabledOnOs({MAC, LINUX})
   void nativeIntegrityCheck() throws DataFormatException {
     VelocityCompressor compressor = Natives.compress.get().create(Deflater.DEFAULT_COMPRESSION);
-    if (compressor instanceof JavaVelocityCompressor) {
+    if (compressor.preferredBufferType() != BufferPreference.DIRECT_REQUIRED) {
       compressor.dispose();
       fail("Loaded regular compressor");
     }
@@ -56,6 +59,22 @@ class VelocityCompressorTest {
   @Test
   void javaIntegrityCheckHeap() throws DataFormatException {
     VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
+        .create(Deflater.DEFAULT_COMPRESSION);
+    check(compressor, () -> Unpooled.buffer(TEST_DATA.length + 32));
+  }
+
+  @Test
+  @EnabledOnJre(JRE.JAVA_11)
+  void java11IntegrityCheckDirect() throws DataFormatException {
+    VelocityCompressor compressor = Java11VelocityCompressor.FACTORY
+        .create(Deflater.DEFAULT_COMPRESSION);
+    check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length + 32));
+  }
+
+  @Test
+  @EnabledOnJre(JRE.JAVA_11)
+  void java11IntegrityCheckHeap() throws DataFormatException {
+    VelocityCompressor compressor = Java11VelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
     check(compressor, () -> Unpooled.buffer(TEST_DATA.length + 32));
   }

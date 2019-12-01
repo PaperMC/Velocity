@@ -1,6 +1,7 @@
 package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
@@ -32,40 +33,14 @@ public class NativeVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public void process(ByteBuf source, ByteBuf destination) throws ShortBufferException {
+  public void process(ByteBuf source) {
     ensureNotDisposed();
     source.memoryAddress();
-    destination.memoryAddress();
 
-    // The exact amount we read in is also the amount we write out.
+    long base = source.memoryAddress() + source.readerIndex();
     int len = source.readableBytes();
-    destination.ensureWritable(len);
 
-    impl.process(ctx, source.memoryAddress() + source.readerIndex(), len,
-        destination.memoryAddress() + destination.writerIndex(), encrypt);
-
-    source.skipBytes(len);
-    destination.writerIndex(destination.writerIndex() + len);
-  }
-
-  @Override
-  public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
-    ensureNotDisposed();
-    source.memoryAddress(); // sanity check
-
-    int len = source.readableBytes();
-    ByteBuf out = ctx.alloc().directBuffer(len);
-
-    try {
-      impl.process(this.ctx, source.memoryAddress() + source.readerIndex(), len,
-          out.memoryAddress(), encrypt);
-      source.skipBytes(len);
-      out.writerIndex(len);
-      return out;
-    } catch (Exception e) {
-      out.release();
-      throw e;
-    }
+    impl.process(ctx, base, len, base, encrypt);
   }
 
   @Override
@@ -81,7 +56,7 @@ public class NativeVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public boolean isNative() {
-    return true;
+  public BufferPreference preferredBufferType() {
+    return BufferPreference.DIRECT_REQUIRED;
   }
 }

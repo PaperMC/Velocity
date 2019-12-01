@@ -3,6 +3,8 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION_AMOUNT;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
@@ -12,7 +14,6 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -33,6 +34,7 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -77,7 +79,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.initializeGenericBootstrap(proxyPlayer.getMinecraftConnection().eventLoop())
+    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
@@ -139,23 +141,24 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
-    ProtocolVersion protocolVersion = proxyPlayer.getMinecraftConnection().getNextProtocolVersion();
+    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (proxyPlayer.getMinecraftConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
     }
     handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
-    mc.write(handshake);
+    mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
-    mc.write(new ServerLogin(proxyPlayer.getUsername()));
+    mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername()));
+    mc.flush();
   }
 
   public @Nullable MinecraftConnection getConnection() {
@@ -208,12 +211,22 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+    return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
+  }
+
+  /**
+   * Sends a plugin message to the server through this connection.
+   * @param identifier the channel ID to use
+   * @param data the data
+   * @return whether or not the message was sent
+   */
+  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
+    PluginMessage message = new PluginMessage(identifier.getId(), data);
     mc.write(message);
     return true;
   }

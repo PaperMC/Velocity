@@ -15,7 +15,7 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
 
   @Override
   public T get() {
-    return selected.object;
+    return selected.constructed;
   }
 
   private static <T> Variant<T> getVariant(List<Variant<T>> variants) {
@@ -38,9 +38,14 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
     private Status status;
     private final Runnable setup;
     private final String name;
-    private final T object;
+    private final Supplier<T> object;
+    private T constructed;
 
     Variant(BooleanSupplier possiblyAvailable, Runnable setup, String name, T object) {
+      this(possiblyAvailable, setup, name, () -> object);
+    }
+
+    Variant(BooleanSupplier possiblyAvailable, Runnable setup, String name, Supplier<T> object) {
       this.status =
           possiblyAvailable.getAsBoolean() ? Status.POSSIBLY_AVAILABLE : Status.NOT_AVAILABLE;
       this.setup = setup;
@@ -57,6 +62,7 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
       if (status == Status.POSSIBLY_AVAILABLE) {
         try {
           setup.run();
+          constructed = object.get();
           status = Status.SETUP;
         } catch (Exception e) {
           status = Status.SETUP_FAILURE;
@@ -64,7 +70,7 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
         }
       }
 
-      return object;
+      return constructed;
     }
   }
 

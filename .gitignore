@@ -85,3 +85,7 @@ server-icon.png
 /bin/
 run/
 plugins/
+
+### Natives stuff ###
+native/mbedtls
+native/zlib-ng

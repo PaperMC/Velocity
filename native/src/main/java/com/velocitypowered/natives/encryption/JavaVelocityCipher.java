@@ -1,10 +1,10 @@
 package com.velocitypowered.natives.encryption;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.FastThreadLocal;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,13 +24,6 @@ public class JavaVelocityCipher implements VelocityCipher {
       return new JavaVelocityCipher(false, key);
     }
   };
-  private static final int INITIAL_BUFFER_SIZE = 1024 * 8;
-  private static final FastThreadLocal<byte[]> inBufLocal = new FastThreadLocal<byte[]>() {
-    @Override
-    protected byte[] initialValue() {
-      return new byte[INITIAL_BUFFER_SIZE];
-    }
-  };
 
   private final Cipher cipher;
   private boolean disposed = false;
@@ -42,53 +35,23 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public void process(ByteBuf source, ByteBuf destination) throws ShortBufferException {
+  public void process(ByteBuf source) {
     ensureNotDisposed();
+    Preconditions.checkArgument(source.hasArray(), "No source array");
 
     int inBytes = source.readableBytes();
-    ByteBuf asHeapBuf = asHeapBuf(source);
+    int baseOffset = source.arrayOffset() + source.readerIndex();
 
-    int outputSize = cipher.getOutputSize(inBytes);
-    if (!destination.hasArray()) {
-      byte[] outBuf = new byte[outputSize];
-      cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, outBuf);
-      destination.writeBytes(outBuf);
-    } else {
-      // If the destination we write to is an array, we can use the backing array directly.
-      destination.ensureWritable(outputSize);
-      int produced = cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes,
-          destination.array(), destination.arrayOffset());
-      destination.writerIndex(destination.writerIndex() + produced);
+    try {
+      cipher.update(source.array(), baseOffset, inBytes, source.array(), baseOffset);
+    } catch (ShortBufferException ex) {
+      /* This _really_ shouldn't happen - AES CFB8 will work in place.
+         If you run into this, that means that for whatever reason the Java Runtime has determined
+         that the output buffer needs more bytes than the input buffer. When we are working with
+         AES-CFB8, the output size is equal to the input size. See the problem? */
+      throw new AssertionError("Cipher update did not operate in place and requested a larger "
+              + "buffer than the source buffer");
     }
-  }
-
-  @Override
-  public ByteBuf process(ChannelHandlerContext ctx, ByteBuf source) throws ShortBufferException {
-    ensureNotDisposed();
-
-    int inBytes = source.readableBytes();
-    ByteBuf asHeapBuf = asHeapBuf(source);
-
-    ByteBuf out = ctx.alloc().heapBuffer(cipher.getOutputSize(inBytes));
-    out.writerIndex(cipher.update(asHeapBuf.array(), asHeapBuf.arrayOffset(), inBytes, out.array(),
-        out.arrayOffset()));
-    return out;
-  }
-
-  private static ByteBuf asHeapBuf(ByteBuf source) {
-    if (source.hasArray()) {
-      // If this byte buffer is backed by an array, we can just use this buffer directly.
-      return source;
-    }
-
-    int inBytes = source.readableBytes();
-    byte[] inBuf = inBufLocal.get();
-    if (inBuf.length <= inBytes) {
-      inBuf = new byte[inBytes];
-      inBufLocal.set(inBuf);
-    }
-    source.readBytes(inBuf, 0, inBytes);
-    return Unpooled.wrappedBuffer(inBuf, 0, inBytes);
   }
 
   @Override
@@ -101,7 +64,7 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public boolean isNative() {
-    return false;
+  public BufferPreference preferredBufferType() {
+    return BufferPreference.HEAP_REQUIRED;
   }
 }

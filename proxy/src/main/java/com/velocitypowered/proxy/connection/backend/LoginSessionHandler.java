@@ -17,9 +17,9 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
@@ -111,38 +111,45 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    resultFuture
-        .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
+    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+      resultFuture.completeExceptionally(
+          new QuietException("The connection to the remote server was unexpectedly closed.\n"
+              + "This is usually because the remote server does not have BungeeCord IP forwarding "
+              + "correctly enabled.\nSee "
+              + "https://docs.velocitypowered.com/en/latest/users/player-info-forwarding.html "
+              + "for instructions on how to configure player info forwarding correctly.")
+      );
+    } else {
+      resultFuture.completeExceptionally(
+          new QuietException("The connection to the remote server was unexpectedly closed.")
+      );
+    }
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
       GameProfile profile) {
-    ByteBuf dataToForward = Unpooled.buffer();
-    ByteBuf finalData = Unpooled.buffer();
+    ByteBuf forwarded = Unpooled.buffer(2048);
     try {
-      ProtocolUtils.writeVarInt(dataToForward, VelocityConstants.FORWARDING_VERSION);
-      ProtocolUtils.writeString(dataToForward, address);
-      ProtocolUtils.writeUuid(dataToForward, profile.getId());
-      ProtocolUtils.writeString(dataToForward, profile.getName());
-      ProtocolUtils.writeProperties(dataToForward, profile.getProperties());
+      ProtocolUtils.writeVarInt(forwarded, VelocityConstants.FORWARDING_VERSION);
+      ProtocolUtils.writeString(forwarded, address);
+      ProtocolUtils.writeUuid(forwarded, profile.getId());
+      ProtocolUtils.writeString(forwarded, profile.getName());
+      ProtocolUtils.writeProperties(forwarded, profile.getProperties());
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");
       mac.init(key);
-      mac.update(dataToForward.array(), dataToForward.arrayOffset(), dataToForward.readableBytes());
+      mac.update(forwarded.array(), forwarded.arrayOffset(), forwarded.readableBytes());
       byte[] sig = mac.doFinal();
-      finalData.writeBytes(sig);
-      finalData.writeBytes(dataToForward);
-      return finalData;
+
+      return Unpooled.wrappedBuffer(Unpooled.wrappedBuffer(sig), forwarded);
     } catch (InvalidKeyException e) {
-      finalData.release();
+      forwarded.release();
       throw new RuntimeException("Unable to authenticate data", e);
     } catch (NoSuchAlgorithmException e) {
       // Should never happen
-      finalData.release();
+      forwarded.release();
       throw new AssertionError(e);
-    } finally {
-      dataToForward.release();
     }
   }
 }

@@ -20,11 +20,11 @@ allprojects {
 
     ext {
         // dependency versions
-        textVersion = '3.0.2-SNAPSHOT'
+        textVersion = '3.0.2'
         junitVersion = '5.3.0-M1'
         slf4jVersion = '1.7.25'
         log4jVersion = '2.11.2'
-        nettyVersion = '4.1.37.Final'
+        nettyVersion = '4.1.43.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '2.7.0'
         configurateVersion = '3.6'
@@ -48,9 +48,6 @@ allprojects {
         // for kyoripowered dependencies
         maven {
             url 'https://oss.sonatype.org/content/groups/public/'
-        }
-        maven {
-            url 'https://oss.sonatype.org/content/repositories/snapshots/'
         }
         
         // Brigadier

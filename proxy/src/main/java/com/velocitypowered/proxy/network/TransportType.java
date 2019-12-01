@@ -32,6 +32,7 @@ enum TransportType {
       KQueueDatagramChannel.class,
       (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)));
 
+
   final String name;
   final Class<? extends ServerSocketChannel> serverSocketChannelClass;
   final Class<? extends SocketChannel> socketChannelClass;
@@ -64,6 +65,10 @@ enum TransportType {
   }
 
   public static TransportType bestType() {
+    if (Boolean.getBoolean("velocity.disable-native-transport")) {
+      return NIO;
+    }
+
     if (Epoll.isAvailable()) {
       return EPOLL;
     } else if (KQueue.isAvailable()) {

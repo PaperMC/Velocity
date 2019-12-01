@@ -56,20 +56,18 @@ class VelocityCipherTest {
     VelocityCipher encrypt = factory.forEncryption(new SecretKeySpec(AES_KEY, "AES"));
 
     ByteBuf source = bufSupplier.get();
-    ByteBuf dest = bufSupplier.get();
-    ByteBuf decryptionBuf = bufSupplier.get();
 
     source.writeBytes(TEST_DATA);
 
+    ByteBuf workingBuf = source.copy();
+
     try {
-      encrypt.process(source, dest);
-      decrypt.process(dest, decryptionBuf);
-      source.readerIndex(0);
-      assertTrue(ByteBufUtil.equals(source, decryptionBuf));
+      encrypt.process(workingBuf);
+      decrypt.process(workingBuf);
+      assertTrue(ByteBufUtil.equals(source, workingBuf));
     } finally {
       source.release();
-      dest.release();
-      decryptionBuf.release();
+      workingBuf.release();
       decrypt.dispose();
       encrypt.dispose();
     }

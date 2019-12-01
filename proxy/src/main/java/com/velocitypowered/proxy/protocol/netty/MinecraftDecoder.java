@@ -47,18 +47,19 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
         packet.decode(msg, direction, registry.version);
       } catch (Exception e) {
         throw new CorruptedFrameException(
-            "Error decoding " + packet.getClass() + " Direction " + direction
-                + " Protocol " + registry.version + " State " + state + " ID " + Integer
-                .toHexString(packetId), e);
+            "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), e);
       }
       if (msg.isReadable()) {
-        throw new CorruptedFrameException(
-            "Did not read full packet for " + packet.getClass() + " Direction " + direction
-                + " Protocol " + registry.version + " State " + state + " ID " + Integer
-                .toHexString(packetId));
+        throw new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " "
+                + getExtraConnectionDetail(packetId));
       }
       out.add(packet);
     }
+  }
+
+  private String getExtraConnectionDetail(int packetId) {
+    return "Direction " + direction + " Protocol " + registry.version + " State " + state
+        + " ID " + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {

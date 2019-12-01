@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerListItem implements MinecraftPacket {
@@ -42,35 +43,43 @@ public class PlayerListItem implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    action = ProtocolUtils.readVarInt(buf);
-    int length = ProtocolUtils.readVarInt(buf);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      action = ProtocolUtils.readVarInt(buf);
+      int length = ProtocolUtils.readVarInt(buf);
 
-    for (int i = 0; i < length; i++) {
-      Item item = new Item(ProtocolUtils.readUuid(buf));
-      items.add(item);
-      switch (action) {
-        case ADD_PLAYER:
-          item.setName(ProtocolUtils.readString(buf));
-          item.setProperties(ProtocolUtils.readProperties(buf));
-          item.setGameMode(ProtocolUtils.readVarInt(buf));
-          item.setLatency(ProtocolUtils.readVarInt(buf));
-          item.setDisplayName(readOptionalComponent(buf));
-          break;
-        case UPDATE_GAMEMODE:
-          item.setGameMode(ProtocolUtils.readVarInt(buf));
-          break;
-        case UPDATE_LATENCY:
-          item.setLatency(ProtocolUtils.readVarInt(buf));
-          break;
-        case UPDATE_DISPLAY_NAME:
-          item.setDisplayName(readOptionalComponent(buf));
-          break;
-        case REMOVE_PLAYER:
-          //Do nothing, all that is needed is the uuid
-          break;
-        default:
-          throw new UnsupportedOperationException("Unknown action " + action);
+      for (int i = 0; i < length; i++) {
+        Item item = new Item(ProtocolUtils.readUuid(buf));
+        items.add(item);
+        switch (action) {
+          case ADD_PLAYER:
+            item.setName(ProtocolUtils.readString(buf));
+            item.setProperties(ProtocolUtils.readProperties(buf));
+            item.setGameMode(ProtocolUtils.readVarInt(buf));
+            item.setLatency(ProtocolUtils.readVarInt(buf));
+            item.setDisplayName(readOptionalComponent(buf));
+            break;
+          case UPDATE_GAMEMODE:
+            item.setGameMode(ProtocolUtils.readVarInt(buf));
+            break;
+          case UPDATE_LATENCY:
+            item.setLatency(ProtocolUtils.readVarInt(buf));
+            break;
+          case UPDATE_DISPLAY_NAME:
+            item.setDisplayName(readOptionalComponent(buf));
+            break;
+          case REMOVE_PLAYER:
+            //Do nothing, all that is needed is the uuid
+            break;
+          default:
+            throw new UnsupportedOperationException("Unknown action " + action);
+        }
       }
+    } else {
+      Item item = new Item();
+      item.setName(ProtocolUtils.readString(buf));
+      action = buf.readBoolean() ? ADD_PLAYER : REMOVE_PLAYER;
+      item.setLatency(buf.readShort());
+      items.add(item);
     }
   }
 
@@ -83,34 +92,47 @@ public class PlayerListItem implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, action);
-    ProtocolUtils.writeVarInt(buf, items.size());
-    for (Item item : items) {
-      ProtocolUtils.writeUuid(buf, item.getUuid());
-      switch (action) {
-        case ADD_PLAYER:
-          ProtocolUtils.writeString(buf, item.getName());
-          ProtocolUtils.writeProperties(buf, item.getProperties());
-          ProtocolUtils.writeVarInt(buf, item.getGameMode());
-          ProtocolUtils.writeVarInt(buf, item.getLatency());
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ProtocolUtils.writeVarInt(buf, action);
+      ProtocolUtils.writeVarInt(buf, items.size());
+      for (Item item : items) {
+        ProtocolUtils.writeUuid(buf, item.getUuid());
+        switch (action) {
+          case ADD_PLAYER:
+            ProtocolUtils.writeString(buf, item.getName());
+            ProtocolUtils.writeProperties(buf, item.getProperties());
+            ProtocolUtils.writeVarInt(buf, item.getGameMode());
+            ProtocolUtils.writeVarInt(buf, item.getLatency());
 
-          writeDisplayName(buf, item.getDisplayName());
-          break;
-        case UPDATE_GAMEMODE:
-          ProtocolUtils.writeVarInt(buf, item.getGameMode());
-          break;
-        case UPDATE_LATENCY:
-          ProtocolUtils.writeVarInt(buf, item.getLatency());
-          break;
-        case UPDATE_DISPLAY_NAME:
-          writeDisplayName(buf, item.getDisplayName());
-          break;
-        case REMOVE_PLAYER:
-          //Do nothing, all that is needed is the uuid
-          break;
-        default:
-          throw new UnsupportedOperationException("Unknown action " + action);
+            writeDisplayName(buf, item.getDisplayName());
+            break;
+          case UPDATE_GAMEMODE:
+            ProtocolUtils.writeVarInt(buf, item.getGameMode());
+            break;
+          case UPDATE_LATENCY:
+            ProtocolUtils.writeVarInt(buf, item.getLatency());
+            break;
+          case UPDATE_DISPLAY_NAME:
+            writeDisplayName(buf, item.getDisplayName());
+            break;
+          case REMOVE_PLAYER:
+            //Do nothing, all that is needed is the uuid
+            break;
+          default:
+            throw new UnsupportedOperationException("Unknown action " + action);
+        }
       }
+    } else {
+      Item item = items.get(0);
+      if (item.getDisplayName() != null) {
+        String displayName = LegacyComponentSerializer.legacy().serialize(item.getDisplayName());
+        ProtocolUtils.writeString(buf,
+            displayName.length() > 16 ? displayName.substring(0, 16) : displayName);
+      } else {
+        ProtocolUtils.writeString(buf, item.getName());
+      }
+      buf.writeBoolean(action != REMOVE_PLAYER);
+      buf.writeShort(item.getLatency());
     }
   }
 
@@ -135,11 +157,24 @@ public class PlayerListItem implements MinecraftPacket {
     private int latency;
     private @Nullable Component displayName;
 
+    public Item() {
+      uuid = null;
+    }
+
     public Item(UUID uuid) {
       this.uuid = uuid;
     }
 
-    public UUID getUuid() {
+    public static Item from(TabListEntry entry) {
+      return new Item(entry.getProfile().getId())
+          .setName(entry.getProfile().getName())
+          .setProperties(entry.getProfile().getProperties())
+          .setLatency(entry.getLatency())
+          .setGameMode(entry.getGameMode())
+          .setDisplayName(entry.getDisplayName().orElse(null));
+    }
+
+    public @Nullable UUID getUuid() {
       return uuid;
     }
 

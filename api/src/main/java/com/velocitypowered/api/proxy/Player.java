@@ -75,6 +75,13 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
   long getPing();
 
   /**
+   * Returns the player's connection status.
+   *
+   * @return true if the player is authenticated with Mojang servers
+   */
+  boolean isOnlineMode();
+
+  /**
    * Sends a chat message to the player's client.
    *
    * @param component the chat message to send
