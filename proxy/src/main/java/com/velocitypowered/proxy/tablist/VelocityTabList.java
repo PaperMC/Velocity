@@ -55,7 +55,7 @@ public class VelocityTabList implements TabList {
     }
 
     if (header != this.header || footer != this.footer) {
-      player.getMinecraftConnection().delayedWrite(HeaderAndFooter.create(header, footer));
+      player.getConnection().delayedWrite(HeaderAndFooter.create(header, footer));
     }
 
     List<PlayerListItem.Item> displayNameUpdates = null;
@@ -72,7 +72,7 @@ public class VelocityTabList implements TabList {
       }
     }
     if (displayNameUpdates != null) {
-      player.getMinecraftConnection().delayedWrite(
+      player.getConnection().delayedWrite(
           new PlayerListItem(PlayerListItem.UPDATE_DISPLAY_NAME, displayNameUpdates));
     }
   }
@@ -91,15 +91,14 @@ public class VelocityTabList implements TabList {
     Component translatedHeader = translationManager.translateComponent(locale, header);
     Component translatedFooter = translationManager.translateComponent(locale, footer);
 
-    player.getMinecraftConnection().write(
-        HeaderAndFooter.create(translatedHeader, translatedFooter));
+    player.getConnection().write(HeaderAndFooter.create(translatedHeader, translatedFooter));
   }
 
   @Override
   public void clearHeaderAndFooter() {
     header = null;
     footer = null;
-    player.getMinecraftConnection().write(HeaderAndFooter.reset());
+    player.getConnection().write(HeaderAndFooter.reset());
   }
 
   @Override
@@ -113,7 +112,7 @@ public class VelocityTabList implements TabList {
         "Not a Velocity tab list entry");
 
     PlayerListItem.Item packetItem = itemFrom(entry);
-    player.getMinecraftConnection().write(
+    player.getConnection().write(
         new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
@@ -125,7 +124,7 @@ public class VelocityTabList implements TabList {
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
       PlayerListItem.Item packetItem = itemFrom(entry);
-      player.getMinecraftConnection().write(
+      player.getConnection().write(
           new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
     }
 
@@ -149,8 +148,7 @@ public class VelocityTabList implements TabList {
       items.add(itemFrom(value));
     }
     entries.clear();
-    player.getMinecraftConnection().delayedWrite(
-        new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    player.getConnection().delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override
@@ -228,7 +226,7 @@ public class VelocityTabList implements TabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       PlayerListItem.Item packetItem = itemFrom(entry);
-      player.getMinecraftConnection().write(
+      player.getConnection().write(
           new PlayerListItem(action, Collections.singletonList(packetItem)));
     }
   }

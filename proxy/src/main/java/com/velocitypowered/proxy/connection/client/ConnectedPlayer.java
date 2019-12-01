@@ -113,7 +113,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
     if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.tabList = new VelocityTabList(connection);
+      this.tabList = new VelocityTabList(server, this);
     } else {
       this.tabList = new VelocityTabListLegacy(connection);
     }
@@ -204,7 +204,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private void updateTranslations() {
     tabList.updateTranslations();
     bossBars.forEach(bossBar -> bossBar.updateTranslationsFor(this));
-    minecraftConnection.flush();
+    connection.flush();
   }
 
   @Override
@@ -346,7 +346,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         Component translated = server.getTranslationManager()
             .translateComponent(this, subtitleText.get());
         titlePkt.setComponent(GsonComponentSerializer.INSTANCE.serialize(translated));
-        mconnection.delayedWrite(titlePkt);
+        connection.delayedWrite(titlePkt);
       }
 
       if (tt.areTimesSet()) {

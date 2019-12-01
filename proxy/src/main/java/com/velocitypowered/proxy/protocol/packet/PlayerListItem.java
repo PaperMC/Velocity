@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
