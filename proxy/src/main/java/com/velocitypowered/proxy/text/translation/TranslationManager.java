@@ -22,6 +22,7 @@ import java.util.ResourceBundle;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
@@ -449,60 +450,15 @@ public class TranslationManager {
   private @Nullable Component translateComponentIfNeeded(
       TranslationRegistry registry, Component component,
       @Nullable FormattingContext formattingContext) {
-    List<Component> children = component.children();
-    HoverEvent hoverEvent = component.style().hoverEvent();
-
     if (formattingContext != null && component instanceof TextComponent) {
-      TextComponent textComponent = (TextComponent) component;
-      TextAppender appender = null;
-
-      String content = textComponent.content();
-      Matcher matcher = this.formatPattern.matcher(content);
-
-      int end = 0;
-      while (matcher.find()) {
-        if (appender == null) {
-          appender = new TextAppender();
-        }
-        int start = matcher.start();
-        if (start != end) {
-          appender.append(content, end, start);
-        }
-        end = matcher.end();
-
-        char code = matcher.group(2).charAt(0);
-        if (code == 's') {
-          Component argument = formattingContext.argument(matcher.group(1));
-          appender.append(translateComponent(registry, argument, null));
-        } else if (code == '%') {
-          appender.append("%");
-        } else {
-          throw new UnsupportedFormatException("Invalid format: " + content.substring(start, end));
-        }
-      }
-
-      if (appender != null) {
-        if (end != content.length()) {
-          appender.append(content, end, content.length());
-        }
-
-        appender.appendRemaining();
-        TextComponent.Builder builder = appender.builder();
-        builder.style(component.style());
-
-        List<Component> translatedChildren = translateComponentsIfNeeded(
-            registry, children, formattingContext);
-        builder.append(translatedChildren != null ? translatedChildren : children);
-
-        if (hoverEvent != null) {
-          HoverEvent translatedHoverEvent = translateHoverEventIfNeeded(
-              registry, hoverEvent, formattingContext);
-          builder.hoverEvent(translatedHoverEvent != null ? translatedHoverEvent : hoverEvent);
-        }
-
-        return builder.build();
+      Component attempted = applyFormatToTextComponent(registry, component, formattingContext);
+      if (attempted != null) {
+        return attempted;
       }
     }
+
+    List<Component> children = component.children();
+    HoverEvent hoverEvent = component.style().hoverEvent();
 
     List<Component> translatedChildren = translateComponentsIfNeeded(
         registry, children, formattingContext);
@@ -552,6 +508,64 @@ public class TranslationManager {
       return component;
     }
 
+    return null;
+  }
+
+  @Nullable
+  private Component applyFormatToTextComponent(TranslationRegistry registry,
+      Component component, FormattingContext formattingContext) {
+    TextComponent textComponent = (TextComponent) component;
+    TextAppender appender = null;
+
+    String content = textComponent.content();
+    Matcher matcher = this.formatPattern.matcher(content);
+
+    int end = 0;
+    while (matcher.find()) {
+      if (appender == null) {
+        appender = new TextAppender();
+      }
+      int start = matcher.start();
+      if (start != end) {
+        appender.append(content, end, start);
+      }
+      end = matcher.end();
+
+      char code = matcher.group(2).charAt(0);
+      if (code == 's') {
+        Component argument = formattingContext.argument(matcher.group(1));
+        appender.append(translateComponent(registry, argument, null));
+      } else if (code == '%') {
+        appender.append("%");
+      } else {
+        throw new UnsupportedFormatException("Invalid format: " + content.substring(start, end));
+      }
+    }
+
+    if (appender != null) {
+      if (end != content.length()) {
+        appender.append(content, end, content.length());
+      }
+
+      appender.appendRemaining();
+      TextComponent.Builder builder = appender.builder();
+      builder.style(component.style());
+
+      List<Component> children = component.children();
+      HoverEvent hoverEvent = component.style().hoverEvent();
+
+      List<Component> translatedChildren = translateComponentsIfNeeded(
+          registry, children, formattingContext);
+      builder.append(translatedChildren != null ? translatedChildren : children);
+
+      if (hoverEvent != null) {
+        HoverEvent translatedHoverEvent = translateHoverEventIfNeeded(
+            registry, hoverEvent, formattingContext);
+        builder.hoverEvent(translatedHoverEvent != null ? translatedHoverEvent : hoverEvent);
+      }
+
+      return builder.build();
+    }
     return null;
   }
 
