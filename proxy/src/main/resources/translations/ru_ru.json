@@ -1,0 +1,194 @@
+{
+  "velocity.only-online-mode": {
+    "text": "Сервер поддерживает подключение только через лицензионный клиент.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nИзменили свой ник? Выйдите из Minecraft, войдите и попробуйте ещё раз.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-proxy-behind-proxy": {
+    "text": "Подключение Velocity к Velocity не поддерживается.",
+    "color": "red"
+  },
+  "velocity.no-available-servers": {
+    "text": "Нет доступных серверов.",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "Вы уже подключены к серверу!",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "Вы были перемещены на новый сервер, поскольку вы были кикнуты",
+    "color": "red"
+  },
+  "velocity.command.usage": {
+    "text": "/velocity <%s>",
+    "color": "red"
+  },
+  "velocity.command.not-found": {
+    "text": "Команда не найдена.",
+    "color": "red"
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Много аргументов.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "Сервера %s не сушествует.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Только игроки могут использовать эту команду.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "На сервере ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " игроков онлайн."
+    ]
+  },
+  "velocity.command.glist.player-list": [
+    "",
+    {
+      "text": "[%s] ",
+      "color": "dark_aqua"
+    },
+    {
+      "text": "(%s)",
+      "color": "gray"
+    },
+    ": %s"
+  ],
+  "velocity.command.glist.player-list.entry": "%s",
+  "velocity.command.glist.player-list.entry.separator": ", ",
+  "velocity.command.glist.usage": {
+    "text": "Чтобы посмотреть всех игроков онлайн, используйте ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.server.currently-connected-to": {
+    "text": "Вы подключены к серверу %s.",
+    "color": "yellow"
+  },
+  "velocity.command.server.server-list": {
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Доступные сервера: ",
+        "color": "yellow"
+      },
+      "%s"
+    ]
+  },
+  "velocity.command.server.server-list.entry.separator": ", ",
+  "velocity.command.server.server-list.entry.current": {
+    "text": "%s",
+    "color": "green"
+  },
+  "velocity.command.server.server-list.entry.current.hover": "Вы подключены к этому серверу\n%s игроков онлайн",
+  "velocity.command.server.server-list.entry.other": {
+    "text": "%s",
+    "color": "gray"
+  },
+  "velocity.command.server.server-list.entry.other.hover": "Нажмите чтобы подлючиться на этот сервер\n%s игроков онлайн",
+  "velocity.command.info.usage": {
+    "text": "/velocity version",
+    "color": "red"
+  },
+  "velocity.command.info.velocity": {
+    "text": "%s ",
+    "color": "dark_aqua",
+    "bold": true,
+    "extra": [
+      {
+        "text": "%s",
+        "bold": false
+      }
+    ]
+  },
+  "velocity.command.info.website": {
+    "text": "Больше информации о Velocity можно найти на ",
+    "extra": [
+      {
+        "text": "официальном сайте (кликабельно)",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " или на ",
+      {
+        "text": "GitHub (кликабельно)",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "Плагины не установлены.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.usage": {
+    "text": "/velocity plugins",
+    "color": "red"
+  },
+  "velocity.command.plugins.plugin-list": {
+    "text": "Плагины: ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "white"
+      }
+    ]
+  },
+  "velocity.command.plugins.plugin-list.entry": {
+    "text": "%s",
+    "color": "gray",
+    "hoverEvent": {
+      "action": "show_text",
+      "value": [
+        "",
+        "%s %s",
+        "%s",
+        "%s",
+        "%s"
+      ]
+    }
+  },
+  "velocity.command.plugins.plugin-list.entry.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.url": "\nСайт: %s",
+  "velocity.command.plugins.plugin-list.entry.author": "\nАвтор: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nАвторы: %s",
+  "velocity.command.plugins.plugin-list.entry.authors.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.description": "\n\n%s",
+  "velocity.command.reload.success": {
+    "text": "Конфигурация перезагружена.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Не удалось перезагрузить конфигигурацию. Проверьте консоль для дополнительной информации.",
+    "color": "red"
+  }
+}
