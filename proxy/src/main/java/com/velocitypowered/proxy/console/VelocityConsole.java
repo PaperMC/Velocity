@@ -8,6 +8,7 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
+import java.util.Locale;
 import net.kyori.text.Component;
 import net.kyori.text.TranslatableComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -37,7 +38,9 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(Component component) {
-    logger.info(LegacyComponentSerializer.legacy().serialize(component));
+    Component translated = server.getTranslationManager().translateComponent(Locale.getDefault(),
+        component);
+    logger.info(LegacyComponentSerializer.legacy().serialize(translated));
   }
 
   @Override

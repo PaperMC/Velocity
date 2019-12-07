@@ -157,6 +157,7 @@ public class TranslationManager {
       }
       String name = com.google.common.io.Files.getNameWithoutExtension(fullName);
       Locale locale = Locale.forLanguageTag(name.replace('_', '-'));
+
       if (extension.equals("properties")) {
         Properties properties = new Properties();
         try (InputStream is = Files.newInputStream(file)) {
@@ -537,7 +538,7 @@ public class TranslationManager {
         if (translatedHoverEvent != null) {
           formatted = formatted.hoverEvent(translatedHoverEvent);
         }
-        return formatted.style(mergeStyle(component.style(), formatted.style()));
+        return formatted.mergeStyle(component);
       }
     }
 
@@ -552,29 +553,6 @@ public class TranslationManager {
     }
 
     return null;
-  }
-
-  // TODO: Replace with text library method once added
-  private static Style mergeStyle(Style first, Style second) {
-    first = first.mergeDecorations(second);
-
-    TextColor color = second.color();
-    if (color != null) {
-      first = first.color(color);
-    }
-
-    HoverEvent hoverEvent = second.hoverEvent();
-    if (hoverEvent != null) {
-      first = first.hoverEvent(hoverEvent);
-    }
-
-    ClickEvent clickEvent = second.clickEvent();
-    if (clickEvent != null) {
-      first = first.clickEvent(clickEvent);
-    }
-
-    String insertion = second.insertion();
-    return insertion != null ? first.insertion(insertion) : first;
   }
 
   private @Nullable List<Component> translateComponentsIfNeeded(
