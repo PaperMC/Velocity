@@ -100,8 +100,8 @@ public class VelocityTabListLegacy extends VelocityTabList {
       switch (action) {
         case PlayerListItem.UPDATE_LATENCY:
         case PlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
-          connection
-              .write(new PlayerListItem(PlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
+          // ADD_PLAYER also updates ping
+          connection.write(new PlayerListItem(PlayerListItem.ADD_PLAYER,
                   Collections.singletonList(PlayerListItem.Item.from(entry))));
           break;
         default:
