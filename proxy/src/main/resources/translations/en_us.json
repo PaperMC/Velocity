@@ -9,10 +9,6 @@
       }
     ]
   },
-  "velocity.no-proxy-behind-proxy": {
-    "text": "Running Velocity behind Velocity isn't supported.",
-    "color": "red"
-  },
   "velocity.no-available-servers": {
     "text": "No available servers.",
     "color": "red"

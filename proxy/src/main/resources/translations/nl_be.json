@@ -9,10 +9,6 @@
       }
     ]
   },
-  "velocity.no-proxy-behind-proxy": {
-    "text": "Velocity achter Velocity laten draaien wordt niet ondersteund.",
-    "color": "red"
-  },
   "velocity.no-available-servers": {
     "text": "Er zijn geen beschikbare servers.",
     "color": "red"
