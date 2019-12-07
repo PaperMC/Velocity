@@ -4,17 +4,14 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
-import com.velocitypowered.proxy.text.translation.TranslationManager;
+import com.velocitypowered.proxy.protocol.packet.PlayerListItem.Item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,81 +21,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
 
-  private final VelocityServer server;
-  private final ConnectedPlayer player;
-  private final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
+  protected final MinecraftConnection connection;
+  protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
-  private @Nullable Component header;
-  private @Nullable Component footer;
-
-  public VelocityTabList(VelocityServer server, ConnectedPlayer player) {
-    this.server = server;
-    this.player = player;
-  }
-
-  /**
-   * Sends packets to update translated
-   * components on the client.
-   */
-  public void updateTranslations() {
-    Locale locale = this.player.getLocale();
-    TranslationManager translationManager = this.server.getTranslationManager();
-
-    Component header = this.header;
-    if (header != null) {
-      header = translationManager.translateComponent(locale, header);
-    }
-
-    Component footer = this.footer;
-    if (footer != null) {
-      footer = translationManager.translateComponent(locale, footer);
-    }
-
-    if (header != this.header || footer != this.footer) {
-      player.getConnection().delayedWrite(HeaderAndFooter.create(header, footer));
-    }
-
-    List<PlayerListItem.Item> displayNameUpdates = null;
-    for (VelocityTabListEntry entry : this.entries.values()) {
-      Component displayName = entry.getDisplayName().orElse(null);
-      if (displayName != null) {
-        Component translated = translationManager.translateComponent(locale, displayName);
-        if (displayName != translated) {
-          if (displayNameUpdates == null) {
-            displayNameUpdates = new ArrayList<>();
-          }
-          displayNameUpdates.add(itemFrom(entry, translated));
-        }
-      }
-    }
-    if (displayNameUpdates != null) {
-      player.getConnection().delayedWrite(
-          new PlayerListItem(PlayerListItem.UPDATE_DISPLAY_NAME, displayNameUpdates));
-    }
+  public VelocityTabList(MinecraftConnection connection) {
+    this.connection = connection;
   }
 
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
-
-    this.header = header;
-    this.footer = footer;
-
-    TranslationManager translationManager = this.server.getTranslationManager();
-    Locale locale = this.player.getLocale();
-
-    Component translatedHeader = translationManager.translateComponent(locale, header);
-    Component translatedFooter = translationManager.translateComponent(locale, footer);
-
-    player.getConnection().write(HeaderAndFooter.create(translatedHeader, translatedFooter));
+    connection.write(HeaderAndFooter.create(header, footer));
   }
 
   @Override
   public void clearHeaderAndFooter() {
-    header = null;
-    footer = null;
-    player.getConnection().write(HeaderAndFooter.reset());
+    connection.write(HeaderAndFooter.reset());
   }
 
   @Override
@@ -111,8 +50,8 @@ public class VelocityTabList implements TabList {
     Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
         "Not a Velocity tab list entry");
 
-    PlayerListItem.Item packetItem = itemFrom(entry);
-    player.getConnection().write(
+    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+    connection.write(
         new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
@@ -123,8 +62,8 @@ public class VelocityTabList implements TabList {
 
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
-      PlayerListItem.Item packetItem = itemFrom(entry);
-      player.getConnection().write(
+      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+      connection.write(
           new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
     }
 
@@ -138,17 +77,19 @@ public class VelocityTabList implements TabList {
   }
 
   /**
-   * Clears all entries from the tab list. Note that the entries are written with
-   * {@link MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit
-   * {@link MinecraftConnection#flush()}.
+   * Clears all entries from the tab list. Note that the entries are written with {@link
+   * MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit {@link
+   * MinecraftConnection#flush()}.
    */
   public void clearAll() {
     List<PlayerListItem.Item> items = new ArrayList<>();
     for (TabListEntry value : entries.values()) {
-      items.add(itemFrom(value));
+      items.add(PlayerListItem.Item.from(value));
     }
     entries.clear();
-    player.getConnection().delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    if (!items.isEmpty()) {
+      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    }
   }
 
   @Override
@@ -164,12 +105,14 @@ public class VelocityTabList implements TabList {
 
   /**
    * Processes a tab list entry packet from the backend.
+   *
    * @param packet the packet to process
    */
   public void processBackendPacket(PlayerListItem packet) {
     // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
+
       if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;
@@ -225,27 +168,8 @@ public class VelocityTabList implements TabList {
 
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = itemFrom(entry);
-      player.getConnection().write(
-          new PlayerListItem(action, Collections.singletonList(packetItem)));
+      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
     }
-  }
-
-  PlayerListItem.Item itemFrom(TabListEntry entry) {
-    Component displayName = entry.getDisplayName().orElse(null);
-    if (displayName != null) {
-      displayName = this.server.getTranslationManager().translateComponent(
-          this.player.getLocale(), displayName);
-    }
-    return itemFrom(entry, displayName);
-  }
-
-  static PlayerListItem.Item itemFrom(TabListEntry entry, @Nullable Component displayName) {
-    return new PlayerListItem.Item(entry.getProfile().getId())
-        .setName(entry.getProfile().getName())
-        .setProperties(entry.getProfile().getProperties())
-        .setLatency(entry.getLatency())
-        .setGameMode(entry.getGameMode())
-        .setDisplayName(displayName);
   }
 }

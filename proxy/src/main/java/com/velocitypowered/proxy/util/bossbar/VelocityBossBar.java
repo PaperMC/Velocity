@@ -71,8 +71,7 @@ public class VelocityBossBar implements com.velocitypowered.api.util.bossbar.Bos
     Component translatedTitle = server.getTranslationManager()
         .translateComponent(player.getLocale(), title);
     if (translatedTitle != title) {
-      player.getMinecraftConnection().delayedWrite(
-          updateTitlePacket(translatedTitle));
+      player.getConnection().delayedWrite(updateTitlePacket(translatedTitle));
     }
   }
 
