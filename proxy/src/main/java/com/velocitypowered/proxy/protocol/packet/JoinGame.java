@@ -12,11 +12,13 @@ public class JoinGame implements MinecraftPacket {
   private int entityId;
   private short gamemode;
   private int dimension;
+  private long partialHashedSeed; // 1.15+
   private short difficulty;
   private short maxPlayers;
   private @Nullable String levelType;
   private int viewDistance; //1.14+
   private boolean reducedDebugInfo;
+  private boolean mystery;
 
   public int getEntityId() {
     return entityId;
@@ -40,6 +42,10 @@ public class JoinGame implements MinecraftPacket {
 
   public void setDimension(int dimension) {
     this.dimension = dimension;
+  }
+
+  public long getPartialHashedSeed() {
+    return partialHashedSeed;
   }
 
   public short getDifficulty() {
@@ -91,6 +97,7 @@ public class JoinGame implements MinecraftPacket {
         + "entityId=" + entityId
         + ", gamemode=" + gamemode
         + ", dimension=" + dimension
+        + ", partialHashedSeed=" + partialHashedSeed
         + ", difficulty=" + difficulty
         + ", maxPlayers=" + maxPlayers
         + ", levelType='" + levelType + '\''
@@ -111,12 +118,18 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       this.difficulty = buf.readUnsignedByte();
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      this.partialHashedSeed = buf.readLong();
+    }
     this.maxPlayers = buf.readUnsignedByte();
     this.levelType = ProtocolUtils.readString(buf, 16);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
     }
     this.reducedDebugInfo = buf.readBoolean();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      this.mystery = buf.readBoolean();
+    }
   }
 
   @Override
@@ -131,6 +144,9 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       buf.writeByte(difficulty);
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      buf.writeLong(partialHashedSeed);
+    }
     buf.writeByte(maxPlayers);
     if (levelType == null) {
       throw new IllegalStateException("No level type specified.");
@@ -140,6 +156,9 @@ public class JoinGame implements MinecraftPacket {
       ProtocolUtils.writeVarInt(buf,viewDistance);
     }
     buf.writeBoolean(reducedDebugInfo);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+      buf.writeBoolean(mystery);
+    }
   }
 
   @Override
