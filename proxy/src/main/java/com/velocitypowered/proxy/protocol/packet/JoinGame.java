@@ -18,7 +18,7 @@ public class JoinGame implements MinecraftPacket {
   private @Nullable String levelType;
   private int viewDistance; //1.14+
   private boolean reducedDebugInfo;
-  private boolean mystery;
+  private boolean respawnScreen;
 
   public int getEntityId() {
     return entityId;
@@ -103,6 +103,7 @@ public class JoinGame implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
+        + ", respawnScreen=" + respawnScreen
         + '}';
   }
 
@@ -128,7 +129,7 @@ public class JoinGame implements MinecraftPacket {
     }
     this.reducedDebugInfo = buf.readBoolean();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
-      this.mystery = buf.readBoolean();
+      this.respawnScreen = buf.readBoolean();
     }
   }
 
@@ -157,7 +158,7 @@ public class JoinGame implements MinecraftPacket {
     }
     buf.writeBoolean(reducedDebugInfo);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
-      buf.writeBoolean(mystery);
+      buf.writeBoolean(respawnScreen);
     }
   }
 
