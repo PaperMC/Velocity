@@ -14,7 +14,7 @@
     "color": "red"
   },
   "velocity.no-available-servers": {
-    "text": "Keine verfügbaren Server.",
+    "text": "Es ist kein Server verfügbar.",
     "color": "red"
   },
   "velocity.already-connected": {
