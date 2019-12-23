@@ -1,0 +1,191 @@
+{
+  "velocity.only-online-mode": {
+    "text": "Ten serwer akceptuje polaczenia tylko od kont premium.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nZmieniles swoj nick? Wyloguj sie z Minecrafta, zaloguj sie, i sprobuj jeszcze raz.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-available-servers": {
+    "text": "Brak dostepnych serwerow.",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "Jestes juz polaczony z tym serwerem!",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "Zostales wyrzucony z serwera na ktorym byles.",
+    "color": "red"
+  },
+  "velocity.command.usage": {
+    "text": "/velocity <%s>",
+    "color": "red"
+  },
+  "velocity.command.not-found": {
+    "text": "Nie znaleziono komendy.",
+    "color": "red"
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Za duzo argumentow.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "Serwer %s nie istnieje.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Tylko gracze moge uzyc tej komendy.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "Tam jest ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " gracz(y) online."
+    ]
+  },
+  "velocity.command.glist.player-list": [
+    "",
+    {
+      "text": "[%s] ",
+      "color": "dark_aqua"
+    },
+    {
+      "text": "(%s)",
+      "color": "gray"
+    },
+    ": %s"
+  ],
+  "velocity.command.glist.player-list.entry": "%s",
+  "velocity.command.glist.player-list.entry.separator": ", ",
+  "velocity.command.glist.usage": {
+    "text": "Do zobaczenia wszystkich graczy na serwerach, uzyj ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.server.currently-connected-to": {
+    "text": "Juz jestes polaczony z %s.",
+    "color": "yellow"
+  },
+  "velocity.command.server.server-list": {
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Dostepne serwery: ",
+        "color": "yellow"
+      },
+      "%s"
+    ]
+  },
+  "velocity.command.server.server-list.entry.separator": ", ",
+  "velocity.command.server.server-list.entry.current": {
+    "text": "%s",
+    "color": "green"
+  },
+  "velocity.command.server.server-list.entry.current.hover": "Aktualnie polaczonych z serwerem jest\n%s gracz(y)",
+  "velocity.command.server.server-list.entry.other": {
+    "text": "%s",
+    "color": "gray"
+  },
+  "velocity.command.server.server-list.entry.other.hover": "Kliknij by dolaczyc na serwer\n%s gracz(y) online",
+  "velocity.command.info.usage": {
+    "text": "/velocity version",
+    "color": "red"
+  },
+  "velocity.command.info.velocity": {
+    "text": "%s ",
+    "color": "dark_aqua",
+    "bold": true,
+    "extra": [
+      {
+        "text": "%s",
+        "bold": false
+      }
+    ]
+  },
+  "velocity.command.info.copyright": "Copyright 2018-2019 %s. %s is freely licensed under the terms of the MIT License.",
+  "velocity.command.info.website": {
+    "text": "Odwiedz ",
+    "extra": [
+      {
+        "text": "Velocity Website",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " albo ",
+      {
+        "text": "Velocity GitHub",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "Nie zainstalowano zadnych wtyczek.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.usage": {
+    "text": "/velocity plugins",
+    "color": "red"
+  },
+  "velocity.command.plugins.plugin-list": {
+    "text": "Wtyczki: ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "white"
+      }
+    ]
+  },
+  "velocity.command.plugins.plugin-list.entry": {
+    "text": "%s",
+    "color": "gray",
+    "hoverEvent": {
+      "action": "show_text",
+      "value": [
+        "",
+        "%s %s",
+        "%s",
+        "%s",
+        "%s"
+      ]
+    }
+  },
+  "velocity.command.plugins.plugin-list.entry.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.url": "\nStrona: %s",
+  "velocity.command.plugins.plugin-list.entry.author": "\nAutor: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nAutorzy: %s",
+  "velocity.command.plugins.plugin-list.entry.authors.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.description": "\n\n%s",
+  "velocity.command.reload.success": {
+    "text": "Konfiguracja przeladowana.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Nie udalo sie przeladowac twojej konfiguracji. Sprawdz konsole po wiecej informacji.",
+    "color": "red"
+  }
+}
