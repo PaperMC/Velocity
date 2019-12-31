@@ -5,6 +5,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ShutdownCommand implements Command {
@@ -17,7 +18,12 @@ public class ShutdownCommand implements Command {
 
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
-    server.shutdown(true);
+    if (args.length == 0) {
+      server.shutdown(true);
+    } else {
+      String reason = String.join(" ", args);
+      server.shutdown(true, LegacyComponentSerializer.legacy().deserialize(reason, '&'));
+    }
   }
 
   @Override
