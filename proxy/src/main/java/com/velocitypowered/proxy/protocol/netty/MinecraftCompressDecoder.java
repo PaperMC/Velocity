@@ -30,7 +30,6 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     if (claimedUncompressedSize == 0) {
       // Strip the now-useless uncompressed size, this message is already uncompressed.
       out.add(in.retainedSlice());
-      in.skipBytes(in.readableBytes());
       return;
     }
 
