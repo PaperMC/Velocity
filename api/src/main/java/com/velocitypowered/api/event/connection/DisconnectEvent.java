@@ -10,19 +10,31 @@ import com.velocitypowered.api.proxy.Player;
 public final class DisconnectEvent {
 
   private final Player player;
+  private final boolean disconnectedDuringLogin;
 
   public DisconnectEvent(Player player) {
+    this(player, false);
+  }
+
+  public DisconnectEvent(Player player,
+      boolean disconnectedDuringLogin) {
     this.player = Preconditions.checkNotNull(player, "player");
+    this.disconnectedDuringLogin = disconnectedDuringLogin;
   }
 
   public Player getPlayer() {
     return player;
   }
 
+  public boolean disconnectedDuringLogin() {
+    return this.disconnectedDuringLogin;
+  }
+
   @Override
   public String toString() {
     return "DisconnectEvent{"
-        + "player=" + player
+        + "player=" + player + ", "
+        + "disconnectedDuringLogin=" + disconnectedDuringLogin
         + '}';
   }
 }
