@@ -1,0 +1,191 @@
+{
+  "velocity.only-online-mode": {
+    "text": "Този сървър изисква premium акаунт, за да може да влезеш.",
+    "color": "red",
+    "extra": [
+      {
+        "text": "\n\nСмени ли си името? Рестартирай играта.",
+        "color": "gray"
+      }
+    ]
+  },
+  "velocity.no-available-servers": {
+    "text": "Няма налични сървъри",
+    "color": "red"
+  },
+  "velocity.already-connected": {
+    "text": "Ти вече си влезнал в проксито.",
+    "color": "red"
+  },
+  "velocity.moved-to-new-server": {
+    "text": "Ти беше изритан от сървъра, в който беше.",
+    "color": "red"
+  },
+  "velocity.command.usage": {
+    "text": "/velocity <%s>",
+    "color": "red"
+  },
+  "velocity.command.not-found": {
+    "text": "Тази команда не може да бъде намерена.",
+    "color": "red"
+  },
+  "velocity.command.too-many-arguments": {
+    "text": "Прекалено много аргументи.",
+    "color": "red"
+  },
+  "velocity.command.server-doesnt-exist": {
+    "text": "Сървър %s не съществува.",
+    "color": "red"
+  },
+  "velocity.command.only-players-can-execute": {
+    "text": "Само играчи може да използват тази команда.",
+    "color": "red"
+  },
+  "velocity.command.glist.players-online": {
+    "text": "Има ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "green"
+      },
+      " играч(и) на линия."
+    ]
+  },
+  "velocity.command.glist.player-list": [
+    "",
+    {
+      "text": "[%s] ",
+      "color": "dark_aqua"
+    },
+    {
+      "text": "(%s)",
+      "color": "gray"
+    },
+    ": %s"
+  ],
+  "velocity.command.glist.player-list.entry": "%s",
+  "velocity.command.glist.player-list.entry.separator": ", ",
+  "velocity.command.glist.usage": {
+    "text": "За да видиш всички играчи на сървърите, използвай ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "/glist all",
+        "color": "dark_aqua",
+        "insertion": "/glist all"
+      },
+      "."
+    ]
+  },
+  "velocity.command.server.currently-connected-to": {
+    "text": "Ти вмомента си в %s.",
+    "color": "yellow"
+  },
+  "velocity.command.server.server-list": {
+    "text": "",
+    "color": "gray",
+    "extra": [
+      {
+        "text": "Налични сървъри: ",
+        "color": "yellow"
+      },
+      "%s"
+    ]
+  },
+  "velocity.command.server.server-list.entry.separator": ", ",
+  "velocity.command.server.server-list.entry.current": {
+    "text": "%s",
+    "color": "green"
+  },
+  "velocity.command.server.server-list.entry.current.hover": "Вмомента си в този сървър\n%s играч(и) на линия",
+  "velocity.command.server.server-list.entry.other": {
+    "text": "%s",
+    "color": "gray"
+  },
+  "velocity.command.server.server-list.entry.other.hover": "Натисни тук, за да влезеш в този сървър\n%s играч(и) на линия",
+  "velocity.command.info.usage": {
+    "text": "/velocity version",
+    "color": "red"
+  },
+  "velocity.command.info.velocity": {
+    "text": "%s ",
+    "color": "dark_aqua",
+    "bold": true,
+    "extra": [
+      {
+        "text": "%s",
+        "bold": false
+      }
+    ]
+  },
+  "velocity.command.info.copyright": "Всички права запазени 2018-2019 %s. %s е безплатно лицензирана под MIT лиценза.",
+  "velocity.command.info.website": {
+    "text": "Виж ",
+    "extra": [
+      {
+        "text": "Сайта на Velocity",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://www.velocitypowered.com"
+        }
+      },
+      " или ",
+      {
+        "text": "GitHub-а на Velocity",
+        "color": "green",
+        "clickEvent": {
+          "action": "open_url",
+          "value": "https://github.com/VelocityPowered/Velocity"
+        }
+      }
+    ]
+  },
+  "velocity.command.plugins.no-plugins-installed": {
+    "text": "Няма инсталирани plugin-и.",
+    "color": "yellow"
+  },
+  "velocity.command.plugins.usage": {
+    "text": "/velocity plugins",
+    "color": "red"
+  },
+  "velocity.command.plugins.plugin-list": {
+    "text": "Plugins: ",
+    "color": "yellow",
+    "extra": [
+      {
+        "text": "%s",
+        "color": "white"
+      }
+    ]
+  },
+  "velocity.command.plugins.plugin-list.entry": {
+    "text": "%s",
+    "color": "gray",
+    "hoverEvent": {
+      "action": "show_text",
+      "value": [
+        "",
+        "%s %s",
+        "%s",
+        "%s",
+        "%s"
+      ]
+    }
+  },
+  "velocity.command.plugins.plugin-list.entry.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.url": "\nУебсайт: %s",
+  "velocity.command.plugins.plugin-list.entry.author": "\nАвтор: %s",
+  "velocity.command.plugins.plugin-list.entry.authors": "\nАвтори: %s",
+  "velocity.command.plugins.plugin-list.entry.authors.separator": ", ",
+  "velocity.command.plugins.plugin-list.entry.description": "\n\n%s",
+  "velocity.command.reload.success": {
+    "text": "Конфигурацията беше презаредена.",
+    "color": "green"
+  },
+  "velocity.command.reload.failure": {
+    "text": "Не можахме да презаредим конфигурацията. Вижте конзолата за повече детайли.",
+    "color": "red"
+  }
+}
