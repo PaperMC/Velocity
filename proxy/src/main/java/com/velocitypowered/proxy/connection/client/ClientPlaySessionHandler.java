@@ -273,7 +273,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     MinecraftConnection smc = serverConnection.getConnection();
-    if (smc != null && serverConnection.getPhase().consideredComplete()) {
+    if (smc != null && !smc.isClosed() && serverConnection.getPhase().consideredComplete()) {
       smc.write(buf.retain());
     }
   }
