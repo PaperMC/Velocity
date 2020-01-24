@@ -342,10 +342,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     destination.completeJoin();
   }
 
-  private static int getFakeTemporaryDimensionId(int dim) {
-    return dim == 0 ? -1 : 0;
-  }
-
   public List<UUID> getServerBossBars() {
     return serverBossBars;
   }
