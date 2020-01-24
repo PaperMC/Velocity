@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.text.Component;
@@ -82,14 +83,16 @@ public class VelocityTabList implements TabList {
    * MinecraftConnection#flush()}.
    */
   public void clearAll() {
-    List<PlayerListItem.Item> items = new ArrayList<>();
-    for (TabListEntry value : entries.values()) {
+    Collection<VelocityTabListEntry> values = entries.values();
+    if (values.isEmpty()) {
+      return;
+    }
+    List<PlayerListItem.Item> items = new ArrayList<>(values.size());
+    for (TabListEntry value : values) {
       items.add(PlayerListItem.Item.from(value));
     }
     entries.clear();
-    if (!items.isEmpty()) {
-      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
-    }
+    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override

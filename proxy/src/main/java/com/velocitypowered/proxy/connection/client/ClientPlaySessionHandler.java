@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
@@ -303,21 +302,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     } else {
       // Clear tab list to avoid duplicate entries
       player.getTabList().clearAll();
-
-      // In order to handle switching to another server, you will need to send two packets:
-      //
-      // - The join game packet from the backend server, with a different dimension
-      // - A respawn with the correct dimension
-      //
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      int realDim = joinGame.getDimension();
-      joinGame.setDimension(getFakeTemporaryDimensionId(realDim));
       player.getConnection().delayedWrite(joinGame);
-      player.getConnection().delayedWrite(
-          new Respawn(realDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-              joinGame.getGamemode(), joinGame.getLevelType()));
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
