@@ -75,7 +75,7 @@ public class JavaPluginLoader implements PluginLoader {
 
     VelocityPluginContainer container = new VelocityPluginContainer(description);
     Injector injector = Guice
-        .createInjector(new VelocityPluginModule(server, javaDescription, container, baseDirectory));
+      .createInjector(new VelocityPluginModule(server, javaDescription, container, baseDirectory));
     Object instance = injector.getInstance(javaDescription.getMainClass());
 
     if (instance == null) {
