@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
@@ -17,12 +18,14 @@ class VelocityPluginModule implements Module {
 
   private final ProxyServer server;
   private final JavaVelocityPluginDescription description;
+  private final PluginContainer pluginContainer;
   private final Path basePluginPath;
 
   VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-      Path basePluginPath) {
+                       PluginContainer pluginContainer, Path basePluginPath) {
     this.server = server;
     this.description = description;
+    this.pluginContainer = pluginContainer;
     this.basePluginPath = basePluginPath;
   }
 
@@ -35,6 +38,7 @@ class VelocityPluginModule implements Module {
     binder.bind(Path.class).annotatedWith(DataDirectory.class)
         .toInstance(basePluginPath.resolve(description.getId()));
     binder.bind(PluginDescription.class).toInstance(description);
+    binder.bind(PluginContainer.class).toInstance(pluginContainer);
     binder.bind(PluginManager.class).toInstance(server.getPluginManager());
     binder.bind(EventManager.class).toInstance(server.getEventManager());
     binder.bind(CommandManager.class).toInstance(server.getCommandManager());

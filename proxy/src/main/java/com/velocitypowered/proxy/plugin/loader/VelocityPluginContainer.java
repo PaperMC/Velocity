@@ -7,11 +7,10 @@ import java.util.Optional;
 public class VelocityPluginContainer implements PluginContainer {
 
   private final PluginDescription description;
-  private final Object instance;
+  private Object instance;
 
-  public VelocityPluginContainer(PluginDescription description, Object instance) {
+  public VelocityPluginContainer(PluginDescription description) {
     this.description = description;
-    this.instance = instance;
   }
 
   @Override
@@ -22,5 +21,9 @@ public class VelocityPluginContainer implements PluginContainer {
   @Override
   public Optional<?> getInstance() {
     return Optional.ofNullable(instance);
+  }
+
+  public void setInstance(Object instance) {
+    this.instance = instance;
   }
 }

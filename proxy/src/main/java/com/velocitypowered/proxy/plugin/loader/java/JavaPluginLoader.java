@@ -73,8 +73,9 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
+    VelocityPluginContainer container = new VelocityPluginContainer(description);
     Injector injector = Guice
-        .createInjector(new VelocityPluginModule(server, javaDescription, baseDirectory));
+        .createInjector(new VelocityPluginModule(server, javaDescription, container, baseDirectory));
     Object instance = injector.getInstance(javaDescription.getMainClass());
 
     if (instance == null) {
@@ -82,7 +83,8 @@ public class JavaPluginLoader implements PluginLoader {
           "Got nothing from injector for plugin " + javaDescription.getId());
     }
 
-    return new VelocityPluginContainer(description, instance);
+    container.setInstance(instance);
+    return container;
   }
 
   private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
