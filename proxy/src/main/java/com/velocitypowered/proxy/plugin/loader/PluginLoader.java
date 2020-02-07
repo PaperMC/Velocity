@@ -21,7 +21,8 @@ public interface PluginLoader {
    *
    * @param container the plugin container
    * @return the module containing bindings specific to this plugin
-   * @throws Exception If anything went wrong
+   * @throws IllegalArgumentException If the {@link PluginDescription}
+   *                                  is missing the path
    */
   Module createModule(PluginContainer container) throws Exception;
 
@@ -35,8 +36,9 @@ public interface PluginLoader {
    * <p>The plugin instance is set in the provided {@link PluginContainer}.</p>
    *
    * @param container the plugin container
-   * @param modules the modules to be used when creating this plugin's injector
-   * @throws Exception If anything went wrong
+   * @param modules   the modules to be used when creating this plugin's injector
+   * @throws IllegalStateException If the plugin instance could not be
+   *                               created from the provided modules
    */
   void createPlugin(PluginContainer container, Module... modules) throws Exception;
 }
