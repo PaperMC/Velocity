@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.plugin.loader.java;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.velocitypowered.api.plugin.InvalidPluginException;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -13,8 +14,6 @@ import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.PluginLoader;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
-import com.velocitypowered.proxy.plugin.loader.java.JavaVelocityPluginDescription;
-import com.velocitypowered.proxy.plugin.loader.java.VelocityPluginModule;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -61,7 +60,8 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   @Override
-  public PluginContainer createPlugin(PluginDescription description) throws Exception {
+  public Module createModule(PluginContainer container) throws Exception {
+    PluginDescription description = container.getDescription();
     if (!(description instanceof JavaVelocityPluginDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
@@ -73,18 +73,29 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
-    VelocityPluginContainer container = new VelocityPluginContainer(description);
-    Injector injector = Guice.createInjector(
-        new VelocityPluginModule(server, javaDescription, container, baseDirectory));
-    Object instance = injector.getInstance(javaDescription.getMainClass());
+    return new VelocityPluginModule(server, javaDescription, container, baseDirectory);
+  }
+
+  @Override
+  public void createPlugin(PluginContainer container, Module... modules) {
+    if (!(container instanceof VelocityPluginContainer)) {
+      throw new IllegalArgumentException("Container provided isn't of the Java plugin loader");
+    }
+    PluginDescription description = container.getDescription();
+    if (!(description instanceof JavaVelocityPluginDescription)) {
+      throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
+    }
+
+    Injector injector = Guice.createInjector(modules);
+    Object instance = injector
+        .getInstance(((JavaVelocityPluginDescription) description).getMainClass());
 
     if (instance == null) {
       throw new IllegalStateException(
-          "Got nothing from injector for plugin " + javaDescription.getId());
+        "Got nothing from injector for plugin " + description.getId());
     }
 
-    container.setInstance(instance);
-    return container;
+    ((VelocityPluginContainer) container).setInstance(instance);
   }
 
   private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
