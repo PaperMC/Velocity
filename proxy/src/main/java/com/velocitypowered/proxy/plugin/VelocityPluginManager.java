@@ -4,11 +4,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Joiner;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
@@ -80,6 +87,7 @@ public class VelocityPluginManager implements PluginManager {
     found.sort(Comparator.comparing(PluginDescription::getId));
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
+    Map<PluginContainer, Module> pluginContainers = new HashMap<>();
     // Now load the plugins
     pluginLoad:
     for (PluginDescription plugin : sortedPlugins) {
@@ -92,19 +100,44 @@ public class VelocityPluginManager implements PluginManager {
         }
       }
 
-      // Actually create the plugin
-      PluginContainer pluginObject;
+      try {
+        VelocityPluginContainer container = new VelocityPluginContainer(plugin);
+        pluginContainers.put(container, loader.createModule(container));
+      } catch (Exception e) {
+        logger.error("Can't create module for plugin {}", plugin.getId(), e);
+      }
+    }
+
+    // Make a global Guice module that with common bindings for every plugin
+    AbstractModule commonModule = new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(ProxyServer.class).toInstance(server);
+        bind(PluginManager.class).toInstance(server.getPluginManager());
+        bind(EventManager.class).toInstance(server.getEventManager());
+        bind(CommandManager.class).toInstance(server.getCommandManager());
+        for (PluginContainer container : pluginContainers.keySet()) {
+          bind(PluginContainer.class)
+            .annotatedWith(Names.named(container.getDescription().getId()))
+            .toInstance(container);
+        }
+      }
+    };
+
+    for (Map.Entry<PluginContainer, Module> plugin : pluginContainers.entrySet()) {
+      PluginContainer container = plugin.getKey();
+      PluginDescription description = container.getDescription();
 
       try {
-        pluginObject = loader.createPlugin(plugin);
+        loader.createPlugin(container, plugin.getValue(), commonModule);
       } catch (Exception e) {
-        logger.error("Can't create plugin {}", plugin.getId(), e);
+        logger.error("Can't create plugin {}", description.getId(), e);
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", plugin.getId(), plugin.getVersion()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(plugin.getAuthors()));
-      registerPlugin(pluginObject);
+      logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
+          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
+      registerPlugin(container);
     }
   }
 
