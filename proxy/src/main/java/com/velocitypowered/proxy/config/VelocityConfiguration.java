@@ -508,7 +508,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         Map<String, String> servers = new HashMap<>();
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
-            servers.put(entry.getKey(), (String) entry.getValue());
+            servers.put(cleanServerName(entry.getKey()), (String) entry.getValue());
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
@@ -540,6 +540,19 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
       this.attemptConnectionOrder = attemptConnectionOrder;
+    }
+
+    /**
+     * TOML requires keys to match a regex of {@code [A-Za-z0-9_-]} unless it is wrapped in
+     * quotes; however, the TOML parser returns the key with the quotes so we need to clean the
+     * server name before we pass it onto server registration to keep proper server name behavior.
+     *
+     * @param name the server name to clean
+     *
+     * @return the cleaned server name
+     */
+    private String cleanServerName(String name) {
+      return name.replace("\"", "");
     }
 
     @Override
