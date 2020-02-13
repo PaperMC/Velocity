@@ -114,7 +114,7 @@ public final class ServerPing {
     if (players != null) {
       builder.onlinePlayers = players.online;
       builder.maximumPlayers = players.max;
-      builder.samplePlayers.addAll(players.sample);
+      builder.samplePlayers.addAll(players.getSample());
     } else {
       builder.nullOutPlayers = true;
     }
@@ -354,7 +354,7 @@ public final class ServerPing {
     }
 
     public List<SamplePlayer> getSample() {
-      return sample;
+      return sample == null ? ImmutableList.of() : sample;
     }
 
     @Override
