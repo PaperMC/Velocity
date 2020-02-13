@@ -35,7 +35,7 @@ import org.asynchttpclient.Response;
 public class Metrics {
 
   // The version of this bStats class
-  private static final int B_STATS_VERSION = 1;
+  private static final int B_STATS_METRICS_REVISION = 2;
 
   // The url to which the data is sent
   private static final String URL = "https://bstats.org/submitData/server-implementation";
@@ -49,6 +49,9 @@ public class Metrics {
   // The name of the server software
   private final String name;
 
+  // The plugin ID for the server software as assigned by bStats.
+  private final int pluginId;
+
   // The uuid of the server
   private final String serverUuid;
 
@@ -60,13 +63,15 @@ public class Metrics {
   /**
    * Class constructor.
    * @param name              The name of the server software.
+   * @param pluginId          The plugin ID for the server software as assigned by bStats.
    * @param serverUuid        The uuid of the server.
    * @param logFailedRequests Whether failed requests should be logged or not.
    * @param server            The Velocity server instance.
    */
-  private Metrics(String name, String serverUuid, boolean logFailedRequests,
+  private Metrics(String name, int pluginId, String serverUuid, boolean logFailedRequests,
       VelocityServer server) {
     this.name = name;
+    this.pluginId = pluginId;
     this.serverUuid = serverUuid;
     Metrics.logFailedRequests = logFailedRequests;
     this.server = server;
@@ -114,6 +119,8 @@ public class Metrics {
     JsonObject data = new JsonObject();
 
     data.addProperty("pluginName", name); // Append the name of the server software
+    data.addProperty("id", pluginId);
+    data.addProperty("metricsRevision", B_STATS_METRICS_REVISION);
     JsonArray customCharts = new JsonArray();
     for (CustomChart customChart : charts) {
       // Add the data of the custom charts
@@ -573,7 +580,7 @@ public class Metrics {
       boolean logFailedRequests = metricsConfig.isLogFailure();
       // Only start Metrics, if it's enabled in the config
       if (metricsConfig.isEnabled()) {
-        Metrics metrics = new Metrics("Velocity", serverUuid, logFailedRequests, server);
+        Metrics metrics = new Metrics("Velocity", 4752, serverUuid, logFailedRequests, server);
 
         metrics.addCustomChart(
             new Metrics.SingleLineChart("players", server::getPlayerCount)
