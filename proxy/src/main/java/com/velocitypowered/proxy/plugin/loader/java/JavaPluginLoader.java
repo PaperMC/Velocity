@@ -38,7 +38,7 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   @Override
-  public PluginDescription loadPlugin(Path source) throws Exception {
+  public PluginDescription loadPluginDescription(Path source) throws Exception {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
     if (!serialized.isPresent()) {
@@ -50,13 +50,23 @@ public class JavaPluginLoader implements PluginLoader {
       throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
     }
 
+    return createCandidateDescription(pd, source);
+  }
+
+  @Override
+  public PluginDescription loadPlugin(PluginDescription source) throws Exception {
+    if (!(source instanceof JavaVelocityPluginDescriptionCandidate)) {
+      throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
+    }
     PluginClassLoader loader = new PluginClassLoader(
-        new URL[]{source.toUri().toURL()}
+        new URL[]{source.getSource().get().toUri().toURL()}
     );
     loader.addToClassloaders();
 
-    Class mainClass = loader.loadClass(pd.getMain());
-    return createDescription(pd, source, mainClass);
+    JavaVelocityPluginDescriptionCandidate candidate =
+        (JavaVelocityPluginDescriptionCandidate) source;
+    Class mainClass = loader.loadClass(candidate.getMainClass());
+    return createDescription(candidate, mainClass);
   }
 
   @Override
@@ -127,15 +137,16 @@ public class JavaPluginLoader implements PluginLoader {
     }
   }
 
-  private VelocityPluginDescription createDescription(SerializedPluginDescription description,
-      Path source, Class mainClass) {
+  private VelocityPluginDescription createCandidateDescription(
+      SerializedPluginDescription description,
+      Path source) {
     Set<PluginDependency> dependencies = new HashSet<>();
 
     for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
       dependencies.add(toDependencyMeta(dependency));
     }
 
-    return new JavaVelocityPluginDescription(
+    return new JavaVelocityPluginDescriptionCandidate(
         description.getId(),
         description.getName(),
         description.getVersion(),
@@ -144,6 +155,22 @@ public class JavaPluginLoader implements PluginLoader {
         description.getAuthors(),
         dependencies,
         source,
+        description.getMain()
+    );
+  }
+
+  private VelocityPluginDescription createDescription(
+      JavaVelocityPluginDescriptionCandidate description,
+      Class mainClass) {
+    return new JavaVelocityPluginDescription(
+        description.getId(),
+        description.getName().orElse(null),
+        description.getVersion().orElse(null),
+        description.getDescription().orElse(null),
+        description.getUrl().orElse(null),
+        description.getAuthors(),
+        description.getDependencies(),
+        description.getSource().orElse(null),
         mainClass
     );
   }

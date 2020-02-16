@@ -11,7 +11,9 @@ import java.nio.file.Path;
  */
 public interface PluginLoader {
 
-  PluginDescription loadPlugin(Path source) throws Exception;
+  PluginDescription loadPluginDescription(Path source) throws Exception;
+
+  PluginDescription loadPlugin(PluginDescription source) throws Exception;
 
   /**
    * Creates a {@link Module} for the provided {@link PluginContainer}

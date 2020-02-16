@@ -16,6 +16,7 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
@@ -25,12 +26,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -68,7 +70,7 @@ public class VelocityPluginManager implements PluginManager {
         .newDirectoryStream(directory, p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadPlugin(path));
+          found.add(loader.loadPluginDescription(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
         }
@@ -80,31 +82,29 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
-    // Sort the loaded plugins twice. First, sort the already-loaded plugins by their IDs, so as
-    // to make the topographic sort deterministic (since the order will differ depending on the
-    // first node chosen in the graph, which is the first plugin we found). Afterwards, we execute
-    // a depth-first search over the loaded plugins.
-    found.sort(Comparator.comparing(PluginDescription::getId));
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
+    Set<String> loadedPluginsById = new HashSet<>();
     Map<PluginContainer, Module> pluginContainers = new HashMap<>();
     // Now load the plugins
     pluginLoad:
-    for (PluginDescription plugin : sortedPlugins) {
+    for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
-      for (PluginDependency dependency : plugin.getDependencies()) {
-        if (!dependency.isOptional() && !isLoaded(dependency.getId())) {
-          logger.error("Can't load plugin {} due to missing dependency {}", plugin.getId(),
+      for (PluginDependency dependency : candidate.getDependencies()) {
+        if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
+          logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
               dependency.getId());
           continue pluginLoad;
         }
       }
 
       try {
-        VelocityPluginContainer container = new VelocityPluginContainer(plugin);
+        PluginDescription realPlugin = loader.loadPlugin(candidate);
+        VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
+        loadedPluginsById.add(realPlugin.getId());
       } catch (Exception e) {
-        logger.error("Can't create module for plugin {}", plugin.getId(), e);
+        logger.error("Can't create module for plugin {}", candidate.getId(), e);
       }
     }
 

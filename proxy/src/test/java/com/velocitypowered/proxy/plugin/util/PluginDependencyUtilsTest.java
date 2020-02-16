@@ -69,8 +69,8 @@ class PluginDependencyUtilsTest {
   void sortCandidatesMultiplePluginsDependentOnOne() throws Exception {
     List<PluginDescription> plugins = ImmutableList.of(HAS_DEPENDENCY_3, HAS_DEPENDENCY_1,
         NO_DEPENDENCY);
-    List<PluginDescription> expected = ImmutableList.of(NO_DEPENDENCY, HAS_DEPENDENCY_3,
-        HAS_DEPENDENCY_1);
+    List<PluginDescription> expected = ImmutableList.of(NO_DEPENDENCY, HAS_DEPENDENCY_1,
+        HAS_DEPENDENCY_3);
     assertEquals(expected, PluginDependencyUtils.sortCandidates(plugins));
   }
 
