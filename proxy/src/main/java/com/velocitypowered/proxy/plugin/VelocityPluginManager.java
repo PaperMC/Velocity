@@ -4,11 +4,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Joiner;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
@@ -18,12 +26,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,7 +70,7 @@ public class VelocityPluginManager implements PluginManager {
         .newDirectoryStream(directory, p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadPlugin(path));
+          found.add(loader.loadPluginDescription(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
         }
@@ -73,38 +82,62 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
-    // Sort the loaded plugins twice. First, sort the already-loaded plugins by their IDs, so as
-    // to make the topographic sort deterministic (since the order will differ depending on the
-    // first node chosen in the graph, which is the first plugin we found). Afterwards, we execute
-    // a depth-first search over the loaded plugins.
-    found.sort(Comparator.comparing(PluginDescription::getId));
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
+    Set<String> loadedPluginsById = new HashSet<>();
+    Map<PluginContainer, Module> pluginContainers = new HashMap<>();
     // Now load the plugins
     pluginLoad:
-    for (PluginDescription plugin : sortedPlugins) {
+    for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
-      for (PluginDependency dependency : plugin.getDependencies()) {
-        if (!dependency.isOptional() && !isLoaded(dependency.getId())) {
-          logger.error("Can't load plugin {} due to missing dependency {}", plugin.getId(),
+      for (PluginDependency dependency : candidate.getDependencies()) {
+        if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
+          logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
               dependency.getId());
           continue pluginLoad;
         }
       }
 
-      // Actually create the plugin
-      PluginContainer pluginObject;
+      try {
+        PluginDescription realPlugin = loader.loadPlugin(candidate);
+        VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
+        pluginContainers.put(container, loader.createModule(container));
+        loadedPluginsById.add(realPlugin.getId());
+      } catch (Exception e) {
+        logger.error("Can't create module for plugin {}", candidate.getId(), e);
+      }
+    }
+
+    // Make a global Guice module that with common bindings for every plugin
+    AbstractModule commonModule = new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(ProxyServer.class).toInstance(server);
+        bind(PluginManager.class).toInstance(server.getPluginManager());
+        bind(EventManager.class).toInstance(server.getEventManager());
+        bind(CommandManager.class).toInstance(server.getCommandManager());
+        for (PluginContainer container : pluginContainers.keySet()) {
+          bind(PluginContainer.class)
+            .annotatedWith(Names.named(container.getDescription().getId()))
+            .toInstance(container);
+        }
+      }
+    };
+
+    for (Map.Entry<PluginContainer, Module> plugin : pluginContainers.entrySet()) {
+      PluginContainer container = plugin.getKey();
+      PluginDescription description = container.getDescription();
 
       try {
-        pluginObject = loader.createPlugin(plugin);
+        loader.createPlugin(container, plugin.getValue(), commonModule);
       } catch (Exception e) {
-        logger.error("Can't create plugin {}", plugin.getId(), e);
+        logger.error("Can't create plugin {}", description.getId(), e);
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", plugin.getId(), plugin.getVersion()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(plugin.getAuthors()));
-      registerPlugin(pluginObject);
+      logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
+          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
+      registerPlugin(container);
     }
   }
 

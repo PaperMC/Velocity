@@ -8,6 +8,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -28,17 +29,20 @@ public class PluginDependencyUtils {
    * @throws IllegalStateException if there is a circular loop in the dependency graph
    */
   public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
+    List<PluginDescription> sortedCandidates = new ArrayList<>(candidates);
+    sortedCandidates.sort(Comparator.comparing(PluginDescription::getId));
+
     // Create a graph and populate it with plugin dependencies. Specifically, each graph has plugin
     // nodes, and edges that represent the dependencies that plugin relies on. Non-existent plugins
     // are ignored.
     MutableGraph<PluginDescription> graph = GraphBuilder.directed()
         .allowsSelfLoops(false)
-        .expectedNodeCount(candidates.size())
+        .expectedNodeCount(sortedCandidates.size())
         .build();
-    Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(candidates,
+    Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(sortedCandidates,
         PluginDescription::getId);
 
-    for (PluginDescription description : candidates) {
+    for (PluginDescription description : sortedCandidates) {
       graph.addNode(description);
 
       for (PluginDependency dependency : description.getDependencies()) {
