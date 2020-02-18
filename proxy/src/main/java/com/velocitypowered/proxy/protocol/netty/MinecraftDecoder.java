@@ -5,6 +5,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
@@ -12,6 +13,11 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
 public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
+
+  private static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
+  private static final QuietException DECODE_FAILED =
+      new QuietException("A packet did not decode successfully (invalid data). If you are a "
+          + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
@@ -46,19 +52,37 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
       try {
         packet.decode(msg, direction, registry.version);
       } catch (Exception e) {
-        throw new CorruptedFrameException(
-            "Error decoding " + packet.getClass() + " Direction " + direction
-                + " Protocol " + registry.version + " State " + state + " ID " + Integer
-                .toHexString(packetId), e);
+        throw handleDecodeFailure(e, packet, packetId);
       }
+
       if (msg.isReadable()) {
-        throw new CorruptedFrameException(
-            "Did not read full packet for " + packet.getClass() + " Direction " + direction
-                + " Protocol " + registry.version + " State " + state + " ID " + Integer
-                .toHexString(packetId));
+        throw handleNotReadEnough(packet, packetId);
       }
       out.add(packet);
     }
+  }
+
+  private Exception handleNotReadEnough(MinecraftPacket packet, int packetId) {
+    if (DEBUG) {
+      return new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " "
+          + getExtraConnectionDetail(packetId));
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private Exception handleDecodeFailure(Exception cause, MinecraftPacket packet, int packetId) {
+    if (DEBUG) {
+      return new CorruptedFrameException(
+          "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private String getExtraConnectionDetail(int packetId) {
+    return "Direction " + direction + " Protocol " + registry.version + " State " + state
+        + " ID " + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
