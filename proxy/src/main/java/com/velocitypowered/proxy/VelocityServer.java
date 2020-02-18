@@ -360,11 +360,12 @@ public class VelocityServer implements ProxyServer {
   }
 
   /**
-   * Shuts down the proxy.
+   * Shuts down the proxy, kicking players with the specified {@param reason}.
    *
    * @param explicitExit whether the user explicitly shut down the proxy
+   * @param reason message to kick online players with
    */
-  public void shutdown(boolean explicitExit) {
+  public void shutdown(boolean explicitExit, TextComponent reason) {
     if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
       throw new AssertionError();
     }
@@ -382,7 +383,7 @@ public class VelocityServer implements ProxyServer {
 
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {
-        player.disconnect(TextComponent.of("Proxy shutting down."));
+        player.disconnect(reason);
       }
 
       try {
@@ -423,6 +424,15 @@ public class VelocityServer implements ProxyServer {
 
     Thread thread = new Thread(shutdownProcess);
     thread.start();
+  }
+
+  /**
+   * Calls {@link #shutdown(boolean, TextComponent)} with the default reason "Proxy shutting down."
+   *
+   * @param explicitExit whether the user explicitly shut down the proxy
+   */
+  public void shutdown(boolean explicitExit) {
+    shutdown(explicitExit, TextComponent.of("Proxy shutting down."));
   }
 
   public AsyncHttpClient getAsyncHttpClient() {

@@ -16,6 +16,7 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.network.netty.DiscardHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
@@ -151,6 +152,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       }
 
+      ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
       ctx.close();
     }
   }
