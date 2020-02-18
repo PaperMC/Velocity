@@ -89,3 +89,4 @@ plugins/
 ### Natives stuff ###
 native/mbedtls
 native/zlib-ng
+native/zlib-cf
