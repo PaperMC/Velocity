@@ -5,11 +5,11 @@ if [ ! -d zlib-cf ]; then
   git clone -b gcc.amd64 https://github.com/cloudflare/zlib.git zlib-cf
 fi
 
-#echo "Compiling Cloudflare zlib..."
-#cd zlib-cf
-#CFLAGS="-fPIC -O3 -mtune=skylake -flto" AR=gcc-ar RANLIB=gcc-ranlib ./configure --static
-#make clean && make
-#cd ..
+echo "Compiling Cloudflare zlib..."
+cd zlib-cf
+CFLAGS="-fPIC -O3 -mtune=skylake -flto" AR=gcc-ar RANLIB=gcc-ranlib ./configure --static
+make clean && make
+cd ..
 
 # Modify as you need.
 MBEDTLS_ROOT=mbedtls
