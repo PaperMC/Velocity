@@ -19,8 +19,8 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietException DECODE_FAILED =
-      new QuietException("A packet did not decode successfully (invalid data). If you are a " +
-          "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
+      new QuietException("A packet did not decode successfully (invalid data). If you are a "
+          + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
