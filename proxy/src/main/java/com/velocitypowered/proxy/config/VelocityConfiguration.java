@@ -94,12 +94,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "                 will determine the initial server list ping response.",
       "- \"mods\":        Passes only the mod list from your backend server into the response.",
       "                 The first server in your try list (or forced host) with a mod list will be",
-      "                 used. If no backend servers can be contacted, Velocity will not display any",
+      "                 used. If no backend servers can be contacted, Velocity won't display any",
       "                 mod information.",
       "- \"description\": Uses the description and mod list from the backend server. The first",
       "                 server in the try (or forced host) list that responds is used for the",
       "                 description and mod list.",
-      "- \"all\":         Passes everything from the backend server into the response. The Velocity",
+      "- \"all\":         Uses the backend server's response as the proxy response. The Velocity",
       "                 configuration is used if no servers could be contacted."
   })
   @ConfigKey("ping-passthrough")
