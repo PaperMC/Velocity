@@ -57,7 +57,7 @@ public class VelocityCommandManager implements CommandManager {
     int firstSpace = cmdLine.indexOf(' ');
     if (firstSpace != -1) {
       alias = cmdLine.substring(0, firstSpace);
-      args = cmdLine.substring(firstSpace).trim();
+      args = cmdLine.substring(firstSpace);
     }
     RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
@@ -107,7 +107,7 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     String alias = cmdLine.substring(0, firstSpace);
-    String args = cmdLine.substring(firstSpace).trim();
+    String args = cmdLine.substring(firstSpace);
     RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       // No such command, so we can't offer any tab complete suggestions.
@@ -167,7 +167,7 @@ public class VelocityCommandManager implements CommandManager {
       if (line.isEmpty()) {
         return new String[0];
       }
-      return line.split(" ", -1);
+      return line.trim().split(" ", -1);
     }
 
     @Override
