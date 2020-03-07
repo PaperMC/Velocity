@@ -47,7 +47,7 @@ public interface Command {
   }
 
   /**
-   * Returns the description for this command
+   * Returns the description for this command.
    *
    * @return the description
    */
@@ -56,7 +56,7 @@ public interface Command {
   }
 
   /**
-   * Returns the usage for this command
+   * Returns the usage for this command.
    *
    * @return the usage
    */
