@@ -54,4 +54,13 @@ public interface Command {
   default Optional<String> getDescription() {
     return Optional.empty();
   }
+
+  /**
+   * Returns the usage for this command
+   *
+   * @return the usage
+   */
+  default Optional<String> getUsage() {
+    return Optional.empty();
+  }
 }
