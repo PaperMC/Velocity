@@ -2,6 +2,8 @@ package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Optional;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -42,5 +44,14 @@ public interface Command {
    */
   default boolean hasPermission(CommandSource source, String @NonNull [] args) {
     return true;
+  }
+
+  /**
+   * Returns the description for this command
+   *
+   * @return the description
+   */
+  default Optional<String> getDescription() {
+    return Optional.empty();
   }
 }
