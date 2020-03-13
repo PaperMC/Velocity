@@ -3,7 +3,6 @@ package com.velocitypowered.proxy.scheduler;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -187,7 +186,9 @@ public class VelocityScheduler implements Scheduler {
         } catch (Exception e) {
           Log.logger.error("Exception in task {} by plugin {}", runnable, plugin, e);
         } finally {
-          onFinish();
+          if (repeat == 0) {
+            onFinish();
+          }
           currentTaskThread = null;
         }
       });
