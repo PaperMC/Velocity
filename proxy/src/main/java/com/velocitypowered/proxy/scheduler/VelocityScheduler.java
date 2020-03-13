@@ -187,6 +187,7 @@ public class VelocityScheduler implements Scheduler {
         } catch (Exception e) {
           Log.logger.error("Exception in task {} by plugin {}", runnable, plugin, e);
         } finally {
+          onFinish();
           currentTaskThread = null;
         }
       });
