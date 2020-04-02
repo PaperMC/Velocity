@@ -68,7 +68,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
         if (nameMapping.containsKey(strippedName)) { // ADD_PLAYER also used for updating ping
           VelocityTabListEntry entry = entries.get(nameMapping.get(strippedName));
           if (entry != null) {
-            entry.setLatency(item.getLatency());
+            entry.setLatencyInternal(item.getLatency());
           }
         } else {
           UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
