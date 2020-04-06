@@ -279,6 +279,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void disconnect(Component reason) {
+    boolean isConnected = server.getPlayer(this.getUniqueId()).isPresent();
+    server.getEventManager().fireAndForget(new DisconnectEvent(this, !isConnected));
+
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
     connection.closeWith(Disconnect.create(reason));
