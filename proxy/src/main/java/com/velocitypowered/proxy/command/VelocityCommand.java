@@ -10,7 +10,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +33,7 @@ public class VelocityCommand implements Command {
    * Initializes the command object for /velocity.
    * @param server the Velocity server
    */
-  public VelocityCommand(VelocityProxy server) {
+  public VelocityCommand(VelocityServer server) {
     this.subcommands = ImmutableMap.<String, Command>builder()
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
@@ -111,9 +111,9 @@ public class VelocityCommand implements Command {
   private static class Reload implements Command {
 
     private static final Logger logger = LogManager.getLogger(Reload.class);
-    private final VelocityProxy proxy;
+    private final VelocityServer proxy;
 
-    private Reload(VelocityProxy proxy) {
+    private Reload(VelocityServer proxy) {
       this.proxy = proxy;
     }
 

@@ -8,7 +8,7 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("WeakerAccess")
 public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
 
-  public ServerChannelInitializer(final VelocityProxy proxy) {
+  public ServerChannelInitializer(final VelocityServer proxy) {
     this.proxy = proxy;
   }
 

@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
-import static com.velocitypowered.proxy.VelocityProxy.GSON;
+import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
@@ -18,7 +18,7 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 
@@ -52,14 +52,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private static final String MOJANG_HASJOINED_URL =
       "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private final MinecraftConnection mcConnection;
   private final InitialInboundConnection inbound;
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
-  LoginSessionHandler(VelocityProxy proxy, MinecraftConnection mcConnection,
+  LoginSessionHandler(VelocityServer proxy, MinecraftConnection mcConnection,
       InitialInboundConnection inbound) {
     this.proxy = Preconditions.checkNotNull(proxy, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");

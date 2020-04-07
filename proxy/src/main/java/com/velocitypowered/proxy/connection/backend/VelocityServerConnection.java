@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import static com.velocitypowered.proxy.VelocityProxy.GSON;
+import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
@@ -15,7 +15,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -47,7 +47,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   private final VelocityRegisteredServer registeredServer;
   private final ConnectedPlayer proxyPlayer;
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private @Nullable MinecraftConnection connection;
   private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
@@ -62,7 +62,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * @param proxy the Velocity proxy instance
    */
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
-      ConnectedPlayer proxyPlayer, VelocityProxy proxy) {
+      ConnectedPlayer proxyPlayer, VelocityServer proxy) {
     this.registeredServer = registeredServer;
     this.proxyPlayer = proxyPlayer;
     this.proxy = proxy;

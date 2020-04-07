@@ -43,7 +43,7 @@ public class Velocity {
 
     long startTime = System.currentTimeMillis();
 
-    VelocityProxy proxy = new VelocityProxy(options);
+    VelocityServer proxy = new VelocityServer(options);
     proxy.start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> proxy.shutdown(false),
         "Shutdown thread"));

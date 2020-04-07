@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -33,12 +33,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private static final TextComponent MODERN_IP_FORWARDING_FAILURE = TextComponent
       .of("Your server did not send a forwarding request to the proxy. Is it set up correctly?");
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
   private boolean informationForwarded;
 
-  LoginSessionHandler(VelocityProxy proxy, VelocityServerConnection serverConn,
+  LoginSessionHandler(VelocityServer proxy, VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
     this.proxy = proxy;
     this.serverConn = serverConn;

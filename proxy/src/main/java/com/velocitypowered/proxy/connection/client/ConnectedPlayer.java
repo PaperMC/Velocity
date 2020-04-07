@@ -27,7 +27,7 @@ import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -96,14 +96,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
   private final VelocityTabList tabList;
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private ClientConnectionPhase connectionPhase;
   private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityProxy proxy, GameProfile profile, MinecraftConnection connection,
+  ConnectedPlayer(VelocityServer proxy, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.proxy = proxy;
     if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {

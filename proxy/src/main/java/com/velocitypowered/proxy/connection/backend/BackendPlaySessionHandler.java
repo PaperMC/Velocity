@@ -9,7 +9,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -30,14 +30,14 @@ import io.netty.buffer.Unpooled;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
 
-  BackendPlaySessionHandler(VelocityProxy proxy, VelocityServerConnection serverConn) {
+  BackendPlaySessionHandler(VelocityServer proxy, VelocityServerConnection serverConn) {
     this.proxy = proxy;
     this.serverConn = serverConn;
     this.playerConnection = serverConn.getPlayer().getConnection();
@@ -197,7 +197,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable, true);
   }
 
-  public VelocityProxy getProxy() {
+  public VelocityServer getProxy() {
     return proxy;
   }
 

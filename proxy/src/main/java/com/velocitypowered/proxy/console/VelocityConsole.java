@@ -6,7 +6,7 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -26,10 +26,10 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
 
-  public VelocityConsole(VelocityProxy proxy) {
+  public VelocityConsole(VelocityServer proxy) {
     this.proxy = proxy;
   }
 

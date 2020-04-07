@@ -15,7 +15,7 @@ import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.DiscardHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -58,7 +58,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private ProtocolVersion protocolVersion;
   private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
 
@@ -67,7 +67,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param channel the channel on the connection
    * @param proxy the Velocity instance
    */
-  public MinecraftConnection(Channel channel, VelocityProxy proxy) {
+  public MinecraftConnection(Channel channel, VelocityServer proxy) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.proxy = proxy;

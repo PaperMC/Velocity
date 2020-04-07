@@ -8,7 +8,7 @@ import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -28,11 +28,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private final MinecraftConnection connection;
   private final InboundConnection inbound;
 
-  StatusSessionHandler(VelocityProxy proxy, MinecraftConnection connection,
+  StatusSessionHandler(VelocityServer proxy, MinecraftConnection connection,
       InboundConnection inbound) {
     this.proxy = proxy;
     this.connection = connection;
@@ -161,7 +161,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
-              VelocityProxy.GSON.toJson(event.getPing(), json);
+              VelocityServer.GSON.toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },
             connection.eventLoop());

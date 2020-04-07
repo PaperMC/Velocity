@@ -4,7 +4,7 @@ import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhas
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -29,7 +29,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
 
@@ -39,7 +39,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  TransitionSessionHandler(VelocityProxy proxy,
+  TransitionSessionHandler(VelocityServer proxy,
       VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
     this.proxy = proxy;

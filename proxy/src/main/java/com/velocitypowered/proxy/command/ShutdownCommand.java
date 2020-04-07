@@ -2,15 +2,15 @@ package com.velocitypowered.proxy.command;
 
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ShutdownCommand implements Command {
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
 
-  public ShutdownCommand(VelocityProxy proxy) {
+  public ShutdownCommand(VelocityServer proxy) {
     this.proxy = proxy;
   }
 

@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -35,9 +35,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
 
   private final MinecraftConnection connection;
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
 
-  public HandshakeSessionHandler(MinecraftConnection connection, VelocityProxy proxy) {
+  public HandshakeSessionHandler(MinecraftConnection connection, VelocityServer proxy) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.proxy = Preconditions.checkNotNull(proxy, "server");
   }

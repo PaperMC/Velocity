@@ -15,7 +15,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -41,11 +41,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityRegisteredServer implements RegisteredServer {
 
-  private final @Nullable VelocityProxy proxy;
+  private final @Nullable VelocityServer proxy;
   private final ServerInfo serverInfo;
   private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
 
-  public VelocityRegisteredServer(@Nullable VelocityProxy proxy, ServerInfo serverInfo) {
+  public VelocityRegisteredServer(@Nullable VelocityServer proxy, ServerInfo serverInfo) {
     this.proxy = proxy;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
   }

@@ -10,7 +10,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
@@ -59,7 +59,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   private @Nullable TabCompleteRequest outstandingTabComplete;
 
   /**
@@ -67,7 +67,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param proxy the Velocity server instance
    * @param player the player
    */
-  public ClientPlaySessionHandler(VelocityProxy proxy, ConnectedPlayer player) {
+  public ClientPlaySessionHandler(VelocityServer proxy, ConnectedPlayer player) {
     this.player = player;
     this.proxy = proxy;
   }

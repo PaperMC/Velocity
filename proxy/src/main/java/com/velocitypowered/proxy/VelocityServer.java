@@ -80,9 +80,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
-public class VelocityProxy implements ProxyServer {
+public class VelocityServer implements ProxyServer {
 
-  private static final Logger logger = LogManager.getLogger(VelocityProxy.class);
+  private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GSON = GsonComponentSerializer.populate(new GsonBuilder())
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
@@ -106,7 +106,7 @@ public class VelocityProxy implements ProxyServer {
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
 
-  VelocityProxy(final ProxyOptions options) {
+  VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
     scheduler = new VelocityScheduler(pluginManager);
@@ -127,7 +127,7 @@ public class VelocityProxy implements ProxyServer {
 
   @Override
   public ProxyVersion getVersion() {
-    Package pkg = VelocityProxy.class.getPackage();
+    Package pkg = VelocityServer.class.getPackage();
     String implName;
     String implVersion;
     String implVendor;

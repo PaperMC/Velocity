@@ -57,7 +57,7 @@ public class Metrics {
   // A list with all custom charts
   private final List<CustomChart> charts = new ArrayList<>();
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
 
   /**
    * Class constructor.
@@ -68,7 +68,7 @@ public class Metrics {
    * @param proxy            The Velocity proxy instance.
    */
   private Metrics(String name, int pluginId, String serverUuid, boolean logFailedRequests,
-      VelocityProxy proxy) {
+      VelocityServer proxy) {
     this.name = name;
     this.pluginId = pluginId;
     this.serverUuid = serverUuid;
@@ -224,7 +224,7 @@ public class Metrics {
             )
         )
     ) {
-      VelocityProxy.GSON.toJson(object, writer);
+      VelocityServer.GSON.toJson(object, writer);
     } catch (IOException e) {
       throw e;
     }
@@ -564,7 +564,7 @@ public class Metrics {
   }
 
   static class VelocityMetrics {
-    static void startMetrics(VelocityProxy proxy, VelocityConfiguration.Metrics metricsConfig) {
+    static void startMetrics(VelocityServer proxy, VelocityConfiguration.Metrics metricsConfig) {
       if (!metricsConfig.isFromConfig()) {
         // Log an informational message.
         logger.info("Velocity collects metrics and sends them to bStats (https://bstats.org).");

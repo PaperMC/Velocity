@@ -11,7 +11,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -63,9 +63,9 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   private volatile @MonotonicNonNull List<QueryResponse.PluginInformation> pluginInformationList
       = null;
 
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
 
-  public GS4QueryHandler(VelocityProxy proxy) {
+  public GS4QueryHandler(VelocityServer proxy) {
     this.proxy = proxy;
     this.random = new SecureRandom();
   }

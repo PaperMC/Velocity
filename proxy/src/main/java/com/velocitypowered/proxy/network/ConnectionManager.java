@@ -5,7 +5,7 @@ import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
-import com.velocitypowered.proxy.VelocityProxy;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.DnsAddressResolverGroupNameResolverAdapter;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import io.netty.bootstrap.Bootstrap;
@@ -40,7 +40,7 @@ public final class ConnectionManager {
   private final TransportType transportType;
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
-  private final VelocityProxy proxy;
+  private final VelocityServer proxy;
   // This is intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
@@ -54,7 +54,7 @@ public final class ConnectionManager {
    *
    * @param proxy a reference to the Velocity server
    */
-  public ConnectionManager(VelocityProxy proxy) {
+  public ConnectionManager(VelocityServer proxy) {
     this.proxy = proxy;
     this.transportType = TransportType.bestType();
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
