@@ -429,7 +429,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    boolean kickedFromCurrent = connectedServer == null || connectedServer.getProxy().equals(rs);
+    boolean kickedFromCurrent = connectedServer == null || connectedServer.getServer().equals(rs);
     ServerKickResult result;
     if (kickedFromCurrent) {
       Optional<RegisteredServer> next = getNextServerToTry(rs);
@@ -437,7 +437,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
-      if (connectionInFlight != null && connectionInFlight.getProxy().equals(rs)) {
+      if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
         resetInFlightConnection();
       }
       result = Notify.create(friendlyReason);
@@ -516,8 +516,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     for (int i = tryIndex; i < serversToTry.size(); i++) {
       String toTryName = serversToTry.get(i);
-      if ((connectedServer != null && hasSameName(connectedServer.getProxy(), toTryName))
-          || (connectionInFlight != null && hasSameName(connectionInFlight.getProxy(), toTryName))
+      if ((connectedServer != null && hasSameName(connectedServer.getServer(), toTryName))
+          || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), toTryName))
           || (current != null && hasSameName(current, toTryName))) {
         continue;
       }
@@ -717,7 +717,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
-      if (connectedServer != null && connectedServer.getProxy().equals(server)) {
+      if (connectedServer != null && connectedServer.getServer().equals(server)) {
         return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
       }
       return Optional.empty();

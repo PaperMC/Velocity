@@ -55,7 +55,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    serverConn.getProxy().addPlayer(serverConn.getPlayer());
+    serverConn.getServer().addPlayer(serverConn.getPlayer());
     MinecraftConnection serverMc = serverConn.ensureConnected();
     serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
         ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
@@ -81,7 +81,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();
-    serverConn.getPlayer().handleConnectionException(serverConn.getProxy(), packet, true);
+    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
     return true;
   }
 
@@ -194,7 +194,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     exceptionTriggered = true;
-    serverConn.getPlayer().handleConnectionException(serverConn.getProxy(), throwable, true);
+    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable, true);
   }
 
   public VelocityProxy getProxy() {
@@ -203,9 +203,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    serverConn.getProxy().removePlayer(serverConn.getPlayer());
+    serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
-      serverConn.getPlayer().handleConnectionException(serverConn.getProxy(),
+      serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
           Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT), true);
     }
   }

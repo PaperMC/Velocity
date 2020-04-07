@@ -80,8 +80,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     proxy.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getProxy(),
-            existingConnection != null ? existingConnection.getProxy() : null))
+        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer(),
+            existingConnection != null ? existingConnection.getServer() : null))
         .whenCompleteAsync((x, error) -> {
           // Strap on the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
@@ -106,7 +106,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getProxy()));
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop())
         .exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
@@ -130,9 +130,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
         && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getProxy()));
+          serverConn.getServer()));
     } else {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getProxy()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
 
     return true;

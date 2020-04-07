@@ -176,7 +176,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public VelocityRegisteredServer getProxy() {
+  public VelocityRegisteredServer getServer() {
     return registeredServer;
   }
 
