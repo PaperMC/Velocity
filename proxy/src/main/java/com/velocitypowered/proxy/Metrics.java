@@ -65,7 +65,7 @@ public class Metrics {
    * @param pluginId          The plugin ID for the server software as assigned by bStats.
    * @param serverUuid        The uuid of the server.
    * @param logFailedRequests Whether failed requests should be logged or not.
-   * @param proxy            The Velocity server instance.
+   * @param proxy            The Velocity proxy instance.
    */
   private Metrics(String name, int pluginId, String serverUuid, boolean logFailedRequests,
       VelocityProxy proxy) {
