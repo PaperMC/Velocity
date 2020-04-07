@@ -14,9 +14,8 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
-import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
@@ -42,10 +41,10 @@ public class VelocityPluginManager implements PluginManager {
 
   private final Map<String, PluginContainer> plugins = new HashMap<>();
   private final Map<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
-  public VelocityPluginManager(VelocityServer server) {
-    this.server = checkNotNull(server, "server");
+  public VelocityPluginManager(VelocityProxy proxy) {
+    this.proxy = checkNotNull(proxy, "proxy");
   }
 
   private void registerPlugin(PluginContainer plugin) {
@@ -64,7 +63,7 @@ public class VelocityPluginManager implements PluginManager {
     checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
 
     List<PluginDescription> found = new ArrayList<>();
-    JavaPluginLoader loader = new JavaPluginLoader(server, directory);
+    JavaPluginLoader loader = new JavaPluginLoader(proxy, directory);
 
     try (DirectoryStream<Path> stream = Files
         .newDirectoryStream(directory, p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
@@ -112,10 +111,10 @@ public class VelocityPluginManager implements PluginManager {
     AbstractModule commonModule = new AbstractModule() {
       @Override
       protected void configure() {
-        bind(ProxyServer.class).toInstance(server);
-        bind(PluginManager.class).toInstance(server.getPluginManager());
-        bind(EventManager.class).toInstance(server.getEventManager());
-        bind(CommandManager.class).toInstance(server.getCommandManager());
+        bind(ProxyServer.class).toInstance(proxy);
+        bind(PluginManager.class).toInstance(proxy.getPluginManager());
+        bind(EventManager.class).toInstance(proxy.getEventManager());
+        bind(CommandManager.class).toInstance(proxy.getCommandManager());
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
             .annotatedWith(Names.named(container.getDescription().getId()))

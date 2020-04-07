@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.server;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -50,7 +50,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     completed = true;
     connection.close();
 
-    ServerPing ping = VelocityServer.GSON.fromJson(packet.getStatus(), ServerPing.class);
+    ServerPing ping = VelocityProxy.GSON.fromJson(packet.getStatus(), ServerPing.class);
     result.complete(ping);
     return true;
   }

@@ -8,7 +8,7 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -27,17 +27,17 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("WeakerAccess")
 public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
-  public ServerChannelInitializer(final VelocityServer server) {
-    this.server = server;
+  public ServerChannelInitializer(final VelocityProxy proxy) {
+    this.proxy = proxy;
   }
 
   @Override
   protected void initChannel(final Channel ch) {
     ch.pipeline()
         .addLast(READ_TIMEOUT,
-            new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
+            new ReadTimeoutHandler(this.proxy.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
@@ -46,11 +46,11 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.CLIENTBOUND));
 
-    final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
-    connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));
+    final MinecraftConnection connection = new MinecraftConnection(ch, this.proxy);
+    connection.setSessionHandler(new HandshakeSessionHandler(connection, this.proxy));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
-    if (this.server.getConfiguration().isProxyProtocol()) {
+    if (this.proxy.getConfiguration().isProxyProtocol()) {
       ch.pipeline().addFirst(new HAProxyMessageDecoder());
     }
   }

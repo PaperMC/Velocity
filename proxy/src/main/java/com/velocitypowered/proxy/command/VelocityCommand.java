@@ -10,8 +10,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.proxy.VelocityServer;
-import java.io.IOException;
+import com.velocitypowered.proxy.VelocityProxy;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
-import net.kyori.text.event.HoverEvent.Action;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +33,7 @@ public class VelocityCommand implements Command {
    * Initializes the command object for /velocity.
    * @param server the Velocity server
    */
-  public VelocityCommand(VelocityServer server) {
+  public VelocityCommand(VelocityProxy server) {
     this.subcommands = ImmutableMap.<String, Command>builder()
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
@@ -113,16 +111,16 @@ public class VelocityCommand implements Command {
   private static class Reload implements Command {
 
     private static final Logger logger = LogManager.getLogger(Reload.class);
-    private final VelocityServer server;
+    private final VelocityProxy proxy;
 
-    private Reload(VelocityServer server) {
-      this.server = server;
+    private Reload(VelocityProxy proxy) {
+      this.proxy = proxy;
     }
 
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
-        if (server.reloadConfiguration()) {
+        if (proxy.reloadConfiguration()) {
           source.sendMessage(TextComponent.of("Configuration reloaded.", TextColor.GREEN));
         } else {
           source.sendMessage(TextComponent.of(

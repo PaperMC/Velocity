@@ -4,7 +4,7 @@ import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhas
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -29,20 +29,20 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
 
   /**
    * Creates the new transition handler.
-   * @param server the Velocity server instance
+   * @param proxy the Velocity proxy instance
    * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  TransitionSessionHandler(VelocityServer server,
+  TransitionSessionHandler(VelocityProxy proxy,
       VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
-    this.server = server;
+    this.proxy = proxy;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
   }
@@ -79,9 +79,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
-    server.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer(),
-            existingConnection != null ? existingConnection.getServer() : null))
+    proxy.getEventManager()
+        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getProxy(),
+            existingConnection != null ? existingConnection.getProxy() : null))
         .whenCompleteAsync((x, error) -> {
           // Strap on the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
@@ -90,14 +90,14 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
             playHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
                 .getSessionHandler();
           } else {
-            playHandler = new ClientPlaySessionHandler(server, serverConn.getPlayer());
+            playHandler = new ClientPlaySessionHandler(proxy, serverConn.getPlayer());
             serverConn.getPlayer().getConnection().setSessionHandler(playHandler);
           }
           playHandler.handleBackendJoinGame(packet, serverConn);
 
           // Strap on the correct session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+          smc.setSessionHandler(new BackendPlaySessionHandler(proxy, serverConn));
 
           // Clean up disabling auto-read while the connected event was being processed.
           smc.setAutoReading(true);
@@ -106,7 +106,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getProxy()));
         }, smc.eventLoop())
         .exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
@@ -130,9 +130,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
         && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getServer()));
+          serverConn.getProxy()));
     } else {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getProxy()));
     }
 
     return true;

@@ -8,7 +8,7 @@ import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -22,30 +22,29 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private final MinecraftConnection connection;
   private final InboundConnection inbound;
 
-  StatusSessionHandler(VelocityServer server, MinecraftConnection connection,
+  StatusSessionHandler(VelocityProxy proxy, MinecraftConnection connection,
       InboundConnection inbound) {
-    this.server = server;
+    this.proxy = proxy;
     this.connection = connection;
     this.inbound = inbound;
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = proxy.getConfiguration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
-        new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
+        new ServerPing.Players(proxy.getPlayerCount(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotdComponent(),
         configuration.getFavicon().orElse(null),
@@ -58,7 +57,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     ServerPing fallback = constructLocalPing(pingingVersion);
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
-      Optional<RegisteredServer> rs = server.getServer(s);
+      Optional<RegisteredServer> rs = proxy.getServer(s);
       if (!rs.isPresent()) {
         continue;
       }
@@ -122,7 +121,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   private CompletableFuture<ServerPing> getInitialPing() {
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = proxy.getConfiguration();
     ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthrough = configuration.getPingPassthrough();
@@ -132,8 +131,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     } else {
       String virtualHostStr = inbound.getVirtualHost().map(InetSocketAddress::getHostString)
           .orElse("");
-      List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+      List<String> serversToTry = proxy.getConfiguration().getForcedHosts().getOrDefault(
+          virtualHostStr, proxy.getConfiguration().getAttemptConnectionOrder());
       return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);
     }
   }
@@ -141,7 +140,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyPing packet) {
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> proxy.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> {
           connection.closeWith(LegacyDisconnect.fromServerPing(event.getPing(),
               packet.getVersion()));
@@ -158,11 +157,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(StatusRequest packet) {
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> proxy.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
-              VelocityServer.GSON.toJson(event.getPing(), json);
+              VelocityProxy.GSON.toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },
             connection.eventLoop());

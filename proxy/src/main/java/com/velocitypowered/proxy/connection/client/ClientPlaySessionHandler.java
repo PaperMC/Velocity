@@ -10,7 +10,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
@@ -59,22 +59,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
   private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private @Nullable TabCompleteRequest outstandingTabComplete;
 
   /**
    * Constructs a client play session handler.
-   * @param server the Velocity server instance
+   * @param proxy the Velocity server instance
    * @param player the player
    */
-  public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
+  public ClientPlaySessionHandler(VelocityProxy proxy, ConnectedPlayer player) {
     this.player = player;
-    this.server = server;
+    this.proxy = proxy;
   }
 
   @Override
   public void activated() {
-    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
+    Collection<String> channels = proxy.getChannelRegistrar().getChannelsForProtocol(player
         .getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
@@ -124,7 +124,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
       try {
-        if (!server.getCommandManager().execute(player, msg.substring(1))) {
+        if (!proxy.getCommandManager().execute(player, msg.substring(1))) {
           return false;
         }
       } catch (Exception e) {
@@ -136,7 +136,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
-      server.getEventManager().fire(event)
+      proxy.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
             PlayerChatEvent.ChatResult chatResult = pme.getResult();
             if (chatResult.isAllowed()) {
@@ -179,7 +179,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+            .rewriteMinecraftBrand(packet, proxy.getVersion(), player.getProtocolVersion()));
       } else {
         if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
           // We must bypass the currently-connected server when forwarding Forge packets.
@@ -202,14 +202,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // appropriately.
             loginPluginMessages.add(packet.retain());
           } else {
-            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+            ChannelIdentifier id = proxy.getChannelRegistrar().getFromId(packet.getChannel());
             if (id == null) {
               backendConn.write(packet.retain());
             } else {
               byte[] copy = ByteBufUtil.getBytes(packet.content());
               PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
                   ByteBufUtil.getBytes(packet.content()));
-              server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+              proxy.getEventManager().fire(event).thenAcceptAsync(pme -> {
                 PluginMessage message = new PluginMessage(packet.getChannel(),
                     Unpooled.wrappedBuffer(copy));
                 backendConn.write(message);
@@ -225,7 +225,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponse packet) {
-    server.getEventManager().fireAndForget(new PlayerResourcePackStatusEvent(player,
+    proxy.getEventManager().fireAndForget(new PlayerResourcePackStatusEvent(player,
         packet.getStatus()));
     return false;
   }
@@ -371,7 +371,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String commandLabel = command.substring(0, spacePos);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
+    if (!proxy.getCommandManager().hasCommand(commandLabel)) {
       if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.
@@ -380,7 +380,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
+    List<String> suggestions = proxy.getCommandManager().offerSuggestions(player, command);
     if (suggestions.isEmpty()) {
       return false;
     }
@@ -433,7 +433,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
     try {
-      List<String> offers = server.getCommandManager().offerSuggestions(player, command);
+      List<String> offers = proxy.getCommandManager().offerSuggestions(player, command);
       for (String offer : offers) {
         response.getOffers().add(new Offer(offer, null));
       }
@@ -451,7 +451,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+    proxy.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
         .thenAcceptAsync(e -> {
           response.getOffers().clear();
           for (String s : e.getSuggestions()) {

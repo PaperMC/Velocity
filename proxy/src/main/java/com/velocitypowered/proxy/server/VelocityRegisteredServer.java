@@ -11,12 +11,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -25,7 +24,6 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -43,12 +41,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityRegisteredServer implements RegisteredServer {
 
-  private final @Nullable VelocityServer server;
+  private final @Nullable VelocityProxy proxy;
   private final ServerInfo serverInfo;
   private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
 
-  public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
-    this.server = server;
+  public VelocityRegisteredServer(@Nullable VelocityProxy proxy, ServerInfo serverInfo) {
+    this.proxy = proxy;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
   }
 
@@ -75,17 +73,17 @@ public class VelocityRegisteredServer implements RegisteredServer {
    * @return the server list ping response
    */
   public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, ProtocolVersion version) {
-    if (server == null) {
+    if (proxy == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop)
+    proxy.createBootstrap(loop)
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                    new ReadTimeoutHandler(proxy.getConfiguration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
@@ -94,7 +92,7 @@ public class VelocityRegisteredServer implements RegisteredServer {
                 .addLast(MINECRAFT_ENCODER,
                     new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
+            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, proxy));
           }
         })
         .connect(serverInfo.getAddress())

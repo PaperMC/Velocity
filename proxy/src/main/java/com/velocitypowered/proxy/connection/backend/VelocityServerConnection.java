@@ -1,10 +1,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import static com.velocitypowered.proxy.VelocityServer.GSON;
+import static com.velocitypowered.proxy.VelocityProxy.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
-import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
-import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION_AMOUNT;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
@@ -17,7 +15,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -49,7 +47,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   private final VelocityRegisteredServer registeredServer;
   private final ConnectedPlayer proxyPlayer;
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private @Nullable MinecraftConnection connection;
   private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
@@ -61,13 +59,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * Initializes a new server connection.
    * @param registeredServer the server to connect to
    * @param proxyPlayer the player connecting to the server
-   * @param server the Velocity proxy instance
+   * @param proxy the Velocity proxy instance
    */
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
-      ConnectedPlayer proxyPlayer, VelocityServer server) {
+      ConnectedPlayer proxyPlayer, VelocityProxy proxy) {
     this.registeredServer = registeredServer;
     this.proxyPlayer = proxyPlayer;
-    this.server = server;
+    this.proxy = proxy;
   }
 
   /**
@@ -79,13 +77,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
+    proxy.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                    new ReadTimeoutHandler(proxy.getConfiguration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
@@ -99,13 +97,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .connect(registeredServer.getServerInfo().getAddress())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
-            connection = new MinecraftConnection(future.channel(), server);
+            connection = new MinecraftConnection(future.channel(), proxy);
             connection.setAssociation(VelocityServerConnection.this);
             future.channel().pipeline().addLast(HANDLER, connection);
 
             // Kick off the connection process
             connection.setSessionHandler(
-                new LoginSessionHandler(server, VelocityServerConnection.this, result));
+                new LoginSessionHandler(proxy, VelocityServerConnection.this, result));
 
             // Set the connection phase, which may, for future forge (or whatever), be determined
             // at this point already
@@ -138,7 +136,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   private void startHandshake() {
     final MinecraftConnection mc = ensureConnected();
-    PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
+    PlayerInfoForwarding forwardingMode = proxy.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
@@ -178,7 +176,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public VelocityRegisteredServer getServer() {
+  public VelocityRegisteredServer getProxy() {
     return registeredServer;
   }
 

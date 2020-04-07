@@ -9,7 +9,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.ap.SerializedPluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.PluginLoader;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
@@ -117,7 +117,7 @@ public class JavaPluginLoader implements PluginLoader {
       while ((entry = in.getNextJarEntry()) != null) {
         if (entry.getName().equals("velocity-plugin.json")) {
           try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return Optional.of(VelocityServer.GSON
+            return Optional.of(VelocityProxy.GSON
                 .fromJson(pluginInfoReader, SerializedPluginDescription.class));
           }
         }

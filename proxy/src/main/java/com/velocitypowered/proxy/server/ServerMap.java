@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
@@ -14,11 +14,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerMap {
 
-  private final @Nullable VelocityServer server;
+  private final @Nullable VelocityProxy proxy;
   private final Map<String, RegisteredServer> servers = new ConcurrentHashMap<>();
 
-  public ServerMap(@Nullable VelocityServer server) {
-    this.server = server;
+  public ServerMap(@Nullable VelocityProxy proxy) {
+    this.proxy = proxy;
   }
 
   /**
@@ -46,7 +46,7 @@ public class ServerMap {
   public RegisteredServer register(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
     String lowerName = serverInfo.getName().toLowerCase(Locale.US);
-    VelocityRegisteredServer rs = new VelocityRegisteredServer(server, serverInfo);
+    VelocityRegisteredServer rs = new VelocityRegisteredServer(proxy, serverInfo);
 
     RegisteredServer existing = servers.putIfAbsent(lowerName, rs);
     if (existing != null && !existing.getServerInfo().equals(serverInfo)) {

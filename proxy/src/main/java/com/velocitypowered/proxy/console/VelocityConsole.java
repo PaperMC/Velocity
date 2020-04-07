@@ -6,7 +6,7 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import java.util.List;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -26,11 +26,11 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
 
-  public VelocityConsole(VelocityServer server) {
-    this.server = server;
+  public VelocityConsole(VelocityProxy proxy) {
+    this.proxy = proxy;
   }
 
   @Override
@@ -57,7 +57,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   public void setupPermissions() {
     PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
     // we can safely block here, this is before any listeners fire
-    this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
+    this.permissionFunction = this.proxy.getEventManager().fire(event).join().createFunction(this);
   }
 
   @Override
@@ -67,7 +67,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
         .completer((reader, parsedLine, list) -> {
           try {
             boolean isCommand = parsedLine.line().indexOf(' ') == -1;
-            List<String> offers = this.server.getCommandManager()
+            List<String> offers = this.proxy.getCommandManager()
                 .offerSuggestions(this, parsedLine.line());
             for (String offer : offers) {
               if (isCommand) {
@@ -85,13 +85,13 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   protected boolean isRunning() {
-    return !this.server.isShutdown();
+    return !this.proxy.isShutdown();
   }
 
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command)) {
+      if (!this.proxy.getCommandManager().execute(this, command)) {
         sendMessage(TextComponent.of("Command not found.", TextColor.RED));
       }
     } catch (Exception e) {
@@ -101,7 +101,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   protected void shutdown() {
-    this.server.shutdown(true);
+    this.proxy.shutdown(true);
   }
 
 }

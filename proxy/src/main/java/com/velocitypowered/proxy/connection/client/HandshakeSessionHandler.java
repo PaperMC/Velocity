@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -35,17 +35,17 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
 
   private final MinecraftConnection connection;
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
-  public HandshakeSessionHandler(MinecraftConnection connection, VelocityServer server) {
+  public HandshakeSessionHandler(MinecraftConnection connection, VelocityProxy proxy) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
-    this.server = Preconditions.checkNotNull(server, "server");
+    this.proxy = Preconditions.checkNotNull(proxy, "server");
   }
 
   @Override
   public boolean handle(LegacyPing packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
-    StatusSessionHandler handler = new StatusSessionHandler(server, connection,
+    StatusSessionHandler handler = new StatusSessionHandler(proxy, connection,
         new LegacyInboundConnection(connection, packet));
     connection.setSessionHandler(handler);
     handler.handle(packet);
@@ -74,7 +74,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
       switch (nextState) {
         case STATUS:
-          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+          connection.setSessionHandler(new StatusSessionHandler(proxy, connection, ic));
           break;
         case LOGIN:
           this.handleLogin(handshake, ic);
@@ -107,7 +107,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-    if (!server.getIpAttemptLimiter().attempt(address)) {
+    if (!proxy.getIpAttemptLimiter().attempt(address)) {
       connection.closeWith(
           Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
       return;
@@ -117,15 +117,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if (proxy.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       connection.closeWith(Disconnect
           .create(TextComponent.of("This server is only compatible with 1.13 and above.")));
       return;
     }
 
-    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
-    connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+    proxy.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+    connection.setSessionHandler(new LoginSessionHandler(proxy, connection, ic));
   }
 
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {

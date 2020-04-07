@@ -2,32 +2,30 @@ package com.velocitypowered.proxy.command;
 
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.proxy.VelocityServer;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import com.velocitypowered.proxy.VelocityProxy;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ShutdownCommand implements Command {
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
-  public ShutdownCommand(VelocityServer server) {
-    this.server = server;
+  public ShutdownCommand(VelocityProxy proxy) {
+    this.proxy = proxy;
   }
 
   @Override
   public void execute(CommandSource source, String @NonNull [] args) {
     if (args.length == 0) {
-      server.shutdown(true);
+      proxy.shutdown(true);
     } else {
       String reason = String.join(" ", args);
-      server.shutdown(true, LegacyComponentSerializer.legacy().deserialize(reason, '&'));
+      proxy.shutdown(true, LegacyComponentSerializer.legacy().deserialize(reason, '&'));
     }
   }
 
   @Override
   public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-    return source == server.getConsoleCommandSource();
+    return source == proxy.getConsoleCommandSource();
   }
 }

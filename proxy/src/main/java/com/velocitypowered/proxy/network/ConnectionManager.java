@@ -5,7 +5,7 @@ import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.network.netty.DnsAddressResolverGroupNameResolverAdapter;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import io.netty.bootstrap.Bootstrap;
@@ -18,7 +18,6 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
-import io.netty.util.concurrent.EventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +40,7 @@ public final class ConnectionManager {
   private final TransportType transportType;
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   // This is intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
@@ -53,22 +52,22 @@ public final class ConnectionManager {
   /**
    * Initalizes the {@code ConnectionManager}.
    *
-   * @param server a reference to the Velocity server
+   * @param proxy a reference to the Velocity server
    */
-  public ConnectionManager(VelocityServer server) {
-    this.server = server;
+  public ConnectionManager(VelocityProxy proxy) {
+    this.proxy = proxy;
     this.transportType = TransportType.bestType();
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
-        new ServerChannelInitializer(this.server));
+        new ServerChannelInitializer(this.proxy));
     this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
         .channelType(this.transportType.datagramChannelClass)
         .negativeTtl(15)
         .ndots(1));
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .setUserAgent(proxy.getVersion().getName() + "/" + proxy.getVersion().getVersion())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
@@ -104,7 +103,7 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+    if (transportType == TransportType.EPOLL && proxy.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
     }
 
@@ -131,7 +130,7 @@ public final class ConnectionManager {
     final Bootstrap bootstrap = new Bootstrap()
         .channel(this.transportType.datagramChannelClass)
         .group(this.workerGroup)
-        .handler(new GS4QueryHandler(this.server))
+        .handler(new GS4QueryHandler(this.proxy))
         .localAddress(address);
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
@@ -157,10 +156,10 @@ public final class ConnectionManager {
         .channel(this.transportType.socketChannelClass)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            this.server.getConfiguration().getConnectTimeout())
+            this.proxy.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolverGroup);
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+    if (transportType == TransportType.EPOLL && proxy.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;

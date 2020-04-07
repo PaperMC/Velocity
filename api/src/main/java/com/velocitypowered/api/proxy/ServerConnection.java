@@ -15,7 +15,7 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    *
    * @return the server this connection is connected to
    */
-  RegisteredServer getServer();
+  RegisteredServer getProxy();
 
   /**
    * Returns the server info for this connection.

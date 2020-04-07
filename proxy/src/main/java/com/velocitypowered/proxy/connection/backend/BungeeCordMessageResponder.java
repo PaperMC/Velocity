@@ -6,7 +6,7 @@ import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.UuidUtils;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -25,10 +25,10 @@ class BungeeCordMessageResponder {
   private static final LegacyChannelIdentifier LEGACY_CHANNEL =
       new LegacyChannelIdentifier("BungeeCord");
 
-  private final VelocityServer proxy;
+  private final VelocityProxy proxy;
   private final ConnectedPlayer player;
 
-  BungeeCordMessageResponder(VelocityServer proxy, ConnectedPlayer player) {
+  BungeeCordMessageResponder(VelocityProxy proxy, ConnectedPlayer player) {
     this.proxy = proxy;
     this.player = player;
   }

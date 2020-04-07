@@ -43,18 +43,18 @@ public class Velocity {
 
     long startTime = System.currentTimeMillis();
 
-    VelocityServer server = new VelocityServer(options);
-    server.start();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown(false),
+    VelocityProxy proxy = new VelocityProxy(options);
+    proxy.start();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> proxy.shutdown(false),
         "Shutdown thread"));
 
     double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
     logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
-    server.getConsoleCommandSource().start();
+    proxy.getConsoleCommandSource().start();
 
     // If we don't have a console available (because SimpleTerminalConsole returned), then we still
     // need to wait, otherwise the JVM will reap us as no non-daemon threads will be active once the
     // main thread exits.
-    server.awaitProxyShutdown();
+    proxy.awaitProxyShutdown();
   }
 }

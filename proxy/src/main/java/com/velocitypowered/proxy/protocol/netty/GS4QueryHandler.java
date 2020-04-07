@@ -11,7 +11,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
@@ -65,28 +63,28 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   private volatile @MonotonicNonNull List<QueryResponse.PluginInformation> pluginInformationList
       = null;
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
-  public GS4QueryHandler(VelocityServer server) {
-    this.server = server;
+  public GS4QueryHandler(VelocityProxy proxy) {
+    this.proxy = proxy;
     this.random = new SecureRandom();
   }
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
         .hostname(PlainComponentSerializer.INSTANCE
-            .serialize(server.getConfiguration().getMotdComponent()))
+            .serialize(proxy.getConfiguration().getMotdComponent()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
-        .map(server.getConfiguration().getQueryMap())
-        .currentPlayers(server.getPlayerCount())
-        .maxPlayers(server.getConfiguration().getShowMaxPlayers())
-        .proxyPort(server.getConfiguration().getBind().getPort())
-        .proxyHost(server.getConfiguration().getBind().getHostString())
-        .players(server.getAllPlayers().stream().map(Player::getUsername)
+        .map(proxy.getConfiguration().getQueryMap())
+        .currentPlayers(proxy.getPlayerCount())
+        .maxPlayers(proxy.getConfiguration().getShowMaxPlayers())
+        .proxyPort(proxy.getConfiguration().getBind().getPort())
+        .proxyHost(proxy.getConfiguration().getBind().getHostString())
+        .players(proxy.getAllPlayers().stream().map(Player::getUsername)
             .collect(Collectors.toList()))
         .proxyVersion("Velocity")
         .plugins(
-            server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
+            proxy.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
                 : Collections.emptyList())
         .build();
   }
@@ -144,7 +142,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
           boolean isBasic = queryMessage.readableBytes() == 0;
 
           // Call event and write response
-          server.getEventManager()
+          proxy.getEventManager()
               .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
               .whenCompleteAsync((event, exc) -> {
                 // Packet header
@@ -199,7 +197,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     if (res == null) {
       synchronized (this) {
         if (pluginInformationList == null) {
-          pluginInformationList = res = server.getPluginManager().getPlugins().stream()
+          pluginInformationList = res = proxy.getPluginManager().getPlugins().stream()
               .map(PluginContainer::getDescription)
               .map(desc -> QueryResponse.PluginInformation
                   .of(desc.getName().orElse(desc.getId()), desc.getVersion().orElse(null)))

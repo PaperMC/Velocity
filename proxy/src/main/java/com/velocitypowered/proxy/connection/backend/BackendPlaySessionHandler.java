@@ -9,7 +9,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -30,15 +30,15 @@ import io.netty.buffer.Unpooled;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
 
-  BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
-    this.server = server;
+  BackendPlaySessionHandler(VelocityProxy proxy, VelocityServerConnection serverConn) {
+    this.proxy = proxy;
     this.serverConn = serverConn;
     this.playerConnection = serverConn.getPlayer().getConnection();
 
@@ -49,13 +49,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
     this.playerSessionHandler = (ClientPlaySessionHandler) psh;
 
-    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(proxy,
         serverConn.getPlayer());
   }
 
   @Override
   public void activated() {
-    serverConn.getServer().addPlayer(serverConn.getPlayer());
+    serverConn.getProxy().addPlayer(serverConn.getPlayer());
     MinecraftConnection serverMc = serverConn.ensureConnected();
     serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
         ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
@@ -81,7 +81,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
+    serverConn.getPlayer().handleConnectionException(serverConn.getProxy(), packet, true);
     return true;
   }
 
@@ -117,7 +117,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     if (PluginMessageUtil.isMcBrand(packet)) {
-      PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+      PluginMessage rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet, proxy.getVersion(),
           playerConnection.getProtocolVersion());
       playerConnection.write(rewritten);
       return true;
@@ -128,7 +128,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+    ChannelIdentifier id = proxy.getChannelRegistrar().getFromId(packet.getChannel());
     if (id == null) {
       return false;
     }
@@ -136,7 +136,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     byte[] copy = ByteBufUtil.getBytes(packet.content());
     PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
         copy);
-    server.getEventManager().fire(event)
+    proxy.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
           if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
             PluginMessage copied = new PluginMessage(packet.getChannel(),
@@ -162,8 +162,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(AvailableCommands commands) {
     // Inject commands from the proxy.
-    for (String command : server.getCommandManager().getAllRegisteredCommands()) {
-      if (!server.getCommandManager().hasPermission(serverConn.getPlayer(), command)) {
+    for (String command : proxy.getCommandManager().getAllRegisteredCommands()) {
+      if (!proxy.getCommandManager().hasPermission(serverConn.getPlayer(), command)) {
         continue;
       }
 
@@ -194,18 +194,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     exceptionTriggered = true;
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable, true);
+    serverConn.getPlayer().handleConnectionException(serverConn.getProxy(), throwable, true);
   }
 
-  public VelocityServer getServer() {
-    return server;
+  public VelocityProxy getProxy() {
+    return proxy;
   }
 
   @Override
   public void disconnected() {
-    serverConn.getServer().removePlayer(serverConn.getPlayer());
+    serverConn.getProxy().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
-      serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
+      serverConn.getPlayer().handleConnectionException(serverConn.getProxy(),
           Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT), true);
     }
   }

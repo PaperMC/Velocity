@@ -27,7 +27,7 @@ import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -96,16 +96,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
   private final VelocityTabList tabList;
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private ClientConnectionPhase connectionPhase;
   private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
 
   private @MonotonicNonNull List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
+  ConnectedPlayer(VelocityProxy proxy, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
-    this.server = server;
+    this.proxy = proxy;
     if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       this.tabList = new VelocityTabList(connection);
     } else {
@@ -178,7 +178,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   void setPlayerSettings(ClientSettings settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
-    server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
+    proxy.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
 
   @Override
@@ -188,7 +188,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   public void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
-    server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
+    proxy.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
   }
 
   @Override
@@ -429,7 +429,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    boolean kickedFromCurrent = connectedServer == null || connectedServer.getServer().equals(rs);
+    boolean kickedFromCurrent = connectedServer == null || connectedServer.getProxy().equals(rs);
     ServerKickResult result;
     if (kickedFromCurrent) {
       Optional<RegisteredServer> next = getNextServerToTry(rs);
@@ -437,7 +437,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
-      if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
+      if (connectionInFlight != null && connectionInFlight.getProxy().equals(rs)) {
         resetInFlightConnection();
       }
       result = Notify.create(friendlyReason);
@@ -448,7 +448,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
-    server.getEventManager().fire(originalEvent)
+    proxy.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
           connectionInFlight = null;
@@ -506,24 +506,24 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
-      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
+      serversToTry = proxy.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
     }
 
     if (serversToTry.isEmpty()) {
-      serversToTry = server.getConfiguration().getAttemptConnectionOrder();
+      serversToTry = proxy.getConfiguration().getAttemptConnectionOrder();
     }
 
     for (int i = tryIndex; i < serversToTry.size(); i++) {
       String toTryName = serversToTry.get(i);
-      if ((connectedServer != null && hasSameName(connectedServer.getServer(), toTryName))
-          || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), toTryName))
+      if ((connectedServer != null && hasSameName(connectedServer.getProxy(), toTryName))
+          || (connectionInFlight != null && hasSameName(connectionInFlight.getProxy(), toTryName))
           || (current != null && hasSameName(current, toTryName))) {
         continue;
       }
 
       tryIndex = i;
-      return server.getServer(toTryName);
+      return proxy.getServer(toTryName);
     }
     return Optional.empty();
   }
@@ -571,10 +571,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (connectedServer != null) {
       connectedServer.disconnect();
     }
-    boolean isConnected = server.getPlayer(this.getUniqueId()).isPresent();
+    boolean isConnected = proxy.getPlayer(this.getUniqueId()).isPresent();
 
-    server.unregisterConnection(this);
-    server.getEventManager().fire(new DisconnectEvent(this, !isConnected))
+    proxy.unregisterConnection(this);
+    proxy.getEventManager().fire(new DisconnectEvent(this, !isConnected))
             .thenRun(() -> this.teardownFuture.complete(null));
   }
 
@@ -717,7 +717,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
-      if (connectedServer != null && connectedServer.getServer().equals(server)) {
+      if (connectedServer != null && connectedServer.getProxy().equals(server)) {
         return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
       }
       return Optional.empty();
@@ -732,7 +732,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
       // Otherwise, initiate the connection.
       ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this, toConnect);
-      return server.getEventManager().fire(event)
+      return proxy.getEventManager().fire(event)
           .thenCompose(newEvent -> {
             Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
             if (!connectTo.isPresent()) {
@@ -751,7 +751,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
             VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
             VelocityServerConnection con = new VelocityServerConnection(vrs, ConnectedPlayer.this,
-                server);
+                proxy);
             connectionInFlight = con;
             return con.connect();
           });

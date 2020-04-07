@@ -15,7 +15,7 @@ import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityProxy;
 import com.velocitypowered.proxy.network.netty.DiscardHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -58,19 +58,19 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private ProtocolVersion protocolVersion;
   private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
 
   /**
    * Initializes a new {@link MinecraftConnection} instance.
    * @param channel the channel on the connection
-   * @param server the Velocity instance
+   * @param proxy the Velocity instance
    */
-  public MinecraftConnection(Channel channel, VelocityServer server) {
+  public MinecraftConnection(Channel channel, VelocityProxy proxy) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
-    this.server = server;
+    this.proxy = proxy;
     this.state = StateRegistry.HANDSHAKE;
   }
 
@@ -324,7 +324,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       return;
     }
 
-    int level = server.getConfiguration().getCompressionLevel();
+    int level = proxy.getConfiguration().getCompressionLevel();
     VelocityCompressor compressor = Natives.compress.get().create(level);
     MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
     MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);

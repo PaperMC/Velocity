@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +57,7 @@ public class Metrics {
   // A list with all custom charts
   private final List<CustomChart> charts = new ArrayList<>();
 
-  private final VelocityServer server;
+  private final VelocityProxy proxy;
 
   /**
    * Class constructor.
@@ -66,15 +65,15 @@ public class Metrics {
    * @param pluginId          The plugin ID for the server software as assigned by bStats.
    * @param serverUuid        The uuid of the server.
    * @param logFailedRequests Whether failed requests should be logged or not.
-   * @param server            The Velocity server instance.
+   * @param proxy            The Velocity server instance.
    */
   private Metrics(String name, int pluginId, String serverUuid, boolean logFailedRequests,
-      VelocityServer server) {
+      VelocityProxy proxy) {
     this.name = name;
     this.pluginId = pluginId;
     this.serverUuid = serverUuid;
     Metrics.logFailedRequests = logFailedRequests;
-    this.server = server;
+    this.proxy = proxy;
 
     // Start submitting the data
     startSubmitting();
@@ -192,7 +191,7 @@ public class Metrics {
     }
 
     // Compress the data to save bandwidth
-    ListenableFuture<Response> future = server.getAsyncHttpClient()
+    ListenableFuture<Response> future = proxy.getAsyncHttpClient()
         .preparePost(URL)
         .addHeader(HttpHeaderNames.CONTENT_ENCODING, "gzip")
         .addHeader(HttpHeaderNames.ACCEPT, "application/json")
@@ -225,7 +224,7 @@ public class Metrics {
             )
         )
     ) {
-      VelocityServer.GSON.toJson(object, writer);
+      VelocityProxy.GSON.toJson(object, writer);
     } catch (IOException e) {
       throw e;
     }
@@ -565,13 +564,13 @@ public class Metrics {
   }
 
   static class VelocityMetrics {
-    static void startMetrics(VelocityServer server, VelocityConfiguration.Metrics metricsConfig) {
+    static void startMetrics(VelocityProxy proxy, VelocityConfiguration.Metrics metricsConfig) {
       if (!metricsConfig.isFromConfig()) {
         // Log an informational message.
         logger.info("Velocity collects metrics and sends them to bStats (https://bstats.org).");
         logger.info("bStats collects some basic information like how many people use Velocity and");
         logger.info("their player count. This has no impact on performance and this data does not");
-        logger.info("identify your server in any way. However, you may opt-out by editing your");
+        logger.info("identify your proxy in any way. However, you may opt-out by editing your");
         logger.info("velocity.toml and setting enabled = false in the [metrics] section.");
       }
 
@@ -580,20 +579,20 @@ public class Metrics {
       boolean logFailedRequests = metricsConfig.isLogFailure();
       // Only start Metrics, if it's enabled in the config
       if (metricsConfig.isEnabled()) {
-        Metrics metrics = new Metrics("Velocity", 4752, serverUuid, logFailedRequests, server);
+        Metrics metrics = new Metrics("Velocity", 4752, serverUuid, logFailedRequests, proxy);
 
         metrics.addCustomChart(
-            new Metrics.SingleLineChart("players", server::getPlayerCount)
+            new Metrics.SingleLineChart("players", proxy::getPlayerCount)
         );
         metrics.addCustomChart(
-            new Metrics.SingleLineChart("managed_servers", () -> server.getAllServers().size())
+            new Metrics.SingleLineChart("managed_servers", () -> proxy.getAllServers().size())
         );
         metrics.addCustomChart(
             new Metrics.SimplePie("online_mode",
-                () -> server.getConfiguration().isOnlineMode() ? "online" : "offline")
+                () -> proxy.getConfiguration().isOnlineMode() ? "online" : "offline")
         );
         metrics.addCustomChart(new Metrics.SimplePie("velocity_version",
-            () -> server.getVersion().getVersion()));
+            () -> proxy.getVersion().getVersion()));
 
         metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
           Map<String, Map<String, Integer>> map = new HashMap<>();
