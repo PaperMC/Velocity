@@ -60,29 +60,25 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
-    Component displayName = LegacyComponentSerializer.legacy().deserialize(item.getName());
-    String strippedName = PlainComponentSerializer.INSTANCE.serialize(displayName);
-
     switch (packet.getAction()) {
       case PlayerListItem.ADD_PLAYER:
-        if (nameMapping.containsKey(strippedName)) { // ADD_PLAYER also used for updating ping
-          VelocityTabListEntry entry = entries.get(nameMapping.get(strippedName));
+        if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
+          VelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
             entry.setLatency(item.getLatency());
           }
         } else {
           UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
-          nameMapping.put(strippedName, uuid);
+          nameMapping.put(item.getName(), uuid);
           entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
-              .profile(new GameProfile(uuid, strippedName, ImmutableList.of()))
-              .displayName(displayName)
+              .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
               .latency(item.getLatency())
               .build());
         }
         break;
       case PlayerListItem.REMOVE_PLAYER:
-        UUID removedUuid = nameMapping.remove(strippedName);
+        UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
         }
