@@ -145,7 +145,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       }
 
-      ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+      installDiscardHandler(ctx);
       ctx.close();
     }
   }
@@ -159,6 +159,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private void ensureInEventLoop() {
     Preconditions.checkState(this.channel.eventLoop().inEventLoop(), "Not in event loop");
+  }
+
+  private void installDiscardHandler(ChannelHandlerContext ctx) {
+    ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+  }
+
+  private void installDiscardHandler() {
+    channel.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
   }
 
   public EventLoop eventLoop() {
@@ -201,6 +209,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void closeWith(Object msg) {
     if (channel.isActive()) {
       knownDisconnect = true;
+      installDiscardHandler();
       channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
     }
   }
@@ -210,6 +219,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void close() {
     if (channel.isActive()) {
+      installDiscardHandler();
       channel.close();
     }
   }
