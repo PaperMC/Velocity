@@ -97,6 +97,24 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
           }
           return fallback;
         });
+      case DESCRIPTION:
+        return pingResponses.thenApply(responses -> {
+          // Find the first non-fallback. If it includes a modlist, add it too.
+          for (ServerPing response : responses) {
+            if (response == fallback) {
+              continue;
+            }
+
+            return new ServerPing(
+                fallback.getVersion(),
+                fallback.getPlayers().orElse(null),
+                response.getDescription(),
+                fallback.getFavicon().orElse(null),
+                response.getModinfo().orElse(null)
+            );
+          }
+          return fallback;
+        });
       default:
         // Not possible, but covered for completeness.
         return CompletableFuture.completedFuture(fallback);
