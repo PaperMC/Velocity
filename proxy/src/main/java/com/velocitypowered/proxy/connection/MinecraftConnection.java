@@ -169,11 +169,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   private void installDiscardHandler(ChannelHandlerContext ctx) {
-    ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+    if (ctx.pipeline().get("discard") == null) {
+      ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+    }
   }
 
   private void installDiscardHandler() {
-    channel.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+    if (channel.pipeline().get("discard") == null) {
+      channel.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
+    }
   }
 
   public EventLoop eventLoop() {
