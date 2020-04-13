@@ -47,7 +47,7 @@ public final class ConnectionManager {
   @SuppressWarnings("WeakerAccess")
   public final ServerChannelInitializerHolder serverChannelInitializer;
   @SuppressWarnings("WeakerAccess")
-  public final BackendChannelInitializerHolder backendChannelInitializerHolder;
+  public final BackendChannelInitializerHolder backendChannelInitializer;
 
   private final DnsAddressResolverGroup resolverGroup;
   private final AsyncHttpClient httpClient;
@@ -64,7 +64,7 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
-    this.backendChannelInitializerHolder = new BackendChannelInitializerHolder(
+    this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
     this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
         .channelType(this.transportType.datagramChannelClass)
@@ -209,7 +209,7 @@ public final class ConnectionManager {
     return httpClient;
   }
 
-  public BackendChannelInitializerHolder getBackendChannelInitializerHolder() {
-    return this.backendChannelInitializerHolder;
+  public BackendChannelInitializerHolder getBackendChannelInitializer() {
+    return this.backendChannelInitializer;
   }
 }

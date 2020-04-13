@@ -271,7 +271,7 @@ public class VelocityServer implements ProxyServer {
   }
 
   public ChannelInitializer<Channel> getBackendChannelInitializer() {
-    return this.cm.backendChannelInitializerHolder.get();
+    return this.cm.backendChannelInitializer.get();
   }
 
   public boolean isShutdown() {
