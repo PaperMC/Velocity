@@ -42,10 +42,12 @@ public final class ConnectionManager {
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
   private final VelocityServer server;
-  // This is intentionally made public for plugins like ViaVersion, which inject their own
+  // These are intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
   public final ServerChannelInitializerHolder serverChannelInitializer;
+  @SuppressWarnings("WeakerAccess")
+  public final BackendChannelInitializerHolder backendChannelInitializer;
 
   private final DnsAddressResolverGroup resolverGroup;
   private final AsyncHttpClient httpClient;
@@ -62,6 +64,8 @@ public final class ConnectionManager {
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
+    this.backendChannelInitializer = new BackendChannelInitializerHolder(
+        new BackendChannelInitializer(this.server));
     this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
         .channelType(this.transportType.datagramChannelClass)
         .negativeTtl(15)
@@ -203,5 +207,9 @@ public final class ConnectionManager {
 
   public AsyncHttpClient getHttpClient() {
     return httpClient;
+  }
+
+  public BackendChannelInitializerHolder getBackendChannelInitializer() {
+    return this.backendChannelInitializer;
   }
 }

@@ -44,6 +44,8 @@ import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -266,6 +268,10 @@ public class VelocityServer implements ProxyServer {
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
     return this.cm.createWorker(group);
+  }
+
+  public ChannelInitializer<Channel> getBackendChannelInitializer() {
+    return this.cm.backendChannelInitializer.get();
   }
 
   public boolean isShutdown() {

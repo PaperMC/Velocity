@@ -80,22 +80,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
     server.createBootstrap(proxyPlayer.getConnection().eventLoop())
-        .handler(new ChannelInitializer<Channel>() {
-          @Override
-          protected void initChannel(Channel ch) throws Exception {
-            ch.pipeline()
-                .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
-                        TimeUnit.MILLISECONDS))
-                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-                .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                .addLast(FLOW_HANDLER, new FlowControlHandler())
-                .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-                .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
-          }
-        })
+        .handler(server.getBackendChannelInitializer())
         .connect(registeredServer.getServerInfo().getAddress())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
