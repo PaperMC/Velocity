@@ -365,12 +365,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean handleCommandTabComplete(TabCompleteRequest packet) {
     // In 1.13+, we need to do additional work for the richer suggestions available.
     String command = packet.getCommand().substring(1);
-    int spacePos = command.indexOf(' ');
-    if (spacePos == -1) {
-      spacePos = command.length();
+    int commandEndPosition = command.indexOf(' ');
+    if (commandEndPosition == -1) {
+      commandEndPosition = command.length();
     }
 
-    String commandLabel = command.substring(0, spacePos);
+    String commandLabel = command.substring(0, commandEndPosition);
     if (!server.getCommandManager().hasCommand(commandLabel)) {
       if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide

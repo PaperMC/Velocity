@@ -167,7 +167,14 @@ public class VelocityCommandManager implements CommandManager {
       if (line.isEmpty()) {
         return new String[0];
       }
-      return line.trim().split(" ", -1);
+
+      String[] trimmed = line.trim().split(" ", -1);
+      if (line.endsWith(" ") && !line.trim().isEmpty()) {
+        // To work around a 1.13+ specific bug we have to inject a space at the end of the arguments
+        trimmed = Arrays.copyOf(trimmed, trimmed.length + 1);
+        trimmed[trimmed.length - 1] = "";
+      }
+      return trimmed;
     }
 
     @Override
