@@ -4,6 +4,7 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgument
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DummyVoidArgumentPropertySerializer.DUMMY;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.FloatArgumentPropertySerializer.FLOAT;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.INTEGER;
+import static com.velocitypowered.proxy.protocol.packet.brigadier.LongArgumentPropertySerializer.LONG;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.StringArgumentPropertySerializer.STRING;
 
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -11,6 +12,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
@@ -90,6 +92,7 @@ public class ArgumentPropertyRegistry {
     register("brigadier:double", DoubleArgumentType.class, DOUBLE);
     register("brigadier:bool", BoolArgumentType.class,
         VoidArgumentPropertySerializer.create(BoolArgumentType::bool));
+    register("brigadier:long", LongArgumentType.class, LONG);
 
     // Minecraft argument types with extra properties
     dummy("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
