@@ -63,6 +63,7 @@ artifacts {
 javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
+    options.source = '8'
     options.links(
             'http://www.slf4j.org/apidocs/',
             'https://google.github.io/guava/releases/25.1-jre/api/docs/',
