@@ -17,11 +17,6 @@ class DummyProperty<T> implements ArgumentType<T> {
     this.result = result;
   }
 
-  @Override
-  public <S> T parse(StringReader reader) throws CommandSyntaxException {
-    throw new UnsupportedOperationException();
-  }
-
   public String getIdentifier() {
     return identifier;
   }
@@ -32,5 +27,10 @@ class DummyProperty<T> implements ArgumentType<T> {
 
   public @Nullable T getResult() {
     return result;
+  }
+
+  @Override
+  public T parse(StringReader reader) {
+    throw new UnsupportedOperationException();
   }
 }
