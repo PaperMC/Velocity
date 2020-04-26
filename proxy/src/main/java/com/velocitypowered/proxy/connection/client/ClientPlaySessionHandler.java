@@ -147,7 +147,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                         TextColor.RED));
               }
             }
-          });
+          }, smc.eventLoop());
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)
