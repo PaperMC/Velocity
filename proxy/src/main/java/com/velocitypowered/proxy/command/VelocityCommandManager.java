@@ -7,9 +7,9 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.proxy.plugin.VelocityEventManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,9 +22,9 @@ import java.util.concurrent.CompletableFuture;
 public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, RawCommand> commands = new HashMap<>();
-  private final EventManager eventManager;
+  private final VelocityEventManager eventManager;
 
-  public VelocityCommandManager(EventManager eventManager) {
+  public VelocityCommandManager(VelocityEventManager eventManager) {
     this.eventManager = eventManager;
   }
 
@@ -74,22 +74,21 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    return execute(source, cmdLine, false);
+    CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
+    CommandResult commandResult = event.getResult();
+    if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+      return false;
+    }
+    cmdLine = commandResult.getCommand().orElse(event.getCommand());
+
+    return executeImmediately(source, cmdLine);
   }
 
   @Override
-  public boolean execute(CommandSource source, String cmdLine, boolean callEvent) {
+  public boolean executeImmediately(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    if (callEvent) {
-      CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
-      CommandResult commandResult = event.getResult();
-      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-        return false;
-      }
-      cmdLine = commandResult.getCommand().orElse(event.getCommand());
-    }
     String alias = cmdLine;
     String args = "";
     int firstSpace = cmdLine.indexOf(' ');
@@ -111,6 +110,38 @@ public class VelocityCommandManager implements CommandManager {
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }
+  }
+
+
+  @Override
+  public CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine) {
+    CompletableFuture<Boolean> result = new CompletableFuture<>();
+    callCommandEvent(source, cmdLine).thenAccept(event -> {
+      CommandResult commandResult = event.getResult();
+      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+        result.complete(false);
+      }
+      String command = commandResult.getCommand().orElse(event.getCommand());
+      try {
+        result.complete(executeImmediately(source, command));
+      } catch (Exception e) {
+        result.completeExceptionally(e);
+      }
+    });
+    return result;
+  }
+
+  @Override
+  public CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine) {
+    CompletableFuture<Boolean> result = new CompletableFuture<>();
+    eventManager.getService().execute(() -> {
+      try {
+        result.complete(executeImmediately(source, cmdLine));
+      } catch (Exception e) {
+        result.completeExceptionally(e);
+      }
+    });
+    return result;
   }
 
   public boolean hasCommand(String command) {

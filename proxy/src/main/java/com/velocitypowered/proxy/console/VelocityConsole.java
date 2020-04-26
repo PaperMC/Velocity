@@ -8,6 +8,8 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -91,7 +93,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command, true)) {
+      if (!this.server.getCommandManager().execute(this, command)) {
         sendMessage(TextComponent.of("Command not found.", TextColor.RED));
       }
     } catch (Exception e) {

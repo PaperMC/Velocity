@@ -136,7 +136,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
             if (commandResult.isAllowed()) {
               try {
-                if (!server.getCommandManager().execute(player, command)) {
+                if (!server.getCommandManager().executeImmediately(player, command)) {
                   smc.write(Chat.createServerbound(command));
                 }
               } catch (Exception e) {

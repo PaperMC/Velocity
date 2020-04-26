@@ -1,5 +1,7 @@
 package com.velocitypowered.api.command;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Represents an interface to register a command executor with the proxy.
  */
@@ -34,8 +36,8 @@ public interface CommandManager {
   void unregister(String alias);
 
   /**
-   * Attempts to execute a command from the specified {@code cmdLine}.
-   * CommandExecuteEvent will not called
+   * Calls CommandExecuteEvent and attempts to execute a command from the specified {@code cmdLine}
+   * sync.
    *
    * @param source the command's source
    * @param cmdLine the command to run
@@ -44,12 +46,32 @@ public interface CommandManager {
   boolean execute(CommandSource source, String cmdLine);
 
   /**
-   * Attempts to execute a command from the specified {@code cmdLine}.
+   * Attempts to execute a command from the specified {@code cmdLine} sync
+   * without calling CommandExecuteEvent.
    *
    * @param source the command's source
    * @param cmdLine the command to run
-   * @param callEvent will CommandExecuteEvent called or not
    * @return true if the command was found and executed, false if it was not
    */
-  boolean execute(CommandSource source, String cmdLine, boolean callEvent);
+  boolean executeImmediately(CommandSource source, String cmdLine);
+
+  /**
+   * Calls CommandExecuteEvent and attempts to execute a command from the specified {@code cmdLine}
+   * async.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @return A future that will be completed with the result of the command execution
+   */
+  CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine);
+
+  /**
+   * Attempts to execute a command from the specified {@code cmdLine} async
+   * without calling CommandExecuteEvent.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @return A future that will be completed with the result of the command execution
+   */
+  CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 }
