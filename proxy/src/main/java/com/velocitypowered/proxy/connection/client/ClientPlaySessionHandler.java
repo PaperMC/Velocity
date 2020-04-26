@@ -4,6 +4,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -123,17 +124,32 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
-      try {
-        if (!server.getCommandManager().execute(player, msg.substring(1))) {
-          return false;
-        }
-      } catch (Exception e) {
-        logger.info("Exception occurred while running command for {}", player.getUsername(),
-                e);
-        player.sendMessage(
-            TextComponent.of("An error occurred while running this command.", TextColor.RED));
-        return true;
-      }
+
+      server.getCommandManager().callCommandEvent(player, msg.substring(1))
+          .thenAcceptAsync(event -> {
+            CommandExecuteEvent.CommandResult commandResult = event.getResult();
+            if (commandResult.isAllowed()) {
+              Optional<String> eventCommand = event.getResult().getCommand();
+              String command = eventCommand.orElse(event.getCommand());
+
+              if (commandResult.isForwardToServer()) {
+                smc.write(Chat.createServerbound(command));
+                return;
+              }
+
+              try {
+                if (!server.getCommandManager().execute(player, command)) {
+                  smc.write(Chat.createServerbound(command));
+                }
+              } catch (Exception e) {
+                logger.info("Exception occurred while running command for {}", player.getUsername(),
+                    e);
+                player.sendMessage(
+                    TextComponent.of("An error occurred while running this command.",
+                        TextColor.RED));
+              }
+            }
+          });
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)

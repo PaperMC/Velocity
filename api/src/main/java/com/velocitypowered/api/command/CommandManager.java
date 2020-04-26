@@ -35,10 +35,21 @@ public interface CommandManager {
 
   /**
    * Attempts to execute a command from the specified {@code cmdLine}.
+   * CommandExecuteEvent will not called
    *
    * @param source the command's source
    * @param cmdLine the command to run
    * @return true if the command was found and executed, false if it was not
    */
   boolean execute(CommandSource source, String cmdLine);
+
+  /**
+   * Attempts to execute a command from the specified {@code cmdLine}.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @param callEvent will CommandExecuteEvent called or not
+   * @return true if the command was found and executed, false if it was not
+   */
+  boolean execute(CommandSource source, String cmdLine, boolean callEvent);
 }

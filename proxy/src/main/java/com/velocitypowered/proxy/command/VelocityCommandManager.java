@@ -7,16 +7,26 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, RawCommand> commands = new HashMap<>();
+  private final EventManager eventManager;
+
+  public VelocityCommandManager(EventManager eventManager) {
+    this.eventManager = eventManager;
+  }
 
   @Override
   @Deprecated
@@ -47,11 +57,39 @@ public class VelocityCommandManager implements CommandManager {
     this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
   }
 
+  /**
+   * Calls CommandExecuteEvent.
+   * @param source the command's source
+   * @param cmd the command
+   * @return CompletableFuture of event
+   */
+  public CompletableFuture<CommandExecuteEvent> callCommandEvent(CommandSource source, String cmd) {
+    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(cmd, "cmd");
+    return eventManager.fire(new CommandExecuteEvent(source, cmd));
+  }
+
   @Override
   public boolean execute(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "invoker");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
+    return execute(source, cmdLine, false);
+  }
+
+  @Override
+  public boolean execute(CommandSource source, String cmdLine, boolean callEvent) {
+    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    if (callEvent) {
+      CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
+      CommandResult commandResult = event.getResult();
+      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+        return false;
+      }
+      cmdLine = commandResult.getCommand().orElse(event.getCommand());
+    }
     String alias = cmdLine;
     String args = "";
     int firstSpace = cmdLine.indexOf(' ');

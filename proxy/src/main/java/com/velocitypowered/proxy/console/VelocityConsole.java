@@ -91,7 +91,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command)) {
+      if (!this.server.getCommandManager().execute(this, command, true)) {
         sendMessage(TextComponent.of("Command not found.", TextColor.RED));
       }
     } catch (Exception e) {
