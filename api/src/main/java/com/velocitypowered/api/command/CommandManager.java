@@ -60,6 +60,7 @@ public interface CommandManager {
    * @deprecated This method will block current thread during event and command execution.
    *             Prefer {@link #executeImmediatelyAsync(CommandSource, String)} instead.
    */
+  @Deprecated
   boolean executeImmediately(CommandSource source, String cmdLine);
 
   /**
