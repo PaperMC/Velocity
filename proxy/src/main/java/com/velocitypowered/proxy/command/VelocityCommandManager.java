@@ -64,14 +64,14 @@ public class VelocityCommandManager implements CommandManager {
    * @return CompletableFuture of event
    */
   public CompletableFuture<CommandExecuteEvent> callCommandEvent(CommandSource source, String cmd) {
-    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmd, "cmd");
     return eventManager.fire(new CommandExecuteEvent(source, cmd));
   }
 
   @Override
   public boolean execute(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
@@ -86,7 +86,7 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public boolean executeImmediately(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     String alias = cmdLine;
@@ -133,6 +133,8 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
     CompletableFuture<Boolean> result = new CompletableFuture<>();
     eventManager.getService().execute(() -> {
       try {

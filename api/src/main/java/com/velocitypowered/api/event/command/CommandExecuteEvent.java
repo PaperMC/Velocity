@@ -18,7 +18,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   private CommandResult result;
 
   /**
-   * Constructs a PlayerChatEvent.
+   * Constructs a CommandExecuteEvent.
    * @param commandSource the source executing the command
    * @param command the command being executed without first slash
    */
@@ -52,7 +52,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
   @Override
   public String toString() {
-    return "PlayerCommmandEvent{"
+    return "CommandExecuteEvent{"
         + "commandSource=" + commandSource
         + ", command=" + command
         + ", result=" + result
