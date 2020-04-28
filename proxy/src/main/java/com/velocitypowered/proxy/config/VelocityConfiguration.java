@@ -402,6 +402,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return pingPassthrough;
   }
 
+  public boolean isBungeePluginChannelEnabled() {
+    return advanced.isBungeePluginMessageChannel();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -654,6 +658,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("tcp-fast-open")
     private boolean tcpFastOpen = false;
 
+    @Comment("Enables BungeeCord plugin messaging channel support on Velocity.")
+    @ConfigKey("bungee-plugin-message-channel")
+    private boolean bungeePluginMessageChannel = true;
+
     private Advanced() {
     }
 
@@ -666,6 +674,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
         this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
         this.tcpFastOpen = toml.getBoolean("tcp-fast-open", false);
+        this.bungeePluginMessageChannel = toml.getBoolean("bungee-plugin-message-channel", true);
       }
     }
 
@@ -697,6 +706,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       return tcpFastOpen;
     }
 
+    public boolean isBungeePluginMessageChannel() {
+      return bungeePluginMessageChannel;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -707,6 +720,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           + ", readTimeout=" + readTimeout
           + ", proxyProtocol=" + proxyProtocol
           + ", tcpFastOpen=" + tcpFastOpen
+          + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + '}';
     }
   }

@@ -273,6 +273,10 @@ class BungeeCordMessageResponder {
   }
 
   boolean process(PluginMessage message) {
+    if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
+      return false;
+    }
+
     if (!MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
         .equals(message.getChannel())) {
       return false;
