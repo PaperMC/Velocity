@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired when a player types in a chat message.
+ * This event is fired when someone executing command
  */
 public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 

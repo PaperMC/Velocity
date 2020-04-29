@@ -131,13 +131,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             Optional<String> eventCommand = event.getResult().getCommand();
             String command = eventCommand.orElse(event.getCommand());
             if (commandResult.isForwardToServer()) {
-              smc.write(Chat.createServerbound(command));
+              smc.write(Chat.createServerbound("/" + command));
               return;
             }
             if (commandResult.isAllowed()) {
               try {
                 if (!server.getCommandManager().executeImmediately(player, command)) {
-                  smc.write(Chat.createServerbound(command));
+                  smc.write(Chat.createServerbound("/" + command));
                 }
               } catch (Exception e) {
                 logger.info("Exception occurred while running command for {}", player.getUsername(),
