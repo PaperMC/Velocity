@@ -24,7 +24,7 @@ public class GlistCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(CommandSource source, String alias, String @NonNull [] args) {
     if (args.length == 0) {
       sendTotalProxyCount(source);
       source.sendMessage(

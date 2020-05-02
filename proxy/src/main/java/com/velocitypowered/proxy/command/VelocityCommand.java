@@ -53,7 +53,7 @@ public class VelocityCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(CommandSource source, String alias, String @NonNull [] args) {
     if (args.length == 0) {
       usage(source);
       return;
@@ -66,7 +66,7 @@ public class VelocityCommand implements Command {
     }
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
-    command.execute(source, actualArgs);
+    command.execute(source, alias, actualArgs);
   }
 
   @Override
@@ -120,7 +120,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
+    public void execute(CommandSource source, String alias, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
           source.sendMessage(TextComponent.of("Configuration reloaded.", TextColor.GREEN));
@@ -152,7 +152,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
+    public void execute(CommandSource source, String alias, String @NonNull [] args) {
       if (args.length != 0) {
         source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
         return;
@@ -205,7 +205,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
+    public void execute(CommandSource source, String alias, String @NonNull [] args) {
       if (args.length != 0) {
         source.sendMessage(TextComponent.of("/velocity plugins", TextColor.RED));
         return;

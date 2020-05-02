@@ -14,9 +14,10 @@ public interface Command {
    * Executes the command for the specified {@link CommandSource}.
    *
    * @param source the source of this command
+   * @param alias the alias used to execute this command
    * @param args the arguments for this command
    */
-  void execute(CommandSource source, String @NonNull [] args);
+  void execute(CommandSource source, String alias, String @NonNull [] args);
 
   /**
    * Provides tab complete suggestions for a command for a specified {@link CommandSource}.

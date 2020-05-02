@@ -16,7 +16,7 @@ public class ShutdownCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(CommandSource source, String alias, String @NonNull [] args) {
     server.shutdown(true);
   }
 
