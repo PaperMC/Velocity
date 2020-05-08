@@ -50,7 +50,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-      "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+      "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s";
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
@@ -96,8 +96,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
-          urlFormParameterEscaper().escape(login.getUsername()), serverId,
-          urlFormParameterEscaper().escape(playerIp));
+          urlFormParameterEscaper().escape(login.getUsername()), serverId);
+
+      if (server.getConfiguration().shouldPreventClientProxyConnections()) {
+        url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
+      }
 
       ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
           .execute();

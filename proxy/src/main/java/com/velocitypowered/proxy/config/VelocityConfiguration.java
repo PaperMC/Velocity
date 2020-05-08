@@ -55,6 +55,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   private boolean onlineMode = true;
 
   @Comment({
+      "If client's ISP/AS sent from this proxy is different from the one from Mojang's",
+      "authentication server, the player is kicked. This disallows some VPN and proxy",
+      "connections but is a weak form of protection."
+  })
+  @ConfigKey("prevent-client-proxy-connections")
+  private boolean preventClientProxyConnections = false;
+
+  @Comment({
       "Should we forward IP addresses and other data to backend servers?",
       "Available options:",
       "- \"none\":   No forwarding will be done. All players will appear to be connecting from the",
@@ -326,6 +334,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Override
   public boolean isOnlineMode() {
     return onlineMode;
+  }
+
+  @Override
+  public boolean shouldPreventClientProxyConnections() {
+    return preventClientProxyConnections;
   }
 
   public PlayerInfoForwarding getPlayerInfoForwardingMode() {
