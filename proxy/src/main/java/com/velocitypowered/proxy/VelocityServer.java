@@ -298,7 +298,8 @@ public class VelocityServer implements ProxyServer {
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
-          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()),
+              newConfiguration.getPlayerInfoForwardingMode());
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (!rs.isPresent()) {
         servers.register(newInfo);
