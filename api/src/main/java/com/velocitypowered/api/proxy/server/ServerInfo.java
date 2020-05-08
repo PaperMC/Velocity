@@ -21,8 +21,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    *
    * @param name the name for the server
    * @param address the address of the server to connect to
-   * @deprecated prefer using {@link ServerInfo(String, InetSocketAddress, PlayerInfoForwarding)} constructor
-   *             where you can specify player info forwarding mode
+   * @deprecated prefer using constructor where you can specify player info forwarding mode
    */
   @Deprecated
   public ServerInfo(String name, InetSocketAddress address) {
@@ -36,10 +35,12 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    * @param address the address of the server to connect to
    * @param playerInfoForwarding the player info forwarding mode this connection will use
    */
-  public ServerInfo(String name, InetSocketAddress address, PlayerInfoForwarding playerInfoForwarding) {
+  public ServerInfo(String name, InetSocketAddress address,
+                    PlayerInfoForwarding playerInfoForwarding) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.address = Preconditions.checkNotNull(address, "address");
-    this.playerInfoForwarding = Preconditions.checkNotNull(playerInfoForwarding, "playerInfoForwarding");
+    this.playerInfoForwarding = Preconditions.checkNotNull(playerInfoForwarding,
+        "playerInfoForwarding");
   }
 
   public final String getName() {
@@ -56,11 +57,11 @@ public final class ServerInfo implements Comparable<ServerInfo> {
 
   @Override
   public String toString() {
-    return "ServerInfo{" +
-        "name='" + name + '\'' +
-        ", address=" + address +
-        ", playerInfoForwarding=" + playerInfoForwarding +
-        '}';
+    return "ServerInfo{"
+        + "name='" + name + '\''
+        + ", address=" + address
+        + ", playerInfoForwarding=" + playerInfoForwarding
+        + '}';
   }
 
   @Override
