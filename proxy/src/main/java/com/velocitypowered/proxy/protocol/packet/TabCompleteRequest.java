@@ -77,9 +77,9 @@ public class TabCompleteRequest implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(MINECRAFT_1_13) >= 0) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
-      this.command = ProtocolUtils.readString(buf);
+      this.command = ProtocolUtils.readString(buf, Chat.MAX_SERVERBOUND_MESSAGE_LENGTH);
     } else {
-      this.command = ProtocolUtils.readString(buf);
+      this.command = ProtocolUtils.readString(buf, Chat.MAX_SERVERBOUND_MESSAGE_LENGTH);
       if (version.compareTo(MINECRAFT_1_9) >= 0) {
         this.assumeCommand = buf.readBoolean();
       }
