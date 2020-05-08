@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.forge.legacy;
 
+import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
