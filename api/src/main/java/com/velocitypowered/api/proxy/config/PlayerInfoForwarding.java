@@ -9,6 +9,11 @@ public enum PlayerInfoForwarding {
   BUNGEEGUARD,
 
   /**
+   * Forwarding mode will be picked from Velocity's configuration.
+   */
+  DEFAULT,
+
+  /**
    * No forwarding will be done. All players will appear to be connecting from the
    * proxy and will have offline-mode UUIDs.
    */

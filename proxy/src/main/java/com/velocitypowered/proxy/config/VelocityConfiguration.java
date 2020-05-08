@@ -195,6 +195,11 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     }
 
     switch (playerInfoForwardingMode) {
+      case DEFAULT:
+        logger.error("DEFAULT forwarding mode is not a valid option as a default forwarding mode "
+            + "setting");
+        valid = false;
+        break;
       case NONE:
         logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
             + "from the proxy and will have offline-mode UUIDs.");
