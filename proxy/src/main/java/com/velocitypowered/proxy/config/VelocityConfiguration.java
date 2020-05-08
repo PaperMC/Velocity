@@ -74,7 +74,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "                 plugin. Use this if you run servers using Minecraft 1.12 or lower, and are",
       "                 unable to implement network level firewalling (on a shared host).",
       "- \"modern\":      Forward player IPs and UUIDs as part of the login process using",
-      "                 Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher."
+      "                 Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.",
+      "",
+      "This value acts as a default forwarding mode setting for servers which do not specify the ",
+      "forwarding mode explicitly"
   })
   @ConfigKey("player-info-forwarding-mode")
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
