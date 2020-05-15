@@ -5,6 +5,7 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.construc
 
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.PlayerCommandPreProcessEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -32,11 +33,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -61,6 +60,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   /**
    * Constructs a client play session handler.
+   *
    * @param server the Velocity server instance
    * @param player the player
    */
@@ -113,17 +113,31 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
-      try {
-        if (!server.getCommandManager().execute(player, msg.substring(1))) {
-          return false;
-        }
-      } catch (Exception e) {
-        logger.info("Exception occurred while running command for {}", player.getUsername(),
-                e);
-        player.sendMessage(
-            TextComponent.of("An error occurred while running this command.", TextColor.RED));
-        return true;
-      }
+      PlayerCommandPreProcessEvent event = new PlayerCommandPreProcessEvent(player, msg);
+      server.getEventManager().fire(event)
+          .thenAcceptAsync(pme -> {
+            PlayerCommandPreProcessEvent.CommandResult result = pme.getResult();
+            if (result.isAllowed()) {
+              String command;
+              if (pme.getResult().getCommand().isPresent()) {
+                command = pme.getResult().getCommand().get();
+              } else {
+                command = msg;
+              }
+
+              try {
+                if (!server.getCommandManager().execute(player, command.substring(1))) {
+                  smc.write(Chat.createServerbound(command));
+                }
+              } catch (Exception e) {
+                logger.info("Exception occurred while running command for {}", player.getUsername(),
+                    e);
+                player.sendMessage(
+                    TextComponent
+                        .of("An error occurred while running this command.", TextColor.RED));
+              }
+            }
+          }, smc.eventLoop());
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)
@@ -304,7 +318,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   /**
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
    * switching servers in Velocity.
-   * @param joinGame the join game packet
+   *
+   * @param joinGame    the join game packet
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
