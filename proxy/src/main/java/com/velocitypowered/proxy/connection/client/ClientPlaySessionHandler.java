@@ -118,13 +118,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .thenAcceptAsync(pme -> {
             PlayerCommandPreProcessEvent.CommandResult result = pme.getResult();
             if (result.isAllowed()) {
-              String command;
-              if (pme.getResult().getCommand().isPresent()) {
-                command = pme.getResult().getCommand().get();
-              } else {
-                command = msg;
-              }
-
+              String command = result.getCommand().orElse(msg);
               try {
                 if (!server.getCommandManager().execute(player, command.substring(1))) {
                   smc.write(Chat.createServerbound(command));
