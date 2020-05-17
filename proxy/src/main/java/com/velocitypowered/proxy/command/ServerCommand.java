@@ -12,8 +12,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +23,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ServerCommand implements Command {
 
+  public static final int MAX_SERVERS_TO_LIST = 50;
   private final ProxyServer server;
 
   public ServerCommand(ProxyServer server) {
@@ -61,10 +60,16 @@ public class ServerCommand implements Command {
     executor.sendMessage(of("You are currently connected to " + currentServer + ".",
         TextColor.YELLOW));
 
+    List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
+    if (servers.size() > MAX_SERVERS_TO_LIST) {
+      executor.sendMessage(of("Too many servers to list. Tab-complete to show all servers.",
+          TextColor.RED));
+      return;
+    }
+
     // Assemble the list of servers as components
     TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
         .color(TextColor.YELLOW);
-    List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     for (int i = 0; i < servers.size(); i++) {
       RegisteredServer rs = servers.get(i);
       serverListBuilder.append(formatServerComponent(currentServer, rs));
