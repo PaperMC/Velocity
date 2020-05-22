@@ -6,12 +6,19 @@ import static com.google.common.base.Preconditions.checkState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.GameProfile;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.ByteBufUtil;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import net.kyori.nbt.CompoundTag;
 
 public enum ProtocolUtils {
   ;
@@ -151,6 +158,81 @@ public enum ProtocolUtils {
   public static void writeUuid(ByteBuf buf, UUID uuid) {
     buf.writeLong(uuid.getMostSignificantBits());
     buf.writeLong(uuid.getLeastSignificantBits());
+  }
+
+  /**
+   * Reads an UUID stored as an Integer Array from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return the UUID from the buffer
+   */
+  public static UUID readUuidIntArray(ByteBuf buf) {
+    long msbHigh = (long) buf.readInt() << 32;
+    long msbLow = (long) buf.readInt() & 0xFFFFFFFFL;
+    long msb = msbHigh | msbLow;
+    long lsbHigh = (long) buf.readInt() << 32;
+    long lsbLow = (long) buf.readInt() & 0xFFFFFFFFL;
+    long lsb = lsbHigh | lsbLow;
+    return new UUID(msb, lsb);
+  }
+
+  /**
+   * Writes an UUID as an Integer Array to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param uuid the UUID to write
+   */
+  public static void writeUuidIntArray(ByteBuf buf, UUID uuid) {
+    buf.writeInt((int) (uuid.getMostSignificantBits() >> 32));
+    buf.writeInt((int) uuid.getMostSignificantBits());
+    buf.writeInt((int) (uuid.getLeastSignificantBits() >> 32));
+    buf.writeInt((int) uuid.getLeastSignificantBits());
+  }
+
+  /**
+   * Reads a {@link net.kyori.nbt.CompoundTag} from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return {@link net.kyori.nbt.CompoundTag} the CompoundTag from the buffer
+   */
+  public static CompoundTag readCompoundTag(ByteBuf buf) {
+    int indexBefore = buf.readerIndex();
+    byte startType = buf.readByte();
+    if (startType == 0) {
+      return null;
+    } else {
+      buf.readerIndex(indexBefore);
+      try {
+        DataInput input = new ByteBufInputStream(buf);
+        byte type = input.readByte();
+        if (type != 10) {
+          return null;
+        }
+        input.readUTF();
+        CompoundTag ret = new CompoundTag();
+        ret.read(input, 0);
+        return ret;
+      } catch (IOException e) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Writes a CompoundTag to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param compoundTag the CompoundTag to write
+   */
+  public static void writeCompoundTag(ByteBuf buf, CompoundTag compoundTag) {
+    if (compoundTag == null) {
+      buf.writeByte(0);
+    } else {
+      try {
+        DataOutput output = new ByteBufOutputStream(buf);
+        output.writeByte(10);
+        output.writeUTF("");
+        compoundTag.write(output);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   /**

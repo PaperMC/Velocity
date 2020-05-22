@@ -6,6 +6,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_12_1;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_15;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
@@ -113,13 +114,15 @@ public enum StateRegistry {
           map(0x0C, MINECRAFT_1_12, false),
           map(0x0B, MINECRAFT_1_12_1, false),
           map(0x0E, MINECRAFT_1_13, false),
-          map(0x0F, MINECRAFT_1_14, false));
+          map(0x0F, MINECRAFT_1_14, false),
+          map(0x10, MINECRAFT_1_16, false));
       serverbound.register(ResourcePackResponse.class, ResourcePackResponse::new,
           map(0x19, MINECRAFT_1_8, false),
           map(0x16, MINECRAFT_1_9, false),
           map(0x18, MINECRAFT_1_12, false),
           map(0x1D, MINECRAFT_1_13, false),
-          map(0x1F, MINECRAFT_1_14, false));
+          map(0x1F, MINECRAFT_1_14, false),
+          map(0x20, MINECRAFT_1_16, false));
 
       clientbound.register(BossBar.class, BossBar::new,
           map(0x0C, MINECRAFT_1_9, false),
