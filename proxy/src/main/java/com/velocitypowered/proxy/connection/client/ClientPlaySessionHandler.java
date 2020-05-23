@@ -334,12 +334,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
       player.getMinecraftConnection().delayedWrite(joinGame);
-      int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-      player.getMinecraftConnection().delayedWrite(
-          new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-              joinGame.getGamemode(), joinGame.getLevelType(), joinGame.getShouldKeepPlayerData(),
-                  joinGame.getIsDebug(), joinGame.getIsFlat(),
-                  joinGame.getDimensionRegistryName()));
+      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
+        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+        player.getMinecraftConnection().delayedWrite(
+                new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
+                        joinGame.getGamemode(), joinGame.getLevelType(),
+                        joinGame.getShouldKeepPlayerData(),
+                        joinGame.getIsDebug(), joinGame.getIsFlat(),
+                        joinGame.getDimensionRegistryName()));
+      }
       player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),

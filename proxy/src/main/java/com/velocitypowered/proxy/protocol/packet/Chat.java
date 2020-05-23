@@ -86,7 +86,7 @@ public class Chat implements MinecraftPacket {
     ProtocolUtils.writeString(buf, message);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
       buf.writeByte(type);
-      if(version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);
       }
     }
