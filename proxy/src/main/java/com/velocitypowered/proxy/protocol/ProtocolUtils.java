@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import net.kyori.nbt.CompoundTag;
 
 public enum ProtocolUtils {
@@ -196,22 +198,21 @@ public enum ProtocolUtils {
     int indexBefore = buf.readerIndex();
     byte startType = buf.readByte();
     if (startType == 0) {
-      return null;
-    } else {
-      buf.readerIndex(indexBefore);
-      try {
-        DataInput input = new ByteBufInputStream(buf);
-        byte type = input.readByte();
-        if (type != 10) {
-          return null;
-        }
-        input.readUTF();
-        CompoundTag ret = new CompoundTag();
-        ret.read(input, 0);
-        return ret;
-      } catch (IOException e) {
-        return null;
+      throw new DecoderException("Invalid NBT start-type (end/empty)");
+    }
+    buf.readerIndex(indexBefore);
+    try {
+      DataInput input = new ByteBufInputStream(buf);
+      byte type = input.readByte();
+      if (type != 10) {
+        throw new DecoderException("NBTTag is not a CompoundTag");
       }
+      input.readUTF(); // Head-padding
+      CompoundTag compoundTag = new CompoundTag();
+      compoundTag.read(input, 0);
+      return compoundTag;
+    } catch (IOException e) {
+      throw new DecoderException("Unable to decode NBT CompoundTag at " + indexBefore);
     }
   }
 
@@ -223,15 +224,15 @@ public enum ProtocolUtils {
   public static void writeCompoundTag(ByteBuf buf, CompoundTag compoundTag) {
     if (compoundTag == null) {
       buf.writeByte(0);
-    } else {
-      try {
-        DataOutput output = new ByteBufOutputStream(buf);
-        output.writeByte(10);
-        output.writeUTF("");
-        compoundTag.write(output);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      return;
+    }
+    try {
+      DataOutput output = new ByteBufOutputStream(buf);
+      output.writeByte(10); // Type 10 - CompoundTag
+      output.writeUTF(""); // Head-padding
+      compoundTag.write(output);
+    } catch (IOException e) {
+      throw new EncoderException("Unable to encode NBT CompoundTag");
     }
   }
 

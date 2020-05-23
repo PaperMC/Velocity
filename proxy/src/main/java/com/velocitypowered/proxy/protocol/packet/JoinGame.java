@@ -17,14 +17,14 @@ public class JoinGame implements MinecraftPacket {
   private short difficulty;
   private short maxPlayers;
   private @Nullable String levelType;
-  private int viewDistance; //1.14+
+  private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
-  private boolean shouldKeepPlayerData;
-  private boolean isDebug;
-  private boolean isFlat;
-  private String dimensionRegistryName;
-  private CompoundTag dimensionRegistry;
+  private boolean shouldKeepPlayerData; // 1.16+
+  private boolean isDebug; // 1.16+
+  private boolean isFlat; // 1.16+
+  private String dimensionRegistryName; // 1.16+
+  private CompoundTag dimensionRegistry; // 1.16+
 
   public int getEntityId() {
     return entityId;
@@ -149,6 +149,10 @@ public class JoinGame implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
+        + ", shouldKeepPlayerData=" + shouldKeepPlayerData
+        + ", isDebug=" + isDebug
+        + ", isFlat='" + isFlat
+        + ", dimensionRegistryName='" + dimensionRegistryName + '\''
         + '}';
   }
 
@@ -159,12 +163,10 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       this.dimensionRegistry = ProtocolUtils.readCompoundTag(buf);
       this.dimensionRegistryName = ProtocolUtils.readString(buf);
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+      this.dimension = buf.readInt();
     } else {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
-        this.dimension = buf.readInt();
-      } else {
-        this.dimension = buf.readByte();
-      }
+      this.dimension = buf.readByte();
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       this.difficulty = buf.readUnsignedByte();
@@ -198,12 +200,10 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       ProtocolUtils.writeCompoundTag(buf, dimensionRegistry);
       ProtocolUtils.writeString(buf, dimensionRegistryName);
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+      buf.writeInt(dimension);
     } else {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
-        buf.writeInt(dimension);
-      } else {
-        buf.writeByte(dimension);
-      }
+      buf.writeByte(dimension);
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
       buf.writeByte(difficulty);

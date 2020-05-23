@@ -20,7 +20,7 @@ public class Chat implements MinecraftPacket {
 
   private @Nullable String message;
   private byte type;
-  private UUID sender;
+  private @Nullable UUID sender;
 
   public Chat() {
   }
@@ -72,7 +72,7 @@ public class Chat implements MinecraftPacket {
     message = ProtocolUtils.readString(buf);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
       type = buf.readByte();
-      if(version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         sender = ProtocolUtils.readUuid(buf);
       }
     }
@@ -87,7 +87,7 @@ public class Chat implements MinecraftPacket {
     if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
       buf.writeByte(type);
       if(version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-        ProtocolUtils.writeUuid(buf, sender == null ? new UUID(0,0) : sender);
+        ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);
       }
     }
   }

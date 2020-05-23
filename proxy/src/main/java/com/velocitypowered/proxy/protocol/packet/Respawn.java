@@ -13,10 +13,10 @@ public class Respawn implements MinecraftPacket {
   private short difficulty;
   private short gamemode;
   private String levelType = "";
-  private boolean shouldKeepPlayerData;
-  private boolean isDebug;
-  private boolean isFlat;
-  private String dimensionRegistryName;
+  private boolean shouldKeepPlayerData; // 1.16+
+  private boolean isDebug; // 1.16+
+  private boolean isFlat; // 1.16+
+  private String dimensionRegistryName; // 1.16+
 
   public Respawn() {
   }
