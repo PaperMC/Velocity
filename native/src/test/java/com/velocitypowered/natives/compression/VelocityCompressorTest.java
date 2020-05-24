@@ -86,10 +86,11 @@ class VelocityCompressorTest {
     ByteBuf decompressed = bufSupplier.get();
 
     source.writeBytes(TEST_DATA);
+    int uncompressedData = source.readableBytes();
 
     try {
       compressor.deflate(source, dest);
-      compressor.inflate(dest, decompressed, Integer.MAX_VALUE);
+      compressor.inflate(dest, decompressed, uncompressedData);
       source.readerIndex(0);
       assertTrue(ByteBufUtil.equals(source, decompressed));
     } finally {

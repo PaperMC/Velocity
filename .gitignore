@@ -90,3 +90,4 @@ plugins/
 native/mbedtls
 native/zlib-ng
 native/zlib-cf
+native/libdeflate

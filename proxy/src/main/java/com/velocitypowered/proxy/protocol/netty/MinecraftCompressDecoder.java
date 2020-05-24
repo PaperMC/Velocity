@@ -13,8 +13,12 @@ import java.util.List;
 
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
-  private static final int SOFT_MAXIMUM_UNCOMPRESSED_SIZE = 2 * 1024 * 1024; // 2MiB
+  private static final int VANILLA_MAXIMUM_UNCOMPRESSED_SIZE = 2 * 1024 * 1024; // 2MiB
   private static final int HARD_MAXIMUM_UNCOMPRESSED_SIZE = 16 * 1024 * 1024; // 16MiB
+
+  private static final int UNCOMPRESSED_CAP =
+      Boolean.getBoolean("velocity.increased-compression-cap")
+          ? HARD_MAXIMUM_UNCOMPRESSED_SIZE : VANILLA_MAXIMUM_UNCOMPRESSED_SIZE;
 
   private final int threshold;
   private final VelocityCompressor compressor;
@@ -28,20 +32,21 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     int claimedUncompressedSize = ProtocolUtils.readVarInt(in);
     if (claimedUncompressedSize == 0) {
-      // Strip the now-useless uncompressed size, this message is already uncompressed.
+      // This message is not compressed.
       out.add(in.retainedSlice());
       return;
     }
 
     checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
             + " threshold %s", claimedUncompressedSize, threshold);
-    int allowedMax = Math.min(claimedUncompressedSize, HARD_MAXIMUM_UNCOMPRESSED_SIZE);
-    int initialCapacity = Math.min(claimedUncompressedSize, SOFT_MAXIMUM_UNCOMPRESSED_SIZE);
+    checkFrame(claimedUncompressedSize <= UNCOMPRESSED_CAP,
+        "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
+        UNCOMPRESSED_CAP);
 
     ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);
-    ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, initialCapacity);
+    ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, claimedUncompressedSize);
     try {
-      compressor.inflate(compatibleIn, uncompressed, allowedMax);
+      compressor.inflate(compatibleIn, uncompressed, claimedUncompressedSize);
       out.add(uncompressed);
     } catch (Exception e) {
       uncompressed.release();

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
 import com.velocitypowered.natives.compression.Java11VelocityCompressor;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
-import com.velocitypowered.natives.compression.NativeVelocityCompressor;
+import com.velocitypowered.natives.compression.LibdeflateVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.NativeVelocityCipher;
@@ -64,10 +64,11 @@ public class Natives {
       ImmutableList.of(
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS,
               copyAndLoadNative("/macosx/velocity-compress.dylib"), "native (macOS)",
-              NativeVelocityCompressor.FACTORY),
+              LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
-              copyAndLoadNative("/linux_x64/velocity-compress.so"), "native (Linux amd64)",
-              NativeVelocityCompressor.FACTORY),
+              copyAndLoadNative("/linux_x64/velocity-compress.so"),
+              "libdeflate (Linux amd64)",
+              LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.JAVA_11, () -> {
           }, "Java 11", () -> Java11VelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
