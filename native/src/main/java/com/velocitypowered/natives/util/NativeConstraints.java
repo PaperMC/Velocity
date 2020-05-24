@@ -23,13 +23,6 @@ public class NativeConstraints {
     IS_AMD64 = osArch.equals("amd64") || osArch.equals("x86_64");
   }
 
-  static final BooleanSupplier MACOS = () -> {
-    return NATIVES_ENABLED
-        && CAN_GET_MEMORYADDRESS
-        && System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X")
-        && IS_AMD64;
-  };
-
   static final BooleanSupplier LINUX = () -> {
     return NATIVES_ENABLED
         && CAN_GET_MEMORYADDRESS

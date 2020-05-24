@@ -62,9 +62,6 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
       ImmutableList.of(
-          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS,
-              copyAndLoadNative("/macosx/velocity-compress.dylib"), "native (macOS)",
-              LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
               copyAndLoadNative("/linux_x64/velocity-compress.so"),
               "libdeflate (Linux amd64)",
@@ -78,9 +75,6 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS,
-              copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
-              NativeVelocityCipher.FACTORY),
             new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
               copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
               NativeVelocityCipher.FACTORY),
