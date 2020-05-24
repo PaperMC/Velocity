@@ -15,6 +15,7 @@ import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -43,8 +44,11 @@ class BungeeCordMessageResponder {
     String playerName = in.readUTF();
     String serverName = in.readUTF();
 
-    proxy.getPlayer(playerName).flatMap(player -> proxy.getServer(serverName))
-        .ifPresent(server -> player.createConnectionRequest(server).fireAndForget());
+    Optional<Player> referencedPlayer = proxy.getPlayer(playerName);
+    Optional<RegisteredServer> referencedServer = proxy.getServer(serverName);
+    if (referencedPlayer.isPresent() && referencedServer.isPresent()) {
+      referencedPlayer.get().createConnectionRequest(referencedServer.get()).fireAndForget();
+    }
   }
 
   private void processIp(ByteBufDataInput in) {
@@ -269,6 +273,10 @@ class BungeeCordMessageResponder {
   }
 
   boolean process(PluginMessage message) {
+    if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
+      return false;
+    }
+
     if (!MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
         .equals(message.getChannel())) {
       return false;

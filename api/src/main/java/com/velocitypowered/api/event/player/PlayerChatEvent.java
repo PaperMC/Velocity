@@ -70,6 +70,10 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       this.message = message;
     }
 
+    public Optional<String> getMessage() {
+      return Optional.ofNullable(message);
+    }
+
     @Override
     public boolean isAllowed() {
       return status;
@@ -96,10 +100,6 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       return DENIED;
     }
 
-    public Optional<String> getMessage() {
-      return Optional.ofNullable(message);
-    }
-
     /**
      * Allows the message to be sent, but silently replaced with another.
      * @param message the message to use instead
@@ -110,6 +110,4 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       return new ChatResult(true, message);
     }
   }
-
-
 }

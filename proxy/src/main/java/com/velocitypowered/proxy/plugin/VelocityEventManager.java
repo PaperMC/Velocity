@@ -185,6 +185,10 @@ public class VelocityEventManager implements EventManager {
     fireEvent(new ProxyShutdownEvent());
   }
 
+  public ExecutorService getService() {
+    return service;
+  }
+
   private static class VelocityMethodScanner implements MethodScanner<Object> {
 
     @Override

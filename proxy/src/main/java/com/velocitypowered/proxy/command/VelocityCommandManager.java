@@ -7,16 +7,26 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.proxy.plugin.VelocityEventManager;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, RawCommand> commands = new HashMap<>();
+  private final VelocityEventManager eventManager;
+
+  public VelocityCommandManager(VelocityEventManager eventManager) {
+    this.eventManager = eventManager;
+  }
 
   @Override
   @Deprecated
@@ -47,9 +57,36 @@ public class VelocityCommandManager implements CommandManager {
     this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
   }
 
+  /**
+   * Calls CommandExecuteEvent.
+   * @param source the command's source
+   * @param cmd the command
+   * @return CompletableFuture of event
+   */
+  public CompletableFuture<CommandExecuteEvent> callCommandEvent(CommandSource source, String cmd) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmd, "cmd");
+    return eventManager.fire(new CommandExecuteEvent(source, cmd));
+  }
+
   @Override
   public boolean execute(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "invoker");
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
+    CommandResult commandResult = event.getResult();
+    if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+      return false;
+    }
+    cmdLine = commandResult.getCommand().orElse(event.getCommand());
+
+    return executeImmediately(source, cmdLine);
+  }
+
+  @Override
+  public boolean executeImmediately(CommandSource source, String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     String alias = cmdLine;
@@ -73,6 +110,40 @@ public class VelocityCommandManager implements CommandManager {
     } catch (Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }
+  }
+
+
+  @Override
+  public CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine) {
+    CompletableFuture<Boolean> result = new CompletableFuture<>();
+    callCommandEvent(source, cmdLine).thenAccept(event -> {
+      CommandResult commandResult = event.getResult();
+      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+        result.complete(false);
+      }
+      String command = commandResult.getCommand().orElse(event.getCommand());
+      try {
+        result.complete(executeImmediately(source, command));
+      } catch (Exception e) {
+        result.completeExceptionally(e);
+      }
+    });
+    return result;
+  }
+
+  @Override
+  public CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+    CompletableFuture<Boolean> result = new CompletableFuture<>();
+    eventManager.getService().execute(() -> {
+      try {
+        result.complete(executeImmediately(source, cmdLine));
+      } catch (Exception e) {
+        result.completeExceptionally(e);
+      }
+    });
+    return result;
   }
 
   public boolean hasCommand(String command) {
@@ -167,7 +238,14 @@ public class VelocityCommandManager implements CommandManager {
       if (line.isEmpty()) {
         return new String[0];
       }
-      return line.trim().split(" ", -1);
+
+      String[] trimmed = line.trim().split(" ", -1);
+      if (line.endsWith(" ") && !line.trim().isEmpty()) {
+        // To work around a 1.13+ specific bug we have to inject a space at the end of the arguments
+        trimmed = Arrays.copyOf(trimmed, trimmed.length + 1);
+        trimmed[trimmed.length - 1] = "";
+      }
+      return trimmed;
     }
 
     @Override

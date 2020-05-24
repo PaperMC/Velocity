@@ -44,6 +44,8 @@ import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -93,7 +95,7 @@ public class VelocityServer implements ProxyServer {
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
-  private final VelocityCommandManager commandManager = new VelocityCommandManager();
+  private final VelocityCommandManager commandManager;
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
@@ -109,6 +111,7 @@ public class VelocityServer implements ProxyServer {
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
+    commandManager = new VelocityCommandManager(eventManager);
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
@@ -266,6 +269,10 @@ public class VelocityServer implements ProxyServer {
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
     return this.cm.createWorker(group);
+  }
+
+  public ChannelInitializer<Channel> getBackendChannelInitializer() {
+    return this.cm.backendChannelInitializer.get();
   }
 
   public boolean isShutdown() {

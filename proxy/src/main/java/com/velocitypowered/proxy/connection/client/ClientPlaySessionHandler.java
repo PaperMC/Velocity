@@ -4,6 +4,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -123,17 +124,30 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
-      try {
-        if (!server.getCommandManager().execute(player, msg.substring(1))) {
-          return false;
-        }
-      } catch (Exception e) {
-        logger.info("Exception occurred while running command for {}", player.getUsername(),
-                e);
-        player.sendMessage(
-            TextComponent.of("An error occurred while running this command.", TextColor.RED));
-        return true;
-      }
+
+      server.getCommandManager().callCommandEvent(player, msg.substring(1))
+          .thenAcceptAsync(event -> {
+            CommandExecuteEvent.CommandResult commandResult = event.getResult();
+            Optional<String> eventCommand = event.getResult().getCommand();
+            String command = eventCommand.orElse(event.getCommand());
+            if (commandResult.isForwardToServer()) {
+              smc.write(Chat.createServerbound("/" + command));
+              return;
+            }
+            if (commandResult.isAllowed()) {
+              try {
+                if (!server.getCommandManager().executeImmediately(player, command)) {
+                  smc.write(Chat.createServerbound("/" + command));
+                }
+              } catch (Exception e) {
+                logger.info("Exception occurred while running command for {}", player.getUsername(),
+                    e);
+                player.sendMessage(
+                    TextComponent.of("An error occurred while running this command.",
+                        TextColor.RED));
+              }
+            }
+          }, smc.eventLoop());
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)
@@ -371,12 +385,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean handleCommandTabComplete(TabCompleteRequest packet) {
     // In 1.13+, we need to do additional work for the richer suggestions available.
     String command = packet.getCommand().substring(1);
-    int spacePos = command.indexOf(' ');
-    if (spacePos == -1) {
-      spacePos = command.length();
+    int commandEndPosition = command.indexOf(' ');
+    if (commandEndPosition == -1) {
+      commandEndPosition = command.length();
     }
 
-    String commandLabel = command.substring(0, spacePos);
+    String commandLabel = command.substring(0, commandEndPosition);
     if (!server.getCommandManager().hasCommand(commandLabel)) {
       if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
