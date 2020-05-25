@@ -766,11 +766,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     public CompletableFuture<Result> connect() {
       return this.internalConnect()
           .whenCompleteAsync((status, throwable) -> {
-            if (status != null && !status.isSafe()) {
-              // If it's not safe to continue the connection we need to shut it down.
-              handleConnectionException(status.getAttemptedConnection(), throwable, true);
-            } else if ((status != null && !status.isSuccessful())) {
-              resetInFlightConnection();
+            if (status != null && !status.isSuccessful()) {
+              if (!status.isSafe()) {
+                handleConnectionException(status.getAttemptedConnection(), throwable, false);
+              } else if (status.getStatus() == Status.SERVER_DISCONNECTED) {
+                resetInFlightConnection();
+              }
             }
           }, connection.eventLoop())
           .thenApply(x -> x);
