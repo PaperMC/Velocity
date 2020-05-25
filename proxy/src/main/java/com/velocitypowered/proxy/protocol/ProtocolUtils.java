@@ -28,7 +28,7 @@ public enum ProtocolUtils {
    */
   public static int readVarInt(ByteBuf buf) {
     int read = readVarIntSafely(buf);
-    if (read == -1) {
+    if (read == Integer.MIN_VALUE) {
       throw MinecraftDecoder.DEBUG ? BAD_VARINT_CACHED
           : new CorruptedFrameException("Bad varint decoded");
     }
@@ -40,19 +40,19 @@ public enum ProtocolUtils {
    * method and {@link #readVarInt(ByteBuf)} is that this function returns a sentinel value if the
    * varint is invalid.
    * @param buf the buffer to read from
-   * @return the decoded VarInt, or {@code -1} if the varint is invalid
+   * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
    */
   public static int readVarIntSafely(ByteBuf buf) {
     int i = 0;
     int j = 0;
     while (true) {
       if (!buf.isReadable()) {
-        return -1;
+        return Integer.MIN_VALUE;
       }
       int k = buf.readByte();
       i |= (k & 0x7F) << j++ * 7;
       if (j > 5) {
-        return -1;
+        return Integer.MIN_VALUE;
       }
       if ((k & 0x80) != 128) {
         break;
