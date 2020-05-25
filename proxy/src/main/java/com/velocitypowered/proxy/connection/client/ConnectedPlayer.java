@@ -772,6 +772,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               } else if (status.getStatus() == Status.SERVER_DISCONNECTED) {
                 resetInFlightConnection();
               }
+            } else if (throwable != null) {
+              resetInFlightConnection();
             }
           }, connection.eventLoop())
           .thenApply(x -> x);
