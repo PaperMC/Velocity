@@ -758,7 +758,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
                   return con.connect().whenCompleteAsync((result, throwable) ->
-                      this.cleanupIfRequired(con));
+                      this.cleanupIfRequired(con), connection.eventLoop());
                 }, connection.eventLoop());
           });
     }
