@@ -733,7 +733,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       // Otherwise, initiate the connection.
       ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this, toConnect);
       return server.getEventManager().fire(event)
-          .thenCompose(newEvent -> {
+          .thenComposeAsync(newEvent -> {
             Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
             if (!connectTo.isPresent()) {
               return CompletableFuture.completedFuture(
@@ -754,7 +754,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 server);
             connectionInFlight = con;
             return con.connect();
-          });
+          }, connection.eventLoop());
     }
 
     @Override
