@@ -33,13 +33,13 @@ class VelocityCompressorTest {
   }
 
   @Test
-  @EnabledOnOs({MAC, LINUX})
+  @EnabledOnOs({LINUX})
   void sanityCheckNative() {
     assertThrows(IllegalArgumentException.class, () -> Natives.compress.get().create(-42));
   }
 
   @Test
-  @EnabledOnOs({MAC, LINUX})
+  @EnabledOnOs({LINUX})
   void nativeIntegrityCheck() throws DataFormatException {
     VelocityCompressor compressor = Natives.compress.get().create(Deflater.DEFAULT_COMPRESSION);
     if (compressor.preferredBufferType() != BufferPreference.DIRECT_REQUIRED) {
