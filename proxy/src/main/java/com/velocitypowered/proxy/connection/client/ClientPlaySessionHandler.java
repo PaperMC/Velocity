@@ -4,7 +4,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
-import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.apache.logging.log4j.LogManager;
@@ -124,30 +125,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (msg.startsWith("/")) {
-
+      String originalCommand = msg.substring(1);
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
-          .thenAcceptAsync(event -> {
-            CommandExecuteEvent.CommandResult commandResult = event.getResult();
-            Optional<String> eventCommand = event.getResult().getCommand();
-            String command = eventCommand.orElse(event.getCommand());
-            if (commandResult.isForwardToServer()) {
-              smc.write(Chat.createServerbound("/" + command));
-              return;
-            }
-            if (commandResult.isAllowed()) {
-              try {
-                if (!server.getCommandManager().executeImmediately(player, command)) {
-                  smc.write(Chat.createServerbound("/" + command));
-                }
-              } catch (Exception e) {
-                logger.info("Exception occurred while running command for {}", player.getUsername(),
-                    e);
-                player.sendMessage(
-                    TextComponent.of("An error occurred while running this command.",
-                        TextColor.RED));
-              }
-            }
-          }, smc.eventLoop());
+          .thenComposeAsync(event -> processCommandExecuteResult(originalCommand,
+              event.getResult()))
+          .exceptionally(e -> {
+            logger.info("Exception occurred while running command for {}",
+                player.getUsername(), e);
+            player.sendMessage(
+                TextComponent.of("An error occurred while running this command.",
+                    TextColor.RED));
+            return null;
+          });
     } else {
       PlayerChatEvent event = new PlayerChatEvent(player, msg);
       server.getEventManager().fire(event)
@@ -479,6 +468,27 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
           player.getConnection().write(response);
         }, player.getConnection().eventLoop());
+  }
+
+  private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
+      CommandResult result) {
+    if (result == CommandResult.denied()) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
+    String commandToRun = result.getCommand().orElse(originalCommand);
+    if (result.isForwardToServer()) {
+      return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/"
+          + commandToRun)), smc.eventLoop());
+    } else {
+      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
+          .thenAcceptAsync(hasRun -> {
+            if (!hasRun) {
+              smc.write(Chat.createServerbound("/" + commandToRun));
+            }
+          }, smc.eventLoop());
+    }
   }
 
   /**
