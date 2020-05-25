@@ -1,5 +1,8 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -33,7 +36,6 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
-import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
@@ -711,8 +713,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
-      Preconditions
-          .checkState(server instanceof VelocityRegisteredServer, "Not a valid Velocity server.");
+      Preconditions.checkArgument(server instanceof VelocityRegisteredServer,
+          "Not a valid Velocity server.");
       if (connectionInFlight != null || (connectedServer != null
           && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
@@ -723,38 +725,41 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return Optional.empty();
     }
 
+    private CompletableFuture<Optional<Status>> getInitialStatus() {
+      return CompletableFuture.supplyAsync(() -> checkServer(toConnect), connection.eventLoop());
+    }
+
     private CompletableFuture<Impl> internalConnect() {
-      Optional<ConnectionRequestBuilder.Status> initialCheck = checkServer(toConnect);
-      if (initialCheck.isPresent()) {
-        return CompletableFuture
-            .completedFuture(ConnectionRequestResults.plainResult(initialCheck.get(), toConnect));
-      }
-
-      // Otherwise, initiate the connection.
-      ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this, toConnect);
-      return server.getEventManager().fire(event)
-          .thenComposeAsync(newEvent -> {
-            Optional<RegisteredServer> connectTo = newEvent.getResult().getServer();
-            if (!connectTo.isPresent()) {
-              return CompletableFuture.completedFuture(
-                  ConnectionRequestResults
-                      .plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect)
-              );
+      return this.getInitialStatus()
+          .thenCompose(initialCheck -> {
+            if (initialCheck.isPresent()) {
+              return completedFuture(plainResult(initialCheck.get(), toConnect));
             }
 
-            RegisteredServer rs = connectTo.get();
-            Optional<ConnectionRequestBuilder.Status> lastCheck = checkServer(rs);
-            if (lastCheck.isPresent()) {
-              return CompletableFuture
-                  .completedFuture(ConnectionRequestResults.plainResult(lastCheck.get(), rs));
-            }
+            ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this,
+                toConnect);
+            return server.getEventManager().fire(event)
+                .thenComposeAsync(newEvent -> {
+                  Optional<RegisteredServer> newDest = newEvent.getResult().getServer();
+                  if (!newDest.isPresent()) {
+                    return completedFuture(
+                        plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect)
+                    );
+                  }
 
-            VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
-            VelocityServerConnection con = new VelocityServerConnection(vrs, ConnectedPlayer.this,
-                server);
-            connectionInFlight = con;
-            return con.connect();
-          }, connection.eventLoop());
+                  RegisteredServer realDestination = newDest.get();
+                  Optional<ConnectionRequestBuilder.Status> check = checkServer(realDestination);
+                  if (check.isPresent()) {
+                    return completedFuture(plainResult(check.get(), realDestination));
+                  }
+
+                  VelocityRegisteredServer vrs = (VelocityRegisteredServer) realDestination;
+                  VelocityServerConnection con = new VelocityServerConnection(vrs,
+                      ConnectedPlayer.this, server);
+                  connectionInFlight = con;
+                  return con.connect();
+                }, connection.eventLoop());
+          });
     }
 
     @Override
