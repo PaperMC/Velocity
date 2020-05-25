@@ -155,27 +155,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
-  private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
-      CommandResult result) {
-    if (result == CommandResult.denied()) {
-      return CompletableFuture.completedFuture(null);
-    }
-
-    MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
-    String commandToRun = result.getCommand().orElse(originalCommand);
-    if (result.isForwardToServer()) {
-      return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/" +
-          commandToRun)), smc.eventLoop());
-    } else {
-      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
-          .thenAcceptAsync(hasRun -> {
-            if (!hasRun) {
-              smc.write(Chat.createServerbound("/" + commandToRun));
-            }
-          }, smc.eventLoop());
-    }
-  }
-
   @Override
   public boolean handle(TabCompleteRequest packet) {
     boolean isCommand = !packet.isAssumeCommand() && packet.getCommand().startsWith("/");
@@ -483,6 +462,27 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
           player.getConnection().write(response);
         }, player.getConnection().eventLoop());
+  }
+
+  private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
+      CommandResult result) {
+    if (result == CommandResult.denied()) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
+    String commandToRun = result.getCommand().orElse(originalCommand);
+    if (result.isForwardToServer()) {
+      return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/"
+          + commandToRun)), smc.eventLoop());
+    } else {
+      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
+          .thenAcceptAsync(hasRun -> {
+            if (!hasRun) {
+              smc.write(Chat.createServerbound("/" + commandToRun));
+            }
+          }, smc.eventLoop());
+    }
   }
 
   /**
