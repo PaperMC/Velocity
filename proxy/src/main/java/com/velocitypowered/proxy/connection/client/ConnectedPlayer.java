@@ -757,9 +757,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   VelocityServerConnection con = new VelocityServerConnection(vrs,
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
-                  return con.connect();
+                  return con.connect().whenCompleteAsync((result, throwable) ->
+                      this.cleanupIfRequired(con));
                 }, connection.eventLoop());
           });
+    }
+
+    private void cleanupIfRequired(VelocityServerConnection establishedConnection) {
+      if (establishedConnection == connectionInFlight) {
+        resetInFlightConnection();
+      }
     }
 
     @Override
@@ -769,11 +776,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (status != null && !status.isSuccessful()) {
               if (!status.isSafe()) {
                 handleConnectionException(status.getAttemptedConnection(), throwable, false);
-              } else if (status.getStatus() == Status.SERVER_DISCONNECTED) {
-                resetInFlightConnection();
               }
-            } else if (throwable != null) {
-              resetInFlightConnection();
             }
           }, connection.eventLoop())
           .thenApply(x -> x);
