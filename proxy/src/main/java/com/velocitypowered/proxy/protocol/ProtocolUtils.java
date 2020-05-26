@@ -29,8 +29,8 @@ public enum ProtocolUtils {
   public static int readVarInt(ByteBuf buf) {
     int read = readVarIntSafely(buf);
     if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? BAD_VARINT_CACHED
-          : new CorruptedFrameException("Bad varint decoded");
+      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad varint decoded")
+          : BAD_VARINT_CACHED;
     }
     return read;
   }
