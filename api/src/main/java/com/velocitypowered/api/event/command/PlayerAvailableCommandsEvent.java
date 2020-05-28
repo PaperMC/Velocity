@@ -2,15 +2,15 @@ package com.velocitypowered.api.event.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.api.annotations.UnstableApi;
 import com.velocitypowered.api.proxy.Player;
 
 /**
  * Allows plugins to modify the packet indicating commands available on the server to a
  * Minecraft 1.13+ client.
  */
-@UnstableApi
+@Beta
 public class PlayerAvailableCommandsEvent {
 
   private final Player player;
