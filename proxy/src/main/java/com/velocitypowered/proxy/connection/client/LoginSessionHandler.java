@@ -244,7 +244,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
 
     int threshold = server.getConfiguration().getCompressionThreshold();
-    if (threshold >= 0) {
+    if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
       mcConnection.write(new SetCompression(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
@@ -281,7 +281,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
-                    .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
+                    .thenRun(() -> connectToInitialServer(player));
           }
         }, mcConnection.eventLoop());
   }
