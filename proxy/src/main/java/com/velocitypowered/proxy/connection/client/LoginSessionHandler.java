@@ -10,6 +10,7 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.LoginFailEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
@@ -127,16 +128,25 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
             inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);
+            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                    login.getUsername(),
+                    LoginFailEvent.Reason.ONLINE_MODE_ONLY));
           } else {
             // Something else went wrong
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
             mcConnection.close();
+            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                    login.getUsername(),
+                    LoginFailEvent.Reason.UNDEFINED));
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
           mcConnection.close();
+          server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                  login.getUsername(),
+                  LoginFailEvent.Reason.UNDEFINED));
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();
@@ -161,17 +171,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // The player was disconnected
             return;
           }
-
           PreLoginComponentResult result = event.getResult();
           Optional<Component> disconnectReason = result.getReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
             mcConnection.closeWith(Disconnect.create(disconnectReason.get()));
+            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                    login.getUsername(),
+                    LoginFailEvent.Reason.MANUALLY));
             return;
           }
 
           if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result
-              .isOnlineModeAllowed())) {
+                  .isOnlineModeAllowed())) {
             // Request encryption.
             EncryptionRequest request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -225,8 +237,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void finishLogin(ConnectedPlayer player) {
+    Optional<RegisteredServer> toTry = player.getNextServerToTry();
+    if (!toTry.isPresent()) {
+      player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
+      return;
+    }
+
     int threshold = server.getConfiguration().getCompressionThreshold();
-    if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
+    if (threshold >= 0) {
       mcConnection.write(new SetCompression(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
@@ -249,15 +267,21 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Optional<Component> reason = event.getResult().getReason();
           if (reason.isPresent()) {
             player.disconnect(reason.get());
+            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                    player.getUsername(),
+                    LoginFailEvent.Reason.MANUALLY));
           } else {
             if (!server.registerConnection(player)) {
               player.disconnect(VelocityMessages.ALREADY_CONNECTED);
+              server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
+                      player.getUsername(),
+                      LoginFailEvent.Reason.ALREADY_CONNECTED));
               return;
             }
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
-                .thenRun(() -> connectToInitialServer(player));
+                    .thenRun(() -> player.createConnectionRequest(toTry.get()).fireAndForget());
           }
         }, mcConnection.eventLoop());
   }
