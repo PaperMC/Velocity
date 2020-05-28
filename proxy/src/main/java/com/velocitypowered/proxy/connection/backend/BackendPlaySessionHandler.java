@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -175,7 +176,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           .build();
       commands.getRootNode().addChild(root);
     }
-    return false;
+
+    server.getEventManager().fire(
+        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), commands.getRootNode()))
+        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
+    return true;
   }
 
   @Override

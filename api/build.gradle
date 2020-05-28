@@ -26,6 +26,7 @@ dependencies {
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile 'com.google.inject:guice:4.2.2'
     compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
+    compile 'com.mojang:brigadier:1.0.17'
 
     compile "org.spongepowered:configurate-hocon:${configurateVersion}"
     compile "org.spongepowered:configurate-yaml:${configurateVersion}"
