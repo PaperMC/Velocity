@@ -33,7 +33,9 @@ public final class LoginFailEvent {
 
         ONLINE_MODE_ONLY,
         ALREADY_CONNECTED,
-        MANUALLY,
+        NO_AVAILABLE_SERVERS,
+        PLAYER_INITIATED,
+        PLUGIN,
         UNDEFINED,
 
     }

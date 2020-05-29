@@ -108,6 +108,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       hasJoinedResponse.addListener(() -> {
         if (mcConnection.isClosed()) {
           // The player disconnected after we authenticated them.
+          disconnect(login.getUsername(), LoginFailEvent.Reason.PLAYER_INITIATED);
           return;
         }
 
@@ -128,25 +129,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
             inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);
-            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                    login.getUsername(),
-                    LoginFailEvent.Reason.ONLINE_MODE_ONLY));
+            disconnect(login.getUsername(), LoginFailEvent.Reason.ONLINE_MODE_ONLY);
           } else {
             // Something else went wrong
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
             mcConnection.close();
-            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                    login.getUsername(),
-                    LoginFailEvent.Reason.UNDEFINED));
+            disconnect(login.getUsername(), LoginFailEvent.Reason.UNDEFINED);
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
           mcConnection.close();
-          server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                  login.getUsername(),
-                  LoginFailEvent.Reason.UNDEFINED));
+          disconnect(login.getUsername(), LoginFailEvent.Reason.UNDEFINED);
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();
@@ -169,6 +164,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenRunAsync(() -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
+            disconnect(login.getUsername(), LoginFailEvent.Reason.PLAYER_INITIATED);
             return;
           }
           PreLoginComponentResult result = event.getResult();
@@ -176,9 +172,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
             mcConnection.closeWith(Disconnect.create(disconnectReason.get()));
-            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                    login.getUsername(),
-                    LoginFailEvent.Reason.MANUALLY));
+            disconnect(login.getUsername(), LoginFailEvent.Reason.PLUGIN);
             return;
           }
 
@@ -240,6 +234,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     Optional<RegisteredServer> toTry = player.getNextServerToTry();
     if (!toTry.isPresent()) {
       player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
+      disconnect(player.getUsername(), LoginFailEvent.Reason.NO_AVAILABLE_SERVERS);
       return;
     }
 
@@ -261,21 +256,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(event -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
+            disconnect(player.getUsername(), LoginFailEvent.Reason.PLAYER_INITIATED);
             return;
           }
 
           Optional<Component> reason = event.getResult().getReason();
           if (reason.isPresent()) {
             player.disconnect(reason.get());
-            server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                    player.getUsername(),
-                    LoginFailEvent.Reason.MANUALLY));
+            disconnect(player.getUsername(), LoginFailEvent.Reason.PLUGIN);
           } else {
             if (!server.registerConnection(player)) {
               player.disconnect(VelocityMessages.ALREADY_CONNECTED);
-              server.getEventManager().fireAndForget(new LoginFailEvent(inbound,
-                      player.getUsername(),
-                      LoginFailEvent.Reason.ALREADY_CONNECTED));
+              disconnect(player.getUsername(), LoginFailEvent.Reason.ALREADY_CONNECTED);
               return;
             }
 
@@ -312,5 +304,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (connectedPlayer != null) {
       connectedPlayer.teardown();
     }
+  }
+
+  private void disconnect(String username, LoginFailEvent.Reason reason){
+    server.getEventManager().fireAndForget(new LoginFailEvent(inbound, username, reason));
   }
 }
