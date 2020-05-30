@@ -6,7 +6,6 @@ import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
-import static org.asynchttpclient.Dsl.asyncHttpClient;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -21,7 +20,6 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;

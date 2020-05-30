@@ -2,15 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
-import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
-import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION_AMOUNT;
-import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -24,25 +16,15 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.handler.flow.FlowControlHandler;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {

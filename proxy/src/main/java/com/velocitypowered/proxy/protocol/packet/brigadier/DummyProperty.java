@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class DummyProperty<T> implements ArgumentType<T> {

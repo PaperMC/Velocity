@@ -8,8 +8,6 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;

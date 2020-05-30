@@ -6,13 +6,11 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityChannelRegistrar implements ChannelRegistrar {

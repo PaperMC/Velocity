@@ -3,7 +3,6 @@ package com.velocitypowered.proxy.plugin.loader;
 import com.google.inject.Module;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-
 import java.nio.file.Path;
 
 /**
