@@ -20,18 +20,26 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         return;
       }
 
-      if (!reader.successfulDecode) {
-        throw BAD_LENGTH_CACHED;
-      }
+      if (reader.successfulDecode) {
+        if (reader.readVarint < 0) {
+          throw BAD_LENGTH_CACHED;
+        }
 
-      int minimumRead = reader.bytesRead + reader.readVarint;
-      if (in.isReadable(minimumRead)) {
-        out.add(in.retainedSlice(varintEnd + 1, reader.readVarint));
-        in.skipBytes(minimumRead);
-        reader.reset();
+        int minimumRead = reader.bytesRead + reader.readVarint;
+        if (in.isReadable(minimumRead)) {
+          out.add(in.retainedSlice(varintEnd + 1, reader.readVarint));
+          in.skipBytes(minimumRead);
+          reader.reset();
+        } else {
+          reader.reset();
+          return;
+        }
       } else {
+        boolean tooBig = reader.bytesRead > 3;
         reader.reset();
-        return;
+        if (tooBig) {
+          throw BAD_LENGTH_CACHED;
+        }
       }
     }
   }
