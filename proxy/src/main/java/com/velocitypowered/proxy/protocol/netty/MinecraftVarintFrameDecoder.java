@@ -14,6 +14,11 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+    if (!ctx.channel().isActive()) {
+      in.skipBytes(in.readableBytes());
+      return;
+    }
+
     while (in.isReadable()) {
       int varintEnd = in.forEachByte(reader);
       if (varintEnd == -1) {
