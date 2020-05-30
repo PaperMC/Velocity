@@ -10,7 +10,6 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

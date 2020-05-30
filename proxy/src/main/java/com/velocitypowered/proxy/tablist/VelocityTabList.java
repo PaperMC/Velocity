@@ -7,7 +7,6 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem.Item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

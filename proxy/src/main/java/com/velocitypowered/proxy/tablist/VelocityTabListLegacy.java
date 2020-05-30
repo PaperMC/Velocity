@@ -12,8 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.text.Component;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabListLegacy extends VelocityTabList {

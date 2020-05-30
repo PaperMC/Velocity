@@ -16,7 +16,6 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
-import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import java.io.IOException;
