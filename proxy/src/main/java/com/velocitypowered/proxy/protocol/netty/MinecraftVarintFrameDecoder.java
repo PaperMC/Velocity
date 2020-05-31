@@ -1,16 +1,15 @@
 package com.velocitypowered.proxy.protocol.netty;
 
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.util.ByteProcessor;
 import java.util.List;
 
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   private static final QuietException BAD_LENGTH_CACHED = new QuietException("Bad packet length");
-  private final VarintByteDecoder reader = new VarintByteDecoder();
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
@@ -19,58 +18,31 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    while (in.isReadable()) {
-      int varintEnd = in.forEachByte(reader);
-      if (varintEnd == -1) {
-        return;
-      }
-
-      if (reader.successfulDecode) {
-        if (reader.readVarint < 0) {
-          throw BAD_LENGTH_CACHED;
-        }
-
-        int minimumRead = reader.bytesRead + reader.readVarint;
-        if (in.isReadable(minimumRead)) {
-          out.add(in.retainedSlice(varintEnd + 1, reader.readVarint));
-          in.skipBytes(minimumRead);
-          reader.reset();
-        } else {
-          reader.reset();
+    read_lens: while (in.isReadable()) {
+      int origReaderIndex = in.readerIndex();
+      for (int i = 0; i < 3; i++) {
+        if (!in.isReadable()) {
+          in.readerIndex(origReaderIndex);
           return;
         }
-      } else {
-        boolean tooBig = reader.bytesRead > 3;
-        reader.reset();
-        if (tooBig) {
-          throw BAD_LENGTH_CACHED;
+
+        byte read = in.readByte();
+        if (read >= 0) {
+          // Make sure reader index of length buffer is returned to the beginning
+          in.readerIndex(origReaderIndex);
+          int packetLength = ProtocolUtils.readVarInt(in);
+
+          if (in.readableBytes() >= packetLength) {
+            out.add(in.readBytes(packetLength));
+            continue read_lens;
+          } else {
+            in.readerIndex(origReaderIndex);
+            return;
+          }
         }
       }
-    }
-  }
 
-  private static class VarintByteDecoder implements ByteProcessor {
-    private int readVarint;
-    private int bytesRead;
-    private boolean successfulDecode;
-
-    @Override
-    public boolean process(byte k) {
-      readVarint |= (k & 0x7F) << bytesRead++ * 7;
-      if (bytesRead > 3) {
-        return false;
-      }
-      if ((k & 0x80) != 128) {
-        successfulDecode = true;
-        return false;
-      }
-      return true;
-    }
-
-    void reset() {
-      readVarint = 0;
-      bytesRead = 0;
-      successfulDecode = false;
+      throw BAD_LENGTH_CACHED;
     }
   }
 }
