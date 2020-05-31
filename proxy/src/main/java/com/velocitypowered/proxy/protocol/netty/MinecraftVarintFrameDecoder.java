@@ -49,6 +49,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         throw VARINT_BIG_CACHED;
       } else if (reader.result == DecodeResult.TOO_SHORT) {
         // No-op: we couldn't get a useful result.
+        break;
       }
     }
   }
