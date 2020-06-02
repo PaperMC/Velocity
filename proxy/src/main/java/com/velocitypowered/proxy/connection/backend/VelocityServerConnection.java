@@ -5,10 +5,12 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConst
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -24,7 +26,10 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
@@ -88,7 +93,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return result;
   }
 
-  private String createLegacyForwardingAddress() {
+  private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
@@ -99,8 +104,22 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
         .append('\0');
-    GSON.toJson(proxyPlayer.getGameProfile().getProperties(), data);
+    GSON.toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
     return data.toString();
+  }
+
+  private String createLegacyForwardingAddress() {
+    return createLegacyForwardingAddress(UnaryOperator.identity());
+  }
+
+  private String createBungeeGuardForwardingAddress(byte[] forwardingSecret) {
+    // Append forwarding secret as a BungeeGuard token.
+    Property property = new Property("bungeeguard-token",
+        new String(forwardingSecret, StandardCharsets.UTF_8), "");
+    return createLegacyForwardingAddress(properties -> ImmutableList.<Property>builder()
+        .addAll(properties)
+        .add(property)
+        .build());
   }
 
   private void startHandshake() {
@@ -114,6 +133,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
+    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
+      byte[] secret = server.getConfiguration().getForwardingSecret();
+      handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {

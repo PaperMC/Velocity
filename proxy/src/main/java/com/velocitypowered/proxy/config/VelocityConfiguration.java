@@ -69,6 +69,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "            proxy and will have offline-mode UUIDs.",
       "- \"legacy\": Forward player IPs and UUIDs in a BungeeCord-compatible format. Use this if",
       "            you run servers using Minecraft 1.12 or lower.",
+      "- \"bungeeguard\": Forward player IPs and UUIDs in a format supported by the BungeeGuard",
+      "            plugin. Use this if you run servers using Minecraft 1.12 or lower, and are",
+      "            unable to implement network level firewalling (on a shared host).",
       "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's ",
       "            native forwarding. Only applicable for Minecraft 1.13 or higher."
   })
@@ -193,6 +196,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
             + "from the proxy and will have offline-mode UUIDs.");
         break;
       case MODERN:
+      case BUNGEEGUARD:
         if (forwardingSecret == null || forwardingSecret.length == 0) {
           logger.error("You don't have a forwarding secret set. This is required for security.");
           valid = false;
