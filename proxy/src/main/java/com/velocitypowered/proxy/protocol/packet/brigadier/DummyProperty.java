@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class DummyProperty<T> implements ArgumentType<T> {
@@ -17,11 +16,6 @@ class DummyProperty<T> implements ArgumentType<T> {
     this.result = result;
   }
 
-  @Override
-  public <S> T parse(StringReader reader) throws CommandSyntaxException {
-    throw new UnsupportedOperationException();
-  }
-
   public String getIdentifier() {
     return identifier;
   }
@@ -32,5 +26,10 @@ class DummyProperty<T> implements ArgumentType<T> {
 
   public @Nullable T getResult() {
     return result;
+  }
+
+  @Override
+  public T parse(StringReader reader) {
+    throw new UnsupportedOperationException();
   }
 }

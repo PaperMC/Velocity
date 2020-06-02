@@ -11,7 +11,6 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
-import net.kyori.text.event.HoverEvent.Action;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
@@ -166,7 +164,7 @@ public class VelocityCommand implements Command {
           .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
       TextComponent copyright = TextComponent
-          .of("Copyright 2018-2019 " + version.getVendor() + ". " + version.getName()
+          .of("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
               + " is freely licensed under the terms of the MIT License.");
       source.sendMessage(velocity);
       source.sendMessage(copyright);

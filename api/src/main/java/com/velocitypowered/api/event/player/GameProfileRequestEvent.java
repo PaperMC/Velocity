@@ -60,13 +60,11 @@ public final class GameProfileRequestEvent {
   }
 
   /**
-   * Sets the game profile to use for this connection. It is invalid to use this method on an
-   * online-mode connection.
+   * Sets the game profile to use for this connection.
    *
    * @param gameProfile the profile for this connection, {@code null} uses the original profile
    */
   public void setGameProfile(@Nullable GameProfile gameProfile) {
-    Preconditions.checkState(!onlineMode, "Profiles can not be faked in online mode!");
     this.gameProfile = gameProfile;
   }
 

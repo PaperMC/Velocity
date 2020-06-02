@@ -1,5 +1,7 @@
 package com.velocitypowered.api.command;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Represents an interface to register a command executor with the proxy.
  */
@@ -34,11 +36,52 @@ public interface CommandManager {
   void unregister(String alias);
 
   /**
-   * Attempts to execute a command from the specified {@code cmdLine}.
+   * Calls CommandExecuteEvent and attempts to execute a command using the specified {@code cmdLine}
+   * in a blocking fashion.
    *
    * @param source the command's source
    * @param cmdLine the command to run
    * @return true if the command was found and executed, false if it was not
+   * 
+   * @deprecated This method will block current thread during event call and command execution.
+   *             Prefer {@link #executeAsync(CommandSource, String)} instead.
    */
+  @Deprecated
   boolean execute(CommandSource source, String cmdLine);
+
+  /**
+   * Attempts to execute a command using the specified {@code cmdLine} in a blocking fashion without
+   * calling CommandExecuteEvent.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @return true if the command was found and executed, false if it was not
+   * 
+   * @deprecated This method will block current thread during event and command execution.
+   *             Prefer {@link #executeImmediatelyAsync(CommandSource, String)} instead.
+   */
+  @Deprecated
+  boolean executeImmediately(CommandSource source, String cmdLine);
+
+  /**
+   * Calls CommandExecuteEvent and attempts to execute a command from the specified {@code cmdLine}
+   * async.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @return A future that will be completed with the result of the command execution.
+   *         Can be completed exceptionally if exception was thrown during execution.
+   */
+  CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine);
+
+  /**
+   * Attempts to execute a command from the specified {@code cmdLine} async
+   * without calling CommandExecuteEvent.
+   *
+   * @param source the command's source
+   * @param cmdLine the command to run
+   * @return A future that will be completed with the result of the command execution.
+   *         Can be completed exceptionally if exception was thrown during execution.
+   */
+  CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 }

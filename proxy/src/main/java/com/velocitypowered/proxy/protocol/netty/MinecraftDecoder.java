@@ -14,7 +14,7 @@ import java.util.List;
 
 public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
 
-  private static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
+  public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietException DECODE_FAILED =
       new QuietException("A packet did not decode successfully (invalid data). If you are a "
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
@@ -30,8 +30,8 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
    */
   public MinecraftDecoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = direction
-        .getProtocolRegistry(StateRegistry.HANDSHAKE, ProtocolVersion.MINIMUM_VERSION);
+    this.registry = direction.getProtocolRegistry(StateRegistry.HANDSHAKE,
+        ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 

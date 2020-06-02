@@ -6,7 +6,6 @@ import static com.velocitypowered.proxy.VelocityServer.GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
-import static org.asynchttpclient.Dsl.asyncHttpClient;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -21,7 +20,6 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -50,7 +48,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-      "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s&ip=%s";
+      "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s";
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
@@ -96,8 +94,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
-          urlFormParameterEscaper().escape(login.getUsername()), serverId,
-          urlFormParameterEscaper().escape(playerIp));
+          urlFormParameterEscaper().escape(login.getUsername()), serverId);
+
+      if (server.getConfiguration().shouldPreventClientProxyConnections()) {
+        url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
+      }
 
       ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
           .execute();

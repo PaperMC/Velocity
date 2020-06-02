@@ -1,12 +1,18 @@
 package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.base.Strings;
+import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.handler.codec.CorruptedFrameException;
 
 /**
  * Extends {@link com.google.common.base.Preconditions} for Netty's {@link CorruptedFrameException}.
  */
 public class NettyPreconditions {
+  private static final QuietException BAD = new QuietException(
+      "Invalid packet received. Launch Velocity with -Dvelocity.packet-decode-logging=true "
+          + "to see more.");
+
   private NettyPreconditions() {
     throw new AssertionError();
   }
@@ -18,7 +24,7 @@ public class NettyPreconditions {
    */
   public static void checkFrame(boolean b, String message) {
     if (!b) {
-      throw new CorruptedFrameException(message);
+      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException(message) : BAD;
     }
   }
 
@@ -32,7 +38,11 @@ public class NettyPreconditions {
    */
   public static void checkFrame(boolean b, String message, Object arg1) {
     if (!b) {
-      throw new CorruptedFrameException(Strings.lenientFormat(message, arg1));
+      if (MinecraftDecoder.DEBUG) {
+        throw new CorruptedFrameException(Strings.lenientFormat(message, arg1));
+      } else {
+        throw BAD;
+      }
     }
   }
 
@@ -47,7 +57,11 @@ public class NettyPreconditions {
    */
   public static void checkFrame(boolean b, String message, Object arg1, Object arg2) {
     if (!b) {
-      throw new CorruptedFrameException(Strings.lenientFormat(message, arg1, arg2));
+      if (MinecraftDecoder.DEBUG) {
+        throw new CorruptedFrameException(Strings.lenientFormat(message, arg1, arg2));
+      } else {
+        throw BAD;
+      }
     }
   }
 
@@ -61,7 +75,11 @@ public class NettyPreconditions {
    */
   public static void checkFrame(boolean b, String message, Object... args) {
     if (!b) {
-      throw new CorruptedFrameException(Strings.lenientFormat(message, args));
+      if (MinecraftDecoder.DEBUG) {
+        throw new CorruptedFrameException(Strings.lenientFormat(message, args));
+      } else {
+        throw BAD;
+      }
     }
   }
 }
