@@ -84,9 +84,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();
           } else {
-            // We need to remember to reset the in-flight connection to allow connect() to work
-            // properly.
-            proxyPlayer.resetInFlightConnection();
+            // Complete the result immediately. ConnectedPlayer will reset the in-flight connection.
             result.completeExceptionally(future.cause());
           }
         });

@@ -758,12 +758,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
                   return con.connect().whenCompleteAsync((result, throwable) ->
-                      this.cleanupIfRequired(con), connection.eventLoop());
+                      this.resetIfInFlightIs(con), connection.eventLoop());
                 }, connection.eventLoop());
           });
     }
 
-    private void cleanupIfRequired(VelocityServerConnection establishedConnection) {
+    private void resetIfInFlightIs(VelocityServerConnection establishedConnection) {
       if (establishedConnection == connectionInFlight) {
         resetInFlightConnection();
       }
