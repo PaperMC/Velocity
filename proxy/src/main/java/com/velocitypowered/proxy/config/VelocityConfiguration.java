@@ -65,18 +65,21 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Comment({
       "Should we forward IP addresses and other data to backend servers?",
       "Available options:",
-      "- \"none\":   No forwarding will be done. All players will appear to be connecting from the",
-      "            proxy and will have offline-mode UUIDs.",
-      "- \"legacy\": Forward player IPs and UUIDs in a BungeeCord-compatible format. Use this if",
-      "            you run servers using Minecraft 1.12 or lower.",
-      "- \"modern\": Forward player IPs and UUIDs as part of the login process using Velocity's ",
-      "            native forwarding. Only applicable for Minecraft 1.13 or higher."
+      "- \"none\":        No forwarding will be done. All players will appear to be connecting",
+      "                 from the proxy and will have offline-mode UUIDs.",
+      "- \"legacy\":      Forward player IPs and UUIDs in a BungeeCord-compatible format. Use this",
+      "                 if you run servers using Minecraft 1.12 or lower.",
+      "- \"bungeeguard\": Forward player IPs and UUIDs in a format supported by the BungeeGuard",
+      "                 plugin. Use this if you run servers using Minecraft 1.12 or lower, and are",
+      "                 unable to implement network level firewalling (on a shared host).",
+      "- \"modern\":      Forward player IPs and UUIDs as part of the login process using",
+      "                 Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher."
   })
   @ConfigKey("player-info-forwarding-mode")
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
 
   @StringAsBytes
-  @Comment("If you are using modern IP forwarding, configure an unique secret here.")
+  @Comment("If you are using modern or BungeeGuard IP forwarding, configure an unique secret here.")
   @ConfigKey("forwarding-secret")
   private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
 
@@ -193,6 +196,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
             + "from the proxy and will have offline-mode UUIDs.");
         break;
       case MODERN:
+      case BUNGEEGUARD:
         if (forwardingSecret == null || forwardingSecret.length == 0) {
           logger.error("You don't have a forwarding secret set. This is required for security.");
           valid = false;
