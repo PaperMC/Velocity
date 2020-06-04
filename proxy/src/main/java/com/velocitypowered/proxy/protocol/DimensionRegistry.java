@@ -12,15 +12,26 @@ import net.kyori.nbt.TagType;
 
 public class DimensionRegistry {
 
+  // Mapping:
+  // dimensionIdentifier (Client connection refers to this),
+  // dimensionType (The game refers to this).
   private final @Nonnull Map<String, String> dimensionRegistry;
   private final @Nonnull Set<String> worldNames;
 
+  /**
+   * Initializes a new {@link DimensionRegistry} instance.
+   * This registry is required for 1.16+ clients/servers to communicate,
+   * it constrains the dimension types and names the client can be sent
+   * in a Respawn action (dimension change).
+   * @param dimensionRegistry a populated map containing dimensionIdentifier and dimensionType sets
+   * @param worldNames a populated {@link Set} of the dimension level names the server offers
+   */
   public DimensionRegistry(Map<String, String> dimensionRegistry,
                            Set<String> worldNames) {
     if (dimensionRegistry == null || dimensionRegistry.isEmpty()
             || worldNames == null || worldNames.isEmpty()) {
       throw new IllegalArgumentException(
-              "DimensionRegistry requires valid arguments, not null and not empty");
+              "Dimension registry requires valid arguments, not null and not empty");
     }
     this.dimensionRegistry = dimensionRegistry;
     this.worldNames = worldNames;
@@ -34,45 +45,64 @@ public class DimensionRegistry {
     return worldNames;
   }
 
-  public @Nonnull String getDimensionIdentifier(@Nonnull String dimensionName) {
-    if (dimensionName == null) {
-      throw new IllegalArgumentException("DimensionName cannot be null!");
+  /**
+   * Returns the internal dimension type as used by the game.
+   * @param dimensionIdentifier how the type is identified by the connection
+   * @return game internal dimension type
+   */
+  public @Nonnull String getDimensionType(@Nonnull String dimensionIdentifier) {
+    if (dimensionIdentifier == null) {
+      throw new IllegalArgumentException("Dimension identifier cannot be null!");
     }
-    if (dimensionName == null || !dimensionRegistry.containsKey(dimensionName)) {
-      throw new NoSuchElementException("DimensionName " + dimensionName
+    if (dimensionIdentifier == null || !dimensionRegistry.containsKey(dimensionIdentifier)) {
+      throw new NoSuchElementException("Dimension with identifier " + dimensionIdentifier
               + " doesn't exist in this Registry!");
     }
-    return dimensionRegistry.get(dimensionName);
+    return dimensionRegistry.get(dimensionIdentifier);
   }
 
-  public @Nonnull String getDimensionName(@Nonnull String dimensionIdentifier) {
-    if (dimensionIdentifier == null) {
-      throw new IllegalArgumentException("DimensionIdentifier cannot be null!");
+  /**
+   * Returns the dimension identifier as used by the client.
+   * @param dimensionType the internal dimension type
+   * @return game dimension identifier
+   */
+  public @Nonnull String getDimensionIdentifier(@Nonnull String dimensionType) {
+    if (dimensionType == null) {
+      throw new IllegalArgumentException("Dimension type cannot be null!");
     }
     for (Map.Entry<String, String> entry : dimensionRegistry.entrySet()) {
-      if (entry.getValue().equals(dimensionIdentifier)) {
+      if (entry.getValue().equals(dimensionType)) {
         return entry.getKey();
       }
     }
-    throw new NoSuchElementException("DimensionIdentifier " + dimensionIdentifier
+    throw new NoSuchElementException("Dimension type " + dimensionType
             + " doesn't exist in this Registry!");
   }
 
+  /**
+   * Checks a {@link DimensionInfo} against this registry.
+   * @param toValidate the {@link DimensionInfo} to validate
+   * @return true: the dimension information is valid for this registry
+   */
   public boolean isValidFor(@Nonnull DimensionInfo toValidate) {
     if (toValidate == null) {
-      throw new IllegalArgumentException("DimensionInfo cannot be null");
+      throw new IllegalArgumentException("Dimension info cannot be null");
     }
     try {
       if (!worldNames.contains(toValidate.getDimensionLevelName())) {
         return false;
       }
-      getDimensionName(toValidate.getDimensionIdentifier());
+      getDimensionType(toValidate.getDimensionIdentifier());
       return true;
     } catch (NoSuchElementException thrown) {
       return false;
     }
   }
 
+  /**
+   * Encodes the stored Dimension registry as CompoundTag.
+   * @return the CompoundTag containing identifier:type mappings
+   */
   public CompoundTag encodeToCompoundTag() {
     CompoundTag ret = new CompoundTag();
     ListTag list = new ListTag(TagType.COMPOUND);
@@ -86,6 +116,10 @@ public class DimensionRegistry {
     return ret;
   }
 
+  /**
+   * Decodes a CompoundTag storing dimension mappings to a Map identifier:type.
+   * @param toParse CompoundTag containing a dimension registry
+   */
   public static Map<String, String> parseToMapping(@Nonnull CompoundTag toParse) {
     if (toParse == null) {
       throw new IllegalArgumentException("CompoundTag cannot be null");

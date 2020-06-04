@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.protocol;
 
+import com.velocitypowered.proxy.connection.MinecraftConnection;
+
 import javax.annotation.Nonnull;
 
 public class DimensionInfo {
@@ -9,6 +11,13 @@ public class DimensionInfo {
   private final boolean isFlat;
   private final boolean isDebugType;
 
+  /**
+   * Initializes a new {@link DimensionInfo} instance.
+   * @param dimensionIdentifier the identifier for the dimension from the registry
+   * @param dimensionLevelName the level name as displayed in the F3 menu and logs
+   * @param isFlat if true will set world lighting below surface-level to not display fog
+   * @param isDebugType if true constrains the world to the very limited debug-type world
+   */
   public DimensionInfo(@Nonnull String dimensionIdentifier, @Nonnull String dimensionLevelName,
                        boolean isFlat, boolean isDebugType) {
     if (dimensionIdentifier == null || dimensionIdentifier.isEmpty()
