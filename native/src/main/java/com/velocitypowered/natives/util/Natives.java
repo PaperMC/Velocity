@@ -62,11 +62,11 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
       ImmutableList.of(
-          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
               "libdeflate (Linux x86_64)",
               LibdeflateVelocityCompressor.FACTORY),
-          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
               "libdeflate (Linux aarch64)",
               LibdeflateVelocityCompressor.FACTORY),
@@ -79,10 +79,10 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-            new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
+            new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher.so"),
               "mbed TLS (Linux x86_64)", NativeVelocityCipher.FACTORY),
-          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
               "mbed TLS (Linux aarch64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
