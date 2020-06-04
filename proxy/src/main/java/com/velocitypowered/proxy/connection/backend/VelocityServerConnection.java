@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.protocol.DimensionRegistry;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
@@ -53,6 +54,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
+  private @Nullable DimensionRegistry activeDimensionRegistry;
 
   /**
    * Initializes a new server connection.
@@ -297,4 +299,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return hasCompletedJoin;
   }
 
+  public DimensionRegistry getActiveDimensionRegistry() {
+    return activeDimensionRegistry;
+  }
+
+  public void setActiveDimensionRegistry(DimensionRegistry activeDimensionRegistry) {
+    this.activeDimensionRegistry = activeDimensionRegistry;
+  }
 }

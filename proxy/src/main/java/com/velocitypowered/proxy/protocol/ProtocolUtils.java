@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import net.kyori.nbt.CompoundTag;
+import net.kyori.nbt.TagType;
 
 public enum ProtocolUtils {
   ;
@@ -204,7 +205,7 @@ public enum ProtocolUtils {
     try {
       DataInput input = new ByteBufInputStream(buf);
       byte type = input.readByte();
-      if (type != 10) {
+      if (type != TagType.COMPOUND.id()) {
         throw new DecoderException("NBTTag is not a CompoundTag");
       }
       input.readUTF(); // Head-padding
@@ -233,6 +234,36 @@ public enum ProtocolUtils {
       compoundTag.write(output);
     } catch (IOException e) {
       throw new EncoderException("Unable to encode NBT CompoundTag");
+    }
+  }
+
+  /**
+   * Reads a String array from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return the String array from the buffer
+   */
+  public static String[] readStringArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    String[] ret = new String[length];
+    for(int i = 0; i < length; i++) {
+      ret[i] = readString(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes a String Array to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param stringArray the array to write
+   */
+  public static void writeStringArray(ByteBuf buf, String[] stringArray) {
+    if (stringArray == null) {
+      writeVarInt(buf, 0);
+      return;
+    }
+    writeVarInt(buf, stringArray.length);
+    for(int i = 0; i < stringArray.length; i++) {
+      writeString(buf, stringArray[i]);
     }
   }
 

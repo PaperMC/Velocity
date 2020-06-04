@@ -13,6 +13,8 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.protocol.DimensionInfo;
+import com.velocitypowered.proxy.protocol.DimensionRegistry;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -313,8 +315,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
       player.getMinecraftConnection().delayedWrite(joinGame);
-
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
     } else {
@@ -334,20 +336,59 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
       player.getMinecraftConnection().delayedWrite(joinGame);
+      int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+      // Since 1.16 this dynamic changed:
+      // The respawn packet has a keepMetadata flag which should
+      // be true for dimension switches, so by double switching
+      // we can keep the flow of the game
+      // There is a problem here though: By only sending one dimension
+      // in the registry we can't do that, so we need to run an *unclean* switch.
+      // NOTE! We can't just send a fake dimension in the registry either
+      // to get two dimensions, as modded games will break with this.
+      final DimensionRegistry dimensionRegistry = joinGame.getDimensionRegistry();
+      DimensionInfo dimensionInfo = joinGame.getDimensionInfo(); // 1.16+
+      // The doubleSwitch variable doubles as keepMetadata flag for an unclean switch as
+      // well as to indicate the second switch.
+      boolean doubleSwitch;
+      // This is not ONE if because this will all be null in < 1.16
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
-        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+        if(dimensionRegistry.getWorldNames().size() > 1 && dimensionRegistry.getDimensionRegistry().size() > 1){
+          String tmpDimLevelName = null;
+          for(String s : dimensionRegistry.getWorldNames()){
+            if(!s.equals(dimensionInfo.getDimensionLevelName())){
+              tmpDimLevelName = s;
+              break;
+            }
+          }
+          String tmpDimIdentifier = null;
+          for(String s : dimensionRegistry.getDimensionRegistry().keySet()){
+            if(!s.equals(dimensionInfo.getDimensionIdentifier())){
+              tmpDimIdentifier = s;
+              break;
+            }
+          }
+          dimensionInfo = new DimensionInfo(tmpDimIdentifier, tmpDimLevelName, true, false);
+          doubleSwitch = true;
+        } else {
+          doubleSwitch = false;
+          // We should add a warning here.
+        }
+      } else {
+        doubleSwitch = true;
+      }
+      if(doubleSwitch) {
         player.getMinecraftConnection().delayedWrite(
                 new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
                         joinGame.getGamemode(), joinGame.getLevelType(),
-                        joinGame.getShouldKeepPlayerData(),
-                        joinGame.getIsDebug(), joinGame.getIsFlat(),
-                        joinGame.getDimensionRegistryName()));
+                        false, dimensionInfo));
       }
+
       player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-                  joinGame.getShouldKeepPlayerData(), joinGame.getIsDebug(), joinGame.getIsFlat(),
-                  joinGame.getDimensionRegistryName()));
+                  doubleSwitch, joinGame.getDimensionInfo()));
+
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
