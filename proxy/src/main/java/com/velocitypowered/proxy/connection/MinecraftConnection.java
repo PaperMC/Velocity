@@ -205,8 +205,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      knownDisconnect = true;
-      channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+      channel.eventLoop().execute(() -> {
+        knownDisconnect = true;
+        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+      });
     }
   }
 
