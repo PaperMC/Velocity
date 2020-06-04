@@ -245,7 +245,7 @@ public enum ProtocolUtils {
   public static String[] readStringArray(ByteBuf buf) {
     int length = readVarInt(buf);
     String[] ret = new String[length];
-    for(int i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       ret[i] = readString(buf);
     }
     return ret;
@@ -262,7 +262,7 @@ public enum ProtocolUtils {
       return;
     }
     writeVarInt(buf, stringArray.length);
-    for(int i = 0; i < stringArray.length; i++) {
+    for (int i = 0; i < stringArray.length; i++) {
       writeString(buf, stringArray[i]);
     }
   }

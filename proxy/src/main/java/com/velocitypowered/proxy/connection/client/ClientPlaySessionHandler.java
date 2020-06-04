@@ -352,17 +352,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       boolean doubleSwitch;
       // This is not ONE if because this will all be null in < 1.16
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
-        if(dimensionRegistry.getWorldNames().size() > 1 && dimensionRegistry.getDimensionRegistry().size() > 1){
+        if (dimensionRegistry.getWorldNames().size() > 1
+                && dimensionRegistry.getDimensionRegistry().size() > 1) {
           String tmpDimLevelName = null;
-          for(String s : dimensionRegistry.getWorldNames()){
-            if(!s.equals(dimensionInfo.getDimensionLevelName())){
+          for (String s : dimensionRegistry.getWorldNames()) {
+            if (!s.equals(dimensionInfo.getDimensionLevelName())) {
               tmpDimLevelName = s;
               break;
             }
           }
           String tmpDimIdentifier = null;
-          for(String s : dimensionRegistry.getDimensionRegistry().keySet()){
-            if(!s.equals(dimensionInfo.getDimensionIdentifier())){
+          for (String s : dimensionRegistry.getDimensionRegistry().keySet()) {
+            if (!s.equals(dimensionInfo.getDimensionIdentifier())) {
               tmpDimIdentifier = s;
               break;
             }
@@ -376,7 +377,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       } else {
         doubleSwitch = true;
       }
-      if(doubleSwitch) {
+      if (doubleSwitch) {
         player.getMinecraftConnection().delayedWrite(
                 new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
                         joinGame.getGamemode(), joinGame.getLevelType(),
