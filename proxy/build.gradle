@@ -48,8 +48,7 @@ dependencies {
     compile "io.netty:netty-handler:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
-    compile "io.netty:netty-transport-native-kqueue:${nettyVersion}"
-    compile "io.netty:netty-transport-native-kqueue:${nettyVersion}:osx-x86_64"
+    compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch64"
     compile "io.netty:netty-resolver-dns:${nettyVersion}"
 
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"

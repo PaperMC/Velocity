@@ -7,11 +7,6 @@ import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.kqueue.KQueue;
-import io.netty.channel.kqueue.KQueueDatagramChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.kqueue.KQueueServerSocketChannel;
-import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
@@ -27,11 +22,7 @@ enum TransportType {
       (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
   EPOLL("epoll", EpollServerSocketChannel.class, EpollSocketChannel.class,
       EpollDatagramChannel.class,
-      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type))),
-  KQUEUE("Kqueue", KQueueServerSocketChannel.class, KQueueSocketChannel.class,
-      KQueueDatagramChannel.class,
-      (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)));
-
+      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
   final Class<? extends ServerSocketChannel> serverSocketChannelClass;
@@ -71,8 +62,6 @@ enum TransportType {
 
     if (Epoll.isAvailable()) {
       return EPOLL;
-    } else if (KQueue.isAvailable()) {
-      return KQUEUE;
     } else {
       return NIO;
     }
