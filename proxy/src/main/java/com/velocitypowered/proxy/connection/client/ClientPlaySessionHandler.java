@@ -34,11 +34,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -336,58 +334,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
       player.getMinecraftConnection().delayedWrite(joinGame);
-      int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
       // Since 1.16 this dynamic changed:
-      // The respawn packet has a keepMetadata flag which should
-      // be true for dimension switches, so by double switching
-      // we can keep the flow of the game
-      // There is a problem here though: By only sending one dimension
-      // in the registry we can't do that, so we need to run an *unclean* switch.
-      // NOTE! We can't just send a fake dimension in the registry either
-      // to get two dimensions, as modded games will break with this.
-      final DimensionRegistry dimensionRegistry = joinGame.getDimensionRegistry();
-      DimensionInfo dimensionInfo = joinGame.getDimensionInfo(); // 1.16+
-      // The doubleSwitch variable doubles as keepMetadata flag for an unclean switch as
-      // well as to indicate the second switch.
-      boolean doubleSwitch;
-      // This is not ONE if because this will all be null in < 1.16
+      // We don't need to send two dimension swiches anymore!
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
-        if (dimensionRegistry.getWorldNames().size() > 1
-                && dimensionRegistry.getDimensionRegistry().size() > 1) {
-          String tmpDimLevelName = null;
-          for (String s : dimensionRegistry.getWorldNames()) {
-            if (!s.equals(dimensionInfo.getDimensionLevelName())) {
-              tmpDimLevelName = s;
-              break;
-            }
-          }
-          String tmpDimIdentifier = null;
-          for (String s : dimensionRegistry.getDimensionRegistry().keySet()) {
-            if (!s.equals(dimensionInfo.getDimensionIdentifier())) {
-              tmpDimIdentifier = s;
-              break;
-            }
-          }
-          dimensionInfo = new DimensionInfo(tmpDimIdentifier, tmpDimLevelName, true, false);
-          doubleSwitch = true;
-        } else {
-          doubleSwitch = false;
-          // We should add a warning here.
-        }
-      } else {
-        doubleSwitch = true;
-      }
-      if (doubleSwitch) {
+        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
         player.getMinecraftConnection().delayedWrite(
                 new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
                         joinGame.getGamemode(), joinGame.getLevelType(),
-                        false, dimensionInfo));
+                        false, joinGame.getDimensionInfo()));
       }
 
       player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-                  doubleSwitch, joinGame.getDimensionInfo()));
+                  false, joinGame.getDimensionInfo()));
 
       destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }

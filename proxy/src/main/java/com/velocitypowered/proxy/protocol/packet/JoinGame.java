@@ -2,12 +2,8 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.DimensionInfo;
-import com.velocitypowered.proxy.protocol.DimensionRegistry;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
-import net.kyori.nbt.CompoundTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Map;
@@ -140,8 +136,7 @@ public class JoinGame implements MinecraftPacket {
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       String levelNames[] = ProtocolUtils.readStringArray(buf);
-      Map<String, String> dimensionMapping = DimensionRegistry.parseToMapping(ProtocolUtils.readCompoundTag(buf));
-      this.dimensionRegistry = new DimensionRegistry(dimensionMapping, Set.of(levelNames));
+      this.dimensionRegistry = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf), levelNames);
       dimensionIdentifier = ProtocolUtils.readString(buf);
       levelName = ProtocolUtils.readString(buf);
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
@@ -180,10 +175,10 @@ public class JoinGame implements MinecraftPacket {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getWorldNames().toArray(new String[dimensionRegistry.getWorldNames().size()]));
-      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeToCompoundTag());
+      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames());
+      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
       ProtocolUtils.writeString(buf, dimensionInfo.getDimensionIdentifier());
-      ProtocolUtils.writeString(buf, dimensionInfo.getDimensionLevelName());
+      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
