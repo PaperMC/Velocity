@@ -113,7 +113,7 @@ public class Respawn implements MinecraftPacket {
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
-      shouldKeepPlayerData = buf.readBoolean();
+      this.shouldKeepPlayerData = buf.readBoolean();
     } else {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
