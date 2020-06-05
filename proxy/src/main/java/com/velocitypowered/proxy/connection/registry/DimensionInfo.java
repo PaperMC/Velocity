@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol;
+package com.velocitypowered.proxy.connection.registry;
 
 import javax.annotation.Nonnull;
 
