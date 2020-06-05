@@ -6,9 +6,6 @@ import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Map;
-import java.util.Set;
-
 public class JoinGame implements MinecraftPacket {
 
   private int entityId;
@@ -177,7 +174,7 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames());
       ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
-      ProtocolUtils.writeString(buf, dimensionInfo.getDimensionIdentifier());
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);

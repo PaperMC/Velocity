@@ -1,9 +1,8 @@
 package com.velocitypowered.proxy.protocol;
 
-import net.kyori.nbt.CompoundTag;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.kyori.nbt.CompoundTag;
 
 public class DimensionData {
   private final @Nonnull String registryIdentifier;
@@ -16,6 +15,18 @@ public class DimensionData {
   private final @Nullable Long fixedTime;
   private final @Nullable Boolean hasEnderdragonFight;
 
+  /**
+   * Initializes a new {@link DimensionData} instance.
+   * @param registryIdentifier the identifier for the dimension from the registry.
+   * @param isNatural indicates if the dimension use natural world generation (e.g. overworld)
+   * @param ambientLight the light level the client sees without external lighting
+   * @param isShrunk indicates if the world is shrunk, aka not the full 256 blocks (e.g. nether)
+   * @param isUltrawarm internal dimension warmth flag
+   * @param hasCeiling indicates if the dimension has a ceiling layer
+   * @param hasSkylight indicates if the dimension should display the sun
+   * @param fixedTime optional. If set to any game daytime value will deactivate time cycle
+   * @param hasEnderdragonFight optional. Internal flag used in the end dimension
+   */
   public DimensionData(@Nonnull String registryIdentifier, boolean isNatural,
                        float ambientLight, boolean isShrunk, boolean isUltrawarm,
                        boolean hasCeiling, boolean hasSkylight,
@@ -67,8 +78,13 @@ public class DimensionData {
     return hasEnderdragonFight;
   }
 
-  public static DimensionData fromNBT(@Nonnull CompoundTag toRead) {
-    if (toRead == null){
+  /**
+   * Parses a given CompoundTag to a DimensionData instance.
+   * @param toRead the compound from the registry to read
+   * @return game dimension data
+   */
+  public static DimensionData fromCompoundTag(@Nonnull CompoundTag toRead) {
+    if (toRead == null) {
       throw new IllegalArgumentException("CompoundTag cannot be null");
     }
     String registryIdentifier = toRead.getString("key");
@@ -80,11 +96,18 @@ public class DimensionData {
     boolean hasCeiling = values.getBoolean("has_ceiling");
     boolean hasSkylight = values.getBoolean("has_skylight");
     Long fixedTime = values.contains("fixed_time") ? values.getLong("fixed_time") : null;
-    Boolean hasEnderdragonFight = values.contains("has_enderdragon_fight") ? values.getBoolean("has_enderdragon_fight") : null;
-    return new DimensionData(registryIdentifier, isNatural, ambientLight, isShrunk, isUltrawarm, hasCeiling, hasSkylight, fixedTime, hasEnderdragonFight);
+    Boolean hasEnderdragonFight = values.contains("has_enderdragon_fight")
+            ? values.getBoolean("has_enderdragon_fight") : null;
+    return new DimensionData(
+            registryIdentifier, isNatural, ambientLight, isShrunk,
+            isUltrawarm, hasCeiling, hasSkylight, fixedTime, hasEnderdragonFight);
   }
 
-  public CompoundTag encode() {
+  /**
+   * Encodes the Dimension data as CompoundTag.
+   * @return compound containing the dimension data
+   */
+  public CompoundTag encodeAsCompundTag() {
     CompoundTag ret = new CompoundTag();
     ret.putString("key", registryIdentifier);
     CompoundTag values = new CompoundTag();

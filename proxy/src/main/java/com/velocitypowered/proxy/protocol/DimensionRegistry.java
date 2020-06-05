@@ -1,9 +1,10 @@
 package com.velocitypowered.proxy.protocol;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
-import com.google.inject.internal.asm.$TypePath;
 import net.kyori.nbt.CompoundTag;
 import net.kyori.nbt.ListTag;
 import net.kyori.nbt.Tag;
@@ -51,7 +52,7 @@ public class DimensionRegistry {
       throw new IllegalArgumentException("Dimension identifier cannot be null!");
     }
     for (DimensionData iter : dimensionRegistry) {
-      if(iter.getRegistryIdentifier().equals(dimensionIdentifier)) {
+      if (iter.getRegistryIdentifier().equals(dimensionIdentifier)) {
         return iter;
       }
     }
@@ -69,9 +70,9 @@ public class DimensionRegistry {
       throw new IllegalArgumentException("Dimension info cannot be null");
     }
     try {
-      getDimensionData(toValidate.getDimensionIdentifier());
-      for(int i = 0; i < levelNames.length; i++) {
-        if(levelNames[i].equals(toValidate.getDimensionIdentifier())) {
+      getDimensionData(toValidate.getRegistryIdentifier());
+      for (int i = 0; i < levelNames.length; i++) {
+        if (levelNames[i].equals(toValidate.getRegistryIdentifier())) {
           return true;
         }
       }
@@ -89,18 +90,19 @@ public class DimensionRegistry {
     CompoundTag ret = new CompoundTag();
     ListTag list = new ListTag(TagType.COMPOUND);
     for (DimensionData iter : dimensionRegistry) {
-      list.add(iter.encode());
+      list.add(iter.encodeAsCompundTag());
     }
     ret.put("dimension", list);
     return ret;
   }
 
   /**
-   * Decodes a CompoundTag storing a dimension registry
+   * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    * @param levelNames world level names
    */
-  public static DimensionRegistry fromGameData(@Nonnull CompoundTag toParse, @Nonnull String[] levelNames) {
+  public static DimensionRegistry fromGameData(
+          @Nonnull CompoundTag toParse, @Nonnull String[] levelNames) {
     if (toParse == null) {
       throw new IllegalArgumentException("CompoundTag cannot be null");
     }
@@ -116,7 +118,7 @@ public class DimensionRegistry {
       if (!(iter instanceof CompoundTag)) {
         throw new IllegalStateException("DimensionList in CompoundTag contains an invalid entry");
       }
-      mappings.add(DimensionData.fromNBT((CompoundTag) iter));
+      mappings.add(DimensionData.fromCompoundTag((CompoundTag) iter));
     }
     if (mappings.isEmpty()) {
       throw new IllegalStateException("Dimension mapping cannot be empty");

@@ -122,7 +122,7 @@ public class Respawn implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      ProtocolUtils.writeString(buf, dimensionInfo.getDimensionIdentifier());
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     } else {
       buf.writeInt(dimension);
