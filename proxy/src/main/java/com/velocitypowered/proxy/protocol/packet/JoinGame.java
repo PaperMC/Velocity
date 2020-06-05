@@ -2,10 +2,10 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.connection.registry.DimensionInfo;
+import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
+import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
-import net.kyori.nbt.CompoundTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
@@ -20,11 +20,8 @@ public class JoinGame implements MinecraftPacket {
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
-  private boolean shouldKeepPlayerData; // 1.16+
-  private boolean isDebug; // 1.16+
-  private boolean isFlat; // 1.16+
-  private String dimensionRegistryName; // 1.16+
-  private CompoundTag dimensionRegistry; // 1.16+
+  private DimensionRegistry dimensionRegistry; // 1.16+
+  private DimensionInfo dimensionInfo; // 1.16+
 
   public int getEntityId() {
     return entityId;
@@ -97,43 +94,19 @@ public class JoinGame implements MinecraftPacket {
     this.reducedDebugInfo = reducedDebugInfo;
   }
 
-  public boolean getShouldKeepPlayerData() {
-    return shouldKeepPlayerData;
+  public DimensionInfo getDimensionInfo() {
+    return dimensionInfo;
   }
 
-  public void setShouldKeepPlayerData(boolean shouldKeepPlayerData) {
-    this.shouldKeepPlayerData = shouldKeepPlayerData;
+  public void setDimensionInfo(DimensionInfo dimensionInfo) {
+    this.dimensionInfo = dimensionInfo;
   }
 
-  public boolean getIsDebug() {
-    return isDebug;
-  }
-
-  public void setIsDebug(boolean isDebug) {
-    this.isDebug = isDebug;
-  }
-
-  public boolean getIsFlat() {
-    return isFlat;
-  }
-
-  public void setIsFlat(boolean isFlat) {
-    this.isFlat = isFlat;
-  }
-
-  public String getDimensionRegistryName() {
-    return dimensionRegistryName;
-  }
-
-  public void setDimensionRegistryName(String dimensionRegistryName) {
-    this.dimensionRegistryName = dimensionRegistryName;
-  }
-
-  public CompoundTag getDimensionRegistry() {
+  public DimensionRegistry getDimensionRegistry() {
     return dimensionRegistry;
   }
 
-  public void setDimensionRegistry(CompoundTag dimensionRegistry) {
+  public void setDimensionRegistry(DimensionRegistry dimensionRegistry) {
     this.dimensionRegistry = dimensionRegistry;
   }
 
@@ -149,10 +122,8 @@ public class JoinGame implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
-        + ", shouldKeepPlayerData=" + shouldKeepPlayerData
-        + ", isDebug=" + isDebug
-        + ", isFlat='" + isFlat
-        + ", dimensionRegistryName='" + dimensionRegistryName + '\''
+        + ", dimensionRegistry='" + dimensionRegistry.toString() + '\''
+        + ", dimensionInfo='" + dimensionInfo.toString() + '\''
         + '}';
   }
 
@@ -160,9 +131,13 @@ public class JoinGame implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
     this.gamemode = buf.readUnsignedByte();
+    String dimensionIdentifier = null;
+    String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      this.dimensionRegistry = ProtocolUtils.readCompoundTag(buf);
-      this.dimensionRegistryName = ProtocolUtils.readString(buf);
+      String levelNames[] = ProtocolUtils.readStringArray(buf);
+      this.dimensionRegistry = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf), levelNames);
+      dimensionIdentifier = ProtocolUtils.readString(buf);
+      levelName = ProtocolUtils.readString(buf);
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       this.dimension = buf.readInt();
     } else {
@@ -188,8 +163,9 @@ public class JoinGame implements MinecraftPacket {
       this.showRespawnScreen = buf.readBoolean();
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      isDebug = buf.readBoolean();
-      isFlat = buf.readBoolean();
+      boolean isDebug = buf.readBoolean();
+      boolean isFlat = buf.readBoolean();
+      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
     }
   }
 
@@ -198,8 +174,10 @@ public class JoinGame implements MinecraftPacket {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry);
-      ProtocolUtils.writeString(buf, dimensionRegistryName);
+      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames());
+      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
@@ -226,8 +204,8 @@ public class JoinGame implements MinecraftPacket {
       buf.writeBoolean(showRespawnScreen);
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      buf.writeBoolean(isDebug);
-      buf.writeBoolean(isFlat);
+      buf.writeBoolean(dimensionInfo.isDebugType());
+      buf.writeBoolean(dimensionInfo.isFlat());
     }
   }
 

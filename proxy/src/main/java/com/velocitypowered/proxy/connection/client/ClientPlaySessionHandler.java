@@ -32,11 +32,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -313,8 +311,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
       player.getMinecraftConnection().delayedWrite(joinGame);
-
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
     } else {
@@ -334,20 +332,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
       player.getMinecraftConnection().delayedWrite(joinGame);
+      // Since 1.16 this dynamic changed:
+      // We don't need to send two dimension swiches anymore!
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
         int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
         player.getMinecraftConnection().delayedWrite(
                 new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
                         joinGame.getGamemode(), joinGame.getLevelType(),
-                        joinGame.getShouldKeepPlayerData(),
-                        joinGame.getIsDebug(), joinGame.getIsFlat(),
-                        joinGame.getDimensionRegistryName()));
+                        false, joinGame.getDimensionInfo()));
       }
+
       player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-                  joinGame.getShouldKeepPlayerData(), joinGame.getIsDebug(), joinGame.getIsFlat(),
-                  joinGame.getDimensionRegistryName()));
+                  false, joinGame.getDimensionInfo()));
+
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to

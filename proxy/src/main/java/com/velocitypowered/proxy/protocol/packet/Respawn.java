@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
@@ -14,24 +15,20 @@ public class Respawn implements MinecraftPacket {
   private short gamemode;
   private String levelType = "";
   private boolean shouldKeepPlayerData; // 1.16+
-  private boolean isDebug; // 1.16+
-  private boolean isFlat; // 1.16+
-  private String dimensionRegistryName; // 1.16+
+  private DimensionInfo dimensionInfo;
 
   public Respawn() {
   }
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
-      String levelType, boolean shouldKeepPlayerData, boolean isDebug, boolean isFlat, String dimensionRegistryName) {
+      String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
     this.gamemode = gamemode;
     this.levelType = levelType;
     this.shouldKeepPlayerData = shouldKeepPlayerData;
-    this.isDebug = isDebug;
-    this.isFlat = isFlat;
-    this.dimensionRegistryName = dimensionRegistryName;
+    this.dimensionInfo = dimensionInfo;
   }
 
   public int getDimension() {
@@ -82,30 +79,6 @@ public class Respawn implements MinecraftPacket {
     this.shouldKeepPlayerData = shouldKeepPlayerData;
   }
 
-  public boolean getIsDebug() {
-    return isDebug;
-  }
-
-  public void setIsDebug(boolean isDebug) {
-    this.isDebug = isDebug;
-  }
-
-  public boolean getIsFlat() {
-    return isFlat;
-  }
-
-  public void setIsFlat(boolean isFlat) {
-    this.isFlat = isFlat;
-  }
-
-  public String getDimensionRegistryName() {
-    return dimensionRegistryName;
-  }
-
-  public void setDimensionRegistryName(String dimensionRegistryName) {
-    this.dimensionRegistryName = dimensionRegistryName;
-  }
-
   @Override
   public String toString() {
     return "Respawn{"
@@ -115,16 +88,17 @@ public class Respawn implements MinecraftPacket {
         + ", gamemode=" + gamemode
         + ", levelType='" + levelType + '\''
         + ", shouldKeepPlayerData=" + shouldKeepPlayerData
-        + ", isDebug=" + isDebug
-        + ", isFlat='" + isFlat
-        + ", dimensionRegistryName='" + dimensionRegistryName + '\''
+        + ", dimensionRegistryName='" + dimensionInfo.toString() + '\''
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    String dimensionIdentifier = null;
+    String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      this.dimensionRegistryName = ProtocolUtils.readString(buf); // Not sure what the cap on that is
+      dimensionIdentifier = ProtocolUtils.readString(buf);
+      levelName = ProtocolUtils.readString(buf);
     } else {
       this.dimension = buf.readInt();
     }
@@ -136,9 +110,10 @@ public class Respawn implements MinecraftPacket {
     }
     this.gamemode = buf.readUnsignedByte();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      isDebug = buf.readBoolean();
-      isFlat = buf.readBoolean();
-      shouldKeepPlayerData = buf.readBoolean();
+      boolean isDebug = buf.readBoolean();
+      boolean isFlat = buf.readBoolean();
+      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+      this.shouldKeepPlayerData = buf.readBoolean();
     } else {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
@@ -147,7 +122,8 @@ public class Respawn implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      ProtocolUtils.writeString(buf, dimensionRegistryName);
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     } else {
       buf.writeInt(dimension);
     }
@@ -159,8 +135,8 @@ public class Respawn implements MinecraftPacket {
     }
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      buf.writeBoolean(isDebug);
-      buf.writeBoolean(isFlat);
+      buf.writeBoolean(dimensionInfo.isDebugType());
+      buf.writeBoolean(dimensionInfo.isFlat());
       buf.writeBoolean(shouldKeepPlayerData);
     } else {
       ProtocolUtils.writeString(buf, levelType);
