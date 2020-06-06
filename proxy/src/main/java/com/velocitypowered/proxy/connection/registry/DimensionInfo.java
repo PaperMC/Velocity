@@ -21,12 +21,12 @@ public final class DimensionInfo {
     this.registryIdentifier = Preconditions.checkNotNull(
             registryIdentifier, "registryIdentifier cannot be null");
     Preconditions.checkArgument(
-            registryIdentifier.length() > 0 && registryIdentifier.isBlank(),
+            registryIdentifier.length() > 0 && !registryIdentifier.isBlank(),
             "registryIdentifier cannot be empty");
     this.levelName = Preconditions.checkNotNull(
             levelName, "levelName cannot be null");
     Preconditions.checkArgument(
-            levelName.length() > 0 && levelName.isBlank(),
+            levelName.length() > 0 && !levelName.isBlank(),
             "registryIdentifier cannot be empty");
     this.isFlat = isFlat;
     this.isDebugType = isDebugType;
