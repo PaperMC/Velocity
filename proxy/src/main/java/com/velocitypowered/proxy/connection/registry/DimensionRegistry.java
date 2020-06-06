@@ -59,7 +59,7 @@ public final class DimensionRegistry {
    * @return game dimension data or null if not registered
    */
   public @Nullable DimensionData getDimensionData(String dimensionIdentifier) {
-    return registeredDimensions.getOrDefault(dimensionIdentifier, null);
+    return registeredDimensions.get(dimensionIdentifier);
   }
 
   /**
