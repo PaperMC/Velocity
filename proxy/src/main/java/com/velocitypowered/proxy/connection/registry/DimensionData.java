@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.connection.registry;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import net.kyori.nbt.CompoundTag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DimensionData {
   private final String registryIdentifier;
@@ -12,8 +12,8 @@ public final class DimensionData {
   private final boolean isUltrawarm;
   private final boolean hasCeiling;
   private final boolean hasSkylight;
-  private final Optional<Long> fixedTime;
-  private final Optional<Boolean> hasEnderdragonFight;
+  private final @Nullable Long fixedTime;
+  private final @Nullable Boolean hasEnderdragonFight;
 
   /**
    * Initializes a new {@link DimensionData} instance.
@@ -30,7 +30,7 @@ public final class DimensionData {
   public DimensionData(String registryIdentifier, boolean isNatural,
                        float ambientLight, boolean isShrunk, boolean isUltrawarm,
                        boolean hasCeiling, boolean hasSkylight,
-                       Optional<Long> fixedTime, Optional<Boolean> hasEnderdragonFight) {
+                       @Nullable Long fixedTime, @Nullable Boolean hasEnderdragonFight) {
     Preconditions.checkNotNull(
             registryIdentifier, "registryIdentifier cannot be null");
     Preconditions.checkArgument(registryIdentifier.length() > 0 && !registryIdentifier.isBlank(),
@@ -42,10 +42,8 @@ public final class DimensionData {
     this.isUltrawarm = isUltrawarm;
     this.hasCeiling = hasCeiling;
     this.hasSkylight = hasSkylight;
-    this.fixedTime = Preconditions.checkNotNull(
-            fixedTime, "fixedTime optional object cannot be null");
-    this.hasEnderdragonFight = Preconditions.checkNotNull(
-            hasEnderdragonFight, "hasEnderdragonFight optional object cannot be null");
+    this.fixedTime = fixedTime;
+    this.hasEnderdragonFight = hasEnderdragonFight;
   }
 
   public String getRegistryIdentifier() {
@@ -76,11 +74,11 @@ public final class DimensionData {
     return hasSkylight;
   }
 
-  public Optional<Long> getFixedTime() {
+  public @Nullable Long getFixedTime() {
     return fixedTime;
   }
 
-  public Optional<Boolean> getHasEnderdragonFight() {
+  public @Nullable Boolean getHasEnderdragonFight() {
     return hasEnderdragonFight;
   }
 
@@ -99,12 +97,10 @@ public final class DimensionData {
     boolean isUltrawarm = values.getBoolean("ultrawarm");
     boolean hasCeiling = values.getBoolean("has_ceiling");
     boolean hasSkylight = values.getBoolean("has_skylight");
-    Optional<Long> fixedTime = Optional.fromNullable(
-            values.contains("fixed_time")
-                    ? values.getLong("fixed_time") : null);
-    Optional<Boolean> hasEnderdragonFight = Optional.fromNullable(
-            values.contains("has_enderdragon_fight")
-                    ? values.getBoolean("has_enderdragon_fight") : null);
+    Long fixedTime = values.contains("fixed_time")
+            ? values.getLong("fixed_time") : null;
+    Boolean hasEnderdragonFight = values.contains("has_enderdragon_fight")
+                    ? values.getBoolean("has_enderdragon_fight") : null;
     return new DimensionData(
             registryIdentifier, isNatural, ambientLight, isShrunk,
             isUltrawarm, hasCeiling, hasSkylight, fixedTime, hasEnderdragonFight);
@@ -124,11 +120,11 @@ public final class DimensionData {
     values.putBoolean("ultrawarm", isUltrawarm);
     values.putBoolean("has_ceiling", hasCeiling);
     values.putBoolean("has_skylight", hasSkylight);
-    if (fixedTime.isPresent()) {
-      values.putLong("fixed_time", fixedTime.get());
+    if (fixedTime != null) {
+      values.putLong("fixed_time", fixedTime);
     }
-    if (hasEnderdragonFight.isPresent()) {
-      values.putBoolean("has_enderdragon_fight", hasEnderdragonFight.get());
+    if (hasEnderdragonFight != null) {
+      values.putBoolean("has_enderdragon_fight", hasEnderdragonFight);
     }
     ret.put("element", values);
     return ret;
