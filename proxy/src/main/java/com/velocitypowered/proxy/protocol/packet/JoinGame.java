@@ -1,7 +1,9 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.protocol.*;
@@ -134,8 +136,9 @@ public class JoinGame implements MinecraftPacket {
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      String levelNames[] = ProtocolUtils.readStringArray(buf);
-      this.dimensionRegistry = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf), levelNames);
+      ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
+      ImmutableSet<DimensionData> readData = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf));
+      this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
       dimensionIdentifier = ProtocolUtils.readString(buf);
       levelName = ProtocolUtils.readString(buf);
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
@@ -174,7 +177,8 @@ public class JoinGame implements MinecraftPacket {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames());
+      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
+              new String[dimensionRegistry.getLevelNames().size()]));
       ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());

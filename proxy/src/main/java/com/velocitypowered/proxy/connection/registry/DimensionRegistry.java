@@ -93,7 +93,7 @@ public final class DimensionRegistry {
    * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    */
-  public static Set<DimensionData> fromGameData(CompoundTag toParse) {
+  public static ImmutableSet<DimensionData> fromGameData(CompoundTag toParse) {
     Preconditions.checkNotNull(toParse, "CompoundTag cannot be null");
     Preconditions.checkArgument(toParse.contains("dimension", TagType.LIST),
             "CompoundTag does not contain a dimension list");
