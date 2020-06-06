@@ -1,11 +1,11 @@
 package com.velocitypowered.proxy.connection.registry;
 
-import javax.annotation.Nonnull;
+import com.google.common.base.Preconditions;
 
-public class DimensionInfo {
+public final class DimensionInfo {
 
-  private final @Nonnull String registryIdentifier;
-  private final @Nonnull String levelName;
+  private final String registryIdentifier;
+  private final String levelName;
   private final boolean isFlat;
   private final boolean isDebugType;
 
@@ -16,18 +16,18 @@ public class DimensionInfo {
    * @param isFlat if true will set world lighting below surface-level to not display fog
    * @param isDebugType if true constrains the world to the very limited debug-type world
    */
-  public DimensionInfo(@Nonnull String registryIdentifier, @Nonnull String levelName,
+  public DimensionInfo(String registryIdentifier, String levelName,
                        boolean isFlat, boolean isDebugType) {
-    if (registryIdentifier == null || registryIdentifier.isEmpty()
-            || registryIdentifier.isBlank()) {
-      throw new IllegalArgumentException("Dimension registry identifier may not be empty or null");
-    }
-    this.registryIdentifier = registryIdentifier;
-    if (levelName == null || levelName.isEmpty()
-            || levelName.isBlank()) {
-      throw new IllegalArgumentException("dimensions level name may not be empty or null");
-    }
-    this.levelName = levelName;
+    this.registryIdentifier = Preconditions.checkNotNull(
+            registryIdentifier, "registryIdentifier cannot be null");
+    Preconditions.checkArgument(
+            registryIdentifier.length() > 0 && registryIdentifier.isBlank(),
+            "registryIdentifier cannot be empty");
+    this.levelName = Preconditions.checkNotNull(
+            levelName, "levelName cannot be null");
+    Preconditions.checkArgument(
+            levelName.length() > 0 && levelName.isBlank(),
+            "registryIdentifier cannot be empty");
     this.isFlat = isFlat;
     this.isDebugType = isDebugType;
   }
@@ -40,11 +40,11 @@ public class DimensionInfo {
     return isFlat;
   }
 
-  public @Nonnull String getLevelName() {
+  public String getLevelName() {
     return levelName;
   }
 
-  public @Nonnull String getRegistryIdentifier() {
+  public String getRegistryIdentifier() {
     return registryIdentifier;
   }
 }
