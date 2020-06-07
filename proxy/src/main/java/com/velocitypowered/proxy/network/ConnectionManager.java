@@ -6,7 +6,7 @@ import static org.asynchttpclient.Dsl.config;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.netty.DnsAddressResolverGroupNameResolverAdapter;
+import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -18,6 +18,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +49,7 @@ public final class ConnectionManager {
   @SuppressWarnings("WeakerAccess")
   public final BackendChannelInitializerHolder backendChannelInitializer;
 
-  private final DnsAddressResolverGroup resolverGroup;
+  private final SeparatePoolInetNameResolver resolver;
   private final AsyncHttpClient httpClient;
 
   /**
@@ -65,21 +66,16 @@ public final class ConnectionManager {
         new ServerChannelInitializer(this.server));
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
-    this.resolverGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder()
-        .channelType(this.transportType.datagramChannelClass)
-        .negativeTtl(15)
-        .ndots(1));
+    this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
         .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
         .addRequestFilter(new RequestFilter() {
           @Override
-          public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
+          public <T> FilterContext<T> filter(FilterContext<T> ctx) {
             return new FilterContextBuilder<>(ctx)
                 .request(new RequestBuilder(ctx.getRequest())
-                    .setNameResolver(
-                        new DnsAddressResolverGroupNameResolverAdapter(resolverGroup, workerGroup)
-                    )
+                    .setNameResolver(resolver)
                     .build())
                 .build();
           }
@@ -162,7 +158,7 @@ public final class ConnectionManager {
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
-        .resolver(this.resolverGroup);
+        .resolver(this.resolver.asGroup());
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
@@ -194,6 +190,8 @@ public final class ConnectionManager {
         Thread.currentThread().interrupt();
       }
     }
+
+    this.resolver.shutdown();
   }
 
   public EventLoopGroup getBossGroup() {
