@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import net.kyori.nbt.CompoundTag;
+import net.kyori.nbt.TagIO;
 import net.kyori.nbt.TagType;
 
 public enum ProtocolUtils {
@@ -203,17 +204,10 @@ public enum ProtocolUtils {
     }
     buf.readerIndex(indexBefore);
     try {
-      DataInput input = new ByteBufInputStream(buf);
-      byte type = input.readByte();
-      if (type != TagType.COMPOUND.id()) {
-        throw new DecoderException("NBTTag is not a CompoundTag");
-      }
-      input.readUTF(); // Head-padding
-      CompoundTag compoundTag = new CompoundTag();
-      compoundTag.read(input, 0);
-      return compoundTag;
-    } catch (IOException e) {
-      throw new DecoderException("Unable to decode NBT CompoundTag at " + indexBefore);
+      return TagIO.readDataInput(new ByteBufInputStream(buf));
+    } catch (IOException thrown) {
+      throw new DecoderException(
+              "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
     }
   }
 
@@ -228,10 +222,7 @@ public enum ProtocolUtils {
       return;
     }
     try {
-      DataOutput output = new ByteBufOutputStream(buf);
-      output.writeByte(10); // Type 10 - CompoundTag
-      output.writeUTF(""); // Head-padding
-      compoundTag.write(output);
+      TagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
     } catch (IOException e) {
       throw new EncoderException("Unable to encode NBT CompoundTag");
     }

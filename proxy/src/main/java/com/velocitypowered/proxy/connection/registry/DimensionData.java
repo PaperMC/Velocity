@@ -12,8 +12,14 @@ public final class DimensionData {
   private final boolean isUltrawarm;
   private final boolean hasCeiling;
   private final boolean hasSkylight;
+  private final boolean isPiglinSafe;
+  private final boolean doBedsWork;
+  private final boolean doRespawnAnchorsWork;
+  private final boolean hasRaids;
+  private final int logicalHeight;
+  private final String burningBehaviourIdentifier;
   private final @Nullable Long fixedTime;
-  private final @Nullable Boolean hasEnderdragonFight;
+  private final @Nullable Boolean createDragonFight;
 
   /**
    * Initializes a new {@link DimensionData} instance.
@@ -24,17 +30,32 @@ public final class DimensionData {
    * @param isUltrawarm internal dimension warmth flag
    * @param hasCeiling indicates if the dimension has a ceiling layer
    * @param hasSkylight indicates if the dimension should display the sun
+   * @param isPiglinSafe indicates if piglins should naturally zombify in this dimension
+   * @param doBedsWork indicates if players should be able to sleep in beds in this dimension
+   * @param doRespawnAnchorsWork indicates if player respawn points can be used in this dimension
+   * @param hasRaids indicates if raids can be spawned in the dimension
+   * @param logicalHeight the natural max height for the given dimension
+   * @param burningBehaviourIdentifier the identifier for how burning blocks work in the dimension
    * @param fixedTime optional. If set to any game daytime value will deactivate time cycle
-   * @param hasEnderdragonFight optional. Internal flag used in the end dimension
+   * @param createDragonFight optional. Internal flag used in the end dimension
    */
   public DimensionData(String registryIdentifier, boolean isNatural,
                        float ambientLight, boolean isShrunk, boolean isUltrawarm,
                        boolean hasCeiling, boolean hasSkylight,
-                       @Nullable Long fixedTime, @Nullable Boolean hasEnderdragonFight) {
+                       boolean isPiglinSafe, boolean doBedsWork,
+                       boolean doRespawnAnchorsWork, boolean hasRaids,
+                       int logicalHeight, String burningBehaviourIdentifier,
+                       @Nullable Long fixedTime, @Nullable Boolean createDragonFight) {
     Preconditions.checkNotNull(
             registryIdentifier, "registryIdentifier cannot be null");
     Preconditions.checkArgument(registryIdentifier.length() > 0 && !registryIdentifier.isBlank(),
             "registryIdentifier cannot be empty");
+    Preconditions.checkArgument(logicalHeight >= 0, "localHeight must be >= 0");
+    Preconditions.checkNotNull(
+            burningBehaviourIdentifier, "burningBehaviourIdentifier cannot be null");
+    Preconditions.checkArgument(burningBehaviourIdentifier.length() > 0
+                    && !burningBehaviourIdentifier.isBlank(),
+            "burningBehaviourIdentifier cannot be empty");
     this.registryIdentifier = registryIdentifier;
     this.isNatural = isNatural;
     this.ambientLight = ambientLight;
@@ -42,8 +63,14 @@ public final class DimensionData {
     this.isUltrawarm = isUltrawarm;
     this.hasCeiling = hasCeiling;
     this.hasSkylight = hasSkylight;
+    this.isPiglinSafe = isPiglinSafe;
+    this.doBedsWork = doBedsWork;
+    this.doRespawnAnchorsWork = doRespawnAnchorsWork;
+    this.hasRaids = hasRaids;
+    this.logicalHeight = logicalHeight;
+    this.burningBehaviourIdentifier = burningBehaviourIdentifier;
     this.fixedTime = fixedTime;
-    this.hasEnderdragonFight = hasEnderdragonFight;
+    this.createDragonFight = createDragonFight;
   }
 
   public String getRegistryIdentifier() {
@@ -66,20 +93,44 @@ public final class DimensionData {
     return isUltrawarm;
   }
 
-  public boolean isHasCeiling() {
+  public boolean hasCeiling() {
     return hasCeiling;
   }
 
-  public boolean isHasSkylight() {
+  public boolean hasSkylight() {
     return hasSkylight;
+  }
+
+  public boolean isPiglinSafe() {
+    return isPiglinSafe;
+  }
+
+  public boolean doBedsWork() {
+    return doBedsWork;
+  }
+
+  public boolean doRespawnAnchorsWork() {
+    return doRespawnAnchorsWork;
+  }
+
+  public boolean hasRaids() {
+    return hasRaids;
+  }
+
+  public int getLogicalHeight() {
+    return logicalHeight;
+  }
+
+  public String getBurningBehaviourIdentifier() {
+    return burningBehaviourIdentifier;
   }
 
   public @Nullable Long getFixedTime() {
     return fixedTime;
   }
 
-  public @Nullable Boolean getHasEnderdragonFight() {
-    return hasEnderdragonFight;
+  public @Nullable Boolean getCreateDragonFight() {
+    return createDragonFight;
   }
 
   /**
@@ -89,21 +140,27 @@ public final class DimensionData {
    */
   public static DimensionData decodeCompoundTag(CompoundTag toRead) {
     Preconditions.checkNotNull(toRead, "CompoundTag cannot be null");
-    String registryIdentifier = toRead.getString("key");
-    CompoundTag values = toRead.getCompound("element");
-    boolean isNatural = values.getBoolean("natural");
-    float ambientLight = values.getFloat("ambient_light");
-    boolean isShrunk = values.getBoolean("shrunk");
-    boolean isUltrawarm = values.getBoolean("ultrawarm");
-    boolean hasCeiling = values.getBoolean("has_ceiling");
-    boolean hasSkylight = values.getBoolean("has_skylight");
-    Long fixedTime = values.contains("fixed_time")
-            ? values.getLong("fixed_time") : null;
-    Boolean hasEnderdragonFight = values.contains("has_enderdragon_fight")
-                    ? values.getBoolean("has_enderdragon_fight") : null;
+    String registryIdentifier = toRead.getString("name");
+    boolean isNatural = toRead.getBoolean("natural");
+    float ambientLight = toRead.getFloat("ambient_light");
+    boolean isShrunk = toRead.getBoolean("shrunk");
+    boolean isUltrawarm = toRead.getBoolean("ultrawarm");
+    boolean hasCeiling = toRead.getBoolean("has_ceiling");
+    boolean hasSkylight = toRead.getBoolean("has_skylight");
+    boolean isPiglinSafe = toRead.getBoolean("piglin_safe");
+    boolean doBedsWork = toRead.getBoolean("bed_works");
+    boolean doRespawnAnchorsWork = toRead.getBoolean("respawn_anchor_works");
+    boolean hasRaids = toRead.getBoolean("has_raids");
+    int logicalHeight = toRead.getInt("logical_height");
+    String burningBehaviourIdentifier = toRead.getString("infiniburn");
+    Long fixedTime = toRead.contains("fixed_time")
+            ? toRead.getLong("fixed_time") : null;
+    Boolean hasEnderdragonFight = toRead.contains("has_enderdragon_fight")
+                    ? toRead.getBoolean("has_enderdragon_fight") : null;
     return new DimensionData(
             registryIdentifier, isNatural, ambientLight, isShrunk,
-            isUltrawarm, hasCeiling, hasSkylight, fixedTime, hasEnderdragonFight);
+            isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
+            hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, hasEnderdragonFight);
   }
 
   /**
@@ -112,21 +169,25 @@ public final class DimensionData {
    */
   public CompoundTag encodeAsCompundTag() {
     CompoundTag ret = new CompoundTag();
-    ret.putString("key", registryIdentifier);
-    CompoundTag values = new CompoundTag();
-    values.putBoolean("natural", isNatural);
-    values.putFloat("ambient_light", ambientLight);
-    values.putBoolean("shrunk", isShrunk);
-    values.putBoolean("ultrawarm", isUltrawarm);
-    values.putBoolean("has_ceiling", hasCeiling);
-    values.putBoolean("has_skylight", hasSkylight);
+    ret.putString("name", registryIdentifier);
+    ret.putBoolean("natural", isNatural);
+    ret.putFloat("ambient_light", ambientLight);
+    ret.putBoolean("shrunk", isShrunk);
+    ret.putBoolean("ultrawarm", isUltrawarm);
+    ret.putBoolean("has_ceiling", hasCeiling);
+    ret.putBoolean("has_skylight", hasSkylight);
+    ret.putBoolean("piglin_safe", isPiglinSafe);
+    ret.putBoolean("bed_works", doBedsWork);
+    ret.putBoolean("respawn_anchor_works", doRespawnAnchorsWork);
+    ret.putBoolean("has_raids", hasRaids);
+    ret.putInt("logical_height", logicalHeight);
+    ret.putString("infiniburn", burningBehaviourIdentifier);
     if (fixedTime != null) {
-      values.putLong("fixed_time", fixedTime);
+      ret.putLong("fixed_time", fixedTime);
     }
-    if (hasEnderdragonFight != null) {
-      values.putBoolean("has_enderdragon_fight", hasEnderdragonFight);
+    if (createDragonFight != null) {
+      ret.putBoolean("has_enderdragon_fight", createDragonFight);
     }
-    ret.put("element", values);
     return ret;
   }
 }
