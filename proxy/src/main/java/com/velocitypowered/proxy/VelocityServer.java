@@ -120,12 +120,12 @@ public class VelocityServer implements ProxyServer {
   }
 
   public KeyPair getServerKeyPair() {
-    return ensureInitialized(serverKeyPair);
+    return serverKeyPair;
   }
 
   @Override
   public VelocityConfiguration getConfiguration() {
-    return ensureInitialized(this.configuration);
+    return this.configuration;
   }
 
   @Override
@@ -229,7 +229,6 @@ public class VelocityServer implements ProxyServer {
     Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
   }
 
-  @RequiresNonNull({"pluginManager", "eventManager"})
   private void loadPlugins() {
     logger.info("Loading plugins...");
 
@@ -443,18 +442,11 @@ public class VelocityServer implements ProxyServer {
   }
 
   public AsyncHttpClient getAsyncHttpClient() {
-    return ensureInitialized(cm).getHttpClient();
+    return cm.getHttpClient();
   }
 
   public Ratelimiter getIpAttemptLimiter() {
-    return ensureInitialized(ipAttemptLimiter);
-  }
-
-  private static <T> T ensureInitialized(T o) {
-    if (o == null) {
-      throw new IllegalStateException("The proxy isn't fully initialized.");
-    }
-    return o;
+    return ipAttemptLimiter;
   }
 
   /**
