@@ -22,7 +22,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   private AddressResolverGroup<InetSocketAddress> resolverGroup;
 
   /**
-   * Creates a new instnace of {@code SeparatePoolInetNameResolver}.
+   * Creates a new instance of {@code SeparatePoolInetNameResolver}.
    *
    * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link
    *                 Future} returned by {@link #resolve(String)}
