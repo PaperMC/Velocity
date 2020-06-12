@@ -204,7 +204,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
-        player.disconnect(VelocityMessages.ALREADY_CONNECTED);
+        player.disconnect0(VelocityMessages.ALREADY_CONNECTED, true);
         return CompletableFuture.completedFuture(null);
       }
 
@@ -246,10 +246,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
           Optional<Component> reason = event.getResult().getReason();
           if (reason.isPresent()) {
-            player.disconnect(reason.get());
+            player.disconnect0(reason.get(), true);
           } else {
             if (!server.registerConnection(player)) {
-              player.disconnect(VelocityMessages.ALREADY_CONNECTED);
+              player.disconnect0(VelocityMessages.ALREADY_CONNECTED, true);
               return;
             }
 
@@ -269,7 +269,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
-            player.disconnect(VelocityMessages.NO_AVAILABLE_SERVERS);
+            player.disconnect0(VelocityMessages.NO_AVAILABLE_SERVERS, true);
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();

@@ -104,6 +104,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
 
   private @MonotonicNonNull List<String> serversToTry = null;
+  private boolean explicitlyDisconnected = false;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -281,9 +282,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void disconnect(Component reason) {
+    if (connection.eventLoop().inEventLoop()) {
+      disconnect0(reason, false);
+    } else {
+      connection.eventLoop().execute(() -> disconnect0(reason, false));
+    }
+  }
+
+  public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
+    this.explicitlyDisconnected = true;
     connection.closeWith(Disconnect.create(reason));
+
+    server.getEventManager().fireAndForget(new DisconnectEvent(this, duringLogin));
   }
 
   @Override
@@ -574,10 +586,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connectedServer.disconnect();
     }
     boolean isConnected = server.getPlayer(this.getUniqueId()).isPresent();
-
     server.unregisterConnection(this);
-    server.getEventManager().fire(new DisconnectEvent(this, !isConnected))
-            .thenRun(() -> this.teardownFuture.complete(null));
+    if (!this.explicitlyDisconnected) {
+      server.getEventManager().fire(new DisconnectEvent(this, !isConnected))
+          .thenRun(() -> this.teardownFuture.complete(null));
+    }
   }
 
   public CompletableFuture<Void> getTeardownFuture() {
