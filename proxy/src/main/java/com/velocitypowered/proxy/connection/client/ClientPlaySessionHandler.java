@@ -170,59 +170,45 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(PluginMessage packet) {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
-    if (serverConn != null && backendConn != null) {
-      if (backendConn.getState() != StateRegistry.PLAY) {
-        logger.warn("A plugin message was received while the backend server was not "
-            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
-      } else if (PluginMessageUtil.isRegister(packet)) {
-        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-        backendConn.write(packet.retain());
-      } else if (PluginMessageUtil.isUnregister(packet)) {
-        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-        backendConn.write(packet.retain());
-      } else if (PluginMessageUtil.isMcBrand(packet)) {
-        backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
-      } else {
-        if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
-          // We must bypass the currently-connected server when forwarding Forge packets.
-          VelocityServerConnection inFlight = player.getConnectionInFlight();
-          if (inFlight != null) {
-            player.getPhase().handle(player, packet, inFlight);
-          }
-          return true;
-        }
-
-        if (!player.getPhase().handle(player, packet, serverConn)) {
-          if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-              .consideredComplete()) {
-            // The client is trying to send messages too early. This is primarily caused by mods,
-            // but further aggravated by Velocity. To work around these issues, we will queue any
-            // non-FML handshake messages to be sent once the FML handshake has completed or the
-            // JoinGame packet has been received by the proxy, whichever comes first.
-            //
-            // We also need to make sure to retain these packets so they can be flushed
-            // appropriately.
-            loginPluginMessages.add(packet.retain());
-          } else {
-            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-            if (id == null) {
-              backendConn.write(packet.retain());
-            } else {
-              byte[] copy = ByteBufUtil.getBytes(packet.content());
-              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                  ByteBufUtil.getBytes(packet.content()));
-              server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-                PluginMessage message = new PluginMessage(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
-                backendConn.write(message);
-              }, backendConn.eventLoop());
-            }
-          }
-        }
-      }
+    if (serverConn == null || backendConn == null) {
+      return true;
     }
 
+    if (backendConn.getState() != StateRegistry.PLAY) {
+      logger.warn("A plugin message was received while the backend server was not "
+          + "ready. Channel: {}. Packet discarded.", packet.getChannel());
+      return true;
+    }
+
+    if (this.tryHandleVanillaPluginMessageChannel(packet, backendConn)) {
+      return true;
+    }
+
+    if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
+      // We must bypass the currently-connected server when forwarding Forge packets.
+      VelocityServerConnection inFlight = player.getConnectionInFlight();
+      if (inFlight != null) {
+        if (player.getPhase().handle(player, packet, inFlight)) {
+          return true;
+        }
+      }
+    } else if (!this.tryHandleForgeMessage(packet, serverConn)) {
+      return true;
+    }
+
+    ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+    if (id == null) {
+      backendConn.write(packet.retain());
+    } else {
+      byte[] copy = ByteBufUtil.getBytes(packet.content());
+      PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
+          ByteBufUtil.getBytes(packet.content()));
+      server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+        PluginMessage message = new PluginMessage(packet.getChannel(),
+            Unpooled.wrappedBuffer(copy));
+        backendConn.write(message);
+      }, backendConn.eventLoop());
+    }
     return true;
   }
 
@@ -290,6 +276,44 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (smc != null) {
         smc.setAutoReading(writable);
       }
+    }
+  }
+
+  private boolean tryHandleVanillaPluginMessageChannel(PluginMessage packet,
+      MinecraftConnection backendConn) {
+    if (PluginMessageUtil.isRegister(packet)) {
+      player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+      backendConn.write(packet.retain());
+      return true;
+    } else if (PluginMessageUtil.isUnregister(packet)) {
+      player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
+      backendConn.write(packet.retain());
+      return true;
+    } else if (PluginMessageUtil.isMcBrand(packet)) {
+      backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+          player.getProtocolVersion()));
+      return true;
+    }
+    return false;
+  }
+
+  private boolean tryHandleForgeMessage(PluginMessage packet, VelocityServerConnection serverConn) {
+    if (player.getPhase().handle(player, packet, serverConn)) {
+      return true;
+    }
+
+    if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+      // The client is trying to send messages too early. This is primarily caused by mods,
+      // but further aggravated by Velocity. To work around these issues, we will queue any
+      // non-FML handshake messages to be sent once the FML handshake has completed or the
+      // JoinGame packet has been received by the proxy, whichever comes first.
+      //
+      // We also need to make sure to retain these packets so they can be flushed
+      // appropriately.
+      loginPluginMessages.add(packet.retain());
+      return true;
+    } else {
+      return false;
     }
   }
 
