@@ -289,6 +289,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
+  /**
+   * Disconnects the player from the proxy.
+   * @param reason the reason for disconnecting the player
+   * @param duringLogin whether the disconnect happened during login
+   */
   public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
