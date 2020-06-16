@@ -24,6 +24,7 @@ public class JoinGame implements MinecraftPacket {
   private boolean showRespawnScreen;
   private DimensionRegistry dimensionRegistry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
+  private short previousGamemode; // 1.16+
 
   public int getEntityId() {
     return entityId;
@@ -69,10 +70,7 @@ public class JoinGame implements MinecraftPacket {
     this.maxPlayers = maxPlayers;
   }
 
-  public String getLevelType() {
-    if (levelType == null) {
-      throw new IllegalStateException("No level type specified.");
-    }
+  public @Nullable String getLevelType() {
     return levelType;
   }
 
@@ -112,6 +110,14 @@ public class JoinGame implements MinecraftPacket {
     this.dimensionRegistry = dimensionRegistry;
   }
 
+  public short getPreviousGamemode() {
+    return previousGamemode;
+  }
+
+  public void setPreviousGamemode(short previousGamemode) {
+    this.previousGamemode = previousGamemode;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -126,16 +132,18 @@ public class JoinGame implements MinecraftPacket {
         + ", reducedDebugInfo=" + reducedDebugInfo
         + ", dimensionRegistry='" + dimensionRegistry.toString() + '\''
         + ", dimensionInfo='" + dimensionInfo.toString() + '\''
+        + ", previousGamemode=" + previousGamemode
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    this.gamemode = buf.readUnsignedByte();
+    this.gamemode = buf.readByte();
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      this.previousGamemode = buf.readByte();
       ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
       ImmutableSet<DimensionData> readData = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf));
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
@@ -155,8 +163,6 @@ public class JoinGame implements MinecraftPacket {
     this.maxPlayers = buf.readUnsignedByte();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       this.levelType = ProtocolUtils.readString(buf, 16);
-    } else {
-      this.levelType = "default"; // I didn't have the courage to rework this yet.
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
@@ -177,6 +183,7 @@ public class JoinGame implements MinecraftPacket {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      buf.writeByte(previousGamemode);
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
               new String[dimensionRegistry.getLevelNames().size()]));
       ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());

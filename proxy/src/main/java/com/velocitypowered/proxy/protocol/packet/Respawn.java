@@ -15,13 +15,15 @@ public class Respawn implements MinecraftPacket {
   private short gamemode;
   private String levelType = "";
   private boolean shouldKeepPlayerData; // 1.16+
-  private DimensionInfo dimensionInfo;
+  private DimensionInfo dimensionInfo; // 1.16+
+  private short previousGamemode; // 1.16+
 
   public Respawn() {
   }
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
-      String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo) {
+      String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo,
+                 short previousGamemode) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
@@ -29,6 +31,7 @@ public class Respawn implements MinecraftPacket {
     this.levelType = levelType;
     this.shouldKeepPlayerData = shouldKeepPlayerData;
     this.dimensionInfo = dimensionInfo;
+    this.previousGamemode = previousGamemode;
   }
 
   public int getDimension() {
@@ -79,6 +82,14 @@ public class Respawn implements MinecraftPacket {
     this.shouldKeepPlayerData = shouldKeepPlayerData;
   }
 
+  public short getPreviousGamemode() {
+    return previousGamemode;
+  }
+
+  public void setPreviousGamemode(short previousGamemode) {
+    this.previousGamemode = previousGamemode;
+  }
+
   @Override
   public String toString() {
     return "Respawn{"
@@ -89,6 +100,7 @@ public class Respawn implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", shouldKeepPlayerData=" + shouldKeepPlayerData
         + ", dimensionRegistryName='" + dimensionInfo.toString() + '\''
+        + ", previousGamemode=" + previousGamemode
         + '}';
   }
 
@@ -108,8 +120,9 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       this.partialHashedSeed = buf.readLong();
     }
-    this.gamemode = buf.readUnsignedByte();
+    this.gamemode = buf.readByte();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      this.previousGamemode = buf.readByte();
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
@@ -135,6 +148,7 @@ public class Respawn implements MinecraftPacket {
     }
     buf.writeByte(gamemode);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      buf.writeByte(previousGamemode);
       buf.writeBoolean(dimensionInfo.isDebugType());
       buf.writeBoolean(dimensionInfo.isFlat());
       buf.writeBoolean(shouldKeepPlayerData);

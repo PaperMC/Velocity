@@ -339,13 +339,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.getMinecraftConnection().delayedWrite(
                 new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
                         joinGame.getGamemode(), joinGame.getLevelType(),
-                        false, joinGame.getDimensionInfo()));
+                        false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode()));
       }
 
       player.getMinecraftConnection().delayedWrite(
           new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-                  false, joinGame.getDimensionInfo()));
+                  false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode()));
 
       destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
