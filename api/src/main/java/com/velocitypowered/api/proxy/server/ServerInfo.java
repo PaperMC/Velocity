@@ -25,7 +25,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    */
   @Deprecated
   public ServerInfo(String name, InetSocketAddress address) {
-    this(name, address, PlayerInfoForwarding.NONE); // TODO: get default
+    this(name, address, PlayerInfoForwarding.DEFAULT);
   }
 
   /**
