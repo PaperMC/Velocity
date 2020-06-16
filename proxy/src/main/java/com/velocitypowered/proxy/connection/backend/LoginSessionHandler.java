@@ -54,7 +54,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LoginPluginMessage packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
-    PlayerInfoForwarding forwardingMode = serverConn.getServer().getServerInfo().getPlayerInfoForwarding();
+    PlayerInfoForwarding forwardingMode = serverConn
+        .getServer().getServerInfo().getPlayerInfoForwarding();
     if (forwardingMode == PlayerInfoForwarding.DEFAULT) {
       forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
     }
@@ -89,7 +90,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccess packet) {
-    PlayerInfoForwarding forwardingMode = serverConn.getServer().getServerInfo().getPlayerInfoForwarding();
+    PlayerInfoForwarding forwardingMode = serverConn
+        .getServer().getServerInfo().getPlayerInfoForwarding();
     if (forwardingMode == PlayerInfoForwarding.DEFAULT) {
       forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
     }
@@ -120,7 +122,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    PlayerInfoForwarding forwardingMode = serverConn.getServer().getServerInfo().getPlayerInfoForwarding();
+    PlayerInfoForwarding forwardingMode = serverConn
+        .getServer().getServerInfo().getPlayerInfoForwarding();
     if (forwardingMode == PlayerInfoForwarding.DEFAULT) {
       forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
     }

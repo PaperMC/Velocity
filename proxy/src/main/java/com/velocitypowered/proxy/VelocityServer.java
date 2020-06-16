@@ -12,6 +12,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.config.ServerConnectionInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
@@ -200,8 +201,10 @@ public class VelocityServer implements ProxyServer {
       System.exit(1);
     }
 
-    for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
-      servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+    for (Map.Entry<String, ServerConnectionInfo> entry : configuration.getServers().entrySet()) {
+      ServerConnectionInfo pair = entry.getValue();
+      InetSocketAddress serverAddress = AddressUtil.parseAddress(pair.getAddress());
+      servers.register(new ServerInfo(entry.getKey(), serverAddress, pair.getForwarding()));
     }
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
@@ -296,10 +299,10 @@ public class VelocityServer implements ProxyServer {
     // Re-register servers. If a server is being replaced, make sure to note what players need to
     // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
-    for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
+    for (Map.Entry<String, ServerConnectionInfo> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
-          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()),
-              newConfiguration.getPlayerInfoForwardingMode());
+          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue().getAddress()),
+              entry.getValue().getForwarding());
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (!rs.isPresent()) {
         servers.register(newInfo);

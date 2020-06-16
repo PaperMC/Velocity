@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
+import com.velocitypowered.api.proxy.config.ServerConnectionInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
@@ -74,7 +75,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       "                 plugin. Use this if you run servers using Minecraft 1.12 or lower, and are",
       "                 unable to implement network level firewalling (on a shared host).",
       "- \"modern\":      Forward player IPs and UUIDs as part of the login process using",
-      "                 Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.",
+      "                 Velocity's native forwarding.",
+      "                 Only applicable for Minecraft 1.13 or higher.",
       "",
       "This value acts as a default forwarding mode setting for servers which do not specify the ",
       "forwarding mode explicitly"
@@ -219,9 +221,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       logger.warn("You don't have any servers configured.");
     }
 
-    for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
+    for (Map.Entry<String, ServerConnectionInfo> entry : servers.getServers().entrySet()) {
       try {
-        AddressUtil.parseAddress(entry.getValue());
+        AddressUtil.parseAddress(entry.getValue().getAddress());
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
@@ -363,7 +365,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   @Override
-  public Map<String, String> getServers() {
+  public Map<String, ServerConnectionInfo> getServers() {
     return servers.getServers();
   }
 
@@ -519,10 +521,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @IsMap
     @Comment({"Configure your servers here. Each key represents the server's name, and the value",
         "represents the IP address of the server to connect to."})
-    private Map<String, String> servers = ImmutableMap.of(
-        "lobby", "127.0.0.1:30066",
-        "factions", "127.0.0.1:30067",
-        "minigames", "127.0.0.1:30068"
+    private Map<String, ServerConnectionInfo> servers = ImmutableMap.of(
+        "lobby", ServerConnectionInfo.of("127.0.0.1:30066", PlayerInfoForwarding.DEFAULT),
+        "factions", ServerConnectionInfo.of("127.0.0.1:30067", PlayerInfoForwarding.DEFAULT),
+        "minigames", ServerConnectionInfo.of("127.0.0.1:30068", PlayerInfoForwarding.DEFAULT)
     );
 
     @Comment("In what order we should try servers when a player logs in or is kicked from a"
@@ -535,10 +537,22 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
     private Servers(Toml toml) {
       if (toml != null) {
-        Map<String, String> servers = new HashMap<>();
+        Map<String, ServerConnectionInfo> servers = new HashMap<>();
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), (String) entry.getValue());
+            ServerConnectionInfo pair = ServerConnectionInfo.of(
+                (String) entry.getValue(), PlayerInfoForwarding.DEFAULT
+            );
+            servers.put(cleanServerName(entry.getKey()), pair);
+          } else if (entry.getValue() instanceof Map) {
+            Toml serverTable = toml.getTable(entry.getKey());
+            ServerConnectionInfo pair = ServerConnectionInfo.of(
+                serverTable.getString("address", ""),
+                PlayerInfoForwarding
+                    .valueOf(serverTable.getString("forwarding", "default")
+                    .toUpperCase(Locale.ROOT))
+            );
+            servers.put(cleanServerName(entry.getKey()), pair);
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
@@ -551,16 +565,17 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       }
     }
 
-    private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
+    private Servers(Map<String, ServerConnectionInfo> servers,
+                    List<String> attemptConnectionOrder) {
       this.servers = servers;
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
 
-    private Map<String, String> getServers() {
+    private Map<String, ServerConnectionInfo> getServers() {
       return servers;
     }
 
-    public void setServers(Map<String, String> servers) {
+    public void setServers(Map<String, ServerConnectionInfo> servers) {
       this.servers = servers;
     }
 

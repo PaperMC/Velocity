@@ -21,18 +21,6 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    *
    * @param name the name for the server
    * @param address the address of the server to connect to
-   * @deprecated prefer using constructor where you can specify player info forwarding mode
-   */
-  @Deprecated
-  public ServerInfo(String name, InetSocketAddress address) {
-    this(name, address, PlayerInfoForwarding.DEFAULT);
-  }
-
-  /**
-   * Creates a new ServerInfo object.
-   *
-   * @param name the name for the server
-   * @param address the address of the server to connect to
    * @param playerInfoForwarding the player info forwarding mode this connection will use
    */
   public ServerInfo(String name, InetSocketAddress address,
