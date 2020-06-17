@@ -30,9 +30,10 @@ public final class ServerConnectionInfo {
 
   @Override
   public String toString() {
-    return "AddressForwardingModePair{"
-        + "address='" + address + '\''
-        + ", forwarding=" + forwarding
-        + '}';
+    if (forwarding == PlayerInfoForwarding.DEFAULT) {
+      return "{ address = \"" + address + "\" }";
+    } else {
+      return "{ address = \"" + address + "\", forwarding = \"" + forwarding.name() + "\" }";
+    }
   }
 }
