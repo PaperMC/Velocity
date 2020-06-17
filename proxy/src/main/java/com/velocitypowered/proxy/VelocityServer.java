@@ -201,7 +201,8 @@ public class VelocityServer implements ProxyServer {
       System.exit(1);
     }
 
-    for (Map.Entry<String, ServerConnectionInfo> entry : configuration.getServersDetailed().entrySet()) {
+    for (Map.Entry<String, ServerConnectionInfo> entry : configuration
+        .getServersDetailed().entrySet()) {
       ServerConnectionInfo pair = entry.getValue();
       InetSocketAddress serverAddress = AddressUtil.parseAddress(pair.getAddress());
       servers.register(new ServerInfo(entry.getKey(), serverAddress, pair.getForwarding()));
@@ -299,7 +300,8 @@ public class VelocityServer implements ProxyServer {
     // Re-register servers. If a server is being replaced, make sure to note what players need to
     // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
-    for (Map.Entry<String, ServerConnectionInfo> entry : newConfiguration.getServersDetailed().entrySet()) {
+    for (Map.Entry<String, ServerConnectionInfo> entry : newConfiguration
+        .getServersDetailed().entrySet()) {
       ServerInfo newInfo =
           new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue().getAddress()),
               entry.getValue().getForwarding());
