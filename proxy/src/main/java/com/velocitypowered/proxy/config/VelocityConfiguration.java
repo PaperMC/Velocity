@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.config;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
@@ -365,7 +366,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   @Override
-  public Map<String, ServerConnectionInfo> getServers() {
+  public Map<String, String> getServers() {
+    return Maps.transformValues(servers.getServers(), ServerConnectionInfo::getAddress);
+  }
+
+  @Override
+  public Map<String, ServerConnectionInfo> getServersDetailed() {
     return servers.getServers();
   }
 
@@ -540,19 +546,19 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         Map<String, ServerConnectionInfo> servers = new HashMap<>();
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
           if (entry.getValue() instanceof String) {
-            ServerConnectionInfo pair = ServerConnectionInfo.of(
+            ServerConnectionInfo info = ServerConnectionInfo.of(
                 (String) entry.getValue(), PlayerInfoForwarding.DEFAULT
             );
-            servers.put(cleanServerName(entry.getKey()), pair);
+            servers.put(cleanServerName(entry.getKey()), info);
           } else if (entry.getValue() instanceof Toml) {
             Toml serverTable = (Toml) entry.getValue();
-            ServerConnectionInfo pair = ServerConnectionInfo.of(
+            ServerConnectionInfo info = ServerConnectionInfo.of(
                 serverTable.getString("address", ""),
                 PlayerInfoForwarding
                     .valueOf(serverTable.getString("forwarding", "default")
                     .toUpperCase(Locale.ROOT))
             );
-            servers.put(cleanServerName(entry.getKey()), pair);
+            servers.put(cleanServerName(entry.getKey()), info);
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(

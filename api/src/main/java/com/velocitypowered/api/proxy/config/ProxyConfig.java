@@ -78,7 +78,17 @@ public interface ProxyConfig {
    *
    * @return registered servers map
    */
-  Map<String, ServerConnectionInfo> getServers();
+  Map<String, String> getServers();
+
+  /**
+   * Get a Map of all servers registered in <code>velocity.toml</code> with all details.
+   * This method does <strong>not</strong> return all the servers currently in memory,
+   * although in most cases it does. For a view of all registered servers,
+   * see {@link ProxyServer#getAllServers()}.
+   *
+   * @return registered servers map
+   */
+  Map<String, ServerConnectionInfo> getServersDetailed();
 
   /**
    * Get the order of servers that players will be connected to.
