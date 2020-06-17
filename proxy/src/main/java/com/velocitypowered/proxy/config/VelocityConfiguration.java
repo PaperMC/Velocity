@@ -544,8 +544,8 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
                 (String) entry.getValue(), PlayerInfoForwarding.DEFAULT
             );
             servers.put(cleanServerName(entry.getKey()), pair);
-          } else if (entry.getValue() instanceof Map) {
-            Toml serverTable = toml.getTable(entry.getKey());
+          } else if (entry.getValue() instanceof Toml) {
+            Toml serverTable = (Toml) entry.getValue();
             ServerConnectionInfo pair = ServerConnectionInfo.of(
                 serverTable.getString("address", ""),
                 PlayerInfoForwarding
