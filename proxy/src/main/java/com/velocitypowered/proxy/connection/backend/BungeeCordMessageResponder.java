@@ -220,8 +220,8 @@ class BungeeCordMessageResponder {
   }
 
   private void processForwardToServer(ByteBufDataInput in) {
-    ByteBuf toForward = prepareForwardMessage(in);
     String target = in.readUTF();
+    ByteBuf toForward = prepareForwardMessage(in);
     if (target.equals("ALL")) {
       ByteBuf unreleasableForward = Unpooled.unreleasableBuffer(toForward);
       try {
