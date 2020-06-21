@@ -22,7 +22,6 @@ public class MinecraftCipherDecoder extends MessageToMessageDecoder<ByteBuf> {
     try {
       cipher.process(compatible);
       out.add(compatible);
-      in.skipBytes(in.readableBytes());
     } catch (Exception e) {
       compatible.release(); // compatible will never be used if we throw an exception
       throw e;

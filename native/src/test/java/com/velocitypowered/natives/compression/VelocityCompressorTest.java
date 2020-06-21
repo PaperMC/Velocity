@@ -33,13 +33,13 @@ class VelocityCompressorTest {
   }
 
   @Test
-  @EnabledOnOs({MAC, LINUX})
+  @EnabledOnOs({LINUX})
   void sanityCheckNative() {
     assertThrows(IllegalArgumentException.class, () -> Natives.compress.get().create(-42));
   }
 
   @Test
-  @EnabledOnOs({MAC, LINUX})
+  @EnabledOnOs({LINUX})
   void nativeIntegrityCheck() throws DataFormatException {
     VelocityCompressor compressor = Natives.compress.get().create(Deflater.DEFAULT_COMPRESSION);
     if (compressor.preferredBufferType() != BufferPreference.DIRECT_REQUIRED) {
@@ -86,10 +86,11 @@ class VelocityCompressorTest {
     ByteBuf decompressed = bufSupplier.get();
 
     source.writeBytes(TEST_DATA);
+    int uncompressedData = source.readableBytes();
 
     try {
       compressor.deflate(source, dest);
-      compressor.inflate(dest, decompressed, Integer.MAX_VALUE);
+      compressor.inflate(dest, decompressed, uncompressedData);
       source.readerIndex(0);
       assertTrue(ByteBufUtil.equals(source, decompressed));
     } finally {

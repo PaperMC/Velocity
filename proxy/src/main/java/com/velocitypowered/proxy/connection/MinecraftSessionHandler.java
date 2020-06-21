@@ -70,6 +70,10 @@ public interface MinecraftSessionHandler {
 
   }
 
+  default void readCompleted() {
+
+  }
+
   default boolean handle(AvailableCommands commands) {
     return false;
   }

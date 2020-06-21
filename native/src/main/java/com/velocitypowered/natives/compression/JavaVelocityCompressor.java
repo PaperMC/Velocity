@@ -25,20 +25,21 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException {
+  public void inflate(ByteBuf source, ByteBuf destination, int uncompressedSize)
+      throws DataFormatException {
     ensureNotDisposed();
 
     final int available = source.readableBytes();
     this.setInflaterInput(source);
 
     if (destination.hasArray()) {
-      this.inflateDestinationIsHeap(destination, available, max);
+      this.inflateDestinationIsHeap(destination, available, uncompressedSize);
     } else {
       if (buf.length == 0) {
         buf = new byte[ZLIB_BUFFER_SIZE];
       }
       while (!inflater.finished() && inflater.getBytesRead() < available) {
-        ensureMaxSize(destination, max);
+        ensureMaxSize(destination, uncompressedSize);
         int read = inflater.inflate(buf);
         destination.writeBytes(buf, 0, read);
       }

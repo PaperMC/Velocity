@@ -38,8 +38,11 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    int initialBufferSize = msg.readableBytes() <= threshold ? msg.readableBytes() + 1 :
-        msg.readableBytes() / 3;
+    // Follow the advice of https://github.com/ebiggers/libdeflate/blob/master/libdeflate.h#L103
+    // here for compression. The maximum buffer size if the data compresses well (which is almost
+    // always the case) is one less the input buffer.
+    int offset = msg.readableBytes() < threshold ? 1 : -1;
+    int initialBufferSize = msg.readableBytes() + offset;
     return MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, initialBufferSize);
   }
 
