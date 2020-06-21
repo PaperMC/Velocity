@@ -16,7 +16,6 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.netty.DiscardHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
@@ -126,6 +125,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   @Override
+  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    if (sessionHandler != null) {
+      sessionHandler.readCompleted();
+    }
+  }
+
+  @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if (ctx.channel().isActive()) {
       if (sessionHandler != null) {
@@ -145,7 +151,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       }
 
-      installDiscardHandler(ctx);
       ctx.close();
     }
   }
@@ -159,18 +164,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private void ensureInEventLoop() {
     Preconditions.checkState(this.channel.eventLoop().inEventLoop(), "Not in event loop");
-  }
-
-  private void installDiscardHandler(ChannelHandlerContext ctx) {
-    if (ctx.pipeline().get("discard") == null) {
-      ctx.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
-    }
-  }
-
-  private void installDiscardHandler() {
-    if (channel.pipeline().get("discard") == null) {
-      channel.pipeline().addBefore(MINECRAFT_DECODER, "discard", DiscardHandler.HANDLER);
-    }
   }
 
   public EventLoop eventLoop() {
@@ -212,9 +205,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      knownDisconnect = true;
-      installDiscardHandler();
-      channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+      channel.eventLoop().execute(() -> {
+        knownDisconnect = true;
+        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+      });
     }
   }
 
@@ -223,7 +217,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void close() {
     if (channel.isActive()) {
-      installDiscardHandler();
       channel.close();
     }
   }

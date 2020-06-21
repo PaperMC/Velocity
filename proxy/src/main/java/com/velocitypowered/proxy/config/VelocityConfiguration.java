@@ -465,7 +465,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     Advanced advanced = new Advanced(toml.getTable("advanced"));
     Query query = new Query(toml.getTable("query"));
     Metrics metrics = new Metrics(toml.getTable("metrics"));
-    byte[] forwardingSecret = toml.getString("forwarding-secret", "5up3r53cr3t")
+    byte[] forwardingSecret = toml.getString("forwarding-secret", generateRandomString(12))
         .getBytes(StandardCharsets.UTF_8);
 
     String forwardingModeName = toml.getString("player-info-forwarding-mode", "MODERN")

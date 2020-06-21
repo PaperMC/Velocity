@@ -54,7 +54,8 @@ public class Java11VelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void inflate(ByteBuf source, ByteBuf destination, int max) throws DataFormatException {
+  public void inflate(ByteBuf source, ByteBuf destination, int uncompressedSize)
+      throws DataFormatException {
     ensureNotDisposed();
 
     // We (probably) can't nicely deal with >=1 buffer nicely, so let's scream loudly.
@@ -67,7 +68,7 @@ public class Java11VelocityCompressor implements VelocityCompressor {
 
       while (!inflater.finished() && inflater.getBytesRead() < source.readableBytes()) {
         if (!destination.isWritable()) {
-          ensureMaxSize(destination, max);
+          ensureMaxSize(destination, uncompressedSize);
           destination.ensureWritable(ZLIB_BUFFER_SIZE);
         }
 

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
 import com.velocitypowered.natives.compression.Java11VelocityCompressor;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
-import com.velocitypowered.natives.compression.NativeVelocityCompressor;
+import com.velocitypowered.natives.compression.LibdeflateVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.NativeVelocityCipher;
@@ -62,12 +62,14 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
       ImmutableList.of(
-          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS,
-              copyAndLoadNative("/macosx/velocity-compress.dylib"), "native (macOS)",
-              NativeVelocityCompressor.FACTORY),
-          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
-              copyAndLoadNative("/linux_x64/velocity-compress.so"), "native (Linux amd64)",
-              NativeVelocityCompressor.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
+              "libdeflate (Linux x86_64)",
+              LibdeflateVelocityCompressor.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
+              copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
+              "libdeflate (Linux aarch64)",
+              LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.JAVA_11, () -> {
           }, "Java 11", () -> Java11VelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
@@ -77,12 +79,12 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS,
-              copyAndLoadNative("/macosx/velocity-cipher.dylib"), "mbed TLS (macOS)",
-              NativeVelocityCipher.FACTORY),
-            new NativeCodeLoader.Variant<>(NativeConstraints.LINUX,
-              copyAndLoadNative("/linux_x64/velocity-cipher.so"), "mbed TLS (Linux amd64)",
-              NativeVelocityCipher.FACTORY),
+            new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher.so"),
+              "mbed TLS (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
+              copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
+              "mbed TLS (Linux aarch64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )
