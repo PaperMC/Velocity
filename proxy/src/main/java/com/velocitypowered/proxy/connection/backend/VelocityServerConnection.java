@@ -12,7 +12,6 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -22,6 +21,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -40,6 +40,8 @@ import io.netty.handler.flow.FlowControlHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
@@ -53,6 +55,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private long lastPingId;
   private long lastPingSent;
+  private @MonotonicNonNull DimensionRegistry activeDimensionRegistry;
 
   /**
    * Initializes a new server connection.
@@ -297,4 +300,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return hasCompletedJoin;
   }
 
+  public DimensionRegistry getActiveDimensionRegistry() {
+    return activeDimensionRegistry;
+  }
+
+  public void setActiveDimensionRegistry(DimensionRegistry activeDimensionRegistry) {
+    this.activeDimensionRegistry = activeDimensionRegistry;
+  }
 }
