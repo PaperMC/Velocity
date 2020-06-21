@@ -7,6 +7,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_15;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
