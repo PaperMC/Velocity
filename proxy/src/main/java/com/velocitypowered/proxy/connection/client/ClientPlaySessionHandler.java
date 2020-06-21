@@ -299,7 +299,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!spawned) {
       // Nothing special to do with regards to spawning the player
       spawned = true;
-      player.getConnection().delayedWrite(joinGame);
 
       destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
       player.getConnection().delayedWrite(joinGame);

@@ -48,14 +48,13 @@ public final class DimensionData {
                        @Nullable Long fixedTime, @Nullable Boolean createDragonFight) {
     Preconditions.checkNotNull(
             registryIdentifier, "registryIdentifier cannot be null");
-    Preconditions.checkArgument(registryIdentifier.length() > 0 && !registryIdentifier.isBlank(),
+    Preconditions.checkArgument(registryIdentifier.length() > 0,
             "registryIdentifier cannot be empty");
     Preconditions.checkArgument(logicalHeight >= 0, "localHeight must be >= 0");
     Preconditions.checkNotNull(
             burningBehaviourIdentifier, "burningBehaviourIdentifier cannot be null");
-    Preconditions.checkArgument(burningBehaviourIdentifier.length() > 0
-                    && !burningBehaviourIdentifier.isBlank(),
-            "burningBehaviourIdentifier cannot be empty");
+    Preconditions.checkArgument(burningBehaviourIdentifier.length() > 0,
+        "burningBehaviourIdentifier cannot be empty");
     this.registryIdentifier = registryIdentifier;
     this.isNatural = isNatural;
     this.ambientLight = ambientLight;
