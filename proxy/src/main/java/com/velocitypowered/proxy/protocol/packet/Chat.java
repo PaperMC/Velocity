@@ -10,20 +10,25 @@ import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.UUID;
+
 public class Chat implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
+  public static final UUID EMPTY_SENDER = new UUID(0, 0);
 
   private @Nullable String message;
   private byte type;
+  private @Nullable UUID sender;
 
   public Chat() {
   }
 
-  public Chat(String message, byte type) {
+  public Chat(String message, byte type, UUID sender) {
     this.message = message;
     this.type = type;
+    this.sender = sender;
   }
 
   public String getMessage() {
@@ -45,11 +50,20 @@ public class Chat implements MinecraftPacket {
     this.type = type;
   }
 
+  public UUID getSenderUuid() {
+    return sender;
+  }
+
+  public void setSenderUuid(UUID sender) {
+    this.sender = sender;
+  }
+
   @Override
   public String toString() {
     return "Chat{"
         + "message='" + message + '\''
         + ", type=" + type
+        + ", sender=" + sender
         + '}';
   }
 
@@ -58,6 +72,9 @@ public class Chat implements MinecraftPacket {
     message = ProtocolUtils.readString(buf);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       type = buf.readByte();
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+        sender = ProtocolUtils.readUuid(buf);
+      }
     }
   }
 
@@ -69,6 +86,9 @@ public class Chat implements MinecraftPacket {
     ProtocolUtils.writeString(buf, message);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       buf.writeByte(type);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+        ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);
+      }
     }
   }
 
@@ -78,15 +98,15 @@ public class Chat implements MinecraftPacket {
   }
 
   public static Chat createClientbound(Component component) {
-    return createClientbound(component, CHAT_TYPE);
+    return createClientbound(component, CHAT_TYPE, EMPTY_SENDER);
   }
 
-  public static Chat createClientbound(Component component, byte type) {
+  public static Chat createClientbound(Component component, byte type, UUID sender) {
     Preconditions.checkNotNull(component, "component");
-    return new Chat(GsonComponentSerializer.INSTANCE.serialize(component), type);
+    return new Chat(GsonComponentSerializer.INSTANCE.serialize(component), type, sender);
   }
 
   public static Chat createServerbound(String message) {
-    return new Chat(message, CHAT_TYPE);
+    return new Chat(message, CHAT_TYPE, EMPTY_SENDER);
   }
 }

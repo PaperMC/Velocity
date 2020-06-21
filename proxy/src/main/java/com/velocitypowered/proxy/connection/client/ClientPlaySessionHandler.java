@@ -301,6 +301,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       spawned = true;
       player.getConnection().delayedWrite(joinGame);
 
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
+      player.getMinecraftConnection().delayedWrite(joinGame);
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
     } else {
@@ -315,12 +317,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      int realDim = joinGame.getDimension();
-      joinGame.setDimension(getFakeTemporaryDimensionId(realDim));
-      player.getConnection().delayedWrite(joinGame);
-      player.getConnection().delayedWrite(
-          new Respawn(realDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-              joinGame.getGamemode(), joinGame.getLevelType()));
+      player.getMinecraftConnection().delayedWrite(joinGame);
+      // Since 1.16 this dynamic changed:
+      // We don't need to send two dimension swiches anymore!
+      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
+        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+        player.getMinecraftConnection().delayedWrite(
+                new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
+                        joinGame.getGamemode(), joinGame.getLevelType(),
+                        false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode()));
+      }
+
+      player.getMinecraftConnection().delayedWrite(
+          new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+              joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
+                  false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode()));
+
+      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
@@ -355,10 +368,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().flush();
     serverMc.flush();
     destination.completeJoin();
-  }
-
-  private static int getFakeTemporaryDimensionId(int dim) {
-    return dim == 0 ? -1 : 0;
   }
 
   public List<UUID> getServerBossBars() {

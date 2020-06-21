@@ -9,12 +9,24 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import net.kyori.nbt.CompoundTag;
+import net.kyori.nbt.TagIO;
+import net.kyori.nbt.TagType;
 
 public enum ProtocolUtils {
   ;
@@ -178,6 +190,100 @@ public enum ProtocolUtils {
   public static void writeUuid(ByteBuf buf, UUID uuid) {
     buf.writeLong(uuid.getMostSignificantBits());
     buf.writeLong(uuid.getLeastSignificantBits());
+  }
+
+  /**
+   * Reads an UUID stored as an Integer Array from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return the UUID from the buffer
+   */
+  public static UUID readUuidIntArray(ByteBuf buf) {
+    long msbHigh = (long) buf.readInt() << 32;
+    long msbLow = (long) buf.readInt() & 0xFFFFFFFFL;
+    long msb = msbHigh | msbLow;
+    long lsbHigh = (long) buf.readInt() << 32;
+    long lsbLow = (long) buf.readInt() & 0xFFFFFFFFL;
+    long lsb = lsbHigh | lsbLow;
+    return new UUID(msb, lsb);
+  }
+
+  /**
+   * Writes an UUID as an Integer Array to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param uuid the UUID to write
+   */
+  public static void writeUuidIntArray(ByteBuf buf, UUID uuid) {
+    buf.writeInt((int) (uuid.getMostSignificantBits() >> 32));
+    buf.writeInt((int) uuid.getMostSignificantBits());
+    buf.writeInt((int) (uuid.getLeastSignificantBits() >> 32));
+    buf.writeInt((int) uuid.getLeastSignificantBits());
+  }
+
+  /**
+   * Reads a {@link net.kyori.nbt.CompoundTag} from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return {@link net.kyori.nbt.CompoundTag} the CompoundTag from the buffer
+   */
+  public static CompoundTag readCompoundTag(ByteBuf buf) {
+    int indexBefore = buf.readerIndex();
+    byte startType = buf.readByte();
+    if (startType == 0) {
+      throw new DecoderException("Invalid NBT start-type (end/empty)");
+    }
+    buf.readerIndex(indexBefore);
+    try {
+      return TagIO.readDataInput(new ByteBufInputStream(buf));
+    } catch (IOException thrown) {
+      throw new DecoderException(
+              "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
+    }
+  }
+
+  /**
+   * Writes a CompoundTag to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param compoundTag the CompoundTag to write
+   */
+  public static void writeCompoundTag(ByteBuf buf, CompoundTag compoundTag) {
+    if (compoundTag == null) {
+      buf.writeByte(0);
+      return;
+    }
+    try {
+      TagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
+    } catch (IOException e) {
+      throw new EncoderException("Unable to encode NBT CompoundTag");
+    }
+  }
+
+  /**
+   * Reads a String array from the {@code buf}.
+   * @param buf the buffer to read from
+   * @return the String array from the buffer
+   */
+  public static String[] readStringArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    String[] ret = new String[length];
+    for (int i = 0; i < length; i++) {
+      ret[i] = readString(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes a String Array to the {@code buf}.
+   * @param buf the buffer to write to
+   * @param stringArray the array to write
+   */
+  public static void writeStringArray(ByteBuf buf, String[] stringArray) {
+    if (stringArray == null) {
+      writeVarInt(buf, 0);
+      return;
+    }
+    writeVarInt(buf, stringArray.length);
+    for (int i = 0; i < stringArray.length; i++) {
+      writeString(buf, stringArray[i]);
+    }
   }
 
   /**

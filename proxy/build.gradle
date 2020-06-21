@@ -48,7 +48,6 @@ dependencies {
     compile "io.netty:netty-handler:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}"
     compile "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
-    compile "io.netty:netty-transport-native-kqueue:${nettyVersion}"
     compile "io.netty:netty-transport-native-kqueue:${nettyVersion}:osx-x86_64"
     compile "io.netty:netty-resolver-dns:${nettyVersion}"
 
@@ -64,11 +63,12 @@ dependencies {
 
     compile 'it.unimi.dsi:fastutil:8.2.3'
     compile 'net.kyori:event-method-asm:3.0.0'
+    compile 'net.kyori:nbt:1.12-1.0.0-SNAPSHOT'
 
     compile 'com.mojang:brigadier:1.0.17'
-    
+
     compile 'org.asynchttpclient:async-http-client:2.10.4'
-    
+
     compile 'com.spotify:completable-futures:0.3.2'
 
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
