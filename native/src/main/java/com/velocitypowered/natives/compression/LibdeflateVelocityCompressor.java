@@ -22,7 +22,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
     }
 
     this.inflateCtx = inflate.init();
-    this.deflateCtx = deflate.init(level == -1 ? 6 : level);
+    this.deflateCtx = deflate.init(correctedLevel);
   }
 
   @Override
