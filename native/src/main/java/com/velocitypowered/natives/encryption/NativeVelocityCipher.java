@@ -3,10 +3,8 @@ package com.velocitypowered.natives.encryption;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
 import javax.crypto.SecretKey;
-import javax.crypto.ShortBufferException;
 
 public class NativeVelocityCipher implements VelocityCipher {
 
@@ -21,15 +19,13 @@ public class NativeVelocityCipher implements VelocityCipher {
       return new NativeVelocityCipher(false, key);
     }
   };
-  private static final MbedtlsAesImpl impl = new MbedtlsAesImpl();
+  private static final OpenSslCipherImpl impl = new OpenSslCipherImpl();
 
   private final long ctx;
-  private final boolean encrypt;
   private boolean disposed = false;
 
   private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
-    this.encrypt = encrypt;
-    this.ctx = impl.init(key.getEncoded());
+    this.ctx = impl.init(key.getEncoded(), encrypt);
   }
 
   @Override
@@ -40,7 +36,7 @@ public class NativeVelocityCipher implements VelocityCipher {
     long base = source.memoryAddress() + source.readerIndex();
     int len = source.readableBytes();
 
-    impl.process(ctx, base, len, base, encrypt);
+    impl.process(ctx, base, len, base);
   }
 
   @Override

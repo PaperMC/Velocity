@@ -79,12 +79,18 @@ public class Natives {
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
       ImmutableList.of(
-            new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
-              copyAndLoadNative("/linux_x86_64/velocity-cipher.so"),
-              "mbed TLS (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher.so"), // Any local version
+              "OpenSSL local (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Debian 9
+              "OpenSSL 1.1.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl10x.so"), // CentOS 7
+              "OpenSSL 1.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
-              "mbed TLS (Linux aarch64)", NativeVelocityCipher.FACTORY),
+              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )

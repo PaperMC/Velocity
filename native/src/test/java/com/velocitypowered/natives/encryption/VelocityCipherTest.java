@@ -30,18 +30,12 @@ class VelocityCipherTest {
   }
 
   @Test
-  @Disabled
   void nativeIntegrityCheck() throws GeneralSecurityException {
     VelocityCipherFactory factory = Natives.cipher.get();
     if (factory == JavaVelocityCipher.FACTORY) {
       fail("Loaded regular cipher");
     }
     check(factory, Unpooled::directBuffer);
-  }
-
-  @Test
-  void javaIntegrityCheckDirect() throws GeneralSecurityException {
-    check(JavaVelocityCipher.FACTORY, Unpooled::directBuffer);
   }
 
   @Test
