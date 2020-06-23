@@ -212,8 +212,8 @@ public abstract class AnnotatedConfig {
   }
 
   protected static String escapeKeyIfNeeded(String key) {
-    if (key.contains(".") && !(key.indexOf('"') == 0 && key.lastIndexOf('"') == (key.length()
-        - 1))) {
+    if ((key.contains(".") || key.contains(" "))
+        && !(key.indexOf('"') == 0 && key.lastIndexOf('"') == (key.length() - 1))) {
       return '"' + key + '"';
     }
     return key;
