@@ -205,10 +205,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      channel.eventLoop().execute(() -> {
+      if (channel.eventLoop().inEventLoop()) {
         knownDisconnect = true;
         channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
-      });
+      } else {
+        channel.eventLoop().execute(() -> {
+          knownDisconnect = true;
+          channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        });
+      }
     }
   }
 
@@ -217,7 +222,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void close() {
     if (channel.isActive()) {
-      channel.close();
+      if (channel.eventLoop().inEventLoop()) {
+        knownDisconnect = true;
+        channel.close();
+      } else {
+        channel.eventLoop().execute(() -> {
+          knownDisconnect = true;
+          channel.close();
+        });
+      }
     }
   }
 
