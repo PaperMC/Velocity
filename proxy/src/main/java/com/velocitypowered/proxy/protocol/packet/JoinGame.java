@@ -130,8 +130,8 @@ public class JoinGame implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
-        + ", dimensionRegistry='" + dimensionRegistry.toString() + '\''
-        + ", dimensionInfo='" + dimensionInfo.toString() + '\''
+        + ", dimensionRegistry='" + dimensionRegistry + '\''
+        + ", dimensionInfo='" + dimensionInfo + '\''
         + ", previousGamemode=" + previousGamemode
         + '}';
   }
@@ -139,7 +139,7 @@ public class JoinGame implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    this.gamemode = buf.readByte();
+    this.gamemode = buf.readUnsignedByte();
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
@@ -167,7 +167,9 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
     }
-    this.reducedDebugInfo = buf.readBoolean();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.reducedDebugInfo = buf.readBoolean();
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       this.showRespawnScreen = buf.readBoolean();
     }
@@ -208,9 +210,11 @@ public class JoinGame implements MinecraftPacket {
       ProtocolUtils.writeString(buf, levelType);
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
-      ProtocolUtils.writeVarInt(buf,viewDistance);
+      ProtocolUtils.writeVarInt(buf, viewDistance);
     }
-    buf.writeBoolean(reducedDebugInfo);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      buf.writeBoolean(reducedDebugInfo);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       buf.writeBoolean(showRespawnScreen);
     }

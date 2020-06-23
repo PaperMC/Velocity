@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -47,8 +48,10 @@ public class ServerLoginSuccess implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       uuid = ProtocolUtils.readUuidIntArray(buf);
-    } else {
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
       uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
+    } else {
+      uuid = UuidUtils.fromUndashed(ProtocolUtils.readString(buf, 32));
     }
     username = ProtocolUtils.readString(buf, 16);
   }
@@ -60,8 +63,10 @@ public class ServerLoginSuccess implements MinecraftPacket {
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       ProtocolUtils.writeUuidIntArray(buf, uuid);
-    } else {
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
       ProtocolUtils.writeString(buf, uuid.toString());
+    } else {
+      ProtocolUtils.writeString(buf, UuidUtils.toUndashed(uuid));
     }
     if (username == null) {
       throw new IllegalStateException("No username specified!");

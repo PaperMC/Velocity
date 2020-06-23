@@ -37,6 +37,7 @@ import io.netty.util.ReferenceCountUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
@@ -207,14 +208,18 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      if (channel.eventLoop().inEventLoop()) {
+      if (channel.eventLoop().inEventLoop()
+          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
         knownDisconnect = true;
         channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
       } else {
-        channel.eventLoop().execute(() -> {
+        // 1.7.x versions have a race condition with switching protocol versions, so just explicitly
+        // close the connection after a short while.
+        this.setAutoReading(false);
+        channel.eventLoop().schedule(() -> {
           knownDisconnect = true;
           channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
-        });
+        }, 250, TimeUnit.MILLISECONDS);
       }
     }
   }
