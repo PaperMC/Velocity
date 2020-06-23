@@ -423,6 +423,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     return advanced.isBungeePluginMessageChannel();
   }
 
+  public boolean isShowPingRequests() {
+    return advanced.isShowPingRequests();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -679,6 +683,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     @ConfigKey("bungee-plugin-message-channel")
     private boolean bungeePluginMessageChannel = true;
 
+    @Comment("Shows ping requests to the proxy from clients.")
+    @ConfigKey("show-ping-requests")
+    private boolean showPingRequests = false;
+
     private Advanced() {
     }
 
@@ -692,6 +700,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
         this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
         this.tcpFastOpen = toml.getBoolean("tcp-fast-open", false);
         this.bungeePluginMessageChannel = toml.getBoolean("bungee-plugin-message-channel", true);
+        this.showPingRequests = toml.getBoolean("show-ping-requests", false);
       }
     }
 
@@ -727,6 +736,10 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       return bungeePluginMessageChannel;
     }
 
+    public boolean isShowPingRequests() {
+      return showPingRequests;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -738,6 +751,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           + ", proxyProtocol=" + proxyProtocol
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
+          + ", showPingRequests=" + showPingRequests
           + '}';
     }
   }

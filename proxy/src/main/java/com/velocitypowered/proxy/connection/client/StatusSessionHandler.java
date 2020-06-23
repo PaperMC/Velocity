@@ -25,8 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
+
+  private static final Logger logger = LogManager.getLogger(StatusSessionHandler.class);
 
   private final VelocityServer server;
   private final MinecraftConnection connection;
@@ -37,6 +41,14 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     this.server = server;
     this.connection = connection;
     this.inbound = inbound;
+  }
+
+  @Override
+  public void activated() {
+    if (server.getConfiguration().isShowPingRequests()) {
+      logger.info("{} is pinging the server with version {}", this.inbound,
+          this.connection.getProtocolVersion());
+    }
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
