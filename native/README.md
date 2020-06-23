@@ -28,5 +28,4 @@ In theory, these libraries can be compiled for any Unix-like system (in the past
 but interest in other systems is minimal at best, thus we focus on Linux x86_64 and aarch64 as they
 are commonly used platforms.
 
-There is no support for Alpine Linux, however using `apk add libc6-compat` may enable native support.
-Alpine Linux support is on a "best-effort" basis only.
+Alpine Linux support is on a "best-effort" basis only. Using `apk add libc6-compat` may enable native support.
