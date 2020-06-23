@@ -13,7 +13,8 @@ import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class InitialInboundConnection implements InboundConnection, MinecraftConnectionAssociation {
+public final class InitialInboundConnection implements InboundConnection,
+    MinecraftConnectionAssociation {
 
   private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
 
@@ -53,6 +54,10 @@ class InitialInboundConnection implements InboundConnection, MinecraftConnection
     return "[initial connection] " + connection.getRemoteAddress().toString();
   }
 
+  /**
+   * Disconnects the connection from the server.
+   * @param reason the reason for disconnecting
+   */
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
