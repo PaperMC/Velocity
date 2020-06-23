@@ -18,7 +18,10 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 
@@ -41,6 +44,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.text.Component;
@@ -253,10 +257,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       mcConnection.write(new SetCompression(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
-
+    VelocityConfiguration configuration = server.getConfiguration();
+    UUID playerUniqueId = player.getUniqueId();
+    if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
+      playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
+    }
     ServerLoginSuccess success = new ServerLoginSuccess();
     success.setUsername(player.getUsername());
-    success.setUuid(player.getUniqueId());
+    success.setUuid(playerUniqueId);
     mcConnection.write(success);
 
     mcConnection.setAssociation(player);

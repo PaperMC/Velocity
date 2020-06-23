@@ -1,9 +1,12 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.connection.registry.DimensionData;
+import com.velocitypowered.proxy.connection.registry.DimensionInfo;
+import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
+import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -16,9 +19,12 @@ public class JoinGame implements MinecraftPacket {
   private short difficulty;
   private short maxPlayers;
   private @Nullable String levelType;
-  private int viewDistance; //1.14+
+  private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
+  private DimensionRegistry dimensionRegistry; // 1.16+
+  private DimensionInfo dimensionInfo; // 1.16+
+  private short previousGamemode; // 1.16+
 
   public int getEntityId() {
     return entityId;
@@ -64,10 +70,7 @@ public class JoinGame implements MinecraftPacket {
     this.maxPlayers = maxPlayers;
   }
 
-  public String getLevelType() {
-    if (levelType == null) {
-      throw new IllegalStateException("No level type specified.");
-    }
+  public @Nullable String getLevelType() {
     return levelType;
   }
 
@@ -91,6 +94,30 @@ public class JoinGame implements MinecraftPacket {
     this.reducedDebugInfo = reducedDebugInfo;
   }
 
+  public DimensionInfo getDimensionInfo() {
+    return dimensionInfo;
+  }
+
+  public void setDimensionInfo(DimensionInfo dimensionInfo) {
+    this.dimensionInfo = dimensionInfo;
+  }
+
+  public DimensionRegistry getDimensionRegistry() {
+    return dimensionRegistry;
+  }
+
+  public void setDimensionRegistry(DimensionRegistry dimensionRegistry) {
+    this.dimensionRegistry = dimensionRegistry;
+  }
+
+  public short getPreviousGamemode() {
+    return previousGamemode;
+  }
+
+  public void setPreviousGamemode(short previousGamemode) {
+    this.previousGamemode = previousGamemode;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -103,14 +130,26 @@ public class JoinGame implements MinecraftPacket {
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
+        + ", dimensionRegistry='" + dimensionRegistry.toString() + '\''
+        + ", dimensionInfo='" + dimensionInfo.toString() + '\''
+        + ", previousGamemode=" + previousGamemode
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    this.gamemode = buf.readUnsignedByte();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    this.gamemode = buf.readByte();
+    String dimensionIdentifier = null;
+    String levelName = null;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      this.previousGamemode = buf.readByte();
+      ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
+      ImmutableSet<DimensionData> readData = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf));
+      this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
+      dimensionIdentifier = ProtocolUtils.readString(buf);
+      levelName = ProtocolUtils.readString(buf);
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       this.dimension = buf.readInt();
     } else {
       this.dimension = buf.readByte();
@@ -122,7 +161,9 @@ public class JoinGame implements MinecraftPacket {
       this.partialHashedSeed = buf.readLong();
     }
     this.maxPlayers = buf.readUnsignedByte();
-    this.levelType = ProtocolUtils.readString(buf, 16);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
+      this.levelType = ProtocolUtils.readString(buf, 16);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
     }
@@ -130,13 +171,25 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       this.showRespawnScreen = buf.readBoolean();
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      boolean isDebug = buf.readBoolean();
+      boolean isFlat = buf.readBoolean();
+      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    }
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(entityId);
     buf.writeByte(gamemode);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      buf.writeByte(previousGamemode);
+      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
+              new String[dimensionRegistry.getLevelNames().size()]));
+      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
       buf.writeByte(dimension);
@@ -148,16 +201,22 @@ public class JoinGame implements MinecraftPacket {
       buf.writeLong(partialHashedSeed);
     }
     buf.writeByte(maxPlayers);
-    if (levelType == null) {
-      throw new IllegalStateException("No level type specified.");
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
+      if (levelType == null) {
+        throw new IllegalStateException("No level type specified.");
+      }
+      ProtocolUtils.writeString(buf, levelType);
     }
-    ProtocolUtils.writeString(buf, levelType);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
       ProtocolUtils.writeVarInt(buf,viewDistance);
     }
     buf.writeBoolean(reducedDebugInfo);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       buf.writeBoolean(showRespawnScreen);
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      buf.writeBoolean(dimensionInfo.isDebugType());
+      buf.writeBoolean(dimensionInfo.isFlat());
     }
   }
 

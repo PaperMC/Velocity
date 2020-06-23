@@ -45,7 +45,11 @@ public class ServerLoginSuccess implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      uuid = ProtocolUtils.readUuidIntArray(buf);
+    } else {
+      uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
+    }
     username = ProtocolUtils.readString(buf, 16);
   }
 
@@ -54,7 +58,11 @@ public class ServerLoginSuccess implements MinecraftPacket {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
     }
-    ProtocolUtils.writeString(buf, uuid.toString());
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      ProtocolUtils.writeUuidIntArray(buf, uuid);
+    } else {
+      ProtocolUtils.writeString(buf, uuid.toString());
+    }
     if (username == null) {
       throw new IllegalStateException("No username specified!");
     }
