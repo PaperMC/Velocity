@@ -62,7 +62,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   /**
    * Represents the result of the {@link CommandExecuteEvent}.
    */
-  public static final class CommandResult implements Result {
+  public static final class CommandResult implements ResultedEvent.Result {
 
     private static final CommandResult ALLOWED = new CommandResult(true, false,null);
     private static final CommandResult DENIED = new CommandResult(false, false,null);

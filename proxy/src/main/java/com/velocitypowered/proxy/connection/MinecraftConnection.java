@@ -17,6 +17,7 @@ import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.InitialInboundConnection;
+import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
@@ -92,7 +93,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       sessionHandler.disconnected();
     }
 
-    if (association != null && !knownDisconnect) {
+    if (association != null && !knownDisconnect
+        && !(sessionHandler instanceof StatusSessionHandler)) {
       logger.info("{} has disconnected", association);
     }
   }
