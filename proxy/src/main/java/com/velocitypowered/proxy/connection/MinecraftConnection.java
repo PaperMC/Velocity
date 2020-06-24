@@ -225,6 +225,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
   }
 
+  public void close() {
+    close(true);
+  }
+
   /**
    * Immediately closes the connection.
    * @param markKnown whether the disconnection is known
