@@ -92,8 +92,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       sessionHandler.disconnected();
     }
 
-    if (association != null && !knownDisconnect
-        && !(association instanceof InitialInboundConnection)) {
+    if (association != null && !knownDisconnect) {
       logger.info("{} has disconnected", association);
     }
   }
@@ -226,15 +225,20 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Immediately closes the connection.
+   * @param markKnown whether the disconnection is known
    */
-  public void close() {
+  public void close(boolean markKnown) {
     if (channel.isActive()) {
       if (channel.eventLoop().inEventLoop()) {
-        knownDisconnect = true;
+        if (markKnown) {
+          knownDisconnect = true;
+        }
         channel.close();
       } else {
         channel.eventLoop().execute(() -> {
-          knownDisconnect = true;
+          if (markKnown) {
+            knownDisconnect = true;
+          }
           channel.close();
         });
       }

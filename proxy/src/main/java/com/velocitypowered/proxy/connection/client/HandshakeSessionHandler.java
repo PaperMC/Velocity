@@ -66,7 +66,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
-      connection.close();
+      connection.close(true);
     } else {
       connection.setState(nextState);
       connection.setProtocolVersion(handshake.getProtocolVersion());
@@ -171,13 +171,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public void handleGeneric(MinecraftPacket packet) {
     // Unknown packet received. Better to close the connection.
-    connection.close();
+    connection.close(true);
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
     // Unknown packet received. Better to close the connection.
-    connection.close();
+    connection.close(true);
   }
 
   private static class LegacyInboundConnection implements InboundConnection {

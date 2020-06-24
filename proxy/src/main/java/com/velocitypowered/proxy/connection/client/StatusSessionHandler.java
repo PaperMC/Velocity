@@ -183,6 +183,6 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   @Override
   public void handleUnknown(ByteBuf buf) {
     // what even is going on?
-    connection.close();
+    connection.close(true);
   }
 }

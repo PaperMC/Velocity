@@ -48,7 +48,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   public boolean handle(StatusResponse packet) {
     // All good!
     completed = true;
-    connection.close();
+    connection.close(true);
 
     ServerPing ping = VelocityServer.GSON.fromJson(packet.getStatus(), ServerPing.class);
     result.complete(ping);

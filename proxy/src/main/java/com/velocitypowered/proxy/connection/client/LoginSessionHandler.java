@@ -134,11 +134,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
-            mcConnection.close();
+            mcConnection.close(true);
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
-          mcConnection.close();
+          mcConnection.close(true);
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();
@@ -146,7 +146,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       }, mcConnection.eventLoop());
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
-      mcConnection.close();
+      mcConnection.close(true);
     }
     return true;
   }
@@ -286,7 +286,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    mcConnection.close();
+    mcConnection.close(true);
   }
 
   @Override

@@ -15,9 +15,6 @@ allprojects {
     group 'com.velocitypowered'
     version '1.1.0-SNAPSHOT'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
     ext {
         // dependency versions
         textVersion = '3.0.3'
@@ -39,6 +36,11 @@ allprojects {
                 return os.toString().trim().substring(0, 8)
             }
         }
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     repositories {
