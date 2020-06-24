@@ -26,10 +26,8 @@ import org.apache.logging.log4j.Logger;
 public abstract class AnnotatedConfig {
 
   private static final Logger logger = LogManager.getLogger(AnnotatedConfig.class);
-  @SuppressWarnings("checkstyle:IllegalTokenText") // Need to follow the TOML spec exactly
-  private static final Pattern STRING_NEEDS_ESCAPE = Pattern.compile(
-      "(\"|\\\\|[\\u0000-\\u0008]|[\\u000a-\\u001f]|\\u007f)"
-  );
+  private static final Pattern STRING_NEEDS_ESCAPE
+      = Pattern.compile("(\"|\\\\|[\\u0000-\\u0008]|[\\u000a-\\u001f]|\\u007f)");
 
   public static Logger getLogger() {
     return logger;
