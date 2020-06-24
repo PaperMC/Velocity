@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,6 +26,10 @@ import org.apache.logging.log4j.Logger;
 public abstract class AnnotatedConfig {
 
   private static final Logger logger = LogManager.getLogger(AnnotatedConfig.class);
+  @SuppressWarnings("checkstyle:IllegalTokenText") // Need to follow the TOML spec exactly
+  private static final Pattern STRING_NEEDS_ESCAPE = Pattern.compile(
+      "(\"|\\\\|[\\u0000-\\u0008]|[\\u000a-\\u001f]|\\u007f)"
+  );
 
   public static Logger getLogger() {
     return logger;
@@ -201,11 +206,7 @@ public abstract class AnnotatedConfig {
     }
 
     if (value instanceof String) {
-      String stringValue = (String) value;
-      if (stringValue.isEmpty()) {
-        return "\"\"";
-      }
-      return "\"" + stringValue.replace("\n", "\\n") + "\"";
+      return writeString((String) value);
     }
 
     return value != null ? value.toString() : "null";
@@ -217,6 +218,23 @@ public abstract class AnnotatedConfig {
       return '"' + key + '"';
     }
     return key;
+  }
+
+  private static String writeString(String str) {
+    if (str.isEmpty()) {
+      return "\"\"";
+    }
+
+    // According to the TOML specification (https://toml.io/en/v1.0.0-rc.1#section-7):
+    //
+    // Any Unicode character may be used except those that must be escaped: quotation mark,
+    // backslash, and the control characters other than tab (U+0000 to U+0008, U+000A to U+001F,
+    // U+007F).
+    if (STRING_NEEDS_ESCAPE.matcher(str).find()) {
+      return "'" + str + "'";
+    } else {
+      return "\"" + str.replace("\n", "\\n") + "\"";
+    }
   }
 
   protected static String unescapeKeyIfNeeded(String key) {
