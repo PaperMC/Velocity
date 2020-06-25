@@ -132,18 +132,28 @@ public class PluginMessageUtil {
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
     String toAppend = " (" + version.getName() + ")";
+    String currentBrand = readBrandMessage(message.content());
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
-
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      String currentBrand = ProtocolUtils.readString(message.content().slice());
       ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
     } else {
-      String currentBrand = ProtocolUtils.readStringWithoutLength(message.content().slice());
       rewrittenBuf.writeBytes((currentBrand + toAppend).getBytes());
     }
 
     return new PluginMessage(message.getChannel(), rewrittenBuf);
+  }
+
+  private static String readBrandMessage(ByteBuf content) {
+    // Some clients (mostly poorly-implemented bots) do not send validly-formed brand messages.
+    // In order to accommodate their broken behavior, we'll first try to read in the 1.8 format, and
+    // if that fails, treat it as a 1.7-format message (which has no prefixed length). (The message
+    // Velocity sends will be in the correct format depending on the protocol.)
+    try {
+      return ProtocolUtils.readString(content.slice());
+    } catch (Exception e) {
+      return ProtocolUtils.readStringWithoutLength(content.slice());
+    }
   }
 
   private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");
