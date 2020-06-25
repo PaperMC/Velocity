@@ -1,11 +1,16 @@
 package com.velocitypowered.proxy.config;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.proxy.Velocity;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
 import java.io.Reader;
@@ -25,116 +30,31 @@ import java.util.UUID;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfig {
+public class VelocityConfiguration implements ProxyConfig {
 
-  @Comment("Config version. Do not change this")
-  @ConfigKey("config-version")
-  private final String configVersion = "1.0";
+  private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
 
-  @Comment("What port should the proxy be bound to? By default, we'll bind to all addresses on"
-      + " port 25577.")
   private String bind = "0.0.0.0:25577";
-
-  @Comment({"What should be the MOTD? This gets displayed when the player adds your server to",
-      "their server list. Legacy color codes and JSON are accepted."})
   private String motd = "&3A Velocity Server";
-
-  @Comment({
-      "What should we display for the maximum number of players? (Velocity does not support a cap",
-      "on the number of players online.)"
-  })
-  @ConfigKey("show-max-players")
   private int showMaxPlayers = 500;
-
-  @Comment("Should we authenticate players with Mojang? By default, this is on.")
-  @ConfigKey("online-mode")
   private boolean onlineMode = true;
-
-  @Comment({
-      "If client's ISP/AS sent from this proxy is different from the one from Mojang's",
-      "authentication server, the player is kicked. This disallows some VPN and proxy",
-      "connections but is a weak form of protection."
-  })
-  @ConfigKey("prevent-client-proxy-connections")
   private boolean preventClientProxyConnections = false;
-
-  @Comment({
-      "Should we forward IP addresses and other data to backend servers?",
-      "Available options:",
-      "- \"none\":        No forwarding will be done. All players will appear to be connecting",
-      "                 from the proxy and will have offline-mode UUIDs.",
-      "- \"legacy\":      Forward player IPs and UUIDs in a BungeeCord-compatible format. Use this",
-      "                 if you run servers using Minecraft 1.12 or lower.",
-      "- \"bungeeguard\": Forward player IPs and UUIDs in a format supported by the BungeeGuard",
-      "                 plugin. Use this if you run servers using Minecraft 1.12 or lower, and are",
-      "                 unable to implement network level firewalling (on a shared host).",
-      "- \"modern\":      Forward player IPs and UUIDs as part of the login process using",
-      "                 Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher."
-  })
-  @ConfigKey("player-info-forwarding-mode")
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
-
-  @StringAsBytes
-  @Comment("If you are using modern or BungeeGuard IP forwarding, configure an unique secret here.")
-  @ConfigKey("forwarding-secret")
   private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
-
-  @Comment({
-      "Announce whether or not your server supports Forge. If you run a modded server, we",
-      "suggest turning this on.",
-      "",
-      "If your network runs one modpack consistently, consider using ping-passthrough = \"mods\"",
-      "instead for a nicer display in the server list."
-  })
-  @ConfigKey("announce-forge")
   private boolean announceForge = false;
-
-  @Comment({"If enabled (default is false) and the proxy is in online mode, Velocity will kick",
-      "any existing player who is online if a duplicate connection attempt is made."})
-  @ConfigKey("kick-existing-players")
   private boolean onlineModeKickExistingPlayers = false;
-
-  @Comment({
-      "Should Velocity pass server list ping requests to a backend server?",
-      "Available options:",
-      "- \"disabled\":    No pass-through will be done. The velocity.toml and server-icon.png",
-      "                 will determine the initial server list ping response.",
-      "- \"mods\":        Passes only the mod list from your backend server into the response.",
-      "                 The first server in your try list (or forced host) with a mod list will be",
-      "                 used. If no backend servers can be contacted, Velocity won't display any",
-      "                 mod information.",
-      "- \"description\": Uses the description and mod list from the backend server. The first",
-      "                 server in the try (or forced host) list that responds is used for the",
-      "                 description and mod list.",
-      "- \"all\":         Uses the backend server's response as the proxy response. The Velocity",
-      "                 configuration is used if no servers could be contacted."
-  })
-  @ConfigKey("ping-passthrough")
   private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
-
-  @Table("[servers]")
   private final Servers servers;
-
-  @Table("[forced-hosts]")
   private final ForcedHosts forcedHosts;
-
-  @Table("[advanced]")
   private final Advanced advanced;
-
-  @Table("[query]")
   private final Query query;
-
-  @Table("[metrics]")
   private final Metrics metrics;
-
-  @Ignore
   private @MonotonicNonNull Component motdAsComponent;
-
-  @Ignore
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
@@ -172,7 +92,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
    */
   public boolean validate() {
     boolean valid = true;
-    Logger logger = AnnotatedConfig.getLogger();
 
     if (bind.isEmpty()) {
       logger.error("'bind' option is empty.");
@@ -280,7 +199,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       try {
         this.favicon = Favicon.create(faviconPath);
       } catch (Exception e) {
-        getLogger().info("Unable to load your server-icon.png, continuing without it.", e);
+        logger.info("Unable to load your server-icon.png, continuing without it.", e);
       }
     }
   }
@@ -430,7 +349,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("configVersion", configVersion)
         .add("bind", bind)
         .add("motd", motd)
         .add("showMaxPlayers", showMaxPlayers)
@@ -453,45 +371,67 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
    * @throws IOException if we could not read from the {@code path}.
    */
   public static VelocityConfiguration read(Path path) throws IOException {
-    Toml toml;
-    if (!path.toFile().exists()) {
-      getLogger().info("No velocity.toml found, creating one for you...");
-      return new VelocityConfiguration(new Servers(), new ForcedHosts(), new Advanced(),
-          new Query(), new Metrics());
-    } else {
-      try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-        toml = new Toml().read(reader);
-      }
+    boolean mustResave = false;
+    CommentedFileConfig config = CommentedFileConfig.builder(path)
+        .defaultResource("/default-velocity.toml")
+        .autosave()
+        .preserveInsertionOrder()
+        .sync()
+        .build();
+    config.load();
+
+    // Handle any cases where the config needs to be saved again
+    byte[] forwardingSecret;
+    String forwardingSecretString = config.get("forwarding-secret");
+    if (forwardingSecretString.isEmpty()) {
+      forwardingSecretString = generateRandomString(12);
+      config.set("forwarding-secret", forwardingSecretString);
+      mustResave = true;
+    }
+    forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+
+    if (config.<String>get("metrics.id").isEmpty()) {
+      config.set("metrics.id", UUID.randomUUID().toString());
+      mustResave = true;
     }
 
-    Servers servers = new Servers(toml.getTable("servers"));
-    ForcedHosts forcedHosts = new ForcedHosts(toml.getTable("forced-hosts"));
-    Advanced advanced = new Advanced(toml.getTable("advanced"));
-    Query query = new Query(toml.getTable("query"));
-    Metrics metrics = new Metrics(toml.getTable("metrics"));
-    byte[] forwardingSecret = toml.getString("forwarding-secret", generateRandomString(12))
-        .getBytes(StandardCharsets.UTF_8);
+    if (mustResave) {
+      config.save();
+    }
 
-    String forwardingModeName = toml.getString("player-info-forwarding-mode", "MODERN")
-        .toUpperCase(Locale.US);
-    String passThroughName = toml.getString("ping-passthrough", "DISABLED")
-        .toUpperCase(Locale.US);
+    // Read the rest of the config
+    CommentedConfig serversConfig = config.get("servers");
+    CommentedConfig forcedHostsConfig = config.get("forced-hosts");
+    CommentedConfig advancedConfig = config.get("advanced");
+    CommentedConfig queryConfig = config.get("query");
+    CommentedConfig metricsConfig = config.get("metrics");
+    PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
+        PlayerInfoForwarding.NONE);
+    PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
+        PingPassthroughMode.DISABLED);
+
+    String bind = config.getOrElse("bind", "0.0.0.0:25577");
+    String motd = config.getOrElse("motd", "&3A Velocity Server");
+    int maxPlayers = config.getIntOrElse("show-max-players", 500);
+    Boolean onlineMode = config.getOrElse("online-mode", true);
+    Boolean announceForge = config.getOrElse("announce-forge", true);
+    Boolean kickExisting = config.getOrElse("kick-existing-players", false);
 
     return new VelocityConfiguration(
-        toml.getString("bind", "0.0.0.0:25577"),
-        toml.getString("motd", "&3A Velocity Server"),
-        toml.getLong("show-max-players", 500L).intValue(),
-        toml.getBoolean("online-mode", true),
-        toml.getBoolean("announce-forge", false),
-        PlayerInfoForwarding.valueOf(forwardingModeName),
+        bind,
+        motd,
+        maxPlayers,
+        onlineMode,
+        announceForge,
+        forwardingMode,
         forwardingSecret,
-        toml.getBoolean("kick-existing-players", false),
-        PingPassthroughMode.valueOf(passThroughName),
-        servers,
-        forcedHosts,
-        advanced,
-        query,
-        metrics
+        kickExisting,
+        pingPassthroughMode,
+        new Servers(serversConfig),
+        new ForcedHosts(forcedHostsConfig),
+        new Advanced(advancedConfig),
+        new Query(queryConfig),
+        new Metrics(metricsConfig)
     );
   }
 
@@ -511,29 +451,22 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private static class Servers {
 
-    @IsMap
-    @Comment({"Configure your servers here. Each key represents the server's name, and the value",
-        "represents the IP address of the server to connect to."})
     private Map<String, String> servers = ImmutableMap.of(
         "lobby", "127.0.0.1:30066",
         "factions", "127.0.0.1:30067",
         "minigames", "127.0.0.1:30068"
     );
-
-    @Comment("In what order we should try servers when a player logs in or is kicked from a"
-        + "server.")
-    @ConfigKey("try")
     private List<String> attemptConnectionOrder = Arrays.asList("lobby");
 
     private Servers() {
     }
 
-    private Servers(Toml toml) {
-      if (toml != null) {
+    private Servers(CommentedConfig config) {
+      if (config != null) {
         Map<String, String> servers = new HashMap<>();
-        for (Map.Entry<String, Object> entry : toml.entrySet()) {
+        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), (String) entry.getValue());
+            servers.put(cleanServerName(entry.getKey()), entry.getValue());
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
@@ -542,7 +475,7 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
           }
         }
         this.servers = ImmutableMap.copyOf(servers);
-        this.attemptConnectionOrder = toml.getList("try", attemptConnectionOrder);
+        this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
       }
     }
 
@@ -591,8 +524,6 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private static class ForcedHosts {
 
-    @IsMap
-    @Comment("Configure your forced hosts here.")
     private Map<String, List<String>> forcedHosts = ImmutableMap.of(
         "lobby.example.com", ImmutableList.of("lobby"),
         "factions.example.com", ImmutableList.of("factions"),
@@ -602,16 +533,14 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
     private ForcedHosts() {
     }
 
-    private ForcedHosts(Toml toml) {
-      if (toml != null) {
+    private ForcedHosts(CommentedConfig config) {
+      if (config != null) {
         Map<String, List<String>> forcedHosts = new HashMap<>();
-        for (Map.Entry<String, Object> entry : toml.entrySet()) {
+        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
-            forcedHosts.put(unescapeKeyIfNeeded(entry.getKey()), ImmutableList.of(
-                (String) entry.getValue()));
+            forcedHosts.put(entry.getKey(), ImmutableList.of(entry.getValue()));
           } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(unescapeKeyIfNeeded(entry.getKey()),
-                ImmutableList.copyOf((List<String>) entry.getValue()));
+            forcedHosts.put(entry.getKey(), ImmutableList.copyOf((List<String>) entry.getValue()));
           } else {
             throw new IllegalStateException(
                 "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
@@ -643,64 +572,30 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private static class Advanced {
 
-    @Comment({
-        "How large a Minecraft packet has to be before we compress it. Setting this to zero will",
-        "compress all packets, and setting it to -1 will disable compression entirely."
-    })
-    @ConfigKey("compression-threshold")
     private int compressionThreshold = 256;
-
-    @Comment({"How much compression should be done (from 0-9). The default is -1, which uses the",
-        "default level of 6."})
-    @ConfigKey("compression-level")
     private int compressionLevel = -1;
-
-    @Comment({
-        "How fast (in milliseconds) are clients allowed to connect after the last connection? By",
-        "default, this is three seconds. Disable this by setting this to 0."
-    })
-    @ConfigKey("login-ratelimit")
     private int loginRatelimit = 3000;
-
-    @Comment({
-        "Specify a custom timeout for connection timeouts here. The default is five seconds."})
-    @ConfigKey("connection-timeout")
     private int connectionTimeout = 5000;
-
-    @Comment({"Specify a read timeout for connections here. The default is 30 seconds."})
-    @ConfigKey("read-timeout")
     private int readTimeout = 30000;
-
-    @Comment("Enables compatibility with HAProxy.")
-    @ConfigKey("proxy-protocol")
     private boolean proxyProtocol = false;
-
-    @Comment("Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.")
-    @ConfigKey("tcp-fast-open")
     private boolean tcpFastOpen = false;
-
-    @Comment("Enables BungeeCord plugin messaging channel support on Velocity.")
-    @ConfigKey("bungee-plugin-message-channel")
     private boolean bungeePluginMessageChannel = true;
-
-    @Comment("Shows ping requests to the proxy from clients.")
-    @ConfigKey("show-ping-requests")
     private boolean showPingRequests = false;
 
     private Advanced() {
     }
 
-    private Advanced(Toml toml) {
-      if (toml != null) {
-        this.compressionThreshold = toml.getLong("compression-threshold", 256L).intValue();
-        this.compressionLevel = toml.getLong("compression-level", -1L).intValue();
-        this.loginRatelimit = toml.getLong("login-ratelimit", 3000L).intValue();
-        this.connectionTimeout = toml.getLong("connection-timeout", 5000L).intValue();
-        this.readTimeout = toml.getLong("read-timeout", 30000L).intValue();
-        this.proxyProtocol = toml.getBoolean("proxy-protocol", false);
-        this.tcpFastOpen = toml.getBoolean("tcp-fast-open", false);
-        this.bungeePluginMessageChannel = toml.getBoolean("bungee-plugin-message-channel", true);
-        this.showPingRequests = toml.getBoolean("show-ping-requests", false);
+    private Advanced(CommentedConfig config) {
+      if (config != null) {
+        this.compressionThreshold = config.getIntOrElse("compression-threshold", 256);
+        this.compressionLevel = config.getIntOrElse("compression-level", -1);
+        this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
+        this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
+        this.readTimeout = config.getIntOrElse("read-timeout", 30000);
+        this.proxyProtocol = config.getOrElse("proxy-protocol", false);
+        this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
+        this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
+        this.showPingRequests = config.getOrElse("show-ping-requests", false);
       }
     }
 
@@ -758,20 +653,9 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
 
   private static class Query {
 
-    @Comment("Whether to enable responding to GameSpy 4 query responses or not.")
-    @ConfigKey("enabled")
     private boolean queryEnabled = false;
-
-    @Comment("If query is enabled, on what port should the query protocol listen on?")
-    @ConfigKey("port")
     private int queryPort = 25577;
-
-    @Comment("This is the map name that is reported to the query services.")
-    @ConfigKey("map")
     private String queryMap = "Velocity";
-
-    @Comment("Whether plugins should be shown in query response by default or not")
-    @ConfigKey("show-plugins")
     private boolean showPlugins = false;
 
     private Query() {
@@ -784,12 +668,12 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
       this.showPlugins = showPlugins;
     }
 
-    private Query(Toml toml) {
-      if (toml != null) {
-        this.queryEnabled = toml.getBoolean("enabled", false);
-        this.queryPort = toml.getLong("port", 25577L).intValue();
-        this.queryMap = toml.getString("map", "Velocity");
-        this.showPlugins = toml.getBoolean("show-plugins", false);
+    private Query(CommentedConfig config) {
+      if (config != null) {
+        this.queryEnabled = config.getOrElse("enabled", false);
+        this.queryPort = config.getIntOrElse("port", 25577);
+        this.queryMap = config.getOrElse("map", "Velocity");
+        this.showPlugins = config.getOrElse("show-plugins", false);
       }
     }
 
@@ -821,34 +705,21 @@ public class VelocityConfiguration extends AnnotatedConfig implements ProxyConfi
   }
 
   public static class Metrics {
-
-    @Comment({"Whether metrics will be reported to bStats (https://bstats.org).",
-        "bStats collects some basic information, like how many people use Velocity and their",
-        "player count. We recommend keeping bStats enabled, but if you're not comfortable with",
-        "this, you can turn this setting off. There is no performance penalty associated with",
-        "having metrics enabled, and data sent to bStats can't identify your server."})
-    @ConfigKey("enabled")
     private boolean enabled = true;
-
-    @Comment("A unique, anonymous ID to identify this proxy with.")
-    @ConfigKey("id")
     private String id = UUID.randomUUID().toString();
-
-    @ConfigKey("log-failure")
     private boolean logFailure = false;
 
-    @Ignore
     private boolean fromConfig;
 
     private Metrics() {
       this.fromConfig = false;
     }
 
-    private Metrics(Toml toml) {
+    private Metrics(CommentedConfig toml) {
       if (toml != null) {
-        this.enabled = toml.getBoolean("enabled", false);
-        this.id = toml.getString("id", UUID.randomUUID().toString());
-        this.logFailure = toml.getBoolean("log-failure", false);
+        this.enabled = toml.getOrElse("enabled", false);
+        this.id = toml.getOrElse("id", UUID.randomUUID().toString());
+        this.logFailure = toml.getOrElse("log-failure", false);
         this.fromConfig = true;
       }
     }

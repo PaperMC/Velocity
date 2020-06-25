@@ -71,6 +71,8 @@ dependencies {
 
     compile 'com.spotify:completable-futures:0.3.2'
 
+    compile 'com.electronwill.night-config:toml:3.6.3'
+
     testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }

@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.command.ServerCommand;
 import com.velocitypowered.proxy.command.ShutdownCommand;
 import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
-import com.velocitypowered.proxy.config.AnnotatedConfig;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
@@ -80,7 +79,6 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class VelocityServer implements ProxyServer {
 
@@ -184,9 +182,6 @@ public class VelocityServer implements ProxyServer {
     try {
       Path configPath = Paths.get("velocity.toml");
       configuration = VelocityConfiguration.read(configPath);
-
-      // Resave config to add new values
-      AnnotatedConfig.saveConfig(configuration.dumpConfig(), configPath);
 
       if (!configuration.validate()) {
         logger.error("Your configuration is invalid. Velocity will not start up until the errors "
