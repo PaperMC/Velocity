@@ -24,7 +24,7 @@ dependencies {
     compile "net.kyori:text-serializer-plain:${textVersion}"
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile 'com.google.inject:guice:4.2.2'
+    compile 'com.google.inject:guice:4.2.3'
     compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     compile 'com.mojang:brigadier:1.0.17'
 
