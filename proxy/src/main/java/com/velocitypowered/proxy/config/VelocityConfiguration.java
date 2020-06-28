@@ -383,14 +383,14 @@ public class VelocityConfiguration implements ProxyConfig {
     // Handle any cases where the config needs to be saved again
     byte[] forwardingSecret;
     String forwardingSecretString = config.get("forwarding-secret");
-    if (forwardingSecretString.isEmpty()) {
+    if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
       forwardingSecretString = generateRandomString(12);
       config.set("forwarding-secret", forwardingSecretString);
       mustResave = true;
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
-    if (config.<String>get("metrics.id").isEmpty()) {
+    if (!config.contains("metrics.id") || config.<String>get("metrics.id").isEmpty()) {
       config.set("metrics.id", UUID.randomUUID().toString());
       mustResave = true;
     }
