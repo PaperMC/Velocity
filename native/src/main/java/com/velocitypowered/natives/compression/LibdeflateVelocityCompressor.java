@@ -48,8 +48,6 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
   @Override
   public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
-    source.memoryAddress();
-    destination.memoryAddress();
 
     while (true) {
       long sourceAddress = source.memoryAddress() + source.readerIndex();

@@ -31,7 +31,6 @@ public class NativeVelocityCipher implements VelocityCipher {
   @Override
   public void process(ByteBuf source) {
     ensureNotDisposed();
-    source.memoryAddress();
 
     long base = source.memoryAddress() + source.readerIndex();
     int len = source.readableBytes();
