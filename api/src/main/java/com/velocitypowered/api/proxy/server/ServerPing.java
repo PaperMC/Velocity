@@ -293,6 +293,7 @@ public final class ServerPing {
       return samplePlayers;
     }
 
+    @Deprecated
     public Optional<net.kyori.text.Component> getDescription() {
       return Optional.ofNullable(description).map(AdventureCompat::asOriginalTextComponent);
     }

@@ -33,6 +33,7 @@ public final class KickedFromServerEvent implements
    * @param duringServerConnect whether or not the player was kicked during the connection process
    * @param fancyReason a fancy reason for being disconnected, used for the initial result
    */
+  @Deprecated
   public KickedFromServerEvent(Player player, RegisteredServer server,
       @Nullable Component originalReason, boolean duringServerConnect, Component fancyReason) {
     this(player, server, originalReason, duringServerConnect, Notify.create(fancyReason));
@@ -46,10 +47,9 @@ public final class KickedFromServerEvent implements
    * @param duringServerConnect whether or not the player was kicked during the connection process
    * @param result the initial result
    */
-  public KickedFromServerEvent(Player player,
-      RegisteredServer server,
-      @Nullable Component originalReason, boolean duringServerConnect,
-      ServerKickResult result) {
+  @Deprecated
+  public KickedFromServerEvent(Player player, RegisteredServer server,
+      @Nullable Component originalReason, boolean duringServerConnect, ServerKickResult result) {
     this(player, server, AdventureCompat.asAdventureComponent(originalReason), duringServerConnect,
         result);
   }

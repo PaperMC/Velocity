@@ -34,8 +34,9 @@ public interface TabListEntry {
    *
    * @return {@link Optional} text {@link net.kyori.text.Component} of name displayed in the tab
    *         list
-   *
+   * @deprecated Use {@link #getDisplayNameComponent()} instead
    */
+  @Deprecated
   Optional<net.kyori.text.Component> getDisplayName();
 
   /**
@@ -56,6 +57,7 @@ public interface TabListEntry {
    * @return {@code this}, for chaining
    * @deprecated Use {@link #setDisplayName(Component)} instead
    */
+  @Deprecated
   TabListEntry setDisplayName(net.kyori.text.Component displayName);
 
   /**
