@@ -23,9 +23,10 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
-import net.kyori.text.TextComponent;
-import net.kyori.text.TranslatableComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -55,7 +56,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyHandshake packet) {
     connection.closeWith(LegacyDisconnect
-        .from(TextComponent.of("Your client is old, please upgrade!", TextColor.RED)));
+        .from(TextComponent.of("Your client is old, please upgrade!", NamedTextColor.RED)));
     return true;
   }
 
@@ -101,15 +102,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
-      connection.closeWith(Disconnect
-          .create(TranslatableComponent.of("multiplayer.disconnect.outdated_client")));
+      ic.disconnectQuietly(TranslatableComponent.of("multiplayer.disconnect.outdated_client"));
       return;
     }
 
     InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
     if (!server.getIpAttemptLimiter().attempt(address)) {
-      connection.closeWith(
-          Disconnect.create(TextComponent.of("You are logging in too fast, try again later.")));
+      ic.disconnectQuietly(TextComponent.of("You are logging in too fast, try again later."));
       return;
     }
 
@@ -119,8 +118,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
-      connection.closeWith(Disconnect
-          .create(TextComponent.of("This server is only compatible with 1.13 and above.")));
+      ic.disconnectQuietly(TextComponent.of("This server is only compatible with 1.13 and above."));
       return;
     }
 

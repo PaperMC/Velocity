@@ -3,11 +3,12 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import net.kyori.text.Component;
-import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 public class ConnectionRequestResults {
 
@@ -42,19 +43,19 @@ public class ConnectionRequestResults {
   }
 
   public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.INSTANCE.deserialize(disconnect.getReason());
+    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     return forDisconnect(deserialized, server);
   }
 
   public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.INSTANCE.deserialize(disconnect.getReason());
+    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
   }
 
   public static class Impl implements ConnectionRequestBuilder.Result {
 
     private final Status status;
-    private final @Nullable Component component;
+    private final @Nullable net.kyori.adventure.text.Component component;
     private final RegisteredServer attemptedConnection;
     private final boolean safe;
 
@@ -72,7 +73,12 @@ public class ConnectionRequestResults {
     }
 
     @Override
-    public Optional<Component> getReason() {
+    public Optional<net.kyori.text.Component> getReason() {
+      return Optional.ofNullable(component).map(AdventureCompat::asOriginalTextComponent);
+    }
+
+    @Override
+    public Optional<Component> getReasonComponent() {
       return Optional.ofNullable(component);
     }
 

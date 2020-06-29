@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -57,8 +58,15 @@ public class Disconnect implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  @Deprecated
   public static Disconnect create(Component component) {
     Preconditions.checkNotNull(component, "component");
     return new Disconnect(GsonComponentSerializer.INSTANCE.serialize(component));
+  }
+
+  public static Disconnect create(net.kyori.adventure.text.Component component,
+      ProtocolVersion version) {
+    Preconditions.checkNotNull(component, "component");
+    return new Disconnect(VelocityServer.getGsonInstance(version).toJson(component));
   }
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -11,9 +12,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.kyori.text.Component;
-import net.kyori.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerListItem implements MinecraftPacket {
@@ -86,7 +87,7 @@ public class PlayerListItem implements MinecraftPacket {
 
   private static @Nullable Component readOptionalComponent(ByteBuf buf) {
     if (buf.readBoolean()) {
-      return GsonComponentSerializer.INSTANCE.deserialize(ProtocolUtils.readString(buf));
+      return GsonComponentSerializer.gson().deserialize(ProtocolUtils.readString(buf));
     }
     return null;
   }
@@ -105,7 +106,7 @@ public class PlayerListItem implements MinecraftPacket {
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
             ProtocolUtils.writeVarInt(buf, item.getLatency());
 
-            writeDisplayName(buf, item.getDisplayName());
+            writeDisplayName(buf, item.getDisplayName(), version);
             break;
           case UPDATE_GAMEMODE:
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
@@ -114,10 +115,10 @@ public class PlayerListItem implements MinecraftPacket {
             ProtocolUtils.writeVarInt(buf, item.getLatency());
             break;
           case UPDATE_DISPLAY_NAME:
-            writeDisplayName(buf, item.getDisplayName());
+            writeDisplayName(buf, item.getDisplayName(), version);
             break;
           case REMOVE_PLAYER:
-            //Do nothing, all that is needed is the uuid
+            // Do nothing, all that is needed is the uuid
             break;
           default:
             throw new UnsupportedOperationException("Unknown action " + action);
@@ -142,10 +143,11 @@ public class PlayerListItem implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  private void writeDisplayName(ByteBuf buf, @Nullable Component displayName) {
+  private void writeDisplayName(ByteBuf buf, @Nullable Component displayName,
+      ProtocolVersion version) {
     buf.writeBoolean(displayName != null);
     if (displayName != null) {
-      ProtocolUtils.writeString(buf, GsonComponentSerializer.INSTANCE.serialize(displayName));
+      ProtocolUtils.writeString(buf, VelocityServer.getGsonInstance(version).toJson(displayName));
     }
   }
 
@@ -172,7 +174,7 @@ public class PlayerListItem implements MinecraftPacket {
           .setProperties(entry.getProfile().getProperties())
           .setLatency(entry.getLatency())
           .setGameMode(entry.getGameMode())
-          .setDisplayName(entry.getDisplayName().orElse(null));
+          .setDisplayName(entry.getDisplayNameComponent().orElse(null));
     }
 
     public @Nullable UUID getUuid() {

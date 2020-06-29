@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
@@ -68,10 +69,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.TranslatableComponent;
-import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -83,10 +84,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityServer implements ProxyServer {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
-  public static final Gson GSON = GsonComponentSerializer.populate(new GsonBuilder())
+  public static final Gson GENERAL_GSON = new GsonBuilder()
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
+  private static final Gson PRE_1_16_COMPONENT_SERIALIZER =
+      wrapAndAddTextSerializers(GsonComponentSerializer.colorDownsamplingGson())
+          .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+          .create();
+  private static final Gson POST_1_16_COMPONENT_SERIALIZER =
+      wrapAndAddTextSerializers(GsonComponentSerializer.gson())
+          .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+          .create();
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
@@ -593,5 +602,23 @@ public class VelocityServer implements ProxyServer {
           "No configuration"); // even though you'll never get the chance... heh, heh
     }
     return configuration.getBind();
+  }
+
+  @Override
+  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
+    Preconditions.checkNotNull(message, "message");
+    for (ConnectedPlayer player : connectionsByUuid.values()) {
+      player.sendMessage(message);
+    }
+  }
+
+  public static Gson getGsonInstance(ProtocolVersion version) {
+    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_COMPONENT_SERIALIZER
+        : PRE_1_16_COMPONENT_SERIALIZER;
+  }
+
+  private static GsonBuilder wrapAndAddTextSerializers(GsonComponentSerializer serializer) {
+    return net.kyori.text.serializer.gson.GsonComponentSerializer
+        .populate(serializer.serializer().newBuilder());
   }
 }

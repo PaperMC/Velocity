@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -216,7 +217,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
       serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
-          Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT), true);
+          Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT,
+              ProtocolVersion.MINECRAFT_1_16), true);
     }
   }
 }

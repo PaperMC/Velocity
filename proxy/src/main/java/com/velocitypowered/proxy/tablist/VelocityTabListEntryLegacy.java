@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabListEntryLegacy extends VelocityTabListEntry {

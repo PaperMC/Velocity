@@ -7,7 +7,10 @@ import net.kyori.text.Component;
 /**
  * Represents a boss bar, which can be send to a (group of) player(s).
  * <b>Boss bars only work on 1.9 and above.</b>
+ *
+ * @deprecated Replaced with {@link net.kyori.adventure.bossbar.BossBar}
  */
+@Deprecated
 public interface BossBar {
 
   /**

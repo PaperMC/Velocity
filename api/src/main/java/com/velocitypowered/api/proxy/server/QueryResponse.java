@@ -49,7 +49,7 @@ public final class QueryResponse {
 
   /**
    * Get hostname which will be used to reply to the query. By default it is {@link
-   * ProxyConfig#getMotdComponent()} in plain text without colour codes.
+   * ProxyConfig#getMotd()} in plain text without colour codes.
    *
    * @return hostname
    */

@@ -3,8 +3,8 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.util.AdventureCompat;
 import java.util.Optional;
-import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -71,9 +71,10 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         Result.FORCE_OFFLINE, null);
 
     private final Result result;
-    private final @Nullable Component reason;
+    private final net.kyori.adventure.text.Component reason;
 
-    private PreLoginComponentResult(Result result, @Nullable Component reason) {
+    private PreLoginComponentResult(Result result,
+        net.kyori.adventure.text.@Nullable Component reason) {
       this.result = result;
       this.reason = reason;
     }
@@ -83,7 +84,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
       return result != Result.DISALLOWED;
     }
 
-    public Optional<Component> getReason() {
+    @Deprecated
+    public Optional<net.kyori.text.Component> getReason() {
+      return Optional.ofNullable(reason).map(AdventureCompat::asOriginalTextComponent);
+    }
+
+    public Optional<net.kyori.adventure.text.Component> getReasonComponent() {
       return Optional.ofNullable(reason);
     }
 
@@ -143,9 +149,23 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
      * Denies the login with the specified reason.
      *
      * @param reason the reason for disallowing the connection
+     * @deprecated Use {@link #denied(net.kyori.adventure.text.Component)}
      * @return a new result
      */
-    public static PreLoginComponentResult denied(Component reason) {
+    @Deprecated
+    public static PreLoginComponentResult denied(net.kyori.text.Component reason) {
+      Preconditions.checkNotNull(reason, "reason");
+      return new PreLoginComponentResult(Result.DISALLOWED,
+          AdventureCompat.asAdventureComponent(reason));
+    }
+
+    /**
+     * Denies the login with the specified reason.
+     *
+     * @param reason the reason for disallowing the connection
+     * @return a new result
+     */
+    public static PreLoginComponentResult denied(net.kyori.adventure.text.Component reason) {
       Preconditions.checkNotNull(reason, "reason");
       return new PreLoginComponentResult(Result.DISALLOWED, reason);
     }

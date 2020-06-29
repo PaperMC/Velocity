@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
-import static com.velocitypowered.proxy.VelocityServer.GSON;
+import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
@@ -124,7 +124,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
             // All went well, initialize the session.
-            initializePlayer(GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class),
+            initializePlayer(GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class),
                 true);
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.

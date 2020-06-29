@@ -8,10 +8,8 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
-import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -34,8 +32,15 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public void sendMessage(Component component) {
-    logger.info(LegacyComponentSerializer.legacy().serialize(component));
+  public void sendMessage(net.kyori.text.Component component) {
+    logger.info(net.kyori.text.serializer.legacy.LegacyComponentSerializer.legacy()
+        .serialize(component));
+  }
+
+  @Override
+  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
+    logger.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacy()
+        .serialize(message));
   }
 
   @Override
@@ -103,5 +108,4 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   protected void shutdown() {
     this.server.shutdown(true);
   }
-
 }

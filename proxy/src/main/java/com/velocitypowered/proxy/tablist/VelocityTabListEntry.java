@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import java.util.Optional;
@@ -12,12 +13,12 @@ public class VelocityTabListEntry implements TabListEntry {
 
   private final VelocityTabList tabList;
   private final GameProfile profile;
-  private @Nullable Component displayName;
+  private net.kyori.adventure.text.Component displayName;
   private int latency;
   private int gameMode;
 
   VelocityTabListEntry(VelocityTabList tabList, GameProfile profile,
-      @Nullable Component displayName, int latency, int gameMode) {
+      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -37,17 +38,27 @@ public class VelocityTabListEntry implements TabListEntry {
 
   @Override
   public Optional<Component> getDisplayName() {
+    return Optional.ofNullable(displayName).map(AdventureCompat::asOriginalTextComponent);
+  }
+
+  @Override
+  public Optional<net.kyori.adventure.text.Component> getDisplayNameComponent() {
     return Optional.ofNullable(displayName);
   }
 
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
+    return this.setDisplayName(AdventureCompat.asAdventureComponent(displayName));
+  }
+
+  @Override
+  public TabListEntry setDisplayName(net.kyori.adventure.text.@Nullable Component displayName) {
     this.displayName = displayName;
     tabList.updateEntry(PlayerListItem.UPDATE_DISPLAY_NAME, this);
     return this;
   }
 
-  void setDisplayNameInternal(@Nullable Component displayName) {
+  void setDisplayNameInternal(net.kyori.adventure.text.@Nullable Component displayName) {
     this.displayName = displayName;
   }
 

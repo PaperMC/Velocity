@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabListLegacy extends VelocityTabList {
@@ -20,6 +20,10 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   public VelocityTabListLegacy(MinecraftConnection connection) {
     super(connection);
+  }
+
+  @Override
+  public void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer) {
   }
 
   @Override
@@ -55,7 +59,6 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   @Override
   public void processBackendPacket(PlayerListItem packet) {
-
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {

@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.proxy.server.ServerPing.Players;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
-import net.kyori.text.TextComponent;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 
 public class LegacyDisconnect {
 
@@ -36,7 +36,8 @@ public class LegacyDisconnect {
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
-            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.INSTANCE.serialize(response.getDescription()))),
+            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.INSTANCE.serialize(
+                response.getDescriptionComponent()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
       case MINECRAFT_1_4:
@@ -46,7 +47,8 @@ public class LegacyDisconnect {
             LEGACY_COLOR_CODE + "1",
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
-            getFirstLine(LegacyComponentSerializer.legacy().serialize(response.getDescription())),
+            getFirstLine(LegacyComponentSerializer.legacy().serialize(response
+                .getDescriptionComponent())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
         ));

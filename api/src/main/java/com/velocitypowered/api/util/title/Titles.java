@@ -2,7 +2,10 @@ package com.velocitypowered.api.util.title;
 
 /**
  * Provides special-purpose titles.
+ *
+ * @deprecated Replaced with {@link net.kyori.adventure.title.Title}
  */
+@Deprecated
 public final class Titles {
 
   private Titles() {

@@ -9,7 +9,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents a "full" title, including all components. This class is immutable.
+ *
+ * @deprecated Replaced with {@link net.kyori.adventure.title.Title}
  */
+@Deprecated
 public final class TextTitle implements Title {
 
   private final @Nullable Component title;

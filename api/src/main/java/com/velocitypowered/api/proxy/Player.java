@@ -14,7 +14,7 @@ import com.velocitypowered.api.util.title.Title;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 
 /**
  * Represents a player who is connected to the proxy.
@@ -76,9 +76,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * Sends a chat message to the player's client.
    *
    * @param component the chat message to send
+   * @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)}
    */
+  @Deprecated
   @Override
-  default void sendMessage(Component component) {
+  default void sendMessage(net.kyori.text.Component component) {
     sendMessage(component, MessagePosition.CHAT);
   }
 
@@ -87,8 +89,11 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    *
    * @param component the chat message to send
    * @param position the position for the message
+   * @deprecated Use @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)} or
+   *             {@link #sendActionBar(net.kyori.adventure.text.Component)}
    */
-  void sendMessage(Component component, MessagePosition position);
+  @Deprecated
+  void sendMessage(net.kyori.text.Component component, MessagePosition position);
 
   /**
    * Creates a new connection request so that the player can connect to another server.
@@ -127,7 +132,7 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * @deprecated Use {@link TabList#setHeaderAndFooter(Component, Component)}.
    */
   @Deprecated
-  void setHeaderAndFooter(Component header, Component footer);
+  void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer);
 
   /**
    * Clears the tab list header and footer for the player.
@@ -149,14 +154,26 @@ public interface Player extends CommandSource, InboundConnection, ChannelMessage
    * other {@link Player} methods will become undefined.
    *
    * @param reason component with the reason
+   * @deprecated Use {@link #disconnect(Component)} instead
    */
-  void disconnect(Component reason);
+  @Deprecated
+  void disconnect(net.kyori.text.Component reason);
+
+  /**
+   * Disconnects the player with the specified reason. Once this method is called, further calls to
+   * other {@link Player} methods will become undefined.
+   *
+   * @param reason component with the reason
+   */
+  void disconnect(net.kyori.adventure.text.Component reason);
 
   /**
    * Sends the specified title to the client.
    *
    * @param title the title to send
+   * @deprecated Use {@link #showTitle(net.kyori.adventure.title.Title)} and {@link #resetTitle()}
    */
+  @Deprecated
   void sendTitle(Title title);
 
   /**

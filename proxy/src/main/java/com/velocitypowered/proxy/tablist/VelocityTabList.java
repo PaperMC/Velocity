@@ -35,6 +35,14 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
+  public void setHeaderAndFooter(net.kyori.adventure.text.Component header,
+      net.kyori.adventure.text.Component footer) {
+    Preconditions.checkNotNull(header, "header");
+    Preconditions.checkNotNull(footer, "footer");
+    connection.write(HeaderAndFooter.create(header, footer, connection.getProtocolVersion()));
+  }
+
+  @Override
   public void clearHeaderAndFooter() {
     connection.write(HeaderAndFooter.reset());
   }
@@ -97,8 +105,8 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-      int gameMode) {
+  public TabListEntry buildEntry(GameProfile profile,
+      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
   }
 

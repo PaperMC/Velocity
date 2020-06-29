@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
-import static com.velocitypowered.proxy.VelocityServer.GSON;
+import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
@@ -105,7 +105,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
         .append('\0');
-    GSON.toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
+    GENERAL_GSON
+        .toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
     return data.toString();
   }
 

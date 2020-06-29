@@ -17,13 +17,13 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Provides an interface to a Minecraft server proxy.
  */
-public interface ProxyServer {
+public interface ProxyServer extends ProxyAudience {
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search
@@ -46,8 +46,10 @@ public interface ProxyServer {
    * Broadcasts a message to all players currently online.
    *
    * @param component the message to send
+   * @deprecated Use {@link #sendMessage(Component)} instead
    */
-  void broadcast(Component component);
+  @Deprecated
+  void broadcast(net.kyori.text.Component component);
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot
@@ -186,8 +188,10 @@ public interface ProxyServer {
    * @param overlay boss bar overlay
    * @param progress boss bar progress
    * @return a completely new and fresh boss bar
+   * @deprecated Use {@link net.kyori.adventure.bossbar.BossBar} instead
    */
+  @Deprecated
   @NonNull
-  BossBar createBossBar(@NonNull Component title, @NonNull BossBarColor color,
+  BossBar createBossBar(net.kyori.text.Component title, @NonNull BossBarColor color,
       @NonNull BossBarOverlay overlay, float progress);
 }

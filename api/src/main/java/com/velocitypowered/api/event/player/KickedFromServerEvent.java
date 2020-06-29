@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.util.AdventureCompat;
 import java.util.Optional;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,7 +21,7 @@ public final class KickedFromServerEvent implements
 
   private final Player player;
   private final RegisteredServer server;
-  private final @Nullable Component originalReason;
+  private final net.kyori.adventure.text.Component originalReason;
   private final boolean duringServerConnect;
   private ServerKickResult result;
 
@@ -34,11 +35,7 @@ public final class KickedFromServerEvent implements
    */
   public KickedFromServerEvent(Player player, RegisteredServer server,
       @Nullable Component originalReason, boolean duringServerConnect, Component fancyReason) {
-    this.player = Preconditions.checkNotNull(player, "player");
-    this.server = Preconditions.checkNotNull(server, "server");
-    this.originalReason = originalReason;
-    this.duringServerConnect = duringServerConnect;
-    this.result = new Notify(fancyReason);
+    this(player, server, originalReason, duringServerConnect, Notify.create(fancyReason));
   }
 
   /**
@@ -53,6 +50,21 @@ public final class KickedFromServerEvent implements
       RegisteredServer server,
       @Nullable Component originalReason, boolean duringServerConnect,
       ServerKickResult result) {
+    this(player, server, AdventureCompat.asAdventureComponent(originalReason), duringServerConnect,
+        result);
+  }
+
+  /**
+   * Creates a {@code KickedFromServerEvent} instance.
+   * @param player the player affected
+   * @param server the server the player disconnected from
+   * @param originalReason the reason for being kicked, optional
+   * @param duringServerConnect whether or not the player was kicked during the connection process
+   * @param result the initial result
+   */
+  public KickedFromServerEvent(Player player, RegisteredServer server,
+      net.kyori.adventure.text.Component originalReason,
+      boolean duringServerConnect, ServerKickResult result) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
     this.originalReason = originalReason;
@@ -78,7 +90,17 @@ public final class KickedFromServerEvent implements
     return server;
   }
 
+  /**
+   * Gets the reason the server kicked the player from the server.
+   * @return the server kicked the player from the server
+   * @deprecated Use {@link #getServerKickReason()} instead
+   */
+  @Deprecated
   public Optional<Component> getOriginalReason() {
+    return Optional.ofNullable(originalReason).map(AdventureCompat::asOriginalTextComponent);
+  }
+
+  public Optional<net.kyori.adventure.text.Component> getServerKickReason() {
     return Optional.ofNullable(originalReason);
   }
 
@@ -115,9 +137,9 @@ public final class KickedFromServerEvent implements
    */
   public static final class DisconnectPlayer implements ServerKickResult {
 
-    private final Component component;
+    private final net.kyori.adventure.text.Component component;
 
-    private DisconnectPlayer(Component component) {
+    private DisconnectPlayer(net.kyori.adventure.text.Component component) {
       this.component = Preconditions.checkNotNull(component, "component");
     }
 
@@ -126,7 +148,12 @@ public final class KickedFromServerEvent implements
       return true;
     }
 
+    @Deprecated
     public Component getReason() {
+      return AdventureCompat.asOriginalTextComponent(component);
+    }
+
+    public net.kyori.adventure.text.Component getReasonComponent() {
       return component;
     }
 
@@ -135,8 +162,20 @@ public final class KickedFromServerEvent implements
      *
      * @param reason the reason to use when disconnecting the player
      * @return the disconnect result
+     * @deprecated Use {@link #create(net.kyori.adventure.text.Component)} instead
      */
+    @Deprecated
     public static DisconnectPlayer create(Component reason) {
+      return new DisconnectPlayer(AdventureCompat.asAdventureComponent(reason));
+    }
+
+    /**
+     * Creates a new {@link DisconnectPlayer} with the specified reason.
+     *
+     * @param reason the reason to use when disconnecting the player
+     * @return the disconnect result
+     */
+    public static DisconnectPlayer create(net.kyori.adventure.text.Component reason) {
       return new DisconnectPlayer(reason);
     }
   }
@@ -147,10 +186,10 @@ public final class KickedFromServerEvent implements
    */
   public static final class RedirectPlayer implements ServerKickResult {
 
-    private final Component message;
+    private final net.kyori.adventure.text.Component message;
     private final RegisteredServer server;
 
-    private RedirectPlayer(RegisteredServer server, @Nullable Component message) {
+    private RedirectPlayer(RegisteredServer server, net.kyori.adventure.text.Component message) {
       this.server = Preconditions.checkNotNull(server, "server");
       this.message = message;
     }
@@ -164,8 +203,12 @@ public final class KickedFromServerEvent implements
       return server;
     }
 
-    @Nullable
+    @Deprecated
     public Component getMessage() {
+      return AdventureCompat.asOriginalTextComponent(message);
+    }
+
+    public net.kyori.adventure.text.Component getMessageComponent() {
       return message;
     }
 
@@ -174,13 +217,29 @@ public final class KickedFromServerEvent implements
      *
      * @param server the server to send the player to
      * @return the redirect result
+     * @deprecated Use {@link #create(RegisteredServer, net.kyori.adventure.text.Component)}
      */
-    public static RedirectPlayer create(RegisteredServer server, @Nullable Component message) {
+    @Deprecated
+    public static RedirectPlayer create(RegisteredServer server, net.kyori.text.Component message) {
+      if (message == null) {
+        return new RedirectPlayer(server, null);
+      }
+      return new RedirectPlayer(server, AdventureCompat.asAdventureComponent(message));
+    }
+
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     *
+     * @param server the server to send the player to
+     * @return the redirect result
+     */
+    public static RedirectPlayer create(RegisteredServer server,
+        net.kyori.adventure.text.Component message) {
       return new RedirectPlayer(server, message);
     }
 
     public static ServerKickResult create(RegisteredServer server) {
-      return create(server, null);
+      return new RedirectPlayer(server, null);
     }
   }
 
@@ -191,9 +250,10 @@ public final class KickedFromServerEvent implements
    */
   public static final class Notify implements ServerKickResult {
 
-    private final Component message;
+    private final net.kyori.adventure.text.Component message;
 
-    private Notify(Component message) {
+    @Deprecated
+    private Notify(net.kyori.adventure.text.Component message) {
       this.message = Preconditions.checkNotNull(message, "message");
     }
 
@@ -202,7 +262,13 @@ public final class KickedFromServerEvent implements
       return false;
     }
 
+    @Deprecated
     public Component getMessage() {
+      return AdventureCompat.asOriginalTextComponent(message);
+    }
+
+    @Deprecated
+    public net.kyori.adventure.text.Component getMessageComponent() {
       return message;
     }
 
@@ -211,8 +277,20 @@ public final class KickedFromServerEvent implements
      *
      * @param message the server to send the player to
      * @return the redirect result
+     * @deprecated Use {@link #create(net.kyori.adventure.text.Component)} instead
      */
+    @Deprecated
     public static Notify create(Component message) {
+      return new Notify(AdventureCompat.asAdventureComponent(message));
+    }
+
+    /**
+     * Notifies the player with the specified message but does nothing else.
+     *
+     * @param message the server to send the player to
+     * @return the redirect result
+     */
+    public static Notify create(net.kyori.adventure.text.Component message) {
       return new Notify(message);
     }
   }

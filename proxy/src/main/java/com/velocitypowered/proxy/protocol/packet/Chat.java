@@ -2,12 +2,11 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.text.Component;
-import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
@@ -97,13 +96,27 @@ public class Chat implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static Chat createClientbound(Component component) {
+  @Deprecated
+  public static Chat createClientbound(net.kyori.text.Component component) {
     return createClientbound(component, CHAT_TYPE, EMPTY_SENDER);
   }
 
-  public static Chat createClientbound(Component component, byte type, UUID sender) {
+  @Deprecated
+  public static Chat createClientbound(net.kyori.text.Component component, byte type, UUID sender) {
     Preconditions.checkNotNull(component, "component");
-    return new Chat(GsonComponentSerializer.INSTANCE.serialize(component), type, sender);
+    return new Chat(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
+        .serialize(component), type, sender);
+  }
+
+  public static Chat createClientbound(net.kyori.adventure.text.Component component,
+      ProtocolVersion version) {
+    return createClientbound(component, CHAT_TYPE, EMPTY_SENDER, version);
+  }
+
+  public static Chat createClientbound(net.kyori.adventure.text.Component component, byte type,
+      UUID sender, ProtocolVersion version) {
+    Preconditions.checkNotNull(component, "component");
+    return new Chat(VelocityServer.getGsonInstance(version).toJson(component), type, sender);
   }
 
   public static Chat createServerbound(String message) {

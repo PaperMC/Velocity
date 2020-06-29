@@ -3,6 +3,7 @@ package com.velocitypowered.api.proxy.server;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -22,12 +22,19 @@ public final class ServerPing {
 
   private final Version version;
   private final @Nullable Players players;
-  private final Component description;
+  private final net.kyori.adventure.text.Component description;
   private final @Nullable Favicon favicon;
   private final @Nullable ModInfo modinfo;
 
-  public ServerPing(Version version, @Nullable Players players, Component description,
-      @Nullable Favicon favicon) {
+  @Deprecated
+  public ServerPing(Version version, @Nullable Players players,
+      net.kyori.text.Component description, @Nullable Favicon favicon) {
+    this(version, players, AdventureCompat.asAdventureComponent(description), favicon,
+        ModInfo.DEFAULT);
+  }
+
+  public ServerPing(Version version, @Nullable Players players,
+      net.kyori.adventure.text.Component description, @Nullable Favicon favicon) {
     this(version, players, description, favicon, ModInfo.DEFAULT);
   }
 
@@ -40,8 +47,25 @@ public final class ServerPing {
    * @param favicon the server's favicon
    * @param modinfo the mods this server runs
    */
-  public ServerPing(Version version, @Nullable Players players, Component description,
-      @Nullable Favicon favicon, @Nullable ModInfo modinfo) {
+  @Deprecated
+  public ServerPing(Version version, @Nullable Players players,
+      net.kyori.text.Component description, @Nullable Favicon favicon,
+      @Nullable ModInfo modinfo) {
+    this(version, players, AdventureCompat.asAdventureComponent(description), favicon, modinfo);
+  }
+
+  /**
+   * Constructs a ServerPing instance.
+   *
+   * @param version the version of the server
+   * @param players the players on the server
+   * @param description the MOTD for the server
+   * @param favicon the server's favicon
+   * @param modinfo the mods this server runs
+   */
+  public ServerPing(Version version, @Nullable Players players,
+      net.kyori.adventure.text.Component description, @Nullable Favicon favicon,
+      @Nullable ModInfo modinfo) {
     this.version = Preconditions.checkNotNull(version, "version");
     this.players = players;
     this.description = Preconditions.checkNotNull(description, "description");
@@ -57,7 +81,12 @@ public final class ServerPing {
     return Optional.ofNullable(players);
   }
 
-  public Component getDescription() {
+  @Deprecated
+  public net.kyori.text.Component getDescription() {
+    return AdventureCompat.asOriginalTextComponent(description);
+  }
+
+  public net.kyori.adventure.text.Component getDescriptionComponent() {
     return description;
   }
 
@@ -143,7 +172,7 @@ public final class ServerPing {
     private final List<SamplePlayer> samplePlayers = new ArrayList<>();
     private String modType = "FML";
     private final List<ModInfo.Mod> mods = new ArrayList<>();
-    private @Nullable Component description;
+    private net.kyori.adventure.text.Component description;
     private @Nullable Favicon favicon;
     private boolean nullOutPlayers;
     private boolean nullOutModinfo;
@@ -215,7 +244,13 @@ public final class ServerPing {
       return this;
     }
 
-    public Builder description(Component description) {
+    @Deprecated
+    public Builder description(net.kyori.text.Component description) {
+      this.description(AdventureCompat.asAdventureComponent(description));
+      return this;
+    }
+
+    public Builder description(net.kyori.adventure.text.Component description) {
       this.description = Preconditions.checkNotNull(description, "description");
       return this;
     }
@@ -258,7 +293,11 @@ public final class ServerPing {
       return samplePlayers;
     }
 
-    public Optional<Component> getDescription() {
+    public Optional<net.kyori.text.Component> getDescription() {
+      return Optional.ofNullable(description).map(AdventureCompat::asOriginalTextComponent);
+    }
+
+    public Optional<net.kyori.adventure.text.Component> getDescriptionComponent() {
       return Optional.ofNullable(description);
     }
 

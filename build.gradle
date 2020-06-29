@@ -18,6 +18,7 @@ allprojects {
     ext {
         // dependency versions
         textVersion = '3.0.3'
+        adventureVersion = '4.0.0-SNAPSHOT'
         junitVersion = '5.3.0-M1'
         slf4jVersion = '1.7.25'
         log4jVersion = '2.11.2'

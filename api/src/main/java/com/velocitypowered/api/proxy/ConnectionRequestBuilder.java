@@ -67,8 +67,17 @@ public interface ConnectionRequestBuilder {
      * Returns an (optional) textual reason for the failure to connect to the server.
      *
      * @return the reason why the user could not connect to the server
+     * @deprecated Use {@link #getReasonComponent()} instead
      */
+    @Deprecated
     Optional<Component> getReason();
+
+    /**
+     * Returns an (optional) textual reason for the failure to connect to the server.
+     *
+     * @return the reason why the user could not connect to the server
+     */
+    Optional<net.kyori.adventure.text.Component> getReasonComponent();
 
     /**
      * Returns the server we actually tried to connect to.

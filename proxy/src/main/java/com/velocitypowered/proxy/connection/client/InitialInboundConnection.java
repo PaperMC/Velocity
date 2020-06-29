@@ -8,8 +8,8 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import java.net.InetSocketAddress;
 import java.util.Optional;
-import net.kyori.text.Component;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,6 +61,14 @@ public final class InitialInboundConnection implements InboundConnection,
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacy().serialize(reason));
-    connection.closeWith(Disconnect.create(reason));
+    connection.closeWith(Disconnect.create(reason, getProtocolVersion()));
+  }
+
+  /**
+   * Disconnects the connection from the server silently.
+   * @param reason the reason for disconnecting
+   */
+  public void disconnectQuietly(Component reason) {
+    connection.closeWith(Disconnect.create(reason, getProtocolVersion()));
   }
 }

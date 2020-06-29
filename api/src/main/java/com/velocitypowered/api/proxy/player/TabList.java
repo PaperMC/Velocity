@@ -5,13 +5,23 @@ import com.velocitypowered.api.util.GameProfile;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents the tab list of a {@link Player}.
  */
 public interface TabList {
+
+  /**
+   * Sets the tab list header and footer for the player.
+   *
+   * @param header the header component
+   * @param footer the footer component
+   * @deprecated Use {@link #setHeaderAndFooter(Component, Component)} instead
+   */
+  @Deprecated
+  void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer);
 
   /**
    * Sets the tab list header and footer for the player.

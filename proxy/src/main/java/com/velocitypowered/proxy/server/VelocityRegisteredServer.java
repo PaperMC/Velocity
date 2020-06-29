@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityRegisteredServer implements RegisteredServer {
@@ -144,5 +146,12 @@ public class VelocityRegisteredServer implements RegisteredServer {
   @Override
   public String toString() {
     return "registered server: " + serverInfo;
+  }
+
+  @Override
+  public void sendMessage(@NonNull Component message) {
+    for (ConnectedPlayer player : players) {
+      player.sendMessage(message);
+    }
   }
 }

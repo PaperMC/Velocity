@@ -1,12 +1,14 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
@@ -18,6 +20,7 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -25,11 +28,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
+  private static final Gson PRE_1_16_PING_SERIALIZER = GsonComponentSerializer
+      .colorDownsamplingGson()
+      .serializer()
+      .newBuilder()
+      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .create();
+  private static final Gson POST_1_16_PING_SERIALIZER = GsonComponentSerializer.gson()
+      .serializer()
+      .newBuilder()
+      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .create();
   private static final Logger logger = LogManager.getLogger(StatusSessionHandler.class);
 
   private final VelocityServer server;
@@ -58,7 +73,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
-        configuration.getMotdComponent(),
+        configuration.getMotd(),
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
     );
@@ -119,7 +134,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             return new ServerPing(
                 fallback.getVersion(),
                 fallback.getPlayers().orElse(null),
-                response.getDescription(),
+                response.getDescriptionComponent(),
                 fallback.getFavicon().orElse(null),
                 response.getModinfo().orElse(null)
             );
@@ -173,7 +188,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
-              VelocityServer.GSON.toJson(event.getPing(), json);
+              VelocityServer.getGsonInstance(connection.getProtocolVersion())
+                  .toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },
             connection.eventLoop());
