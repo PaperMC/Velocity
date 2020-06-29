@@ -25,12 +25,14 @@ dependencies {
     compile "net.kyori:text-serializer-legacy:${textVersion}"
     compile "net.kyori:text-serializer-plain:${textVersion}"
 
+    // DEPRECATED: Will be removed in Velocity 2.0.0
+    compile 'com.moandjiezana.toml:toml4j:0.7.2'
+
     compile "net.kyori:adventure-api:${adventureVersion}"
     compile "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
     compile "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
     compile "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
 
-    compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile 'com.google.inject:guice:4.2.3'
     compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
