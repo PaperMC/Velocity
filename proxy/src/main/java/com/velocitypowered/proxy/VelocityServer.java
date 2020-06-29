@@ -69,6 +69,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -605,11 +606,8 @@ public class VelocityServer implements ProxyServer {
   }
 
   @Override
-  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
-    Preconditions.checkNotNull(message, "message");
-    for (ConnectedPlayer player : connectionsByUuid.values()) {
-      player.sendMessage(message);
-    }
+  public @NonNull Iterable<? extends Audience> audiences() {
+    return this.getAllPlayers();
   }
 
   public static Gson getGsonInstance(ProtocolVersion version) {
