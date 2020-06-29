@@ -21,7 +21,7 @@ public final class KickedFromServerEvent implements
 
   private final Player player;
   private final RegisteredServer server;
-  private final net.kyori.adventure.text.Component originalReason;
+  private final net.kyori.adventure.text.@Nullable Component originalReason;
   private final boolean duringServerConnect;
   private ServerKickResult result;
 
@@ -63,7 +63,7 @@ public final class KickedFromServerEvent implements
    * @param result the initial result
    */
   public KickedFromServerEvent(Player player, RegisteredServer server,
-      net.kyori.adventure.text.Component originalReason,
+      net.kyori.adventure.text.@Nullable Component originalReason,
       boolean duringServerConnect, ServerKickResult result) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
@@ -189,7 +189,8 @@ public final class KickedFromServerEvent implements
     private final net.kyori.adventure.text.Component message;
     private final RegisteredServer server;
 
-    private RedirectPlayer(RegisteredServer server, net.kyori.adventure.text.Component message) {
+    private RedirectPlayer(RegisteredServer server,
+        net.kyori.adventure.text.@Nullable Component message) {
       this.server = Preconditions.checkNotNull(server, "server");
       this.message = message;
     }
@@ -252,7 +253,6 @@ public final class KickedFromServerEvent implements
 
     private final net.kyori.adventure.text.Component message;
 
-    @Deprecated
     private Notify(net.kyori.adventure.text.Component message) {
       this.message = Preconditions.checkNotNull(message, "message");
     }

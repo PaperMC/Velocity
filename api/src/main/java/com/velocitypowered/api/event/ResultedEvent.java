@@ -93,6 +93,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status;
     }
 
+    @Deprecated
     public Optional<net.kyori.text.Component> getReason() {
       return Optional.ofNullable(reason).map(AdventureCompat::asOriginalTextComponent);
     }
