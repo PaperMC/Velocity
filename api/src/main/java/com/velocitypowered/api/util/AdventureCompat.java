@@ -12,6 +12,12 @@ public class AdventureCompat {
     throw new AssertionError("Do not create instances of this class.");
   }
 
+  /**
+   * Converts an {@link net.kyori.text.Component} component into an adventure
+   * {@link net.kyori.adventure.text.Component} component.
+   * @param component the component to translate
+   * @return the translated component
+   */
   public static net.kyori.adventure.text.Component asAdventureComponent(
       net.kyori.text.Component component) {
     String json = net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
@@ -20,6 +26,12 @@ public class AdventureCompat {
         .deserialize(json);
   }
 
+  /**
+   * Converts an {@link net.kyori.adventure.text.Component} component into an text
+   * {@link net.kyori.text.Component} component.
+   * @param component the component to translate
+   * @return the translated component
+   */
   public static net.kyori.text.Component asOriginalTextComponent(
       net.kyori.adventure.text.Component component) {
     String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer

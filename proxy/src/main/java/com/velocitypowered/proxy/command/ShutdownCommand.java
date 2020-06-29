@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.command;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ShutdownCommand implements Command {
@@ -20,7 +20,7 @@ public class ShutdownCommand implements Command {
       server.shutdown(true);
     } else {
       String reason = String.join(" ", args);
-      server.shutdown(true, LegacyComponentSerializer.legacy().deserialize(reason, '&'));
+      server.shutdown(true, LegacyComponentSerializer.legacy('&').deserialize(reason));
     }
   }
 

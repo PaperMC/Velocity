@@ -281,7 +281,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion());
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+        .getProtocolVersion());
 
     TitlePacket titlePkt = new TitlePacket();
     titlePkt.setAction(TitlePacket.SET_TITLE);
