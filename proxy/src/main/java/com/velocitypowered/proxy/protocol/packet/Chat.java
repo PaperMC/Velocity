@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -116,7 +115,8 @@ public class Chat implements MinecraftPacket {
   public static Chat createClientbound(net.kyori.adventure.text.Component component, byte type,
       UUID sender, ProtocolVersion version) {
     Preconditions.checkNotNull(component, "component");
-    return new Chat(VelocityServer.getGsonInstance(version).toJson(component), type, sender);
+    return new Chat(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,
+        sender);
   }
 
   public static Chat createServerbound(String message) {

@@ -117,8 +117,8 @@ public class JavaPluginLoader implements PluginLoader {
       while ((entry = in.getNextJarEntry()) != null) {
         if (entry.getName().equals("velocity-plugin.json")) {
           try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return Optional.of(VelocityServer.GENERAL_GSON
-                .fromJson(pluginInfoReader, SerializedPluginDescription.class));
+            return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
+                SerializedPluginDescription.class));
           }
         }
 

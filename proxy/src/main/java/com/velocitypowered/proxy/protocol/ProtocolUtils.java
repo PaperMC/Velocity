@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.nbt.CompoundTag;
 import net.kyori.nbt.TagIO;
 import net.kyori.nbt.TagType;
@@ -458,6 +459,20 @@ public enum ProtocolUtils {
    */
   public static String readStringWithoutLength(ByteBuf buf) {
     return readString(buf, DEFAULT_MAX_STRING_SIZE, buf.readableBytes());
+  }
+
+  /**
+   * Returns the appropriate {@link GsonComponentSerializer} for the given protocol version. This
+   * is used to constrain messages sent to older clients.
+   *
+   * @param version the protocol version used by the client.
+   * @return the appropriate {@link GsonComponentSerializer}
+   */
+  public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      return GsonComponentSerializer.gson();
+    }
+    return GsonComponentSerializer.colorDownsamplingGson();
   }
 
   public enum Direction {

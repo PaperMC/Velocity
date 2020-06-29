@@ -4,8 +4,6 @@ import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
@@ -39,6 +37,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -69,7 +68,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
@@ -266,7 +264,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       // We can use the title packet instead.
       TitlePacket pkt = new TitlePacket();
       pkt.setAction(TitlePacket.SET_ACTION_BAR);
-      pkt.setComponent(VelocityServer.getGsonInstance(this.getProtocolVersion()).toJson(message));
+      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion())
+          .serialize(message));
       connection.write(pkt);
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
@@ -282,16 +281,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
-    Gson gson = VelocityServer.getGsonInstance(this.getProtocolVersion());
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion());
 
     TitlePacket titlePkt = new TitlePacket();
     titlePkt.setAction(TitlePacket.SET_TITLE);
-    titlePkt.setComponent(gson.toJson(title.title()));
+    titlePkt.setComponent(serializer.serialize(title.title()));
     connection.delayedWrite(titlePkt);
 
     TitlePacket subtitlePkt = new TitlePacket();
     subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
-    subtitlePkt.setComponent(gson.toJson(title.subtitle()));
+    subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
     connection.delayedWrite(titlePkt);
 
     TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
@@ -394,7 +393,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
     } else if (title instanceof TextTitle) {
       TextTitle tt = (TextTitle) title;
-      Gson gson = VelocityServer.getGsonInstance(this.getProtocolVersion());
 
       if (tt.isResetBeforeSend()) {
         connection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
@@ -404,7 +402,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (titleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_TITLE);
-        titlePkt.setComponent(gson.toJson(titleText.get()));
+        titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
+            .serialize(titleText.get()));
         connection.delayedWrite(titlePkt);
       }
 
@@ -412,7 +411,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       if (subtitleText.isPresent()) {
         TitlePacket titlePkt = new TitlePacket();
         titlePkt.setAction(TitlePacket.SET_SUBTITLE);
-        titlePkt.setComponent(gson.toJson(subtitleText.get()));
+        titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
+            .serialize(subtitleText.get()));
         connection.delayedWrite(titlePkt);
       }
 

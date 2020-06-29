@@ -147,7 +147,8 @@ public class PlayerListItem implements MinecraftPacket {
       ProtocolVersion version) {
     buf.writeBoolean(displayName != null);
     if (displayName != null) {
-      ProtocolUtils.writeString(buf, VelocityServer.getGsonInstance(version).toJson(displayName));
+      ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(version)
+          .serialize(displayName));
     }
   }
 

@@ -124,8 +124,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
             // All went well, initialize the session.
-            initializePlayer(GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class),
-                true);
+            initializePlayer(GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
+                GameProfile.class), true);
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
             inbound.disconnect(VelocityMessages.ONLINE_MODE_ONLY);

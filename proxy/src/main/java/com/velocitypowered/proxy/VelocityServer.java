@@ -54,10 +54,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -73,10 +71,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.TranslatableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -92,14 +90,17 @@ public class VelocityServer implements ProxyServer {
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
-  private static final Gson PRE_1_16_COMPONENT_SERIALIZER =
-      wrapAndAddTextSerializers(GsonComponentSerializer.colorDownsamplingGson())
-          .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
-          .create();
-  private static final Gson POST_1_16_COMPONENT_SERIALIZER =
-      wrapAndAddTextSerializers(GsonComponentSerializer.gson())
-          .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
-          .create();
+  private static final Gson PRE_1_16_PING_SERIALIZER = GsonComponentSerializer
+      .colorDownsamplingGson()
+      .serializer()
+      .newBuilder()
+      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .create();
+  private static final Gson POST_1_16_PING_SERIALIZER = GsonComponentSerializer.gson()
+      .serializer()
+      .newBuilder()
+      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .create();
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
@@ -614,13 +615,8 @@ public class VelocityServer implements ProxyServer {
         getAllPlayers().iterator());
   }
 
-  public static Gson getGsonInstance(ProtocolVersion version) {
-    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_COMPONENT_SERIALIZER
-        : PRE_1_16_COMPONENT_SERIALIZER;
-  }
-
-  private static GsonBuilder wrapAndAddTextSerializers(GsonComponentSerializer serializer) {
-    return net.kyori.text.serializer.gson.GsonComponentSerializer
-        .populate(serializer.serializer().newBuilder());
+  public static Gson getPingGsonInstance(ProtocolVersion version) {
+    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_PING_SERIALIZER
+        : PRE_1_16_PING_SERIALIZER;
   }
 }

@@ -173,7 +173,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
-              VelocityServer.getGsonInstance(connection.getProtocolVersion())
+              VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
                   .toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },

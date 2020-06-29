@@ -43,8 +43,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -134,7 +134,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 player.getUsername(), e);
             player.sendMessage(
                 TextComponent.of("An error occurred while running this command.",
-                    TextColor.RED));
+                    NamedTextColor.RED));
             return null;
           });
     } else {
@@ -272,7 +272,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     player.disconnect(TextComponent.of("Your connection has encountered an error. Try again later.",
-        TextColor.RED));
+        NamedTextColor.RED));
   }
 
   @Override
