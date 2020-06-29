@@ -3,6 +3,7 @@ package com.velocitypowered.proxy;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
@@ -53,8 +54,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -607,7 +610,8 @@ public class VelocityServer implements ProxyServer {
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return this.getAllPlayers();
+    return (Iterable<Audience>) () -> Iterators.concat(Iterators.singletonIterator(console),
+        getAllPlayers().iterator());
   }
 
   public static Gson getGsonInstance(ProtocolVersion version) {
