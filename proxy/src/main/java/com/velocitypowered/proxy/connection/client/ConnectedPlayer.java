@@ -51,6 +51,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
+import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
@@ -277,6 +278,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       chat.setType((byte) 1);
       connection.write(chat);
     }
+  }
+
+  @Override
+  public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
+    Gson gson = VelocityServer.getGsonInstance(this.getProtocolVersion());
+
+    TitlePacket titlePkt = new TitlePacket();
+    titlePkt.setAction(TitlePacket.SET_TITLE);
+    titlePkt.setComponent(gson.toJson(title.title()));
+    connection.delayedWrite(titlePkt);
+
+    TitlePacket subtitlePkt = new TitlePacket();
+    subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
+    subtitlePkt.setComponent(gson.toJson(title.subtitle()));
+    connection.delayedWrite(titlePkt);
+
+    TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
+    timesPkt.setFadeIn((int) DurationUtils.convertDurationToTicks(title.fadeInTime()));
+    timesPkt.setStay((int) DurationUtils.convertDurationToTicks(title.stayTime()));
+    timesPkt.setFadeOut((int) DurationUtils.convertDurationToTicks(title.fadeOutTime()));
+    connection.delayedWrite(timesPkt);
+
+    connection.flush();
+  }
+
+  @Override
+  public void clearTitle() {
+    connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+  }
+
+  @Override
+  public void resetTitle() {
+    connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
   }
 
   @Override
