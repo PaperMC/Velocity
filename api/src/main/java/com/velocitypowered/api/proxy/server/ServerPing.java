@@ -3,7 +3,6 @@ package com.velocitypowered.api.proxy.server;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -29,7 +29,7 @@ public final class ServerPing {
   @Deprecated
   public ServerPing(Version version, @Nullable Players players,
       net.kyori.text.Component description, @Nullable Favicon favicon) {
-    this(version, players, AdventureCompat.asAdventureComponent(description), favicon,
+    this(version, players, LegacyText3ComponentSerializer.get().deserialize(description), favicon,
         ModInfo.DEFAULT);
   }
 
@@ -51,7 +51,8 @@ public final class ServerPing {
   public ServerPing(Version version, @Nullable Players players,
       net.kyori.text.Component description, @Nullable Favicon favicon,
       @Nullable ModInfo modinfo) {
-    this(version, players, AdventureCompat.asAdventureComponent(description), favicon, modinfo);
+    this(version, players, LegacyText3ComponentSerializer.get().deserialize(description), favicon,
+        modinfo);
   }
 
   /**
@@ -83,7 +84,7 @@ public final class ServerPing {
 
   @Deprecated
   public net.kyori.text.Component getDescription() {
-    return AdventureCompat.asOriginalTextComponent(description);
+    return LegacyText3ComponentSerializer.get().serialize(description);
   }
 
   public net.kyori.adventure.text.Component getDescriptionComponent() {
@@ -246,7 +247,7 @@ public final class ServerPing {
 
     @Deprecated
     public Builder description(net.kyori.text.Component description) {
-      this.description(AdventureCompat.asAdventureComponent(description));
+      this.description(LegacyText3ComponentSerializer.get().deserialize(description));
       return this;
     }
 
@@ -295,7 +296,7 @@ public final class ServerPing {
 
     @Deprecated
     public Optional<net.kyori.text.Component> getDescription() {
-      return Optional.ofNullable(description).map(AdventureCompat::asOriginalTextComponent);
+      return Optional.ofNullable(description).map(LegacyText3ComponentSerializer.get()::serialize);
     }
 
     public Optional<net.kyori.adventure.text.Component> getDescriptionComponent() {

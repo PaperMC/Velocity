@@ -32,6 +32,7 @@ dependencies {
     compile "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
     compile "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
     compile "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
+    compile "net.kyori:adventure-text-serializer-legacy-text3:${adventureVersion}"
 
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile 'com.google.inject:guice:4.2.3'

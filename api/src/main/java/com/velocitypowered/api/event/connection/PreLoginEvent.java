@@ -3,8 +3,8 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.api.util.AdventureCompat;
 import java.util.Optional;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -86,7 +86,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
     @Deprecated
     public Optional<net.kyori.text.Component> getReason() {
-      return Optional.ofNullable(reason).map(AdventureCompat::asOriginalTextComponent);
+      return Optional.ofNullable(reason).map(LegacyText3ComponentSerializer.get()::serialize);
     }
 
     public Optional<net.kyori.adventure.text.Component> getReasonComponent() {
@@ -155,8 +155,8 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     @Deprecated
     public static PreLoginComponentResult denied(net.kyori.text.Component reason) {
       Preconditions.checkNotNull(reason, "reason");
-      return new PreLoginComponentResult(Result.DISALLOWED,
-          AdventureCompat.asAdventureComponent(reason));
+      return new PreLoginComponentResult(Result.DISALLOWED, LegacyText3ComponentSerializer.get()
+          .deserialize(reason));
     }
 
     /**

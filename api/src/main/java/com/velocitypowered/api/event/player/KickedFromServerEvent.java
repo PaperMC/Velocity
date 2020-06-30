@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.util.AdventureCompat;
 import java.util.Optional;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -50,8 +50,8 @@ public final class KickedFromServerEvent implements
   @Deprecated
   public KickedFromServerEvent(Player player, RegisteredServer server,
       @Nullable Component originalReason, boolean duringServerConnect, ServerKickResult result) {
-    this(player, server, AdventureCompat.asAdventureComponent(originalReason), duringServerConnect,
-        result);
+    this(player, server, originalReason == null ? null : LegacyText3ComponentSerializer.get()
+            .deserialize(originalReason), duringServerConnect, result);
   }
 
   /**
@@ -97,7 +97,7 @@ public final class KickedFromServerEvent implements
    */
   @Deprecated
   public Optional<Component> getOriginalReason() {
-    return Optional.ofNullable(originalReason).map(AdventureCompat::asOriginalTextComponent);
+    return Optional.ofNullable(originalReason).map(LegacyText3ComponentSerializer.get()::serialize);
   }
 
   public Optional<net.kyori.adventure.text.Component> getServerKickReason() {
@@ -150,7 +150,7 @@ public final class KickedFromServerEvent implements
 
     @Deprecated
     public Component getReason() {
-      return AdventureCompat.asOriginalTextComponent(component);
+      return LegacyText3ComponentSerializer.get().serialize(component);
     }
 
     public net.kyori.adventure.text.Component getReasonComponent() {
@@ -166,7 +166,7 @@ public final class KickedFromServerEvent implements
      */
     @Deprecated
     public static DisconnectPlayer create(Component reason) {
-      return new DisconnectPlayer(AdventureCompat.asAdventureComponent(reason));
+      return new DisconnectPlayer(LegacyText3ComponentSerializer.get().deserialize(reason));
     }
 
     /**
@@ -206,7 +206,7 @@ public final class KickedFromServerEvent implements
 
     @Deprecated
     public Component getMessage() {
-      return AdventureCompat.asOriginalTextComponent(message);
+      return LegacyText3ComponentSerializer.get().serialize(message);
     }
 
     public net.kyori.adventure.text.Component getMessageComponent() {
@@ -225,7 +225,7 @@ public final class KickedFromServerEvent implements
       if (message == null) {
         return new RedirectPlayer(server, null);
       }
-      return new RedirectPlayer(server, AdventureCompat.asAdventureComponent(message));
+      return new RedirectPlayer(server, LegacyText3ComponentSerializer.get().deserialize(message));
     }
 
     /**
@@ -264,7 +264,7 @@ public final class KickedFromServerEvent implements
 
     @Deprecated
     public Component getMessage() {
-      return AdventureCompat.asOriginalTextComponent(message);
+      return LegacyText3ComponentSerializer.get().serialize(message);
     }
 
     @Deprecated
@@ -281,7 +281,7 @@ public final class KickedFromServerEvent implements
      */
     @Deprecated
     public static Notify create(Component message) {
-      return new Notify(AdventureCompat.asAdventureComponent(message));
+      return new Notify(LegacyText3ComponentSerializer.get().deserialize(message));
     }
 
     /**

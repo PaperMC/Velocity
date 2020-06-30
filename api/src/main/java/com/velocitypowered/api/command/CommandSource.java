@@ -2,8 +2,8 @@ package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.permission.PermissionSubject;
 import com.velocitypowered.api.proxy.ProxyAudience;
-import com.velocitypowered.api.util.AdventureCompat;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -22,6 +22,6 @@ public interface CommandSource extends PermissionSubject, ProxyAudience {
 
   @Override
   default void sendMessage(@NonNull Component message) {
-    this.sendMessage(AdventureCompat.asOriginalTextComponent(message));
+    this.sendMessage(LegacyText3ComponentSerializer.get().serialize(message));
   }
 }

@@ -1,9 +1,9 @@
 package com.velocitypowered.api.proxy.player;
 
-import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -179,7 +179,7 @@ public interface TabListEntry {
      */
     @Deprecated
     public Builder displayName(net.kyori.text.Component displayName) {
-      return displayName(AdventureCompat.asAdventureComponent(displayName));
+      return displayName(LegacyText3ComponentSerializer.get().deserialize(displayName));
     }
 
     /**

@@ -3,12 +3,12 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 
 public class ConnectionRequestResults {
 
@@ -74,7 +74,7 @@ public class ConnectionRequestResults {
 
     @Override
     public Optional<net.kyori.text.Component> getReason() {
-      return Optional.ofNullable(component).map(AdventureCompat::asOriginalTextComponent);
+      return Optional.ofNullable(component).map(LegacyText3ComponentSerializer.get()::serialize);
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
-import com.velocitypowered.api.util.AdventureCompat;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
@@ -25,6 +24,7 @@ import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -230,7 +230,7 @@ public class VelocityConfiguration implements ProxyConfig {
    */
   @Override
   public net.kyori.text.Component getMotdComponent() {
-    return AdventureCompat.asOriginalTextComponent(this.getMotd());
+    return LegacyText3ComponentSerializer.get().serialize(this.getMotd());
   }
 
   @Override
