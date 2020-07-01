@@ -64,6 +64,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -311,6 +312,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void resetTitle() {
     connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+  }
+
+  @Override
+  public void hideBossBar(@NonNull BossBar bar) {
+    this.server.getBossBarManager().removeBossBar(this, bar);
+  }
+
+  @Override
+  public void showBossBar(@NonNull BossBar bar) {
+    this.server.getBossBarManager().addBossBar(this, bar);
   }
 
   @Override

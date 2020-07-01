@@ -173,4 +173,11 @@ public class BossBar implements MinecraftPacket {
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
+
+  public static BossBar createRemovePacket(UUID id) {
+    BossBar packet = new BossBar();
+    packet.setUuid(id);
+    packet.setAction(REMOVE);
+    return packet;
+  }
 }

@@ -41,6 +41,7 @@ import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
+import com.velocitypowered.proxy.util.bossbar.BossBarManager;
 import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
@@ -111,6 +112,7 @@ public class VelocityServer implements ProxyServer {
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
+  private final BossBarManager bossBarManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -129,6 +131,7 @@ public class VelocityServer implements ProxyServer {
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
     this.options = options;
+    this.bossBarManager = new BossBarManager();
   }
 
   public KeyPair getServerKeyPair() {
@@ -501,9 +504,15 @@ public class VelocityServer implements ProxyServer {
     return true;
   }
 
+  /**
+   * Unregisters the given player from the proxy.
+   *
+   * @param connection the connection to unregister
+   */
   public void unregisterConnection(ConnectedPlayer connection) {
     connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
     connectionsByUuid.remove(connection.getUniqueId(), connection);
+    bossBarManager.onDisconnect(connection);
   }
 
   @Override
@@ -613,6 +622,10 @@ public class VelocityServer implements ProxyServer {
   public @NonNull Iterable<? extends Audience> audiences() {
     return (Iterable<Audience>) () -> Iterators.concat(Iterators.singletonIterator(console),
         getAllPlayers().iterator());
+  }
+
+  public BossBarManager getBossBarManager() {
+    return bossBarManager;
   }
 
   public static Gson getPingGsonInstance(ProtocolVersion version) {
