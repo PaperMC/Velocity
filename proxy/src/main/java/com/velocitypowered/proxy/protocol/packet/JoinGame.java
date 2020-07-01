@@ -17,7 +17,8 @@ public class JoinGame implements MinecraftPacket {
   private int dimension;
   private long partialHashedSeed; // 1.15+
   private short difficulty;
-  private short maxPlayers;
+  private boolean isHardcore;
+  private int maxPlayers;
   private @Nullable String levelType;
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
@@ -62,11 +63,11 @@ public class JoinGame implements MinecraftPacket {
     this.difficulty = difficulty;
   }
 
-  public short getMaxPlayers() {
+  public int getMaxPlayers() {
     return maxPlayers;
   }
 
-  public void setMaxPlayers(short maxPlayers) {
+  public void setMaxPlayers(int maxPlayers) {
     this.maxPlayers = maxPlayers;
   }
 
@@ -118,6 +119,14 @@ public class JoinGame implements MinecraftPacket {
     this.previousGamemode = previousGamemode;
   }
 
+  public boolean getIsHardcore() {
+    return isHardcore;
+  }
+
+  public void setIsHardcore(boolean isHardcore) {
+    this.isHardcore = isHardcore;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -126,6 +135,7 @@ public class JoinGame implements MinecraftPacket {
         + ", dimension=" + dimension
         + ", partialHashedSeed=" + partialHashedSeed
         + ", difficulty=" + difficulty
+        + ", isHardcore=" + isHardcore
         + ", maxPlayers=" + maxPlayers
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
@@ -139,7 +149,14 @@ public class JoinGame implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    this.gamemode = buf.readByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      this.isHardcore = buf.readBoolean();
+      this.gamemode = buf.readByte();
+    } else {
+      this.gamemode = buf.readByte();
+      this.isHardcore = (this.gamemode & 0x08) != 0;
+      this.gamemode &= ~0x08;
+    }
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
@@ -160,7 +177,11 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       this.partialHashedSeed = buf.readLong();
     }
-    this.maxPlayers = buf.readUnsignedByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      this.maxPlayers = ProtocolUtils.readVarInt(buf);
+    } else {
+      this.maxPlayers = buf.readUnsignedByte();
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
@@ -181,7 +202,12 @@ public class JoinGame implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(entityId);
-    buf.writeByte(gamemode);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      buf.writeBoolean(isHardcore);
+      buf.writeByte(gamemode);
+    } else {
+      buf.writeByte(isHardcore ? gamemode | 0x8 : gamemode);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       buf.writeByte(previousGamemode);
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
@@ -200,7 +226,11 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       buf.writeLong(partialHashedSeed);
     }
-    buf.writeByte(maxPlayers);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      ProtocolUtils.writeVarInt(buf, maxPlayers);
+    } else {
+      buf.writeByte(maxPlayers);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       if (levelType == null) {
         throw new IllegalStateException("No level type specified.");
