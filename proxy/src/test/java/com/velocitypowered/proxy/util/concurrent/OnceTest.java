@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -24,11 +24,15 @@ public class OnceTest {
     ExecutorService service = Executors.newFixedThreadPool(10);
     AtomicInteger i = new AtomicInteger();
     Once once = new Once();
+    CountDownLatch latch = new CountDownLatch(10);
     for (int i1 = 0; i1 < 10; i1++) {
-      service.execute(() -> once.run(i::incrementAndGet));
+      service.execute(() -> {
+        once.run(i::incrementAndGet);
+        latch.countDown();
+      });
     }
+    latch.await();
     service.shutdown();
-    service.awaitTermination(500, TimeUnit.MILLISECONDS);
     assertEquals(1, i.get(), "Integer is not equal to one");
   }
 
