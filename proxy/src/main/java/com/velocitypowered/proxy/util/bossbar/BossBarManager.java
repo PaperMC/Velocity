@@ -1,14 +1,15 @@
 package com.velocitypowered.proxy.util.bossbar;
 
+import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.collect.Enum2IntMap;
-import com.velocitypowered.proxy.util.collect.concurrent.SyncMap;
 import com.velocitypowered.proxy.util.concurrent.Once;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.bossbar.BossBar.Color;
 import net.kyori.adventure.bossbar.BossBar.Flag;
@@ -45,10 +46,10 @@ public class BossBarManager implements BossBar.Listener {
           .put(Flag.PLAY_BOSS_MUSIC, 0x2)
           .put(Flag.CREATE_WORLD_FOG, 0x4)
           .build();
-  private final SyncMap<BossBar, BossBarHolder> bars;
+  private final Map<BossBar, BossBarHolder> bars;
 
   public BossBarManager() {
-    this.bars = SyncMap.of(WeakHashMap::new, 16);
+    this.bars = new MapMaker().weakKeys().makeMap();
   }
 
   private @Nullable BossBarHolder getHandler(BossBar bar) {
@@ -174,7 +175,8 @@ public class BossBarManager implements BossBar.Listener {
   private class BossBarHolder {
     private final UUID id = UUID.randomUUID();
     private final BossBar bar;
-    private final Set<ConnectedPlayer> subscribers = SyncMap.setOf(WeakHashMap::new, 16);
+    private final Set<ConnectedPlayer> subscribers = Collections.newSetFromMap(
+        new MapMaker().weakKeys().makeMap());
     private final Once registrationOnce = new Once();
 
     BossBarHolder(BossBar bar) {
