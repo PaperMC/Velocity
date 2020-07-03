@@ -202,10 +202,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         onlineMode);
 
     server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
+      if (mcConnection.isClosed()) {
+        // The player disconnected after we authenticated them.
+        return CompletableFuture.completedFuture(null);
+      }
+
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection,
-          inbound.getVirtualHost().orElse(null), onlineMode);
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(VelocityMessages.ALREADY_CONNECTED, true);
