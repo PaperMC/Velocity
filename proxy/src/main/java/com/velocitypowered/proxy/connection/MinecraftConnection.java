@@ -209,8 +209,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      if (channel.eventLoop().inEventLoop()
-          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      boolean is1Point8 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0;
+      boolean isLegacyPing = this.getState() == StateRegistry.HANDSHAKE
+          || this.getState() == StateRegistry.STATUS;
+      if (channel.eventLoop().inEventLoop() && (is1Point8 || isLegacyPing)) {
         knownDisconnect = true;
         channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
       } else {
