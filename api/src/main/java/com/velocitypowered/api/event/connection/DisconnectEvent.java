@@ -1,6 +1,7 @@
 package com.velocitypowered.api.event.connection;
 
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CANCELLED_BY_PROXY;
+import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CONFLICTING_LOGIN;
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN;
 
 import com.google.common.base.Preconditions;
@@ -37,7 +38,7 @@ public final class DisconnectEvent {
 
   @Deprecated
   public boolean disconnectedDuringLogin() {
-    return this.loginStatus == CANCELLED_BY_PROXY;
+    return this.loginStatus == CANCELLED_BY_PROXY || this.loginStatus == CONFLICTING_LOGIN;
   }
 
   public LoginStatus getLoginStatus() {
