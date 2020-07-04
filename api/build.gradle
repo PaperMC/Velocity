@@ -93,9 +93,10 @@ publishing {
     repositories {
         maven {
             credentials {
-                username project.findProperty('nexusUsername') ?: ''
-                password project.findProperty('nexusPassword') ?: ""
+                username System.getenv("NEXUS_USERNAME")
+                password System.getenv("NEXUS_PASSWORD")
             }
+
             name = 'velocity-nexus'
             def base = 'https://nexus.velocitypowered.com/repository/velocity-artifacts'
             def releasesRepoUrl = "$base-releases/"
