@@ -17,14 +17,14 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.adventure.audience.MultiAudience;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Provides an interface to a Minecraft server proxy.
  */
-public interface ProxyServer extends MultiAudience {
+public interface ProxyServer extends Audience {
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search

@@ -1,18 +1,17 @@
 package com.velocitypowered.api.proxy.server;
 
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyAudience;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.audience.MultiAudience;
+import net.kyori.adventure.audience.Audience;
 
 /**
  * Represents a server that has been registered with the proxy. The {@code Audience} associated with
  * a {@code RegisteredServer} represent all players on the server connected to this proxy and do not
  * interact with the server in any way.
  */
-public interface RegisteredServer extends ChannelMessageSink, MultiAudience {
+public interface RegisteredServer extends ChannelMessageSink, Audience {
 
   /**
    * Returns the {@link ServerInfo} for this server.
