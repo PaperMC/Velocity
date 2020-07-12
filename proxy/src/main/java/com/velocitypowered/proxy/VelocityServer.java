@@ -421,6 +421,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           timedOut = true;
         }
 
+        eventManager.fireShutdownEvent();
+
         timedOut = !eventManager.shutdown() || timedOut;
         timedOut = !scheduler.shutdown() || timedOut;
 
@@ -431,8 +433,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         // Not much we can do about this...
         Thread.currentThread().interrupt();
       }
-
-      eventManager.fireShutdownEvent();
 
       shutdown = true;
 

@@ -6,6 +6,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
@@ -683,10 +684,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (connectedServer != null) {
       connectedServer.disconnect();
     }
-    boolean isConnected = server.getPlayer(this.getUniqueId()).isPresent();
+
+    Optional<Player> connectedPlayer = server.getPlayer(this.getUniqueId());
     server.unregisterConnection(this);
-    server.getEventManager().fire(new DisconnectEvent(this, !isConnected))
-        .thenRun(() -> this.teardownFuture.complete(null));
+
+    DisconnectEvent.LoginStatus status;
+    if (connectedPlayer.isPresent()) {
+      status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
+          : LoginStatus.CONFLICTING_LOGIN;
+    } else {
+      status = connection.isKnownDisconnect() ? LoginStatus.CANCELLED_BY_PROXY :
+          LoginStatus.CANCELLED_BY_USER;
+    }
+
+    DisconnectEvent event = new DisconnectEvent(this, status);
+    server.getEventManager().fire(event).thenRun(() -> this.teardownFuture.complete(null));
   }
 
   public CompletableFuture<Void> getTeardownFuture() {

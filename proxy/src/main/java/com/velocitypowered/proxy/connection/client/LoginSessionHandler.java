@@ -8,6 +8,8 @@ import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -202,10 +204,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         onlineMode);
 
     server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
+      if (mcConnection.isClosed()) {
+        // The player disconnected after we authenticated them.
+        return CompletableFuture.completedFuture(null);
+      }
+
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection,
-          inbound.getVirtualHost().orElse(null), onlineMode);
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(VelocityMessages.ALREADY_CONNECTED, true);
@@ -220,13 +226,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
               player.setPermissionFunction(event.createFunction(player));
-              finishLogin(player);
+              completeLoginProtocolPhaseAndInitialize(player);
             }
           }, mcConnection.eventLoop());
     });  
   }
 
-  private void finishLogin(ConnectedPlayer player) {
+  private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
     int threshold = server.getConfiguration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
       mcConnection.write(new SetCompression(threshold));
@@ -249,6 +255,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(event -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
+            server.getEventManager().fireAndForget(new DisconnectEvent(player,
+                LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
             return;
           }
 
