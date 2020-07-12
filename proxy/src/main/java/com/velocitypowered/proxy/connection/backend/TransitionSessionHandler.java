@@ -4,6 +4,7 @@ import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhas
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -113,6 +114,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
+          server.getEventManager().fireAndForget(new ServerPostConnectEvent(serverConn.getPlayer(),
+              existingConnection == null ? null : existingConnection.getServer()));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop())
         .exceptionally(exc -> {
