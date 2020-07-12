@@ -39,7 +39,7 @@ public class Enum2IntMap<E extends Enum<E>> {
       return this;
     }
 
-    public Builder<E> remove(E key, int value) {
+    public Builder<E> remove(E key) {
       this.populated.remove(key);
       return this;
     }
