@@ -397,26 +397,28 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    List<String> suggestions = server.getCommandManager().offerSuggestions(player, command);
-    if (suggestions.isEmpty()) {
-      return false;
-    }
+    server.getCommandManager().offerSuggestions(player, command)
+        .thenAcceptAsync(suggestions -> {
+          if (suggestions.isEmpty()) {
+            return;
+          }
 
-    List<Offer> offers = new ArrayList<>();
-    for (String suggestion : suggestions) {
-      offers.add(new Offer(suggestion));
-    }
+          List<Offer> offers = new ArrayList<>();
+          for (String suggestion : suggestions) {
+            offers.add(new Offer(suggestion));
+          }
 
-    int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-    if (startPos > 0) {
-      TabCompleteResponse resp = new TabCompleteResponse();
-      resp.setTransactionId(packet.getTransactionId());
-      resp.setStart(startPos);
-      resp.setLength(packet.getCommand().length() - startPos);
-      resp.getOffers().addAll(offers);
-      player.getConnection().write(resp);
-    }
-    return true;
+          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+          if (startPos > 0) {
+            TabCompleteResponse resp = new TabCompleteResponse();
+            resp.setTransactionId(packet.getTransactionId());
+            resp.setStart(startPos);
+            resp.setLength(packet.getCommand().length() - startPos);
+            resp.getOffers().addAll(offers);
+            player.getConnection().write(resp);
+          }
+        }, player.getConnection().eventLoop());
+    return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
   private boolean handleRegularTabComplete(TabCompleteRequest packet) {
@@ -449,18 +451,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
-    try {
-      List<String> offers = server.getCommandManager().offerSuggestions(player, command);
-      for (String offer : offers) {
-        response.getOffers().add(new Offer(offer, null));
-      }
-      response.getOffers().sort(null);
-      player.getConnection().write(response);
-    } catch (Exception e) {
-      logger.error("Unable to provide tab list completions for {} for command '{}'",
-          player.getUsername(),
-          command, e);
-    }
+    server.getCommandManager().offerSuggestions(player, command)
+        .thenAcceptAsync(offers -> {
+          try {
+            for (String offer : offers) {
+              response.getOffers().add(new Offer(offer, null));
+            }
+            response.getOffers().sort(null);
+            player.getConnection().write(response);
+          } catch (Exception e) {
+            logger.error("Unable to provide tab list completions for {} for command '{}'",
+                player.getUsername(),
+                command, e);
+          }
+        }, player.getConnection().eventLoop());
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {

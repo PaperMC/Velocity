@@ -2,6 +2,7 @@ package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -27,6 +28,18 @@ public interface Command {
    */
   default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
     return ImmutableList.of();
+  }
+
+  /**
+   * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
+   *
+   * @param source the source to run the command for
+   * @param currentArgs the current, partial arguments for this command
+   * @return tab complete suggestions
+   */
+  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
+      String @NonNull [] currentArgs) {
+    return CompletableFuture.completedFuture(suggest(source, currentArgs));
   }
 
   /**

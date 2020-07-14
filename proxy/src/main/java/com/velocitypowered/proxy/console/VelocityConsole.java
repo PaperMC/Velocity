@@ -73,7 +73,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
           try {
             boolean isCommand = parsedLine.line().indexOf(' ') == -1;
             List<String> offers = this.server.getCommandManager()
-                .offerSuggestions(this, parsedLine.line());
+                .offerSuggestions(this, parsedLine.line())
+                .join(); // Console doesn't get harmed much by this...
             for (String offer : offers) {
               if (isCommand) {
                 list.add(new Candidate(offer.substring(1)));

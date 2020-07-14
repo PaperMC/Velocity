@@ -157,9 +157,9 @@ public class VelocityCommandManager implements CommandManager {
    * Offer suggestions to fill in the command.
    * @param source the source for the command
    * @param cmdLine the partially completed command
-   * @return a {@link List}, possibly empty
+   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
    */
-  public List<String> offerSuggestions(CommandSource source, String cmdLine) {
+  public CompletableFuture<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -173,7 +173,7 @@ public class VelocityCommandManager implements CommandManager {
           availableCommands.add("/" + entry.getKey());
         }
       }
-      return availableCommands.build();
+      return CompletableFuture.completedFuture(availableCommands.build());
     }
 
     String alias = cmdLine.substring(0, firstSpace);
@@ -181,14 +181,15 @@ public class VelocityCommandManager implements CommandManager {
     RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
     if (command == null) {
       // No such command, so we can't offer any tab complete suggestions.
-      return ImmutableList.of();
+      return CompletableFuture.completedFuture(ImmutableList.of());
     }
 
     try {
       if (!command.hasPermission(source, args)) {
-        return ImmutableList.of();
+        return CompletableFuture.completedFuture(ImmutableList.of());
       }
-      return ImmutableList.copyOf(command.suggest(source, args));
+      return command.suggest(source, args)
+          .thenApply(ImmutableList::copyOf);
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
@@ -253,8 +254,8 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     @Override
-    public List<String> suggest(CommandSource source, String currentLine) {
-      return delegate.suggest(source, split(currentLine));
+    public CompletableFuture<List<String>> suggest(CommandSource source, String currentLine) {
+      return delegate.suggestAsync(source, split(currentLine));
     }
 
     @Override
