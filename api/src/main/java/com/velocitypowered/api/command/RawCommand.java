@@ -2,6 +2,7 @@ package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -29,13 +30,19 @@ public interface RawCommand extends Command {
    * @param currentLine the current, partial command line for this command
    * @return tab complete suggestions
    */
-  default List<String> suggest(CommandSource source, String currentLine) {
-    return ImmutableList.of();
+  default CompletableFuture<List<String>> suggest(CommandSource source, String currentLine) {
+    return CompletableFuture.completedFuture(ImmutableList.of());
+  }
+
+  @Override
+  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
+      String @NonNull [] currentArgs) {
+    return suggest(source, String.join(" ", currentArgs));
   }
 
   @Override
   default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
-    return suggest(source, String.join(" ", currentArgs));
+    return suggestAsync(source, currentArgs).join();
   }
 
   @Override
