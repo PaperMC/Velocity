@@ -3,7 +3,6 @@ package com.velocitypowered.proxy;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
@@ -621,8 +620,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return (Iterable<Audience>) () -> Iterators.concat(Iterators.singletonIterator(console),
-        getAllPlayers().iterator());
+    Collection<Audience> audiences = new ArrayList<>(this.getPlayerCount() + 1);
+    audiences.add(this.console);
+    audiences.addAll(this.getAllPlayers());
+    return audiences;
   }
 
   public BossBarManager getBossBarManager() {
