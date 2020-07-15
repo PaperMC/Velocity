@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
-import net.kyori.text.TextComponent;
-import net.kyori.text.event.ClickEvent;
-import net.kyori.text.event.HoverEvent;
-import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextDecoration;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -47,7 +47,7 @@ public class VelocityCommand implements Command {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(TextComponent.of(commandText, TextColor.RED));
+    source.sendMessage(TextComponent.of(commandText, NamedTextColor.RED));
   }
 
   @Override
@@ -121,17 +121,17 @@ public class VelocityCommand implements Command {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(TextComponent.of("Configuration reloaded.", TextColor.GREEN));
+          source.sendMessage(TextComponent.of("Configuration reloaded.", NamedTextColor.GREEN));
         } else {
           source.sendMessage(TextComponent.of(
               "Unable to reload your configuration. Check the console for more details.",
-              TextColor.RED));
+              NamedTextColor.RED));
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
         source.sendMessage(TextComponent.of(
             "Unable to reload your configuration. Check the console for more details.",
-            TextColor.RED));
+            NamedTextColor.RED));
       }
     }
 
@@ -152,7 +152,7 @@ public class VelocityCommand implements Command {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity version", TextColor.RED));
+        source.sendMessage(TextComponent.of("/velocity version", NamedTextColor.RED));
         return;
       }
 
@@ -160,7 +160,7 @@ public class VelocityCommand implements Command {
 
       TextComponent velocity = TextComponent.builder(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
-          .color(TextColor.DARK_AQUA)
+          .color(NamedTextColor.DARK_AQUA)
           .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
       TextComponent copyright = TextComponent
@@ -173,13 +173,13 @@ public class VelocityCommand implements Command {
         TextComponent velocityWebsite = TextComponent.builder()
             .content("Visit the ")
             .append(TextComponent.builder("Velocity website")
-                .color(TextColor.GREEN)
+                .color(NamedTextColor.GREEN)
                 .clickEvent(
                     ClickEvent.openUrl("https://www.velocitypowered.com"))
                 .build())
             .append(TextComponent.of(" or the "))
             .append(TextComponent.builder("Velocity GitHub")
-                .color(TextColor.GREEN)
+                .color(NamedTextColor.GREEN)
                 .clickEvent(ClickEvent.openUrl(
                     "https://github.com/VelocityPowered/Velocity"))
                 .build())
@@ -205,7 +205,7 @@ public class VelocityCommand implements Command {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity plugins", TextColor.RED));
+        source.sendMessage(TextComponent.of("/velocity plugins", NamedTextColor.RED));
         return;
       }
 
@@ -213,12 +213,12 @@ public class VelocityCommand implements Command {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(TextComponent.of("No plugins installed.", TextColor.YELLOW));
+        source.sendMessage(TextComponent.of("No plugins installed.", NamedTextColor.YELLOW));
         return;
       }
 
       TextComponent.Builder output = TextComponent.builder("Plugins: ")
-          .color(TextColor.YELLOW);
+          .color(NamedTextColor.YELLOW);
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
         output.append(componentForPlugin(plugin.getDescription()));
@@ -255,7 +255,7 @@ public class VelocityCommand implements Command {
         hoverText.append(TextComponent.of(pdesc));
       });
 
-      return TextComponent.of(description.getId(), TextColor.GRAY)
+      return TextComponent.of(description.getId(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
 

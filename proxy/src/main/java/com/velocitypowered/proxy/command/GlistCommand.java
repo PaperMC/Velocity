@@ -9,8 +9,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.List;
 import java.util.Optional;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class GlistCommand implements Command {
@@ -26,9 +26,9 @@ public class GlistCommand implements Command {
     if (args.length == 0) {
       sendTotalProxyCount(source);
       source.sendMessage(
-          TextComponent.builder("To view all players on servers, use ", TextColor.YELLOW)
-              .append("/glist all", TextColor.DARK_AQUA)
-              .append(".", TextColor.YELLOW)
+          TextComponent.builder("To view all players on servers, use ", NamedTextColor.YELLOW)
+              .append("/glist all", NamedTextColor.DARK_AQUA)
+              .append(".", NamedTextColor.YELLOW)
               .build());
     } else if (args.length == 1) {
       String arg = args[0];
@@ -41,20 +41,20 @@ public class GlistCommand implements Command {
         Optional<RegisteredServer> registeredServer = server.getServer(arg);
         if (!registeredServer.isPresent()) {
           source.sendMessage(
-              TextComponent.of("Server " + arg + " doesn't exist.", TextColor.RED));
+              TextComponent.of("Server " + arg + " doesn't exist.", NamedTextColor.RED));
           return;
         }
         sendServerPlayers(source, registeredServer.get(), false);
       }
     } else {
-      source.sendMessage(TextComponent.of("Too many arguments.", TextColor.RED));
+      source.sendMessage(TextComponent.of("Too many arguments.", NamedTextColor.RED));
     }
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    target.sendMessage(TextComponent.builder("There are ", TextColor.YELLOW)
-        .append(Integer.toString(server.getAllPlayers().size()), TextColor.GREEN)
-        .append(" player(s) online.", TextColor.YELLOW)
+    target.sendMessage(TextComponent.builder("There are ", NamedTextColor.YELLOW)
+        .append(Integer.toString(server.getAllPlayers().size()), NamedTextColor.GREEN)
+        .append(" player(s) online.", NamedTextColor.YELLOW)
         .build());
   }
 
@@ -66,8 +66,8 @@ public class GlistCommand implements Command {
 
     TextComponent.Builder builder = TextComponent.builder()
         .append(TextComponent.of("[" + server.getServerInfo().getName() + "] ",
-            TextColor.DARK_AQUA))
-        .append("(" + onServer.size() + ")", TextColor.GRAY)
+            NamedTextColor.DARK_AQUA))
+        .append("(" + onServer.size() + ")", NamedTextColor.GRAY)
         .append(": ")
         .resetStyle();
 
