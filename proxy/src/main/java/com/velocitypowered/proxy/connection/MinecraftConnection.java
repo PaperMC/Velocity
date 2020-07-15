@@ -16,7 +16,6 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.client.InitialInboundConnection;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -26,6 +25,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -39,6 +39,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
@@ -52,6 +53,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
+  private static final AtomicLong lastQuietError = new AtomicLong();
+  private static final AtomicLong quietErrorsSent = new AtomicLong();
 
   private final Channel channel;
   private SocketAddress remoteAddress;
@@ -111,6 +114,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         return;
       }
 
+      if (this.isClosed()) {
+        return;
+      }
+
       if (msg instanceof MinecraftPacket) {
         MinecraftPacket pkt = (MinecraftPacket) msg;
         if (!pkt.handle(sessionHandler)) {
@@ -151,6 +158,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
+          if (cause instanceof QuietException && willThrottleQuietErrorLogging()) {
+            // Silence the disconnect
+            this.knownDisconnect = true;
+            return;
+          }
           logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
         }
       }
@@ -427,5 +439,18 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void setType(ConnectionType connectionType) {
     this.connectionType = connectionType;
+  }
+
+  private static boolean willThrottleQuietErrorLogging() {
+    long lastErrorAt = lastQuietError.get();
+    long now = System.currentTimeMillis();
+
+    if (lastErrorAt + 2000 >= now) {
+      return quietErrorsSent.incrementAndGet() >= 5;
+    } else {
+      lastQuietError.set(now);
+      quietErrorsSent.set(0);
+      return false;
+    }
   }
 }

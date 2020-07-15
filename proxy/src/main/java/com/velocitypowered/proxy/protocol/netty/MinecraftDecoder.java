@@ -8,11 +8,10 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
-import io.netty.handler.codec.MessageToMessageDecoder;
-import java.util.List;
 
-public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
+public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietException DECODE_FAILED =
@@ -36,33 +35,41 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf> {
   }
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    if (msg instanceof ByteBuf) {
+      ByteBuf buf = (ByteBuf) msg;
+      try {
+        tryDecode(ctx, buf);
+      } finally {
+        buf.release();
+      }
+    } else {
+      ctx.fireChannelRead(msg);
+    }
+  }
+
+  private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
     if (!ctx.channel().isActive()) {
       return;
     }
 
-    if (!msg.isReadable()) {
-      return;
-    }
-
-    ByteBuf slice = msg.slice();
-
-    int packetId = ProtocolUtils.readVarInt(msg);
+    int originalReaderIndex = buf.readerIndex();
+    int packetId = ProtocolUtils.readVarInt(buf);
     MinecraftPacket packet = this.registry.createPacket(packetId);
     if (packet == null) {
-      msg.skipBytes(msg.readableBytes());
-      out.add(slice.retain());
+      buf.readerIndex(originalReaderIndex);
+      ctx.fireChannelRead(buf.retain());
     } else {
       try {
-        packet.decode(msg, direction, registry.version);
+        packet.decode(buf, direction, registry.version);
       } catch (Exception e) {
         throw handleDecodeFailure(e, packet, packetId);
       }
 
-      if (msg.isReadable()) {
+      if (buf.isReadable()) {
         throw handleNotReadEnough(packet, packetId);
       }
-      out.add(packet);
+      ctx.fireChannelRead(packet);
     }
   }
 

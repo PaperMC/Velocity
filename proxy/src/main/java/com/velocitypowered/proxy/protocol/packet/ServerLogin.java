@@ -5,10 +5,13 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.except.QuietException;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerLogin implements MinecraftPacket {
+
+  private static final QuietException EMPTY_USERNAME = new QuietException("Empty username!");
 
   private @Nullable String username;
 
@@ -36,6 +39,9 @@ public class ServerLogin implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     username = ProtocolUtils.readString(buf, 16);
+    if (username.isEmpty()) {
+      throw EMPTY_USERNAME;
+    }
   }
 
   @Override
