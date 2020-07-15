@@ -35,14 +35,14 @@ public interface RawCommand extends Command {
   }
 
   @Override
-  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
-      String @NonNull [] currentArgs) {
-    return suggest(source, String.join(" ", currentArgs));
+  default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+    return suggestAsync(source, currentArgs).join();
   }
 
   @Override
-  default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
-    return suggestAsync(source, currentArgs).join();
+  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
+      String @NonNull [] currentArgs) {
+    return suggest(source, String.join(" ", currentArgs));
   }
 
   @Override
