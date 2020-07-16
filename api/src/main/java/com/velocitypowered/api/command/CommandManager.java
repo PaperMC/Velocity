@@ -4,7 +4,7 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Registers commands executors for the proxy.
+ * Handles the registration and execution of commands.
  */
 public interface CommandManager {
 
