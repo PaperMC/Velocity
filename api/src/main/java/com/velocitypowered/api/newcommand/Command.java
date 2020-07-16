@@ -25,9 +25,16 @@ public interface Command<C extends CommandExecutionContext> {
         BRIGADIER,
         /**
          * 1.12-style command parsing.
+         *
+         * @see LegacyCommand
          */
-        LEGACY
-        // TODO Add RAW and deprecate RawCommand
+        LEGACY,
+        /**
+         * Accepts raw arguments as a {@link String}
+         *
+         * @see RawCommand
+         */
+        RAW
     }
 
     /**

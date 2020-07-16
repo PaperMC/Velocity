@@ -42,7 +42,7 @@ public interface CommandManager {
    * @param source the command's source
    * @param cmdLine the command to run
    * @return true if the command was found and executed, false if it was not
-   * 
+   *
    * @deprecated This method will block current thread during event call and command execution.
    *             Prefer {@link #executeAsync(CommandSource, String)} instead.
    */
@@ -56,7 +56,7 @@ public interface CommandManager {
    * @param source the command's source
    * @param cmdLine the command to run
    * @return true if the command was found and executed, false if it was not
-   * 
+   *
    * @deprecated This method will block current thread during event and command execution.
    *             Prefer {@link #executeImmediatelyAsync(CommandSource, String)} instead.
    */
