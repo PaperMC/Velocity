@@ -1,5 +1,7 @@
 package com.velocitypowered.api.newcommand;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 /**
  * A {@link CommandExecutionContext} for {@link LegacyCommand}s.
  */
@@ -10,5 +12,5 @@ public interface LegacyCommandExecutionContext extends CommandExecutionContext {
      *
      * @return the arguments for the command
      */
-    String[] arguments();
+    String @NonNull [] arguments();
 }
