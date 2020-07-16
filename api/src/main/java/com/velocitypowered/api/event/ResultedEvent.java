@@ -108,7 +108,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         return "allowed";
       }
       if (reason != null) {
-        return "denied: " + PlainComponentSerializer.INSTANCE.serialize(reason);
+        return "denied: " + PlainComponentSerializer.plain().serialize(reason);
       }
       return "denied";
     }

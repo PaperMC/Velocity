@@ -12,7 +12,8 @@ public class LegacyDisconnect {
 
   private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0,
       ImmutableList.of());
-  private static final String LEGACY_COLOR_CODE = "\u00a7";
+  private static final String LEGACY_COLOR_CODE = Character
+      .toString(LegacyComponentSerializer.SECTION_CHAR);
 
   private final String reason;
 
@@ -36,7 +37,7 @@ public class LegacyDisconnect {
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
-            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.INSTANCE.serialize(
+            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
                 response.getDescriptionComponent()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
