@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.event.query.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import com.velocitypowered.proxy.VelocityServer;
@@ -19,6 +20,7 @@ import io.netty.channel.socket.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,8 +34,6 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
-
-  private static final Logger logger = LogManager.getLogger(GS4QueryHandler.class);
 
   private static final short QUERY_MAGIC_FIRST = 0xFE;
   private static final short QUERY_MAGIC_SECOND = 0xFD;
@@ -59,10 +59,6 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       .expireAfterWrite(30, TimeUnit.SECONDS)
       .build();
   private final SecureRandom random;
-
-  private volatile @MonotonicNonNull List<QueryResponse.PluginInformation> pluginInformationList
-      = null;
-
   private final VelocityServer server;
 
   public GS4QueryHandler(VelocityServer server) {
@@ -93,95 +89,87 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     ByteBuf queryMessage = msg.content();
     InetAddress senderAddress = msg.sender().getAddress();
 
-    // Allocate buffer for response
-    ByteBuf queryResponse = ctx.alloc().buffer();
-    DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
+    // Verify query packet magic
+    if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
+        || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
+      return;
+    }
 
-    try {
-      // Verify query packet magic
-      if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
-          || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
-        throw new IllegalStateException("Invalid query packet magic");
+    // Read packet header
+    short type = queryMessage.readUnsignedByte();
+    int sessionId = queryMessage.readInt();
+
+    switch (type) {
+      case QUERY_TYPE_HANDSHAKE: {
+        // Generate new challenge token and put it into the sessions cache
+        int challengeToken = random.nextInt();
+        sessions.put(senderAddress, challengeToken);
+
+        // Respond with challenge token
+        ByteBuf queryResponse = ctx.alloc().buffer();
+        queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
+        queryResponse.writeInt(sessionId);
+        writeString(queryResponse, Integer.toString(challengeToken));
+
+        DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
+        ctx.writeAndFlush(responsePacket, ctx.voidPromise());
+        break;
       }
 
-      // Read packet header
-      short type = queryMessage.readUnsignedByte();
-      int sessionId = queryMessage.readInt();
-
-      switch (type) {
-        case QUERY_TYPE_HANDSHAKE: {
-          // Generate new challenge token and put it into the sessions cache
-          int challengeToken = random.nextInt();
-          sessions.put(senderAddress, challengeToken);
-
-          // Respond with challenge token
-          queryResponse.writeByte(QUERY_TYPE_HANDSHAKE);
-          queryResponse.writeInt(sessionId);
-          writeString(queryResponse, Integer.toString(challengeToken));
-          ctx.writeAndFlush(responsePacket, ctx.voidPromise());
-          break;
+      case QUERY_TYPE_STAT: {
+        // Check if query was done with session previously generated using a handshake packet
+        int challengeToken = queryMessage.readInt();
+        Integer session = sessions.getIfPresent(senderAddress);
+        if (session == null || session != challengeToken) {
+          return;
         }
 
-        case QUERY_TYPE_STAT: {
-          // Check if query was done with session previously generated using a handshake packet
-          int challengeToken = queryMessage.readInt();
-          Integer session = sessions.getIfPresent(senderAddress);
-          if (session == null || session != challengeToken) {
-            throw new IllegalStateException("Invalid challenge token");
-          }
-
-          // Check which query response client expects
-          if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
-            throw new IllegalStateException("Invalid query packet");
-          }
-
-          // Build query response
-          QueryResponse response = createInitialResponse();
-
-          boolean isBasic = queryMessage.readableBytes() == 0;
-
-          // Call event and write response
-          server.getEventManager()
-              .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
-              .whenCompleteAsync((event, exc) -> {
-                // Packet header
-                queryResponse.writeByte(QUERY_TYPE_STAT);
-                queryResponse.writeInt(sessionId);
-
-                // Start writing the response
-                ResponseWriter responseWriter = new ResponseWriter(queryResponse, isBasic);
-                responseWriter.write("hostname", event.getResponse().getHostname());
-                responseWriter.write("gametype", "SMP");
-
-                responseWriter.write("game_id", "MINECRAFT");
-                responseWriter.write("version", event.getResponse().getGameVersion());
-                responseWriter.writePlugins(event.getResponse().getProxyVersion(),
-                    event.getResponse().getPlugins());
-
-                responseWriter.write("map", event.getResponse().getMap());
-                responseWriter.write("numplayers", event.getResponse().getCurrentPlayers());
-                responseWriter.write("maxplayers", event.getResponse().getMaxPlayers());
-                responseWriter.write("hostport", event.getResponse().getProxyPort());
-                responseWriter.write("hostip", event.getResponse().getProxyHost());
-
-                if (!responseWriter.isBasic) {
-                  responseWriter.writePlayers(event.getResponse().getPlayers());
-                }
-
-                // Send the response
-                ctx.writeAndFlush(responsePacket, ctx.voidPromise());
-              }, ctx.channel().eventLoop());
-
-          break;
+        // Check which query response client expects
+        if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
+          return;
         }
-        default:
-          throw new IllegalStateException("Invalid query type: " + type);
+
+        // Build initial query response
+        QueryResponse response = createInitialResponse();
+        boolean isBasic = queryMessage.isReadable();
+
+        // Call event and write response
+        server.getEventManager()
+            .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
+            .whenCompleteAsync((event, exc) -> {
+              // Packet header
+              ByteBuf queryResponse = ctx.alloc().buffer();
+              queryResponse.writeByte(QUERY_TYPE_STAT);
+              queryResponse.writeInt(sessionId);
+
+              // Start writing the response
+              ResponseWriter responseWriter = new ResponseWriter(queryResponse, isBasic);
+              responseWriter.write("hostname", event.getResponse().getHostname());
+              responseWriter.write("gametype", "SMP");
+
+              responseWriter.write("game_id", "MINECRAFT");
+              responseWriter.write("version", event.getResponse().getGameVersion());
+              responseWriter.writePlugins(event.getResponse().getProxyVersion(),
+                  event.getResponse().getPlugins());
+
+              responseWriter.write("map", event.getResponse().getMap());
+              responseWriter.write("numplayers", event.getResponse().getCurrentPlayers());
+              responseWriter.write("maxplayers", event.getResponse().getMaxPlayers());
+              responseWriter.write("hostport", event.getResponse().getProxyPort());
+              responseWriter.write("hostip", event.getResponse().getProxyHost());
+
+              if (!responseWriter.isBasic) {
+                responseWriter.writePlayers(event.getResponse().getPlayers());
+              }
+
+              // Send the response
+              DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
+              ctx.writeAndFlush(responsePacket, ctx.voidPromise());
+            }, ctx.channel().eventLoop());
+        break;
       }
-    } catch (Exception e) {
-      logger.warn("Error while trying to handle a query packet from {}", msg.sender(), e);
-      // NB: Only need to explicitly release upon exception, writing the response out will decrement
-      // the reference count.
-      responsePacket.release();
+      default:
+        // Invalid query type - just don't respond
     }
   }
 
@@ -191,20 +179,13 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   }
 
   private List<QueryResponse.PluginInformation> getRealPluginInformation() {
-    // Effective Java, Third Edition; Item 83: Use lazy initialization judiciously
-    List<QueryResponse.PluginInformation> res = pluginInformationList;
-    if (res == null) {
-      synchronized (this) {
-        if (pluginInformationList == null) {
-          pluginInformationList = res = server.getPluginManager().getPlugins().stream()
-              .map(PluginContainer::getDescription)
-              .map(desc -> QueryResponse.PluginInformation
-                  .of(desc.getName().orElse(desc.getId()), desc.getVersion().orElse(null)))
-              .collect(Collectors.toList());
-        }
-      }
+    List<QueryResponse.PluginInformation> result = new ArrayList<>();
+    for (PluginContainer plugin : server.getPluginManager().getPlugins()) {
+      PluginDescription description = plugin.getDescription();
+      result.add(QueryResponse.PluginInformation.of(description.getName()
+          .orElse(description.getId()), description.getVersion().orElse(null)));
     }
-    return res;
+    return result;
   }
 
   private static class ResponseWriter {
