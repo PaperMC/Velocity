@@ -13,7 +13,7 @@ public interface CommandManager {
    *
    * @return a legacy command builder
    */
-  LegacyCommandBuilder builder();
+  LegacyCommand.Builder builder();
 
   /**
    * Returns a builder to register a {@link BrigadierCommand}.
