@@ -29,9 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
