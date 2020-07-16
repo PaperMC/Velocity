@@ -6,11 +6,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageEncoder;
-import java.util.List;
+import io.netty.handler.codec.MessageToByteEncoder;
 
 @ChannelHandler.Sharable
-public class MinecraftVarintLengthEncoder extends MessageToMessageEncoder<ByteBuf> {
+public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
   private static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
@@ -19,11 +18,17 @@ public class MinecraftVarintLengthEncoder extends MessageToMessageEncoder<ByteBu
   }
 
   @Override
-  protected void encode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> list)
+  protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
+    ProtocolUtils.writeVarInt(out, msg.readableBytes());
+    out.writeBytes(msg);
+  }
+
+  @Override
+  protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    ByteBuf lengthBuf = IS_JAVA_CIPHER ? ctx.alloc().heapBuffer(5) : ctx.alloc().directBuffer(5);
-    ProtocolUtils.writeVarInt(lengthBuf, buf.readableBytes());
-    list.add(lengthBuf);
-    list.add(buf.retain());
+    int anticipatedRequiredCapacity = 5 + msg.readableBytes();
+    return IS_JAVA_CIPHER
+        ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
+        : ctx.alloc().directBuffer(anticipatedRequiredCapacity);
   }
 }

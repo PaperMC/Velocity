@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.util.except.QuietException;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
@@ -16,8 +16,6 @@ import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,12 +25,12 @@ import java.util.UUID;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.nbt.CompoundTag;
 import net.kyori.nbt.TagIO;
-import net.kyori.nbt.TagType;
 
 public enum ProtocolUtils {
   ;
   private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
-  private static final QuietException BAD_VARINT_CACHED = new QuietException("Bad varint decoded");
+  private static final QuietDecoderException BAD_VARINT_CACHED =
+      new QuietDecoderException("Bad varint decoded");
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.

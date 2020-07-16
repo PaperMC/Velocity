@@ -2,14 +2,14 @@ package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.base.Strings;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.util.except.QuietException;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.handler.codec.CorruptedFrameException;
 
 /**
  * Extends {@link com.google.common.base.Preconditions} for Netty's {@link CorruptedFrameException}.
  */
 public class NettyPreconditions {
-  private static final QuietException BAD = new QuietException(
+  private static final QuietDecoderException BAD = new QuietDecoderException(
       "Invalid packet received. Launch Velocity with -Dvelocity.packet-decode-logging=true "
           + "to see more.");
 

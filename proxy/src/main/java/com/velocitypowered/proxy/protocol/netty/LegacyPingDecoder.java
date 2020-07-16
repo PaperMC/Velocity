@@ -22,6 +22,11 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
       return;
     }
 
+    if (!ctx.channel().isActive()) {
+      in.skipBytes(in.readableBytes());
+      return;
+    }
+
     int originalReaderIndex = in.readerIndex();
     short first = in.readUnsignedByte();
     if (first == 0xfe) {
@@ -39,7 +44,7 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
 
       // We got a 1.6.x ping. Let's chomp off the stuff we don't need.
       out.add(readExtended16Data(in));
-    } else if (first == 0x02) {
+    } else if (first == 0x02 && in.isReadable()) {
       in.skipBytes(in.readableBytes());
       out.add(new LegacyHandshake());
     } else {
