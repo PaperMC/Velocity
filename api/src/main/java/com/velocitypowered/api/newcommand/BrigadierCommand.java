@@ -12,11 +12,6 @@ import com.velocitypowered.api.command.CommandSource;
 public interface BrigadierCommand extends Command<BrigadierCommandExecutionContext> {
 
     /**
-     * A suggestion provider that returns no suggestions.
-     */
-    SuggestionProvider<CommandSource> NO_SUGGESTIONS = (context, builder) -> Suggestions.empty();
-
-    /**
      * Returns the command tree node representing the syntax options for
      * the command.
      *
@@ -30,7 +25,7 @@ public interface BrigadierCommand extends Command<BrigadierCommandExecutionConte
      * @return the suggestion provider
      */
     default SuggestionProvider<CommandSource> getSuggestionProvider() {
-        return NO_SUGGESTIONS;
+        return (context, builder) -> Suggestions.empty();
     }
 
     @Override
