@@ -1,87 +1,60 @@
 package com.velocitypowered.api.command;
 
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Represents an interface to register a command executor with the proxy.
+ * Registers commands executors for the proxy.
  */
 public interface CommandManager {
 
   /**
-   * Registers the specified command with the manager with the specified aliases.
+   * Returns a builder to register a {@link LegacyCommand}.
    *
-   * @param command the command to register
-   * @param aliases the alias to use
-   *
-   * @deprecated This method requires at least one alias, but this is only enforced at runtime.
-   *             Prefer {@link #register(String, Command, String...)} instead.
+   * @return a legacy command builder
    */
-  @Deprecated
-  void register(Command command, String... aliases);
+  LegacyCommand.Builder legacyBuilder();
 
   /**
-   * Registers the specified command with the manager with the specified aliases.
+   * Returns a builder to register a {@link BrigadierCommand}.
    *
-   * @param alias the first alias to register
-   * @param command the command to register
-   * @param otherAliases the other aliases to use
+   * @return a Brigadier command builder
    */
-  void register(String alias, Command command, String... otherAliases);
+  BrigadierCommand.Builder brigadierBuilder();
 
   /**
-   * Unregisters a command.
+   * Unregisters the specified command, if registered.
+   *
+   * @param command the command to unregister
+   */
+  void unregister(Command<?> command);
+
+  /**
+   * Unregisters the specified command alias from the manager, if registered.
    *
    * @param alias the command alias to unregister
    */
   void unregister(String alias);
 
   /**
-   * Calls CommandExecuteEvent and attempts to execute a command using the specified {@code cmdLine}
-   * in a blocking fashion.
+   * Attempts to asynchronously execute a command from the given {@code cmdLine}.
    *
-   * @param source the command's source
+   * @param source the source to execute the command for
    * @param cmdLine the command to run
-   * @return true if the command was found and executed, false if it was not
-   *
-   * @deprecated This method will block current thread during event call and command execution.
-   *             Prefer {@link #executeAsync(CommandSource, String)} instead.
+   * @return a future that may be completed with the result of the command execution.
+   *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  @Deprecated
-  boolean execute(CommandSource source, String cmdLine);
+  // TODO Move to CompletableFuture<CommandResult>?
+  CompletableFuture<Boolean> execute(CommandSource source, String cmdLine);
 
   /**
-   * Attempts to execute a command using the specified {@code cmdLine} in a blocking fashion without
-   * calling CommandExecuteEvent.
+   * Attempts to asynchronously execute a command from the given {@code cmdLine}
+   * without firing a {@link CommandExecuteEvent}.
    *
-   * @param source the command's source
+   * @param source the source to execute the command for
    * @param cmdLine the command to run
-   * @return true if the command was found and executed, false if it was not
-   *
-   * @deprecated This method will block current thread during event and command execution.
-   *             Prefer {@link #executeImmediatelyAsync(CommandSource, String)} instead.
+   * @return a future that may be completed with the result of the command execution.
+   *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  @Deprecated
-  boolean executeImmediately(CommandSource source, String cmdLine);
-
-  /**
-   * Calls CommandExecuteEvent and attempts to execute a command from the specified {@code cmdLine}
-   * async.
-   *
-   * @param source the command's source
-   * @param cmdLine the command to run
-   * @return A future that will be completed with the result of the command execution.
-   *         Can be completed exceptionally if exception was thrown during execution.
-   */
-  CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine);
-
-  /**
-   * Attempts to execute a command from the specified {@code cmdLine} async
-   * without calling CommandExecuteEvent.
-   *
-   * @param source the command's source
-   * @param cmdLine the command to run
-   * @return A future that will be completed with the result of the command execution.
-   *         Can be completed exceptionally if exception was thrown during execution.
-   */
-  CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
+  CompletableFuture<Boolean> executeImmediately(CommandSource source, String cmdLine);
 }

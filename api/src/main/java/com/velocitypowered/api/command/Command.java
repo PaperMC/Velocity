@@ -1,59 +1,55 @@
 package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.proxy.Player;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * Represents a command that can be executed by a {@link CommandSource}, such as a {@link
- * com.velocitypowered.api.proxy.Player} or the console.
+ * Represents a command that can be executed by a {@link CommandSource},
+ * such as a {@link Player} or the console.
  */
-public interface Command {
+public interface Command<C extends CommandExecutionContext> {
 
   /**
-   * Executes the command for the specified {@link CommandSource}.
+   * Executes the command for the specified context.
    *
-   * @param source the source of this command
-   * @param args the arguments for this command
+   * @param context the execution context
    */
-  void execute(CommandSource source, String @NonNull [] args);
+  void execute(C context);
 
   /**
-   * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
+   * Provides tab complete for the given execution context.
    *
-   * @param source the source to run the command for
-   * @param currentArgs the current, partial arguments for this command
-   * @return tab complete suggestions
+   * @param context the execution context
+   * @return the tab complete suggestions
    */
-  default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+  default List<String> suggest(final C context) {
     return ImmutableList.of();
   }
 
   /**
-   * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
+   * Test to check if the source has permission to use this command with
+   * the provided arguments.
    *
-   * @param source the source to run the command for
-   * @param currentArgs the current, partial arguments for this command
-   * @return tab complete suggestions
+   * <p>If the method returns {@code false}, the handling is forwarded onto
+   * the players current server.
+   *
+   * @param context the execution context
+   * @return {@code true} if the source has permission
    */
-  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
-      String @NonNull [] currentArgs) {
-    return CompletableFuture.completedFuture(suggest(source, currentArgs));
+  default boolean hasPermission(final C context) {
+    return true;
   }
 
   /**
-   * Tests to check if the {@code source} has permission to use this command with the provided
-   * {@code args}.
+   * Provides a fluent interface to register a command.
    *
-   * <p>If this method returns false, the handling will be forwarded onto
-   * the players current server.</p>
-   *
-   * @param source the source of the command
-   * @param args the arguments for this command
-   * @return whether the source has permission
+   * @param <T> the type of the built command
+   * @param <B> the type of this builder
    */
-  default boolean hasPermission(CommandSource source, String @NonNull [] args) {
-    return true;
+  interface Builder<T, B extends Builder<T, B>> {
+    // Even if unused, we keep the builder type parameter in case
+    // we ever add a chainable method common to all builders.
+    // See https://community.oracle.com/blogs/emcmanus/2010/10/24/using-builder-pattern-subclasses
   }
 }
