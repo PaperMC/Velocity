@@ -47,9 +47,15 @@ public interface Command<C extends CommandExecutionContext> {
    * @param <T> the type of the built command
    * @param <B> the type of this builder
    */
+  // See https://community.oracle.com/blogs/emcmanus/2010/10/24/using-builder-pattern-subclasses
   interface Builder<T, B extends Builder<T, B>> {
-    // Even if unused, we keep the builder type parameter in case
-    // we ever add a chainable method common to all builders.
-    // See https://community.oracle.com/blogs/emcmanus/2010/10/24/using-builder-pattern-subclasses
+
+    /**
+     * Specifies additional aliases that can be used to execute the command.
+     *
+     * @param aliases the command aliases
+     * @return this builder, for chaining
+     */
+    B aliases(String... aliases);
   }
 }

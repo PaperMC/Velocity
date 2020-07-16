@@ -9,11 +9,11 @@ import java.util.concurrent.CompletableFuture;
 public interface CommandManager {
 
   /**
-   * Returns a builder to register a {@link LegacyCommand}.
+   * Returns a builder to register a 1.12-style command.
    *
    * @return a legacy command builder
    */
-  LegacyCommand.Builder legacyBuilder();
+  LegacyCommandBuilder builder();
 
   /**
    * Returns a builder to register a {@link BrigadierCommand}.
@@ -21,6 +21,27 @@ public interface CommandManager {
    * @return a Brigadier command builder
    */
   BrigadierCommand.Builder brigadierBuilder();
+
+  /**
+   * Registers the specified command with the specified aliases.
+   *
+   * @param command the command to register
+   * @param aliases the command aliases
+   *
+   * @deprecated This method requires at least one alias, but this is only enforced at runtime.
+   *             Prefer {@link #register(String, Command, String...)}
+   */
+  @Deprecated
+  void register(Command<?> command, String... aliases);
+
+  /**
+   * Registers the specified command with the specified aliases.
+   *
+   * @param alias the first command alias
+   * @param command the command to register
+   * @param otherAliases additional aliases
+   */
+  void register(String alias, Command<?> command, String... otherAliases);
 
   /**
    * Unregisters the specified command, if registered.
