@@ -17,7 +17,7 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
-import com.velocitypowered.proxy.util.except.QuietException;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.security.InvalidKeyException;
@@ -113,7 +113,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(
-          new QuietException("The connection to the remote server was unexpectedly closed.\n"
+          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
               + "This is usually because the remote server does not have BungeeCord IP forwarding "
               + "correctly enabled.\nSee "
               + "https://docs.velocitypowered.com/en/latest/users/player-info-forwarding.html "
@@ -121,7 +121,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       );
     } else {
       resultFuture.completeExceptionally(
-          new QuietException("The connection to the remote server was unexpectedly closed.")
+          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
       );
     }
   }

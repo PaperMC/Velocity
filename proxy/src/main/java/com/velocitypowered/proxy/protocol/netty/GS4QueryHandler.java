@@ -72,7 +72,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainComponentSerializer.INSTANCE.serialize(server.getConfiguration().getMotd()))
+        .hostname(PlainComponentSerializer.plain().serialize(server.getConfiguration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())

@@ -5,7 +5,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.util.except.QuietException;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,8 +14,8 @@ import io.netty.handler.codec.CorruptedFrameException;
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
-  private static final QuietException DECODE_FAILED =
-      new QuietException("A packet did not decode successfully (invalid data). If you are a "
+  private static final QuietDecoderException DECODE_FAILED =
+      new QuietDecoderException("A packet did not decode successfully (invalid data). If you are a "
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
@@ -38,11 +38,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     if (msg instanceof ByteBuf) {
       ByteBuf buf = (ByteBuf) msg;
-      try {
-        tryDecode(ctx, buf);
-      } finally {
-        buf.release();
-      }
+      tryDecode(ctx, buf);
     } else {
       ctx.fireChannelRead(msg);
     }
@@ -50,6 +46,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
     if (!ctx.channel().isActive()) {
+      buf.release();
       return;
     }
 
@@ -58,18 +55,22 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     MinecraftPacket packet = this.registry.createPacket(packetId);
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
-      ctx.fireChannelRead(buf.retain());
+      ctx.fireChannelRead(buf);
     } else {
       try {
-        packet.decode(buf, direction, registry.version);
-      } catch (Exception e) {
-        throw handleDecodeFailure(e, packet, packetId);
-      }
+        try {
+          packet.decode(buf, direction, registry.version);
+        } catch (Exception e) {
+          throw handleDecodeFailure(e, packet, packetId);
+        }
 
-      if (buf.isReadable()) {
-        throw handleNotReadEnough(packet, packetId);
+        if (buf.isReadable()) {
+          throw handleNotReadEnough(packet, packetId);
+        }
+        ctx.fireChannelRead(packet);
+      } finally {
+        buf.release();
       }
-      ctx.fireChannelRead(packet);
     }
   }
 
