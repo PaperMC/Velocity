@@ -1,8 +1,9 @@
 package com.velocitypowered.proxy.command.builtin;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -11,9 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class GlistCommand implements Command {
+public class GlistCommand implements LegacyCommand {
 
   private final ProxyServer server;
 
@@ -22,7 +22,10 @@ public class GlistCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(final LegacyCommandInvocation invocation) {
+    final CommandSource source = invocation.source();
+    final String[] args = invocation.arguments();
+
     if (args.length == 0) {
       sendTotalProxyCount(source);
       source.sendMessage(
@@ -84,8 +87,10 @@ public class GlistCommand implements Command {
   }
 
   @Override
-  public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+  public List<String> suggest(final LegacyCommandInvocation invocation) {
+    final String[] currentArgs = invocation.arguments();
     ImmutableList.Builder<String> options = ImmutableList.builder();
+
     for (RegisteredServer server : server.getAllServers()) {
       options.add(server.getServerInfo().getName());
     }
@@ -104,7 +109,7 @@ public class GlistCommand implements Command {
   }
 
   @Override
-  public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-    return source.getPermissionValue("velocity.command.glist") == Tristate.TRUE;
+  public boolean hasPermission(final LegacyCommandInvocation invocation) {
+    return invocation.source().getPermissionValue("velocity.command.glist") == Tristate.TRUE;
   }
 }

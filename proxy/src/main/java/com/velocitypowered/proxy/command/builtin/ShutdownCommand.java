@@ -1,12 +1,11 @@
 package com.velocitypowered.proxy.command.builtin;
 
-import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class ShutdownCommand implements Command {
+public class ShutdownCommand implements LegacyCommand {
 
   private final VelocityServer server;
 
@@ -15,7 +14,8 @@ public class ShutdownCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(final LegacyCommandInvocation invocation) {
+    final String[] args = invocation.arguments();
     if (args.length == 0) {
       server.shutdown(true);
     } else {
@@ -25,7 +25,7 @@ public class ShutdownCommand implements Command {
   }
 
   @Override
-  public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-    return source == server.getConsoleCommandSource();
+  public boolean hasPermission(final LegacyCommandInvocation invocation) {
+    return invocation.source() == server.getConsoleCommandSource();
   }
 }

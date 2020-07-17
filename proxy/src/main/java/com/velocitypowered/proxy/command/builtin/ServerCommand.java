@@ -1,10 +1,9 @@
 package com.velocitypowered.proxy.command.builtin;
 
-import static net.kyori.adventure.text.event.HoverEvent.showText;
-
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -18,9 +17,10 @@ import java.util.stream.Stream;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class ServerCommand implements Command {
+import static net.kyori.adventure.text.event.HoverEvent.showText;
+
+public class ServerCommand implements LegacyCommand {
 
   public static final int MAX_SERVERS_TO_LIST = 50;
   private final ProxyServer server;
@@ -30,7 +30,10 @@ public class ServerCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(final LegacyCommandInvocation invocation) {
+    final CommandSource source = invocation.source();
+    final String[] args = invocation.arguments();
+
     if (!(source instanceof Player)) {
       source.sendMessage(TextComponent.of("Only players may run this command.",
           NamedTextColor.RED));
@@ -102,9 +105,11 @@ public class ServerCommand implements Command {
   }
 
   @Override
-  public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+  public List<String> suggest(final LegacyCommandInvocation invocation) {
+    final String[] currentArgs = invocation.arguments();
     Stream<String> possibilities = Stream.concat(Stream.of("all"), server.getAllServers()
         .stream().map(rs -> rs.getServerInfo().getName()));
+
     if (currentArgs.length == 0) {
       return possibilities.collect(Collectors.toList());
     } else if (currentArgs.length == 1) {
@@ -117,7 +122,7 @@ public class ServerCommand implements Command {
   }
 
   @Override
-  public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-    return source.getPermissionValue("velocity.command.server") != Tristate.FALSE;
+  public boolean hasPermission(final LegacyCommandInvocation invocation) {
+    return invocation.source().getPermissionValue("velocity.command.server") != Tristate.FALSE;
   }
 }
