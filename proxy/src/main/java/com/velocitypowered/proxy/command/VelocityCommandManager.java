@@ -5,9 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.command.*;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
@@ -17,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
-  @Deprecated
+  /*@Deprecated
   static CommandNode<CommandSource> createRedirectNode(final CommandNode<CommandSource> dest,
                                                               final String alias) {
     // Brigadier provides an aliasing system, but it's broken (https://github.com/Mojang/brigadier/issues/46).
@@ -25,7 +23,7 @@ public class VelocityCommandManager implements CommandManager {
     return LiteralArgumentBuilder.<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
             .executes(dest.getCommand())
             .build();
-  }
+  }*/
 
   // TODO Mental notes to write docs later
   // Only BrigadierCommand implementations may use the Brigadier dispatcher.
@@ -63,10 +61,6 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "alias");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkNotNull(command, "executor");
-
-    if (command instanceof BrigadierCommand) {
-      throw new UnsupportedOperationException("Brigadier commands can only be registered by a builder");
-    }
 
     this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
 

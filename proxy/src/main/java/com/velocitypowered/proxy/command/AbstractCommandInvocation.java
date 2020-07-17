@@ -14,7 +14,7 @@ abstract class AbstractCommandInvocation implements CommandInvocation {
   private final CommandSource source;
 
   protected AbstractCommandInvocation(final CommandSource source) {
-    this.source = Preconditions.checkNotNull(source);
+    this.source = Preconditions.checkNotNull(source, "source");
   }
 
   @Override

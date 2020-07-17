@@ -13,7 +13,7 @@ final class VelocityBrigadierCommandInvocation extends AbstractCommandInvocation
     private final CommandDispatcher<CommandSource> dispatcher;
 
     Factory(final CommandDispatcher<CommandSource> dispatcher) {
-      this.dispatcher = Preconditions.checkNotNull(dispatcher);
+      this.dispatcher = Preconditions.checkNotNull(dispatcher, "dispatcher");
     }
 
     @Override

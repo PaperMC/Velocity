@@ -44,6 +44,7 @@ public class VelocityCommand implements LegacyCommand {
 
   /**
    * Initializes the command object for /velocity.
+   *
    * @param server the Velocity server
    */
   public VelocityCommand(VelocityServer server) {

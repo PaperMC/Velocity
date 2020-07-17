@@ -7,6 +7,7 @@ import java.util.Collection;
 /**
  * Contains metadata about a {@link Command}.
  */
+@Deprecated
 @Immutable
 public interface CommandMeta {
 

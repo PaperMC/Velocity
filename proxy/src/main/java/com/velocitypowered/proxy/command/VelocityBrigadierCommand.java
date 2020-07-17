@@ -1,6 +1,8 @@
 package com.velocitypowered.proxy.command;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -9,6 +11,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 final class VelocityBrigadierCommand implements BrigadierCommand {
@@ -48,16 +51,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     return true;
   }
 
-  // This is mostly going to be a dummy class.
-  // Ignore the commented code below.
-
-  /*
-  @Override
-  public List<String> suggest(final BrigadierCommandExecutionContext context) {
-    return Arrays.asList(manager.getDispatcher().getAllUsage(node, context.source(), true));
-  }
-
-  /*final static class Builder extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
+  final static class Builder extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
           implements BrigadierCommand.Builder {
 
     Builder(final VelocityCommandManager manager) {
@@ -66,28 +60,28 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
 
     @Override
     public BrigadierCommand register(final LiteralArgumentBuilder<CommandSource> builder) {
-      Preconditions.checkNotNull(builder);
+      Preconditions.checkNotNull(builder, "builder");
       return register(builder.build());
     }
 
     @Override
     public BrigadierCommand register(final CommandNode<CommandSource> node) {
-      Preconditions.checkNotNull(node);
+      Preconditions.checkNotNull(node, "node");
+      final BrigadierCommand command = new VelocityBrigadierCommand(manager);
       final String alias = node.getName().toLowerCase(Locale.ENGLISH);
-      manager.registerNode(node);
+      manager.register(alias, command);
 
       aliases.remove(alias); // prevent self-redirect
       for (final String alias1 : aliases) {
-        CommandNode<CommandSource> aliasNode = VelocityCommandManager.createRedirectNode(node, alias1);
-        manager.registerNode(aliasNode);
+        manager.getDispatcher().register(BrigadierCommand.argumentBuilder(alias1).redirect(node));
       }
 
-      return new VelocityBrigadierCommand(manager, node);
+      return command;
     }
 
     @Override
-    protected Builder self() {
+    protected BrigadierCommand.Builder self() {
       return this;
     }
-  }*/
+  }
 }

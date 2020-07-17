@@ -5,7 +5,12 @@ import com.velocitypowered.api.command.Command;
 import java.util.HashSet;
 import java.util.Set;
 
-@Deprecated
+/**
+ * Abstract base class for {@link Command.Builder} implementations.
+ *
+ * @param <T> the type of the registered command
+ * @param <B> the type of this builder (used for chaining)
+ */
 abstract class AbstractCommandBuilder<T extends Command<?>, B extends Command.Builder<T, B>>
         implements Command.Builder<T, B> {
 
@@ -13,7 +18,7 @@ abstract class AbstractCommandBuilder<T extends Command<?>, B extends Command.Bu
   protected final Set<String> aliases = new HashSet<>();
 
   protected AbstractCommandBuilder(final VelocityCommandManager manager) {
-    this.manager = Preconditions.checkNotNull(manager);
+    this.manager = Preconditions.checkNotNull(manager, "manager");
   }
 
   @Override
