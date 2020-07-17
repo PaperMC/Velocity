@@ -36,7 +36,7 @@ public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, Command<?>> commands = new HashMap<>();
 
-  private CommandInvocationFactoryRegistry invocationFactory = new CommandInvocationFactoryRegistry();
+  private final CommandInvocationFactoryRegistry invocationFactory = new CommandInvocationFactoryRegistry();
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
 
   private final VelocityEventManager eventManager;
@@ -64,29 +64,28 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkNotNull(command, "executor");
 
-    // TODO
-    //RawCommand rawCmd = RegularCommandWrapper.wrap(command);
-    //this.commands.put(alias.toLowerCase(Locale.ENGLISH), rawCmd);
+    if (command instanceof BrigadierCommand) {
+      throw new UnsupportedOperationException("Brigadier commands can only be registered by a builder");
+    }
+
+    this.commands.put(alias.toLowerCase(Locale.ENGLISH), command);
 
     for (int i = 0, length = otherAliases.length; i < length; i++) {
       final String alias1 = otherAliases[i];
       Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
-      // TODO
-      //this.commands.put(alias1.toLowerCase(Locale.ENGLISH), rawCmd);
+      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), command);
     }
   }
 
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "name");
-    // TODO
-    //this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
-  }
+    Command<?> removed = this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
 
-  /*private void register(final CommandNode<CommandSource> node) {
-    Preconditions.checkNotNull(node, "node");
-    dispatcher.getRoot().addChild(node);
-  }*/
+    if (removed instanceof BrigadierCommand) {
+      // TODO unregister from dispatcher
+    }
+  }
 
   // General
 
