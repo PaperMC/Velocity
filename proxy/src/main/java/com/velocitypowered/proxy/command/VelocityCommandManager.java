@@ -15,16 +15,6 @@ import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
-  /*@Deprecated
-  static CommandNode<CommandSource> createRedirectNode(final CommandNode<CommandSource> dest,
-                                                              final String alias) {
-    // Brigadier provides an aliasing system, but it's broken (https://github.com/Mojang/brigadier/issues/46).
-    // Additionally, the aliases need to keep working even if the main node is removed.
-    return LiteralArgumentBuilder.<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
-            .executes(dest.getCommand())
-            .build();
-  }*/
-
   // TODO Mental notes to write docs later
   // Only BrigadierCommand implementations may use the Brigadier dispatcher.
 

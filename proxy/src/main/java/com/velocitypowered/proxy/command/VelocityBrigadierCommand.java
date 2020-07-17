@@ -16,6 +16,35 @@ import java.util.concurrent.CompletableFuture;
 
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
+  /**
+   * Returns a node builder with the given alias to the specified destination node.
+   *
+   * @param dest the destination node
+   * @param alias the command alias
+   * @return the created alias
+   * @see <a href="https://github.com/Mojang/brigadier/issues/46">issue</a>
+   */
+  private static LiteralArgumentBuilder<CommandSource> redirect(final CommandNode<CommandSource> dest, String alias) {
+    Preconditions.checkNotNull(dest, "dest");
+    Preconditions.checkNotNull(alias, "alias");
+    alias = alias.toLowerCase(Locale.ENGLISH);
+    Preconditions.checkArgument(dest.getName().equals(alias),"Self-referencing redirect %s for %s", alias, dest);
+
+    if (!dest.getChildren().isEmpty()) {
+      // Regular redirects work if the destination node can expect arguments.
+      return BrigadierCommand.argumentBuilder(alias).redirect(dest);
+    }
+
+    // See LiteralCommandNode.createBuilder
+    final LiteralArgumentBuilder<CommandSource> builder = BrigadierCommand.argumentBuilder(alias);
+    builder.requires(dest.getRequirement());
+    builder.forward(dest.getRedirect(), dest.getRedirectModifier(), dest.isFork());
+    if (dest.getCommand() != null) {
+      builder.executes(dest.getCommand());
+    }
+    return builder;
+  }
+
   private final VelocityCommandManager manager;
   private final CommandNode<CommandSource> node;
 
@@ -77,7 +106,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
 
       aliases.remove(alias); // prevent self-redirect
       for (final String alias1 : aliases) {
-        manager.getDispatcher().register(BrigadierCommand.argumentBuilder(alias1).redirect(node));
+        manager.getDispatcher().register(redirect(node, alias1));
       }
 
       return command;
