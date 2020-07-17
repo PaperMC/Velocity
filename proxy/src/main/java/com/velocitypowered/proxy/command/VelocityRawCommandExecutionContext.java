@@ -7,9 +7,9 @@ import com.velocitypowered.api.command.RawCommandInvocation;
 final class VelocityRawCommandExecutionContext extends AbstractCommandExecutionContext
         implements RawCommandInvocation {
 
-  static final CommandExecutionContextFactory<RawCommandInvocation> FACTORY = new Factory();
+  static final CommandInvocationFactory<RawCommandInvocation> FACTORY = new Factory();
 
-  private static class Factory implements CommandExecutionContextFactory<RawCommandInvocation> {
+  private static class Factory implements CommandInvocationFactory<RawCommandInvocation> {
 
     @Override
     public RawCommandInvocation createContext(final CommandSource source, final String commandLine) {

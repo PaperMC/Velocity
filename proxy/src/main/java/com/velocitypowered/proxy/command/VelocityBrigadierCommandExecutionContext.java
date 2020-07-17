@@ -9,7 +9,7 @@ import com.velocitypowered.api.command.CommandSource;
 final class VelocityBrigadierCommandExecutionContext extends AbstractCommandExecutionContext
         implements BrigadierCommandInvocation {
 
-  static class Factory implements CommandExecutionContextFactory<BrigadierCommandInvocation> {
+  static class Factory implements CommandInvocationFactory<BrigadierCommandInvocation> {
 
     private final CommandDispatcher<CommandSource> dispatcher;
 
@@ -25,7 +25,7 @@ final class VelocityBrigadierCommandExecutionContext extends AbstractCommandExec
     }
 
     @Override
-    public boolean argsCommandLine() {
+    public boolean includeAlias() {
       return false; // full command line
     }
   }

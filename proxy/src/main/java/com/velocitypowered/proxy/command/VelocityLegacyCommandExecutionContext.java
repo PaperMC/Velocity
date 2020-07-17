@@ -9,9 +9,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 final class VelocityLegacyCommandExecutionContext extends AbstractCommandExecutionContext
         implements LegacyCommandInvocation {
 
-  static final CommandExecutionContextFactory<LegacyCommandInvocation> FACTORY = new Factory();
+  static final CommandInvocationFactory<LegacyCommandInvocation> FACTORY = new Factory();
 
-  private static class Factory implements CommandExecutionContextFactory<LegacyCommandInvocation> {
+  private static class Factory implements CommandInvocationFactory<LegacyCommandInvocation> {
 
     @Override
     public LegacyCommandInvocation createContext(final CommandSource source, final String commandLine) {

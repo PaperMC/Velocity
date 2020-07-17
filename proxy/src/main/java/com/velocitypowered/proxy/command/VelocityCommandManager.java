@@ -37,14 +37,14 @@ public class VelocityCommandManager implements CommandManager {
   private final Map<String, Command<?>> commands = new HashMap<>();
 
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
-  private final Map<Class<? extends Command<?>>, CommandExecutionContextFactory<?>> contextFactories;
+  private final Map<Class<? extends Command<?>>, CommandInvocationFactory<?>> contextFactories;
 
   private final VelocityEventManager eventManager;
 
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = eventManager;
     this.contextFactories = new HashMap<>(
-          ImmutableMap.<Class<? extends Command<?>>, CommandExecutionContextFactory<?>>builder()
+          ImmutableMap.<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
                   .put(RawCommand.class, VelocityRawCommandExecutionContext.FACTORY)
                   .put(LegacyCommand.class, VelocityLegacyCommandExecutionContext.FACTORY)
                   .put(BrigadierCommand.class, new VelocityBrigadierCommandExecutionContext.Factory(dispatcher))
@@ -115,9 +115,9 @@ public class VelocityCommandManager implements CommandManager {
 
   private <C extends CommandInvocation> C createContext(
           final Command<C> command, final CommandSource source, final String alias, final String args) {
-    CommandExecutionContextFactory<?> factory = contextFactories.getOrDefault(
-            command.getClass(), CommandExecutionContextFactory.FALLBACK);
-    String commandLine = factory.argsCommandLine() ? args : (alias + " " + args);
+    CommandInvocationFactory<?> factory = contextFactories.getOrDefault(
+            command.getClass(), CommandInvocationFactory.FALLBACK);
+    String commandLine = factory.includeAlias() ? args : (alias + " " + args);
 
     //noinspection unchecked
     return (C) factory.createContext(source, commandLine);
