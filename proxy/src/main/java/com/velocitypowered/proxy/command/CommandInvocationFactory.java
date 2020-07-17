@@ -19,9 +19,7 @@ public interface CommandInvocationFactory<I extends CommandInvocation> {
    * @param commandLine the command line, including the alias if {@link #includeAlias()} is {@code true}
    * @return the built invocation
    */
-  I createContext(final CommandSource source, final String commandLine);
-
-  // TODO Document
+  I create(final CommandSource source, final String commandLine);
 
   /**
    * Returns whether the factory expects the command line to include the command alias.
@@ -29,7 +27,7 @@ public interface CommandInvocationFactory<I extends CommandInvocation> {
    * @return {@code true} if the factory expects the command alias
    */
   default boolean includeAlias() {
-    return true;
+    return false;
   }
 
   CommandInvocationFactory<CommandInvocation> FALLBACK = new FallbackCommandInvocationFactory();
@@ -38,7 +36,7 @@ public interface CommandInvocationFactory<I extends CommandInvocation> {
           implements CommandInvocationFactory<CommandInvocation> {
 
     @Override
-    public CommandInvocation createContext(final CommandSource source, final String commandLine) {
+    public CommandInvocation create(final CommandSource source, final String commandLine) {
       return () -> source;
     }
   }

@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommandInvocation;
 
-final class VelocityRawCommandExecutionContext extends AbstractCommandExecutionContext
+final class VelocityRawCommandInvocation extends AbstractCommandInvocation
         implements RawCommandInvocation {
 
   static final CommandInvocationFactory<RawCommandInvocation> FACTORY = new Factory();
@@ -12,14 +12,14 @@ final class VelocityRawCommandExecutionContext extends AbstractCommandExecutionC
   private static class Factory implements CommandInvocationFactory<RawCommandInvocation> {
 
     @Override
-    public RawCommandInvocation createContext(final CommandSource source, final String commandLine) {
-      return new VelocityRawCommandExecutionContext(source, commandLine);
+    public RawCommandInvocation create(final CommandSource source, final String commandLine) {
+      return new VelocityRawCommandInvocation(source, commandLine);
     }
   }
 
   private final String commandLine;
 
-  private VelocityRawCommandExecutionContext(final CommandSource source, final String commandLine) {
+  private VelocityRawCommandInvocation(final CommandSource source, final String commandLine) {
     super(source);
     this.commandLine = Preconditions.checkNotNull(commandLine);
   }

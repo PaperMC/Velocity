@@ -6,8 +6,7 @@ import com.mojang.brigadier.ParseResults;
 import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 
-final class VelocityBrigadierCommandExecutionContext extends AbstractCommandExecutionContext
-        implements BrigadierCommandInvocation {
+final class VelocityBrigadierCommandInvocation extends AbstractCommandInvocation implements BrigadierCommandInvocation {
 
   static class Factory implements CommandInvocationFactory<BrigadierCommandInvocation> {
 
@@ -18,22 +17,22 @@ final class VelocityBrigadierCommandExecutionContext extends AbstractCommandExec
     }
 
     @Override
-    public BrigadierCommandInvocation createContext(final CommandSource source, final String commandLine) {
+    public BrigadierCommandInvocation create(final CommandSource source, final String commandLine) {
       // Might be unsuccessful, checked on execution
       ParseResults<CommandSource> parse = dispatcher.parse(commandLine, source);
-      return new VelocityBrigadierCommandExecutionContext(source, parse);
+      return new VelocityBrigadierCommandInvocation(source, parse);
     }
 
     @Override
     public boolean includeAlias() {
-      return false; // full command line
+      return true;
     }
   }
 
   private final ParseResults<CommandSource> parseResults;
 
-  private VelocityBrigadierCommandExecutionContext(final CommandSource source,
-                                                   final ParseResults<CommandSource> parseResults) {
+  private VelocityBrigadierCommandInvocation(final CommandSource source,
+                                             final ParseResults<CommandSource> parseResults) {
     super(source);
     this.parseResults = parseResults;
   }

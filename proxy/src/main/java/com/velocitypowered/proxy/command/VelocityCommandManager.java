@@ -45,9 +45,9 @@ public class VelocityCommandManager implements CommandManager {
     this.eventManager = eventManager;
     this.contextFactories = new HashMap<>(
           ImmutableMap.<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
-                  .put(RawCommand.class, VelocityRawCommandExecutionContext.FACTORY)
-                  .put(LegacyCommand.class, VelocityLegacyCommandExecutionContext.FACTORY)
-                  .put(BrigadierCommand.class, new VelocityBrigadierCommandExecutionContext.Factory(dispatcher))
+                  .put(RawCommand.class, VelocityRawCommandInvocation.FACTORY)
+                  .put(LegacyCommand.class, VelocityLegacyCommandInvocation.FACTORY)
+                  .put(BrigadierCommand.class, new VelocityBrigadierCommandInvocation.Factory(dispatcher))
                   .build());
   }
 
@@ -120,7 +120,7 @@ public class VelocityCommandManager implements CommandManager {
     String commandLine = factory.includeAlias() ? args : (alias + " " + args);
 
     //noinspection unchecked
-    return (C) factory.createContext(source, commandLine);
+    return (C) factory.create(source, commandLine);
   }
 
   // Execution

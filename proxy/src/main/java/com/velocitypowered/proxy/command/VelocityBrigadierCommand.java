@@ -14,11 +14,11 @@ import java.util.concurrent.CompletableFuture;
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
   private final VelocityCommandManager manager;
-  private final CommandNode<CommandSource> node;
+  //private final CommandNode<CommandSource> node;
 
-  private VelocityBrigadierCommand(final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
+  private VelocityBrigadierCommand(final VelocityCommandManager manager/*, final CommandNode<CommandSource> node*/) {
     this.manager = manager;
-    this.node = node;
+    //this.node = node;
   }
 
   @Override
@@ -33,7 +33,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
   @Override
   public CompletableFuture<List<String>> suggestAsync(final BrigadierCommandInvocation invocation) {
     return manager.getDispatcher().getCompletionSuggestions(invocation.parsed())
-            // Client infers the position of the suggestions
+            // The client infers the position of the suggestions
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
