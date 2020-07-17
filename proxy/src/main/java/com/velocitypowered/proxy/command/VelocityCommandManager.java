@@ -27,15 +27,16 @@ import java.util.concurrent.CompletableFuture;
 public class VelocityCommandManager implements CommandManager {
 
   // `commands` contains all registered command case-insensitive aliases.
-  // Multiple aliases may map to the same command object.
+  // Multiple aliases may map to the same command.
   //
   // On execution, suggestion offers and permission checks, the corresponding Command object
   // is retrieved. Then, a CommandInvocation describing the request is created by
   // the invocation factory registry. This object is then passed to the underlying command,
   // which may use the Brigadier dispatcher iff it implements BrigadierCommand.
   //
-  // By design, the API doesn't provide CommandInvocations. Commands are not meant to
-  // be executed directly. Instead, users should call CommandManager#execute.
+  // By design, the API doesn't provide CommandInvocation implementations.
+  // Commands are not meant to be executed directly. Instead, users should
+  // call CommandManager#execute.
 
   private final Map<String, Command<?>> commands = new HashMap<>();
 
