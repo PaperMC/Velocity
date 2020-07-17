@@ -4,7 +4,7 @@ package com.velocitypowered.api.command;
  * Provides {@link Command} invocation-related information, including
  * the source, arguments, etc.
  */
-public interface CommandExecutionContext {
+public interface CommandInvocation {
 
   /**
    * Returns the source that executed the command.

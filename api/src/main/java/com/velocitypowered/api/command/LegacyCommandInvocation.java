@@ -3,12 +3,12 @@ package com.velocitypowered.api.command;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * An execution context for a {@link LegacyCommand}.
+ * Contains the invocation data for a {@link LegacyCommand}.
  */
-public interface LegacyCommandExecutionContext extends CommandExecutionContext {
+public interface LegacyCommandInvocation extends CommandInvocation {
 
   /**
-   * Returns the arguments for the command execution.
+   * Returns the arguments for the command invocation.
    *
    * @return the command arguments
    */

@@ -27,10 +27,10 @@ public class VelocityCommandManager implements CommandManager {
             .build();
   }
 
+  private final Map<String, Command<?>> commands = new HashMap<>();
+
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
   private final Map<Class<? extends Command<?>>, CommandExecutionContextFactory<?>> contextFactories;
-
-  private final Map<String, Command<?>> commands = new HashMap<>();
 
   private final VelocityEventManager eventManager;
 
@@ -48,6 +48,8 @@ public class VelocityCommandManager implements CommandManager {
   public BrigadierCommand.Builder brigadierBuilder() {
     return null;
   }
+
+  // Registration
 
   @Override
   public void register(final Command<?> command, final String... aliases) {
@@ -79,23 +81,32 @@ public class VelocityCommandManager implements CommandManager {
     //this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
   }
 
-  public CommandDispatcher<CommandSource> getDispatcher() {
-    return dispatcher;
-  }
-
   private void register(final CommandNode<CommandSource> node) {
     Preconditions.checkNotNull(node, "node");
     dispatcher.getRoot().addChild(node);
   }
 
-  private <C extends CommandExecutionContext> Command<C> getCommand(final String alias) {
+  // General
+
+  public CommandDispatcher<CommandSource> getDispatcher() {
+    return dispatcher;
+  }
+
+  private <C extends CommandInvocation> Command<C> getCommand(final String alias) {
     //noinspection unchecked
     return (Command<C>) commands.get(alias.toLowerCase(Locale.ENGLISH));
   }
 
-  private <C extends CommandExecutionContext> C createContext(
-          final Command<C> command, final CommandSource source, final String alias, final String args)
-          throws CommandSyntaxException {
+  public boolean hasCommand(final String alias) {
+    return commands.containsKey(alias.toLowerCase(Locale.ENGLISH));
+  }
+
+  public Set<String> getAllRegisteredCommands() {
+    return ImmutableSet.copyOf(commands.keySet());
+  }
+
+  private <C extends CommandInvocation> C createContext(
+          final Command<C> command, final CommandSource source, final String alias, final String args) {
     CommandExecutionContextFactory<?> factory = contextFactories.getOrDefault(
             command.getClass(), CommandExecutionContextFactory.FALLBACK);
     String commandLine = factory.argsCommandLine() ? args : (alias + " " + args);
@@ -103,6 +114,8 @@ public class VelocityCommandManager implements CommandManager {
     //noinspection unchecked
     return (C) factory.createContext(source, commandLine);
   }
+
+  // Execution
 
   /**
    * Calls CommandExecuteEvent.
@@ -114,39 +127,6 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmd, "cmd");
     return eventManager.fire(new CommandExecuteEvent(source, cmd));
-  }
-
-  private <C extends CommandExecutionContext> boolean executeImmediately0(final CommandSource source,
-                                                                          final String cmdLine) {
-    String alias = cmdLine;
-    String args = "";
-    int firstSpace = cmdLine.indexOf(' ');
-    if (firstSpace != -1) {
-      alias = cmdLine.substring(0, firstSpace);
-      args = cmdLine.substring(firstSpace);
-    }
-
-    Command<C> command = getCommand(alias);
-    if (command == null) {
-      // Alias isn't registered, don't parse it
-      return false;
-    }
-
-    try {
-      C context = createContext(command, source, alias, args);
-
-      if (!command.hasPermission(context)) {
-        return false;
-      }
-
-      command.execute(context);
-      return true;
-    } catch (final CommandSyntaxException ignored) {
-      // TODO Send invalid syntax message to player (exception contains details)
-      return false;
-    } catch (final Exception e) {
-      throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
-    }
   }
 
   @Override
@@ -174,21 +154,75 @@ public class VelocityCommandManager implements CommandManager {
             () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
-  public boolean hasCommand(final String alias) {
-    return commands.containsKey(alias.toLowerCase(Locale.ENGLISH));
+  private <C extends CommandInvocation> boolean executeImmediately0(final CommandSource source,
+                                                                    final String cmdLine) {
+    String alias = cmdLine;
+    String args = "";
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace != -1) {
+      alias = cmdLine.substring(0, firstSpace);
+      args = cmdLine.substring(firstSpace);
+    }
+
+    Command<C> command = getCommand(alias);
+    if (command == null) {
+      // Alias isn't registered, don't parse it
+      return false;
+    }
+
+    C context = createContext(command, source, alias, args);
+    try {
+      if (!command.hasPermission(context)) {
+        return false;
+      }
+
+      command.execute(context);
+      return true;
+    } catch (final Exception e) {
+      if (e.getCause() instanceof CommandSyntaxException) {
+        // TODO Send invalid syntax message to player (exception contains details)
+        return false;
+      }
+
+      throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
+    }
   }
 
-  public Set<String> getAllRegisteredCommands() {
-    return ImmutableSet.copyOf(commands.keySet());
+  // Suggestions
+
+  private <C extends CommandInvocation> CompletableFuture<List<String>> offerSuggestions(
+          final CommandSource source, final String alias, final String args) {
+    Command<C> command = getCommand(alias);
+    if (command == null) {
+      // No such command, so we can't offer any tab complete suggestions.
+      return CompletableFuture.completedFuture(ImmutableList.of());
+    }
+
+    C context = createContext(command, source, alias, args);
+    try {
+      if (!command.hasPermission(context)) {
+        return CompletableFuture.completedFuture(ImmutableList.of());
+      }
+      return CompletableFuture.completedFuture(command.suggest(context))
+              .thenApply(ImmutableList::copyOf);
+    } catch (final Exception e) {
+      if (e.getCause() instanceof CommandSyntaxException) {
+        return CompletableFuture.completedFuture(ImmutableList.of());
+      }
+
+      String cmdLine = alias + " " + args;
+      throw new RuntimeException("Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
+    }
   }
 
   /**
    * Offer suggestions to fill in the command.
+   *
    * @param source the source for the command
    * @param cmdLine the partially completed command
    * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
    */
-  public CompletableFuture<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
+  public CompletableFuture<List<String>> offerSuggestions(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -196,9 +230,9 @@ public class VelocityCommandManager implements CommandManager {
     if (firstSpace == -1) {
       // Offer to fill in commands.
       ImmutableList.Builder<String> availableCommands = ImmutableList.builder();
-      for (Map.Entry<String, RawCommand> entry : commands.entrySet()) {
+      for (Map.Entry<String, Command<?>> entry : commands.entrySet()) {
         if (entry.getKey().regionMatches(true, 0, cmdLine, 0, cmdLine.length())
-            && entry.getValue().hasPermission(source, new String[0])) {
+            && hasPermission(entry.getValue(), source, entry.getKey(), "")) {
           availableCommands.add("/" + entry.getKey());
         }
       }
@@ -207,22 +241,15 @@ public class VelocityCommandManager implements CommandManager {
 
     String alias = cmdLine.substring(0, firstSpace);
     String args = cmdLine.substring(firstSpace);
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      // No such command, so we can't offer any tab complete suggestions.
-      return CompletableFuture.completedFuture(ImmutableList.of());
-    }
+    return offerSuggestions(source, alias, args);
+  }
 
-    try {
-      if (!command.hasPermission(source, args)) {
-        return CompletableFuture.completedFuture(ImmutableList.of());
-      }
-      return command.suggest(source, args)
-          .thenApply(ImmutableList::copyOf);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
-    }
+  // Permissions
+
+  private <C extends CommandInvocation> boolean hasPermission(
+          final Command<C> command, final CommandSource source, final String alias, final String args) {
+    C context = createContext(command, source, alias, args);
+    return command.hasPermission(context);
   }
 
   /**
@@ -242,16 +269,20 @@ public class VelocityCommandManager implements CommandManager {
       alias = cmdLine.substring(0, firstSpace);
       args = cmdLine.substring(firstSpace).trim();
     }
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+    Command<?> command = getCommand(alias);
     if (command == null) {
       return false;
     }
 
     try {
-      return command.hasPermission(source, args);
-    } catch (Exception e) {
+      return hasPermission(command, source, alias, args);
+    } catch (final Exception e) {
+      if (e.getCause() instanceof CommandSyntaxException) {
+        return false;
+      }
+
       throw new RuntimeException(
-          "Unable to invoke suggestions for command " + alias + " for " + source, e);
+          "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
     }
   }
 }

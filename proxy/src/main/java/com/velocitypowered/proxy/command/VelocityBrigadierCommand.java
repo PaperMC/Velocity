@@ -1,14 +1,11 @@
 package com.velocitypowered.proxy.command;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.BrigadierCommandExecutionContext;
+import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
-import java.util.Arrays;
-import java.util.List;
 
-final class VelocityBrigadierCommand extends AbstractCommand<BrigadierCommandExecutionContext>
+final class VelocityBrigadierCommand extends AbstractCommand<BrigadierCommandInvocation>
         implements BrigadierCommand {
 
   // This is mostly going to be a dummy class.

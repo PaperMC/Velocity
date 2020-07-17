@@ -3,13 +3,12 @@ package com.velocitypowered.api.command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
-import java.util.List;
 
 /**
  * A command that uses Brigadier for parsing the command and providing
  * suggestions to the client.
  */
-public interface BrigadierCommand extends Command<BrigadierCommandExecutionContext> {
+public interface BrigadierCommand extends Command<BrigadierCommandInvocation> {
 
   /**
    * Returns an {@link ArgumentBuilder} used to specify the structure of
@@ -21,21 +20,6 @@ public interface BrigadierCommand extends Command<BrigadierCommandExecutionConte
    */
   static LiteralArgumentBuilder<CommandSource> argumentBuilder(final String alias) {
     return LiteralArgumentBuilder.literal(alias);
-  }
-
-  @Override
-  default void execute(BrigadierCommandExecutionContext context) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  default List<String> suggest(final BrigadierCommandExecutionContext context) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  default boolean hasPermission(final BrigadierCommandExecutionContext context) {
-    throw new UnsupportedOperationException();
   }
 
   /**

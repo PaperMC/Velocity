@@ -8,17 +8,17 @@ import java.util.List;
  * Represents a command that can be executed by a {@link CommandSource},
  * such as a {@link Player} or the console.
  */
-public interface Command<C extends CommandExecutionContext> {
+public interface Command<C extends CommandInvocation> {
 
   /**
-   * Executes the command for the specified context.
+   * Executes the command for the specified invocation.
    *
-   * @param context the execution context
+   * @param invocation the invocation data
    */
-  void execute(C context);
+  void execute(C invocation);
 
   /**
-   * Provides tab complete for the given execution context.
+   * Provides tab complete suggestions for the specified invocation.
    *
    * @param context the execution context
    * @return the tab complete suggestions

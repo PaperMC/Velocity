@@ -2,19 +2,19 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommandExecutionContext;
+import com.velocitypowered.api.command.LegacyCommandInvocation;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 final class VelocityLegacyCommandExecutionContext extends AbstractCommandExecutionContext
-        implements LegacyCommandExecutionContext {
+        implements LegacyCommandInvocation {
 
-  static final CommandExecutionContextFactory<LegacyCommandExecutionContext> FACTORY = new Factory();
+  static final CommandExecutionContextFactory<LegacyCommandInvocation> FACTORY = new Factory();
 
-  private static class Factory implements CommandExecutionContextFactory<LegacyCommandExecutionContext> {
+  private static class Factory implements CommandExecutionContextFactory<LegacyCommandInvocation> {
 
     @Override
-    public LegacyCommandExecutionContext createContext(final CommandSource source, final String commandLine) {
+    public LegacyCommandInvocation createContext(final CommandSource source, final String commandLine) {
       Preconditions.checkNotNull(source, "source");
       Preconditions.checkNotNull(commandLine, "line");
 

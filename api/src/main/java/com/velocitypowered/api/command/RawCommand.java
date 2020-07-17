@@ -5,6 +5,6 @@ package com.velocitypowered.api.command;
  * raw command to the command. This is useful for bolting on external command frameworks to
  * Velocity.
  */
-public interface RawCommand extends Command<RawCommandExecutionContext> {
+public interface RawCommand extends Command<RawCommandInvocation> {
 
 }

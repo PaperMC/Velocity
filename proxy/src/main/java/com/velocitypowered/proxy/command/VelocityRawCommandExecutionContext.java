@@ -2,17 +2,17 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommandExecutionContext;
+import com.velocitypowered.api.command.RawCommandInvocation;
 
 final class VelocityRawCommandExecutionContext extends AbstractCommandExecutionContext
-        implements RawCommandExecutionContext {
+        implements RawCommandInvocation {
 
-  static final CommandExecutionContextFactory<RawCommandExecutionContext> FACTORY = new Factory();
+  static final CommandExecutionContextFactory<RawCommandInvocation> FACTORY = new Factory();
 
-  private static class Factory implements CommandExecutionContextFactory<RawCommandExecutionContext> {
+  private static class Factory implements CommandExecutionContextFactory<RawCommandInvocation> {
 
     @Override
-    public RawCommandExecutionContext createContext(final CommandSource source, final String commandLine) {
+    public RawCommandInvocation createContext(final CommandSource source, final String commandLine) {
       return new VelocityRawCommandExecutionContext(source, commandLine);
     }
   }

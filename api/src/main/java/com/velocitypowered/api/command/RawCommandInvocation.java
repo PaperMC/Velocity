@@ -1,9 +1,9 @@
 package com.velocitypowered.api.command;
 
 /**
- * An execution context for a {@link RawCommand}.
+ * Contains invocation data for a {@link RawCommand}.
  */
-public interface RawCommandExecutionContext extends CommandExecutionContext {
+public interface RawCommandInvocation extends CommandInvocation {
 
   /**
    * Returns the full command line after the command name.
