@@ -19,7 +19,7 @@ public interface BrigadierCommand extends Command<BrigadierCommandExecutionConte
    * @return an argument builder
    * @see <a href="https://github.com/Mojang/brigadier/issues/35#issuecomment-429510335">issue</a>
    */
-  static LiteralArgumentBuilder<BrigadierCommandExecutionContext> argumentBuilder(final String alias) {
+  static LiteralArgumentBuilder<CommandSource> argumentBuilder(final String alias) {
     return LiteralArgumentBuilder.literal(alias);
   }
 
