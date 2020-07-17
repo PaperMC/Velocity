@@ -211,8 +211,8 @@ public class VelocityCommandManager implements CommandManager {
       if (!command.hasPermission(context)) {
         return CompletableFuture.completedFuture(ImmutableList.of());
       }
-      return CompletableFuture.completedFuture(command.suggest(context))
-              .thenApply(ImmutableList::copyOf);
+
+      return command.suggestAsync(context).thenApply(ImmutableList::copyOf);
     } catch (final Exception e) {
       if (e.getCause() instanceof CommandSyntaxException) {
         return CompletableFuture.completedFuture(ImmutableList.of());

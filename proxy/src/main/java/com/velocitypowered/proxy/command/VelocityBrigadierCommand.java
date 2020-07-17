@@ -1,12 +1,15 @@
 package com.velocitypowered.proxy.command;
 
+import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
@@ -28,10 +31,10 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
   }
 
   @Override
-  public List<String> suggest(final BrigadierCommandInvocation invocation) {
-    // TODO Add when async suggestions are added back
-    //return manager.getDispatcher().getCompletionSuggestions()
-    return null;
+  public CompletableFuture<List<String>> suggestAsync(final BrigadierCommandInvocation invocation) {
+    return manager.getDispatcher().getCompletionSuggestions(invocation.parsed())
+            // Client infers the position of the suggestions
+            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
   @Override
