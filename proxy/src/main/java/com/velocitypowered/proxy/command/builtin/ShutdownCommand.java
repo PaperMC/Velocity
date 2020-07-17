@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.builtin;
 
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;

@@ -47,6 +47,7 @@ public interface Command<C extends CommandExecutionContext> {
    * @param <T> the type of the built command
    * @param <B> the type of this builder
    */
+  // TODO Is this useful to API users? Velocity only uses it for building Brigadier commands
   // See https://community.oracle.com/blogs/emcmanus/2010/10/24/using-builder-pattern-subclasses
   interface Builder<T, B extends Builder<T, B>> {
 

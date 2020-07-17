@@ -7,8 +7,12 @@ import com.mojang.brigadier.ParseResults;
  */
 public interface BrigadierCommandExecutionContext extends CommandExecutionContext {
 
-  // TODO this may be helpful, but Brigadier commands should strictly used the parsed results.
-  // String raw();
-
+  /**
+   * Returns the valid parse results.
+   *
+   * @return the parsing results
+   * @implNote the implementation may return an invalid parse result before the context
+   *           is exposed via e.g. {@link Command#execute(CommandExecutionContext)}.
+   */
   ParseResults<CommandSource> parsed();
 }

@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.builtin;
 
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;

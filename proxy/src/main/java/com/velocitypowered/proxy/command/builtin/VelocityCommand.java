@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.builtin;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

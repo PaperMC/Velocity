@@ -3,6 +3,7 @@ package com.velocitypowered.api.command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
+import java.util.List;
 
 /**
  * A command that uses Brigadier for parsing the command and providing
@@ -18,8 +19,23 @@ public interface BrigadierCommand extends Command<BrigadierCommandExecutionConte
    * @return an argument builder
    * @see <a href="https://github.com/Mojang/brigadier/issues/35#issuecomment-429510335">issue</a>
    */
-  static LiteralArgumentBuilder<CommandSource> argumentBuilder(final String alias) {
+  static LiteralArgumentBuilder<BrigadierCommandExecutionContext> argumentBuilder(final String alias) {
     return LiteralArgumentBuilder.literal(alias);
+  }
+
+  @Override
+  default void execute(BrigadierCommandExecutionContext context) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  default List<String> suggest(final BrigadierCommandExecutionContext context) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  default boolean hasPermission(final BrigadierCommandExecutionContext context) {
+    throw new UnsupportedOperationException();
   }
 
   /**

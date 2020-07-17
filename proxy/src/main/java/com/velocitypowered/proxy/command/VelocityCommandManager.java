@@ -2,58 +2,106 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandManager;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommand;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
+import com.velocitypowered.api.command.*;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
-  private final Map<String, RawCommand> commands = new HashMap<>();
+  @Deprecated
+  static CommandNode<CommandSource> createRedirectNode(final CommandNode<CommandSource> dest,
+                                                              final String alias) {
+    // Brigadier provides an aliasing system, but it's broken (https://github.com/Mojang/brigadier/issues/46).
+    // Additionally, the aliases need to keep working even if the main node is removed.
+    return LiteralArgumentBuilder.<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .executes(dest.getCommand())
+            .build();
+  }
+
+  private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
+  private final Map<Class<? extends Command<?>>, CommandExecutionContextFactory<?>> contextFactories;
+
+  private final Map<String, Command<?>> commands = new HashMap<>();
+
   private final VelocityEventManager eventManager;
 
-  public VelocityCommandManager(VelocityEventManager eventManager) {
+  public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = eventManager;
+    this.contextFactories = new HashMap<>(
+          ImmutableMap.<Class<? extends Command<?>>, CommandExecutionContextFactory<?>>builder()
+                  .put(RawCommand.class, VelocityRawCommandExecutionContext.FACTORY)
+                  .put(LegacyCommand.class, VelocityLegacyCommandExecutionContext.FACTORY)
+                  .put(BrigadierCommand.class, new VelocityBrigadierCommandExecutionContext.Factory(dispatcher))
+                  .build());
   }
 
   @Override
-  @Deprecated
-  public void register(final Command command, final String... aliases) {
+  public BrigadierCommand.Builder brigadierBuilder() {
+    return null;
+  }
+
+  @Override
+  public void register(final Command<?> command, final String... aliases) {
     Preconditions.checkArgument(aliases.length > 0, "no aliases provided");
     register(aliases[0], command, Arrays.copyOfRange(aliases, 1, aliases.length));
   }
 
   @Override
-  public void register(String alias, Command command, String... otherAliases) {
+  public void register(final String alias, final Command<?> command, final String... otherAliases) {
     Preconditions.checkNotNull(alias, "alias");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkNotNull(command, "executor");
 
-    RawCommand rawCmd = RegularCommandWrapper.wrap(command);
-    this.commands.put(alias.toLowerCase(Locale.ENGLISH), rawCmd);
+    // TODO
+    //RawCommand rawCmd = RegularCommandWrapper.wrap(command);
+    //this.commands.put(alias.toLowerCase(Locale.ENGLISH), rawCmd);
 
     for (int i = 0, length = otherAliases.length; i < length; i++) {
       final String alias1 = otherAliases[i];
       Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
-      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), rawCmd);
+      // TODO
+      //this.commands.put(alias1.toLowerCase(Locale.ENGLISH), rawCmd);
     }
   }
 
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "name");
-    this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
+    //this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
+  }
+
+  public CommandDispatcher<CommandSource> getDispatcher() {
+    return dispatcher;
+  }
+
+  private void register(final CommandNode<CommandSource> node) {
+    Preconditions.checkNotNull(node, "node");
+    dispatcher.getRoot().addChild(node);
+  }
+
+  private <C extends CommandExecutionContext> Command<C> getCommand(final String alias) {
+    //noinspection unchecked
+    return (Command<C>) commands.get(alias.toLowerCase(Locale.ENGLISH));
+  }
+
+  private <C extends CommandExecutionContext> C createContext(
+          final Command<C> command, final CommandSource source, final String alias, final String args)
+          throws CommandSyntaxException {
+    CommandExecutionContextFactory<?> factory = contextFactories.getOrDefault(
+            command.getClass(), CommandExecutionContextFactory.FALLBACK);
+    String commandLine = factory.argsCommandLine() ? args : (alias + " " + args);
+
+    //noinspection unchecked
+    return (C) factory.createContext(source, commandLine);
   }
 
   /**
@@ -68,26 +116,8 @@ public class VelocityCommandManager implements CommandManager {
     return eventManager.fire(new CommandExecuteEvent(source, cmd));
   }
 
-  @Override
-  public boolean execute(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmdLine, "cmdLine");
-
-    CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
-    CommandResult commandResult = event.getResult();
-    if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-      return false;
-    }
-    cmdLine = commandResult.getCommand().orElse(event.getCommand());
-
-    return executeImmediately(source, cmdLine);
-  }
-
-  @Override
-  public boolean executeImmediately(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmdLine, "cmdLine");
-
+  private <C extends CommandExecutionContext> boolean executeImmediately0(final CommandSource source,
+                                                                          final String cmdLine) {
     String alias = cmdLine;
     String args = "";
     int firstSpace = cmdLine.indexOf(' ');
@@ -95,58 +125,57 @@ public class VelocityCommandManager implements CommandManager {
       alias = cmdLine.substring(0, firstSpace);
       args = cmdLine.substring(firstSpace);
     }
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
+
+    Command<C> command = getCommand(alias);
     if (command == null) {
+      // Alias isn't registered, don't parse it
       return false;
     }
 
     try {
-      if (!command.hasPermission(source, args)) {
+      C context = createContext(command, source, alias, args);
+
+      if (!command.hasPermission(context)) {
         return false;
       }
-      command.execute(source, args);
+
+      command.execute(context);
       return true;
-    } catch (Exception e) {
+    } catch (final CommandSyntaxException ignored) {
+      // TODO Send invalid syntax message to player (exception contains details)
+      return false;
+    } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }
   }
 
-
   @Override
-  public CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine) {
-    CompletableFuture<Boolean> result = new CompletableFuture<>();
-    callCommandEvent(source, cmdLine).thenAccept(event -> {
-      CommandResult commandResult = event.getResult();
-      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-        result.complete(false);
-      }
-      String command = commandResult.getCommand().orElse(event.getCommand());
-      try {
-        result.complete(executeImmediately(source, command));
-      } catch (Exception e) {
-        result.completeExceptionally(e);
-      }
-    });
-    return result;
-  }
-
-  @Override
-  public CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine) {
+  public CompletableFuture<Boolean> execute(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
-    CompletableFuture<Boolean> result = new CompletableFuture<>();
-    eventManager.getService().execute(() -> {
-      try {
-        result.complete(executeImmediately(source, cmdLine));
-      } catch (Exception e) {
-        result.completeExceptionally(e);
+
+    return callCommandEvent(source, cmdLine).thenApply(event -> {
+      CommandResult commandResult = event.getResult();
+      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+        return false;
       }
+
+      String command = commandResult.getCommand().orElse(event.getCommand());
+      return executeImmediately0(source, command);
     });
-    return result;
   }
 
-  public boolean hasCommand(String command) {
-    return commands.containsKey(command);
+  @Override
+  public CompletableFuture<Boolean> executeImmediately(final CommandSource source, final String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    return CompletableFuture.supplyAsync(
+            () -> executeImmediately0(source, cmdLine), eventManager.getService());
+  }
+
+  public boolean hasCommand(final String alias) {
+    return commands.containsKey(alias.toLowerCase(Locale.ENGLISH));
   }
 
   public Set<String> getAllRegisteredCommands() {
@@ -223,51 +252,6 @@ public class VelocityCommandManager implements CommandManager {
     } catch (Exception e) {
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + alias + " for " + source, e);
-    }
-  }
-
-  private static class RegularCommandWrapper implements RawCommand {
-
-    private final Command delegate;
-
-    private RegularCommandWrapper(Command delegate) {
-      this.delegate = delegate;
-    }
-
-    private static String[] split(String line) {
-      if (line.isEmpty()) {
-        return new String[0];
-      }
-
-      String[] trimmed = line.trim().split(" ", -1);
-      if (line.endsWith(" ") && !line.trim().isEmpty()) {
-        // To work around a 1.13+ specific bug we have to inject a space at the end of the arguments
-        trimmed = Arrays.copyOf(trimmed, trimmed.length + 1);
-        trimmed[trimmed.length - 1] = "";
-      }
-      return trimmed;
-    }
-
-    @Override
-    public void execute(CommandSource source, String commandLine) {
-      delegate.execute(source, split(commandLine));
-    }
-
-    @Override
-    public CompletableFuture<List<String>> suggest(CommandSource source, String currentLine) {
-      return delegate.suggestAsync(source, split(currentLine));
-    }
-
-    @Override
-    public boolean hasPermission(CommandSource source, String commandLine) {
-      return delegate.hasPermission(source, split(commandLine));
-    }
-
-    static RawCommand wrap(Command command) {
-      if (command instanceof RawCommand) {
-        return (RawCommand) command;
-      }
-      return new RegularCommandWrapper(command);
     }
   }
 }

@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.builtin;
 
 import static net.kyori.adventure.text.event.HoverEvent.showText;
 
