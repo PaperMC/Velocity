@@ -6,7 +6,8 @@ import com.velocitypowered.api.command.LegacyCommandInvocation;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-final class VelocityLegacyCommandInvocation extends AbstractCommandInvocation implements LegacyCommandInvocation {
+final class VelocityLegacyCommandInvocation extends AbstractCommandInvocation
+        implements LegacyCommandInvocation {
 
   static final CommandInvocationFactory<LegacyCommandInvocation> FACTORY = new Factory();
 

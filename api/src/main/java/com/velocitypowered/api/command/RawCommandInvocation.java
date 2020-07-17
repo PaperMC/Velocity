@@ -1,11 +1,8 @@
 package com.velocitypowered.api.command;
 
-import com.google.errorprone.annotations.Immutable;
-
 /**
  * Contains the invocation data for a {@link RawCommand}.
  */
-@Immutable
 public interface RawCommandInvocation extends CommandInvocation {
 
   /**

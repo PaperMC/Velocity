@@ -24,11 +24,13 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
    * @return the created alias
    * @see <a href="https://github.com/Mojang/brigadier/issues/46">issue</a>
    */
-  private static LiteralArgumentBuilder<CommandSource> redirect(final CommandNode<CommandSource> dest, String alias) {
+  private static LiteralArgumentBuilder<CommandSource> redirect(
+          final CommandNode<CommandSource> dest, String alias) {
     Preconditions.checkNotNull(dest, "dest");
     Preconditions.checkNotNull(alias, "alias");
     alias = alias.toLowerCase(Locale.ENGLISH);
-    Preconditions.checkArgument(dest.getName().equals(alias),"Self-referencing redirect %s for %s", alias, dest);
+    Preconditions.checkArgument(dest.getName().equals(alias),
+            "Self-referencing redirect %s for %s", alias, dest);
 
     if (!dest.getChildren().isEmpty()) {
       // Regular redirects work if the destination node can expect arguments.
@@ -45,10 +47,46 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     return builder;
   }
 
+  static final class Builder
+          extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
+          implements BrigadierCommand.Builder {
+
+    Builder(final VelocityCommandManager manager) {
+      super(manager);
+    }
+
+    @Override
+    public BrigadierCommand register(final LiteralArgumentBuilder<CommandSource> builder) {
+      Preconditions.checkNotNull(builder, "builder");
+      return register(builder.build());
+    }
+
+    @Override
+    public BrigadierCommand register(final CommandNode<CommandSource> node) {
+      Preconditions.checkNotNull(node, "node");
+      final BrigadierCommand command = new VelocityBrigadierCommand(manager, node);
+      final String alias = node.getName().toLowerCase(Locale.ENGLISH);
+      manager.register(alias, command);
+
+      aliases.remove(alias); // prevent self-redirect
+      for (final String alias1 : aliases) {
+        manager.getDispatcher().register(redirect(node, alias1));
+      }
+
+      return command;
+    }
+
+    @Override
+    protected BrigadierCommand.Builder self() {
+      return this;
+    }
+  }
+
   private final VelocityCommandManager manager;
   private final CommandNode<CommandSource> node;
 
-  private VelocityBrigadierCommand(final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
+  private VelocityBrigadierCommand(
+          final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
     this.manager = manager;
     this.node = node;
   }
@@ -82,39 +120,5 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
 
   CommandNode<CommandSource> getNode() {
     return node;
-  }
-
-  final static class Builder extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
-          implements BrigadierCommand.Builder {
-
-    Builder(final VelocityCommandManager manager) {
-      super(manager);
-    }
-
-    @Override
-    public BrigadierCommand register(final LiteralArgumentBuilder<CommandSource> builder) {
-      Preconditions.checkNotNull(builder, "builder");
-      return register(builder.build());
-    }
-
-    @Override
-    public BrigadierCommand register(final CommandNode<CommandSource> node) {
-      Preconditions.checkNotNull(node, "node");
-      final BrigadierCommand command = new VelocityBrigadierCommand(manager, node);
-      final String alias = node.getName().toLowerCase(Locale.ENGLISH);
-      manager.register(alias, command);
-
-      aliases.remove(alias); // prevent self-redirect
-      for (final String alias1 : aliases) {
-        manager.getDispatcher().register(redirect(node, alias1));
-      }
-
-      return command;
-    }
-
-    @Override
-    protected BrigadierCommand.Builder self() {
-      return this;
-    }
   }
 }

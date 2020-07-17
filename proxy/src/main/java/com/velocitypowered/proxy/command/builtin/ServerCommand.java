@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.command.builtin;
 
+import static net.kyori.adventure.text.event.HoverEvent.showText;
+
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.LegacyCommand;
@@ -17,8 +19,6 @@ import java.util.stream.Stream;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-
-import static net.kyori.adventure.text.event.HoverEvent.showText;
 
 public class ServerCommand implements LegacyCommand {
 

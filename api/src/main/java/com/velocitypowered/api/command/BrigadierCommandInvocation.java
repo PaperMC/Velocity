@@ -1,12 +1,10 @@
 package com.velocitypowered.api.command;
 
-import com.google.errorprone.annotations.Immutable;
 import com.mojang.brigadier.ParseResults;
 
 /**
  * Contains the invocation data for a {@link BrigadierCommand}.
  */
-@Immutable
 public interface BrigadierCommandInvocation extends CommandInvocation {
 
   /**

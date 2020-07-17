@@ -6,7 +6,8 @@ import com.mojang.brigadier.ParseResults;
 import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 
-final class VelocityBrigadierCommandInvocation extends AbstractCommandInvocation implements BrigadierCommandInvocation {
+final class VelocityBrigadierCommandInvocation extends AbstractCommandInvocation
+        implements BrigadierCommandInvocation {
 
   static class Factory implements CommandInvocationFactory<BrigadierCommandInvocation> {
 

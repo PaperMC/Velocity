@@ -16,7 +16,8 @@ public interface CommandInvocationFactory<I extends CommandInvocation> {
    * Returns an invocation context for the given source and command line.
    *
    * @param source the source that executed the command
-   * @param commandLine the command line, including the alias if {@link #includeAlias()} is {@code true}
+   * @param commandLine the command line, including the alias if
+   *        {@link #includeAlias()} is {@code true}
    * @return the built invocation
    */
   I create(final CommandSource source, final String commandLine);

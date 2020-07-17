@@ -6,25 +6,41 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.velocitypowered.api.command.*;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandInvocation;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
 
-  // TODO Mental notes to write docs later
-  // Only BrigadierCommand implementations may use the Brigadier dispatcher.
-
-  // The map contains all registered command aliases. On execution, offer suggestions, and
-  // permission checks a CommandInvocation object is created by the factory. This object is then
-  // passed to the underlying command, which may use the Brigadier dispatcher.
+  // `commands` contains all registered command case-insensitive aliases.
+  // Multiple aliases may map to the same command object.
+  //
+  // On execution, suggestion offers and permission checks, the corresponding Command object
+  // is retrieved. Then, a CommandInvocation describing the request is created by
+  // the invocation factory registry. This object is then passed to the underlying command,
+  // which may use the Brigadier dispatcher iff it implements BrigadierCommand.
+  //
+  // By design, the API doesn't provide CommandInvocations. Commands are not meant to
+  // be executed directly. Instead, users should call CommandManager#execute.
 
   private final Map<String, Command<?>> commands = new HashMap<>();
 
-  private final CommandInvocationFactoryRegistry invocationFactory = new CommandInvocationFactoryRegistry();
+  private final CommandInvocationFactoryRegistry invocationFactory =
+          new CommandInvocationFactoryRegistry();
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
 
   private final VelocityEventManager eventManager;
@@ -35,7 +51,7 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public BrigadierCommand.Builder brigadierBuilder() {
-    return null;
+    return new VelocityBrigadierCommand.Builder(this);
   }
 
   // Registration
@@ -99,10 +115,11 @@ public class VelocityCommandManager implements CommandManager {
   // Execution
 
   /**
-   * Calls CommandExecuteEvent.
+   * Fires a {@link CommandExecuteEvent}.
+   *
    * @param source the command's source
    * @param cmd the command
-   * @return CompletableFuture of event
+   * @return the posted event
    */
   public CompletableFuture<CommandExecuteEvent> callCommandEvent(CommandSource source, String cmd) {
     Preconditions.checkNotNull(source, "source");
@@ -127,15 +144,17 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CompletableFuture<Boolean> executeImmediately(final CommandSource source, final String cmdLine) {
+  public CompletableFuture<Boolean> executeImmediately(final CommandSource source,
+                                                       final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-            () -> executeImmediately0(source, cmdLine), eventManager.getService());
+        () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
-  private <I extends CommandInvocation> boolean executeImmediately0(final CommandSource source, final String cmdLine) {
+  private <I extends CommandInvocation> boolean executeImmediately0(final CommandSource source,
+                                                                    final String cmdLine) {
     String alias = cmdLine;
     String args = "";
     int firstSpace = cmdLine.indexOf(' ');
@@ -146,7 +165,6 @@ public class VelocityCommandManager implements CommandManager {
 
     Command<I> command = getCommand(alias);
     if (command == null) {
-      // Alias isn't registered, don't parse it
       return false;
     }
 
@@ -191,7 +209,8 @@ public class VelocityCommandManager implements CommandManager {
       }
 
       String cmdLine = alias + " " + args;
-      throw new RuntimeException("Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
+      throw new RuntimeException(
+              "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
     }
   }
 
@@ -202,7 +221,8 @@ public class VelocityCommandManager implements CommandManager {
    * @param cmdLine the partially completed command
    * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
    */
-  public CompletableFuture<List<String>> offerSuggestions(final CommandSource source, final String cmdLine) {
+  public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
+                                                          final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -227,7 +247,8 @@ public class VelocityCommandManager implements CommandManager {
   // Permissions
 
   private <I extends CommandInvocation> boolean hasPermission(
-          final Command<I> command, final CommandSource source, final String alias, final String args) {
+          final Command<I> command, final CommandSource source,
+          final String alias, final String args) {
     I invocation = invocationFactory.createInvocation(command, source, alias, args);
     return command.hasPermission(invocation);
   }
@@ -271,22 +292,26 @@ public class VelocityCommandManager implements CommandManager {
     private final Map<Class<? extends Command<?>>, CommandInvocationFactory<?>> factories;
 
     private CommandInvocationFactoryRegistry() {
-      // We might allow users to register their own invocation factories in the future.
-      this.factories = ImmutableMap.<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
+      // We might allow external invocation factory registrations in the future.
+      this.factories = ImmutableMap
+              .<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
               .put(LegacyCommand.class, VelocityLegacyCommandInvocation.FACTORY)
-              .put(BrigadierCommand.class, new VelocityBrigadierCommandInvocation.Factory(dispatcher))
+              .put(BrigadierCommand.class,
+                      new VelocityBrigadierCommandInvocation.Factory(dispatcher))
               .put(RawCommand.class, VelocityRawCommandInvocation.FACTORY)
               .build();
     }
 
-    private <I extends CommandInvocation> CommandInvocationFactory<I> getFactory(final Command<I> command) {
+    private <I extends CommandInvocation> CommandInvocationFactory<I> getFactory(
+            final Command<I> command) {
       //noinspection unchecked
       return (CommandInvocationFactory<I>) factories.getOrDefault(
               command.getClass(), CommandInvocationFactory.FALLBACK);
     }
 
     public <I extends CommandInvocation> I createInvocation(
-            final Command<I> command, final CommandSource source, final String alias, final String args) {
+            final Command<I> command, final CommandSource source,
+            final String alias, final String args) {
       CommandInvocationFactory<I> factory = getFactory(command);
       String commandLine = factory.includeAlias() ? (alias + " " + args) : args;
       return factory.create(source, commandLine);
