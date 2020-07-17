@@ -36,19 +36,13 @@ public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, Command<?>> commands = new HashMap<>();
 
+  private CommandInvocationFactoryRegistry invocationFactory = new CommandInvocationFactoryRegistry();
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
-  private final Map<Class<? extends Command<?>>, CommandInvocationFactory<?>> contextFactories;
 
   private final VelocityEventManager eventManager;
 
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = eventManager;
-    this.contextFactories = new HashMap<>(
-          ImmutableMap.<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
-                  .put(RawCommand.class, VelocityRawCommandInvocation.FACTORY)
-                  .put(LegacyCommand.class, VelocityLegacyCommandInvocation.FACTORY)
-                  .put(BrigadierCommand.class, new VelocityBrigadierCommandInvocation.Factory(dispatcher))
-                  .build());
   }
 
   @Override
@@ -113,16 +107,6 @@ public class VelocityCommandManager implements CommandManager {
     return ImmutableSet.copyOf(commands.keySet());
   }
 
-  private <C extends CommandInvocation> C createContext(
-          final Command<C> command, final CommandSource source, final String alias, final String args) {
-    CommandInvocationFactory<?> factory = contextFactories.getOrDefault(
-            command.getClass(), CommandInvocationFactory.FALLBACK);
-    String commandLine = factory.includeAlias() ? args : (alias + " " + args);
-
-    //noinspection unchecked
-    return (C) factory.create(source, commandLine);
-  }
-
   // Execution
 
   /**
@@ -162,8 +146,7 @@ public class VelocityCommandManager implements CommandManager {
             () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
-  private <C extends CommandInvocation> boolean executeImmediately0(final CommandSource source,
-                                                                    final String cmdLine) {
+  private <I extends CommandInvocation> boolean executeImmediately0(final CommandSource source, final String cmdLine) {
     String alias = cmdLine;
     String args = "";
     int firstSpace = cmdLine.indexOf(' ');
@@ -172,19 +155,19 @@ public class VelocityCommandManager implements CommandManager {
       args = cmdLine.substring(firstSpace);
     }
 
-    Command<C> command = getCommand(alias);
+    Command<I> command = getCommand(alias);
     if (command == null) {
       // Alias isn't registered, don't parse it
       return false;
     }
 
-    C context = createContext(command, source, alias, args);
+    I invocation = invocationFactory.createInvocation(command, source, alias, args);
     try {
-      if (!command.hasPermission(context)) {
+      if (!command.hasPermission(invocation)) {
         return false;
       }
 
-      command.execute(context);
+      command.execute(invocation);
       return true;
     } catch (final Exception e) {
       if (e.getCause() instanceof CommandSyntaxException) {
@@ -198,21 +181,21 @@ public class VelocityCommandManager implements CommandManager {
 
   // Suggestions
 
-  private <C extends CommandInvocation> CompletableFuture<List<String>> offerSuggestions(
+  private <I extends CommandInvocation> CompletableFuture<List<String>> offerSuggestions(
           final CommandSource source, final String alias, final String args) {
-    Command<C> command = getCommand(alias);
+    Command<I> command = getCommand(alias);
     if (command == null) {
       // No such command, so we can't offer any tab complete suggestions.
       return CompletableFuture.completedFuture(ImmutableList.of());
     }
 
-    C context = createContext(command, source, alias, args);
+    I invocation = invocationFactory.createInvocation(command, source, alias, args);
     try {
-      if (!command.hasPermission(context)) {
+      if (!command.hasPermission(invocation)) {
         return CompletableFuture.completedFuture(ImmutableList.of());
       }
 
-      return command.suggestAsync(context).thenApply(ImmutableList::copyOf);
+      return command.suggestAsync(invocation).thenApply(ImmutableList::copyOf);
     } catch (final Exception e) {
       if (e.getCause() instanceof CommandSyntaxException) {
         return CompletableFuture.completedFuture(ImmutableList.of());
@@ -254,10 +237,10 @@ public class VelocityCommandManager implements CommandManager {
 
   // Permissions
 
-  private <C extends CommandInvocation> boolean hasPermission(
-          final Command<C> command, final CommandSource source, final String alias, final String args) {
-    C context = createContext(command, source, alias, args);
-    return command.hasPermission(context);
+  private <I extends CommandInvocation> boolean hasPermission(
+          final Command<I> command, final CommandSource source, final String alias, final String args) {
+    I invocation = invocationFactory.createInvocation(command, source, alias, args);
+    return command.hasPermission(invocation);
   }
 
   /**
@@ -291,6 +274,33 @@ public class VelocityCommandManager implements CommandManager {
 
       throw new RuntimeException(
           "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
+    }
+  }
+
+  private final class CommandInvocationFactoryRegistry {
+
+    private final Map<Class<? extends Command<?>>, CommandInvocationFactory<?>> factories;
+
+    private CommandInvocationFactoryRegistry() {
+      // We might allow users to register their own invocation factories in the future.
+      this.factories = ImmutableMap.<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
+              .put(LegacyCommand.class, VelocityLegacyCommandInvocation.FACTORY)
+              .put(BrigadierCommand.class, new VelocityBrigadierCommandInvocation.Factory(dispatcher))
+              .put(RawCommand.class, VelocityRawCommandInvocation.FACTORY)
+              .build();
+    }
+
+    private <I extends CommandInvocation> CommandInvocationFactory<I> getFactory(final Command<I> command) {
+      //noinspection unchecked
+      return (CommandInvocationFactory<I>) factories.getOrDefault(
+              command.getClass(), CommandInvocationFactory.FALLBACK);
+    }
+
+    public <I extends CommandInvocation> I createInvocation(
+            final Command<I> command, final CommandSource source, final String alias, final String args) {
+      CommandInvocationFactory<I> factory = getFactory(command);
+      String commandLine = factory.includeAlias() ? (alias + " " + args) : args;
+      return factory.create(source, commandLine);
     }
   }
 }
