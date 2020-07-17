@@ -17,11 +17,11 @@ import java.util.concurrent.CompletableFuture;
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
   private final VelocityCommandManager manager;
-  //private final CommandNode<CommandSource> node;
+  private final CommandNode<CommandSource> node;
 
-  private VelocityBrigadierCommand(final VelocityCommandManager manager/*, final CommandNode<CommandSource> node*/) {
+  private VelocityBrigadierCommand(final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
     this.manager = manager;
-    //this.node = node;
+    this.node = node;
   }
 
   @Override
@@ -51,6 +51,10 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     return true;
   }
 
+  CommandNode<CommandSource> getNode() {
+    return node;
+  }
+
   final static class Builder extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
           implements BrigadierCommand.Builder {
 
@@ -67,7 +71,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     @Override
     public BrigadierCommand register(final CommandNode<CommandSource> node) {
       Preconditions.checkNotNull(node, "node");
-      final BrigadierCommand command = new VelocityBrigadierCommand(manager);
+      final BrigadierCommand command = new VelocityBrigadierCommand(manager, node);
       final String alias = node.getName().toLowerCase(Locale.ENGLISH);
       manager.register(alias, command);
 

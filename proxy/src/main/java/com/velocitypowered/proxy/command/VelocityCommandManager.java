@@ -76,8 +76,14 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "name");
     Command<?> removed = this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
 
-    if (removed instanceof BrigadierCommand) {
-      // TODO unregister from dispatcher
+    if (removed instanceof VelocityBrigadierCommand) {
+      VelocityBrigadierCommand asBrigadier = (VelocityBrigadierCommand) removed;
+
+      // getChildren() returns the values() view of the internal node map.
+      // Brigadier doesn't hardcode the redirects, so we don't care if
+      // the node to remove is the registered node or a redirect.
+      // Either way, all other registered aliases will still work (see javadoc).
+      dispatcher.getRoot().getChildren().remove(asBrigadier.getNode());
     }
   }
 
