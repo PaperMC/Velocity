@@ -96,7 +96,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     try {
       manager.getDispatcher().execute(invocation.parsed());
     } catch (final CommandSyntaxException e) {
-      throw new RuntimeException("Valid parse results threw syntax exception", e);
+      throw new RuntimeException(e);
     }
   }
 
