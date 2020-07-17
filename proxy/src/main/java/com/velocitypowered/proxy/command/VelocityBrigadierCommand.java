@@ -1,40 +1,58 @@
 package com.velocitypowered.proxy.command;
 
+import com.mojang.brigadier.context.ParsedCommandNode;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.BrigadierCommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
+import java.util.List;
 
-final class VelocityBrigadierCommand extends AbstractCommand<BrigadierCommandInvocation>
-        implements BrigadierCommand {
+final class VelocityBrigadierCommand implements BrigadierCommand {
 
-  // This is mostly going to be a dummy class.
-  // Ignore the commented code below.
+  private final VelocityCommandManager manager;
+  private final CommandNode<CommandSource> node;
 
-  VelocityBrigadierCommand(final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
-    super(manager, node);
+  private VelocityBrigadierCommand(final VelocityCommandManager manager, final CommandNode<CommandSource> node) {
+    this.manager = manager;
+    this.node = node;
   }
 
-  /*@Override
-  public void execute(final BrigadierCommandExecutionContext context) {
+  @Override
+  public void execute(final BrigadierCommandInvocation invocation) {
     try {
-      manager.getDispatcher().execute(context.parsed());
+      manager.getDispatcher().execute(invocation.parsed());
     } catch (final CommandSyntaxException e) {
-      throw new RuntimeException("Context parsed syntax is invalid", e);
+      throw new RuntimeException("Valid parse results threw syntax exception", e);
     }
   }
 
   @Override
-  public List<String> suggest(final BrigadierCommandExecutionContext context) {
-    return Arrays.asList(manager.getDispatcher().getAllUsage(node, context.source(), true));
+  public List<String> suggest(final BrigadierCommandInvocation invocation) {
+    // TODO Add when async suggestions are added back
+    //return manager.getDispatcher().getCompletionSuggestions()
+    return null;
   }
 
   @Override
-  public boolean hasPermission(final BrigadierCommandExecutionContext context) {
-    return node.canUse(context.source());
-  }*/
+  public boolean hasPermission(final BrigadierCommandInvocation invocation) {
+    for (ParsedCommandNode<CommandSource> node : invocation.parsed().getContext().getNodes()) {
+      if (!node.getNode().canUse(invocation.source())) {
+        return false;
+      }
+    }
 
-  //final static class Builder extends
+    return true;
+  }
+
+  // This is mostly going to be a dummy class.
+  // Ignore the commented code below.
+
+  /*
+  @Override
+  public List<String> suggest(final BrigadierCommandExecutionContext context) {
+    return Arrays.asList(manager.getDispatcher().getAllUsage(node, context.source(), true));
+  }
 
   /*final static class Builder extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
           implements BrigadierCommand.Builder {

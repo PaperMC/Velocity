@@ -27,6 +27,13 @@ public class VelocityCommandManager implements CommandManager {
             .build();
   }
 
+  // TODO Mental notes to write docs later
+  // Only BrigadierCommand implementations may use the Brigadier dispatcher.
+
+  // The map contains all registered command aliases. On execution, offer suggestions, and
+  // permission checks a CommandInvocation object is created by the factory. This object is then
+  // passed to the underlying command, which may use the Brigadier dispatcher.
+
   private final Map<String, Command<?>> commands = new HashMap<>();
 
   private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
@@ -78,13 +85,14 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "name");
+    // TODO
     //this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
   }
 
-  private void register(final CommandNode<CommandSource> node) {
+  /*private void register(final CommandNode<CommandSource> node) {
     Preconditions.checkNotNull(node, "node");
     dispatcher.getRoot().addChild(node);
-  }
+  }*/
 
   // General
 
