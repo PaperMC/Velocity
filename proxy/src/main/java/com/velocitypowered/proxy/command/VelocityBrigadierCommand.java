@@ -84,6 +84,8 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
       final String[] aliases = getAliases();
 
       manager.register(alias, command, aliases);
+      manager.getBrigadierDispatcher().getRoot().addChild(node);
+
       for (final String alias1 : aliases) {
         manager.getBrigadierDispatcher().register(redirect(node, alias1));
       }
