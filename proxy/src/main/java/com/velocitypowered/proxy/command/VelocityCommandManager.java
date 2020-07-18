@@ -336,9 +336,20 @@ public class VelocityCommandManager implements CommandManager {
 
     private <I extends CommandInvocation> CommandInvocationFactory<I> getFactory(
             final Command<I> command) {
-      //noinspection unchecked
-      return (CommandInvocationFactory<I>) factories.getOrDefault(
-              command.getClass(), CommandInvocationFactory.FALLBACK);
+      for (Map.Entry<Class<? extends Command<?>>, CommandInvocationFactory<?>> entry
+              : this.factories.entrySet()) {
+        if (entry.getKey().isInstance(command)) {
+          //noinspection unchecked
+          return (CommandInvocationFactory<I>) entry.getValue();
+        }
+      }
+
+      try {
+        //noinspection unchecked
+        return (CommandInvocationFactory<I>) CommandInvocationFactory.FALLBACK;
+      } catch (final ClassCastException e) {
+        throw new RuntimeException("Custom Command interfaces are not supported at this time", e);
+      }
     }
 
     public <I extends CommandInvocation> I createInvocation(
