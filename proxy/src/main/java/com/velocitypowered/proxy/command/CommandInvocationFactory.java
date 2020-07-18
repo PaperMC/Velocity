@@ -12,6 +12,9 @@ import com.velocitypowered.api.command.CommandSource;
 @FunctionalInterface
 public interface CommandInvocationFactory<I extends CommandInvocation> {
 
+  CommandInvocationFactory<VelocityLegacyCommandInvocation> FALLBACK =
+          new VelocityLegacyCommandInvocation.Factory(true);
+
   /**
    * Returns an invocation context for the given source and command line.
    *
@@ -29,16 +32,5 @@ public interface CommandInvocationFactory<I extends CommandInvocation> {
    */
   default boolean includeAlias() {
     return false;
-  }
-
-  CommandInvocationFactory<CommandInvocation> FALLBACK = new FallbackCommandInvocationFactory();
-
-  final class FallbackCommandInvocationFactory
-          implements CommandInvocationFactory<CommandInvocation> {
-
-    @Override
-    public CommandInvocation create(final CommandSource source, final String commandLine) {
-      return () -> source;
-    }
   }
 }

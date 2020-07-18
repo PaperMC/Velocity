@@ -6,22 +6,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandInvocation;
-import com.velocitypowered.api.command.CommandManager;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
-import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.*;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
@@ -33,6 +22,9 @@ public class VelocityCommandManager implements CommandManager {
   // is retrieved. Then, a CommandInvocation describing the request is created by
   // the invocation factory registry. This object is then passed to the underlying command,
   // which may use the Brigadier dispatcher iff it implements BrigadierCommand.
+  // For legacy reasons, this manager should avoid calling command methods directly.
+  // Instead, use the corresponding methods that take a command and invocation
+  // as arguments on this class.
   //
   // By design, the API doesn't provide CommandInvocation implementations.
   // Commands are not meant to be executed directly. Instead, users should
@@ -154,6 +146,19 @@ public class VelocityCommandManager implements CommandManager {
         () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
+  private <I extends CommandInvocation> void execute(
+          final Command<I> command, final I invocation) {
+    if (invocation instanceof VelocityLegacyCommandInvocation) {
+      VelocityLegacyCommandInvocation legacy = ((VelocityLegacyCommandInvocation) invocation);
+
+      if (legacy.shouldCallDeprecatedMethods()) {
+        command.execute(invocation.source(), legacy.arguments());
+        return;
+      }
+    }
+    command.execute(invocation);
+  }
+
   private <I extends CommandInvocation> boolean executeImmediately0(final CommandSource source,
                                                                     final String cmdLine) {
     String alias = cmdLine;
@@ -171,11 +176,11 @@ public class VelocityCommandManager implements CommandManager {
 
     I invocation = invocationFactory.createInvocation(command, source, alias, args);
     try {
-      if (!command.hasPermission(invocation)) {
+      if (!hasPermission(command, invocation)) {
         return false;
       }
 
-      command.execute(invocation);
+      execute(command, invocation);
       return true;
     } catch (final Exception e) {
       if (e.getCause() instanceof CommandSyntaxException) {
@@ -189,6 +194,19 @@ public class VelocityCommandManager implements CommandManager {
 
   // Suggestions
 
+  private <I extends CommandInvocation> CompletableFuture<List<String>> suggestAsync(
+          final Command<I> command, final I invocation) {
+    if (invocation instanceof VelocityLegacyCommandInvocation) {
+      VelocityLegacyCommandInvocation legacy = ((VelocityLegacyCommandInvocation) invocation);
+
+      if (legacy.shouldCallDeprecatedMethods()) {
+        return command.suggestAsync(legacy.source(), legacy.arguments());
+      }
+    }
+
+    return command.suggestAsync(invocation);
+  }
+
   private <I extends CommandInvocation> CompletableFuture<List<String>> offerSuggestions(
           final CommandSource source, final String alias, final String args) {
     Command<I> command = getCommand(alias);
@@ -199,11 +217,11 @@ public class VelocityCommandManager implements CommandManager {
 
     I invocation = invocationFactory.createInvocation(command, source, alias, args);
     try {
-      if (!command.hasPermission(invocation)) {
+      if (!hasPermission(command, invocation)) {
         return CompletableFuture.completedFuture(ImmutableList.of());
       }
 
-      return command.suggestAsync(invocation).thenApply(ImmutableList::copyOf);
+      return suggestAsync(command, invocation).thenApply(ImmutableList::copyOf);
     } catch (final Exception e) {
       if (e.getCause() instanceof CommandSyntaxException) {
         return CompletableFuture.completedFuture(ImmutableList.of());
@@ -248,10 +266,23 @@ public class VelocityCommandManager implements CommandManager {
   // Permissions
 
   private <I extends CommandInvocation> boolean hasPermission(
+          final Command<I> command, final I invocation) {
+    if (invocation instanceof VelocityLegacyCommandInvocation) {
+      VelocityLegacyCommandInvocation legacy = ((VelocityLegacyCommandInvocation) invocation);
+
+      if (legacy.shouldCallDeprecatedMethods()) {
+        return command.hasPermission(invocation.source(), legacy.arguments());
+      }
+    }
+
+    return command.hasPermission(invocation);
+  }
+
+  private <I extends CommandInvocation> boolean hasPermission(
           final Command<I> command, final CommandSource source,
           final String alias, final String args) {
     I invocation = invocationFactory.createInvocation(command, source, alias, args);
-    return command.hasPermission(invocation);
+    return hasPermission(command, invocation);
   }
 
   /**

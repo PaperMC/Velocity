@@ -9,9 +9,16 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 final class VelocityLegacyCommandInvocation extends AbstractCommandInvocation
         implements LegacyCommandInvocation {
 
-  static final CommandInvocationFactory<LegacyCommandInvocation> FACTORY = new Factory();
+  static final CommandInvocationFactory<VelocityLegacyCommandInvocation> FACTORY =
+          new Factory(false);
 
-  private static class Factory implements CommandInvocationFactory<LegacyCommandInvocation> {
+  static class Factory implements CommandInvocationFactory<VelocityLegacyCommandInvocation> {
+
+    private boolean callDeprecatedMethods;
+
+    public Factory(final boolean callDeprecatedMethods) {
+      this.callDeprecatedMethods = callDeprecatedMethods;
+    }
 
     private static String[] split(final String line) {
       if (line.isEmpty()) {
@@ -28,23 +35,31 @@ final class VelocityLegacyCommandInvocation extends AbstractCommandInvocation
     }
 
     @Override
-    public LegacyCommandInvocation create(final CommandSource source, final String commandLine) {
+    public VelocityLegacyCommandInvocation create(final CommandSource source,
+                                                  final String commandLine) {
       Preconditions.checkNotNull(source, "source");
       Preconditions.checkNotNull(commandLine, "line");
       final String[] arguments = split(commandLine);
-      return new VelocityLegacyCommandInvocation(source, arguments);
+      return new VelocityLegacyCommandInvocation(source, arguments, this.callDeprecatedMethods);
     }
   }
 
   private final String[] arguments;
+  private final boolean callDeprecatedMethods;
 
-  private VelocityLegacyCommandInvocation(final CommandSource source, final String[] arguments) {
+  private VelocityLegacyCommandInvocation(final CommandSource source, final String[] arguments,
+                                          final boolean callDeprecatedMethods) {
     super(source);
     this.arguments = arguments;
+    this.callDeprecatedMethods = callDeprecatedMethods;
   }
 
   @Override
   public String @NonNull [] arguments() {
     return Arrays.copyOf(arguments, arguments.length);
+  }
+
+  public boolean shouldCallDeprecatedMethods() {
+    return callDeprecatedMethods;
   }
 }
