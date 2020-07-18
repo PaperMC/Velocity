@@ -259,7 +259,7 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     String alias = cmdLine.substring(0, firstSpace);
-    String args = cmdLine.substring(firstSpace);
+    String args = cmdLine.substring(firstSpace + 1);
     return offerSuggestions(source, alias, args);
   }
 

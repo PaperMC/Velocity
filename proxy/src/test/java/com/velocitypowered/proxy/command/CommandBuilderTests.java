@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 public class CommandBuilderTests {
 
+  // TODO Move execution tests to CommandManagerTests
+
   @Test
   void testBrigadierNoAliases() throws CommandSyntaxException {
     VelocityCommandManager manager = createManager();
