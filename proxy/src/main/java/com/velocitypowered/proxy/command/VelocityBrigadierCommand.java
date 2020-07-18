@@ -85,7 +85,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
 
       aliases.remove(alias); // prevent self-redirect
       for (final String alias1 : aliases) {
-        manager.getDispatcher().register(redirect(node, alias1));
+        manager.getBrigadierDispatcher().register(redirect(node, alias1));
       }
 
       return command;
@@ -109,7 +109,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
   @Override
   public void execute(final BrigadierCommandInvocation invocation) {
     try {
-      manager.getDispatcher().execute(invocation.parsed());
+      manager.getBrigadierDispatcher().execute(invocation.parsed());
     } catch (final CommandSyntaxException e) {
       throw new RuntimeException(e);
     }
@@ -117,7 +117,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
 
   @Override
   public CompletableFuture<List<String>> suggestAsync(final BrigadierCommandInvocation invocation) {
-    return manager.getDispatcher().getCompletionSuggestions(invocation.parsed())
+    return manager.getBrigadierDispatcher().getCompletionSuggestions(invocation.parsed())
             // The client infers the position of the suggestions
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }

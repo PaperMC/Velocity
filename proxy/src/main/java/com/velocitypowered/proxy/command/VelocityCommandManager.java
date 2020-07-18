@@ -42,7 +42,7 @@ public class VelocityCommandManager implements CommandManager {
 
   private final CommandInvocationFactoryRegistry invocationFactory =
           new CommandInvocationFactoryRegistry();
-  private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
+  private final CommandDispatcher<CommandSource> brigadierDispatcher = new CommandDispatcher<>();
 
   private final VelocityEventManager eventManager;
 
@@ -90,14 +90,14 @@ public class VelocityCommandManager implements CommandManager {
       // Brigadier doesn't hardcode the redirects, so we don't care if
       // the node to remove is the registered node or a redirect.
       // Either way, all other registered aliases will still work (see javadoc).
-      dispatcher.getRoot().getChildren().remove(asBrigadier.getNode());
+      brigadierDispatcher.getRoot().getChildren().remove(asBrigadier.getNode());
     }
   }
 
   // General
 
-  public CommandDispatcher<CommandSource> getDispatcher() {
-    return dispatcher;
+  public CommandDispatcher<CommandSource> getBrigadierDispatcher() {
+    return brigadierDispatcher;
   }
 
   private <C extends CommandInvocation> Command<C> getCommand(final String alias) {
@@ -298,7 +298,7 @@ public class VelocityCommandManager implements CommandManager {
               .<Class<? extends Command<?>>, CommandInvocationFactory<?>>builder()
               .put(LegacyCommand.class, VelocityLegacyCommandInvocation.FACTORY)
               .put(BrigadierCommand.class,
-                      new VelocityBrigadierCommandInvocation.Factory(dispatcher))
+                      new VelocityBrigadierCommandInvocation.Factory(brigadierDispatcher))
               .put(RawCommand.class, VelocityRawCommandInvocation.FACTORY)
               .build();
     }
