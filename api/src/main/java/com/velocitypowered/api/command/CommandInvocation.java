@@ -6,7 +6,7 @@ package com.velocitypowered.api.command;
 public interface CommandInvocation {
 
   /**
-   * Returns the source that executed the command.
+   * Returns the source to execute the command for.
    *
    * @return the command source
    */

@@ -16,13 +16,28 @@ import java.util.concurrent.CompletableFuture;
 
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
+  // CommandNodes may only have one alias. Brigadier provides
+  // a redirection system that allows forwarding interactions
+  // to be forwarded to the "main" command node (e.g. /tp -> /teleport).
+  //
+  // These can be created using LiteralArgumentBuilder.redirect().
+  // However, as noted on https://github.com/Mojang/brigadier/issues/46
+  // redirects currently only work for command nodes that contain
+  // children nodes (i.e. have variants that expect arguments).
+  // Given a redirect of an argument-less command such as /shutdown
+  // incorrectly throw CommandSyntaxException on execution.
+  //
+  // This method checks if the redirection destination has children.
+  // If so, it performs a regular redirect. Otherwise, it creates
+  // a manual forward, preserving the permission predicate and
+  // tab complete suggestions.
+
   /**
    * Returns a node builder with the given alias to the specified destination node.
    *
    * @param dest the destination node
    * @param alias the command alias
    * @return the created alias
-   * @see <a href="https://github.com/Mojang/brigadier/issues/46">issue</a>
    */
   private static LiteralArgumentBuilder<CommandSource> redirect(
           final CommandNode<CommandSource> dest, String alias) {

@@ -1,7 +1,11 @@
 package com.velocitypowered.api.command;
 
 /**
- * A legacy 1.12-style command.
+ * A legacy command, modelled after the convention popularized by
+ * Bukkit and BungeeCord.
+ *
+ * <p>Prefer using {@link BrigadierCommand} if possible, which is also
+ * backwards-compatible with older clients.
  */
 public interface LegacyCommand extends Command<LegacyCommandInvocation> {
 

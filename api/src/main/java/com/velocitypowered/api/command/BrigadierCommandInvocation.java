@@ -8,11 +8,9 @@ import com.mojang.brigadier.ParseResults;
 public interface BrigadierCommandInvocation extends CommandInvocation {
 
   /**
-   * Returns the valid parse results.
+   * Returns the result of parsing the given command.
    *
    * @return the parsing results
-   * @implNote the implementation may return an invalid parse result before
-   *           the object is exposed
    */
   ParseResults<CommandSource> parsed();
 }
