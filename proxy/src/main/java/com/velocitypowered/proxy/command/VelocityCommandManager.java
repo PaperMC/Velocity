@@ -32,14 +32,14 @@ public class VelocityCommandManager implements CommandManager {
 
   private final Map<String, Command<?>> commands = new HashMap<>();
 
-  private final CommandInvocationFactoryRegistry invocationFactory =
-          new CommandInvocationFactoryRegistry();
-  private final CommandDispatcher<CommandSource> brigadierDispatcher = new CommandDispatcher<>();
-
+  private final CommandDispatcher<CommandSource> brigadierDispatcher;
+  private final CommandInvocationFactoryRegistry invocationFactory;
   private final VelocityEventManager eventManager;
 
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = eventManager;
+    this.brigadierDispatcher = new CommandDispatcher<>();
+    this.invocationFactory = new CommandInvocationFactoryRegistry();
   }
 
   @Override

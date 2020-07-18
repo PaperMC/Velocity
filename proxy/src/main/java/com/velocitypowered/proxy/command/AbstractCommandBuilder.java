@@ -15,7 +15,7 @@ abstract class AbstractCommandBuilder<T extends Command<?>, B extends Command.Bu
         implements Command.Builder<T, B> {
 
   protected final VelocityCommandManager manager;
-  protected final Set<String> aliases = new HashSet<>();
+  private final Set<String> aliases = new HashSet<>();
 
   protected AbstractCommandBuilder(final VelocityCommandManager manager) {
     this.manager = Preconditions.checkNotNull(manager, "manager");
@@ -32,6 +32,10 @@ abstract class AbstractCommandBuilder<T extends Command<?>, B extends Command.Bu
     }
 
     return self();
+  }
+
+  protected String[] getAliases() {
+    return aliases.toArray(String[]::new);
   }
 
   /**

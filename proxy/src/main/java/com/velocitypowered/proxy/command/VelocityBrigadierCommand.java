@@ -44,7 +44,7 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     Preconditions.checkNotNull(dest, "dest");
     Preconditions.checkNotNull(alias, "alias");
     alias = alias.toLowerCase(Locale.ENGLISH);
-    Preconditions.checkArgument(dest.getName().equals(alias),
+    Preconditions.checkArgument(!dest.getName().equalsIgnoreCase(alias),
             "Self-referencing redirect %s for %s", alias, dest);
 
     if (!dest.getChildren().isEmpty()) {
@@ -81,9 +81,9 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
       Preconditions.checkNotNull(node, "node");
       final BrigadierCommand command = new VelocityBrigadierCommand(manager, node);
       final String alias = node.getName().toLowerCase(Locale.ENGLISH);
-      manager.register(alias, command);
+      final String[] aliases = getAliases();
 
-      aliases.remove(alias); // prevent self-redirect
+      manager.register(alias, command, aliases);
       for (final String alias1 : aliases) {
         manager.getBrigadierDispatcher().register(redirect(node, alias1));
       }
