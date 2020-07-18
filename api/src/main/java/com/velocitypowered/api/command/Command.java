@@ -28,11 +28,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * Most methods take a {@link CommandInvocation} providing information related to
  * the possible execution of the command.
- * For compatibility reasons, the {@link Command} interface provides
- * the {@link #execute(CommandSource, String[])}, {@link #suggest(CommandSource, String[])},
- * {@link #suggestAsync(CommandSource, String[])} and
- * {@link #hasPermission(CommandSource, String[])} methods. These are only executed by
- * a {@link CommandManager} if the given command <b>directly</b> implements this interface.
+ * For this reason, the legacy {@code execute()}, {@code suggest()},
+ * and {@code hasPermission()} methods are deprecated and will be removed in Velocity 2.0.0.
+ * We suggest implementing one of the more specific subinterfaces instead.
+ * The legacy methods are only executed by a {@link CommandManager} if
+ * the given command <b>directly</b> implements this interface.
  */
 public interface Command<I extends CommandInvocation> {
 
