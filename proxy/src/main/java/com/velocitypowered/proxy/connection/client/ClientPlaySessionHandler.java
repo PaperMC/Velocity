@@ -129,6 +129,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
           .thenComposeAsync(event -> processCommandExecuteResult(originalCommand,
               event.getResult()))
+          .whenCompleteAsync((ignored, throwable) -> {
+            logger.info("{} -> executed command /{}", player.getUsername(), originalCommand);
+          })
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.getUsername(), e);
