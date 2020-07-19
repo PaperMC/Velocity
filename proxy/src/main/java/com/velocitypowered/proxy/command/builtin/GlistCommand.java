@@ -34,11 +34,13 @@ public class GlistCommand {
   private void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
+            .requires(this::hasPermission)
             .executes(this::totalCount)
             .build();
 
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
             .<CommandSource, String>argument("server", StringArgumentType.string())
+            .requires(this::hasPermission)
             .suggests((context, builder) -> {
               for (RegisteredServer server : server.getAllServers()) {
                 builder.suggest(server.getServerInfo().getName());
@@ -54,7 +56,6 @@ public class GlistCommand {
 
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
-    if (!hasPermission(source)) return VelocityCommandManager.NO_PERMISSION;
     sendTotalProxyCount(source);
     source.sendMessage(
         TextComponent.builder("To view all players on servers, use ", NamedTextColor.YELLOW)
@@ -66,7 +67,6 @@ public class GlistCommand {
 
   private int serverCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
-    if (!hasPermission(source)) return VelocityCommandManager.NO_PERMISSION;
     final String serverName = getString(context, SERVER_ARG);
     if (serverName.equalsIgnoreCase("all")) {
       for (RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
