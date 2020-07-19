@@ -117,6 +117,9 @@ bungee-plugin-message-channel = true
 # Shows ping requests to the proxy from clients.
 show-ping-requests = false
 
+# Enables the logging of commands
+log-command-executions = false
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

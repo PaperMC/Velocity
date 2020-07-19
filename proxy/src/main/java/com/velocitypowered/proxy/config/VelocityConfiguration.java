@@ -342,6 +342,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isShowPingRequests();
   }
 
+  public boolean isLogCommandExecutions() {
+    return advanced.isLogCommandExecutions();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -577,6 +581,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean tcpFastOpen = false;
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
+    private boolean logCommandExecutions = false;
 
     private Advanced() {
     }
@@ -592,6 +597,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
+        this.logCommandExecutions = config.getOrElse("log-command-executions", false);
       }
     }
 
@@ -631,6 +637,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return showPingRequests;
     }
 
+    public boolean isLogCommandExecutions() {
+      return logCommandExecutions;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -643,6 +653,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests
+          + ", logCommandExecutions=" + logCommandExecutions
           + '}';
     }
   }
