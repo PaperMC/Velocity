@@ -568,7 +568,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
           if (event.getResult() instanceof DisconnectPlayer) {
             DisconnectPlayer res = (DisconnectPlayer) event.getResult();
-            disconnect(res.getReason());
+            disconnect(res.getReasonComponent());
           } else if (event.getResult() instanceof RedirectPlayer) {
             RedirectPlayer res = (RedirectPlayer) event.getResult();
             createConnectionRequest(res.getServer())
@@ -587,9 +587,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
             if (event.kickedDuringServerConnect()) {
-              sendMessage(res.getMessage());
+              sendMessage(res.getMessageComponent());
             } else {
-              disconnect(res.getMessage());
+              disconnect(res.getMessageComponent());
             }
           } else {
             // In case someone gets creative, assume we want to disconnect the player.

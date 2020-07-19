@@ -9,7 +9,7 @@ import com.google.gson.JsonSerializer;
 import com.velocitypowered.api.util.Favicon;
 import java.lang.reflect.Type;
 
-public class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
+public final class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
 
   @Override
   public Favicon deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {

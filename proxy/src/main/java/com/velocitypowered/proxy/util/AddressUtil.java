@@ -6,13 +6,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-public class AddressUtil {
+public final class AddressUtil {
   private AddressUtil() {
     throw new AssertionError();
   }
 
   /**
-   * Attempts to parse an IP address of the form <code>127.0.0.1:25565</code>. The returned
+   * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
    * {@link InetSocketAddress} is not resolved.
    *
    * @param ip the IP to parse
@@ -30,7 +30,7 @@ public class AddressUtil {
   }
 
   /**
-   * Attempts to parse an IP address of the form <code>127.0.0.1:25565</code>. The returned
+   * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
    * {@link InetSocketAddress} is resolved.
    *
    * @param ip the IP to parse

@@ -43,7 +43,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
@@ -167,10 +167,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           }
 
           PreLoginComponentResult result = event.getResult();
-          Optional<Component> disconnectReason = result.getReason();
+          Optional<Component> disconnectReason = result.getReasonComponent();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
-            mcConnection.closeWith(Disconnect.create(disconnectReason.get()));
+            mcConnection.closeWith(Disconnect.create(disconnectReason.get(),
+                inbound.getProtocolVersion()));
             return;
           }
 
@@ -260,7 +261,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          Optional<Component> reason = event.getResult().getReason();
+          Optional<Component> reason = event.getResult().getReasonComponent();
           if (reason.isPresent()) {
             player.disconnect0(reason.get(), true);
           } else {

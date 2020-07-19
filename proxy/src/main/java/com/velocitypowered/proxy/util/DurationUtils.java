@@ -5,7 +5,7 @@ import java.time.Duration;
 /**
  * Provides utility functions for working with durations.
  */
-public class DurationUtils {
+public final class DurationUtils {
   private static final long ONE_TICK_IN_MILLISECONDS = 50;
 
   private DurationUtils() {

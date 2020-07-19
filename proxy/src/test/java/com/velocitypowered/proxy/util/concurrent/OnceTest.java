@@ -21,11 +21,13 @@ public class OnceTest {
 
   @Test
   void contendedOnce() throws Exception {
-    ExecutorService service = Executors.newFixedThreadPool(10);
+    int threadsForTest = 25;
+
+    ExecutorService service = Executors.newFixedThreadPool(threadsForTest);
     AtomicInteger i = new AtomicInteger();
     Once once = new Once();
-    CountDownLatch latch = new CountDownLatch(10);
-    for (int i1 = 0; i1 < 10; i1++) {
+    CountDownLatch latch = new CountDownLatch(threadsForTest);
+    for (int i1 = 0; i1 < threadsForTest; i1++) {
       service.execute(() -> {
         once.run(i::incrementAndGet);
         latch.countDown();

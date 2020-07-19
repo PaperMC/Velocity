@@ -4,7 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-public class VelocityMessages {
+public final class VelocityMessages {
 
   public static final Component ONLINE_MODE_ONLY = TextComponent
       .builder("This server only accepts connections from online-mode clients.")

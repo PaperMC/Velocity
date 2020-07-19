@@ -1,5 +1,7 @@
 package com.velocitypowered.proxy.network.netty;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.resolver.AddressResolver;
 import io.netty.resolver.AddressResolverGroup;
@@ -14,11 +16,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
 
   private final ExecutorService resolveExecutor;
   private final InetNameResolver delegate;
+  private final Cache<String, List<InetAddress>> cache;
   private AddressResolverGroup<InetSocketAddress> resolverGroup;
 
   /**
@@ -35,12 +39,28 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
             .setDaemon(true)
             .build());
     this.delegate = new DefaultNameResolver(executor);
+    this.cache = CacheBuilder.newBuilder()
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .build();
   }
 
   @Override
   protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
+    List<InetAddress> addresses = cache.getIfPresent(inetHost);
+    if (addresses != null) {
+      promise.trySuccess(addresses.get(0));
+      return;
+    }
+
     try {
-      resolveExecutor.execute(() -> this.delegate.resolve(inetHost, promise));
+      resolveExecutor.execute(() -> {
+        promise.addListener(future -> {
+          if (future.isSuccess()) {
+            cache.put(inetHost, (List<InetAddress>) future.getNow());
+          }
+        });
+        this.delegate.resolve(inetHost, promise);
+      });
     } catch (RejectedExecutionException e) {
       promise.setFailure(e);
     }
@@ -49,7 +69,18 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   @Override
   protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise)
       throws Exception {
+    List<InetAddress> addresses = cache.getIfPresent(inetHost);
+    if (addresses != null) {
+      promise.trySuccess(addresses);
+      return;
+    }
+
     try {
+      promise.addListener(future -> {
+        if (future.isSuccess()) {
+          cache.put(inetHost, (List<InetAddress>) future.getNow());
+        }
+      });
       resolveExecutor.execute(() -> this.delegate.resolveAll(inetHost, promise));
     } catch (RejectedExecutionException e) {
       promise.setFailure(e);

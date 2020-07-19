@@ -340,7 +340,7 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet
     int len = readExtendedForgeShort(buf);
 
-    Preconditions.checkArgument(len <= (FORGE_MAX_ARRAY_LENGTH),
+    checkArgument(len <= FORGE_MAX_ARRAY_LENGTH,
         "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
 
     byte[] ret = new byte[len];
@@ -360,7 +360,7 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet
     int len = readExtendedForgeShort(buf);
 
-    checkFrame(len <= (FORGE_MAX_ARRAY_LENGTH),
+    checkFrame(len <= FORGE_MAX_ARRAY_LENGTH,
         "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
 
     return buf.readRetainedSlice(len);
@@ -375,7 +375,7 @@ public enum ProtocolUtils {
    */
   public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
-      checkFrame(b.length <= (FORGE_MAX_ARRAY_LENGTH),
+      checkFrame(b.length <= FORGE_MAX_ARRAY_LENGTH,
           "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
           b.length);
     } else {
@@ -399,7 +399,7 @@ public enum ProtocolUtils {
    */
   public static void writeByteBuf17(ByteBuf b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
-      checkFrame(b.readableBytes() <= (FORGE_MAX_ARRAY_LENGTH),
+      checkFrame(b.readableBytes() <= FORGE_MAX_ARRAY_LENGTH,
           "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
           b.readableBytes());
     } else {

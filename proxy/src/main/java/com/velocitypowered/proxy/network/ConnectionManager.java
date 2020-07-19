@@ -16,8 +16,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.resolver.dns.DnsAddressResolverGroup;
-import io.netty.resolver.dns.DnsNameResolverBuilder;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;

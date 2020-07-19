@@ -43,7 +43,7 @@ public class Metrics {
   private static boolean logFailedRequests = false;
 
   // The logger for the failed requests
-  private static Logger logger = LogManager.getLogger(Metrics.class);
+  private static final Logger logger = LogManager.getLogger(Metrics.class);
 
   // The name of the server software
   private final String name;
