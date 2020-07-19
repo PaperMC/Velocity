@@ -14,7 +14,6 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.proxy.command.VelocityCommandManager;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.text.TextComponent;
@@ -28,16 +27,14 @@ public class GlistCommand {
 
   public GlistCommand(ProxyServer server) {
     this.server = server;
-    this.register();
   }
 
-  private void register() {
+  public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
             .requires(this::hasPermission)
             .executes(this::totalCount)
             .build();
-
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
             .<CommandSource, String>argument("server", StringArgumentType.string())
             .requires(this::hasPermission)
@@ -51,6 +48,7 @@ public class GlistCommand {
             .executes(this::serverCount)
             .build();
     totalNode.addChild(serverNode);
+
     server.getCommandManager().brigadierBuilder().register(totalNode);
   }
 

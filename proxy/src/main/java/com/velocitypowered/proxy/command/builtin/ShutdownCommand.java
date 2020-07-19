@@ -1,7 +1,6 @@
 package com.velocitypowered.proxy.command.builtin;
 
 import com.velocitypowered.api.command.LegacyCommand;
-import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -14,7 +13,7 @@ public class ShutdownCommand implements LegacyCommand {
   }
 
   @Override
-  public void execute(final LegacyCommandInvocation invocation) {
+  public void execute(final LegacyCommand.Invocation invocation) {
     final String[] args = invocation.arguments();
     if (args.length == 0) {
       server.shutdown(true);
@@ -25,7 +24,7 @@ public class ShutdownCommand implements LegacyCommand {
   }
 
   @Override
-  public boolean hasPermission(final LegacyCommandInvocation invocation) {
+  public boolean hasPermission(final LegacyCommand.Invocation invocation) {
     return invocation.source() == server.getConsoleCommandSource();
   }
 }

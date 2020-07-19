@@ -194,7 +194,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     commandManager.register("velocity", new VelocityCommand(this));
     commandManager.register("server", new ServerCommand(this));
     commandManager.register("shutdown", new ShutdownCommand(this),"end");
-    commandManager.register("glist", new GlistCommand(this));
+    new GlistCommand(this).register();
 
     try {
       Path configPath = Paths.get("velocity.toml");

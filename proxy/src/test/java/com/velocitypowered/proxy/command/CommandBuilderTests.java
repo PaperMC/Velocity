@@ -1,21 +1,10 @@
 package com.velocitypowered.proxy.command;
 
-import static com.velocitypowered.proxy.command.CommandManagerTests.createManager;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandSource;
-import org.junit.jupiter.api.Test;
-
 public class CommandBuilderTests {
 
   // TODO Move execution tests to CommandManagerTests
 
-  @Test
+  /*@Test
   void testBrigadierNoAliases() throws CommandSyntaxException {
     VelocityCommandManager manager = createManager();
     BrigadierCommand.Builder builder = manager.brigadierBuilder();
@@ -52,5 +41,5 @@ public class CommandBuilderTests {
     assertFalse(parse.getReader().canRead(), "Alias node is added to Brigadier dispatcher");
     assertEquals(27, manager.getBrigadierDispatcher().execute(parse),
             "Redirect executes command");
-  }
+  }*/
 }
