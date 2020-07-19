@@ -3,12 +3,7 @@ package com.velocitypowered.api.command;
 /**
  * Contains the invocation data for a {@link RawCommand}.
  */
-public interface RawCommandInvocation extends CommandInvocation {
+@Deprecated
+public interface RawCommandInvocation extends CommandInvocation<String> {
 
-  /**
-   * Returns the full command line after the command alias.
-   *
-   * @return the command line
-   */
-  String line();
 }

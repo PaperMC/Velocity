@@ -1,11 +1,11 @@
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.Player;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+// TODO Review javadoc
 /**
  * Represents a command that can be executed by a {@link CommandSource}, such as
  * a {@link Player} or the console.
@@ -26,22 +26,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * </ul>
  *
- * Most methods take a {@link CommandInvocation} providing information related to
- * the possible execution of the command.
  * For this reason, the legacy {@code execute()}, {@code suggest()},
  * and {@code hasPermission()} methods are deprecated and will be removed in Velocity 2.0.0.
  * We suggest implementing one of the more specific subinterfaces instead.
  * The legacy methods are only executed by a {@link CommandManager} if
  * the given command <b>directly</b> implements this interface.
  */
-public interface Command<I extends CommandInvocation> {
-
-  /**
-   * Executes the command for the specified invocation.
-   *
-   * @param invocation the invocation context
-   */
-  void execute(I invocation);
+public interface Command {
 
   /**
    * Executes the command for the specified source.
@@ -53,16 +44,6 @@ public interface Command<I extends CommandInvocation> {
   @Deprecated
   default void execute(final CommandSource source, final String @NonNull [] args) {
     throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Provides tab complete suggestions for the specified invocation.
-   *
-   * @param invocation the invocation context
-   * @return the tab complete suggestions
-   */
-  default List<String> suggest(final I invocation) {
-    return ImmutableList.of();
   }
 
   /**
@@ -79,17 +60,6 @@ public interface Command<I extends CommandInvocation> {
   }
 
   /**
-   * Provides tab complete suggestions for the specified invocation.
-   *
-   * @param invocation the invocation context
-   * @return the tab complete suggestions
-   * @implSpec defaults to wrapping the value returned by {@link #suggest(CommandInvocation)}
-   */
-  default CompletableFuture<List<String>> suggestAsync(final I invocation) {
-    return CompletableFuture.completedFuture(suggest(invocation));
-  }
-
-  /**
    * Provides tab complete suggestions for the specified source.
    *
    * @param source the source to execute the command for
@@ -101,19 +71,6 @@ public interface Command<I extends CommandInvocation> {
   default CompletableFuture<List<String>> suggestAsync(final CommandSource source,
                                                        String @NonNull [] currentArgs) {
     throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Tests to check if the source has permission to perform the specified invocation.
-   *
-   * <p>If the method returns {@code false}, the handling is forwarded onto
-   * the players current server.
-   *
-   * @param invocation the invocation context
-   * @return {@code true} if the source has permission
-   */
-  default boolean hasPermission(final I invocation) {
-    return true;
   }
 
   /**

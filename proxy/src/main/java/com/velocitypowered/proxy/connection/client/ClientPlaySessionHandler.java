@@ -407,7 +407,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           for (String suggestion : suggestions) {
             offers.add(new Offer(suggestion));
           }
-
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
             TabCompleteResponse resp = new TabCompleteResponse();

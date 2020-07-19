@@ -25,7 +25,7 @@ public interface CommandManager {
    *             Prefer {@link #register(String, Command, String...)}
    */
   @Deprecated
-  void register(Command<?> command, String... aliases);
+  void register(Command command, String... aliases);
 
   /**
    * Registers the specified command with the specified aliases.
@@ -34,7 +34,7 @@ public interface CommandManager {
    * @param command the command to register
    * @param otherAliases additional aliases
    */
-  void register(String alias, Command<?> command, String... otherAliases);
+  void register(String alias, Command command, String... otherAliases);
 
   /**
    * Unregisters the specified command alias from the manager, if registered.

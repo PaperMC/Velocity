@@ -3,6 +3,9 @@ package com.velocitypowered.proxy.command;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.tree.CommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.LegacyCommand;
 import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.proxy.plugin.MockEventManager;
@@ -40,7 +43,7 @@ public class CommandManagerTests {
   @Test
   void testLegacyRegistration() {
     final VelocityCommandManager manager = createManager();
-    final FooCommand command = new FooCommand();
+    final ALegacyCommand command = new ALegacyCommand();
 
     manager.register("foo", command);
     assertTrue(manager.hasCommand("foo"));
@@ -57,7 +60,7 @@ public class CommandManagerTests {
   }
 
   @Test
-  void testLegacyMethods() {
+  void testLegacy() {
     final VelocityCommandManager manager = createManager();
     final AtomicBoolean executed = new AtomicBoolean(false);
     final LegacyCommand command = new LegacyCommand() {
@@ -90,6 +93,8 @@ public class CommandManagerTests {
 
     manager.offerSuggestions(MockCommandSource.INSTANCE, "")
             .thenAccept(aliases -> {
+              // TODO I'm not 100% sure on this one,
+              // 1.12 clients need the full suggestion while 1.13+ only needs the completion
               assertTrue(aliases.contains("/foo"));
               assertEquals(1, aliases.size());
             })
@@ -110,7 +115,29 @@ public class CommandManagerTests {
     assertTrue(executed.get());
   }
 
-  static class FooCommand implements LegacyCommand {
+  @Test
+  void testBrigadier() {
+    final VelocityCommandManager manager = createManager();
+    final AtomicBoolean executed = new AtomicBoolean(false);
+
+    CommandNode<CommandSource> node = BrigadierCommand.argumentBuilder("foo")
+            // TODO .then(arg)
+            .build();
+
+    final BrigadierCommand command = manager.brigadierBuilder().register(node);
+
+    manager.offerSuggestions(MockCommandSource.INSTANCE, "")
+            .thenAccept(aliases -> {
+              // See TODO on testLegacy
+              assertTrue(aliases.contains("/foo"));
+              assertEquals(1, aliases.size());
+            })
+            .join();
+
+
+  }
+
+  static class ALegacyCommand implements LegacyCommand {
     @Override
     public void execute(final LegacyCommandInvocation invocation) {
 

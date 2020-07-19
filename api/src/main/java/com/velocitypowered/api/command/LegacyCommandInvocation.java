@@ -5,12 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Contains the invocation data for a {@link LegacyCommand}.
  */
-public interface LegacyCommandInvocation extends CommandInvocation {
+@Deprecated
+public interface LegacyCommandInvocation extends CommandInvocation<String @NonNull []> {
 
-  /**
-   * Returns the arguments for the command invocation.
-   *
-   * @return the command arguments
-   */
-  String @NonNull [] arguments();
 }

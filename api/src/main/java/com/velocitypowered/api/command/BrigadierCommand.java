@@ -1,8 +1,8 @@
 package com.velocitypowered.api.command;
 
-import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 
 /**
  * A command that uses Brigadier for parsing the command and providing
@@ -13,28 +13,7 @@ import com.mojang.brigadier.tree.CommandNode;
  *
  * @see <a href="https://github.com/Mojang/brigadier#registering-a-new-command">How to create a command</a>
  */
-public interface BrigadierCommand extends Command<BrigadierCommandInvocation> {
-
-  /**
-   * Returns an {@link ArgumentBuilder} used to specify the structure of
-   * a {@link CommandNode} executed by a {@link CommandSource}.
-   *
-   * <p>This wraps {@link LiteralArgumentBuilder#literal(String)}
-   * explicitly setting the sender type, allowing it to be statically imported.
-   * Thus, the following are equivalent:
-   *
-   * <pre> {@code
-   * LiteralArgumentBuilder.<CommandSource>.literal(alias) // ...
-   * argumentBuilder(alias) // ...
-   * }</pre>
-   *
-   * @param alias the command alias
-   * @return an argument builder
-   * @see <a href="https://github.com/Mojang/brigadier/issues/35#issuecomment-429510335">issue</a>
-   */
-  static LiteralArgumentBuilder<CommandSource> argumentBuilder(final String alias) {
-    return LiteralArgumentBuilder.literal(alias);
-  }
+public interface BrigadierCommand extends Command {
 
   /**
    * Provides a fluent interface to register a Brigadier command.
@@ -55,6 +34,6 @@ public interface BrigadierCommand extends Command<BrigadierCommandInvocation> {
      * @param node the command node
      * @return the registered command
      */
-    BrigadierCommand register(CommandNode<CommandSource> node);
+    BrigadierCommand register(LiteralCommandNode<CommandSource> node);
   }
 }

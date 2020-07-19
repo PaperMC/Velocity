@@ -1,31 +1,23 @@
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.Preconditions;
+import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommandInvocation;
+import com.velocitypowered.api.command.RawCommand;
 
-final class VelocityRawCommandInvocation extends AbstractCommandInvocation
-        implements RawCommandInvocation {
+final class VelocityRawCommandInvocation extends AbstractCommandInvocation<String>
+        implements RawCommand.Invocation {
 
-  static final CommandInvocationFactory<RawCommandInvocation> FACTORY = new Factory();
+  static final Factory FACTORY = new Factory();
 
-  private static class Factory implements CommandInvocationFactory<RawCommandInvocation> {
+  static class Factory implements CommandInvocationFactory<RawCommand.Invocation> {
 
     @Override
-    public RawCommandInvocation create(final CommandSource source, final String commandLine) {
-      return new VelocityRawCommandInvocation(source, commandLine);
+    public RawCommand.Invocation create(final CommandContext<CommandSource> context) {
+      return new VelocityRawCommandInvocation(context.getSource(), getArguments(context));
     }
   }
 
-  private final String commandLine;
-
-  private VelocityRawCommandInvocation(final CommandSource source, final String commandLine) {
-    super(source);
-    this.commandLine = Preconditions.checkNotNull(commandLine);
-  }
-
-  @Override
-  public String line() {
-    return commandLine;
+  VelocityRawCommandInvocation(final CommandSource source, final String arguments) {
+    super(source, arguments);
   }
 }
