@@ -157,11 +157,6 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
-  public boolean hasCommand(final String alias) {
-    Preconditions.checkNotNull(alias);
-    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
-  }
-
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
                                                           final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
@@ -170,5 +165,14 @@ public class VelocityCommandManager implements CommandManager {
     ParseResults<CommandSource> parse = dispatcher.parse(cmdLine, source);
     return dispatcher.getCompletionSuggestions(parse)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+  }
+
+  public boolean hasCommand(final String alias) {
+    Preconditions.checkNotNull(alias);
+    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
+  }
+
+  public CommandDispatcher<CommandSource> getDispatcher() {
+    return dispatcher;
   }
 }

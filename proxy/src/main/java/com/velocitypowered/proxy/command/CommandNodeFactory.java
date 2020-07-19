@@ -58,6 +58,8 @@ public interface CommandNodeFactory<T extends Command> {
     }
 
     private String[] parseArguments(final String cmdLine) {
+      // This ugly parsing will be removed on Velocity 2.0,
+      // see VelocityLegacyCommandInvocation for replacement.
       int firstSpace = cmdLine.indexOf(' ');
       if (firstSpace == -1) {
         return new String[0];
