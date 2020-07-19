@@ -1,57 +1,92 @@
 package com.velocitypowered.proxy.command.builtin;
 
+import static com.mojang.brigadier.arguments.StringArgumentType.getString;
+
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
-import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.command.VelocityCommandManager;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-public class GlistCommand implements LegacyCommand {
+public class GlistCommand {
+
+  private static final String SERVER_ARG = "server";
 
   private final ProxyServer server;
 
   public GlistCommand(ProxyServer server) {
     this.server = server;
+    this.register();
   }
 
-  @Override
-  public void execute(final LegacyCommandInvocation invocation) {
-    final CommandSource source = invocation.source();
-    final String[] args = invocation.arguments();
+  private void register() {
+    LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
+            .<CommandSource>literal("glist")
+            .executes(this::totalCount)
+            .build();
 
-    if (args.length == 0) {
-      sendTotalProxyCount(source);
-      source.sendMessage(
-          TextComponent.builder("To view all players on servers, use ", NamedTextColor.YELLOW)
-              .append("/glist all", NamedTextColor.DARK_AQUA)
-              .append(".", NamedTextColor.YELLOW)
-              .build());
-    } else if (args.length == 1) {
-      String arg = args[0];
-      if (arg.equalsIgnoreCase("all")) {
-        for (RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
-          sendServerPlayers(source, server, true);
-        }
-        sendTotalProxyCount(source);
-      } else {
-        Optional<RegisteredServer> registeredServer = server.getServer(arg);
-        if (!registeredServer.isPresent()) {
-          source.sendMessage(
-              TextComponent.of("Server " + arg + " doesn't exist.", NamedTextColor.RED));
-          return;
-        }
-        sendServerPlayers(source, registeredServer.get(), false);
+    ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
+            .<CommandSource, String>argument("server", StringArgumentType.string())
+            .suggests((context, builder) -> {
+              for (RegisteredServer server : server.getAllServers()) {
+                builder.suggest(server.getServerInfo().getName());
+              }
+              builder.suggest("all");
+              return builder.buildFuture();
+            })
+            .executes(this::serverCount)
+            .build();
+    totalNode.addChild(serverNode);
+    server.getCommandManager().brigadierBuilder().register(totalNode);
+  }
+
+  private int totalCount(final CommandContext<CommandSource> context) {
+    final CommandSource source = context.getSource();
+    if (!hasPermission(source)) return VelocityCommandManager.NO_PERMISSION;
+    sendTotalProxyCount(source);
+    source.sendMessage(
+        TextComponent.builder("To view all players on servers, use ", NamedTextColor.YELLOW)
+            .append("/glist all", NamedTextColor.DARK_AQUA)
+            .append(".", NamedTextColor.YELLOW)
+            .build());
+    return 1;
+  }
+
+  private int serverCount(final CommandContext<CommandSource> context) {
+    final CommandSource source = context.getSource();
+    if (!hasPermission(source)) return VelocityCommandManager.NO_PERMISSION;
+    final String serverName = getString(context, SERVER_ARG);
+    if (serverName.equalsIgnoreCase("all")) {
+      for (RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
+        sendServerPlayers(source, server, true);
       }
+      sendTotalProxyCount(source);
     } else {
-      source.sendMessage(TextComponent.of("Too many arguments.", NamedTextColor.RED));
+      Optional<RegisteredServer> registeredServer = server.getServer(serverName);
+      if (!registeredServer.isPresent()) {
+        source.sendMessage(
+          TextComponent.of("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+        return -1;
+      }
+      sendServerPlayers(source, registeredServer.get(), false);
     }
+    return 1;
+  }
+
+  private boolean hasPermission(final CommandSource source) {
+    return source.getPermissionValue("velocity.command.glist") == Tristate.TRUE;
   }
 
   private void sendTotalProxyCount(CommandSource target) {
@@ -84,32 +119,5 @@ public class GlistCommand implements LegacyCommand {
     }
 
     target.sendMessage(builder.build());
-  }
-
-  @Override
-  public List<String> suggest(final LegacyCommandInvocation invocation) {
-    final String[] currentArgs = invocation.arguments();
-    ImmutableList.Builder<String> options = ImmutableList.builder();
-
-    for (RegisteredServer server : server.getAllServers()) {
-      options.add(server.getServerInfo().getName());
-    }
-    options.add("all");
-
-    switch (currentArgs.length) {
-      case 0:
-        return options.build();
-      case 1:
-        return options.build().stream()
-            .filter(o -> o.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
-            .collect(ImmutableList.toImmutableList());
-      default:
-        return ImmutableList.of();
-    }
-  }
-
-  @Override
-  public boolean hasPermission(final LegacyCommandInvocation invocation) {
-    return invocation.source().getPermissionValue("velocity.command.glist") == Tristate.TRUE;
   }
 }

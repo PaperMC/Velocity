@@ -1,17 +1,11 @@
 package com.velocitypowered.proxy.command;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.tree.CommandNode;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.LegacyCommand;
-import com.velocitypowered.api.command.LegacyCommandInvocation;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 public class CommandManagerTests {
@@ -33,6 +27,28 @@ public class CommandManagerTests {
   }
 
   @Test
+  void testConstruction() {
+    VelocityCommandManager manager = createManager();
+    assertFalse(manager.hasCommand("foo"));
+    assertTrue(manager.getDispatcher().getRoot().getChildren().isEmpty());
+  }
+
+  @Test
+  void testLegacyRegister() {
+    VelocityCommandManager manager = createManager();
+    LegacyCommand command = new BasicLegacyCommand();
+
+    manager.register("Foo", command);
+    assertTrue(manager.hasCommand("foO"));
+    manager.unregister("fOo");
+    assertFalse(manager.hasCommand("foo"));
+
+    manager.register("foo", command, "bAr", "BAZ");
+    assertTrue(manager.hasCommand("bar"));
+    assertTrue(manager.hasCommand("bAz"));
+  }
+
+  /*@Test
   void testConstruction() {
     VelocityCommandManager manager = createManager();
     assertFalse(manager.hasCommand("foo"));
@@ -140,6 +156,13 @@ public class CommandManagerTests {
   static class ALegacyCommand implements LegacyCommand {
     @Override
     public void execute(final LegacyCommandInvocation invocation) {
+
+    }
+  }*/
+
+  static class BasicLegacyCommand implements LegacyCommand {
+    @Override
+    public void execute(final Invocation invocation) {
 
     }
   }
