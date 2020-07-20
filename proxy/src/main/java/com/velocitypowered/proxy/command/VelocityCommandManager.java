@@ -85,6 +85,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "alias");
     Preconditions.checkNotNull(command, "command");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
+    Preconditions.checkArgument(!hasCommand(alias), "alias already registered");
 
     LiteralCommandNode<CommandSource> node;
     if (command instanceof VelocityBrigadierCommand) {
@@ -101,6 +102,8 @@ public class VelocityCommandManager implements CommandManager {
     for (int i = 0, length = otherAliases.length; i < length; i++) {
       final String alias1 = otherAliases[i];
       Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
+      Preconditions.checkArgument(!hasCommand(alias1),
+              "alias at index %s already registered", i + 1);
       registerRedirect(node, alias1);
     }
   }

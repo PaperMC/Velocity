@@ -9,10 +9,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
-import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.*;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.Collection;
@@ -67,6 +64,17 @@ public class CommandManagerTests {
   }
 
   @Test
+  void testBrigadierSelfAliasThrows() {
+    VelocityCommandManager manager = createManager();
+    BrigadierCommand.Builder builder = manager.brigadierBuilder();
+    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+            .<CommandSource>literal("foo")
+            .executes(context -> 1)
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> builder.aliases("fOO").register(node));
+  }
+
+  @Test
   void testLegacyRegister() {
     VelocityCommandManager manager = createManager();
     LegacyCommand command = new NoopLegacyCommand();
@@ -100,6 +108,16 @@ public class CommandManagerTests {
 
     manager.register("foo", command);
     assertTrue(manager.hasCommand("foO"));
+  }
+
+  @Test
+  void testAlreadyRegisteredThrows() {
+    VelocityCommandManager manager = createManager();
+    manager.register("bar", new NoopDeprecatedCommand());
+    assertThrows(IllegalArgumentException.class, () ->
+            manager.register("BAR", new NoopLegacyCommand()));
+    assertThrows(IllegalArgumentException.class, () ->
+            manager.register("baz", new NoopLegacyCommand(), "bAZ"));
   }
 
   @Test
