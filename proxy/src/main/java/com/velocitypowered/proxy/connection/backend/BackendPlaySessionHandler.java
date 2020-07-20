@@ -156,16 +156,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(AvailableCommands commands) {
-    // Inject commands from the proxy.
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
-    Collection<CommandNode<CommandSource>> proxyNodes = server.getCommandManager().getDispatcher()
-            .getRoot().getChildren();
-    for (CommandNode<CommandSource> node : proxyNodes) {
-      rootNode.addChild(node);
+    if (server.getConfiguration().isAnnounceProxyCommands()) {
+      // Inject commands from the proxy.
+      Collection<CommandNode<CommandSource>> proxyNodes = server.getCommandManager().getDispatcher()
+              .getRoot().getChildren();
+      for (CommandNode<CommandSource> node : proxyNodes) {
+        rootNode.addChild(node);
+      }
     }
 
     server.getEventManager().fire(
-        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), commands.getRootNode()))
+        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
     return true;
   }

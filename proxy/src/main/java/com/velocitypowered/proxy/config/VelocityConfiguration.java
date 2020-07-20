@@ -15,13 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
@@ -342,6 +336,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isShowPingRequests();
   }
 
+  public boolean isAnnounceProxyCommands() {
+    return advanced.isAnnounceProxyCommands();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -577,6 +575,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean tcpFastOpen = false;
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
+    private boolean announceProxyCommands = true;
 
     private Advanced() {
     }
@@ -592,6 +591,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
+        this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
       }
     }
 
@@ -631,6 +631,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return showPingRequests;
     }
 
+    public boolean isAnnounceProxyCommands() {
+      return announceProxyCommands;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -643,6 +647,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests
+          + ", announceProxyCommands=" + announceProxyCommands
           + '}';
     }
   }
