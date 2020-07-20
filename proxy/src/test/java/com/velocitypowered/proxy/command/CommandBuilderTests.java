@@ -1,7 +1,8 @@
 package com.velocitypowered.proxy.command;
 
 import static com.velocitypowered.proxy.command.CommandManagerTests.createManager;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;

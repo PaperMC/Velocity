@@ -12,7 +12,12 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.*;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
@@ -119,6 +124,13 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
+  /**
+   * Fires a {@link CommandExecuteEvent}.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the command to execute
+   * @return the {@link CompletableFuture} of the event
+   */
   public CompletableFuture<CommandExecuteEvent> callCommandEvent(final CommandSource source,
                                                                  final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
@@ -147,7 +159,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
     return CompletableFuture.supplyAsync(
-            () -> executeImmediately0(source, cmdLine), eventManager.getService());
+        () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
   private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
@@ -162,6 +174,14 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
+  /**
+   * Returns suggestions to fill in the given command.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the partially completed command
+   * @return a {@link CompletableFuture} eventually completed with a {@link List},
+   *         possibly empty
+   */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
                                                           final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
@@ -179,11 +199,17 @@ public class VelocityCommandManager implements CommandManager {
     if (firstSpace != -1) {
       // Command aliases are case-insensitive
       command = cmdLine.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
-              + cmdLine.substring(firstSpace);
+          + cmdLine.substring(firstSpace);
     }
     return dispatcher.parse(command, source);
   }
 
+  /**
+   * Returns whether the given alias is registered on this manager.
+   *
+   * @param alias the command alias to check
+   * @return {@code true} if the alias is registered
+   */
   public boolean hasCommand(final String alias) {
     Preconditions.checkNotNull(alias);
     return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;

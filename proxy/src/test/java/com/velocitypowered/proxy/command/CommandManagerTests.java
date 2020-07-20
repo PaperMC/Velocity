@@ -1,6 +1,11 @@
 package com.velocitypowered.proxy.command;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -9,7 +14,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.*;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.Collection;

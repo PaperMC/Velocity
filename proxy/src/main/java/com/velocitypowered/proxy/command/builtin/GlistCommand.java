@@ -29,6 +29,9 @@ public class GlistCommand {
     this.server = server;
   }
 
+  /**
+   * Registers this command.
+   */
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
@@ -75,7 +78,7 @@ public class GlistCommand {
       Optional<RegisteredServer> registeredServer = server.getServer(serverName);
       if (!registeredServer.isPresent()) {
         source.sendMessage(
-          TextComponent.of("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+            TextComponent.of("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);

@@ -5,28 +5,33 @@ import static com.velocitypowered.proxy.command.VelocityLegacyCommandInvocation.
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.*;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandInvocation;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.InvocableCommand;
+import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.RawCommand;
 
 @FunctionalInterface
 public interface CommandNodeFactory<T extends Command> {
 
   InvocableCommandNodeFactory<LegacyCommand.Invocation> LEGACY =
-    new InvocableCommandNodeFactory<>() {
-      @Override
-      protected LegacyCommand.Invocation createInvocation(
-              final CommandContext<CommandSource> context) {
-        return VelocityLegacyCommandInvocation.FACTORY.create(context);
-      }
-    };
+      new InvocableCommandNodeFactory<>() {
+        @Override
+        protected LegacyCommand.Invocation createInvocation(
+                final CommandContext<CommandSource> context) {
+          return VelocityLegacyCommandInvocation.FACTORY.create(context);
+        }
+      };
 
   InvocableCommandNodeFactory<RawCommand.Invocation> RAW =
-    new InvocableCommandNodeFactory<>() {
-      @Override
-      protected RawCommand.Invocation createInvocation(
-              final CommandContext<CommandSource> context) {
-        return VelocityRawCommandInvocation.FACTORY.create(context);
-      }
-    };
+      new InvocableCommandNodeFactory<>() {
+        @Override
+        protected RawCommand.Invocation createInvocation(
+                final CommandContext<CommandSource> context) {
+          return VelocityRawCommandInvocation.FACTORY.create(context);
+        }
+      };
 
   CommandNodeFactory<Command> FALLBACK = new CommandNodeFactory<>() {
 

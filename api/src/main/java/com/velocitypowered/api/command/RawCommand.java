@@ -12,5 +12,11 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
    */
   interface Invocation extends CommandInvocation<String> {
 
+    /**
+     * Returns the used alias to execute the command.
+     *
+     * @return the used command alias
+     */
+    String alias();
   }
 }
