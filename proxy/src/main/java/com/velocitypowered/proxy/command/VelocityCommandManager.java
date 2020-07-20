@@ -167,7 +167,6 @@ public class VelocityCommandManager implements CommandManager {
     try {
       return dispatcher.execute(parse) != NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
-      e.printStackTrace();
       return false;
     } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);

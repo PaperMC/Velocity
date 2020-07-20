@@ -151,13 +151,11 @@ public class AvailableCommands implements MinecraftPacket {
       if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
         SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
                 .getCustomSuggestions();
-
-        if (!(provider instanceof ProtocolSuggestionProvider)) {
-          throw new IllegalArgumentException("Suggestion provider " + provider.getClass().getName()
-            + " is not valid.");
+        String name = "minecraft:ask_server";
+        if (provider instanceof ProtocolSuggestionProvider) {
+          name = ((ProtocolSuggestionProvider) provider).name;
         }
-
-        ProtocolUtils.writeString(buf, ((ProtocolSuggestionProvider) provider).name);
+        ProtocolUtils.writeString(buf, name);
       }
     } else if (node instanceof LiteralCommandNode<?>) {
       ProtocolUtils.writeString(buf, node.getName());
