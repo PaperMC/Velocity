@@ -71,16 +71,11 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
         .appName("Velocity")
         .completer((reader, parsedLine, list) -> {
           try {
-            boolean isCommand = parsedLine.line().indexOf(' ') == -1;
             List<String> offers = this.server.getCommandManager()
                 .offerSuggestions(this, parsedLine.line())
                 .join(); // Console doesn't get harmed much by this...
             for (String offer : offers) {
-              if (isCommand) {
-                list.add(new Candidate(offer.substring(1)));
-              } else {
-                list.add(new Candidate(offer));
-              }
+              list.add(new Candidate(offer));
             }
           } catch (Exception e) {
             logger.error("An error occurred while trying to perform tab completion.", e);
