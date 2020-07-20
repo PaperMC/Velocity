@@ -148,9 +148,11 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
+    ParseResults<CommandSource> parse = parse(cmdLine, source, true);
     try {
-      return dispatcher.execute(cmdLine, source) != NO_PERMISSION;
+      return dispatcher.execute(parse) != NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
+      e.printStackTrace();
       return false;
     } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -162,9 +164,21 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse = dispatcher.parse(cmdLine, source);
+    ParseResults<CommandSource> parse = parse(cmdLine, source, false);
     return dispatcher.getCompletionSuggestions(parse)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+  }
+
+  private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
+                                            final boolean trim) {
+    String command = trim ? cmdLine.trim() : cmdLine;
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace != -1) {
+      // Command aliases are case-insensitive
+      command = cmdLine.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
+              + cmdLine.substring(firstSpace);
+    }
+    return dispatcher.parse(command, source);
   }
 
   public boolean hasCommand(final String alias) {

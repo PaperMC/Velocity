@@ -28,10 +28,9 @@ public interface CommandInvocationFactory<I extends CommandInvocation<?>> {
    * @return the parsed arguments, or an empty string if no arguments were given
    */
   default String getArguments(final CommandContext<CommandSource> context) {
-    if (!context.getInput().contains(" ")) {
+    if (context.getNodes().size() == 1) { // TODO Review this condition
       return "";
     }
-
     return context.getArgument(VelocityCommandManager.ARGUMENTS_NAME, String.class);
   }
 }

@@ -32,12 +32,12 @@ public class GlistCommand {
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
-            .requires(this::hasPermission)
+            .requires(source ->
+                    source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
             .executes(this::totalCount)
             .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument("server", StringArgumentType.string())
-            .requires(this::hasPermission)
+            .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
             .suggests((context, builder) -> {
               for (RegisteredServer server : server.getAllServers()) {
                 builder.suggest(server.getServerInfo().getName());
@@ -81,10 +81,6 @@ public class GlistCommand {
       sendServerPlayers(source, registeredServer.get(), false);
     }
     return 1;
-  }
-
-  private boolean hasPermission(final CommandSource source) {
-    return source.getPermissionValue("velocity.command.glist") == Tristate.TRUE;
   }
 
   private void sendTotalProxyCount(CommandSource target) {

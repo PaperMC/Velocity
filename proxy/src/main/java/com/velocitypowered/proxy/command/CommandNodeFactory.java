@@ -28,7 +28,7 @@ public interface CommandNodeFactory<T extends Command> {
       }
     };
 
-  CommandNodeFactory<Command> FALLBACK = new CommandNodeFactory<Command>() {
+  CommandNodeFactory<Command> FALLBACK = new CommandNodeFactory<>() {
 
     @Override
     public LiteralCommandNode<CommandSource> create(final String alias, final Command command) {
