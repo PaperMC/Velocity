@@ -172,7 +172,7 @@ public class VelocityCommandManager implements CommandManager {
   private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
                                             final boolean trim) {
     String command = trim ? cmdLine.trim() : cmdLine;
-    int firstSpace = cmdLine.indexOf(' ');
+    int firstSpace = command.indexOf(' ');
     if (firstSpace != -1) {
       // Command aliases are case-insensitive
       command = cmdLine.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)

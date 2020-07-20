@@ -9,15 +9,16 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.LegacyCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.jupiter.api.Test;
 
 public class CommandManagerTests {
@@ -93,6 +94,15 @@ public class CommandManagerTests {
   }
 
   @Test
+  void testDeprecatedRegister() {
+    VelocityCommandManager manager = createManager();
+    Command command = new NoopDeprecatedCommand();
+
+    manager.register("foo", command);
+    assertTrue(manager.hasCommand("foO"));
+  }
+
+  @Test
   void testBrigadierExecute() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
@@ -140,7 +150,7 @@ public class CommandManagerTests {
     assertTrue(executed.get());
     assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
             "Invalid arg returns false");
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 9 bananas").join(),
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas").join(),
             "no permission returns false");
     assertTrue(checkedRequires.get());
   }
@@ -208,6 +218,36 @@ public class CommandManagerTests {
   }
 
   @Test
+  void testDeprecatedExecute() {
+    VelocityCommandManager manager = createManager();
+    AtomicBoolean executed = new AtomicBoolean(false);
+    Command command = new Command() {
+      @Override
+      public void execute(final CommandSource source, final String @NonNull [] args) {
+        assertEquals(MockCommandSource.INSTANCE, source);
+        assertArrayEquals(new String[] { "boo", "123" }, args);
+        executed.set(true);
+      }
+    };
+    manager.register("foo", command);
+
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo boo 123").join());
+    assertTrue(executed.get());
+
+    Command noPermsCommand = new Command() {
+      @Override
+      public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
+        return false;
+      }
+    };
+
+    manager.register("oof", noPermsCommand, "veryOof");
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "veryOOF").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321")
+            .join());
+  }
+
+  @Test
   void testSuggestions() {
     VelocityCommandManager manager = createManager();
 
@@ -219,6 +259,7 @@ public class CommandManagerTests {
             .build();
     CommandNode<CommandSource> numberNode = RequiredArgumentBuilder
             .<CommandSource, Integer>argument("quantity", IntegerArgumentType.integer())
+            .suggests((context, builder) -> builder.suggest(2).suggest(3).buildFuture())
             .build();
     nameNode.addChild(numberNode);
     brigadierNode.addChild(nameNode);
@@ -238,7 +279,7 @@ public class CommandManagerTests {
           case 1:
             return ImmutableList.of("123");
           default:
-            return fail(Arrays.toString(invocation.arguments()));
+            return ImmutableList.of();
         }
       }
     };
@@ -260,22 +301,48 @@ public class CommandManagerTests {
           case "bar ":
             return ImmutableList.of("11", "13", "17");
           default:
-            return fail(invocation.arguments());
+            return ImmutableList.of();
         }
       }
     };
     manager.register("raw", rawCommand);
 
+    Command deprecatedCommand = new Command() {
+      @Override
+      public List<String> suggest(
+              final CommandSource source, final String @NonNull [] currentArgs) {
+        switch (currentArgs.length) {
+          case 0:
+            return ImmutableList.of("boo", "scary");
+          case 1:
+            return ImmutableList.of("123", "456");
+          default:
+            return ImmutableList.of();
+        }
+      }
+    };
+    manager.register("deprecated", deprecatedCommand);
+
     assertCollectionsEqual(
-            ImmutableList.of("brigadier", "legacy", "raw"),
+            ImmutableList.of("brigadier", "legacy", "raw", "deprecated"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "").join());
+    assertCollectionsEqual(
+            ImmutableList.of("brigadier"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "briga").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier")
+            .join().isEmpty());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier ")
             .join().isEmpty());
-    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ")
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo")
             .join().isEmpty());
+    assertCollectionsEqual(
+            ImmutableList.of("2", "3"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ").join());
     assertCollectionsEqual(
             ImmutableList.of("foo", "bar"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "legacy ").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "legacy")
+            .join().isEmpty());
     assertCollectionsEqual(
             ImmutableList.of("123"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "legAcy foo ").join());
@@ -285,122 +352,43 @@ public class CommandManagerTests {
     assertCollectionsEqual(
             ImmutableList.of("2", "3", "5", "7"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo ").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo")
+            .join().isEmpty());
     assertCollectionsEqual(
             ImmutableList.of("11", "13", "17"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "rAW bar ").join());
+    assertCollectionsEqual(
+            ImmutableList.of("boo", "scary"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated ").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated")
+            .join().isEmpty());
+    assertCollectionsEqual(
+            ImmutableList.of("123", "456"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "deprEcated foo ").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated foo 789 ")
+            .join().isEmpty());
   }
 
-  /*@Test
-  void testConstruction() {
+  @Test
+  void testBrigadierSuggestionPermissions() {
     VelocityCommandManager manager = createManager();
-    assertFalse(manager.hasCommand("foo"));
-    assertTrue(manager.getAllRegisteredCommands().isEmpty());
-    assertTrue(manager.getBrigadierDispatcher().getRoot().getChildren().isEmpty());
-  }
-
-  @Test
-  void testLegacyRegistration() {
-    final VelocityCommandManager manager = createManager();
-    final ALegacyCommand command = new ALegacyCommand();
-
-    manager.register("foo", command);
-    assertTrue(manager.hasCommand("foo"));
-    assertTrue(manager.getAllRegisteredCommands().contains("foo"));
-
-    manager.unregister("foo");
-    assertFalse(manager.hasCommand("foo"));
-    assertFalse(manager.getAllRegisteredCommands().contains("foo"));
-
-    // Register with aliases
-    manager.register("foo", command, "bar", "baz");
-    assertTrue(manager.hasCommand("bar"));
-    assertTrue(manager.getAllRegisteredCommands().contains("baz"));
-  }
-
-  @Test
-  void testLegacy() {
-    final VelocityCommandManager manager = createManager();
-    final AtomicBoolean executed = new AtomicBoolean(false);
-    final LegacyCommand command = new LegacyCommand() {
-      @Override
-      public void execute(final LegacyCommandInvocation invocation) {
-        assertEquals(MockCommandSource.INSTANCE, invocation.source());
-        assertEquals("car", invocation.arguments()[0]);
-        executed.set(true);
-      }
-
-      @Override
-      public List<String> suggest(final LegacyCommandInvocation invocation) {
-        return ImmutableList.of("bar", "baz");
-      }
-
-      @Override
-      public boolean hasPermission(final LegacyCommandInvocation invocation) {
-        switch (invocation.arguments().length) {
-          case 0: // suggestion
-            return true;
-          case 1:
-            return invocation.arguments()[0].equals("bar");
-          default:
-            return fail();
-        }
-      }
-    };
-
-    manager.register("foo", command);
-
-    manager.offerSuggestions(MockCommandSource.INSTANCE, "")
-            .thenAccept(aliases -> {
-              // TODO I'm not 100% sure on this one,
-              // 1.12 clients need the full suggestion while 1.13+ only needs the completion
-              assertTrue(aliases.contains("/foo"));
-              assertEquals(1, aliases.size());
-            })
-            .join();
-
-    manager.offerSuggestions(MockCommandSource.INSTANCE, "foo ")
-            .thenAccept(suggestions -> {
-              assertTrue(suggestions.contains("bar"));
-              assertTrue(suggestions.contains("baz"));
-            })
-            .join();
-
-    assertTrue(manager.hasPermission(MockCommandSource.INSTANCE, "foo bar"));
-    assertFalse(manager.hasPermission(MockCommandSource.INSTANCE, "foo 123"));
-
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar").join());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo car").join(), "no permission");
-    assertTrue(executed.get());
-  }
-
-  @Test
-  void testBrigadier() {
-    final VelocityCommandManager manager = createManager();
-    final AtomicBoolean executed = new AtomicBoolean(false);
-
-    CommandNode<CommandSource> node = BrigadierCommand.argumentBuilder("foo")
-            // TODO .then(arg)
+    LiteralCommandNode<CommandSource> manageNode = LiteralArgumentBuilder
+            .<CommandSource>literal("manage")
+            .requires(source -> false)
             .build();
+    CommandNode<CommandSource> idNode = RequiredArgumentBuilder
+            .<CommandSource, Integer>argument("id", IntegerArgumentType.integer(0))
+            .suggests((context, builder) -> fail("called suggestion builder"))
+            .build();
+    manageNode.addChild(idNode);
+    manager.brigadierBuilder().register(manageNode);
 
-    final BrigadierCommand command = manager.brigadierBuilder().register(node);
-
-    manager.offerSuggestions(MockCommandSource.INSTANCE, "")
-            .thenAccept(aliases -> {
-              // See TODO on testLegacy
-              assertTrue(aliases.contains("/foo"));
-              assertEquals(1, aliases.size());
-            })
-            .join();
-
-
+    // Brigadier doesn't call the children predicate when requesting suggestions.
+    // However, it won't query children if the source doesn't pass the parent
+    // #requires predicate.
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "manage ")
+            .join().isEmpty());
   }
-
-  static class ALegacyCommand implements LegacyCommand {
-    @Override
-    public void execute(final LegacyCommandInvocation invocation) {
-
-    }
-  }*/
 
   static class NoopLegacyCommand implements LegacyCommand {
     @Override
@@ -412,6 +400,13 @@ public class CommandManagerTests {
   static class NoopRawCommand implements RawCommand {
     @Override
     public void execute(final Invocation invocation) {
+
+    }
+  }
+
+  static class NoopDeprecatedCommand implements Command {
+    @Override
+    public void execute(final CommandSource source, final String @NonNull [] args) {
 
     }
   }

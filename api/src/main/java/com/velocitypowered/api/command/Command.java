@@ -1,5 +1,6 @@
 package com.velocitypowered.api.command;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.Player;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +57,7 @@ public interface Command {
    */
   @Deprecated
   default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
-    throw new UnsupportedOperationException();
+    return ImmutableList.of();
   }
 
   /**
@@ -70,7 +71,7 @@ public interface Command {
   @Deprecated
   default CompletableFuture<List<String>> suggestAsync(final CommandSource source,
                                                        String @NonNull [] currentArgs) {
-    throw new UnsupportedOperationException();
+    return CompletableFuture.completedFuture(suggest(source, currentArgs));
   }
 
   /**
@@ -84,7 +85,7 @@ public interface Command {
    */
   @Deprecated
   default boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-    throw new UnsupportedOperationException();
+    return true;
   }
 
   /**
