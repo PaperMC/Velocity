@@ -25,6 +25,7 @@ public interface BrigadierCommand extends Command {
      *
      * @param builder the {@link CommandNode} builder
      * @return the registered command
+     * @throws IllegalArgumentException if one of the given aliases is already registered
      */
     BrigadierCommand register(LiteralArgumentBuilder<CommandSource> builder);
 
@@ -33,6 +34,7 @@ public interface BrigadierCommand extends Command {
      *
      * @param node the command node
      * @return the registered command
+     * @throws IllegalArgumentException if one of the given aliases is already registered
      */
     BrigadierCommand register(LiteralCommandNode<CommandSource> node);
   }
