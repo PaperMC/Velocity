@@ -4,12 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
@@ -21,31 +17,13 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
+import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class VelocityCommandManager implements CommandManager {
-
-  public static final int NO_PERMISSION = 0xF6287429;
-  public static final String ARGUMENTS_NAME = "arguments";
-
-  static LiteralCommandNode<CommandSource> createRawArgsNode(
-          final String alias, final com.mojang.brigadier.Command<CommandSource> brigadierCommand,
-          SuggestionProvider<CommandSource> suggestionProvider) {
-    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
-            .executes(brigadierCommand)
-            .build();
-    CommandNode<CommandSource> arguments = RequiredArgumentBuilder
-            .<CommandSource, String>argument(ARGUMENTS_NAME, StringArgumentType.greedyString())
-            .suggests(suggestionProvider)
-            .executes(brigadierCommand)
-            .build();
-    node.addChild(arguments);
-    return node;
-  }
 
   private final CommandDispatcher<CommandSource> dispatcher;
   private final VelocityEventManager eventManager;
@@ -58,25 +36,6 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public BrigadierCommand.Builder brigadierBuilder() {
     return new VelocityBrigadierCommand.Builder(this);
-  }
-
-  private void registerRedirect(final CommandNode<CommandSource> destination, final String alias) {
-    LiteralArgumentBuilder<CommandSource> builder =
-            LiteralArgumentBuilder.literal(alias.toLowerCase(Locale.ENGLISH));
-
-    if (!destination.getChildren().isEmpty()) {
-      builder = builder.redirect(destination);
-    } else {
-      // Redirects don't work for nodes without children (argument-less commands).
-      // See https://github.com/Mojang/brigadier/issues/46).
-      // Manually construct redirect instead (LiteralCommandNode.createBuilder)
-      // TODO I suspect the #forward call isn't needed
-      builder.requires(destination.getRequirement());
-      builder.forward(
-              destination.getRedirect(), destination.getRedirectModifier(), destination.isFork());
-      builder.executes(builder.getCommand());
-    }
-    dispatcher.register(builder);
   }
 
   @Override
@@ -109,7 +68,7 @@ public class VelocityCommandManager implements CommandManager {
       Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
       Preconditions.checkArgument(!hasCommand(alias1),
               "alias at index %s already registered", i + 1);
-      registerRedirect(node, alias1);
+      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(alias1, node));
     }
   }
 
@@ -165,7 +124,7 @@ public class VelocityCommandManager implements CommandManager {
   private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
     ParseResults<CommandSource> parse = parse(cmdLine, source, true);
     try {
-      return dispatcher.execute(parse) != NO_PERMISSION;
+      return dispatcher.execute(parse) != BrigadierUtils.NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
       return false;
     } catch (final Exception e) {

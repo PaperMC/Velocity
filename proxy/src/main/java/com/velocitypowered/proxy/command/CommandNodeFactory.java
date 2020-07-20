@@ -1,8 +1,5 @@
 package com.velocitypowered.proxy.command;
 
-import static com.velocitypowered.proxy.command.VelocityCommandManager.createRawArgsNode;
-import static com.velocitypowered.proxy.command.VelocityLegacyCommandInvocation.split;
-
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -11,6 +8,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.api.command.LegacyCommand;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.proxy.util.BrigadierUtils;
 
 @FunctionalInterface
 public interface CommandNodeFactory<T extends Command> {
@@ -33,45 +31,28 @@ public interface CommandNodeFactory<T extends Command> {
         }
       };
 
-  CommandNodeFactory<Command> FALLBACK = new CommandNodeFactory<>() {
+  CommandNodeFactory<Command> FALLBACK = (alias, command) ->
+      BrigadierUtils.buildRawArgumentsLiteral(alias,
+        context -> {
+          CommandSource source = context.getSource();
+          String[] args = BrigadierUtils.getSplitArguments(context);
 
-    @Override
-    public LiteralCommandNode<CommandSource> create(final String alias, final Command command) {
-      return createRawArgsNode(alias,
-          context -> {
-            CommandSource source = context.getSource();
-            String[] args = parseArguments(context.getInput());
-
-            if (!command.hasPermission(source, args)) {
-              return VelocityCommandManager.NO_PERMISSION;
+          if (!command.hasPermission(source, args)) {
+            return BrigadierUtils.NO_PERMISSION;
+          }
+          command.execute(source, args);
+          return 1;
+        },
+        (context, builder) -> {
+          String[] args = BrigadierUtils.getSplitArguments(context);
+          return command.suggestAsync(context.getSource(), args).thenApply(values -> {
+            for (String value : values) {
+              builder.suggest(value);
             }
-            command.execute(source, args);
-            return 1;
-          },
-          (context, builder) -> {
-            CommandSource source = context.getSource();
-            String[] args = parseArguments(context.getInput());
 
-            return command.suggestAsync(source, args).thenApply(values -> {
-              for (String value : values) {
-                builder.suggest(value);
-              }
-
-              return builder.build();
-            });
+            return builder.build();
           });
-    }
-
-    private String[] parseArguments(final String cmdLine) {
-      // This ugly parsing will be removed on Velocity 2.0,
-      // see VelocityLegacyCommandInvocation for replacement.
-      int firstSpace = cmdLine.indexOf(' ');
-      if (firstSpace == -1) {
-        return new String[0];
-      }
-      return split(cmdLine.substring(firstSpace + 1));
-    }
-  };
+        });
 
   /**
    * Returns a Brigadier node for the execution of the given command.
@@ -85,15 +66,14 @@ public interface CommandNodeFactory<T extends Command> {
   abstract class InvocableCommandNodeFactory<I extends CommandInvocation<?>>
           implements CommandNodeFactory<InvocableCommand<I>> {
 
-
     @Override
     public LiteralCommandNode<CommandSource> create(
             final String alias, final InvocableCommand<I> command) {
-      return createRawArgsNode(alias,
+      return BrigadierUtils.buildRawArgumentsLiteral(alias,
           context -> {
             I invocation = createInvocation(context);
             if (!command.hasPermission(invocation)) {
-              return VelocityCommandManager.NO_PERMISSION;
+              return BrigadierUtils.NO_PERMISSION;
             }
             command.execute(invocation);
             return 1;

@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.proxy.util.BrigadierUtils;
 
 final class VelocityRawCommandInvocation extends AbstractCommandInvocation<String>
         implements RawCommand.Invocation {
@@ -15,7 +16,9 @@ final class VelocityRawCommandInvocation extends AbstractCommandInvocation<Strin
     @Override
     public RawCommand.Invocation create(final CommandContext<CommandSource> context) {
       return new VelocityRawCommandInvocation(
-              context.getSource(), getAlias(context), getArguments(context));
+              context.getSource(),
+              BrigadierUtils.getAlias(context),
+              BrigadierUtils.getRawArguments(context));
     }
   }
 
