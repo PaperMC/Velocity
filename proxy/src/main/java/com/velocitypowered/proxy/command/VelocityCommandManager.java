@@ -126,6 +126,7 @@ public class VelocityCommandManager implements CommandManager {
     try {
       return dispatcher.execute(parse) != BrigadierUtils.NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
+      // TODO Distinguish between syntax errors and missing command
       return false;
     } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -152,14 +153,8 @@ public class VelocityCommandManager implements CommandManager {
 
   private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
                                             final boolean trim) {
-    String command = trim ? cmdLine.trim() : cmdLine;
-    int firstSpace = command.indexOf(' ');
-    if (firstSpace != -1) {
-      // Command aliases are case-insensitive
-      command = cmdLine.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
-          + cmdLine.substring(firstSpace);
-    }
-    return dispatcher.parse(command, source);
+    String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
+    return dispatcher.parse(normalized, source);
   }
 
   /**

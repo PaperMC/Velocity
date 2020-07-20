@@ -32,21 +32,16 @@ public final class BrigadierUtils {
    */
   public static LiteralCommandNode<CommandSource> buildRedirect(
           final String alias, final CommandNode<CommandSource> destination) {
-    LiteralArgumentBuilder<CommandSource> builder = LiteralArgumentBuilder
-            .literal(alias.toLowerCase(Locale.ENGLISH));
-
-    if (!destination.getChildren().isEmpty()) {
-      builder.redirect(destination);
-    } else {
-      // Redirects don't work for nodes without children (argument-less commands).
-      // See https://github.com/Mojang/brigadier/issues/46).
-      // Manually construct redirect instead (LiteralCommandNode.createBuilder)
-      builder.requires(destination.getRequirement());
-      builder.forward(
-              destination.getRedirect(), destination.getRedirectModifier(), destination.isFork());
-      builder.executes(destination.getCommand());
-    }
-    return builder.build();
+    // Redirects don't work for nodes without children (argument-less commands).
+    // See https://github.com/Mojang/brigadier/issues/46).
+    // Manually construct redirect instead (LiteralCommandNode.createBuilder)
+    return LiteralArgumentBuilder
+            .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .requires(destination.getRequirement())
+            .forward(
+               destination.getRedirect(), destination.getRedirectModifier(), destination.isFork())
+            .executes(destination.getCommand())
+            .build();
   }
 
   private static final String ARGUMENTS_NAME = "arguments";
@@ -63,17 +58,15 @@ public final class BrigadierUtils {
   public static LiteralCommandNode<CommandSource> buildRawArgumentsLiteral(
           final String alias, final Command<CommandSource> brigadierCommand,
           SuggestionProvider<CommandSource> suggestionProvider) {
-    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+    return LiteralArgumentBuilder
             .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .then(RequiredArgumentBuilder
+                .<CommandSource, String>argument(ARGUMENTS_NAME, StringArgumentType.greedyString())
+                .suggests(suggestionProvider)
+                .executes(brigadierCommand)
+            )
             .executes(brigadierCommand)
             .build();
-    CommandNode<CommandSource> arguments = RequiredArgumentBuilder
-            .<CommandSource, String>argument(ARGUMENTS_NAME, StringArgumentType.greedyString())
-            .suggests(suggestionProvider)
-            .executes(brigadierCommand)
-            .build();
-    node.addChild(arguments);
-    return node;
   }
 
   /**
@@ -113,6 +106,24 @@ public final class BrigadierUtils {
       return new String[0];
     }
     return line.trim().split(" ", -1);
+  }
+
+  /**
+   * Returns the normalized representation of the given command input.
+   *
+   * @param cmdLine the command input
+   * @param trim whether to trim argument-less inputs
+   * @return the normalized command
+   */
+  public static String normalizeInput(final String cmdLine, final boolean trim) {
+    // Command aliases are case insensitive, but Brigadier isn't
+    String command = trim ? cmdLine.trim() : cmdLine;
+    int firstSpace = command.indexOf(' ');
+    if (firstSpace != -1) {
+      return command.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
+              + command.substring(firstSpace);
+    }
+    return command.toLowerCase(Locale.ENGLISH);
   }
 
   private BrigadierUtils() {
