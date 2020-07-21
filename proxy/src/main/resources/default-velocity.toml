@@ -123,6 +123,9 @@ show-ping-requests = false
 # can disable this setting to use the BungeeCord behavior.
 failover-on-unexpected-server-disconnect = true
 
+# Enables the logging of commands
+log-command-executions = false
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false
