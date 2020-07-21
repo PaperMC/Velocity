@@ -56,6 +56,9 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     assertFalse(manager.hasCommand("foo"));
     assertTrue(manager.getDispatcher().getRoot().getChildren().isEmpty());
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "bar").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "").join().isEmpty());
   }
 
   @Test
