@@ -585,7 +585,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean tcpFastOpen = false;
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
-    private boolean failoverOnUnexpectedServerDisconnect = false;
+    private boolean failoverOnUnexpectedServerDisconnect = true;
     private boolean logCommandExecutions = false;
 
     private Advanced() {
