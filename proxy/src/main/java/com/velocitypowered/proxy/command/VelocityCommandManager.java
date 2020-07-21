@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.TextComponent;
 
 public class VelocityCommandManager implements CommandManager {
 
@@ -126,8 +127,12 @@ public class VelocityCommandManager implements CommandManager {
     try {
       return dispatcher.execute(parse) != BrigadierUtils.NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
-      // TODO Distinguish between syntax errors and missing command
-      return false;
+      boolean unknownAlias =
+              e.getType() == CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand();
+      if (!unknownAlias) {
+        source.sendMessage(TextComponent.of(e.getMessage()));
+      }
+      return !unknownAlias;
     } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }

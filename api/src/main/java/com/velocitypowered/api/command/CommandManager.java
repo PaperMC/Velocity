@@ -53,7 +53,6 @@ public interface CommandManager {
    * @return a future that may be completed with the result of the command execution.
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  // TODO Move to CompletableFuture<CommandResult>?
   CompletableFuture<Boolean> execute(CommandSource source, String cmdLine);
 
   /**
