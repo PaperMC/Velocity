@@ -11,7 +11,7 @@ import java.util.Queue;
  * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages
  * on {@code channelRead} and only releases them on an explicit read operation.
  */
-public class AutoReadHolderHandler extends ChannelDuplexHandler implements ChannelInboundHandler {
+public class AutoReadHolderHandler extends ChannelDuplexHandler {
 
   private final Queue<Object> queuedMessages;
 

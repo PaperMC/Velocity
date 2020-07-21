@@ -8,7 +8,7 @@ import io.netty.handler.codec.CorruptedFrameException;
 /**
  * Extends {@link com.google.common.base.Preconditions} for Netty's {@link CorruptedFrameException}.
  */
-public class NettyPreconditions {
+public final class NettyPreconditions {
   private static final QuietDecoderException BAD = new QuietDecoderException(
       "Invalid packet received. Launch Velocity with -Dvelocity.packet-decode-logging=true "
           + "to see more.");

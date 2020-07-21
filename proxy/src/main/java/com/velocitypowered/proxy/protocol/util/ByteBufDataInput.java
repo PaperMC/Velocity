@@ -10,7 +10,7 @@ import java.io.IOException;
  * A wrapper around {@link io.netty.buffer.ByteBuf} that implements the exception-free
  * {@link ByteArrayDataInput} interface from Guava.
  */
-public class ByteBufDataInput implements ByteArrayDataInput, DataInput {
+public class ByteBufDataInput implements ByteArrayDataInput {
 
   private final ByteBuf in;
 

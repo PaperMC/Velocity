@@ -31,6 +31,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -129,6 +130,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
           .thenComposeAsync(event -> processCommandExecuteResult(originalCommand,
               event.getResult()))
+          .whenComplete((ignored, throwable) -> {
+            if (server.getConfiguration().isLogCommandExecutions()) {
+              logger.info("{} -> executed command /{}", player, originalCommand);
+            }
+          })
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.getUsername(), e);
@@ -271,8 +277,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(TextComponent.of("Your connection has encountered an error. Try again later.",
-        NamedTextColor.RED));
+    player.disconnect(VelocityMessages.GENERIC_CONNECTION_ERROR);
   }
 
   @Override

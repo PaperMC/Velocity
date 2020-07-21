@@ -17,7 +17,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.Optional;
 import java.util.StringJoiner;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 class BungeeCordMessageResponder {
 
@@ -134,15 +138,24 @@ class BungeeCordMessageResponder {
   }
 
   private void processMessage(ByteBufDataInput in) {
+    processMessage0(in, LegacyComponentSerializer.legacy());
+  }
+
+  private void processMessageRaw(ByteBufDataInput in) {
+    processMessage0(in, GsonComponentSerializer.gson());
+  }
+
+  private void processMessage0(ByteBufDataInput in,
+      ComponentSerializer<Component, ?, String> serializer) {
     String target = in.readUTF();
     String message = in.readUTF();
+
+    Component messageComponent = serializer.deserialize(message);
     if (target.equals("ALL")) {
-      for (Player player : proxy.getAllPlayers()) {
-        player.sendMessage(LegacyComponentSerializer.INSTANCE.deserialize(message));
-      }
+      proxy.sendMessage(messageComponent);
     } else {
       proxy.getPlayer(target).ifPresent(player -> {
-        player.sendMessage(LegacyComponentSerializer.INSTANCE.deserialize(message));
+        player.sendMessage(messageComponent);
       });
     }
   }
@@ -197,7 +210,7 @@ class BungeeCordMessageResponder {
   private void processKick(ByteBufDataInput in) {
     proxy.getPlayer(in.readUTF()).ifPresent(player -> {
       String kickReason = in.readUTF();
-      player.disconnect(LegacyComponentSerializer.INSTANCE.deserialize(kickReason));
+      player.disconnect(LegacyComponentSerializer.legacy().deserialize(kickReason));
     });
   }
 
@@ -311,6 +324,9 @@ class BungeeCordMessageResponder {
         break;
       case "Message":
         this.processMessage(in);
+        break;
+      case "MessageRaw":
+        this.processMessageRaw(in);
         break;
       case "GetServer":
         this.processGetServer();

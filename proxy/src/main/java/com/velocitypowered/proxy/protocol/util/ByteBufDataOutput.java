@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * A {@link DataOutput} equivalent to {@link ByteBufDataInput}.
  */
-public class ByteBufDataOutput extends OutputStream implements DataOutput, ByteArrayDataOutput {
+public class ByteBufDataOutput extends OutputStream implements ByteArrayDataOutput {
 
   private final ByteBuf buf;
   private final DataOutputStream utf8out;

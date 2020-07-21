@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-public class PluginMessageUtil {
+public final class PluginMessageUtil {
 
   private static final String BRAND_CHANNEL_LEGACY = "MC|Brand";
   private static final String BRAND_CHANNEL = "minecraft:brand";
@@ -110,8 +110,8 @@ public class PluginMessageUtil {
    */
   public static PluginMessage constructChannelsPacket(ProtocolVersion protocolVersion,
                                                       Collection<String> channels) {
-    Preconditions.checkNotNull(channels, "channels");
-    Preconditions.checkArgument(channels.size() > 0, "no channels specified");
+    checkNotNull(channels, "channels");
+    checkArgument(!channels.isEmpty(), "no channels specified");
     String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
         ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
     ByteBuf contents = Unpooled.buffer();
@@ -131,14 +131,14 @@ public class PluginMessageUtil {
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
-    String toAppend = " (" + version.getName() + ")";
     String currentBrand = readBrandMessage(message.content());
+    String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      ProtocolUtils.writeString(rewrittenBuf, currentBrand + toAppend);
+      ProtocolUtils.writeString(rewrittenBuf, rewrittenBrand);
     } else {
-      rewrittenBuf.writeBytes((currentBrand + toAppend).getBytes());
+      rewrittenBuf.writeCharSequence(rewrittenBrand, StandardCharsets.UTF_8);
     }
 
     return new PluginMessage(message.getChannel(), rewrittenBuf);

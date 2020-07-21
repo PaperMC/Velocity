@@ -342,8 +342,16 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isShowPingRequests();
   }
 
+  public boolean isFailoverOnUnexpectedServerDisconnect() {
+    return advanced.isFailoverOnUnexpectedServerDisconnect();
+  }
+
   public boolean isAnnounceProxyCommands() {
     return advanced.isAnnounceProxyCommands();
+  }
+
+  public boolean isLogCommandExecutions() {
+    return advanced.isLogCommandExecutions();
   }
 
   @Override
@@ -581,7 +589,9 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean tcpFastOpen = false;
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
+    private boolean failoverOnUnexpectedServerDisconnect = true;
     private boolean announceProxyCommands = true;
+    private boolean logCommandExecutions = false;
 
     private Advanced() {
     }
@@ -597,7 +607,10 @@ public class VelocityConfiguration implements ProxyConfig {
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
+        this.failoverOnUnexpectedServerDisconnect = config
+            .getOrElse("failover-on-unexpected-server-disconnect", true);
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
+        this.logCommandExecutions = config.getOrElse("log-command-executions", false);
       }
     }
 
@@ -637,8 +650,16 @@ public class VelocityConfiguration implements ProxyConfig {
       return showPingRequests;
     }
 
+    public boolean isFailoverOnUnexpectedServerDisconnect() {
+      return failoverOnUnexpectedServerDisconnect;
+    }
+
     public boolean isAnnounceProxyCommands() {
       return announceProxyCommands;
+    }
+
+    public boolean isLogCommandExecutions() {
+      return logCommandExecutions;
     }
 
     @Override
@@ -653,7 +674,9 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests
+          + ", failoverOnUnexpectedServerDisconnect=" + failoverOnUnexpectedServerDisconnect
           + ", announceProxyCommands=" + announceProxyCommands
+          + ", logCommandExecutions=" + logCommandExecutions
           + '}';
     }
   }

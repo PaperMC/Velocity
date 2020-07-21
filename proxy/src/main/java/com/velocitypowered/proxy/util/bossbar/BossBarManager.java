@@ -57,7 +57,7 @@ public class BossBarManager implements BossBar.Listener {
   }
 
   private BossBarHolder getOrCreateHandler(BossBar bar) {
-    BossBarHolder holder = this.bars.computeIfAbsent(bar, (k) -> new BossBarHolder(bar));
+    BossBarHolder holder = this.bars.computeIfAbsent(bar, k -> new BossBarHolder(bar));
     holder.register();
     return holder;
   }

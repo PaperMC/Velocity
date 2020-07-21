@@ -117,8 +117,17 @@ bungee-plugin-message-channel = true
 # Shows ping requests to the proxy from clients.
 show-ping-requests = false
 
+# By default, Velocity will attempt to gracefully handle situations where the user unexpectedly
+# loses connection to the server without an explicit disconnect message by attempting to fall the
+# user back, except in the case of read timeouts. BungeeCord will disconnect the user instead. You
+# can disable this setting to use the BungeeCord behavior.
+failover-on-unexpected-server-disconnect = true
+
 # Declares the proxy commands to 1.13+ clients.
 announce-proxy-commands = true
+
+# Enables the logging of commands
+log-command-executions = false
 
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
