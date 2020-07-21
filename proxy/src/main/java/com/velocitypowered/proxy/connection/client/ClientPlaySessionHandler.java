@@ -452,9 +452,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String command = request.getCommand().substring(1);
     server.getCommandManager().offerSuggestions(player, command)
         .thenAcceptAsync(offers -> {
+          boolean needsSlash = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
           try {
             for (String offer : offers) {
-              response.getOffers().add(new Offer(offer, null));
+              response.getOffers().add(new Offer(needsSlash ? "/" + offer : offer, null));
             }
             response.getOffers().sort(null);
             player.getConnection().write(response);
