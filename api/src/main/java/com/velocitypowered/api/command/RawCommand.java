@@ -65,21 +65,9 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
     return hasPermission(source, String.join(" ", args));
   }
 
-  // Older classes don't implement these methods, provide default impls for ABI compatibility
-
   @Override
   default void execute(Invocation invocation) {
-
-  }
-
-  @Override
-  default List<String> suggest(final Invocation invocation) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  default boolean hasPermission(final Invocation invocation) {
-    return true;
+    // Guarantees ABI compatibility
   }
 
   /**
