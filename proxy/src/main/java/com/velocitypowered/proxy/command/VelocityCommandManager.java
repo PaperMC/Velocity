@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
 
@@ -127,12 +128,12 @@ public class VelocityCommandManager implements CommandManager {
     try {
       return dispatcher.execute(parse) != BrigadierUtils.NO_PERMISSION;
     } catch (final CommandSyntaxException e) {
-      boolean unknownAlias =
-              e.getType() == CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand();
-      if (!unknownAlias) {
-        source.sendMessage(TextComponent.of(e.getMessage()));
+      boolean isUnknownAlias = e.getType().equals(
+              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+      if (!isUnknownAlias) {
+        source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
       }
-      return !unknownAlias;
+      return !isUnknownAlias;
     } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }

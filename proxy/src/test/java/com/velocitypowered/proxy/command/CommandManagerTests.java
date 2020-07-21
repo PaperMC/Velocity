@@ -175,10 +175,10 @@ public class CommandManagerTests {
     assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 14").join());
     assertTrue(checkedRequires.compareAndSet(true, false));
     assertTrue(executed.get());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
-            "Invalid arg returns false");
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas").join(),
-            "no permission returns false");
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
+            "Invalid arg returns true");
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas").join(),
+            "requires() = false returns true");
     assertTrue(checkedRequires.get());
   }
 
@@ -210,7 +210,7 @@ public class CommandManagerTests {
 
     manager.register("dangerous", noPermsCommand, "veryDangerous");
     assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous").join());
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
             .join());
   }
 
