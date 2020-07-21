@@ -4,7 +4,11 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-// TODO Document
+/**
+ * A command that can be executed with arbitrary arguments.
+ *
+ * @param <I> the type of the command invocation object
+ */
 public interface InvocableCommand<I extends CommandInvocation<?>> extends Command {
 
   /**

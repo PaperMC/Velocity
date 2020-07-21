@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-// TODO Review javadoc
 /**
- * Represents a command that can be executed by a {@link CommandSource}, such as
- * a {@link Player} or the console.
+ * Represents a command that can be executed by a {@link CommandSource}
+ * such as a {@link Player} or the console.
  *
  * <p>Velocity 1.1.0 introduces specialized command subinterfaces to separate
  * command parsing concerns. These include, in order of preference:
@@ -27,10 +26,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * </ul>
  *
- * For this reason, the legacy {@code execute()}, {@code suggest()},
- * and {@code hasPermission()} methods are deprecated and will be removed in Velocity 2.0.0.
- * We suggest implementing one of the more specific subinterfaces instead.
- * The legacy methods are only executed by a {@link CommandManager} if
+ * For this reason, the legacy {@code execute}, {@code suggest} and
+ * {@code hasPermission} methods are deprecated and will be removed
+ * in Velocity 2.0.0. We suggest implementing one of the more specific
+ * subinterfaces instead.
+ * The legacy methods are executed by a {@link CommandManager} if and only if
  * the given command <b>directly</b> implements this interface.
  */
 public interface Command {
@@ -94,7 +94,6 @@ public interface Command {
    * @param <T> the type of the built command
    * @param <B> the type of this builder
    */
-  // TODO Is this useful to API users? Velocity only uses it for building Brigadier commands
   // See https://community.oracle.com/blogs/emcmanus/2010/10/24/using-builder-pattern-subclasses
   interface Builder<T, B extends Builder<T, B>> {
 

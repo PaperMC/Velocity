@@ -8,10 +8,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
  * A command that uses Brigadier for parsing the command and providing
  * suggestions to the client.
  *
- * <p>Brigadier commands may be registered using a {@link Builder} instance,
- * obtainable by calling {@link CommandManager#brigadierBuilder()}.
- *
- * @see <a href="https://github.com/Mojang/brigadier#registering-a-new-command">How to create a command</a>
+ * <p>Brigadier commands may be registered using a {@link Builder} instance
+ * obtainable via the {@link CommandManager#brigadierBuilder()} method.
  */
 public interface BrigadierCommand extends Command {
 
