@@ -1,5 +1,6 @@
 package com.velocitypowered.api.command;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -62,6 +63,23 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
   @Override
   default boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
     return hasPermission(source, String.join(" ", args));
+  }
+
+  // Older classes don't implement these methods, provide default impls for ABI compatibility
+
+  @Override
+  default void execute(Invocation invocation) {
+
+  }
+
+  @Override
+  default List<String> suggest(final Invocation invocation) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  default boolean hasPermission(final Invocation invocation) {
+    return true;
   }
 
   /**
