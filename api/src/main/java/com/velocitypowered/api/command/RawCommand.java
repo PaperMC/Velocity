@@ -2,6 +2,7 @@ package com.velocitypowered.api.command;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -37,12 +38,20 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
    * @deprecated see {@link Command}
    */
   @Deprecated
-  default List<String> suggest(final CommandSource source, final String currentArgs) {
+  default CompletableFuture<List<String>> suggest(final CommandSource source,
+                                                  final String currentArgs) {
+    // This method even has an inconsistent return type
     throw new UnsupportedOperationException();
   }
 
   @Override
   default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
+    return suggestAsync(source, currentArgs).join();
+  }
+
+  @Override
+  default CompletableFuture<List<String>> suggestAsync(final CommandSource source,
+                                                       final String @NonNull [] currentArgs) {
     return suggest(source, String.join(" ", currentArgs));
   }
 
