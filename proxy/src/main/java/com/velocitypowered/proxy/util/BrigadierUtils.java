@@ -1,15 +1,20 @@
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Preconditions;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Locale;
+import java.util.function.Predicate;
 
 /**
  * Provides utilities for working with Brigadier commands.
@@ -31,17 +36,20 @@ public final class BrigadierUtils {
    * @return the built node
    */
   public static LiteralCommandNode<CommandSource> buildRedirect(
-          final String alias, final CommandNode<CommandSource> destination) {
-    // Redirects don't work for nodes without children (argument-less commands).
-    // See https://github.com/Mojang/brigadier/issues/46).
-    // Manually construct redirect instead (LiteralCommandNode.createBuilder)
-    return LiteralArgumentBuilder
+          final String alias, final LiteralCommandNode<CommandSource> destination) {
+    // Redirects only work for nodes with children, but break the top argument-less command.
+    // Manually adding the root command after setting the redirect doesn't fix it.
+    // See https://github.com/Mojang/brigadier/issues/46). Manually clone the node instead.
+    LiteralArgumentBuilder<CommandSource> builder = LiteralArgumentBuilder
             .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
             .requires(destination.getRequirement())
             .forward(
-               destination.getRedirect(), destination.getRedirectModifier(), destination.isFork())
-            .executes(destination.getCommand())
-            .build();
+                destination.getRedirect(), destination.getRedirectModifier(), destination.isFork())
+            .executes(destination.getCommand());
+    for (CommandNode<CommandSource> child : destination.getChildren()) {
+      builder.then(child);
+    }
+    return builder.build();
   }
 
   private static final String ARGUMENTS_NAME = "arguments";
@@ -124,6 +132,45 @@ public final class BrigadierUtils {
               + command.substring(firstSpace);
     }
     return command.toLowerCase(Locale.ENGLISH);
+  }
+
+  /**
+   * Returns a node whose commands are executed iff the given predicate passes.
+   * Otherwise, the command returns {@code predicateFailReturn}.
+   *
+   * @param node the node to wrap
+   * @param predicate the predicate to test before command execution
+   * @param predicateFailReturn the execution return if the predicate fails
+   * @return the wrapped node
+   */
+  public static CommandNode<CommandSource> wrapWithContextPredicate(
+          final CommandNode<CommandSource> node,
+          final Predicate<CommandContext<CommandSource>> predicate, final int predicateFailReturn) {
+    Preconditions.checkArgument(node.getRedirect() == null, "cannot wrap redirect");
+    ArgumentBuilder<CommandSource, ?> builder = node.createBuilder();
+    if (node.getCommand() != null) {
+      builder.executes(context -> {
+        if (!predicate.test(context)) {
+          return predicateFailReturn;
+        }
+        return node.getCommand().run(context);
+      });
+    }
+    if (node instanceof ArgumentCommandNode) {
+      SuggestionProvider<CommandSource> suggestionProvider =
+              ((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions();
+      //noinspection unchecked
+      ((RequiredArgumentBuilder<CommandSource, ?>) builder).suggests((context, builder1) -> {
+        if (!predicate.test(context)) {
+          return Suggestions.empty();
+        }
+        return suggestionProvider.getSuggestions(context, builder1);
+      });
+    }
+    for (CommandNode<CommandSource> child : node.getChildren()) {
+      builder.then(wrapWithContextPredicate(child, predicate, predicateFailReturn));
+    }
+    return builder.build();
   }
 
   private BrigadierUtils() {

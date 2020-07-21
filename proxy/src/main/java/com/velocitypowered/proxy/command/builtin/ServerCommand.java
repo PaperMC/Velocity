@@ -106,8 +106,8 @@ public class ServerCommand implements LegacyCommand {
   @Override
   public List<String> suggest(final LegacyCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
-    Stream<String> possibilities = Stream.concat(Stream.of("all"), server.getAllServers()
-        .stream().map(rs -> rs.getServerInfo().getName()));
+    Stream<String> possibilities = server.getAllServers().stream()
+            .map(rs -> rs.getServerInfo().getName());
 
     if (currentArgs.length == 0) {
       return possibilities.collect(Collectors.toList());

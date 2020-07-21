@@ -210,7 +210,7 @@ public class CommandManagerTests {
 
     manager.register("dangerous", noPermsCommand, "veryDangerous");
     assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous").join());
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
             .join());
   }
 
@@ -415,6 +415,34 @@ public class CommandManagerTests {
     // #requires predicate.
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "manage ")
             .join().isEmpty());
+  }
+
+  @Test
+  void testBrigadierPermissionPredicate() {
+    VelocityCommandManager manager = createManager();
+    AtomicBoolean checkedPermission = new AtomicBoolean(false);
+    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+            .<CommandSource>literal("foo")
+            .executes(context -> fail())
+            .build();
+    CommandNode<CommandSource> args = RequiredArgumentBuilder
+            .<CommandSource, Integer>argument("bars", IntegerArgumentType.integer())
+            .executes(context -> fail())
+            .build();
+    node.addChild(args);
+    manager.brigadierBuilder()
+            .permission(context -> {
+              assertEquals(MockCommandSource.INSTANCE, context.getSource());
+              checkedPermission.set(true);
+              return false;
+            })
+            .aliases("baz")
+            .register(node);
+
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "foo").join());
+    assertTrue(checkedPermission.compareAndSet(true, false));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "baz").join());
+    assertTrue(checkedPermission.get());
   }
 
   static class NoopLegacyCommand implements LegacyCommand {
