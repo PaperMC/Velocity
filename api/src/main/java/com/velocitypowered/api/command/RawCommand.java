@@ -35,6 +35,7 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
    * @return the tab complete suggestions
    * @deprecated see {@link Command}
    */
+  @Deprecated
   default List<String> suggest(final CommandSource source, final String currentArgs) {
     throw new UnsupportedOperationException();
   }
