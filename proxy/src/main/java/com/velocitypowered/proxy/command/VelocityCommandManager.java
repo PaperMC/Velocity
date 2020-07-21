@@ -53,14 +53,24 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkArgument(!hasCommand(alias), "alias already registered");
 
-    LiteralCommandNode<CommandSource> node;
+    LiteralCommandNode<CommandSource> node = null;
     if (command instanceof VelocityBrigadierCommand) {
       node = ((VelocityBrigadierCommand) command).getNode();
     } else if (command instanceof LegacyCommand) {
       node = CommandNodeFactory.LEGACY.create(alias, (LegacyCommand) command);
     } else if (command instanceof RawCommand) {
-      node = CommandNodeFactory.RAW.create(alias, (RawCommand) command);
-    } else {
+      // This ugly hack will be removed in Velocity 2.0.
+      // We rely on the newer RawCommand implementation throwing UOE.
+      RawCommand asRaw = (RawCommand) command;
+      try {
+        asRaw.suggest(null, new String[0]);
+      } catch (final UnsupportedOperationException e) {
+        node = CommandNodeFactory.RAW.create(alias, asRaw);
+      } catch (final Exception ignored) {
+        // The implementation probably relies on a non-null source
+      }
+    }
+    if (node == null) {
       node = CommandNodeFactory.FALLBACK.create(alias, command);
     }
     dispatcher.getRoot().addChild(node);
