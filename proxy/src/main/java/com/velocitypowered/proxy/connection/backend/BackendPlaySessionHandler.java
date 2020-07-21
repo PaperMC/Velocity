@@ -29,6 +29,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.handler.timeout.ReadTimeoutException;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
@@ -205,7 +206,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     exceptionTriggered = true;
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable, true);
+    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable,
+        !(throwable instanceof ReadTimeoutException));
   }
 
   public VelocityServer getServer() {
@@ -216,9 +218,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     serverConn.getServer().removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
-      serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
-          Disconnect.create(ConnectionMessages.UNEXPECTED_DISCONNECT,
-              ProtocolVersion.MINECRAFT_1_16), true);
+      if (server.getConfiguration().isFailoverOnUnexpectedServerDisconnect()) {
+        serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
+            Disconnect.create(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR,
+                ProtocolVersion.MINECRAFT_1_16), true);
+      } else {
+        serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+      }
     }
   }
 }

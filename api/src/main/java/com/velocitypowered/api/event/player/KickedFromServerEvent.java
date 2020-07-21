@@ -209,7 +209,7 @@ public final class KickedFromServerEvent implements
       return LegacyText3ComponentSerializer.get().serialize(message);
     }
 
-    public net.kyori.adventure.text.Component getMessageComponent() {
+    public net.kyori.adventure.text.@Nullable Component getMessageComponent() {
       return message;
     }
 

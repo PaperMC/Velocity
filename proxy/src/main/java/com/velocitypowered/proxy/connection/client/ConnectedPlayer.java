@@ -566,6 +566,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           // There can't be any connection in flight now.
           connectionInFlight = null;
 
+          if (!isActive()) {
+            // If the connection is no longer active, it makes no sense to try and recover it.
+            return;
+          }
+
           if (event.getResult() instanceof DisconnectPlayer) {
             DisconnectPlayer res = (DisconnectPlayer) event.getResult();
             disconnect(res.getReasonComponent());

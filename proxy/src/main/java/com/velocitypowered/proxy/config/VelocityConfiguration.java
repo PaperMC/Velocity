@@ -342,6 +342,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isShowPingRequests();
   }
 
+  public boolean isFailoverOnUnexpectedServerDisconnect() {
+    return advanced.isFailoverOnUnexpectedServerDisconnect();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -577,6 +581,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean tcpFastOpen = false;
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
+    private boolean failoverOnUnexpectedServerDisconnect = false;
 
     private Advanced() {
     }
@@ -592,6 +597,8 @@ public class VelocityConfiguration implements ProxyConfig {
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
+        this.failoverOnUnexpectedServerDisconnect = config
+            .getOrElse("failover-on-unexpected-server-disconnect", true);
       }
     }
 
@@ -631,6 +638,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return showPingRequests;
     }
 
+    public boolean isFailoverOnUnexpectedServerDisconnect() {
+      return failoverOnUnexpectedServerDisconnect;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -643,6 +654,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests
+          + ", failoverOnUnexpectedServerDisconnect=" + failoverOnUnexpectedServerDisconnect
           + '}';
     }
   }
