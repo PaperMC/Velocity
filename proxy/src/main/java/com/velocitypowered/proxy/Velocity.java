@@ -34,7 +34,7 @@ public class Velocity {
 
     // Disable the resource leak detector by default as it reduces performance. Allow the user to
     // override this if desired.
-    if (System.getProperty("io.netty.leakDetection.level") != null) {
+    if (System.getProperty("io.netty.leakDetection.level") == null) {
       ResourceLeakDetector.setLevel(Level.DISABLED);
     }
   }
