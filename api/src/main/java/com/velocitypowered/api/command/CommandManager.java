@@ -46,6 +46,33 @@ public interface CommandManager {
   void unregister(String alias);
 
   /**
+   * Attempts to execute a command from the given {@code cmdLine} in
+   * a blocking fashion.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the command to run
+   * @return {@code true} if the command was found and executed
+   * @deprecated this method blocks the current thread during the event call and
+   *             the command execution. Prefer {@link #executeAsync(CommandSource, String)}
+   *             instead.
+   */
+  @Deprecated
+  boolean execute(CommandSource source, String cmdLine);
+
+  /**
+   * Attempts to execute a command from the given {@code cmdLine} without
+   * firing a {@link CommandExecuteEvent} in a blocking fashion.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the command to run
+   * @return {@code true} if the command was found and executed
+   * @deprecated this methods blocks the current thread during the command execution.
+   *             Prefer {@link #executeImmediatelyAsync(CommandSource, String)} instead.
+   */
+  @Deprecated
+  boolean executeImmediately(CommandSource source, String cmdLine);
+
+  /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}.
    *
    * @param source the source to execute the command for
@@ -53,7 +80,7 @@ public interface CommandManager {
    * @return a future that may be completed with the result of the command execution.
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  CompletableFuture<Boolean> execute(CommandSource source, String cmdLine);
+  CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine);
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}
@@ -64,5 +91,5 @@ public interface CommandManager {
    * @return a future that may be completed with the result of the command execution.
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  CompletableFuture<Boolean> executeImmediately(CommandSource source, String cmdLine);
+  CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 }

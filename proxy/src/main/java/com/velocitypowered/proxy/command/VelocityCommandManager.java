@@ -100,43 +100,52 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CompletableFuture<Boolean> execute(final CommandSource source, final String cmdLine) {
+  public boolean execute(final CommandSource source, final String cmdLine) {
+    return executeAsync(source, cmdLine).join();
+  }
+
+  @Override
+  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    ParseResults<CommandSource> results = parse(cmdLine, source, true);
+    try {
+      return dispatcher.execute(results) != BrigadierUtils.NO_PERMISSION;
+    } catch (final CommandSyntaxException e) {
+      boolean isSyntaxError = !e.getType().equals(
+              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+      if (isSyntaxError) {
+        source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
+      }
+      return false;
+    } catch (final Exception e) {
+      throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
+    }
+  }
+
+  @Override
+  public CompletableFuture<Boolean> executeAsync(final CommandSource source, final String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
     return callCommandEvent(source, cmdLine).thenApply(event -> {
       CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-
-      String command = commandResult.getCommand().orElse(event.getCommand());
-      return executeImmediately0(source, command);
+      return executeImmediately(source, commandResult.getCommand().orElse(event.getCommand()));
     });
   }
 
   @Override
-  public CompletableFuture<Boolean> executeImmediately(final CommandSource source,
-                                                       final String cmdLine) {
+  public CompletableFuture<Boolean> executeImmediatelyAsync(
+          final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
-    return CompletableFuture.supplyAsync(
-        () -> executeImmediately0(source, cmdLine), eventManager.getService());
-  }
 
-  private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
-    ParseResults<CommandSource> parse = parse(cmdLine, source, true);
-    try {
-      return dispatcher.execute(parse) != BrigadierUtils.NO_PERMISSION;
-    } catch (final CommandSyntaxException e) {
-      boolean isUnknownAlias = e.getType().equals(
-              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
-      if (!isUnknownAlias) {
-        source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
-      }
-      return !isUnknownAlias;
-    } catch (final Exception e) {
-      throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
-    }
+    return CompletableFuture.supplyAsync(
+            () -> executeImmediately(source, cmdLine), eventManager.getService());
   }
 
   /**
@@ -170,7 +179,7 @@ public class VelocityCommandManager implements CommandManager {
    * @return {@code true} if the alias is registered
    */
   public boolean hasCommand(final String alias) {
-    Preconditions.checkNotNull(alias);
+    Preconditions.checkNotNull(alias, "alias");
     return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
   }
 

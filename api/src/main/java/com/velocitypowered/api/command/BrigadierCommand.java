@@ -22,7 +22,8 @@ public interface BrigadierCommand extends Command {
 
     /**
      * Specifies the permission-checking predicate the {@link CommandSource}
-     * must pass to execute the command.
+     * must pass to execute the command. Prevents the command from being sent
+     * to the backend server.
      *
      * <p>Brigadier excludes nodes that don't pass the {@link CommandNode#getRequirement()}
      * predicate from parse results. Implementations therefore cannot

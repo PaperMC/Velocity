@@ -1,11 +1,6 @@
 package com.velocitypowered.proxy.command;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -56,8 +51,8 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     assertFalse(manager.hasCommand("foo"));
     assertTrue(manager.getDispatcher().getRoot().getChildren().isEmpty());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo").join());
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "bar").join());
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo"));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "bar"));
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "").join().isEmpty());
   }
 
@@ -137,7 +132,6 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
     AtomicBoolean checkedRequires = new AtomicBoolean(false);
-
     LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
             .<CommandSource>literal("buy")
             .executes(context -> {
@@ -173,15 +167,14 @@ public class CommandManagerTests {
     node.addChild(quantityNode);
     manager.brigadierBuilder().register(node);
 
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "buy ").join());
+    assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "buy ").join());
     assertTrue(executed.compareAndSet(true, false), "was executed");
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 14").join());
+    assertTrue(manager.executeImmediatelyAsync(MockCommandSource.INSTANCE, "buy 14").join());
     assertTrue(checkedRequires.compareAndSet(true, false));
     assertTrue(executed.get());
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
-            "Invalid arg returns true");
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas").join(),
-            "requires() = false returns true");
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9"),
+            "Invalid arg returns false");
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas"));
     assertTrue(checkedRequires.get());
   }
 
@@ -196,7 +189,7 @@ public class CommandManagerTests {
     };
     manager.register("foo", command);
 
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar 254").join());
+    assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "foo bar 254").join());
     assertTrue(executed.get());
 
     LegacyCommand noPermsCommand = new LegacyCommand() {
@@ -212,9 +205,8 @@ public class CommandManagerTests {
     };
 
     manager.register("dangerous", noPermsCommand, "veryDangerous");
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous").join());
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
-            .join());
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous"));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123"));
   }
 
   @Test
@@ -228,8 +220,18 @@ public class CommandManagerTests {
     };
     manager.register("sendMe", command);
 
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendMe lobby 23").join());
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendMe lobby 23"));
+    assertTrue(executed.compareAndSet(true, false));
+
+    RawCommand noArgsCommand = invocation -> {
+      assertEquals("", invocation.arguments());
+      executed.set(true);
+    };
+    manager.register("noargs", noArgsCommand);
+
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs"));
     assertTrue(executed.get());
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs "));
 
     RawCommand noPermsCommand = new RawCommand() {
       @Override
@@ -244,7 +246,7 @@ public class CommandManagerTests {
     };
 
     manager.register("sendThem", noPermsCommand);
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo"));
   }
 
   @Test
@@ -261,7 +263,7 @@ public class CommandManagerTests {
     };
     manager.register("foo", command);
 
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo boo 123").join());
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo boo 123"));
     assertTrue(executed.get());
 
     Command noPermsCommand = new Command() {
@@ -272,9 +274,8 @@ public class CommandManagerTests {
     };
 
     manager.register("oof", noPermsCommand, "veryOof");
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "veryOOF").join());
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321")
-            .join());
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "veryOOF"));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321"));
   }
 
   @Test
@@ -442,9 +443,9 @@ public class CommandManagerTests {
             .aliases("baz")
             .register(node);
 
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "foo").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "foo"));
     assertTrue(checkedPermission.compareAndSet(true, false));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "baz").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "baz"));
     assertTrue(checkedPermission.get());
   }
 
