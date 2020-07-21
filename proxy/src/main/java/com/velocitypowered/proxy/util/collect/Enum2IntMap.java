@@ -6,7 +6,7 @@ import java.util.EnumSet;
  * An immutable map of {@link Enum} entries to {@code int}s.
  * @param <E> the enum type
  */
-public class Enum2IntMap<E extends Enum<E>> {
+public final class Enum2IntMap<E extends Enum<E>> {
   private final int[] mappings;
 
   private Enum2IntMap(int[] mappings) {
