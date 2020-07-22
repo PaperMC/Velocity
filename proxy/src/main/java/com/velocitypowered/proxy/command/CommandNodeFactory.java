@@ -7,8 +7,8 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 
 @FunctionalInterface

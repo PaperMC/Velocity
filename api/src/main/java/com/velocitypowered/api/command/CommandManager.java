@@ -9,11 +9,22 @@ import java.util.concurrent.CompletableFuture;
 public interface CommandManager {
 
   /**
-   * Returns a builder to register a {@link BrigadierCommand}.
+   * Returns a builder to create a {@link CommandMeta} with
+   * the given alias.
    *
-   * @return a Brigadier command builder
+   * @param alias the first command alias
+   * @return a {@link CommandMeta} builder
    */
-  BrigadierCommand.Builder brigadierBuilder();
+  CommandMeta.Builder metaBuilder(String alias);
+
+  /**
+   * Returns a builder to create a {@link CommandMeta} for
+   * the given Brigadier command.
+   *
+   * @param command the command
+   * @return a {@link CommandMeta} builder
+   */
+  CommandMeta.Builder metaBuilder(BrigadierCommand command);
 
   /**
    * Registers the specified command with the specified aliases.
@@ -35,8 +46,27 @@ public interface CommandManager {
    * @param command the command to register
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered
+   * @deprecated Prefer {@link #register(CommandMeta, Command)} instead.
    */
+  @Deprecated
   void register(String alias, Command command, String... otherAliases);
+
+  /**
+   * Registers the specified Brigadier command.
+   *
+   * @param command the command to register
+   * @throws IllegalArgumentException if the node alias is already registered
+   */
+  void register(BrigadierCommand command);
+
+  /**
+   * Registers the specified command with the given metadata.
+   *
+   * @param meta the command metadata
+   * @param command the command to register
+   * @throws IllegalArgumentException if one of the given aliases is already registered
+   */
+  void register(CommandMeta meta, Command command);
 
   /**
    * Unregisters the specified command alias from the manager, if registered.

@@ -11,6 +11,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
@@ -19,6 +20,7 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -36,8 +38,15 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public BrigadierCommand.Builder brigadierBuilder() {
-    return new VelocityBrigadierCommand.Builder(this);
+  public CommandMeta.Builder metaBuilder(final String alias) {
+    Preconditions.checkNotNull(alias, "alias");
+    return new VelocityCommandMeta.Builder(alias);
+  }
+
+  @Override
+  public CommandMeta.Builder metaBuilder(final BrigadierCommand command) {
+    Preconditions.checkNotNull(command, "command");
+    return new VelocityCommandMeta.Builder(command.getNode().getName());
   }
 
   @Override
@@ -52,15 +61,32 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(command, "command");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
     Preconditions.checkArgument(!hasCommand(alias), "alias already registered");
+    register(metaBuilder(alias).aliases(otherAliases).build(), command);
+  }
+
+  @Override
+  public void register(final BrigadierCommand command) {
+    Preconditions.checkNotNull(command, "command");
+    register(metaBuilder(command).build(), command);
+  }
+
+  @Override
+  public void register(final CommandMeta meta, final Command command) {
+    Preconditions.checkNotNull(meta, "meta");
+    Preconditions.checkNotNull(command, "command");
+
+    Iterator<String> aliasIterator = meta.getAliases().iterator();
+    String alias = aliasIterator.next();
 
     LiteralCommandNode<CommandSource> node = null;
-    if (command instanceof VelocityBrigadierCommand) {
-      node = ((VelocityBrigadierCommand) command).getNode();
+    if (command instanceof BrigadierCommand) {
+      node = ((BrigadierCommand) command).getNode();
     } else if (command instanceof SimpleCommand) {
       node = CommandNodeFactory.SIMPLE.create(alias, (SimpleCommand) command);
     } else if (command instanceof RawCommand) {
-      // This ugly hack will be removed in Velocity 2.0.
-      // We rely on the newer RawCommand implementation throwing UOE.
+      // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
+      // have side-effect free #suggest methods. We rely on the newer RawCommand
+      // throwing UOE.
       RawCommand asRaw = (RawCommand) command;
       try {
         asRaw.suggest(null, new String[0]);
@@ -73,14 +99,19 @@ public class VelocityCommandManager implements CommandManager {
     if (node == null) {
       node = CommandNodeFactory.FALLBACK.create(alias, command);
     }
-    dispatcher.getRoot().addChild(node);
 
-    for (int i = 0, length = otherAliases.length; i < length; i++) {
-      final String alias1 = otherAliases[i];
-      Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
-      Preconditions.checkArgument(!hasCommand(alias1),
-              "alias at index %s already registered", i + 1);
-      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(alias1, node));
+    if (!(command instanceof BrigadierCommand)) {
+      for (CommandNode<CommandSource> hint : meta.getHints()) {
+        node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+      }
+    }
+
+    dispatcher.getRoot().addChild(node);
+    while (aliasIterator.hasNext()) {
+      String otherAlias = aliasIterator.next();
+      Preconditions.checkArgument(!hasCommand(otherAlias),
+              "alias %s is already registered", otherAlias);
+      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(otherAlias, node));
     }
   }
 
@@ -89,7 +120,6 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "alias");
     CommandNode<CommandSource> node =
             dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH));
-
     if (node != null) {
       dispatcher.getRoot().getChildren().remove(node);
     }

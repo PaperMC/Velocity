@@ -1,7 +1,9 @@
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Preconditions;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -10,6 +12,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Locale;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides utilities for working with Brigadier commands.
@@ -41,8 +44,6 @@ public final class BrigadierUtils {
     return builder.build();
   }
 
-  private static final String ARGUMENTS_NAME = "arguments";
-
   /**
    * Returns a literal node that optionally accepts arguments
    * as a raw {@link String}.
@@ -58,10 +59,9 @@ public final class BrigadierUtils {
     return LiteralArgumentBuilder
             .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
             .then(RequiredArgumentBuilder
-                .<CommandSource, String>argument(ARGUMENTS_NAME, StringArgumentType.greedyString())
+                .<CommandSource, String>argument("arguments", StringArgumentType.greedyString())
                 .suggests(suggestionProvider)
-                .executes(brigadierCommand)
-            )
+                .executes(brigadierCommand))
             .executes(brigadierCommand)
             .build();
   }
@@ -77,17 +77,18 @@ public final class BrigadierUtils {
   }
 
   /**
-   * Returns the raw {@link String} arguments of a command node built with
-   * {@link #buildRawArgumentsLiteral(String, Command, SuggestionProvider)}.
+   * Returns the raw {@link String} arguments of a command execution.
    *
    * @param context the command context
    * @return the parsed arguments
    */
   public static String getRawArguments(final CommandContext<CommandSource> context) {
-    if (context.getNodes().size() == 1) {
-      return ""; // only the command alias was passed
+    String cmdLine = context.getInput();
+    int firstSpace = cmdLine.indexOf(' ');
+    if (firstSpace == -1) {
+      return "";
     }
-    return context.getArgument(ARGUMENTS_NAME, String.class);
+    return cmdLine.substring(firstSpace + 1);
   }
 
   /**
@@ -121,6 +122,25 @@ public final class BrigadierUtils {
               + command.substring(firstSpace);
     }
     return command.toLowerCase(Locale.ENGLISH);
+  }
+
+  /**
+   * Prepares the given command node prior for hinting metadata to
+   * a {@link com.velocitypowered.api.command.Command}.
+   *
+   * @param node the command node to be wrapped
+   * @param command the command to execute
+   * @return the wrapped command node
+   */
+  public static CommandNode<CommandSource> wrapForHinting(
+          final CommandNode<CommandSource> node, final @Nullable Command<CommandSource> command) {
+    Preconditions.checkNotNull(node, "node");
+    ArgumentBuilder<CommandSource, ?> builder = node.createBuilder();
+    builder.executes(command);
+    for (CommandNode<CommandSource> child : node.getChildren()) {
+      builder.then(wrapForHinting(child, command));
+    }
+    return builder.build();
   }
 
   private BrigadierUtils() {

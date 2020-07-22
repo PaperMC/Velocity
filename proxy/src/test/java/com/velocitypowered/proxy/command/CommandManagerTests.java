@@ -3,22 +3,25 @@ package com.velocitypowered.proxy.command;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.jupiter.api.Test;
 
@@ -40,12 +43,6 @@ public class CommandManagerTests {
     return new VelocityCommandManager(EVENT_MANAGER);
   }
 
-  private static <T> void assertCollectionsEqual(
-          final Collection<T> expected, final Collection<T> actual) {
-    assertEquals(expected.size(), actual.size());
-    assertTrue(expected.containsAll(actual));
-  }
-
   @Test
   void testConstruction() {
     VelocityCommandManager manager = createManager();
@@ -62,23 +59,25 @@ public class CommandManagerTests {
     LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
             .<CommandSource>literal("foo")
             .build();
-    manager.brigadierBuilder()
-            .aliases("bAR", "BAZ")
-            .register(node);
+    BrigadierCommand command = new BrigadierCommand(node);
+    manager.register(command);
 
-    assertTrue(manager.hasCommand("foo"));
-    assertTrue(manager.hasCommand("Baz"));
-  }
+    assertEquals(node, command.getNode());
+    assertTrue(manager.hasCommand("fOo"));
 
-  @Test
-  void testBrigadierSelfAliasThrows() {
-    VelocityCommandManager manager = createManager();
-    BrigadierCommand.Builder builder = manager.brigadierBuilder();
-    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal("foo")
-            .executes(context -> 1)
+    LiteralCommandNode<CommandSource> barNode = LiteralArgumentBuilder
+            .<CommandSource>literal("bar")
             .build();
-    assertThrows(IllegalArgumentException.class, () -> builder.aliases("fOO").register(node));
+    BrigadierCommand aliasesCommand = new BrigadierCommand(barNode);
+    CommandMeta meta = manager.metaBuilder(aliasesCommand)
+            .aliases("baZ")
+            .build();
+
+    assertEquals(ImmutableSet.of("bar", "baz"), meta.getAliases());
+    assertTrue(meta.getHints().isEmpty());
+    manager.register(meta, aliasesCommand);
+    assertTrue(manager.hasCommand("bAr"));
+    assertTrue(manager.hasCommand("Baz"));
   }
 
   @Test
@@ -123,8 +122,12 @@ public class CommandManagerTests {
     manager.register("bar", new NoopDeprecatedCommand());
     assertThrows(IllegalArgumentException.class, () ->
             manager.register("BAR", new NoopSimpleCommand()));
-    assertThrows(IllegalArgumentException.class, () ->
-            manager.register("baz", new NoopSimpleCommand(), "bAZ"));
+    assertThrows(IllegalArgumentException.class, () -> {
+      CommandMeta meta = manager.metaBuilder("baz")
+              .aliases("BAr")
+              .build();
+      manager.register(meta, new NoopRawCommand());
+    });
   }
 
   @Test
@@ -165,7 +168,7 @@ public class CommandManagerTests {
             .build();
     quantityNode.addChild(productNode);
     node.addChild(quantityNode);
-    manager.brigadierBuilder().register(node);
+    manager.register(new BrigadierCommand(node));
 
     assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "buy ").join());
     assertTrue(executed.compareAndSet(true, false), "was executed");
@@ -300,7 +303,7 @@ public class CommandManagerTests {
             .build();
     nameNode.addChild(numberNode);
     brigadierNode.addChild(nameNode);
-    manager.brigadierBuilder().register(brigadierNode);
+    manager.register(new BrigadierCommand(brigadierNode));
 
     SimpleCommand simpleCommand = new SimpleCommand() {
       @Override
@@ -360,10 +363,11 @@ public class CommandManagerTests {
     };
     manager.register("deprecated", deprecatedCommand);
 
-    assertCollectionsEqual(
-            ImmutableList.of("brigadier", "simple", "raw", "deprecated"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "").join());
-    assertCollectionsEqual(
+    assertEquals(
+            ImmutableList.of("brigadier", "deprecated", "raw", "simple"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "").join(),
+            "literals are in alphabetical order");
+    assertEquals(
             ImmutableList.of("brigadier"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "briga").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier")
@@ -372,34 +376,34 @@ public class CommandManagerTests {
             .join().isEmpty());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo")
             .join().isEmpty());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("2", "3"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ").join());
-    assertCollectionsEqual(
-            ImmutableList.of("foo", "bar"),
+    assertEquals(
+            ImmutableList.of("bar", "foo"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "simple ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "simple")
             .join().isEmpty());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("123"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "simPle foo ").join());
-    assertCollectionsEqual(
-            ImmutableList.of("foo", "baz"),
+    assertEquals(
+            ImmutableList.of("baz", "foo"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "raw ").join());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("2", "3", "5", "7"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo")
             .join().isEmpty());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("11", "13", "17"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "rAW bar ").join());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("boo", "scary"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated")
             .join().isEmpty());
-    assertCollectionsEqual(
+    assertEquals(
             ImmutableList.of("123", "456"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "deprEcated foo ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated foo 789 ")
@@ -418,13 +422,77 @@ public class CommandManagerTests {
             .suggests((context, builder) -> fail("called suggestion builder"))
             .build();
     manageNode.addChild(idNode);
-    manager.brigadierBuilder().register(manageNode);
+    manager.register(new BrigadierCommand(manageNode));
 
     // Brigadier doesn't call the children predicate when requesting suggestions.
     // However, it won't query children if the source doesn't pass the parent
     // #requires predicate.
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "manage ")
             .join().isEmpty());
+  }
+
+  @Test
+  void testHinting() {
+    VelocityCommandManager manager = createManager();
+    AtomicBoolean executed = new AtomicBoolean(false);
+    AtomicBoolean calledSuggestionProvider = new AtomicBoolean(false);
+    AtomicReference<String> expectedArgs = new AtomicReference<>();
+    RawCommand command = new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        assertEquals(expectedArgs.get(), invocation.arguments());
+        executed.set(true);
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return ImmutableList.of("raw");
+      }
+    };
+
+    CommandNode<CommandSource> barHint = LiteralArgumentBuilder
+            .<CommandSource>literal("bar")
+            .executes(context -> fail("hints don't get executed"))
+            .build();
+    ArgumentCommandNode<CommandSource, Integer> numberArg = RequiredArgumentBuilder
+            .<CommandSource, Integer>argument("number", IntegerArgumentType.integer())
+            .suggests((context, builder) -> {
+              calledSuggestionProvider.set(true);
+              return builder.suggest("456").buildFuture();
+            })
+            .build();
+    barHint.addChild(numberArg);
+    CommandNode<CommandSource> bazHint = LiteralArgumentBuilder
+            .<CommandSource>literal("baz")
+            .build();
+    CommandMeta meta = manager.metaBuilder("foo")
+            .aliases("foo2")
+            .hint(barHint)
+            .hint(bazHint)
+            .build();
+    manager.register(meta, command);
+
+    expectedArgs.set("notBarOrBaz");
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo notBarOrBaz"));
+    assertTrue(executed.compareAndSet(true, false));
+    expectedArgs.set("anotherArg 123");
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "Foo2 anotherArg 123"));
+    assertTrue(executed.compareAndSet(true, false));
+    expectedArgs.set("bar");
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar"));
+    assertTrue(executed.compareAndSet(true, false));
+    expectedArgs.set("bar 123");
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo2 bar 123"));
+    assertTrue(executed.compareAndSet(true, false));
+
+    assertEquals(ImmutableList.of("bar", "baz", "raw"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo ").join());
+    assertFalse(calledSuggestionProvider.get());
+    assertEquals(ImmutableList.of("456"),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo bar ").join());
+    assertTrue(calledSuggestionProvider.compareAndSet(true, false));
+    assertEquals(ImmutableList.of(),
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo2 baz ").join());
   }
 
   static class NoopSimpleCommand implements SimpleCommand {

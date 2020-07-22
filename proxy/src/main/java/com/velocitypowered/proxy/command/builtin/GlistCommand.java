@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
@@ -51,8 +52,7 @@ public class GlistCommand {
             .executes(this::serverCount)
             .build();
     totalNode.addChild(serverNode);
-
-    server.getCommandManager().brigadierBuilder().register(totalNode);
+    server.getCommandManager().register(new BrigadierCommand(totalNode));
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {

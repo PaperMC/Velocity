@@ -1,6 +1,5 @@
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -24,6 +23,7 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
     throw new UnsupportedOperationException();
   }
 
+  @Deprecated
   @Override
   default void execute(final CommandSource source, final String @NonNull [] args) {
     execute(source, String.join(" ", args));
@@ -44,11 +44,13 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
     throw new UnsupportedOperationException();
   }
 
+  @Deprecated
   @Override
   default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
     return suggestAsync(source, currentArgs).join();
   }
 
+  @Deprecated
   @Override
   default CompletableFuture<List<String>> suggestAsync(final CommandSource source,
                                                        final String @NonNull [] currentArgs) {
@@ -69,6 +71,7 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
     throw new UnsupportedOperationException();
   }
 
+  @Deprecated
   @Override
   default boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
     return hasPermission(source, String.join(" ", args));
