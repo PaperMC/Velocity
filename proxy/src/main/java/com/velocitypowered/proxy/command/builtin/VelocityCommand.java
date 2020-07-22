@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class VelocityCommand implements LegacyCommand {
+public class VelocityCommand implements SimpleCommand {
 
   private interface SubCommand {
 
@@ -63,7 +63,7 @@ public class VelocityCommand implements LegacyCommand {
   }
 
   @Override
-  public void execute(final LegacyCommand.Invocation invocation) {
+  public void execute(final SimpleCommand.Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 
@@ -83,7 +83,7 @@ public class VelocityCommand implements LegacyCommand {
   }
 
   @Override
-  public List<String> suggest(final LegacyCommand.Invocation invocation) {
+  public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] currentArgs = invocation.arguments();
 
@@ -113,7 +113,7 @@ public class VelocityCommand implements LegacyCommand {
   }
 
   @Override
-  public boolean hasPermission(final LegacyCommand.Invocation invocation) {
+  public boolean hasPermission(final SimpleCommand.Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 

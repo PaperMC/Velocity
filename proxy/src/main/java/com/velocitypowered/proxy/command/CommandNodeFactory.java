@@ -6,19 +6,19 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
-import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 
 @FunctionalInterface
 public interface CommandNodeFactory<T extends Command> {
 
-  InvocableCommandNodeFactory<LegacyCommand.Invocation> LEGACY =
+  InvocableCommandNodeFactory<SimpleCommand.Invocation> SIMPLE =
       new InvocableCommandNodeFactory<>() {
         @Override
-        protected LegacyCommand.Invocation createInvocation(
+        protected SimpleCommand.Invocation createInvocation(
                 final CommandContext<CommandSource> context) {
-          return VelocityLegacyCommandInvocation.FACTORY.create(context);
+          return VelocitySimpleCommandInvocation.FACTORY.create(context);
         }
       };
 

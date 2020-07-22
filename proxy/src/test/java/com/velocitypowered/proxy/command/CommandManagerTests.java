@@ -12,7 +12,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
@@ -82,9 +82,9 @@ public class CommandManagerTests {
   }
 
   @Test
-  void testLegacyRegister() {
+  void testSimpleRegister() {
     VelocityCommandManager manager = createManager();
-    LegacyCommand command = new NoopLegacyCommand();
+    SimpleCommand command = new NoopSimpleCommand();
 
     manager.register("Foo", command);
     assertTrue(manager.hasCommand("foO"));
@@ -122,9 +122,9 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     manager.register("bar", new NoopDeprecatedCommand());
     assertThrows(IllegalArgumentException.class, () ->
-            manager.register("BAR", new NoopLegacyCommand()));
+            manager.register("BAR", new NoopSimpleCommand()));
     assertThrows(IllegalArgumentException.class, () ->
-            manager.register("baz", new NoopLegacyCommand(), "bAZ"));
+            manager.register("baz", new NoopSimpleCommand(), "bAZ"));
   }
 
   @Test
@@ -179,10 +179,10 @@ public class CommandManagerTests {
   }
 
   @Test
-  void testLegacyExecute() {
+  void testSimpleExecute() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
-    LegacyCommand command = invocation -> {
+    SimpleCommand command = invocation -> {
       assertEquals(MockCommandSource.INSTANCE, invocation.source());
       assertArrayEquals(new String[] {"bar", "254"}, invocation.arguments());
       executed.set(true);
@@ -192,7 +192,7 @@ public class CommandManagerTests {
     assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "foo bar 254").join());
     assertTrue(executed.get());
 
-    LegacyCommand noPermsCommand = new LegacyCommand() {
+    SimpleCommand noPermsCommand = new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail("was executed");
@@ -213,19 +213,25 @@ public class CommandManagerTests {
   void testRawExecute() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
-    RawCommand command = invocation -> {
-      assertEquals(MockCommandSource.INSTANCE, invocation.source());
-      assertEquals("lobby 23", invocation.arguments());
-      executed.set(true);
+    RawCommand command = new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        assertEquals(MockCommandSource.INSTANCE, invocation.source());
+        assertEquals("lobby 23", invocation.arguments());
+        executed.set(true);
+      }
     };
     manager.register("sendMe", command);
 
     assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendMe lobby 23"));
     assertTrue(executed.compareAndSet(true, false));
 
-    RawCommand noArgsCommand = invocation -> {
-      assertEquals("", invocation.arguments());
-      executed.set(true);
+    RawCommand noArgsCommand = new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        assertEquals("", invocation.arguments());
+        executed.set(true);
+      }
     };
     manager.register("noargs", noArgsCommand);
 
@@ -296,7 +302,7 @@ public class CommandManagerTests {
     brigadierNode.addChild(nameNode);
     manager.brigadierBuilder().register(brigadierNode);
 
-    LegacyCommand legacyCommand = new LegacyCommand() {
+    SimpleCommand simpleCommand = new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -314,7 +320,7 @@ public class CommandManagerTests {
         }
       }
     };
-    manager.register("legacy", legacyCommand);
+    manager.register("simple", simpleCommand);
 
     RawCommand rawCommand = new RawCommand() {
       @Override
@@ -355,7 +361,7 @@ public class CommandManagerTests {
     manager.register("deprecated", deprecatedCommand);
 
     assertCollectionsEqual(
-            ImmutableList.of("brigadier", "legacy", "raw", "deprecated"),
+            ImmutableList.of("brigadier", "simple", "raw", "deprecated"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "").join());
     assertCollectionsEqual(
             ImmutableList.of("brigadier"),
@@ -371,12 +377,12 @@ public class CommandManagerTests {
             manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ").join());
     assertCollectionsEqual(
             ImmutableList.of("foo", "bar"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "legacy ").join());
-    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "legacy")
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "simple ").join());
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "simple")
             .join().isEmpty());
     assertCollectionsEqual(
             ImmutableList.of("123"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "legAcy foo ").join());
+            manager.offerSuggestions(MockCommandSource.INSTANCE, "simPle foo ").join());
     assertCollectionsEqual(
             ImmutableList.of("foo", "baz"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "raw ").join());
@@ -449,7 +455,7 @@ public class CommandManagerTests {
     assertTrue(checkedPermission.get());
   }
 
-  static class NoopLegacyCommand implements LegacyCommand {
+  static class NoopSimpleCommand implements SimpleCommand {
     @Override
     public void execute(final Invocation invocation) {
 

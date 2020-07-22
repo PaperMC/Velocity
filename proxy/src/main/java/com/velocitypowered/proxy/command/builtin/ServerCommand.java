@@ -4,7 +4,7 @@ import static net.kyori.adventure.text.event.HoverEvent.showText;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -19,7 +19,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-public class ServerCommand implements LegacyCommand {
+public class ServerCommand implements SimpleCommand {
 
   public static final int MAX_SERVERS_TO_LIST = 50;
   private final ProxyServer server;
@@ -29,7 +29,7 @@ public class ServerCommand implements LegacyCommand {
   }
 
   @Override
-  public void execute(final LegacyCommand.Invocation invocation) {
+  public void execute(final SimpleCommand.Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 
@@ -104,7 +104,7 @@ public class ServerCommand implements LegacyCommand {
   }
 
   @Override
-  public List<String> suggest(final LegacyCommand.Invocation invocation) {
+  public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
     Stream<String> possibilities = server.getAllServers().stream()
             .map(rs -> rs.getServerInfo().getName());
@@ -121,7 +121,7 @@ public class ServerCommand implements LegacyCommand {
   }
 
   @Override
-  public boolean hasPermission(final LegacyCommand.Invocation invocation) {
+  public boolean hasPermission(final SimpleCommand.Invocation invocation) {
     return invocation.source().getPermissionValue("velocity.command.server") != Tristate.FALSE;
   }
 }

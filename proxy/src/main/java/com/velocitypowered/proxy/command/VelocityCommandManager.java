@@ -12,7 +12,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.LegacyCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
@@ -56,8 +56,8 @@ public class VelocityCommandManager implements CommandManager {
     LiteralCommandNode<CommandSource> node = null;
     if (command instanceof VelocityBrigadierCommand) {
       node = ((VelocityBrigadierCommand) command).getNode();
-    } else if (command instanceof LegacyCommand) {
-      node = CommandNodeFactory.LEGACY.create(alias, (LegacyCommand) command);
+    } else if (command instanceof SimpleCommand) {
+      node = CommandNodeFactory.SIMPLE.create(alias, (SimpleCommand) command);
     } else if (command instanceof RawCommand) {
       // This ugly hack will be removed in Velocity 2.0.
       // We rely on the newer RawCommand implementation throwing UOE.
