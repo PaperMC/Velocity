@@ -138,7 +138,7 @@ class BungeeCordMessageResponder {
   }
 
   private void processMessage(ByteBufDataInput in) {
-    processMessage0(in, LegacyComponentSerializer.legacy());
+    processMessage0(in, LegacyComponentSerializer.legacySection());
   }
 
   private void processMessageRaw(ByteBufDataInput in) {
@@ -210,7 +210,7 @@ class BungeeCordMessageResponder {
   private void processKick(ByteBufDataInput in) {
     proxy.getPlayer(in.readUTF()).ifPresent(player -> {
       String kickReason = in.readUTF();
-      player.disconnect(LegacyComponentSerializer.legacy().deserialize(kickReason));
+      player.disconnect(LegacyComponentSerializer.legacySection().deserialize(kickReason));
     });
   }
 

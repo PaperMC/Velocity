@@ -48,7 +48,7 @@ public class LegacyDisconnect {
             LEGACY_COLOR_CODE + "1",
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
-            getFirstLine(LegacyComponentSerializer.legacy().serialize(response
+            getFirstLine(LegacyComponentSerializer.legacySection().serialize(response
                 .getDescriptionComponent())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
@@ -74,7 +74,7 @@ public class LegacyDisconnect {
    */
   public static LegacyDisconnect from(TextComponent component) {
     // We intentionally use the legacy serializers, because the old clients can't understand JSON.
-    String serialized = LegacyComponentSerializer.legacy().serialize(component);
+    String serialized = LegacyComponentSerializer.legacySection().serialize(component);
     return new LegacyDisconnect(serialized);
   }
 

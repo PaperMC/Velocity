@@ -39,7 +39,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
-    logger.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacy()
+    logger.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
         .serialize(message));
   }
 
