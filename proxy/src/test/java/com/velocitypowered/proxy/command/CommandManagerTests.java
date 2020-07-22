@@ -12,8 +12,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.Collection;
@@ -425,34 +425,6 @@ public class CommandManagerTests {
     // #requires predicate.
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "manage ")
             .join().isEmpty());
-  }
-
-  @Test
-  void testBrigadierPermissionPredicate() {
-    VelocityCommandManager manager = createManager();
-    AtomicBoolean checkedPermission = new AtomicBoolean(false);
-    LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal("foo")
-            .executes(context -> fail())
-            .build();
-    CommandNode<CommandSource> args = RequiredArgumentBuilder
-            .<CommandSource, Integer>argument("bars", IntegerArgumentType.integer())
-            .executes(context -> fail())
-            .build();
-    node.addChild(args);
-    manager.brigadierBuilder()
-            .permission(context -> {
-              assertEquals(MockCommandSource.INSTANCE, context.getSource());
-              checkedPermission.set(true);
-              return false;
-            })
-            .aliases("baz")
-            .register(node);
-
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "foo"));
-    assertTrue(checkedPermission.compareAndSet(true, false));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "baz"));
-    assertTrue(checkedPermission.get());
   }
 
   static class NoopSimpleCommand implements SimpleCommand {

@@ -35,6 +35,8 @@ public class GlistCommand {
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
+            .requires(source ->
+                    source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
             .executes(this::totalCount)
             .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
@@ -50,10 +52,7 @@ public class GlistCommand {
             .build();
     totalNode.addChild(serverNode);
 
-    server.getCommandManager().brigadierBuilder()
-            .permission(context -> context.getSource()
-                    .getPermissionValue("velocity.command.glist") == Tristate.TRUE)
-            .register(totalNode);
+    server.getCommandManager().brigadierBuilder().register(totalNode);
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {

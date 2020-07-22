@@ -12,8 +12,8 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
@@ -121,7 +121,7 @@ public class VelocityCommandManager implements CommandManager {
 
     ParseResults<CommandSource> results = parse(cmdLine, source, true);
     try {
-      return dispatcher.execute(results) != BrigadierUtils.NO_PERMISSION;
+      return dispatcher.execute(results) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
               CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());

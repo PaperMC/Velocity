@@ -2,12 +2,9 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.proxy.util.BrigadierUtils;
-import java.util.function.Predicate;
 
 final class VelocityBrigadierCommand implements BrigadierCommand {
 
@@ -15,17 +12,8 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
           extends AbstractCommandBuilder<BrigadierCommand, BrigadierCommand.Builder>
           implements BrigadierCommand.Builder {
 
-    private Predicate<CommandContext<CommandSource>> permissionPredicate;
-
     Builder(final VelocityCommandManager manager) {
       super(manager);
-    }
-
-    @Override
-    public BrigadierCommand.Builder permission(
-            final Predicate<CommandContext<CommandSource>> predicate) {
-      this.permissionPredicate = predicate;
-      return self();
     }
 
     @Override
@@ -37,12 +25,6 @@ final class VelocityBrigadierCommand implements BrigadierCommand {
     @Override
     public BrigadierCommand register(LiteralCommandNode<CommandSource> node) {
       Preconditions.checkNotNull(node, "node");
-      if (permissionPredicate != null) {
-        // Executes the command iff the permission predicate passes. Redirect nodes
-        // don't require the wrapping since they copy the destination node's command.
-        node = (LiteralCommandNode<CommandSource>) BrigadierUtils.wrapWithContextPredicate(
-                node, permissionPredicate, BrigadierUtils.NO_PERMISSION);
-      }
 
       VelocityBrigadierCommand command = new VelocityBrigadierCommand(node);
       getManager().register(node.getName(), command, getAliases().toArray(String[]::new));

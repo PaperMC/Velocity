@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
@@ -38,7 +39,7 @@ public interface CommandNodeFactory<T extends Command> {
           String[] args = BrigadierUtils.getSplitArguments(context);
 
           if (!command.hasPermission(source, args)) {
-            return BrigadierUtils.NO_PERMISSION;
+            return BrigadierCommand.FORWARD;
           }
           command.execute(source, args);
           return 1;
@@ -73,7 +74,7 @@ public interface CommandNodeFactory<T extends Command> {
           context -> {
             I invocation = createInvocation(context);
             if (!command.hasPermission(invocation)) {
-              return BrigadierUtils.NO_PERMISSION;
+              return BrigadierCommand.FORWARD;
             }
             command.execute(invocation);
             return 1;

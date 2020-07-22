@@ -42,6 +42,4 @@ public class CommandBuilderTests {
     assertTrue(manager.hasCommand("bar"));
     assertTrue(manager.hasCommand("cool"));
   }
-
-  // Builder#permission() is tested on CommandManagerTests
 }
