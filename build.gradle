@@ -30,7 +30,7 @@ allprojects {
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
                 exec {
-                    executable = "git"
+                    executable = "git.bat"
                     args = ["rev-parse", "HEAD"]
                     standardOutput = os
                 }

@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * </ul>
  *
- * For this reason, the legacy {@code execute}, {@code suggest} and
+ * <p>For this reason, the legacy {@code execute}, {@code suggest} and
  * {@code hasPermission} methods are deprecated and will be removed
  * in Velocity 2.0.0. We suggest implementing one of the more specific
  * subinterfaces instead.

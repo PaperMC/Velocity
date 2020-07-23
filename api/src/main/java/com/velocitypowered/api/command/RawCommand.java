@@ -29,6 +29,11 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
     execute(source, String.join(" ", args));
   }
 
+  @Override
+  default void execute(Invocation invocation) {
+    // Guarantees ABI compatibility
+  }
+
   /**
    * Provides tab complete suggestions for the specified source.
    *
@@ -75,11 +80,6 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
   @Override
   default boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
     return hasPermission(source, String.join(" ", args));
-  }
-
-  @Override
-  default void execute(Invocation invocation) {
-    // Guarantees ABI compatibility
   }
 
   /**
