@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * An unsynchronized collection that puts an upper bound on the size of the collection.
  */
-public class CappedSet<T> extends ForwardingSet<T> {
+public final class CappedSet<T> extends ForwardingSet<T> {
 
   private final Set<T> delegate;
   private final int upperSize;

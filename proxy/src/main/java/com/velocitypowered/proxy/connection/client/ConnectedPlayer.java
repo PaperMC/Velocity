@@ -273,7 +273,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       // Due to issues with action bar packets, we'll need to convert the text message into a
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
-      object.addProperty("text", LegacyComponentSerializer.legacy().serialize(message));
+      object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
       Chat chat = new Chat();
       chat.setMessage(object.toString());
       chat.setType((byte) 1);
@@ -391,7 +391,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacy().serialize(reason));
+        LegacyComponentSerializer.legacySection().serialize(reason));
     connection.closeWith(Disconnect.create(reason, this.getProtocolVersion()));
   }
 

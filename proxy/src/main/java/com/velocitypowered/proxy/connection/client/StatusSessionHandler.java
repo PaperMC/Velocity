@@ -19,6 +19,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -31,16 +32,22 @@ import org.apache.logging.log4j.Logger;
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(StatusSessionHandler.class);
+  private static final QuietRuntimeException EXPECTED_AWAITING_REQUEST = new QuietRuntimeException(
+      "Expected connection to be awaiting status request");
+  private static final QuietRuntimeException EXPECTED_RECEIVED_REQUEST = new QuietRuntimeException(
+      "Expected connection to be awaiting ping");
 
   private final VelocityServer server;
   private final MinecraftConnection connection;
   private final InboundConnection inbound;
+  private State state;
 
   StatusSessionHandler(VelocityServer server, MinecraftConnection connection,
       InboundConnection inbound) {
     this.server = server;
     this.connection = connection;
     this.inbound = inbound;
+    this.state = State.AWAITING_REQUEST;
   }
 
   @Override
@@ -151,6 +158,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyPing packet) {
+    if (this.state != State.AWAITING_REQUEST) {
+      throw EXPECTED_AWAITING_REQUEST;
+    }
+    this.state = State.RECEIVED_REQUEST;
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> {
@@ -162,12 +173,19 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(StatusPing packet) {
+    if (this.state != State.RECEIVED_REQUEST) {
+      throw EXPECTED_RECEIVED_REQUEST;
+    }
     connection.closeWith(packet);
     return true;
   }
 
   @Override
   public boolean handle(StatusRequest packet) {
+    if (this.state != State.AWAITING_REQUEST) {
+      throw EXPECTED_AWAITING_REQUEST;
+    }
+    this.state = State.RECEIVED_REQUEST;
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
@@ -185,5 +203,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   public void handleUnknown(ByteBuf buf) {
     // what even is going on?
     connection.close(true);
+  }
+
+  private enum State {
+    AWAITING_REQUEST,
+    RECEIVED_REQUEST
   }
 }

@@ -127,7 +127,8 @@ public class PlayerListItem implements MinecraftPacket {
     } else {
       Item item = items.get(0);
       if (item.getDisplayName() != null) {
-        String displayName = LegacyComponentSerializer.legacy().serialize(item.getDisplayName());
+        String displayName = LegacyComponentSerializer.legacySection()
+            .serialize(item.getDisplayName());
         ProtocolUtils.writeString(buf,
             displayName.length() > 16 ? displayName.substring(0, 16) : displayName);
       } else {

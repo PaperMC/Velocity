@@ -60,7 +60,7 @@ public final class InitialInboundConnection implements InboundConnection,
    */
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacy().serialize(reason));
+        LegacyComponentSerializer.legacySection().serialize(reason));
     connection.closeWith(Disconnect.create(reason, getProtocolVersion()));
   }
 
