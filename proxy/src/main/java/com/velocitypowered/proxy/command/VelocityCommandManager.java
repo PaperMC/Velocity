@@ -185,7 +185,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-            () -> executeImmediately(source, cmdLine), eventManager.getService());
+        () -> executeImmediately(source, cmdLine), eventManager.getService());
   }
 
   /**
