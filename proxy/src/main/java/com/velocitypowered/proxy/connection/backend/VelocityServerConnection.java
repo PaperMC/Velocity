@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -129,6 +130,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
+    InetSocketAddress destAddress = registeredServer.getServerInfo().getAddress();
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
@@ -139,11 +141,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(destAddress.getHostString() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
-      handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
+      handshake.setServerAddress(destAddress.getHostString());
     }
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    handshake.setPort(destAddress.getPort());
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
