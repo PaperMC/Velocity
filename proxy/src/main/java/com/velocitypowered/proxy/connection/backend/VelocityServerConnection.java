@@ -139,7 +139,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(handshake.getServerAddress() + HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(HANDSHAKE_HOSTNAME_TOKEN);
     } else {
       handshake.setServerAddress(registeredServer.getServerInfo().getAddress().getHostString());
     }
