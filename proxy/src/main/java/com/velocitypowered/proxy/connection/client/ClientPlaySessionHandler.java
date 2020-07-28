@@ -230,8 +230,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             } else {
               PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
                   packet.getData());
-              server.getEventManager().fire(event).thenAcceptAsync(pme -> backendConn.write(packet),
-                  backendConn.eventLoop());
+              server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+                if (pme.getResult().isAllowed()) {
+                  backendConn.write(packet);
+                }
+              }, backendConn.eventLoop());
             }
           }
         }
