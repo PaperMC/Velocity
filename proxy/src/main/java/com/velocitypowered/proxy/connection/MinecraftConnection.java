@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.util.NettyUtil;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -169,7 +170,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       }
 
-      ctx.close();
+      Channel ch = ctx.channel();
+      NettyUtil.insertDiscard(ch);
+      ch.close();
     }
   }
 

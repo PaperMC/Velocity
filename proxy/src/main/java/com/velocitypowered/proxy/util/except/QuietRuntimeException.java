@@ -11,7 +11,12 @@ public class QuietRuntimeException extends RuntimeException {
   }
 
   @Override
-  public synchronized Throwable fillInStackTrace() {
+  public Throwable fillInStackTrace() {
+    return this;
+  }
+
+  @Override
+  public Throwable initCause(Throwable cause) {
     return this;
   }
 }
