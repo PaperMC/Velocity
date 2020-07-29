@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.condition.OS.LINUX;
-import static org.junit.jupiter.api.condition.OS.MAC;
 
 import com.velocitypowered.natives.util.BufferPreference;
 import com.velocitypowered.natives.util.Natives;
@@ -43,7 +42,7 @@ class VelocityCompressorTest {
   void nativeIntegrityCheck() throws DataFormatException {
     VelocityCompressor compressor = Natives.compress.get().create(Deflater.DEFAULT_COMPRESSION);
     if (compressor.preferredBufferType() != BufferPreference.DIRECT_REQUIRED) {
-      compressor.dispose();
+      compressor.close();
       fail("Loaded regular compressor");
     }
     check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length + 32));
@@ -97,7 +96,7 @@ class VelocityCompressorTest {
       source.release();
       dest.release();
       decompressed.release();
-      compressor.dispose();
+      compressor.close();
     }
   }
 }

@@ -118,7 +118,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void dispose() {
+  public void close() {
     disposed = true;
     deflater.end();
     inflater.end();

@@ -55,7 +55,7 @@ public class JavaVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public void dispose() {
+  public void close() {
     disposed = true;
   }
 

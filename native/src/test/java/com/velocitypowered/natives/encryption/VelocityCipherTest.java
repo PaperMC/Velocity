@@ -12,7 +12,6 @@ import java.util.Random;
 import java.util.function.Supplier;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class VelocityCipherTest {
@@ -62,8 +61,8 @@ class VelocityCipherTest {
     } finally {
       source.release();
       workingBuf.release();
-      decrypt.dispose();
-      encrypt.dispose();
+      decrypt.close();
+      encrypt.close();
     }
   }
 }

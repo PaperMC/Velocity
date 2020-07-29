@@ -70,7 +70,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
-  public void dispose() {
+  public void close() {
     if (!disposed) {
       inflate.free(inflateCtx);
       deflate.free(deflateCtx);

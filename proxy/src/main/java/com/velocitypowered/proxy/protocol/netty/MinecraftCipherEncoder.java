@@ -30,6 +30,6 @@ public class MinecraftCipherEncoder extends MessageToMessageEncoder<ByteBuf> {
 
   @Override
   public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-    cipher.dispose();
+    cipher.close();
   }
 }

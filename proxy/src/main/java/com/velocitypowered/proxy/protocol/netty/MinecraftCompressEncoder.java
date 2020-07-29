@@ -47,6 +47,6 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
 
   @Override
   public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-    compressor.dispose();
+    compressor.close();
   }
 }

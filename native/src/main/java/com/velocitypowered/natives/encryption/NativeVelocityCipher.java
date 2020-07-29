@@ -39,7 +39,7 @@ public class NativeVelocityCipher implements VelocityCipher {
   }
 
   @Override
-  public void dispose() {
+  public void close() {
     if (!disposed) {
       impl.free(ctx);
     }
