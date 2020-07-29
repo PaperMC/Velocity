@@ -164,7 +164,8 @@ public class VelocityCommandManager implements CommandManager {
         source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
       }
       return false;
-    } catch (final Exception e) {
+    } catch (final Throwable e) {
+      // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }
   }
