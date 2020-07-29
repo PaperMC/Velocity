@@ -17,11 +17,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-    if (!ctx.channel().isActive()) {
-      in.skipBytes(in.readableBytes());
-      return;
-    }
-
     reader.reset();
 
     int varintEnd = in.forEachByte(reader);
@@ -33,6 +28,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
     if (reader.result == DecodeResult.SUCCESS) {
       if (reader.readVarint < 0) {
+        setSingleDecode(true);
         throw BAD_LENGTH_CACHED;
       } else if (reader.readVarint == 0) {
         // skip over the empty packet and ignore it
@@ -47,6 +43,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         }
       }
     } else if (reader.result == DecodeResult.TOO_BIG) {
+      setSingleDecode( true );
       throw VARINT_BIG_CACHED;
     }
   }

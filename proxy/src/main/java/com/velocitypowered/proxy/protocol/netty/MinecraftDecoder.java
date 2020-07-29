@@ -45,11 +45,6 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-    if (!ctx.channel().isActive()) {
-      buf.release();
-      return;
-    }
-
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
     MinecraftPacket packet = this.registry.createPacket(packetId);
@@ -61,10 +56,14 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
         try {
           packet.decode(buf, direction, registry.version);
         } catch (Exception e) {
+          ctx.channel().pipeline().get(MinecraftVarintFrameDecoder.class)
+                  .setSingleDecode(true);
           throw handleDecodeFailure(e, packet, packetId);
         }
 
         if (buf.isReadable()) {
+          ctx.channel().pipeline().get(MinecraftVarintFrameDecoder.class)
+                  .setSingleDecode(true);
           throw handleNotReadEnough(packet, packetId);
         }
         ctx.fireChannelRead(packet);
