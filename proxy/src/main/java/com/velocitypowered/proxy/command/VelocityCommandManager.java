@@ -160,8 +160,11 @@ public class VelocityCommandManager implements CommandManager {
               CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
         source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
+        // This is, of course, a lie, but the API will need to change...
+        return true;
+      } else {
+        return false;
       }
-      return false;
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
