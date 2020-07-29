@@ -318,6 +318,11 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.getReadTimeout();
   }
 
+  @Override
+  public int getInitialReadTimeout() {
+    return advanced.getInitialReadTimeout();
+  }
+
   public boolean isProxyProtocol() {
     return advanced.isProxyProtocol();
   }
@@ -592,6 +597,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean failoverOnUnexpectedServerDisconnect = true;
     private boolean announceProxyCommands = true;
     private boolean logCommandExecutions = false;
+    private int initialReadTimeout = 3000;
 
     private Advanced() {
     }
@@ -611,6 +617,7 @@ public class VelocityConfiguration implements ProxyConfig {
             .getOrElse("failover-on-unexpected-server-disconnect", true);
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
+        this.initialReadTimeout = config.getIntOrElse("initial-read-timeout", 3000);
       }
     }
 
@@ -660,6 +667,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isLogCommandExecutions() {
       return logCommandExecutions;
+    }
+
+    public int getInitialReadTimeout() {
+      return initialReadTimeout;
     }
 
     @Override
