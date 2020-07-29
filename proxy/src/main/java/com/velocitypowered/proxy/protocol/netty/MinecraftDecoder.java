@@ -9,6 +9,7 @@ import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.CorruptedFrameException;
 
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
@@ -56,14 +57,16 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
         try {
           packet.decode(buf, direction, registry.version);
         } catch (Exception e) {
-          ctx.channel().pipeline().get(MinecraftVarintFrameDecoder.class)
-                  .setSingleDecode(true);
+          ChannelPipeline pipeline = ctx.pipeline();
+          pipeline.get(MinecraftVarintFrameDecoder.class).setSingleDecode(true);
+          pipeline.get(LegacyPingDecoder.class).setSingleDecode(true);
           throw handleDecodeFailure(e, packet, packetId);
         }
 
         if (buf.isReadable()) {
-          ctx.channel().pipeline().get(MinecraftVarintFrameDecoder.class)
-                  .setSingleDecode(true);
+          ChannelPipeline pipeline = ctx.pipeline();
+          pipeline.get(MinecraftVarintFrameDecoder.class).setSingleDecode(true);
+          pipeline.get(LegacyPingDecoder.class).setSingleDecode(true);
           throw handleNotReadEnough(packet, packetId);
         }
         ctx.fireChannelRead(packet);
