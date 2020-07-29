@@ -101,8 +101,13 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     if (!(command instanceof BrigadierCommand)) {
-      for (CommandNode<CommandSource> hint : meta.getHints()) {
-        node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+      if (!meta.getHints().isEmpty()) {
+        // If the user specified a hint, then allow the hint to take precedence over the catch-all
+        // argument.
+        node.getChildren().clear();
+        for (CommandNode<CommandSource> hint : meta.getHints()) {
+          node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+        }
       }
     }
 
