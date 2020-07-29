@@ -1,67 +1,97 @@
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * A specialized sub-interface of {@code Command} which indicates that the proxy should pass a
- * raw command to the command. This is useful for bolting on external command frameworks to
- * Velocity.
+ * A specialized sub-interface of {@code Command} which indicates the proxy should pass
+ * the command and its arguments directly without further processing.
+ * This is useful for bolting on external command frameworks to Velocity.
  */
-public interface RawCommand extends Command {
-  /**
-   * Executes the command for the specified {@link CommandSource}.
-   *
-   * @param source the source of this command
-   * @param commandLine the full command line after the command name
-   */
-  void execute(CommandSource source, String commandLine);
+public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
 
-  default void execute(CommandSource source, String @NonNull [] args) {
+  /**
+   * Executes the command for the specified source.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the arguments for the command
+   * @deprecated see {@link Command}
+   */
+  @Deprecated
+  default void execute(final CommandSource source, final String cmdLine) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Deprecated
+  @Override
+  default void execute(final CommandSource source, final String @NonNull [] args) {
     execute(source, String.join(" ", args));
   }
 
-  /**
-   * Provides tab complete suggestions for a command for a specified {@link CommandSource}.
-   *
-   * @param source the source to run the command for
-   * @param currentLine the current, partial command line for this command
-   * @return tab complete suggestions
-   */
-  default CompletableFuture<List<String>> suggest(CommandSource source, String currentLine) {
-    return CompletableFuture.completedFuture(ImmutableList.of());
+  @Override
+  default void execute(Invocation invocation) {
+    // Guarantees ABI compatibility
   }
 
+  /**
+   * Provides tab complete suggestions for the specified source.
+   *
+   * @param source the source to execute the command for
+   * @param currentArgs the partial arguments for the command
+   * @return the tab complete suggestions
+   * @deprecated see {@link Command}
+   */
+  @Deprecated
+  default CompletableFuture<List<String>> suggest(final CommandSource source,
+                                                  final String currentArgs) {
+    // This method even has an inconsistent return type
+    throw new UnsupportedOperationException();
+  }
+
+  @Deprecated
   @Override
-  default List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+  default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
     return suggestAsync(source, currentArgs).join();
   }
 
+  @Deprecated
   @Override
-  default CompletableFuture<List<String>> suggestAsync(CommandSource source,
-      String @NonNull [] currentArgs) {
+  default CompletableFuture<List<String>> suggestAsync(final CommandSource source,
+                                                       final String @NonNull [] currentArgs) {
     return suggest(source, String.join(" ", currentArgs));
   }
 
+  /**
+   * Tests to check if the source has permission to perform the command with
+   * the provided arguments.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the arguments for the command
+   * @return {@code true} if the source has permission
+   * @deprecated see {@link Command}
+   */
+  @Deprecated
+  default boolean hasPermission(final CommandSource source, final String cmdLine) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Deprecated
   @Override
-  default boolean hasPermission(CommandSource source, String @NonNull [] args) {
+  default boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
     return hasPermission(source, String.join(" ", args));
   }
 
   /**
-   * Tests to check if the {@code source} has permission to use this command with the provided
-   * {@code args}.
-   *
-   * <p>If this method returns false, the handling will be forwarded onto
-   * the players current server.</p>
-   *
-   * @param source the source of the command
-   * @param commandLine the arguments for this command
-   * @return whether the source has permission
+   * Contains the invocation data for a raw command.
    */
-  default boolean hasPermission(CommandSource source, String commandLine) {
-    return true;
+  interface Invocation extends CommandInvocation<String> {
+
+    /**
+     * Returns the used alias to execute the command.
+     *
+     * @return the used command alias
+     */
+    String alias();
   }
 }

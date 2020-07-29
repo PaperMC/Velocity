@@ -1,273 +1,229 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
+import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
 
-  private final Map<String, RawCommand> commands = new HashMap<>();
+  private final CommandDispatcher<CommandSource> dispatcher;
   private final VelocityEventManager eventManager;
 
-  public VelocityCommandManager(VelocityEventManager eventManager) {
-    this.eventManager = eventManager;
+  public VelocityCommandManager(final VelocityEventManager eventManager) {
+    this.eventManager = Preconditions.checkNotNull(eventManager);
+    this.dispatcher = new CommandDispatcher<>();
   }
 
   @Override
-  @Deprecated
+  public CommandMeta.Builder metaBuilder(final String alias) {
+    Preconditions.checkNotNull(alias, "alias");
+    return new VelocityCommandMeta.Builder(alias);
+  }
+
+  @Override
+  public CommandMeta.Builder metaBuilder(final BrigadierCommand command) {
+    Preconditions.checkNotNull(command, "command");
+    return new VelocityCommandMeta.Builder(command.getNode().getName());
+  }
+
+  @Override
   public void register(final Command command, final String... aliases) {
     Preconditions.checkArgument(aliases.length > 0, "no aliases provided");
     register(aliases[0], command, Arrays.copyOfRange(aliases, 1, aliases.length));
   }
 
   @Override
-  public void register(String alias, Command command, String... otherAliases) {
+  public void register(final String alias, final Command command, final String... otherAliases) {
     Preconditions.checkNotNull(alias, "alias");
+    Preconditions.checkNotNull(command, "command");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
-    Preconditions.checkNotNull(command, "executor");
+    Preconditions.checkArgument(!hasCommand(alias), "alias already registered");
+    register(metaBuilder(alias).aliases(otherAliases).build(), command);
+  }
 
-    RawCommand rawCmd = RegularCommandWrapper.wrap(command);
-    this.commands.put(alias.toLowerCase(Locale.ENGLISH), rawCmd);
+  @Override
+  public void register(final BrigadierCommand command) {
+    Preconditions.checkNotNull(command, "command");
+    register(metaBuilder(command).build(), command);
+  }
 
-    for (int i = 0, length = otherAliases.length; i < length; i++) {
-      final String alias1 = otherAliases[i];
-      Preconditions.checkNotNull(alias1, "alias at index %s", i + 1);
-      this.commands.put(alias1.toLowerCase(Locale.ENGLISH), rawCmd);
+  @Override
+  public void register(final CommandMeta meta, final Command command) {
+    Preconditions.checkNotNull(meta, "meta");
+    Preconditions.checkNotNull(command, "command");
+
+    Iterator<String> aliasIterator = meta.getAliases().iterator();
+    String alias = aliasIterator.next();
+
+    LiteralCommandNode<CommandSource> node = null;
+    if (command instanceof BrigadierCommand) {
+      node = ((BrigadierCommand) command).getNode();
+    } else if (command instanceof SimpleCommand) {
+      node = CommandNodeFactory.SIMPLE.create(alias, (SimpleCommand) command);
+    } else if (command instanceof RawCommand) {
+      // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
+      // have side-effect free #suggest methods. We rely on the newer RawCommand
+      // throwing UOE.
+      RawCommand asRaw = (RawCommand) command;
+      try {
+        asRaw.suggest(null, new String[0]);
+      } catch (final UnsupportedOperationException e) {
+        node = CommandNodeFactory.RAW.create(alias, asRaw);
+      } catch (final Exception ignored) {
+        // The implementation probably relies on a non-null source
+      }
+    }
+    if (node == null) {
+      node = CommandNodeFactory.FALLBACK.create(alias, command);
+    }
+
+    if (!(command instanceof BrigadierCommand)) {
+      for (CommandNode<CommandSource> hint : meta.getHints()) {
+        node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+      }
+    }
+
+    dispatcher.getRoot().addChild(node);
+    while (aliasIterator.hasNext()) {
+      String otherAlias = aliasIterator.next();
+      Preconditions.checkArgument(!hasCommand(otherAlias),
+              "alias %s is already registered", otherAlias);
+      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(otherAlias, node));
     }
   }
 
   @Override
   public void unregister(final String alias) {
-    Preconditions.checkNotNull(alias, "name");
-    this.commands.remove(alias.toLowerCase(Locale.ENGLISH));
+    Preconditions.checkNotNull(alias, "alias");
+    CommandNode<CommandSource> node =
+            dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH));
+    if (node != null) {
+      dispatcher.getRoot().getChildren().remove(node);
+    }
   }
 
   /**
-   * Calls CommandExecuteEvent.
-   * @param source the command's source
-   * @param cmd the command
-   * @return CompletableFuture of event
+   * Fires a {@link CommandExecuteEvent}.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the command to execute
+   * @return the {@link CompletableFuture} of the event
    */
-  public CompletableFuture<CommandExecuteEvent> callCommandEvent(CommandSource source, String cmd) {
+  public CompletableFuture<CommandExecuteEvent> callCommandEvent(final CommandSource source,
+                                                                 final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmd, "cmd");
-    return eventManager.fire(new CommandExecuteEvent(source, cmd));
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+    return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
   }
 
   @Override
-  public boolean execute(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmdLine, "cmdLine");
-
-    CommandExecuteEvent event = callCommandEvent(source, cmdLine).join();
-    CommandResult commandResult = event.getResult();
-    if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-      return false;
-    }
-    cmdLine = commandResult.getCommand().orElse(event.getCommand());
-
-    return executeImmediately(source, cmdLine);
+  public boolean execute(final CommandSource source, final String cmdLine) {
+    return executeAsync(source, cmdLine).join();
   }
 
   @Override
-  public boolean executeImmediately(CommandSource source, String cmdLine) {
+  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    String alias = cmdLine;
-    String args = "";
-    int firstSpace = cmdLine.indexOf(' ');
-    if (firstSpace != -1) {
-      alias = cmdLine.substring(0, firstSpace);
-      args = cmdLine.substring(firstSpace);
-    }
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      return false;
-    }
-
+    ParseResults<CommandSource> results = parse(cmdLine, source, true);
     try {
-      if (!command.hasPermission(source, args)) {
-        return false;
+      return dispatcher.execute(results) != BrigadierCommand.FORWARD;
+    } catch (final CommandSyntaxException e) {
+      boolean isSyntaxError = !e.getType().equals(
+              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+      if (isSyntaxError) {
+        source.sendMessage(TextComponent.of(e.getMessage(), NamedTextColor.RED));
       }
-      command.execute(source, args);
-      return true;
-    } catch (Exception e) {
+      return false;
+    } catch (final Exception e) {
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
     }
   }
 
-
   @Override
-  public CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine) {
-    CompletableFuture<Boolean> result = new CompletableFuture<>();
-    callCommandEvent(source, cmdLine).thenAccept(event -> {
+  public CompletableFuture<Boolean> executeAsync(final CommandSource source, final String cmdLine) {
+    Preconditions.checkNotNull(source, "source");
+    Preconditions.checkNotNull(cmdLine, "cmdLine");
+
+    return callCommandEvent(source, cmdLine).thenApply(event -> {
       CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-        result.complete(false);
+        return false;
       }
-      String command = commandResult.getCommand().orElse(event.getCommand());
-      try {
-        result.complete(executeImmediately(source, command));
-      } catch (Exception e) {
-        result.completeExceptionally(e);
-      }
+      return executeImmediately(source, commandResult.getCommand().orElse(event.getCommand()));
     });
-    return result;
   }
 
   @Override
-  public CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine) {
+  public CompletableFuture<Boolean> executeImmediatelyAsync(
+          final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
-    CompletableFuture<Boolean> result = new CompletableFuture<>();
-    eventManager.getService().execute(() -> {
-      try {
-        result.complete(executeImmediately(source, cmdLine));
-      } catch (Exception e) {
-        result.completeExceptionally(e);
-      }
-    });
-    return result;
-  }
 
-  public boolean hasCommand(String command) {
-    return commands.containsKey(command);
-  }
-
-  public Set<String> getAllRegisteredCommands() {
-    return ImmutableSet.copyOf(commands.keySet());
+    return CompletableFuture.supplyAsync(
+        () -> executeImmediately(source, cmdLine), eventManager.getService());
   }
 
   /**
-   * Offer suggestions to fill in the command.
-   * @param source the source for the command
+   * Returns suggestions to fill in the given command.
+   *
+   * @param source the source to execute the command for
    * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
+   * @return a {@link CompletableFuture} eventually completed with a {@link List},
+   *         possibly empty
    */
-  public CompletableFuture<List<String>> offerSuggestions(CommandSource source, String cmdLine) {
+  public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
+                                                          final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    int firstSpace = cmdLine.indexOf(' ');
-    if (firstSpace == -1) {
-      // Offer to fill in commands.
-      ImmutableList.Builder<String> availableCommands = ImmutableList.builder();
-      for (Map.Entry<String, RawCommand> entry : commands.entrySet()) {
-        if (entry.getKey().regionMatches(true, 0, cmdLine, 0, cmdLine.length())
-            && entry.getValue().hasPermission(source, new String[0])) {
-          availableCommands.add("/" + entry.getKey());
-        }
-      }
-      return CompletableFuture.completedFuture(availableCommands.build());
-    }
+    ParseResults<CommandSource> parse = parse(cmdLine, source, false);
+    return dispatcher.getCompletionSuggestions(parse)
+            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+  }
 
-    String alias = cmdLine.substring(0, firstSpace);
-    String args = cmdLine.substring(firstSpace);
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      // No such command, so we can't offer any tab complete suggestions.
-      return CompletableFuture.completedFuture(ImmutableList.of());
-    }
-
-    try {
-      if (!command.hasPermission(source, args)) {
-        return CompletableFuture.completedFuture(ImmutableList.of());
-      }
-      return command.suggest(source, args)
-          .thenApply(ImmutableList::copyOf);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "Unable to invoke suggestions for command " + cmdLine + " for " + source, e);
-    }
+  private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
+                                            final boolean trim) {
+    String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
+    return dispatcher.parse(normalized, source);
   }
 
   /**
-   * Determines if the {@code source} has permission to run the {@code cmdLine}.
-   * @param source the source to check against
-   * @param cmdLine the command to run
-   * @return {@code true} if the command can be run, otherwise {@code false}
+   * Returns whether the given alias is registered on this manager.
+   *
+   * @param alias the command alias to check
+   * @return {@code true} if the alias is registered
    */
-  public boolean hasPermission(CommandSource source, String cmdLine) {
-    Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmdLine, "cmdLine");
-
-    String alias = cmdLine;
-    String args = "";
-    int firstSpace = cmdLine.indexOf(' ');
-    if (firstSpace != -1) {
-      alias = cmdLine.substring(0, firstSpace);
-      args = cmdLine.substring(firstSpace).trim();
-    }
-    RawCommand command = commands.get(alias.toLowerCase(Locale.ENGLISH));
-    if (command == null) {
-      return false;
-    }
-
-    try {
-      return command.hasPermission(source, args);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "Unable to invoke suggestions for command " + alias + " for " + source, e);
-    }
+  public boolean hasCommand(final String alias) {
+    Preconditions.checkNotNull(alias, "alias");
+    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
   }
 
-  private static class RegularCommandWrapper implements RawCommand {
-
-    private final Command delegate;
-
-    private RegularCommandWrapper(Command delegate) {
-      this.delegate = delegate;
-    }
-
-    private static String[] split(String line) {
-      if (line.isEmpty()) {
-        return new String[0];
-      }
-
-      String[] trimmed = line.trim().split(" ", -1);
-      if (line.endsWith(" ") && !line.trim().isEmpty()) {
-        // To work around a 1.13+ specific bug we have to inject a space at the end of the arguments
-        trimmed = Arrays.copyOf(trimmed, trimmed.length + 1);
-        trimmed[trimmed.length - 1] = "";
-      }
-      return trimmed;
-    }
-
-    @Override
-    public void execute(CommandSource source, String commandLine) {
-      delegate.execute(source, split(commandLine));
-    }
-
-    @Override
-    public CompletableFuture<List<String>> suggest(CommandSource source, String currentLine) {
-      return delegate.suggestAsync(source, split(currentLine));
-    }
-
-    @Override
-    public boolean hasPermission(CommandSource source, String commandLine) {
-      return delegate.hasPermission(source, split(commandLine));
-    }
-
-    static RawCommand wrap(Command command) {
-      if (command instanceof RawCommand) {
-        return (RawCommand) command;
-      }
-      return new RegularCommandWrapper(command);
-    }
+  public CommandDispatcher<CommandSource> getDispatcher() {
+    return dispatcher;
   }
 }

@@ -47,12 +47,12 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        
+
         // for kyoripowered dependencies
         maven {
             url 'https://oss.sonatype.org/content/groups/public/'
         }
-        
+
         // Brigadier
         maven {
             url "https://libraries.minecraft.net"

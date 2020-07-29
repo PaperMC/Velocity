@@ -3,10 +3,9 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.RootCommandNode;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -18,7 +17,6 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
-import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
@@ -30,6 +28,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.util.Collection;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
@@ -164,23 +163,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(AvailableCommands commands) {
-    // Inject commands from the proxy.
-    for (String command : server.getCommandManager().getAllRegisteredCommands()) {
-      if (!server.getCommandManager().hasPermission(serverConn.getPlayer(), command)) {
-        continue;
+    RootCommandNode<CommandSource> rootNode = commands.getRootNode();
+    if (server.getConfiguration().isAnnounceProxyCommands()) {
+      // Inject commands from the proxy.
+      Collection<CommandNode<CommandSource>> proxyNodes = server.getCommandManager().getDispatcher()
+              .getRoot().getChildren();
+      for (CommandNode<CommandSource> node : proxyNodes) {
+        rootNode.addChild(node);
       }
-
-      LiteralCommandNode<Object> root = LiteralArgumentBuilder.literal(command)
-          .then(RequiredArgumentBuilder.argument("args", StringArgumentType.greedyString())
-              .suggests(new ProtocolSuggestionProvider("minecraft:ask_server"))
-              .build())
-          .executes((ctx) -> 0)
-          .build();
-      commands.getRootNode().addChild(root);
     }
 
     server.getEventManager().fire(
-        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), commands.getRootNode()))
+        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
     return true;
   }

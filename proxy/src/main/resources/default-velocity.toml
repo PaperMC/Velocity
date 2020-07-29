@@ -123,6 +123,9 @@ show-ping-requests = false
 # can disable this setting to use the BungeeCord behavior.
 failover-on-unexpected-server-disconnect = true
 
+# Declares the proxy commands to 1.13+ clients.
+announce-proxy-commands = true
+
 # Enables the logging of commands
 log-command-executions = false
 

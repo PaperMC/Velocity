@@ -21,11 +21,11 @@ import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.api.util.bossbar.BossBar;
 import com.velocitypowered.api.util.bossbar.BossBarColor;
 import com.velocitypowered.api.util.bossbar.BossBarOverlay;
-import com.velocitypowered.proxy.command.GlistCommand;
-import com.velocitypowered.proxy.command.ServerCommand;
-import com.velocitypowered.proxy.command.ShutdownCommand;
-import com.velocitypowered.proxy.command.VelocityCommand;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.command.builtin.GlistCommand;
+import com.velocitypowered.proxy.command.builtin.ServerCommand;
+import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
+import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
@@ -194,7 +194,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     commandManager.register("velocity", new VelocityCommand(this));
     commandManager.register("server", new ServerCommand(this));
     commandManager.register("shutdown", new ShutdownCommand(this),"end");
-    commandManager.register("glist", new GlistCommand(this));
+    new GlistCommand(this).register();
 
     try {
       Path configPath = Paths.get("velocity.toml");

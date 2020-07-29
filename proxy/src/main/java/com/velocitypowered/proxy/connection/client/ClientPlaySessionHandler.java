@@ -130,7 +130,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
           .thenComposeAsync(event -> processCommandExecuteResult(originalCommand,
               event.getResult()))
-          .whenCompleteAsync((ignored, throwable) -> {
+          .whenComplete((ignored, throwable) -> {
             if (server.getConfiguration().isLogCommandExecutions()) {
               logger.info("{} -> executed command /{}", player, originalCommand);
             }
@@ -414,7 +414,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           for (String suggestion : suggestions) {
             offers.add(new Offer(suggestion));
           }
-
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
             TabCompleteResponse resp = new TabCompleteResponse();
@@ -460,9 +459,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String command = request.getCommand().substring(1);
     server.getCommandManager().offerSuggestions(player, command)
         .thenAcceptAsync(offers -> {
+          boolean needsSlash = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
           try {
             for (String offer : offers) {
-              response.getOffers().add(new Offer(offer, null));
+              response.getOffers().add(new Offer(needsSlash ? "/" + offer : offer, null));
             }
             response.getOffers().sort(null);
             player.getConnection().write(response);

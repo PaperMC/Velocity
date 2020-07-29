@@ -1,10 +1,10 @@
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.builtin;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -25,16 +25,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class VelocityCommand implements Command {
+public class VelocityCommand implements SimpleCommand {
 
-  private final Map<String, Command> subcommands;
+  private interface SubCommand {
+
+    void execute(final CommandSource source, final String @NonNull [] args);
+
+    default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
+      return ImmutableList.of();
+    }
+
+    boolean hasPermission(final CommandSource source, final String @NonNull [] args);
+  }
+
+  private final Map<String, SubCommand> commands;
 
   /**
    * Initializes the command object for /velocity.
+   *
    * @param server the Velocity server
    */
   public VelocityCommand(VelocityServer server) {
-    this.subcommands = ImmutableMap.<String, Command>builder()
+    this.commands = ImmutableMap.<String, SubCommand>builder()
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
         .put("reload", new Reload(server))
@@ -42,7 +54,7 @@ public class VelocityCommand implements Command {
   }
 
   private void usage(CommandSource source) {
-    String availableCommands = subcommands.entrySet().stream()
+    String availableCommands = commands.entrySet().stream()
         .filter(e -> e.getValue().hasPermission(source, new String[0]))
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
@@ -51,13 +63,16 @@ public class VelocityCommand implements Command {
   }
 
   @Override
-  public void execute(CommandSource source, String @NonNull [] args) {
+  public void execute(final SimpleCommand.Invocation invocation) {
+    final CommandSource source = invocation.source();
+    final String[] args = invocation.arguments();
+
     if (args.length == 0) {
       usage(source);
       return;
     }
 
-    Command command = subcommands.get(args[0].toLowerCase(Locale.US));
+    SubCommand command = commands.get(args[0].toLowerCase(Locale.US));
     if (command == null) {
       usage(source);
       return;
@@ -68,16 +83,19 @@ public class VelocityCommand implements Command {
   }
 
   @Override
-  public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+  public List<String> suggest(final SimpleCommand.Invocation invocation) {
+    final CommandSource source = invocation.source();
+    final String[] currentArgs = invocation.arguments();
+
     if (currentArgs.length == 0) {
-      return subcommands.entrySet().stream()
+      return commands.entrySet().stream()
               .filter(e -> e.getValue().hasPermission(source, new String[0]))
               .map(Map.Entry::getKey)
               .collect(ImmutableList.toImmutableList());
     }
 
     if (currentArgs.length == 1) {
-      return subcommands.entrySet().stream()
+      return commands.entrySet().stream()
           .filter(e -> e.getKey().regionMatches(true, 0, currentArgs[0], 0,
               currentArgs[0].length()))
           .filter(e -> e.getValue().hasPermission(source, new String[0]))
@@ -85,7 +103,7 @@ public class VelocityCommand implements Command {
           .collect(ImmutableList.toImmutableList());
     }
 
-    Command command = subcommands.get(currentArgs[0].toLowerCase(Locale.US));
+    SubCommand command = commands.get(currentArgs[0].toLowerCase(Locale.US));
     if (command == null) {
       return ImmutableList.of();
     }
@@ -95,11 +113,14 @@ public class VelocityCommand implements Command {
   }
 
   @Override
-  public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+  public boolean hasPermission(final SimpleCommand.Invocation invocation) {
+    final CommandSource source = invocation.source();
+    final String[] args = invocation.arguments();
+
     if (args.length == 0) {
-      return subcommands.values().stream().anyMatch(e -> e.hasPermission(source, args));
+      return commands.values().stream().anyMatch(e -> e.hasPermission(source, args));
     }
-    Command command = subcommands.get(args[0].toLowerCase(Locale.US));
+    SubCommand command = commands.get(args[0].toLowerCase(Locale.US));
     if (command == null) {
       return true;
     }
@@ -108,7 +129,7 @@ public class VelocityCommand implements Command {
     return command.hasPermission(source, actualArgs);
   }
 
-  private static class Reload implements Command {
+  private static class Reload implements SubCommand {
 
     private static final Logger logger = LogManager.getLogger(Reload.class);
     private final VelocityServer server;
@@ -136,12 +157,12 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
     }
   }
 
-  private static class Info implements Command {
+  private static class Info implements SubCommand {
 
     private final ProxyServer server;
 
@@ -189,12 +210,12 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
     }
   }
 
-  private static class Plugins implements Command {
+  private static class Plugins implements SubCommand {
 
     private final ProxyServer server;
 
@@ -260,7 +281,7 @@ public class VelocityCommand implements Command {
     }
 
     @Override
-    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
     }
   }

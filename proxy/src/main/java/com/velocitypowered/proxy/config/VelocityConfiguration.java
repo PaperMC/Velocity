@@ -346,6 +346,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isFailoverOnUnexpectedServerDisconnect();
   }
 
+  public boolean isAnnounceProxyCommands() {
+    return advanced.isAnnounceProxyCommands();
+  }
+
   public boolean isLogCommandExecutions() {
     return advanced.isLogCommandExecutions();
   }
@@ -586,6 +590,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean bungeePluginMessageChannel = true;
     private boolean showPingRequests = false;
     private boolean failoverOnUnexpectedServerDisconnect = true;
+    private boolean announceProxyCommands = true;
     private boolean logCommandExecutions = false;
 
     private Advanced() {
@@ -604,6 +609,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
         this.failoverOnUnexpectedServerDisconnect = config
             .getOrElse("failover-on-unexpected-server-disconnect", true);
+        this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
       }
     }
@@ -648,6 +654,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return failoverOnUnexpectedServerDisconnect;
     }
 
+    public boolean isAnnounceProxyCommands() {
+      return announceProxyCommands;
+    }
+
     public boolean isLogCommandExecutions() {
       return logCommandExecutions;
     }
@@ -665,6 +675,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests
           + ", failoverOnUnexpectedServerDisconnect=" + failoverOnUnexpectedServerDisconnect
+          + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
           + '}';
     }
