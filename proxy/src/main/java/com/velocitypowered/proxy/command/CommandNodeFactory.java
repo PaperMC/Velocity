@@ -15,7 +15,7 @@ import com.velocitypowered.proxy.util.BrigadierUtils;
 public interface CommandNodeFactory<T extends Command> {
 
   InvocableCommandNodeFactory<SimpleCommand.Invocation> SIMPLE =
-      new InvocableCommandNodeFactory<>() {
+      new InvocableCommandNodeFactory<SimpleCommand.Invocation>() {
         @Override
         protected SimpleCommand.Invocation createInvocation(
                 final CommandContext<CommandSource> context) {
@@ -24,7 +24,7 @@ public interface CommandNodeFactory<T extends Command> {
       };
 
   InvocableCommandNodeFactory<RawCommand.Invocation> RAW =
-      new InvocableCommandNodeFactory<>() {
+      new InvocableCommandNodeFactory<RawCommand.Invocation>() {
         @Override
         protected RawCommand.Invocation createInvocation(
                 final CommandContext<CommandSource> context) {
