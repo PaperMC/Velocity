@@ -42,13 +42,13 @@ enum TransportType {
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
 
   TransportType(final String name,
-                final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
-                final Class<? extends ServerSocketChannel> serverSocketChannelClass,
-                final ChannelFactory<? extends SocketChannel> socketChannelFactory,
-                final Class<? extends SocketChannel> socketChannelClass,
-                final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-                final Class<? extends DatagramChannel> datagramChannelClass,
-                final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
+      final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
+      final Class<? extends ServerSocketChannel> serverSocketChannelClass,
+      final ChannelFactory<? extends SocketChannel> socketChannelFactory,
+      final Class<? extends SocketChannel> socketChannelClass,
+      final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
+      final Class<? extends DatagramChannel> datagramChannelClass,
+      final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
     this.name = name;
     this.serverSocketChannelClass = serverSocketChannelClass;
     this.socketChannelClass = socketChannelClass;
