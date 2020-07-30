@@ -15,7 +15,11 @@ public class ShutdownCommand implements RawCommand {
   @Override
   public void execute(final Invocation invocation) {
     String reason = invocation.arguments();
-    server.shutdown(true, LegacyComponentSerializer.legacy('&').deserialize(reason));
+    if (reason.isEmpty() || reason.trim().isEmpty()) {
+      server.shutdown(true);
+    } else {
+      server.shutdown(true, LegacyComponentSerializer.legacy('&').deserialize(reason));
+    }
   }
 
   @Override
