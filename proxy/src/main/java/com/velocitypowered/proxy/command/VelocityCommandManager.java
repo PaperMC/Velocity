@@ -112,8 +112,6 @@ public class VelocityCommandManager implements CommandManager {
     dispatcher.getRoot().addChild(node);
     while (aliasIterator.hasNext()) {
       String otherAlias = aliasIterator.next();
-      Preconditions.checkArgument(!hasCommand(otherAlias),
-              "alias %s is already registered", otherAlias);
       dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(otherAlias, node));
     }
   }
