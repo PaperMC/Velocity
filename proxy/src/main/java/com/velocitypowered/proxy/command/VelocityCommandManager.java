@@ -112,6 +112,11 @@ public class VelocityCommandManager implements CommandManager {
     dispatcher.getRoot().addChild(node);
     while (aliasIterator.hasNext()) {
       String otherAlias = aliasIterator.next();
+      CommandNode<CommandSource> existingNode = dispatcher.getRoot()
+          .getChild(alias.toLowerCase(Locale.ENGLISH));
+      if (existingNode != null) {
+        dispatcher.getRoot().getChildren().remove(existingNode);
+      }
       dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(otherAlias, node));
     }
   }
