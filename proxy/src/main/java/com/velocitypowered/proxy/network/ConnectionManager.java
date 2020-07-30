@@ -26,7 +26,6 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.filter.FilterContext;
 import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
-import org.asynchttpclient.filter.FilterException;
 import org.asynchttpclient.filter.RequestFilter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -93,7 +92,7 @@ public final class ConnectionManager {
    */
   public void bind(final InetSocketAddress address) {
     final ServerBootstrap bootstrap = new ServerBootstrap()
-        .channel(this.transportType.serverSocketChannelClass)
+        .channelFactory(this.transportType.serverSocketChannelFactory)
         .group(this.bossGroup, this.workerGroup)
         .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
         .childHandler(this.serverChannelInitializer.get())
@@ -126,7 +125,7 @@ public final class ConnectionManager {
   public void queryBind(final String hostname, final int port) {
     InetSocketAddress address = new InetSocketAddress(hostname, port);
     final Bootstrap bootstrap = new Bootstrap()
-        .channel(this.transportType.datagramChannelClass)
+        .channelFactory(this.transportType.datagramChannelFactory)
         .group(this.workerGroup)
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
@@ -151,7 +150,7 @@ public final class ConnectionManager {
    */
   public Bootstrap createWorker(@Nullable EventLoopGroup group) {
     Bootstrap bootstrap = new Bootstrap()
-        .channel(this.transportType.socketChannelClass)
+        .channelFactory(this.transportType.socketChannelFactory)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())

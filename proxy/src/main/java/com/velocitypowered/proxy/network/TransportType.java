@@ -1,7 +1,9 @@
 package com.velocitypowered.proxy.network;
 
 import com.velocitypowered.proxy.util.concurrent.VelocityNettyThreadFactory;
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ReflectiveChannelFactory;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -18,28 +20,55 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
 enum TransportType {
-  NIO("NIO", NioServerSocketChannel.class, NioSocketChannel.class, NioDatagramChannel.class,
+  NIO("NIO", NioServerSocketChannel::new, NioServerSocketChannel.class,
+      NioSocketChannel::new, NioSocketChannel.class,
+      NioDatagramChannel::new, NioDatagramChannel.class,
       (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
-  EPOLL("epoll", EpollServerSocketChannel.class, EpollSocketChannel.class,
-      EpollDatagramChannel.class,
+  EPOLL("epoll", EpollServerSocketChannel::new, EpollServerSocketChannel.class,
+      EpollSocketChannel::new, EpollSocketChannel.class,
+      EpollDatagramChannel::new, EpollDatagramChannel.class,
       (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
+  @Deprecated
   final Class<? extends ServerSocketChannel> serverSocketChannelClass;
+  @Deprecated
   final Class<? extends SocketChannel> socketChannelClass;
+  @Deprecated
   final Class<? extends DatagramChannel> datagramChannelClass;
+  final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
+  final ChannelFactory<? extends SocketChannel> socketChannelFactory;
+  final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
 
+  TransportType(final String name,
+                final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
+                final Class<? extends ServerSocketChannel> serverSocketChannelClass,
+                final ChannelFactory<? extends SocketChannel> socketChannelFactory,
+                final Class<? extends SocketChannel> socketChannelClass,
+                final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
+                final Class<? extends DatagramChannel> datagramChannelClass,
+                final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
+    this.name = name;
+    this.serverSocketChannelClass = serverSocketChannelClass;
+    this.socketChannelClass = socketChannelClass;
+    this.datagramChannelClass = datagramChannelClass;
+    this.serverSocketChannelFactory = serverSocketChannelFactory;
+    this.socketChannelFactory = socketChannelFactory;
+    this.datagramChannelFactory = datagramChannelFactory;
+    this.eventLoopGroupFactory = eventLoopGroupFactory;
+  }
+
+  @Deprecated
   TransportType(final String name,
       final Class<? extends ServerSocketChannel> serverSocketChannelClass,
       final Class<? extends SocketChannel> socketChannelClass,
       final Class<? extends DatagramChannel> datagramChannelClass,
       final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
-    this.name = name;
-    this.serverSocketChannelClass = serverSocketChannelClass;
-    this.socketChannelClass = socketChannelClass;
-    this.datagramChannelClass = datagramChannelClass;
-    this.eventLoopGroupFactory = eventLoopGroupFactory;
+    this(name, new ReflectiveChannelFactory<>(serverSocketChannelClass), serverSocketChannelClass,
+            new ReflectiveChannelFactory<>(socketChannelClass), socketChannelClass,
+            new ReflectiveChannelFactory<>(datagramChannelClass), datagramChannelClass,
+            eventLoopGroupFactory);
   }
 
   @Override
