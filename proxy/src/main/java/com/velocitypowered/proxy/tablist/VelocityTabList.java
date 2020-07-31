@@ -89,14 +89,16 @@ public class VelocityTabList implements TabList {
    * MinecraftConnection#flush()}.
    */
   public void clearAll() {
-    List<PlayerListItem.Item> items = new ArrayList<>();
-    for (TabListEntry value : entries.values()) {
+    Collection<VelocityTabListEntry> listEntries = entries.values();
+    if (listEntries.isEmpty()) {
+      return;
+    }
+    List<PlayerListItem.Item> items = new ArrayList<>(listEntries.size());
+    for (TabListEntry value : listEntries) {
       items.add(PlayerListItem.Item.from(value));
     }
     entries.clear();
-    if (!items.isEmpty()) {
-      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
-    }
+    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override
