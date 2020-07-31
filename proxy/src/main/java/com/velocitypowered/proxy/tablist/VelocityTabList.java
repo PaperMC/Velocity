@@ -59,7 +59,7 @@ public class VelocityTabList implements TabList {
 
     PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
     connection.write(
-        new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
+        new PlayerListItem(null, PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
 
@@ -71,7 +71,8 @@ public class VelocityTabList implements TabList {
     if (entry != null) {
       PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
       connection.write(
-          new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
+          new PlayerListItem(null,
+              PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
     }
 
     return Optional.ofNullable(entry);
@@ -98,7 +99,7 @@ public class VelocityTabList implements TabList {
       items.add(PlayerListItem.Item.from(value));
     }
     entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    connection.delayedWrite(new PlayerListItem(null, PlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override
@@ -178,7 +179,7 @@ public class VelocityTabList implements TabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
+      connection.write(new PlayerListItem(null, action, Collections.singletonList(packetItem)));
     }
   }
 }

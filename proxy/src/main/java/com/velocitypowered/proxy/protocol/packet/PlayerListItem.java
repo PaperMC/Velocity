@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -25,11 +25,16 @@ public class PlayerListItem implements MinecraftPacket {
   public static final int UPDATE_DISPLAY_NAME = 3;
   public static final int REMOVE_PLAYER = 4;
   private int action;
-  private final List<Item> items = new ArrayList<>();
+  private List<Item> items;
 
   public PlayerListItem(int action, List<Item> items) {
     this.action = action;
-    this.items.addAll(items);
+    (this.items = new ArrayList<>(items.size())).addAll(items);
+  }
+
+  public PlayerListItem(Void unused, int action, List<Item> items) {
+    this.action = action;
+    this.items = items;
   }
 
   public PlayerListItem() {
@@ -49,6 +54,7 @@ public class PlayerListItem implements MinecraftPacket {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
 
+      items = new ArrayList<>(length);
       for (int i = 0; i < length; i++) {
         Item item = new Item(ProtocolUtils.readUuid(buf));
         items.add(item);
@@ -81,7 +87,7 @@ public class PlayerListItem implements MinecraftPacket {
       item.setName(ProtocolUtils.readString(buf));
       action = buf.readBoolean() ? ADD_PLAYER : REMOVE_PLAYER;
       item.setLatency(buf.readShort());
-      items.add(item);
+      items = Collections.singletonList(item);
     }
   }
 

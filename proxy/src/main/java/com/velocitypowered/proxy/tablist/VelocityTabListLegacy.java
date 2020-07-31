@@ -50,7 +50,8 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
-      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER,
+      connection.delayedWrite(new PlayerListItem(null,
+          PlayerListItem.REMOVE_PLAYER,
           Collections.singletonList(PlayerListItem.Item.from(value))));
     }
     entries.clear();
@@ -98,7 +99,9 @@ public class VelocityTabListLegacy extends VelocityTabList {
         case PlayerListItem.UPDATE_LATENCY:
         case PlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
           connection
-              .write(new PlayerListItem(PlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
+              .write(new PlayerListItem(
+                  null,
+                  PlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
                   Collections.singletonList(PlayerListItem.Item.from(entry))));
           break;
         default:
