@@ -60,7 +60,6 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(alias, "alias");
     Preconditions.checkNotNull(command, "command");
     Preconditions.checkNotNull(otherAliases, "otherAliases");
-    Preconditions.checkArgument(!hasCommand(alias), "alias already registered");
     register(metaBuilder(alias).aliases(otherAliases).build(), command);
   }
 
