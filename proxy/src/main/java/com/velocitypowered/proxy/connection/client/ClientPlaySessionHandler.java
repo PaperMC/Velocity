@@ -410,7 +410,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          List<Offer> offers = new ArrayList<>();
+          List<Offer> offers = new ArrayList<>(suggestions.size());
           for (String suggestion : suggestions) {
             offers.add(new Offer(suggestion));
           }

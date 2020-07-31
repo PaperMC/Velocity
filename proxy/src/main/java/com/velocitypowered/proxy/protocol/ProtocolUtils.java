@@ -311,8 +311,8 @@ public enum ProtocolUtils {
    * @return the read properties
    */
   public static List<GameProfile.Property> readProperties(ByteBuf buf) {
-    List<GameProfile.Property> properties = new ArrayList<>();
     int size = readVarInt(buf);
+    List<GameProfile.Property> properties = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       String name = readString(buf);
       String value = readString(buf);
