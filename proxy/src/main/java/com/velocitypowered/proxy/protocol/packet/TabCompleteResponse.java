@@ -19,7 +19,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   private int transactionId;
   private int start;
   private int length;
-  private final List<Offer> offers = new ArrayList<>();
+  private List<Offer> offers;
 
   public int getTransactionId() {
     return transactionId;
@@ -66,6 +66,7 @@ public class TabCompleteResponse implements MinecraftPacket {
       this.start = ProtocolUtils.readVarInt(buf);
       this.length = ProtocolUtils.readVarInt(buf);
       int offersAvailable = ProtocolUtils.readVarInt(buf);
+      offers = new ArrayList<>(offersAvailable);
       for (int i = 0; i < offersAvailable; i++) {
         String offer = ProtocolUtils.readString(buf);
         Component tooltip = buf.readBoolean() ? GsonComponentSerializer.INSTANCE.deserialize(
@@ -74,6 +75,7 @@ public class TabCompleteResponse implements MinecraftPacket {
       }
     } else {
       int offersAvailable = ProtocolUtils.readVarInt(buf);
+      offers = new ArrayList<>(offersAvailable);
       for (int i = 0; i < offersAvailable; i++) {
         offers.add(new Offer(ProtocolUtils.readString(buf), null));
       }

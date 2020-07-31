@@ -475,11 +475,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
-    List<String> offers = new ArrayList<>();
-    for (Offer offer : response.getOffers()) {
-      offers.add(offer.getText());
+    List<Offer> offers = response.getOffers();
+    List<String> texts = new ArrayList<>(offers.size());
+    for (Offer offer : offers) {
+      texts.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), texts))
         .thenAcceptAsync(e -> {
           response.getOffers().clear();
           for (String s : e.getSuggestions()) {
