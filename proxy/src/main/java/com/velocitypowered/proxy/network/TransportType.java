@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.network;
 
 import com.velocitypowered.proxy.util.concurrent.VelocityNettyThreadFactory;
+import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
@@ -18,27 +19,30 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
 enum TransportType {
-  NIO("NIO", NioServerSocketChannel.class, NioSocketChannel.class, NioDatagramChannel.class,
+  NIO("NIO", NioServerSocketChannel::new,
+      NioSocketChannel::new,
+      NioDatagramChannel::new,
       (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
-  EPOLL("epoll", EpollServerSocketChannel.class, EpollSocketChannel.class,
-      EpollDatagramChannel.class,
+  EPOLL("epoll", EpollServerSocketChannel::new,
+      EpollSocketChannel::new,
+      EpollDatagramChannel::new,
       (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
-  final Class<? extends ServerSocketChannel> serverSocketChannelClass;
-  final Class<? extends SocketChannel> socketChannelClass;
-  final Class<? extends DatagramChannel> datagramChannelClass;
+  final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
+  final ChannelFactory<? extends SocketChannel> socketChannelFactory;
+  final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
 
   TransportType(final String name,
-      final Class<? extends ServerSocketChannel> serverSocketChannelClass,
-      final Class<? extends SocketChannel> socketChannelClass,
-      final Class<? extends DatagramChannel> datagramChannelClass,
+      final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
+      final ChannelFactory<? extends SocketChannel> socketChannelFactory,
+      final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
       final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
     this.name = name;
-    this.serverSocketChannelClass = serverSocketChannelClass;
-    this.socketChannelClass = socketChannelClass;
-    this.datagramChannelClass = datagramChannelClass;
+    this.serverSocketChannelFactory = serverSocketChannelFactory;
+    this.socketChannelFactory = socketChannelFactory;
+    this.datagramChannelFactory = datagramChannelFactory;
     this.eventLoopGroupFactory = eventLoopGroupFactory;
   }
 
