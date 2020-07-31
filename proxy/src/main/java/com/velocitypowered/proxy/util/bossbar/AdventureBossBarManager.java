@@ -21,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Manages all boss bars known to the proxy.
  */
-public class BossBarManager implements BossBar.Listener {
+public class AdventureBossBarManager implements BossBar.Listener {
   private static final Enum2IntMap<Color> COLORS_TO_PROTOCOL =
       new Enum2IntMap.Builder<>(Color.class)
           .put(Color.PINK, 0)
@@ -48,7 +48,7 @@ public class BossBarManager implements BossBar.Listener {
           .build();
   private final Map<BossBar, BossBarHolder> bars;
 
-  public BossBarManager() {
+  public AdventureBossBarManager() {
     this.bars = new MapMaker().weakKeys().makeMap();
   }
 
@@ -160,13 +160,13 @@ public class BossBarManager implements BossBar.Listener {
   }
 
   @Override
-  public void bossBarFlagsChanged(@NonNull BossBar bar, @NonNull Set<Flag> oldFlags,
-      @NonNull Set<Flag> newFlags) {
+  public void bossBarFlagsChanged(@NonNull BossBar bar, @NonNull Set<Flag> added,
+      @NonNull Set<Flag> removed) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createFlagsUpdate(newFlags);
+    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createFlagsUpdate();
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -184,7 +184,7 @@ public class BossBarManager implements BossBar.Listener {
     }
 
     void register() {
-      registrationOnce.run(() -> this.bar.addListener(BossBarManager.this));
+      registrationOnce.run(() -> this.bar.addListener(AdventureBossBarManager.this));
     }
 
     com.velocitypowered.proxy.protocol.packet.BossBar createRemovePacket() {
@@ -231,6 +231,10 @@ public class BossBarManager implements BossBar.Listener {
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_NAME);
       packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(name));
       return packet;
+    }
+
+    com.velocitypowered.proxy.protocol.packet.BossBar createFlagsUpdate() {
+      return createFlagsUpdate(bar.flags());
     }
 
     com.velocitypowered.proxy.protocol.packet.BossBar createFlagsUpdate(Set<Flag> newFlags) {

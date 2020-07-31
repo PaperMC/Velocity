@@ -40,7 +40,7 @@ import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
-import com.velocitypowered.proxy.util.bossbar.BossBarManager;
+import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
@@ -112,7 +112,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
-  private final BossBarManager bossBarManager;
+  private final AdventureBossBarManager bossBarManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -131,7 +131,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
     this.options = options;
-    this.bossBarManager = new BossBarManager();
+    this.bossBarManager = new AdventureBossBarManager();
   }
 
   public KeyPair getServerKeyPair() {
@@ -626,7 +626,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return audiences;
   }
 
-  public BossBarManager getBossBarManager() {
+  public AdventureBossBarManager getBossBarManager() {
     return bossBarManager;
   }
 
