@@ -75,13 +75,13 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(command, "command");
 
     Iterator<String> aliasIterator = meta.getAliases().iterator();
-    String alias = aliasIterator.next();
+    String primaryAlias = aliasIterator.next();
 
     LiteralCommandNode<CommandSource> node = null;
     if (command instanceof BrigadierCommand) {
       node = ((BrigadierCommand) command).getNode();
     } else if (command instanceof SimpleCommand) {
-      node = CommandNodeFactory.SIMPLE.create(alias, (SimpleCommand) command);
+      node = CommandNodeFactory.SIMPLE.create(primaryAlias, (SimpleCommand) command);
     } else if (command instanceof RawCommand) {
       // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
       // have side-effect free #suggest methods. We rely on the newer RawCommand
@@ -90,13 +90,13 @@ public class VelocityCommandManager implements CommandManager {
       try {
         asRaw.suggest(null, new String[0]);
       } catch (final UnsupportedOperationException e) {
-        node = CommandNodeFactory.RAW.create(alias, asRaw);
+        node = CommandNodeFactory.RAW.create(primaryAlias, asRaw);
       } catch (final Exception ignored) {
         // The implementation probably relies on a non-null source
       }
     }
     if (node == null) {
-      node = CommandNodeFactory.FALLBACK.create(alias, command);
+      node = CommandNodeFactory.FALLBACK.create(primaryAlias, command);
     }
 
     if (!(command instanceof BrigadierCommand)) {
@@ -110,13 +110,13 @@ public class VelocityCommandManager implements CommandManager {
 
     dispatcher.getRoot().addChild(node);
     while (aliasIterator.hasNext()) {
-      String otherAlias = aliasIterator.next();
+      String currentAlias = aliasIterator.next();
       CommandNode<CommandSource> existingNode = dispatcher.getRoot()
-          .getChild(alias.toLowerCase(Locale.ENGLISH));
+          .getChild(currentAlias.toLowerCase(Locale.ENGLISH));
       if (existingNode != null) {
         dispatcher.getRoot().getChildren().remove(existingNode);
       }
-      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(otherAlias, node));
+      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(currentAlias, node));
     }
   }
 
