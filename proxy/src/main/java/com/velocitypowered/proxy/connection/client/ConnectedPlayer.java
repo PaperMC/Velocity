@@ -695,8 +695,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     DisconnectEvent.LoginStatus status;
     if (connectedPlayer.isPresent()) {
-      status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
-          : LoginStatus.CONFLICTING_LOGIN;
+      if (!connectedPlayer.get().getCurrentServer().isPresent()) {
+        status = LoginStatus.PRE_SERVER_JOIN;
+      } else {
+        status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
+            : LoginStatus.CONFLICTING_LOGIN;
+      }
     } else {
       status = connection.isKnownDisconnect() ? LoginStatus.CANCELLED_BY_PROXY :
           LoginStatus.CANCELLED_BY_USER;
