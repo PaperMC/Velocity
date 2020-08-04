@@ -60,7 +60,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private StateRegistry state;
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
-  private ProtocolVersion nextProtocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
   private final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
@@ -333,7 +332,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     ensureInEventLoop();
 
     this.protocolVersion = protocolVersion;
-    this.nextProtocolVersion = protocolVersion;
     if (protocolVersion != ProtocolVersion.LEGACY) {
       this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
       this.channel.pipeline().get(MinecraftDecoder.class).setProtocolVersion(protocolVersion);
@@ -417,14 +415,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setAssociation(MinecraftConnectionAssociation association) {
     ensureInEventLoop();
     this.association = association;
-  }
-
-  public ProtocolVersion getNextProtocolVersion() {
-    return this.nextProtocolVersion;
-  }
-
-  public void setNextProtocolVersion(ProtocolVersion nextProtocolVersion) {
-    this.nextProtocolVersion = nextProtocolVersion;
   }
 
   /**

@@ -131,7 +131,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     InetSocketAddress destAddress = registeredServer.getServerInfo().getAddress();
-    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getNextProtocolVersion();
+    ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
