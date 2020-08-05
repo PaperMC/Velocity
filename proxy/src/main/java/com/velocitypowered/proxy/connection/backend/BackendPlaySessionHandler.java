@@ -212,10 +212,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
       destChildBuilder.requires((commandSource) -> true);
       if (destChildBuilder.getRedirect() != null) {
-        CommandNode<CommandSource> filtered = filterNode(destChildBuilder.getRedirect());
-        if (filtered != null) {
-          destChildBuilder.redirect(filtered);
-        }
+        destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
       }
 
       dest = destChildBuilder.build();
