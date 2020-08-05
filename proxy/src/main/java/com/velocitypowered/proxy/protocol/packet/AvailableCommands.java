@@ -58,6 +58,10 @@ public class AvailableCommands implements MinecraftPacket {
     return rootNode;
   }
 
+  public void setRootNode(RootCommandNode<CommandSource> rootNode) {
+    this.rootNode = rootNode;
+  }
+
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     int commands = ProtocolUtils.readVarInt(buf);
