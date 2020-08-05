@@ -19,12 +19,25 @@ import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Provides an interface to a Minecraft server proxy.
  */
 public interface ProxyServer extends Audience {
+
+  /**
+   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   *
+   * @param reason message to kick online players with
+   */
+  void shutdown(TextComponent reason);
+
+  /**
+   * Shuts down the proxy, kicking players with the default reason.
+   */
+  void shutdown();
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search

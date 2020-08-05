@@ -453,6 +453,16 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     shutdown(explicitExit, TextComponent.of("Proxy shutting down."));
   }
 
+  @Override
+  public void shutdown(TextComponent reason) {
+    shutdown(true, reason);
+  }
+
+  @Override
+  public void shutdown() {
+    shutdown(true);
+  }
+
   public AsyncHttpClient getAsyncHttpClient() {
     return cm.getHttpClient();
   }
