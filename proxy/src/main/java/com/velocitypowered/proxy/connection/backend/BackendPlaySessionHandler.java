@@ -30,8 +30,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -174,8 +172,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       // Inject commands from the proxy.
       RootCommandNode<CommandSource> dispatcherRootNode =
           (RootCommandNode<CommandSource>)
-              filterNode(
-                  server.getCommandManager().getDispatcher().getRoot(), new IdentityHashMap<>());
+              filterNode(server.getCommandManager().getDispatcher().getRoot());
       Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
         rootNode.addChild(node);
@@ -193,12 +190,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
    * by the player (respecting the requirement of the node).
    *
    * @param source source node
-   * @param nodeMapping mapped nodes
    * @return filtered node
    */
-  private CommandNode<CommandSource> filterNode(
-      CommandNode<CommandSource> source,
-      Map<CommandNode<CommandSource>, CommandNode<CommandSource>> nodeMapping) {
+  private CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
     CommandNode<CommandSource> dest;
     if (source instanceof RootCommandNode) {
       dest = new RootCommandNode<>();
@@ -206,7 +200,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       if (source.getRequirement() != null) {
         try {
           if (!source.getRequirement().test(serverConn.getPlayer())) {
-            nodeMapping.put(source, null);
             return null;
           }
         } catch (Throwable e) {
@@ -219,19 +212,17 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
       destChildBuilder.requires((commandSource) -> true);
       if (destChildBuilder.getRedirect() != null) {
-        if (nodeMapping.containsKey(destChildBuilder.getRedirect())) {
-          destChildBuilder.redirect(nodeMapping.get(destChildBuilder.getRedirect()));
-        } else {
-          destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect(), nodeMapping));
+        CommandNode<CommandSource> filtered = filterNode(destChildBuilder.getRedirect());
+        if (filtered != null) {
+          destChildBuilder.redirect(filtered);
         }
       }
 
       dest = destChildBuilder.build();
     }
 
-    nodeMapping.put(source, dest);
     for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
-      CommandNode<CommandSource> destChild = filterNode(sourceChild, nodeMapping);
+      CommandNode<CommandSource> destChild = filterNode(sourceChild);
       if (destChild == null) {
         continue;
       }
