@@ -82,7 +82,7 @@ public final class DimensionData {
     return registryIdentifier;
   }
 
-  public Integer getDimensionId() {
+  public @Nullable Integer getDimensionId() {
     return dimensionId;
   }
 
