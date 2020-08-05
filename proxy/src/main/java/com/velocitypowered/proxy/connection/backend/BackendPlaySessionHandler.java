@@ -3,6 +3,7 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
@@ -29,9 +30,12 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
+  private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
@@ -166,8 +170,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.getConfiguration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      Collection<CommandNode<CommandSource>> proxyNodes = server.getCommandManager().getDispatcher()
-              .getRoot().getChildren();
+      RootCommandNode<CommandSource> dispatcherRootNode =
+          (RootCommandNode<CommandSource>)
+              filterNode(server.getCommandManager().getDispatcher().getRoot());
+      Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
         rootNode.addChild(node);
       }
@@ -177,6 +183,50 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
     return true;
+  }
+
+  /**
+   * Creates a deep copy of the provided command node, but removes any node that are not accessible
+   * by the player (respecting the requirement of the node).
+   *
+   * @param source source node
+   * @return filtered node
+   */
+  private CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
+    CommandNode<CommandSource> dest;
+    if (source instanceof RootCommandNode) {
+      dest = new RootCommandNode<>();
+    } else {
+      if (source.getRequirement() != null) {
+        try {
+          if (!source.getRequirement().test(serverConn.getPlayer())) {
+            return null;
+          }
+        } catch (Throwable e) {
+          // swallow everything cuz plugins being plugins
+          logger.error(
+              "Requirement test for command node " + source + " encountered an exception", e);
+        }
+      }
+
+      ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
+      destChildBuilder.requires((commandSource) -> true);
+      if (destChildBuilder.getRedirect() != null) {
+        destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
+      }
+
+      dest = destChildBuilder.build();
+    }
+
+    for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
+      CommandNode<CommandSource> destChild = filterNode(sourceChild);
+      if (destChild == null) {
+        continue;
+      }
+      dest.addChild(destChild);
+    }
+
+    return dest;
   }
 
   @Override
