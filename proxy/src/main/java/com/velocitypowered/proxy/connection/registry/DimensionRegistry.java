@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,17 +32,17 @@ public final class DimensionRegistry {
    * @param levelNames a populated {@link ImmutableSet} of the level (world) names the server offers
    */
   public DimensionRegistry(ImmutableSet<DimensionData> registeredDimensions,
-                            ImmutableSet<String> levelNames) {
+      ImmutableSet<String> levelNames) {
     Preconditions.checkNotNull(registeredDimensions,
-            "registeredDimensions cannot be null");
+        "registeredDimensions cannot be null");
     Preconditions.checkNotNull(levelNames,
-            "levelNames cannot be null");
+        "levelNames cannot be null");
     Preconditions.checkArgument(registeredDimensions.size() > 0,
-            "registeredDimensions needs to be populated");
+        "registeredDimensions needs to be populated");
     Preconditions.checkArgument(levelNames.size() > 0,
-            "levelNames needs to populated");
+        "levelNames needs to populated");
     this.registeredDimensions = Maps.uniqueIndex(
-            registeredDimensions, DimensionData::getRegistryIdentifier);
+        registeredDimensions, DimensionData::getRegistryIdentifier);
     this.levelNames = levelNames;
   }
 
@@ -72,36 +73,31 @@ public final class DimensionRegistry {
       return false;
     }
     return registeredDimensions.containsKey(toValidate.getRegistryIdentifier())
-            && levelNames.contains(toValidate.getLevelName());
+        && levelNames.contains(toValidate.getLevelName());
   }
 
   /**
    * Encodes the stored Dimension registry as CompoundTag.
    * @return the CompoundTag containing identifier:type mappings
    */
-  public CompoundTag encodeRegistry() {
-    CompoundTag ret = new CompoundTag();
+  public ListTag encodeRegistry(ProtocolVersion version) {
     ListTag list = new ListTag(TagType.COMPOUND);
     for (DimensionData iter : registeredDimensions.values()) {
-      list.add(iter.encodeAsCompundTag());
+      list.add(iter.encodeAsCompoundTag(version));
     }
-    ret.put("dimension", list);
-    return ret;
+    return list;
   }
 
   /**
    * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    */
-  public static ImmutableSet<DimensionData> fromGameData(CompoundTag toParse) {
-    Preconditions.checkNotNull(toParse, "CompoundTag cannot be null");
-    Preconditions.checkArgument(toParse.contains("dimension", TagType.LIST),
-            "CompoundTag does not contain a dimension list");
-    ListTag dimensions = toParse.getList("dimension");
+  public static ImmutableSet<DimensionData> fromGameData(ListTag toParse, ProtocolVersion version) {
+    Preconditions.checkNotNull(toParse, "ListTag cannot be null");
     ImmutableSet.Builder<DimensionData> mappings = ImmutableSet.builder();
-    for (Tag iter : dimensions) {
+    for (Tag iter : toParse) {
       if (iter instanceof CompoundTag) {
-        mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter));
+        mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter, version));
       }
     }
     return mappings.build();
