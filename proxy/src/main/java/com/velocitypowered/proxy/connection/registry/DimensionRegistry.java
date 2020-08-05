@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,10 +80,10 @@ public final class DimensionRegistry {
    * Encodes the stored Dimension registry as CompoundTag.
    * @return the CompoundTag containing identifier:type mappings
    */
-  public ListTag encodeRegistry() {
+  public ListTag encodeRegistry(ProtocolVersion version) {
     ListTag list = new ListTag(TagType.COMPOUND);
     for (DimensionData iter : registeredDimensions.values()) {
-      list.add(iter.encodeAsCompundTag());
+      list.add(iter.encodeAsCompoundTag(version));
     }
     return list;
   }
@@ -91,12 +92,12 @@ public final class DimensionRegistry {
    * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    */
-  public static ImmutableSet<DimensionData> fromGameData(ListTag toParse) {
+  public static ImmutableSet<DimensionData> fromGameData(ListTag toParse, ProtocolVersion version) {
     Preconditions.checkNotNull(toParse, "ListTag cannot be null");
     ImmutableSet.Builder<DimensionData> mappings = ImmutableSet.builder();
     for (Tag iter : toParse) {
       if (iter instanceof CompoundTag) {
-        mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter));
+        mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter, version));
       }
     }
     return mappings.build();

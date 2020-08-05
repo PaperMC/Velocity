@@ -184,7 +184,7 @@ public class JoinGame implements MinecraftPacket {
         dimensionRegistryContainer = registryContainer.getList("dimension", TagType.COMPOUND);
       }
       ImmutableSet<DimensionData> readData =
-              DimensionRegistry.fromGameData(dimensionRegistryContainer);
+              DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
       dimensionIdentifier = ProtocolUtils.readString(buf);
       levelName = ProtocolUtils.readString(buf);
@@ -235,7 +235,7 @@ public class JoinGame implements MinecraftPacket {
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
               new String[dimensionRegistry.getLevelNames().size()]));
       CompoundTag registryContainer = new CompoundTag();
-      ListTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry();
+      ListTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
         CompoundTag dimensionRegistryDummy = new CompoundTag();
         dimensionRegistryDummy.putString("type", "minecraft:dimension_type");
