@@ -79,27 +79,22 @@ public final class DimensionRegistry {
    * Encodes the stored Dimension registry as CompoundTag.
    * @return the CompoundTag containing identifier:type mappings
    */
-  public CompoundTag encodeRegistry() {
-    CompoundTag ret = new CompoundTag();
+  public ListTag encodeRegistry() {
     ListTag list = new ListTag(TagType.COMPOUND);
     for (DimensionData iter : registeredDimensions.values()) {
       list.add(iter.encodeAsCompundTag());
     }
-    ret.put("dimension", list);
-    return ret;
+    return list;
   }
 
   /**
    * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    */
-  public static ImmutableSet<DimensionData> fromGameData(CompoundTag toParse) {
-    Preconditions.checkNotNull(toParse, "CompoundTag cannot be null");
-    Preconditions.checkArgument(toParse.contains("dimension", TagType.LIST),
-            "CompoundTag does not contain a dimension list");
-    ListTag dimensions = toParse.getList("dimension");
+  public static ImmutableSet<DimensionData> fromGameData(ListTag toParse) {
+    Preconditions.checkNotNull(toParse, "ListTag cannot be null");
     ImmutableSet.Builder<DimensionData> mappings = ImmutableSet.builder();
-    for (Tag iter : dimensions) {
+    for (Tag iter : toParse) {
       if (iter instanceof CompoundTag) {
         mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter));
       }
