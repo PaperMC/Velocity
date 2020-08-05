@@ -22,6 +22,7 @@ public final class DimensionData {
   private final String burningBehaviourIdentifier;
   private final @Nullable Long fixedTime;
   private final @Nullable Boolean createDragonFight;
+  private final @Nullable Double coordinateScale;
 
   /**
    * Initializes a new {@link DimensionData} instance.
@@ -41,6 +42,7 @@ public final class DimensionData {
    * @param burningBehaviourIdentifier the identifier for how burning blocks work in the dimension
    * @param fixedTime optional. If set to any game daytime value will deactivate time cycle
    * @param createDragonFight optional. Internal flag used in the end dimension
+   * @param coordinateScale optional, unknown purpose
    */
   public DimensionData(String registryIdentifier,
       @Nullable Integer dimensionId,
@@ -50,7 +52,8 @@ public final class DimensionData {
       boolean isPiglinSafe, boolean doBedsWork,
       boolean doRespawnAnchorsWork, boolean hasRaids,
       int logicalHeight, String burningBehaviourIdentifier,
-      @Nullable Long fixedTime, @Nullable Boolean createDragonFight) {
+      @Nullable Long fixedTime, @Nullable Boolean createDragonFight,
+      @Nullable Double coordinateScale) {
     Preconditions.checkNotNull(
             registryIdentifier, "registryIdentifier cannot be null");
     Preconditions.checkArgument(registryIdentifier.length() > 0,
@@ -76,6 +79,7 @@ public final class DimensionData {
     this.burningBehaviourIdentifier = burningBehaviourIdentifier;
     this.fixedTime = fixedTime;
     this.createDragonFight = createDragonFight;
+    this.coordinateScale = coordinateScale;
   }
 
   public String getRegistryIdentifier() {
@@ -142,6 +146,10 @@ public final class DimensionData {
     return createDragonFight;
   }
 
+  public @Nullable Double getCoordinateScale() {
+    return coordinateScale;
+  }
+
   /**
    * Parses a given CompoundTag to a DimensionData instance.
    * @param dimTag the compound from the registry to read
@@ -175,10 +183,13 @@ public final class DimensionData {
             ? details.getLong("fixed_time") : null;
     Boolean hasEnderdragonFight = details.contains("has_enderdragon_fight")
                     ? details.getBoolean("has_enderdragon_fight") : null;
+    Double coordinateScale = details.contains("coordinate_scale")
+        ? details.getDouble("coordinate_scale") : null;
     return new DimensionData(
             registryIdentifier, dimensionId, isNatural, ambientLight, isShrunk,
             isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
-            hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, hasEnderdragonFight);
+            hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, hasEnderdragonFight,
+            coordinateScale);
   }
 
   /**
@@ -223,6 +234,9 @@ public final class DimensionData {
     }
     if (createDragonFight != null) {
       ret.putBoolean("has_enderdragon_fight", createDragonFight);
+    }
+    if (coordinateScale != null) {
+      ret.putDouble("coordinate_scale", coordinateScale);
     }
     return ret;
   }
