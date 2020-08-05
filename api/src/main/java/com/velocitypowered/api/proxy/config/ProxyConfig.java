@@ -151,7 +151,6 @@ public interface ProxyConfig {
    */
   int getReadTimeout();
 
-
   /**
    * Get how long this proxy will wait until performing an initial read timeout.
    *
