@@ -172,23 +172,19 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.getConfiguration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      Collection<CommandNode<CommandSource>> proxyNodes = server.getCommandManager().getDispatcher()
-              .getRoot().getChildren();
+      RootCommandNode<CommandSource> dispatcherRootNode =
+          (RootCommandNode<CommandSource>)
+              filterNode(
+                  server.getCommandManager().getDispatcher().getRoot(), new IdentityHashMap<>());
+      Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
         rootNode.addChild(node);
       }
     }
 
-    server
-        .getEventManager()
-        .fire(new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
-        .thenAcceptAsync(
-            event -> {
-              commands.setRootNode(
-                  (RootCommandNode<CommandSource>) filterNode(rootNode, new IdentityHashMap<>()));
-              playerConnection.write(commands);
-            },
-            playerConnection.eventLoop());
+    server.getEventManager().fire(
+        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
+        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
     return true;
   }
 
