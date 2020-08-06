@@ -6,6 +6,8 @@ import net.kyori.nbt.CompoundTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DimensionData {
+  private static final String UNKNOWN_DIMENSION_ID = "velocity:unknown_dimension";
+
   private final String registryIdentifier;
   private final @Nullable Integer dimensionId;
   private final boolean isNatural;
@@ -151,22 +153,34 @@ public final class DimensionData {
   }
 
   /**
-   * Parses a given CompoundTag to a DimensionData instance.
-   * @param dimTag the compound from the registry to read
-   * @param version the protocol version from the registry
+   * Returns a fresh {@link DimensionData} with the specified {@code registryIdentifier}
+   * and {@code dimensionId}.
+   *
+   * @param registryIdentifier the identifier for the dimension from the registry
+   * @param dimensionId optional, dimension ID
+   * @return a new {@link DimensionData}
+   */
+  public DimensionData annotateWith(String registryIdentifier,
+      @Nullable Integer dimensionId) {
+    return new DimensionData(registryIdentifier, dimensionId, isNatural, ambientLight, isShrunk,
+        isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
+        hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, createDragonFight,
+        coordinateScale);
+  }
+
+  public boolean isUnannotated() {
+    return this.registryIdentifier.equalsIgnoreCase(UNKNOWN_DIMENSION_ID);
+  }
+
+  /**
+   * Parses a given CompoundTag to a DimensionData instance. Assumes the data only contains
+   * dimension details.
+   *
+   * @param details the compound from the registry to read
+   * @param version the protocol version
    * @return game dimension data
    */
-  public static DimensionData decodeCompoundTag(CompoundTag dimTag, ProtocolVersion version) {
-    Preconditions.checkNotNull(dimTag, "CompoundTag cannot be null");
-    String registryIdentifier = dimTag.getString("name");
-    CompoundTag details;
-    Integer dimensionId = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-      dimensionId = dimTag.getInt("id");
-      details = dimTag.getCompound("element");
-    } else {
-      details = dimTag;
-    }
+  public static DimensionData decodeBaseCompoundTag(CompoundTag details, ProtocolVersion version) {
     boolean isNatural = details.getBoolean("natural");
     float ambientLight = details.getFloat("ambient_light");
     boolean isShrunk = details.getBoolean("shrunk");
@@ -186,10 +200,32 @@ public final class DimensionData {
     Double coordinateScale = details.contains("coordinate_scale")
         ? details.getDouble("coordinate_scale") : null;
     return new DimensionData(
-        registryIdentifier, dimensionId, isNatural, ambientLight, isShrunk,
+        UNKNOWN_DIMENSION_ID, null, isNatural, ambientLight, isShrunk,
         isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
         hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, hasEnderdragonFight,
         coordinateScale);
+  }
+
+  /**
+   * Parses a given CompoundTag to a DimensionData instance. Assumes the data is part of a
+   * dimension registry.
+   * @param dimTag the compound from the registry to read
+   * @param version the protocol version
+   * @return game dimension data
+   */
+  public static DimensionData decodeRegistryEntry(CompoundTag dimTag, ProtocolVersion version) {
+    String registryIdentifier = dimTag.getString("name");
+    CompoundTag details;
+    Integer dimensionId = null;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      dimensionId = dimTag.getInt("id");
+      details = dimTag.getCompound("element");
+    } else {
+      details = dimTag;
+    }
+
+    DimensionData deserializedDetails = decodeBaseCompoundTag(details, version);
+    return deserializedDetails.annotateWith(registryIdentifier, dimensionId);
   }
 
   /**
@@ -215,7 +251,11 @@ public final class DimensionData {
     }
   }
 
-  private CompoundTag serializeDimensionDetails() {
+  /**
+   * Serializes details of this dimension.
+   * @return serialized details of this dimension
+   */
+  public CompoundTag serializeDimensionDetails() {
     CompoundTag ret = new CompoundTag();
     ret.putBoolean("natural", isNatural);
     ret.putFloat("ambient_light", ambientLight);
