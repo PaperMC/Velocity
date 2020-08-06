@@ -58,7 +58,7 @@ public class PlayerListItem implements MinecraftPacket {
             item.setProperties(ProtocolUtils.readProperties(buf));
             item.setGameMode(ProtocolUtils.readVarInt(buf));
             item.setLatency(ProtocolUtils.readVarInt(buf));
-            item.setDisplayName(readOptionalComponent(buf));
+            item.setDisplayName(readOptionalComponent(buf, version));
             break;
           case UPDATE_GAMEMODE:
             item.setGameMode(ProtocolUtils.readVarInt(buf));
@@ -67,7 +67,7 @@ public class PlayerListItem implements MinecraftPacket {
             item.setLatency(ProtocolUtils.readVarInt(buf));
             break;
           case UPDATE_DISPLAY_NAME:
-            item.setDisplayName(readOptionalComponent(buf));
+            item.setDisplayName(readOptionalComponent(buf, version));
             break;
           case REMOVE_PLAYER:
             //Do nothing, all that is needed is the uuid
@@ -85,9 +85,10 @@ public class PlayerListItem implements MinecraftPacket {
     }
   }
 
-  private static @Nullable Component readOptionalComponent(ByteBuf buf) {
+  private static @Nullable Component readOptionalComponent(ByteBuf buf, ProtocolVersion version) {
     if (buf.readBoolean()) {
-      return GsonComponentSerializer.gson().deserialize(ProtocolUtils.readString(buf));
+      return ProtocolUtils.getJsonChatSerializer(version)
+          .deserialize(ProtocolUtils.readString(buf));
     }
     return null;
   }
