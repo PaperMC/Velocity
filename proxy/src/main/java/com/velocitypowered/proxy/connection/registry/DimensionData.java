@@ -251,6 +251,10 @@ public final class DimensionData {
     }
   }
 
+  /**
+   * Serializes details of this dimension.
+   * @return serialized details of this dimension
+   */
   public CompoundTag serializeDimensionDetails() {
     CompoundTag ret = new CompoundTag();
     ret.putBoolean("natural", isNatural);
