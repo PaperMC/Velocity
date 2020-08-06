@@ -97,7 +97,7 @@ public final class DimensionRegistry {
     ImmutableSet.Builder<DimensionData> mappings = ImmutableSet.builder();
     for (Tag iter : toParse) {
       if (iter instanceof CompoundTag) {
-        mappings.add(DimensionData.decodeCompoundTag((CompoundTag) iter, version));
+        mappings.add(DimensionData.decodeRegistryEntry((CompoundTag) iter, version));
       }
     }
     return mappings.build();

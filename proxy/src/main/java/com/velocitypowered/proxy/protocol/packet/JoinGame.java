@@ -28,6 +28,7 @@ public class JoinGame implements MinecraftPacket {
   private boolean showRespawnScreen;
   private DimensionRegistry dimensionRegistry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
+  private DimensionData currentDimensionData; // 1.16.2+
   private short previousGamemode; // 1.16+
   private CompoundTag biomeRegistry; // 1.16.2+
 
@@ -139,6 +140,10 @@ public class JoinGame implements MinecraftPacket {
     this.biomeRegistry = biomeRegistry;
   }
 
+  public DimensionData getCurrentDimensionData() {
+    return currentDimensionData;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -186,8 +191,15 @@ public class JoinGame implements MinecraftPacket {
       ImmutableSet<DimensionData> readData =
               DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
-      dimensionIdentifier = ProtocolUtils.readString(buf);
-      levelName = ProtocolUtils.readString(buf);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
+        dimensionIdentifier = ProtocolUtils.readString(buf);
+        this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
+            .annotateWith(dimensionIdentifier, null);
+      } else {
+        dimensionIdentifier = ProtocolUtils.readString(buf);
+        levelName = ProtocolUtils.readString(buf);
+      }
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       this.dimension = buf.readInt();
     } else {
@@ -246,8 +258,13 @@ public class JoinGame implements MinecraftPacket {
         registryContainer.put("dimension", encodedDimensionRegistry);
       }
       ProtocolUtils.writeCompoundTag(buf, registryContainer);
-      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
-      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
+        ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+      } else {
+        ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+        ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+      }
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
