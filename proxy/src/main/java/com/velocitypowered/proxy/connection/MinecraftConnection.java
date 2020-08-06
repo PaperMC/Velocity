@@ -157,12 +157,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           logger.error("{}: read timed out", association);
         } else {
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
-          boolean willLogQuietDecoderException = MinecraftDecoder.DEBUG || (isQuietDecoderException
-              && !(sessionHandler instanceof LoginSessionHandler)
+          boolean willLogQuietDecoderException = !isQuietDecoderException
+              || (!(sessionHandler instanceof LoginSessionHandler)
               && !(sessionHandler instanceof HandshakeSessionHandler));
           if (willLogQuietDecoderException) {
             logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
-          } else if (isQuietDecoderException) {
+          } else {
             knownDisconnect = true;
           }
         }
