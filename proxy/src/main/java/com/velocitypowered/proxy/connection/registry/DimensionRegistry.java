@@ -8,12 +8,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Map;
 import java.util.Set;
 
-import net.kyori.nbt.CompoundTag;
-import net.kyori.nbt.ListTag;
-import net.kyori.nbt.Tag;
-import net.kyori.nbt.TagType;
+import net.kyori.adventure.nbt.BinaryTag;
+import net.kyori.adventure.nbt.BinaryTagTypes;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 
 public final class DimensionRegistry {
 
@@ -80,24 +79,26 @@ public final class DimensionRegistry {
    * Encodes the stored Dimension registry as CompoundTag.
    * @return the CompoundTag containing identifier:type mappings
    */
-  public ListTag encodeRegistry(ProtocolVersion version) {
-    ListTag list = new ListTag(TagType.COMPOUND);
+  public ListBinaryTag encodeRegistry(ProtocolVersion version) {
+    ListBinaryTag.Builder<CompoundBinaryTag> listBuilder = ListBinaryTag
+        .builder(BinaryTagTypes.COMPOUND);
     for (DimensionData iter : registeredDimensions.values()) {
-      list.add(iter.encodeAsCompoundTag(version));
+      listBuilder.add(iter.encodeAsCompoundTag(version));
     }
-    return list;
+    return listBuilder.build();
   }
 
   /**
    * Decodes a CompoundTag storing a dimension registry.
    * @param toParse CompoundTag containing a dimension registry
    */
-  public static ImmutableSet<DimensionData> fromGameData(ListTag toParse, ProtocolVersion version) {
+  public static ImmutableSet<DimensionData> fromGameData(ListBinaryTag toParse,
+      ProtocolVersion version) {
     Preconditions.checkNotNull(toParse, "ListTag cannot be null");
     ImmutableSet.Builder<DimensionData> mappings = ImmutableSet.builder();
-    for (Tag iter : toParse) {
-      if (iter instanceof CompoundTag) {
-        mappings.add(DimensionData.decodeRegistryEntry((CompoundTag) iter, version));
+    for (BinaryTag iter : toParse) {
+      if (iter instanceof CompoundBinaryTag) {
+        mappings.add(DimensionData.decodeRegistryEntry((CompoundBinaryTag) iter, version));
       }
     }
     return mappings.build();
