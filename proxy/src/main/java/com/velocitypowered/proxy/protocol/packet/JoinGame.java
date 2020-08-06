@@ -6,11 +6,12 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
-import com.velocitypowered.proxy.protocol.*;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.nbt.CompoundTag;
-import net.kyori.nbt.ListTag;
-import net.kyori.nbt.TagType;
+import net.kyori.adventure.nbt.BinaryTagTypes;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
@@ -30,7 +31,7 @@ public class JoinGame implements MinecraftPacket {
   private DimensionInfo dimensionInfo; // 1.16+
   private DimensionData currentDimensionData; // 1.16.2+
   private short previousGamemode; // 1.16+
-  private CompoundTag biomeRegistry; // 1.16.2+
+  private CompoundBinaryTag biomeRegistry; // 1.16.2+
 
   public int getEntityId() {
     return entityId;
@@ -132,11 +133,11 @@ public class JoinGame implements MinecraftPacket {
     this.isHardcore = isHardcore;
   }
 
-  public CompoundTag getBiomeRegistry() {
+  public CompoundBinaryTag getBiomeRegistry() {
     return biomeRegistry;
   }
 
-  public void setBiomeRegistry(CompoundTag biomeRegistry) {
+  public void setBiomeRegistry(CompoundBinaryTag biomeRegistry) {
     this.biomeRegistry = biomeRegistry;
   }
 
@@ -179,20 +180,21 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       this.previousGamemode = buf.readByte();
       ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
-      CompoundTag registryContainer = ProtocolUtils.readCompoundTag(buf);
-      ListTag dimensionRegistryContainer = null;
+      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf);
+      ListBinaryTag dimensionRegistryContainer = null;
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
         dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
-                .getList("value", TagType.COMPOUND);
+                .getList("value", BinaryTagTypes.COMPOUND);
         this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
       } else {
-        dimensionRegistryContainer = registryContainer.getList("dimension", TagType.COMPOUND);
+        dimensionRegistryContainer = registryContainer.getList("dimension",
+            BinaryTagTypes.COMPOUND);
       }
       ImmutableSet<DimensionData> readData =
               DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-        CompoundTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
+        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
             .annotateWith(dimensionIdentifier, null);
@@ -246,18 +248,18 @@ public class JoinGame implements MinecraftPacket {
       buf.writeByte(previousGamemode);
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
               new String[dimensionRegistry.getLevelNames().size()]));
-      CompoundTag registryContainer = new CompoundTag();
-      ListTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
+      CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
+      ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-        CompoundTag dimensionRegistryDummy = new CompoundTag();
+        CompoundBinaryTag.Builder dimensionRegistryDummy = CompoundBinaryTag.builder();
         dimensionRegistryDummy.putString("type", "minecraft:dimension_type");
         dimensionRegistryDummy.put("value", encodedDimensionRegistry);
-        registryContainer.put("minecraft:dimension_type", dimensionRegistryDummy);
+        registryContainer.put("minecraft:dimension_type", dimensionRegistryDummy.build());
         registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
       } else {
         registryContainer.put("dimension", encodedDimensionRegistry);
       }
-      ProtocolUtils.writeCompoundTag(buf, registryContainer);
+      ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
         ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());

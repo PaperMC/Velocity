@@ -63,7 +63,7 @@ dependencies {
 
     compile 'it.unimi.dsi:fastutil:8.2.2'
     compile 'net.kyori:event-method-asm:3.0.0'
-    compile 'net.kyori:nbt:1.12-1.0.0-SNAPSHOT'
+    compile 'net.kyori:adventure-nbt:4.0.0-SNAPSHOT'
 
     compile 'com.mojang:brigadier:1.0.17'
 

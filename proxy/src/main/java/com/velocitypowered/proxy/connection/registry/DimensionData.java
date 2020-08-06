@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.registry;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import net.kyori.nbt.CompoundTag;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DimensionData {
@@ -180,24 +180,25 @@ public final class DimensionData {
    * @param version the protocol version
    * @return game dimension data
    */
-  public static DimensionData decodeBaseCompoundTag(CompoundTag details, ProtocolVersion version) {
-    boolean isNatural = details.getBoolean("natural");
+  public static DimensionData decodeBaseCompoundTag(CompoundBinaryTag details,
+      ProtocolVersion version) {
+    boolean isNatural = details.getByte("natural") >= 1;
     float ambientLight = details.getFloat("ambient_light");
-    boolean isShrunk = details.getBoolean("shrunk");
-    boolean isUltrawarm = details.getBoolean("ultrawarm");
-    boolean hasCeiling = details.getBoolean("has_ceiling");
-    boolean hasSkylight = details.getBoolean("has_skylight");
-    boolean isPiglinSafe = details.getBoolean("piglin_safe");
-    boolean doBedsWork = details.getBoolean("bed_works");
-    boolean doRespawnAnchorsWork = details.getBoolean("respawn_anchor_works");
-    boolean hasRaids = details.getBoolean("has_raids");
+    boolean isShrunk = details.getByte("shrunk") >= 1;
+    boolean isUltrawarm = details.getByte("ultrawarm") >= 1;
+    boolean hasCeiling = details.getByte("has_ceiling") >= 1;
+    boolean hasSkylight = details.getByte("has_skylight") >= 1;
+    boolean isPiglinSafe = details.getByte("piglin_safe") >= 1;
+    boolean doBedsWork = details.getByte("bed_works") >= 1;
+    boolean doRespawnAnchorsWork = details.getByte("respawn_anchor_works") >= 1;
+    boolean hasRaids = details.getByte("has_raids") >= 1;
     int logicalHeight = details.getInt("logical_height");
     String burningBehaviourIdentifier = details.getString("infiniburn");
-    Long fixedTime = details.contains("fixed_time")
+    Long fixedTime = details.keySet().contains("fixed_time")
         ? details.getLong("fixed_time") : null;
-    Boolean hasEnderdragonFight = details.contains("has_enderdragon_fight")
-        ? details.getBoolean("has_enderdragon_fight") : null;
-    Double coordinateScale = details.contains("coordinate_scale")
+    Boolean hasEnderdragonFight = details.keySet().contains("has_enderdragon_fight")
+        ? details.getByte("has_enderdragon_fight") >= 1 : null;
+    Double coordinateScale = details.keySet().contains("coordinate_scale")
         ? details.getDouble("coordinate_scale") : null;
     return new DimensionData(
         UNKNOWN_DIMENSION_ID, null, isNatural, ambientLight, isShrunk,
@@ -213,9 +214,10 @@ public final class DimensionData {
    * @param version the protocol version
    * @return game dimension data
    */
-  public static DimensionData decodeRegistryEntry(CompoundTag dimTag, ProtocolVersion version) {
+  public static DimensionData decodeRegistryEntry(CompoundBinaryTag dimTag,
+      ProtocolVersion version) {
     String registryIdentifier = dimTag.getString("name");
-    CompoundTag details;
+    CompoundBinaryTag details;
     Integer dimensionId = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
       dimensionId = dimTag.getInt("id");
@@ -233,21 +235,21 @@ public final class DimensionData {
    * @param version the version to serialize as
    * @return compound containing the dimension data
    */
-  public CompoundTag encodeAsCompoundTag(ProtocolVersion version) {
-    CompoundTag details = serializeDimensionDetails();
+  public CompoundBinaryTag encodeAsCompoundTag(ProtocolVersion version) {
+    CompoundBinaryTag details = serializeDimensionDetails();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-      CompoundTag parent = new CompoundTag();
-      parent.putString("name", registryIdentifier);
       if (dimensionId == null) {
         throw new IllegalStateException("Tried to serialize a 1.16.2+ dimension registry entry "
             + "without an ID");
       }
-      parent.putInt("id", dimensionId);
-      parent.put("element", details);
-      return parent;
+
+      return CompoundBinaryTag.builder()
+          .putString("name", registryIdentifier)
+          .putInt("id", dimensionId)
+          .put("element", details)
+          .build();
     } else {
-      details.putString("name", registryIdentifier);
-      return details;
+      return details.putString("name", registryIdentifier);
     }
   }
 
@@ -255,29 +257,29 @@ public final class DimensionData {
    * Serializes details of this dimension.
    * @return serialized details of this dimension
    */
-  public CompoundTag serializeDimensionDetails() {
-    CompoundTag ret = new CompoundTag();
-    ret.putBoolean("natural", isNatural);
+  public CompoundBinaryTag serializeDimensionDetails() {
+    CompoundBinaryTag.Builder ret = CompoundBinaryTag.builder();
+    ret.putByte("natural", (byte) (isNatural ? 1 : 0));
     ret.putFloat("ambient_light", ambientLight);
-    ret.putBoolean("shrunk", isShrunk);
-    ret.putBoolean("ultrawarm", isUltrawarm);
-    ret.putBoolean("has_ceiling", hasCeiling);
-    ret.putBoolean("has_skylight", hasSkylight);
-    ret.putBoolean("piglin_safe", isPiglinSafe);
-    ret.putBoolean("bed_works", doBedsWork);
-    ret.putBoolean("respawn_anchor_works", doRespawnAnchorsWork);
-    ret.putBoolean("has_raids", hasRaids);
+    ret.putByte("shrunk", (byte) (isShrunk ? 1 : 0));
+    ret.putByte("ultrawarm", (byte) (isUltrawarm ? 1 : 0));
+    ret.putByte("has_ceiling", (byte) (hasCeiling ? 1 : 0));
+    ret.putByte("has_skylight", (byte) (hasSkylight ? 1 : 0));
+    ret.putByte("piglin_safe", (byte) (isPiglinSafe ? 1 : 0));
+    ret.putByte("bed_works", (byte) (doBedsWork ? 1 : 0));
+    ret.putByte("respawn_anchor_works", (byte) (doBedsWork ? 1 : 0));
+    ret.putByte("has_raids", (byte) (hasRaids ? 1 : 0));
     ret.putInt("logical_height", logicalHeight);
     ret.putString("infiniburn", burningBehaviourIdentifier);
     if (fixedTime != null) {
       ret.putLong("fixed_time", fixedTime);
     }
     if (createDragonFight != null) {
-      ret.putBoolean("has_enderdragon_fight", createDragonFight);
+      ret.putByte("has_enderdragon_fight", (byte) (createDragonFight ? 1 : 0));
     }
     if (coordinateScale != null) {
       ret.putDouble("coordinate_scale", coordinateScale);
     }
-    return ret;
+    return ret.build();
   }
 }
