@@ -3,10 +3,10 @@ package com.velocitypowered.proxy.protocol;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -28,6 +28,18 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 public enum ProtocolUtils {
   ;
+
+  private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
+      GsonComponentSerializer.builder()
+          .downsampleColors()
+          .emitLegacyHoverEvent()
+          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .build();
+  private static final GsonComponentSerializer MODERN_SERIALIZER =
+      GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .build();
+
   private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad varint decoded");
@@ -468,9 +480,9 @@ public enum ProtocolUtils {
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      return GsonComponentSerializer.gson();
+      return MODERN_SERIALIZER;
     }
-    return GsonComponentSerializer.colorDownsamplingGson();
+    return PRE_1_16_SERIALIZER;
   }
 
   public enum Direction {
