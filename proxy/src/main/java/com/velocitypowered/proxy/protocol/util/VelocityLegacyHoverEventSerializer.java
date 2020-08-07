@@ -57,9 +57,17 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
       Decoder<Component, String, ? extends RuntimeException> componentDecoder) throws IOException {
     String snbt = PlainComponentSerializer.plain().serialize(input);
     CompoundBinaryTag item = TagStringIO.get().asCompound(snbt);
+
+    Component name;
+    try {
+      name = componentDecoder.decode(item.getString("name"));
+    } catch (Exception e) {
+      name = TextComponent.of(item.getString("name"));
+    }
+
     return new ShowEntity(Key.of(item.getString("type")),
         UUID.fromString(item.getString("id")),
-        componentDecoder.decode(item.getString("name")));
+        name);
   }
 
   @Override
