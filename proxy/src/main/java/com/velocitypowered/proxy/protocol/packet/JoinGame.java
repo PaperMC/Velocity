@@ -6,8 +6,12 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
-import com.velocitypowered.proxy.protocol.*;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.nbt.BinaryTagTypes;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
@@ -17,14 +21,17 @@ public class JoinGame implements MinecraftPacket {
   private int dimension;
   private long partialHashedSeed; // 1.15+
   private short difficulty;
-  private short maxPlayers;
+  private boolean isHardcore;
+  private int maxPlayers;
   private @Nullable String levelType;
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
   private DimensionRegistry dimensionRegistry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
+  private DimensionData currentDimensionData; // 1.16.2+
   private short previousGamemode; // 1.16+
+  private CompoundBinaryTag biomeRegistry; // 1.16.2+
 
   public int getEntityId() {
     return entityId;
@@ -62,11 +69,11 @@ public class JoinGame implements MinecraftPacket {
     this.difficulty = difficulty;
   }
 
-  public short getMaxPlayers() {
+  public int getMaxPlayers() {
     return maxPlayers;
   }
 
-  public void setMaxPlayers(short maxPlayers) {
+  public void setMaxPlayers(int maxPlayers) {
     this.maxPlayers = maxPlayers;
   }
 
@@ -118,6 +125,26 @@ public class JoinGame implements MinecraftPacket {
     this.previousGamemode = previousGamemode;
   }
 
+  public boolean getIsHardcore() {
+    return isHardcore;
+  }
+
+  public void setIsHardcore(boolean isHardcore) {
+    this.isHardcore = isHardcore;
+  }
+
+  public CompoundBinaryTag getBiomeRegistry() {
+    return biomeRegistry;
+  }
+
+  public void setBiomeRegistry(CompoundBinaryTag biomeRegistry) {
+    this.biomeRegistry = biomeRegistry;
+  }
+
+  public DimensionData getCurrentDimensionData() {
+    return currentDimensionData;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -126,6 +153,7 @@ public class JoinGame implements MinecraftPacket {
         + ", dimension=" + dimension
         + ", partialHashedSeed=" + partialHashedSeed
         + ", difficulty=" + difficulty
+        + ", isHardcore=" + isHardcore
         + ", maxPlayers=" + maxPlayers
         + ", levelType='" + levelType + '\''
         + ", viewDistance=" + viewDistance
@@ -139,16 +167,41 @@ public class JoinGame implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    this.gamemode = buf.readByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      this.isHardcore = buf.readBoolean();
+      this.gamemode = buf.readByte();
+    } else {
+      this.gamemode = buf.readByte();
+      this.isHardcore = (this.gamemode & 0x08) != 0;
+      this.gamemode &= ~0x08;
+    }
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       this.previousGamemode = buf.readByte();
       ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
-      ImmutableSet<DimensionData> readData = DimensionRegistry.fromGameData(ProtocolUtils.readCompoundTag(buf));
+      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf);
+      ListBinaryTag dimensionRegistryContainer = null;
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
+                .getList("value", BinaryTagTypes.COMPOUND);
+        this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
+      } else {
+        dimensionRegistryContainer = registryContainer.getList("dimension",
+            BinaryTagTypes.COMPOUND);
+      }
+      ImmutableSet<DimensionData> readData =
+              DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
-      dimensionIdentifier = ProtocolUtils.readString(buf);
-      levelName = ProtocolUtils.readString(buf);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
+        dimensionIdentifier = ProtocolUtils.readString(buf);
+        this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
+            .annotateWith(dimensionIdentifier, null);
+      } else {
+        dimensionIdentifier = ProtocolUtils.readString(buf);
+        levelName = ProtocolUtils.readString(buf);
+      }
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       this.dimension = buf.readInt();
     } else {
@@ -160,7 +213,11 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       this.partialHashedSeed = buf.readLong();
     }
-    this.maxPlayers = buf.readUnsignedByte();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      this.maxPlayers = ProtocolUtils.readVarInt(buf);
+    } else {
+      this.maxPlayers = buf.readUnsignedByte();
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
@@ -181,14 +238,35 @@ public class JoinGame implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeInt(entityId);
-    buf.writeByte(gamemode);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      buf.writeBoolean(isHardcore);
+      buf.writeByte(gamemode);
+    } else {
+      buf.writeByte(isHardcore ? gamemode | 0x8 : gamemode);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       buf.writeByte(previousGamemode);
       ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
               new String[dimensionRegistry.getLevelNames().size()]));
-      ProtocolUtils.writeCompoundTag(buf, dimensionRegistry.encodeRegistry());
-      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
-      ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+      CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
+      ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundBinaryTag.Builder dimensionRegistryDummy = CompoundBinaryTag.builder();
+        dimensionRegistryDummy.putString("type", "minecraft:dimension_type");
+        dimensionRegistryDummy.put("value", encodedDimensionRegistry);
+        registryContainer.put("minecraft:dimension_type", dimensionRegistryDummy.build());
+        registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
+      } else {
+        registryContainer.put("dimension", encodedDimensionRegistry);
+      }
+      ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
+        ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+      } else {
+        ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+        ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+      }
     } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
       buf.writeInt(dimension);
     } else {
@@ -200,7 +278,11 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
       buf.writeLong(partialHashedSeed);
     }
-    buf.writeByte(maxPlayers);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      ProtocolUtils.writeVarInt(buf, maxPlayers);
+    } else {
+      buf.writeByte(maxPlayers);
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       if (levelType == null) {
         throw new IllegalStateException("No level type specified.");

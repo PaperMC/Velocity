@@ -12,17 +12,14 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import net.kyori.nbt.CompoundTag;
-import net.kyori.nbt.TagIO;
-import net.kyori.nbt.TagType;
+import net.kyori.adventure.nbt.BinaryTagIO;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public enum ProtocolUtils {
   ;
@@ -192,11 +189,11 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Reads a {@link net.kyori.nbt.CompoundTag} from the {@code buf}.
+   * Reads a {@link net.kyori.adventure.nbt.CompoundBinaryTag} from the {@code buf}.
    * @param buf the buffer to read from
-   * @return {@link net.kyori.nbt.CompoundTag} the CompoundTag from the buffer
+   * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
-  public static CompoundTag readCompoundTag(ByteBuf buf) {
+  public static CompoundBinaryTag readCompoundTag(ByteBuf buf) {
     int indexBefore = buf.readerIndex();
     byte startType = buf.readByte();
     if (startType == 0) {
@@ -204,7 +201,7 @@ public enum ProtocolUtils {
     }
     buf.readerIndex(indexBefore);
     try {
-      return TagIO.readDataInput(new ByteBufInputStream(buf));
+      return BinaryTagIO.readDataInput(new ByteBufInputStream(buf));
     } catch (IOException thrown) {
       throw new DecoderException(
               "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
@@ -216,13 +213,13 @@ public enum ProtocolUtils {
    * @param buf the buffer to write to
    * @param compoundTag the CompoundTag to write
    */
-  public static void writeCompoundTag(ByteBuf buf, CompoundTag compoundTag) {
+  public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
     if (compoundTag == null) {
       buf.writeByte(0);
       return;
     }
     try {
-      TagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
+      BinaryTagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
     } catch (IOException e) {
       throw new EncoderException("Unable to encode NBT CompoundTag");
     }

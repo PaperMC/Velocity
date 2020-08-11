@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.registry;
 
 import com.google.common.base.Preconditions;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DimensionInfo {
 
@@ -16,18 +17,13 @@ public final class DimensionInfo {
    * @param isFlat if true will set world lighting below surface-level to not display fog
    * @param isDebugType if true constrains the world to the very limited debug-type world
    */
-  public DimensionInfo(String registryIdentifier, String levelName,
+  public DimensionInfo(String registryIdentifier, @Nullable String levelName,
                        boolean isFlat, boolean isDebugType) {
     this.registryIdentifier = Preconditions.checkNotNull(
-            registryIdentifier, "registryIdentifier cannot be null");
-    Preconditions.checkArgument(
-        registryIdentifier.length() > 0,
+        registryIdentifier, "registryIdentifier cannot be null");
+    Preconditions.checkArgument(registryIdentifier.length() > 0,
         "registryIdentifier cannot be empty");
-    this.levelName = Preconditions.checkNotNull(
-            levelName, "levelName cannot be null");
-    Preconditions.checkArgument(
-        levelName.length() > 0,
-        "registryIdentifier cannot be empty");
+    this.levelName = levelName;
     this.isFlat = isFlat;
     this.isDebugType = isDebugType;
   }
@@ -40,7 +36,7 @@ public final class DimensionInfo {
     return isFlat;
   }
 
-  public String getLevelName() {
+  public @Nullable String getLevelName() {
     return levelName;
   }
 

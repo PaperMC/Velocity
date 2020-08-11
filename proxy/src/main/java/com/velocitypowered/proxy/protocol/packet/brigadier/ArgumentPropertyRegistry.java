@@ -135,5 +135,6 @@ public class ArgumentPropertyRegistry {
     dummy("minecraft:float_range", DUMMY);
     dummy("minecraft:time", DUMMY); // added in 1.14
     dummy("minecraft:uuid", DUMMY); // added in 1.16
+    dummy("minecraft:angle", DUMMY); // added in 1.16.2
   }
 }
