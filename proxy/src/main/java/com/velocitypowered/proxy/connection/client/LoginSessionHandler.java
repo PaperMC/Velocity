@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -34,6 +35,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.VelocityMessages;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -43,6 +45,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -198,6 +201,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void initializePlayer(GameProfile profile, boolean onlineMode) {
+    // Restore normal timeout for connection.
+    mcConnection.getChannel().pipeline()
+            .replace(Connections.READ_TIMEOUT, Connections.READ_TIMEOUT,
+                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                            TimeUnit.MILLISECONDS));
+
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.getConfiguration().getPlayerInfoForwardingMode());
