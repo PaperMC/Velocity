@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
@@ -18,6 +19,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Provides utilities for working with Brigadier commands.
  */
 public final class BrigadierUtils {
+
+  private static final Splitter SPACE_SPLITTER = Splitter.on(' ');
 
   /**
    * Returns a literal node that redirects its execution to
@@ -103,7 +106,7 @@ public final class BrigadierUtils {
     if (line.isEmpty()) {
       return new String[0];
     }
-    return line.trim().split(" ", -1);
+    return SPACE_SPLITTER.splitToList(line).toArray(new String[0]);
   }
 
   /**

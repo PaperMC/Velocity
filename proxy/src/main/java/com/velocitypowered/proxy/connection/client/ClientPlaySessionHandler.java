@@ -412,8 +412,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
 
           List<Offer> offers = new ArrayList<>();
-          for (String suggestion : suggestions) {
-            offers.add(new Offer(suggestion));
+          for (String offer : suggestions) {
+            offers.add(new Offer(offer));
           }
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
@@ -460,10 +460,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String command = request.getCommand().substring(1);
     server.getCommandManager().offerSuggestions(player, command)
         .thenAcceptAsync(offers -> {
-          boolean needsSlash = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+          boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
           try {
             for (String offer : offers) {
-              response.getOffers().add(new Offer(needsSlash ? "/" + offer : offer, null));
+              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+              if (legacy && offer.startsWith(command)) {
+                offer = offer.substring(command.length());
+              }
+              response.getOffers().add(new Offer(offer, null));
             }
             response.getOffers().sort(null);
             player.getConnection().write(response);
