@@ -32,6 +32,7 @@ import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
@@ -91,13 +92,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
       .create();
-  private static final Gson PRE_1_16_PING_SERIALIZER = GsonComponentSerializer
-      .colorDownsamplingGson()
+  private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
+      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
       .serializer()
       .newBuilder()
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
       .create();
-  private static final Gson POST_1_16_PING_SERIALIZER = GsonComponentSerializer.gson()
+  private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
+      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
       .serializer()
       .newBuilder()
       .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
