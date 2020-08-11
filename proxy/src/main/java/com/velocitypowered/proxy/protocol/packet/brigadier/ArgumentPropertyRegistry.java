@@ -137,8 +137,8 @@ public class ArgumentPropertyRegistry {
     empty("minecraft:dimension");
     empty("minecraft:int_range");
     empty("minecraft:float_range");
-    empty("minecraft:time", EMPTY); // added in 1.14
-    empty("minecraft:uuid", EMPTY); // added in 1.16
-    empty("minecraft:angle", EMPTY); // added in 1.16.2
+    empty("minecraft:time"); // added in 1.14
+    empty("minecraft:uuid"); // added in 1.16
+    empty("minecraft:angle"); // added in 1.16.2
   }
 }
