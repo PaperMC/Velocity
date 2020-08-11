@@ -5,18 +5,18 @@ import io.netty.buffer.ByteBuf;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class VoidArgumentPropertySerializer<T extends ArgumentType<?>>
+class GenericArgumentPropertySerializer<T extends ArgumentType<?>>
     implements ArgumentPropertySerializer<T> {
 
   private final Supplier<T> argumentSupplier;
 
-  private VoidArgumentPropertySerializer(Supplier<T> argumentSupplier) {
+  private GenericArgumentPropertySerializer(Supplier<T> argumentSupplier) {
     this.argumentSupplier = argumentSupplier;
   }
 
   public static <T extends ArgumentType<?>> ArgumentPropertySerializer<T> create(
       Supplier<T> supplier) {
-    return new VoidArgumentPropertySerializer<T>(supplier);
+    return new GenericArgumentPropertySerializer<>(supplier);
   }
 
   @Override

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
   /**
-   * Dummy phase for use with {@link BackendConnectionPhases#UNKNOWN}.
+   * Indicates that the handshake has not started, used for {@link BackendConnectionPhases#UNKNOWN}.
    */
   NOT_STARTED(LegacyForgeConstants.SERVER_HELLO_DISCRIMINATOR) {
     @Override

@@ -246,7 +246,7 @@ public class AvailableCommands implements MinecraftPacket {
             }
           }
 
-          // If executable, add a dummy command
+          // If executable, add an empty command
           if ((flags & FLAG_EXECUTABLE) != 0) {
             args.executes((Command<CommandSource>) context -> 0);
           }

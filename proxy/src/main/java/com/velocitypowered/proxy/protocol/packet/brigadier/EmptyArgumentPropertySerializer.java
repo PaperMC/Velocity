@@ -6,12 +6,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * An argument property serializer that will serialize and deserialize nothing.
  */
-class DummyVoidArgumentPropertySerializer implements ArgumentPropertySerializer<Void> {
+class EmptyArgumentPropertySerializer implements ArgumentPropertySerializer<Void> {
 
-  static final ArgumentPropertySerializer<Void> DUMMY =
-      new DummyVoidArgumentPropertySerializer();
+  static final ArgumentPropertySerializer<Void> EMPTY =
+      new EmptyArgumentPropertySerializer();
 
-  private DummyVoidArgumentPropertySerializer() {
+  private EmptyArgumentPropertySerializer() {
   }
 
   @Override

@@ -251,10 +251,10 @@ public class JoinGame implements MinecraftPacket {
       CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
       ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-        CompoundBinaryTag.Builder dimensionRegistryDummy = CompoundBinaryTag.builder();
-        dimensionRegistryDummy.putString("type", "minecraft:dimension_type");
-        dimensionRegistryDummy.put("value", encodedDimensionRegistry);
-        registryContainer.put("minecraft:dimension_type", dimensionRegistryDummy.build());
+        CompoundBinaryTag.Builder dimensionRegistryEntry = CompoundBinaryTag.builder();
+        dimensionRegistryEntry.putString("type", "minecraft:dimension_type");
+        dimensionRegistryEntry.put("value", encodedDimensionRegistry);
+        registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
         registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
       } else {
         registryContainer.put("dimension", encodedDimensionRegistry);

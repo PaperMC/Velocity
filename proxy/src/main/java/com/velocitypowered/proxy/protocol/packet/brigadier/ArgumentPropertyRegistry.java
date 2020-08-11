@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
-import static com.velocitypowered.proxy.protocol.packet.brigadier.DummyVoidArgumentPropertySerializer.DUMMY;
+import static com.velocitypowered.proxy.protocol.packet.brigadier.EmptyArgumentPropertySerializer.EMPTY;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.FloatArgumentPropertySerializer.FLOAT;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.INTEGER;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.LongArgumentPropertySerializer.LONG;
@@ -36,7 +36,11 @@ public class ArgumentPropertyRegistry {
     classToId.put(klazz, identifier);
   }
 
-  private static <T> void dummy(String identifier, ArgumentPropertySerializer<T> serializer) {
+  private static <T> void empty(String identifier) {
+    empty(identifier, EMPTY);
+  }
+
+  private static <T> void empty(String identifier, ArgumentPropertySerializer<T> serializer) {
     byId.put(identifier, serializer);
   }
 
@@ -56,7 +60,7 @@ public class ArgumentPropertyRegistry {
     if (result instanceof ArgumentType) {
       return (ArgumentType<?>) result;
     } else {
-      return new DummyProperty(identifier, serializer, result);
+      return new PassthroughProperty(identifier, serializer, result);
     }
   }
 
@@ -66,8 +70,8 @@ public class ArgumentPropertyRegistry {
    * @param type the type to serialize
    */
   public static void serialize(ByteBuf buf, ArgumentType<?> type) {
-    if (type instanceof DummyProperty) {
-      DummyProperty property = (DummyProperty) type;
+    if (type instanceof PassthroughProperty) {
+      PassthroughProperty property = (PassthroughProperty) type;
       ProtocolUtils.writeString(buf, property.getIdentifier());
       if (property.getResult() != null) {
         property.getSerializer().serialize(property.getResult(), buf);
@@ -91,50 +95,50 @@ public class ArgumentPropertyRegistry {
     register("brigadier:float", FloatArgumentType.class, FLOAT);
     register("brigadier:double", DoubleArgumentType.class, DOUBLE);
     register("brigadier:bool", BoolArgumentType.class,
-        VoidArgumentPropertySerializer.create(BoolArgumentType::bool));
+        GenericArgumentPropertySerializer.create(BoolArgumentType::bool));
     register("brigadier:long", LongArgumentType.class, LONG);
 
     // Minecraft argument types with extra properties
-    dummy("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
-    dummy("minecraft:score_holder", ByteArgumentPropertySerializer.BYTE);
+    empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
+    empty("minecraft:score_holder", ByteArgumentPropertySerializer.BYTE);
 
     // Minecraft argument types
-    dummy("minecraft:game_profile", DUMMY);
-    dummy("minecraft:block_pos", DUMMY);
-    dummy("minecraft:column_pos", DUMMY);
-    dummy("minecraft:vec3", DUMMY);
-    dummy("minecraft:vec2", DUMMY);
-    dummy("minecraft:block_state", DUMMY);
-    dummy("minecraft:block_predicate", DUMMY);
-    dummy("minecraft:item_stack", DUMMY);
-    dummy("minecraft:item_predicate", DUMMY);
-    dummy("minecraft:color", DUMMY);
-    dummy("minecraft:component", DUMMY);
-    dummy("minecraft:message", DUMMY);
-    dummy("minecraft:nbt", DUMMY);
-    dummy("minecraft:nbt_compound_tag", DUMMY); // added in 1.14
-    dummy("minecraft:nbt_tag", DUMMY); // added in 1.14
-    dummy("minecraft:nbt_path", DUMMY);
-    dummy("minecraft:objective", DUMMY);
-    dummy("minecraft:objective_criteria", DUMMY);
-    dummy("minecraft:operation", DUMMY);
-    dummy("minecraft:particle", DUMMY);
-    dummy("minecraft:rotation", DUMMY);
-    dummy("minecraft:scoreboard_slot", DUMMY);
-    dummy("minecraft:swizzle", DUMMY);
-    dummy("minecraft:team", DUMMY);
-    dummy("minecraft:item_slot", DUMMY);
-    dummy("minecraft:resource_location", DUMMY);
-    dummy("minecraft:mob_effect", DUMMY);
-    dummy("minecraft:function", DUMMY);
-    dummy("minecraft:entity_anchor", DUMMY);
-    dummy("minecraft:item_enchantment", DUMMY);
-    dummy("minecraft:entity_summon", DUMMY);
-    dummy("minecraft:dimension", DUMMY);
-    dummy("minecraft:int_range", DUMMY);
-    dummy("minecraft:float_range", DUMMY);
-    dummy("minecraft:time", DUMMY); // added in 1.14
-    dummy("minecraft:uuid", DUMMY); // added in 1.16
-    dummy("minecraft:angle", DUMMY); // added in 1.16.2
+    empty("minecraft:game_profile");
+    empty("minecraft:block_pos");
+    empty("minecraft:column_pos");
+    empty("minecraft:vec3");
+    empty("minecraft:vec2");
+    empty("minecraft:block_state");
+    empty("minecraft:block_predicate");
+    empty("minecraft:item_stack");
+    empty("minecraft:item_predicate");
+    empty("minecraft:color");
+    empty("minecraft:component");
+    empty("minecraft:message");
+    empty("minecraft:nbt");
+    empty("minecraft:nbt_compound_tag"); // added in 1.14
+    empty("minecraft:nbt_tag"); // added in 1.14
+    empty("minecraft:nbt_path");
+    empty("minecraft:objective");
+    empty("minecraft:objective_criteria");
+    empty("minecraft:operation");
+    empty("minecraft:particle");
+    empty("minecraft:rotation");
+    empty("minecraft:scoreboard_slot");
+    empty("minecraft:swizzle");
+    empty("minecraft:team");
+    empty("minecraft:item_slot");
+    empty("minecraft:resource_location");
+    empty("minecraft:mob_effect");
+    empty("minecraft:function");
+    empty("minecraft:entity_anchor");
+    empty("minecraft:item_enchantment");
+    empty("minecraft:entity_summon");
+    empty("minecraft:dimension");
+    empty("minecraft:int_range");
+    empty("minecraft:float_range");
+    empty("minecraft:time", EMPTY); // added in 1.14
+    empty("minecraft:uuid", EMPTY); // added in 1.16
+    empty("minecraft:angle", EMPTY); // added in 1.16.2
   }
 }
