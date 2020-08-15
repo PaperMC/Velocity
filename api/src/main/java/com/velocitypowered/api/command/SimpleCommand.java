@@ -16,5 +16,11 @@ public interface SimpleCommand extends InvocableCommand<SimpleCommand.Invocation
    */
   interface Invocation extends CommandInvocation<String @NonNull []> {
 
+    /**
+     * Returns the used alias to execute the command.
+     *
+     * @return the used command alias
+     */
+    String alias();
   }
 }
