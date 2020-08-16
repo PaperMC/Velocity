@@ -1,12 +1,8 @@
 package com.velocitypowered.api.proxy;
 
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.inventory.Book;
-import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.sound.SoundStop;
+import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.title.Title;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -23,52 +19,7 @@ public interface ProxyAudience extends Audience {
   void sendMessage(@NonNull Component message);
 
   @Override
-  default void sendActionBar(@NonNull Component message) {
-
-  }
-
-  @Override
-  default void showTitle(@NonNull Title title) {
-
-  }
-
-  @Override
-  default void clearTitle() {
-
-  }
-
-  @Override
-  default void resetTitle() {
-
-  }
-
-  @Override
-  default void showBossBar(@NonNull BossBar bar) {
-
-  }
-
-  @Override
-  default void hideBossBar(@NonNull BossBar bar) {
-
-  }
-
-  @Override
-  default void playSound(@NonNull Sound sound) {
-
-  }
-
-  @Override
-  default void playSound(@NonNull Sound sound, double x, double y, double z) {
-
-  }
-
-  @Override
-  default void stopSound(@NonNull SoundStop stop) {
-
-  }
-
-  @Override
-  default void openBook(@NonNull Book book) {
-
+  default void sendMessage(@NonNull Component message, @NonNull MessageType type) {
+    sendMessage(message);
   }
 }

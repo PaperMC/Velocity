@@ -65,6 +65,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
+import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -258,6 +259,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
     connection.write(Chat.createClientbound(message, this.getProtocolVersion()));
+  }
+
+  @Override
+  public void sendMessage(@NonNull Component message, @NonNull MessageType type) {
+    Preconditions.checkNotNull(message, "message");
+    Preconditions.checkNotNull(type, "type");
+
+    Chat packet = Chat.createClientbound(message, this.getProtocolVersion());
+    packet.setType(type == MessageType.CHAT ? Chat.CHAT_TYPE : Chat.SYSTEM_TYPE);
+    connection.write(packet);
   }
 
   @Override
