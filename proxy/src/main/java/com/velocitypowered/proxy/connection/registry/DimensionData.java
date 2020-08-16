@@ -186,22 +186,22 @@ public final class DimensionData {
    */
   public static DimensionData decodeBaseCompoundTag(CompoundBinaryTag details,
       ProtocolVersion version) {
-    boolean isNatural = details.getByte("natural") >= 1;
+    boolean isNatural = details.getBoolean("natural");
     float ambientLight = details.getFloat("ambient_light");
-    boolean isShrunk = details.getByte("shrunk") >= 1;
-    boolean isUltrawarm = details.getByte("ultrawarm") >= 1;
-    boolean hasCeiling = details.getByte("has_ceiling") >= 1;
-    boolean hasSkylight = details.getByte("has_skylight") >= 1;
-    boolean isPiglinSafe = details.getByte("piglin_safe") >= 1;
-    boolean doBedsWork = details.getByte("bed_works") >= 1;
-    boolean doRespawnAnchorsWork = details.getByte("respawn_anchor_works") >= 1;
-    boolean hasRaids = details.getByte("has_raids") >= 1;
+    boolean isShrunk = details.getBoolean("shrunk");
+    boolean isUltrawarm = details.getBoolean("ultrawarm");
+    boolean hasCeiling = details.getBoolean("has_ceiling");
+    boolean hasSkylight = details.getBoolean("has_skylight");
+    boolean isPiglinSafe = details.getBoolean("piglin_safe");
+    boolean doBedsWork = details.getBoolean("bed_works");
+    boolean doRespawnAnchorsWork = details.getBoolean("respawn_anchor_works");
+    boolean hasRaids = details.getBoolean("has_raids");
     int logicalHeight = details.getInt("logical_height");
     String burningBehaviourIdentifier = details.getString("infiniburn");
     Long fixedTime = details.keySet().contains("fixed_time")
         ? details.getLong("fixed_time") : null;
     Boolean hasEnderdragonFight = details.keySet().contains("has_enderdragon_fight")
-        ? details.getByte("has_enderdragon_fight") >= 1 : null;
+        ? details.getBoolean("has_enderdragon_fight") : null;
     Double coordinateScale = details.keySet().contains("coordinate_scale")
         ? details.getDouble("coordinate_scale") : null;
     String effects = details.keySet().contains("effects") ? details.getString("effects")
@@ -265,23 +265,23 @@ public final class DimensionData {
    */
   public CompoundBinaryTag serializeDimensionDetails() {
     CompoundBinaryTag.Builder ret = CompoundBinaryTag.builder();
-    ret.putByte("natural", (byte) (isNatural ? 1 : 0));
+    ret.putBoolean("natural", isNatural);
     ret.putFloat("ambient_light", ambientLight);
-    ret.putByte("shrunk", (byte) (isShrunk ? 1 : 0));
-    ret.putByte("ultrawarm", (byte) (isUltrawarm ? 1 : 0));
-    ret.putByte("has_ceiling", (byte) (hasCeiling ? 1 : 0));
-    ret.putByte("has_skylight", (byte) (hasSkylight ? 1 : 0));
-    ret.putByte("piglin_safe", (byte) (isPiglinSafe ? 1 : 0));
-    ret.putByte("bed_works", (byte) (doBedsWork ? 1 : 0));
-    ret.putByte("respawn_anchor_works", (byte) (doBedsWork ? 1 : 0));
-    ret.putByte("has_raids", (byte) (hasRaids ? 1 : 0));
+    ret.putBoolean("shrunk", isShrunk);
+    ret.putBoolean("ultrawarm", isUltrawarm);
+    ret.putBoolean("has_ceiling", hasCeiling);
+    ret.putBoolean("has_skylight", hasSkylight);
+    ret.putBoolean("piglin_safe", isPiglinSafe);
+    ret.putBoolean("bed_works", doBedsWork);
+    ret.putBoolean("respawn_anchor_works", doRespawnAnchorsWork);
+    ret.putBoolean("has_raids", hasRaids);
     ret.putInt("logical_height", logicalHeight);
     ret.putString("infiniburn", burningBehaviourIdentifier);
     if (fixedTime != null) {
       ret.putLong("fixed_time", fixedTime);
     }
     if (createDragonFight != null) {
-      ret.putByte("has_enderdragon_fight", (byte) (createDragonFight ? 1 : 0));
+      ret.putBoolean("has_enderdragon_fight", createDragonFight);
     }
     if (coordinateScale != null) {
       ret.putDouble("coordinate_scale", coordinateScale);
