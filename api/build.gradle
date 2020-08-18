@@ -91,7 +91,7 @@ publishing {
 
             name = 'velocity-nexus'
             def base = 'https://nexus.velocitypowered.com/repository/velocity-artifacts'
-            def releasesRepoUrl = "$base-releases/"
+            def releasesRepoUrl = "$base-release/"
             def snapshotsRepoUrl = "$base-snapshots/"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
         }
