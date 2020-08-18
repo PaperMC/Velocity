@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
@@ -49,22 +50,24 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Advanced advanced;
   private final Query query;
   private final Metrics metrics;
+  private final Messages messages;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+      Query query, Metrics metrics, Messages messages) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.messages = messages;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics, Messages messages) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -79,6 +82,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.messages = messages;
   }
 
   /**
@@ -359,6 +363,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogCommandExecutions();
   }
 
+  public Messages getMessages() {
+    return messages;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -418,6 +426,7 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedConfig advancedConfig = config.get("advanced");
     CommentedConfig queryConfig = config.get("query");
     CommentedConfig metricsConfig = config.get("metrics");
+    CommentedConfig messagesConfig = config.get("messages");
     PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -444,7 +453,8 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig)
+        new Metrics(metricsConfig),
+        new Messages(messagesConfig)
     );
   }
 
@@ -779,6 +789,33 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isFromConfig() {
       return fromConfig;
+    }
+  }
+
+  public static class Messages {
+    private String kickPrefix = "&cKicked from %s: ";
+    private String disconnectPrefix = "&cCan't connect to %s: ";
+
+    private Messages(CommentedConfig toml) {
+      if (toml != null) {
+        this.kickPrefix = toml.getOrElse("kick-prefix", kickPrefix);
+        this.disconnectPrefix = toml.getOrElse("disconnect-prefix", disconnectPrefix);
+      }
+    }
+
+    public Component getKickPrefix(String server) {
+      return serialize(String.format(kickPrefix, server));
+    }
+
+    public Component getDisconnectPrefix(String server) {
+      return serialize(String.format(disconnectPrefix, server));
+    }
+
+    private Component serialize(String str) {
+      if (str.startsWith("{")) {
+        return GsonComponentSerializer.gson().deserialize(str);
+      }
+      return LegacyComponentSerializer.legacyAmpersand().deserialize(str);
     }
   }
 }

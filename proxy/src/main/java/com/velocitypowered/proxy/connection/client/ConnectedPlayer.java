@@ -32,6 +32,7 @@ import com.velocitypowered.api.util.title.TextTitle;
 import com.velocitypowered.api.util.title.Title;
 import com.velocitypowered.api.util.title.Titles;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -517,13 +518,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
+    VelocityConfiguration.Messages messages = this.server.getConfiguration().getMessages();
     Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason, TextComponent.builder()
-          .content("Kicked from " + server.getServerInfo().getName() + ": ")
+          .append(messages.getKickPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
           .build(), safe);
@@ -531,7 +533,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason, TextComponent.builder()
-          .content("Can't connect to server " + server.getServerInfo().getName() + ": ")
+          .append(messages.getDisconnectPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
           .build(), safe);

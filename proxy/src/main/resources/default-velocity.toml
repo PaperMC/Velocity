@@ -158,3 +158,12 @@ id = ""
 
 log-failure = false
 
+# Legacy color codes and JSON are accepted in all messages.
+[messages]
+# Prefix when the player gets kicked from a server.
+#   First argument '%s': the server name
+kick-prefix = "&cKicked from %s: "
+
+# Prefix when the player is disconnected from a server.
+#   First argument '%s': the server name
+disconnect-prefix = "&cCan't connect to %s: "
