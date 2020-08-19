@@ -308,9 +308,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     connection.delayedWrite(titlePkt);
 
     TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
-    timesPkt.setFadeIn((int) DurationUtils.convertDurationToTicks(title.fadeInTime()));
-    timesPkt.setStay((int) DurationUtils.convertDurationToTicks(title.stayTime()));
-    timesPkt.setFadeOut((int) DurationUtils.convertDurationToTicks(title.fadeOutTime()));
+    net.kyori.adventure.title.Title.Times times = title.times();
+    if (times != null) {
+      timesPkt.setFadeIn((int) DurationUtils.convertDurationToTicks(times.fadeIn()));
+      timesPkt.setStay((int) DurationUtils.convertDurationToTicks(times.stay()));
+      timesPkt.setFadeOut((int) DurationUtils.convertDurationToTicks(times.fadeOut()));
+    }
     connection.delayedWrite(timesPkt);
 
     connection.flush();
