@@ -53,7 +53,6 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.DurationUtils;
-import com.velocitypowered.proxy.util.VelocityMessages;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -596,7 +595,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     disconnect(friendlyReason);
                   } else {
                     if (res.getMessageComponent() == null) {
-                      sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER.append(friendlyReason));
+                      sendMessage(server.getConfiguration().getMessages().getMovedToNewServerPrefix().append(friendlyReason));
                     } else {
                       sendMessage(res.getMessageComponent());
                     }

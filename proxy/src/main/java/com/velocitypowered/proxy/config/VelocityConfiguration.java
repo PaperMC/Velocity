@@ -795,11 +795,22 @@ public class VelocityConfiguration implements ProxyConfig {
   public static class Messages {
     private String kickPrefix = "&cKicked from %s: ";
     private String disconnectPrefix = "&cCan't connect to %s: ";
+    private String onlineModeOnly = "&cThis server only accepts connections from online-mode clients."
+            + "\n\n&7Did you change your username? Sign out of Minecraft, sign back in, and try again.";
+    private String noAvailableServers = "&cThere are no available servers.";
+    private String alreadyConnected = "&cYou are already connected to this proxy!";
+    private String movedToNewServerPrefix = "&cThe server you were on kicked you: ";
+    private String genericConnectionError = "&cAn internal error occurred in your connection.";
 
     private Messages(CommentedConfig toml) {
       if (toml != null) {
         this.kickPrefix = toml.getOrElse("kick-prefix", kickPrefix);
         this.disconnectPrefix = toml.getOrElse("disconnect-prefix", disconnectPrefix);
+        this.onlineModeOnly = toml.getOrElse("online-mode-only", onlineModeOnly);
+        this.noAvailableServers = toml.getOrElse("no-available-servers", noAvailableServers);
+        this.alreadyConnected = toml.getOrElse("already-connected", alreadyConnected);
+        this.movedToNewServerPrefix = toml.getOrElse("moved-to-new-server-prefix", movedToNewServerPrefix);
+        this.genericConnectionError = toml.getOrElse("generic-connection-error", genericConnectionError);
       }
     }
 
@@ -809,6 +820,26 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public Component getDisconnectPrefix(String server) {
       return serialize(String.format(disconnectPrefix, server));
+    }
+
+    public Component getOnlineModeOnly() {
+      return serialize(onlineModeOnly);
+    }
+
+    public Component getNoAvailableServers() {
+      return serialize(noAvailableServers);
+    }
+
+    public Component getAlreadyConnected() {
+      return serialize(alreadyConnected);
+    }
+
+    public Component getMovedToNewServerPrefix() {
+      return serialize(movedToNewServerPrefix);
+    }
+
+    public Component getGenericConnectionError() {
+      return serialize(genericConnectionError);
     }
 
     private Component serialize(String str) {
