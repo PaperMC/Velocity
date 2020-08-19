@@ -16,12 +16,14 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   private final Deflater deflater;
   private final Inflater inflater;
   private final byte[] buf;
+  private final byte[] varintBuffer;
   private boolean disposed = false;
 
   private JavaVelocityCompressor(int level) {
     this.deflater = new Deflater(level);
     this.inflater = new Inflater();
     this.buf = new byte[ZLIB_BUFFER_SIZE];
+    this.varintBuffer = new byte[5];
   }
 
   @Override
@@ -37,10 +39,12 @@ public class JavaVelocityCompressor implements VelocityCompressor {
       inflater.setInput(inData);
     }
 
+    byte[] buffer = destination.capacity() == varintBuffer.length ? varintBuffer : buf;
+
     while (!inflater.finished() && inflater.getBytesRead() < available) {
       ensureMaxSize(destination, max);
-      int read = inflater.inflate(buf);
-      destination.writeBytes(buf, 0, read);
+      int read = inflater.inflate(buffer);
+      destination.writeBytes(buffer, 0, read);
     }
     inflater.reset();
   }

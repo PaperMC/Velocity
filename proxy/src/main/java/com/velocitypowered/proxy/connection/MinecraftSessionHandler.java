@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.connection;
 
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
@@ -38,8 +37,12 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default void handleGeneric(MinecraftPacket packet) {
+  default void handleGeneric(Object packet) {
 
+  }
+
+  default boolean shouldHandle(int packetId) {
+    return true;
   }
 
   default void handleUnknown(ByteBuf buf) {

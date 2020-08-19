@@ -165,7 +165,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleGeneric(MinecraftPacket packet) {
+  public void handleGeneric(Object packet) {
     // Unknown packet received. Better to close the connection.
     connection.close();
   }

@@ -359,6 +359,10 @@ public enum StateRegistry {
         return supplier.get();
       }
 
+      public boolean containsInboundPacketId(final int id) {
+        return this.packetIdToSupplier.containsKey(id);
+      }
+
       /**
        * Attempts to look up the packet ID for an {@code packet}.
        *

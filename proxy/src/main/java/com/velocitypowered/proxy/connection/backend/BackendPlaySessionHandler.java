@@ -5,20 +5,17 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands.ProtocolSuggestionProvider;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -60,6 +57,19 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean shouldHandle(int packetId) {
+    MinecraftConnection connection = serverConn.getConnection();
+
+    if (connection != null) {
+      return Direction.CLIENTBOUND
+          .getProtocolRegistry(connection.getState(), connection.getProtocolVersion())
+          .containsInboundPacketId(packetId);
+    }
+
+    return true;
   }
 
   @Override
@@ -162,7 +172,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleGeneric(MinecraftPacket packet) {
+  public void handleGeneric(Object packet) {
     playerConnection.write(packet);
   }
 

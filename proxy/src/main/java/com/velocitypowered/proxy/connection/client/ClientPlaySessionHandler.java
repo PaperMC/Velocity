@@ -13,7 +13,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Chat;
@@ -76,6 +76,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getMinecraftConnection().write(register);
       player.getKnownChannels().addAll(channels);
     }
+  }
+
+  @Override
+  public boolean shouldHandle(int packetId) {
+    MinecraftConnection playerConnection = player.getMinecraftConnection();
+    return Direction.SERVERBOUND
+        .getProtocolRegistry(playerConnection.getState(), playerConnection.getProtocolVersion())
+        .containsInboundPacketId(packetId);
   }
 
   @Override
@@ -252,7 +260,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleGeneric(MinecraftPacket packet) {
+  public void handleGeneric(Object packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
       // No server connection yet, probably transitioning.
