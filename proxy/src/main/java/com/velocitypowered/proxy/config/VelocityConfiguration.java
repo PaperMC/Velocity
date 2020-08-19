@@ -3,22 +3,28 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -392,14 +398,27 @@ public class VelocityConfiguration implements ProxyConfig {
    * @throws IOException if we could not read from the {@code path}.
    */
   public static VelocityConfiguration read(Path path) throws IOException {
+    String defaultResource = "default-velocity.toml";
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
-        .defaultResource("/default-velocity.toml")
+        .defaultResource(defaultResource)
         .autosave()
         .preserveInsertionOrder()
         .sync()
         .build();
     config.load();
+
+    // Create temporary default configuration
+    File tmpFile = File.createTempFile(defaultResource, null);
+    tmpFile.deleteOnExit();
+
+    // Copy over default file to tmp location
+    ClassLoader loader = VelocityConfiguration.class.getClassLoader();
+    try (InputStream in = loader.getResourceAsStream(defaultResource)) {
+      Files.copy(Objects.requireNonNull(in), tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
+    defaultConfig.load();
 
     // Handle any cases where the config needs to be saved again
     byte[] forwardingSecret;
@@ -454,7 +473,7 @@ public class VelocityConfiguration implements ProxyConfig {
         new Advanced(advancedConfig),
         new Query(queryConfig),
         new Metrics(metricsConfig),
-        new Messages(messagesConfig)
+        new Messages(messagesConfig, defaultConfig.get("messages"))
     );
   }
 
@@ -793,25 +812,32 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public static class Messages {
-    private String kickPrefix = "&cKicked from %s: ";
-    private String disconnectPrefix = "&cCan't connect to %s: ";
-    private String onlineModeOnly = "&cThis server only accepts connections from online-mode clients."
-            + "\n\n&7Did you change your username? Sign out of Minecraft, sign back in, and try again.";
-    private String noAvailableServers = "&cThere are no available servers.";
-    private String alreadyConnected = "&cYou are already connected to this proxy!";
-    private String movedToNewServerPrefix = "&cThe server you were on kicked you: ";
-    private String genericConnectionError = "&cAn internal error occurred in your connection.";
 
-    private Messages(CommentedConfig toml) {
-      if (toml != null) {
-        this.kickPrefix = toml.getOrElse("kick-prefix", kickPrefix);
-        this.disconnectPrefix = toml.getOrElse("disconnect-prefix", disconnectPrefix);
-        this.onlineModeOnly = toml.getOrElse("online-mode-only", onlineModeOnly);
-        this.noAvailableServers = toml.getOrElse("no-available-servers", noAvailableServers);
-        this.alreadyConnected = toml.getOrElse("already-connected", alreadyConnected);
-        this.movedToNewServerPrefix = toml.getOrElse("moved-to-new-server-prefix", movedToNewServerPrefix);
-        this.genericConnectionError = toml.getOrElse("generic-connection-error", genericConnectionError);
-      }
+    private final CommentedConfig toml;
+    private final CommentedConfig defaultToml;
+
+    private final String kickPrefix;
+    private final String disconnectPrefix;
+    private final String onlineModeOnly;
+    private final String noAvailableServers;
+    private final String alreadyConnected;
+    private final String movedToNewServerPrefix;
+    private final String genericConnectionError;
+
+    private Messages(CommentedConfig toml, CommentedConfig defaultToml) {
+      this.toml = toml;
+      this.defaultToml = defaultToml;
+      this.kickPrefix = getString("kick-prefix");
+      this.disconnectPrefix = getString("disconnect-prefix");
+      this.onlineModeOnly = getString("online-mode-only");
+      this.noAvailableServers = getString("no-available-servers");
+      this.alreadyConnected = getString("already-connected");
+      this.movedToNewServerPrefix = getString("moved-to-new-server-prefix");
+      this.genericConnectionError = getString("generic-connection-error");
+    }
+
+    private String getString(String path) {
+      return toml.getOrElse(path, defaultToml.getOrElse(path, ""));
     }
 
     public Component getKickPrefix(String server) {

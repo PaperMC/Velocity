@@ -274,7 +274,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             player.disconnect0(reason.get(), true);
           } else {
             if (!server.registerConnection(player)) {
-              player.disconnect0(server.getConfiguration().getMessages().getAlreadyConnected(), true);
+              player.disconnect0(server.getConfiguration().getMessages()
+                      .getAlreadyConnected(), true);
               return;
             }
 
@@ -294,7 +295,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
-            player.disconnect0(server.getConfiguration().getMessages().getNoAvailableServers(), true);
+            player.disconnect0(server.getConfiguration().getMessages()
+                    .getNoAvailableServers(), true);
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();

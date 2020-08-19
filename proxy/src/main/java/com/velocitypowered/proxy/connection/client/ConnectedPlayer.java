@@ -598,7 +598,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     disconnect(friendlyReason);
                   } else {
                     if (res.getMessageComponent() == null) {
-                      sendMessage(server.getConfiguration().getMessages().getMovedToNewServerPrefix().append(friendlyReason));
+                      sendMessage(server.getConfiguration().getMessages()
+                              .getMovedToNewServerPrefix().append(friendlyReason));
                     } else {
                       sendMessage(res.getMessageComponent());
                     }
