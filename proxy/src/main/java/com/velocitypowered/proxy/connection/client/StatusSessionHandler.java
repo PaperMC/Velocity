@@ -34,20 +34,17 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(StatusSessionHandler.class);
   private static final QuietRuntimeException EXPECTED_AWAITING_REQUEST = new QuietRuntimeException(
       "Expected connection to be awaiting status request");
-  private static final QuietRuntimeException EXPECTED_RECEIVED_REQUEST = new QuietRuntimeException(
-      "Expected connection to be awaiting ping");
 
   private final VelocityServer server;
   private final MinecraftConnection connection;
   private final InboundConnection inbound;
-  private State state;
+  private boolean pingReceived = false;
 
   StatusSessionHandler(VelocityServer server, MinecraftConnection connection,
       InboundConnection inbound) {
     this.server = server;
     this.connection = connection;
     this.inbound = inbound;
-    this.state = State.AWAITING_REQUEST;
   }
 
   @Override
@@ -158,10 +155,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyPing packet) {
-    if (this.state != State.AWAITING_REQUEST) {
+    if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
-    this.state = State.RECEIVED_REQUEST;
+    this.pingReceived = true;
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> {
@@ -173,19 +170,17 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(StatusPing packet) {
-    if (this.state != State.RECEIVED_REQUEST) {
-      throw EXPECTED_RECEIVED_REQUEST;
-    }
     connection.closeWith(packet);
     return true;
   }
 
   @Override
   public boolean handle(StatusRequest packet) {
-    if (this.state != State.AWAITING_REQUEST) {
+    if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
-    this.state = State.RECEIVED_REQUEST;
+    this.pingReceived = true;
+
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(

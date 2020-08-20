@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -156,11 +157,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
+          boolean frontlineHandler = sessionHandler instanceof LoginSessionHandler
+              || sessionHandler instanceof HandshakeSessionHandler
+              || sessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
-          boolean willLogQuietDecoderException = !isQuietDecoderException
-              || (!(sessionHandler instanceof LoginSessionHandler)
-              && !(sessionHandler instanceof HandshakeSessionHandler));
-          if (willLogQuietDecoderException) {
+          boolean willLog = !isQuietDecoderException && !frontlineHandler;
+          if (willLog) {
             logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
           } else {
             knownDisconnect = true;
