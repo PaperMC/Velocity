@@ -3,25 +3,32 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
@@ -49,22 +56,24 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Advanced advanced;
   private final Query query;
   private final Metrics metrics;
+  private final Messages messages;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+      Query query, Metrics metrics, Messages messages) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.messages = messages;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics, Messages messages) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -79,6 +88,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.messages = messages;
   }
 
   /**
@@ -359,6 +369,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogCommandExecutions();
   }
 
+  public Messages getMessages() {
+    return messages;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -384,14 +398,27 @@ public class VelocityConfiguration implements ProxyConfig {
    * @throws IOException if we could not read from the {@code path}.
    */
   public static VelocityConfiguration read(Path path) throws IOException {
+    String defaultResource = "default-velocity.toml";
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
-        .defaultResource("/default-velocity.toml")
+        .defaultResource(defaultResource)
         .autosave()
         .preserveInsertionOrder()
         .sync()
         .build();
     config.load();
+
+    // Create temporary default configuration
+    File tmpFile = File.createTempFile(defaultResource, null);
+    tmpFile.deleteOnExit();
+
+    // Copy over default file to tmp location
+    ClassLoader loader = VelocityConfiguration.class.getClassLoader();
+    try (InputStream in = loader.getResourceAsStream(defaultResource)) {
+      Files.copy(Objects.requireNonNull(in), tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
+    defaultConfig.load();
 
     // Handle any cases where the config needs to be saved again
     byte[] forwardingSecret;
@@ -418,6 +445,7 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedConfig advancedConfig = config.get("advanced");
     CommentedConfig queryConfig = config.get("query");
     CommentedConfig metricsConfig = config.get("metrics");
+    CommentedConfig messagesConfig = config.get("messages");
     PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -444,7 +472,8 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig)
+        new Metrics(metricsConfig),
+        new Messages(messagesConfig, defaultConfig.get("messages"))
     );
   }
 
@@ -779,6 +808,71 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isFromConfig() {
       return fromConfig;
+    }
+  }
+
+  public static class Messages {
+
+    private final CommentedConfig toml;
+    private final CommentedConfig defaultToml;
+
+    private final String kickPrefix;
+    private final String disconnectPrefix;
+    private final String onlineModeOnly;
+    private final String noAvailableServers;
+    private final String alreadyConnected;
+    private final String movedToNewServerPrefix;
+    private final String genericConnectionError;
+
+    private Messages(CommentedConfig toml, CommentedConfig defaultToml) {
+      this.toml = toml;
+      this.defaultToml = defaultToml;
+      this.kickPrefix = getString("kick-prefix");
+      this.disconnectPrefix = getString("disconnect-prefix");
+      this.onlineModeOnly = getString("online-mode-only");
+      this.noAvailableServers = getString("no-available-servers");
+      this.alreadyConnected = getString("already-connected");
+      this.movedToNewServerPrefix = getString("moved-to-new-server-prefix");
+      this.genericConnectionError = getString("generic-connection-error");
+    }
+
+    private String getString(String path) {
+      return toml.getOrElse(path, defaultToml.getOrElse(path, ""));
+    }
+
+    public Component getKickPrefix(String server) {
+      return serialize(String.format(kickPrefix, server));
+    }
+
+    public Component getDisconnectPrefix(String server) {
+      return serialize(String.format(disconnectPrefix, server));
+    }
+
+    public Component getOnlineModeOnly() {
+      return serialize(onlineModeOnly);
+    }
+
+    public Component getNoAvailableServers() {
+      return serialize(noAvailableServers);
+    }
+
+    public Component getAlreadyConnected() {
+      return serialize(alreadyConnected);
+    }
+
+    public Component getMovedToNewServerPrefix() {
+      return serialize(movedToNewServerPrefix);
+    }
+
+    public Component getGenericConnectionError() {
+      return serialize(genericConnectionError);
+    }
+
+    private Component serialize(String str) {
+      if (str.startsWith("{")) {
+        return GsonComponentSerializer.gson().deserialize(str);
+      }
+      return LegacyComponentSerializer.legacyAmpersand().deserialize(str);
     }
   }
 }

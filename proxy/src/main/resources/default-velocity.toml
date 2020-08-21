@@ -158,3 +158,18 @@ id = ""
 
 log-failure = false
 
+# Legacy color codes and JSON are accepted in all messages.
+[messages]
+# Prefix when the player gets kicked from a server.
+#   First argument '%s': the server name
+kick-prefix = "&cKicked from %s: "
+
+# Prefix when the player is disconnected from a server.
+#   First argument '%s': the server name
+disconnect-prefix = "&cCan't connect to %s: "
+
+online-mode-only = "&cThis server only accepts connections from online-mode clients.\n\n&7Did you change your username? Sign out of Minecraft, sign back in, and try again."
+no-available-servers = "&cThere are no available servers."
+already-connected = "&cYou are already connected to this proxy!"
+moved-to-new-server-prefix = "&cThe server you were on kicked you: "
+generic-connection-error = "&cAn internal error occurred in your connection."
