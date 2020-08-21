@@ -837,38 +837,42 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     private String getString(String path) {
-      return toml.getOrElse(path, defaultToml.getOrElse(path, ""));
+      String def = defaultToml.getOrElse(path, "");
+      if (toml == null) {
+        return def;
+      }
+      return toml.getOrElse(path, def);
     }
 
     public Component getKickPrefix(String server) {
-      return serialize(String.format(kickPrefix, server));
+      return deserialize(String.format(kickPrefix, server));
     }
 
     public Component getDisconnectPrefix(String server) {
-      return serialize(String.format(disconnectPrefix, server));
+      return deserialize(String.format(disconnectPrefix, server));
     }
 
     public Component getOnlineModeOnly() {
-      return serialize(onlineModeOnly);
+      return deserialize(onlineModeOnly);
     }
 
     public Component getNoAvailableServers() {
-      return serialize(noAvailableServers);
+      return deserialize(noAvailableServers);
     }
 
     public Component getAlreadyConnected() {
-      return serialize(alreadyConnected);
+      return deserialize(alreadyConnected);
     }
 
     public Component getMovedToNewServerPrefix() {
-      return serialize(movedToNewServerPrefix);
+      return deserialize(movedToNewServerPrefix);
     }
 
     public Component getGenericConnectionError() {
-      return serialize(genericConnectionError);
+      return deserialize(genericConnectionError);
     }
 
-    private Component serialize(String str) {
+    private Component deserialize(String str) {
       if (str.startsWith("{")) {
         return GsonComponentSerializer.gson().deserialize(str);
       }
