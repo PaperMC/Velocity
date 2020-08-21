@@ -67,21 +67,15 @@ public enum ProtocolUtils {
    */
   public static int readVarIntSafely(ByteBuf buf) {
     int i = 0;
-    int j = 0;
-    while (true) {
-      if (!buf.isReadable()) {
-        return Integer.MIN_VALUE;
-      }
+    int maxRead = Math.min(5, buf.readableBytes());
+    for (int j = 0; j < maxRead; j++) {
       int k = buf.readByte();
-      i |= (k & 0x7F) << j++ * 7;
-      if (j > 5) {
-        return Integer.MIN_VALUE;
-      }
+      i |= (k & 0x7F) << j * 7;
       if ((k & 0x80) != 128) {
-        break;
+        return i;
       }
     }
-    return i;
+    return Integer.MIN_VALUE;
   }
 
   /**
