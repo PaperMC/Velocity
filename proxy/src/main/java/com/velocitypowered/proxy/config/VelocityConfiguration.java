@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -398,10 +399,11 @@ public class VelocityConfiguration implements ProxyConfig {
    * @throws IOException if we could not read from the {@code path}.
    */
   public static VelocityConfiguration read(Path path) throws IOException {
-    String defaultResource = "default-velocity.toml";
+    URL defaultConfigLocation = VelocityConfiguration.class.getClassLoader()
+        .getResource("default-velocity.toml");
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
-        .defaultResource(defaultResource)
+        .defaultData(defaultConfigLocation)
         .autosave()
         .preserveInsertionOrder()
         .sync()
@@ -409,12 +411,11 @@ public class VelocityConfiguration implements ProxyConfig {
     config.load();
 
     // Create temporary default configuration
-    File tmpFile = File.createTempFile(defaultResource, null);
+    File tmpFile = File.createTempFile("default-config", null);
     tmpFile.deleteOnExit();
 
     // Copy over default file to tmp location
-    ClassLoader loader = VelocityConfiguration.class.getClassLoader();
-    try (InputStream in = loader.getResourceAsStream(defaultResource)) {
+    try (InputStream in = defaultConfigLocation.openStream()) {
       Files.copy(Objects.requireNonNull(in), tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
