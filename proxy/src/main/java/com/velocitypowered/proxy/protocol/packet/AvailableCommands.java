@@ -36,6 +36,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AvailableCommands implements MinecraftPacket {
+  private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
+
   private static final byte NODE_TYPE_ROOT = 0x00;
   private static final byte NODE_TYPE_LITERAL = 0x01;
   private static final byte NODE_TYPE_ARGUMENT = 0x02;
@@ -121,16 +123,14 @@ public class AvailableCommands implements MinecraftPacket {
       flags |= FLAG_EXECUTABLE;
     }
 
-    if (node instanceof RootCommandNode<?>) {
-      flags |= NODE_TYPE_ROOT;
-    } else if (node instanceof LiteralCommandNode<?>) {
+    if (node instanceof LiteralCommandNode<?>) {
       flags |= NODE_TYPE_LITERAL;
     } else if (node instanceof ArgumentCommandNode<?, ?>) {
       flags |= NODE_TYPE_ARGUMENT;
       if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
         flags |= FLAG_HAS_SUGGESTIONS;
       }
-    } else {
+    } else if (!(node instanceof RootCommandNode<?>)) {
       throw new IllegalArgumentException("Unknown node type " + node.getClass().getName());
     }
 
@@ -238,8 +238,9 @@ public class AvailableCommands implements MinecraftPacket {
               throw new IllegalStateException("Node points to non-existent index " + redirectTo);
             }
 
-            if (wireNodes[redirectTo].built != null) {
-              args.redirect(wireNodes[redirectTo].built);
+            WireNode redirect = wireNodes[redirectTo];
+            if (redirect.built != null) {
+              args.redirect(redirect.built);
             } else {
               // Redirect node does not yet exist
               return false;
@@ -248,7 +249,7 @@ public class AvailableCommands implements MinecraftPacket {
 
           // If executable, add an empty command
           if ((flags & FLAG_EXECUTABLE) != 0) {
-            args.executes((Command<CommandSource>) context -> 0);
+            args.executes(PLACEHOLDER_COMMAND);
           }
 
           this.built = args.build();

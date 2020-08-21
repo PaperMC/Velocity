@@ -13,6 +13,12 @@ public class VelocityTabListEntryLegacy extends VelocityTabListEntry {
   }
 
   @Override
+  public TabListEntry setDisplayName(net.kyori.text.@Nullable Component displayName) {
+    getTabList().removeEntry(getProfile().getId()); // We have to remove first if updating
+    return super.setDisplayName(displayName);
+  }
+
+  @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     getTabList().removeEntry(getProfile().getId()); // We have to remove first if updating
     return super.setDisplayName(displayName);

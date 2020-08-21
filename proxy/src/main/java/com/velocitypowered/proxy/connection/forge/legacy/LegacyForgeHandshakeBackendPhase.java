@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.forge.legacy;
 
 import com.velocitypowered.proxy.connection.ConnectionTypes;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -38,8 +39,9 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
     void onTransitionToNewPhase(VelocityServerConnection connection) {
       // We must always reset the handshake before a modded connection is established if
       // we haven't done so already.
-      if (connection.getConnection() != null) {
-        connection.getConnection().setType(ConnectionTypes.LEGACY_FORGE);
+      MinecraftConnection mc = connection.getConnection();
+      if (mc != null) {
+        mc.setType(ConnectionTypes.LEGACY_FORGE);
       }
       connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
     }

@@ -305,7 +305,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     TitlePacket subtitlePkt = new TitlePacket();
     subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
     subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
-    connection.delayedWrite(titlePkt);
+    connection.delayedWrite(subtitlePkt);
 
     TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
     net.kyori.adventure.title.Title.Times times = title.times();

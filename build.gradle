@@ -9,9 +9,12 @@ buildscript {
 
 plugins {
     id 'java'
+    id "com.github.spotbugs" version "4.2.4" apply false
 }
 
 allprojects {
+    apply plugin: "com.github.spotbugs"
+
     group 'com.velocitypowered'
     version '1.1.0-SNAPSHOT'
 
@@ -68,6 +71,16 @@ allprojects {
     test {
         reports {
             junitXml.enabled = true
+        }
+    }
+
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+        reports {
+            html {
+                enabled = true
+                destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+                stylesheet = 'fancy-hist.xsl'
+            }
         }
     }
 }

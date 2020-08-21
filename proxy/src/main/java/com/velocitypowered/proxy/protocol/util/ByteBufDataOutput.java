@@ -102,4 +102,8 @@ public class ByteBufDataOutput extends OutputStream implements ByteArrayDataOutp
       throw new IllegalStateException(e);
     }
   }
+
+  @Override
+  public void close() {
+  }
 }

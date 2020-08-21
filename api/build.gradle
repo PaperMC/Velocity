@@ -1,12 +1,10 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'checkstyle'
-    id "net.ltgt.errorprone" version "0.8"
 }
 
 apply from: '../gradle/checkstyle.gradle'
-apply from: '../gradle/errorprone.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceSets {
@@ -16,35 +14,35 @@ sourceSets {
 }
 
 dependencies {
-    compile 'com.google.code.gson:gson:2.8.6'
-    compile "com.google.guava:guava:${guavaVersion}"
+    api 'com.google.code.gson:gson:2.8.6'
+    api "com.google.guava:guava:${guavaVersion}"
 
     // DEPRECATED: Will be removed in Velocity 2.0.0
-    compile "net.kyori:text-api:${textVersion}"
-    compile "net.kyori:text-serializer-gson:${textVersion}"
-    compile "net.kyori:text-serializer-legacy:${textVersion}"
-    compile "net.kyori:text-serializer-plain:${textVersion}"
+    api "net.kyori:text-api:${textVersion}"
+    api "net.kyori:text-serializer-gson:${textVersion}"
+    api "net.kyori:text-serializer-legacy:${textVersion}"
+    api "net.kyori:text-serializer-plain:${textVersion}"
 
     // DEPRECATED: Will be removed in Velocity 2.0.0
-    compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    api 'com.moandjiezana.toml:toml4j:0.7.2'
 
-    compile "net.kyori:adventure-api:${adventureVersion}"
-    compile "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
-    compile "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
-    compile "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
-    compile "net.kyori:adventure-text-serializer-legacy-text3:${adventureVersion}"
+    api "net.kyori:adventure-api:${adventureVersion}"
+    api "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
+    api "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
+    api "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
+    api "net.kyori:adventure-text-serializer-legacy-text3:${adventureVersion}"
 
-    compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile 'com.google.inject:guice:4.2.3'
-    compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-    compile 'com.mojang:brigadier:1.0.17'
+    api "org.slf4j:slf4j-api:${slf4jVersion}"
+    api 'com.google.inject:guice:4.2.3'
+    api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
+    api 'com.mojang:brigadier:1.0.17'
 
-    compile "org.spongepowered:configurate-hocon:${configurateVersion}"
-    compile "org.spongepowered:configurate-yaml:${configurateVersion}"
-    compile "org.spongepowered:configurate-gson:${configurateVersion}"
+    api "org.spongepowered:configurate-hocon:${configurateVersion}"
+    api "org.spongepowered:configurate-yaml:${configurateVersion}"
+    api "org.spongepowered:configurate-gson:${configurateVersion}"
 
-    testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
 task javadocJar(type: Jar) {

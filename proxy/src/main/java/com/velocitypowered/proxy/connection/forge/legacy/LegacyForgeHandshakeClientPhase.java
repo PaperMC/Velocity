@@ -2,6 +2,7 @@ package com.velocitypowered.proxy.connection.forge.legacy;
 
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -153,8 +154,9 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
       // just in case the timing is awful
       player.sendKeepAlive();
 
-      if (backendConn.getSessionHandler() instanceof ClientPlaySessionHandler) {
-        ((ClientPlaySessionHandler) backendConn.getSessionHandler()).flushQueuedMessages();
+      MinecraftSessionHandler handler = backendConn.getSessionHandler();
+      if (handler instanceof ClientPlaySessionHandler) {
+        ((ClientPlaySessionHandler) handler).flushQueuedMessages();
       }
 
       return true;

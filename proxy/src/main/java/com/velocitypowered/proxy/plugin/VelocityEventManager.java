@@ -12,6 +12,8 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.PluginManager;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -51,7 +53,8 @@ public class VelocityEventManager implements EventManager {
   public VelocityEventManager(PluginManager pluginManager) {
     // Expose the event executors to the plugins - required in order for the generated ASM classes
     // to work.
-    PluginClassLoader cl = new PluginClassLoader(new URL[0]);
+    PluginClassLoader cl = AccessController.doPrivileged(
+        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[0]));
     cl.addToClassloaders();
 
     // Initialize the event bus.

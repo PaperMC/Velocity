@@ -99,7 +99,10 @@ public class PlayerListItem implements MinecraftPacket {
       ProtocolUtils.writeVarInt(buf, action);
       ProtocolUtils.writeVarInt(buf, items.size());
       for (Item item : items) {
-        ProtocolUtils.writeUuid(buf, item.getUuid());
+        UUID uuid = item.getUuid();
+        assert uuid != null : "UUID-less entry serialization attempt - 1.7 component!";
+
+        ProtocolUtils.writeUuid(buf, uuid);
         switch (action) {
           case ADD_PLAYER:
             ProtocolUtils.writeString(buf, item.getName());
@@ -127,9 +130,10 @@ public class PlayerListItem implements MinecraftPacket {
       }
     } else {
       Item item = items.get(0);
-      if (item.getDisplayName() != null) {
+      Component displayNameComponent = item.getDisplayName();
+      if (displayNameComponent != null) {
         String displayName = LegacyComponentSerializer.legacySection()
-            .serialize(item.getDisplayName());
+            .serialize(displayNameComponent);
         ProtocolUtils.writeString(buf,
             displayName.length() > 16 ? displayName.substring(0, 16) : displayName);
       } else {

@@ -83,8 +83,10 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
     } else {
       builder.putString("id", keyAsString);
     }
-    if (input.nbt() != null) {
-      builder.put("tag", TagStringIO.get().asCompound(input.nbt().string()));
+
+    BinaryTagHolder nbt = input.nbt();
+    if (nbt != null) {
+      builder.put("tag", TagStringIO.get().asCompound(nbt.string()));
     }
 
     return TextComponent.of(TagStringIO.get().asString(builder.build()));
@@ -96,8 +98,9 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
     CompoundBinaryTag.Builder tag = CompoundBinaryTag.builder()
         .putString("id", input.id().toString())
         .putString("type", input.type().asString());
-    if (input.name() != null) {
-      tag.putString("name", componentEncoder.encode(input.name()));
+    Component name = input.name();
+    if (name != null) {
+      tag.putString("name", componentEncoder.encode(name));
     }
     return TextComponent.of(TagStringIO.get().asString(tag.build()));
   }

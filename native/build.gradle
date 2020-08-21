@@ -1,17 +1,15 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'checkstyle'
-    id "net.ltgt.errorprone" version "0.8"
 }
 
 apply from: '../gradle/checkstyle.gradle'
-apply from: '../gradle/errorprone.gradle'
 
 dependencies {
-    compile "com.google.guava:guava:${guavaVersion}"
-    compile "io.netty:netty-handler:${nettyVersion}"
-    compile "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
+    implementation "com.google.guava:guava:${guavaVersion}"
+    implementation "io.netty:netty-handler:${nettyVersion}"
+    implementation "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
 
-    testCompile "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testCompile "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }

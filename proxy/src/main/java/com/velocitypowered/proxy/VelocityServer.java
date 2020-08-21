@@ -45,6 +45,7 @@ import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -54,7 +55,9 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.AccessController;
 import java.security.KeyPair;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
@@ -75,7 +78,6 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -198,21 +200,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     commandManager.register("shutdown", new ShutdownCommand(this),"end");
     new GlistCommand(this).register();
 
-    try {
-      Path configPath = Paths.get("velocity.toml");
-      configuration = VelocityConfiguration.read(configPath);
-
-      if (!configuration.validate()) {
-        logger.error("Your configuration is invalid. Velocity will not start up until the errors "
-            + "are resolved.");
-        LogManager.shutdown();
-        System.exit(1);
-      }
-    } catch (Exception e) {
-      logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
-      LogManager.shutdown();
-      System.exit(1);
-    }
+    this.doStartupConfigLoad();
 
     for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
       servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
@@ -241,6 +229,25 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+  }
+
+  @SuppressFBWarnings("DM_EXIT")
+  private void doStartupConfigLoad() {
+    try {
+      Path configPath = Paths.get("velocity.toml");
+      configuration = VelocityConfiguration.read(configPath);
+
+      if (!configuration.validate()) {
+        logger.error("Your configuration is invalid. Velocity will not start up until the errors "
+            + "are resolved.");
+        LogManager.shutdown();
+        System.exit(1);
+      }
+    } catch (Exception e) {
+      logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
+      LogManager.shutdown();
+      System.exit(1);
+    }
   }
 
   private void loadPlugins() {
@@ -438,7 +445,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       shutdown = true;
 
       if (explicitExit) {
-        System.exit(0);
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+          @Override
+          @SuppressFBWarnings("DM_EXIT")
+          public Void run() {
+            System.exit(0);
+            return null;
+          }
+        });
       }
     };
 

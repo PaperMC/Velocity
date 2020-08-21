@@ -15,19 +15,11 @@ public class EncryptionResponse implements MinecraftPacket {
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
 
   public byte[] getSharedSecret() {
-    return sharedSecret;
-  }
-
-  public void setSharedSecret(byte[] sharedSecret) {
-    this.sharedSecret = sharedSecret;
+    return sharedSecret.clone();
   }
 
   public byte[] getVerifyToken() {
-    return verifyToken;
-  }
-
-  public void setVerifyToken(byte[] verifyToken) {
-    this.verifyToken = verifyToken;
+    return verifyToken.clone();
   }
 
   @Override

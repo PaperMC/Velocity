@@ -16,19 +16,19 @@ public class EncryptionRequest implements MinecraftPacket {
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
 
   public byte[] getPublicKey() {
-    return publicKey;
+    return publicKey.clone();
   }
 
   public void setPublicKey(byte[] publicKey) {
-    this.publicKey = publicKey;
+    this.publicKey = publicKey.clone();
   }
 
   public byte[] getVerifyToken() {
-    return verifyToken;
+    return verifyToken.clone();
   }
 
   public void setVerifyToken(byte[] verifyToken) {
-    this.verifyToken = verifyToken;
+    this.verifyToken = verifyToken.clone();
   }
 
   @Override

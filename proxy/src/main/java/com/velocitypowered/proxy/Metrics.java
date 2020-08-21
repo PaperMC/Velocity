@@ -39,11 +39,11 @@ public class Metrics {
   // The url to which the data is sent
   private static final String URL = "https://bstats.org/submitData/server-implementation";
 
-  // Should failed requests be logged?
-  private static boolean logFailedRequests = false;
-
   // The logger for the failed requests
   private static final Logger logger = LogManager.getLogger(Metrics.class);
+
+  // Should failed requests be logged?
+  private boolean logFailedRequests = false;
 
   // The name of the server software
   private final String name;
@@ -72,7 +72,7 @@ public class Metrics {
     this.name = name;
     this.pluginId = pluginId;
     this.serverUuid = serverUuid;
-    Metrics.logFailedRequests = logFailedRequests;
+    this.logFailedRequests = logFailedRequests;
     this.server = server;
 
     // Start submitting the data
@@ -262,9 +262,6 @@ public class Metrics {
         }
         chart.add("data", data);
       } catch (Throwable t) {
-        if (logFailedRequests) {
-          logger.warn("Failed to get data for custom chart with id {}", chartId, t);
-        }
         return null;
       }
       return chart;

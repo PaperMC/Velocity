@@ -17,10 +17,13 @@ import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -58,9 +61,10 @@ public class JavaPluginLoader implements PluginLoader {
     if (!(source instanceof JavaVelocityPluginDescriptionCandidate)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
-    PluginClassLoader loader = new PluginClassLoader(
-        new URL[]{source.getSource().get().toUri().toURL()}
-    );
+
+    URL pluginJarUrl = source.getSource().get().toUri().toURL();
+    PluginClassLoader loader = AccessController.doPrivileged(
+        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
     loader.addToClassloaders();
 
     JavaVelocityPluginDescriptionCandidate candidate =

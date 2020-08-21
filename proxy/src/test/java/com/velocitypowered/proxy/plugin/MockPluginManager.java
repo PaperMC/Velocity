@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public class MockPluginManager implements PluginManager {
 
-  public static PluginManager INSTANCE = new MockPluginManager();
+  public static final PluginManager INSTANCE = new MockPluginManager();
 
   @Override
   public Optional<PluginContainer> fromInstance(final Object instance) {

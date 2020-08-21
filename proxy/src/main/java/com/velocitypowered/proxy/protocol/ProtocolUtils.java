@@ -135,7 +135,7 @@ public enum ProtocolUtils {
   public static void writeString(ByteBuf buf, CharSequence str) {
     int size = ByteBufUtil.utf8Bytes(str);
     writeVarInt(buf, size);
-    ByteBufUtil.writeUtf8(buf, str);
+    buf.writeCharSequence(str, StandardCharsets.UTF_8);
   }
 
   public static byte[] readByteArray(ByteBuf buf) {
@@ -230,12 +230,6 @@ public enum ProtocolUtils {
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
   public static CompoundBinaryTag readCompoundTag(ByteBuf buf) {
-    int indexBefore = buf.readerIndex();
-    byte startType = buf.readByte();
-    if (startType == 0) {
-      throw new DecoderException("Invalid NBT start-type (end/empty)");
-    }
-    buf.readerIndex(indexBefore);
     try {
       return BinaryTagIO.readDataInput(new ByteBufInputStream(buf));
     } catch (IOException thrown) {
@@ -250,10 +244,6 @@ public enum ProtocolUtils {
    * @param compoundTag the CompoundTag to write
    */
   public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
-    if (compoundTag == null) {
-      buf.writeByte(0);
-      return;
-    }
     try {
       BinaryTagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
     } catch (IOException e) {

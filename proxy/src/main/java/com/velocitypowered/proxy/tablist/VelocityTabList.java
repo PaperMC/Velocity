@@ -1,6 +1,9 @@
 package com.velocitypowered.proxy.tablist;
 
+import static com.google.common.base.Verify.verify;
+
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -121,6 +124,7 @@ public class VelocityTabList implements TabList {
     // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
+      assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
 
       if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here

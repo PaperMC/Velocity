@@ -276,7 +276,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public byte[] getForwardingSecret() {
-    return forwardingSecret;
+    return forwardingSecret.clone();
   }
 
   @Override
