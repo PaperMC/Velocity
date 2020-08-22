@@ -105,9 +105,6 @@ connection-timeout = 5000
 # Specify a read timeout for connections here. The default is 30 seconds.
 read-timeout = 30000
 
-# Specify an initial read timeout for connections here. The default is 3 seconds.
-initial-read-timeout = 3000
-
 # Enables compatibility with HAProxy.
 proxy-protocol = false
 

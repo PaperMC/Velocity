@@ -150,11 +150,4 @@ public interface ProxyConfig {
    * @return read timeout (in milliseconds)
    */
   int getReadTimeout();
-
-  /**
-   * Get how long this proxy will wait until performing an initial read timeout.
-   *
-   * @return read timeout (in milliseconds)
-   */
-  int getInitialReadTimeout();
 }
