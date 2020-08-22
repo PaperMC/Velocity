@@ -576,6 +576,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
+    boolean connectedToServer = connectedServer != null;
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
@@ -594,9 +595,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             createConnectionRequest(res.getServer())
                 .connectWithIndication()
                 .whenCompleteAsync((newResult, exception) -> {
-                  if (newResult == null || !newResult) {
-                    disconnect(friendlyReason);
-                  } else {
+                  if (newResult != null && newResult && connectedToServer) {
                     if (res.getMessageComponent() == null) {
                       sendMessage(server.getConfiguration().getMessages()
                               .getMovedToNewServerPrefix().append(friendlyReason));
