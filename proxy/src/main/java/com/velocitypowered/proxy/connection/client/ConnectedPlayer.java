@@ -448,9 +448,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             createConnectionRequest(res.getServer())
                 .connectWithIndication()
                 .whenCompleteAsync((newResult, exception) -> {
-                  if (newResult == null || !newResult) {
-                    disconnect(friendlyReason);
-                  } else {
+                  if (newResult != null && newResult) {
                     sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER);
                   }
                 }, minecraftConnection.eventLoop());
