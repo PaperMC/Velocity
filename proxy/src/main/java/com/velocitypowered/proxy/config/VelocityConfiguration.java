@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -393,9 +394,15 @@ public class VelocityConfiguration implements ProxyConfig {
    * @return the deserialized Velocity configuration
    * @throws IOException if we could not read from the {@code path}.
    */
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+      justification = "I looked carefully and there's no way SpotBugs is right.")
   public static VelocityConfiguration read(Path path) throws IOException {
     URL defaultConfigLocation = VelocityConfiguration.class.getClassLoader()
         .getResource("default-velocity.toml");
+    if (defaultConfigLocation == null) {
+      throw new RuntimeException("Default configuration file does not exist.");
+    }
+
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
         .defaultData(defaultConfigLocation)
@@ -411,7 +418,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
     // Copy over default file to tmp location
     try (InputStream in = defaultConfigLocation.openStream()) {
-      Files.copy(Objects.requireNonNull(in), tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();

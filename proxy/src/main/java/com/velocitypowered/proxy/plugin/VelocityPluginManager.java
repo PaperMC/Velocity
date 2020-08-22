@@ -18,6 +18,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -59,6 +60,8 @@ public class VelocityPluginManager implements PluginManager {
    * @param directory the directory to load from
    * @throws IOException if we could not open the directory
    */
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+      justification = "I looked carefully and there's no way SpotBugs is right.")
   public void loadPlugins(Path directory) throws IOException {
     checkNotNull(directory, "directory");
     checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
@@ -66,8 +69,8 @@ public class VelocityPluginManager implements PluginManager {
     List<PluginDescription> found = new ArrayList<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
-    try (DirectoryStream<Path> stream = Files
-        .newDirectoryStream(directory, p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
+        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
           found.add(loader.loadPluginDescription(path));
