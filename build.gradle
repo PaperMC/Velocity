@@ -28,7 +28,7 @@ allprojects {
         nettyVersion = '4.1.51.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '2.7.0'
-        configurateVersion = '3.6'
+        configurateVersion = '3.7.1'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
@@ -59,12 +59,6 @@ allprojects {
         // Brigadier
         maven {
             url "https://libraries.minecraft.net"
-        }
-
-        // Configurate
-        maven {
-            name = 'sponge'
-            url = 'https://repo.spongepowered.org/maven'
         }
     }
 
