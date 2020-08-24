@@ -68,6 +68,22 @@ class BungeeCordMessageResponder {
     sendResponseOnConnection(buf);
   }
 
+  private void processIpOther(ByteBufDataInput in) {
+    String playerName = in.readUTF();
+
+    Optional<Player> referencedPlayer = proxy.getPlayer(playerName);
+    if (referencedPlayer.isPresent()) {
+      Player reference = referencedPlayer.get();
+      ByteBuf buf = Unpooled.buffer();
+      ByteBufDataOutput out = new ByteBufDataOutput(buf);
+      out.writeUTF("IPOther");
+      out.writeUTF(reference.getUsername());
+      out.writeUTF(reference.getRemoteAddress().getHostString());
+      out.writeInt(reference.getRemoteAddress().getPort());
+      sendResponseOnConnection(buf);
+    }
+  }
+
   private void processPlayerCount(ByteBufDataInput in) {
     ByteBuf buf = Unpooled.buffer();
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
@@ -316,6 +332,9 @@ class BungeeCordMessageResponder {
         break;
       case "IP":
         this.processIp(in);
+        break;
+      case "IPOther":
+        this.processIpOther(in);
         break;
       case "PlayerCount":
         this.processPlayerCount(in);
