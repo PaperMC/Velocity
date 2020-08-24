@@ -421,6 +421,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         Optional<RegisteredServer> next = getNextServerToTry(rs);
         result = next.<ServerKickResult>map(RedirectPlayer::create)
             .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
+        // Make sure we clear the current connected server as the connection is invalid.
+        connectedServer = null;
       } else {
         // If we were kicked by going to another server, the connection should not be in flight
         if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
@@ -446,10 +448,34 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           } else if (event.getResult() instanceof RedirectPlayer) {
             RedirectPlayer res = (RedirectPlayer) event.getResult();
             createConnectionRequest(res.getServer())
-                .connectWithIndication()
-                .whenCompleteAsync((newResult, exception) -> {
-                  if (newResult != null && newResult) {
-                    sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER);
+                .connect()
+                .whenCompleteAsync((status, throwable) -> {
+                  if (throwable != null) {
+                    handleConnectionException(status != null ? status.getAttemptedConnection()
+                        : res.getServer(), throwable, true);
+                    return;
+                  }
+
+                  switch (status.getStatus()) {
+                    // Impossible/nonsensical cases
+                    case ALREADY_CONNECTED:
+                    case CONNECTION_IN_PROGRESS:
+                      // Fatal case
+                    case CONNECTION_CANCELLED:
+                      disconnect(status.getReason().orElse(friendlyReason));
+                      break;
+                    case SERVER_DISCONNECTED:
+                      Component reason = status.getReason()
+                          .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                      handleConnectionException(res.getServer(), Disconnect.create(reason),
+                          ((Impl) status).isSafe());
+                      break;
+                    case SUCCESS:
+                      sendMessage(VelocityMessages.MOVED_TO_NEW_SERVER);
+                      break;
+                    default:
+                      // The only remaining value is successful (no need to do anything!)
+                      break;
                   }
                 }, minecraftConnection.eventLoop());
           } else if (event.getResult() instanceof Notify) {
