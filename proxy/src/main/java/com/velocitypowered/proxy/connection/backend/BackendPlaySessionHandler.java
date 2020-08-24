@@ -175,6 +175,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
               filterNode(server.getCommandManager().getDispatcher().getRoot());
       Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
+        CommandNode<CommandSource> existingServerChild = rootNode.getChild(node.getName());
+        if (existingServerChild != null) {
+          rootNode.getChildren().remove(existingServerChild);
+        }
         rootNode.addChild(node);
       }
     }
@@ -203,7 +207,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             return null;
           }
         } catch (Throwable e) {
-          // swallow everything cuz plugins being plugins
+          // swallow everything because plugins
           logger.error(
               "Requirement test for command node " + source + " encountered an exception", e);
         }
