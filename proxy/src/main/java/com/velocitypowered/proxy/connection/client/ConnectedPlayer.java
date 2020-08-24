@@ -617,6 +617,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       handleConnectionException(res.getServer(), Disconnect.create(reason,
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
+                    case SUCCESS:
+                      sendMessage(server.getConfiguration().getMessages()
+                          .getMovedToNewServerPrefix().append(friendlyReason));
+                      break;
                     default:
                       // The only remaining value is successful (no need to do anything!)
                       break;
