@@ -1,5 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
+import static com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
 import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -563,6 +564,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       Optional<RegisteredServer> next = getNextServerToTry(rs);
       result = next.map(RedirectPlayer::create)
           .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
+      // Make sure we clear the current connected server as the connection is invalid.
+      connectedServer = null;
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
       if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
@@ -576,7 +579,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
-    boolean connectedToServer = connectedServer != null;
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
@@ -593,15 +595,31 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           } else if (event.getResult() instanceof RedirectPlayer) {
             RedirectPlayer res = (RedirectPlayer) event.getResult();
             createConnectionRequest(res.getServer())
-                .connectWithIndication()
-                .whenCompleteAsync((newResult, exception) -> {
-                  if (newResult != null && newResult && connectedToServer) {
-                    if (res.getMessageComponent() == null) {
-                      sendMessage(server.getConfiguration().getMessages()
-                              .getMovedToNewServerPrefix().append(friendlyReason));
-                    } else {
-                      sendMessage(res.getMessageComponent());
-                    }
+                .connect()
+                .whenCompleteAsync((status, throwable) -> {
+                  if (throwable != null) {
+                    handleConnectionException(status != null ? status.getAttemptedConnection()
+                        : res.getServer(), throwable, true);
+                    return;
+                  }
+
+                  switch (status.getStatus()) {
+                    // Impossible/nonsensical cases
+                    case ALREADY_CONNECTED:
+                    case CONNECTION_IN_PROGRESS:
+                    // Fatal case
+                    case CONNECTION_CANCELLED:
+                      disconnect(status.getReasonComponent().orElse(res.getMessageComponent()));
+                      break;
+                    case SERVER_DISCONNECTED:
+                      Component reason = status.getReasonComponent()
+                          .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                      handleConnectionException(res.getServer(), Disconnect.create(reason,
+                          getProtocolVersion()), ((Impl) status).isSafe());
+                      break;
+                    default:
+                      // The only remaining value is successful (no need to do anything!)
+                      break;
                   }
                 }, connection.eventLoop());
           } else if (event.getResult() instanceof Notify) {
@@ -865,7 +883,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
       if (connectedServer != null && connectedServer.getServer().equals(server)) {
-        return Optional.of(ConnectionRequestBuilder.Status.ALREADY_CONNECTED);
+        return Optional.of(ALREADY_CONNECTED);
       }
       return Optional.empty();
     }
