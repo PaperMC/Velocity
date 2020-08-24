@@ -197,6 +197,20 @@ class BungeeCordMessageResponder {
     });
   }
 
+  private void processIpOther(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      ByteBuf buf = Unpooled.buffer();
+      ByteBufDataOutput out = new ByteBufDataOutput(buf);
+
+      out.writeUTF("IPOther");
+      out.writeUTF(player.getUsername());
+      out.writeUTF(player.getRemoteAddress().getHostString());
+      out.writeInt(player.getRemoteAddress().getPort());
+
+      sendResponseOnConnection(buf);
+    });
+  }
+
   private void processServerIp(ByteBufDataInput in) {
     proxy.getServer(in.readUTF()).ifPresent(info -> {
       ByteBuf buf = Unpooled.buffer();
@@ -340,6 +354,9 @@ class BungeeCordMessageResponder {
         break;
       case "UUIDOther":
         this.processUuidOther(in);
+        break;
+      case "IPOther":
+        this.processIpOther(in);
         break;
       case "ServerIP":
         this.processServerIp(in);
