@@ -564,8 +564,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       Optional<RegisteredServer> next = getNextServerToTry(rs);
       result = next.map(RedirectPlayer::create)
           .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
-      // Make sure we clear the current connected server as the connection is invalid.
-      connectedServer = null;
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
       if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
@@ -583,6 +581,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
           connectionInFlight = null;
+          // Make sure we clear the current connected server as the connection is invalid.
+          connectedServer = null;
 
           if (!isActive()) {
             // If the connection is no longer active, it makes no sense to try and recover it.
