@@ -18,8 +18,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -32,7 +30,7 @@ public interface ProxyServer extends Audience {
    *
    * @param reason message to kick online players with
    */
-  void shutdown(TextComponent reason);
+  void shutdown(net.kyori.adventure.text.Component reason);
 
   /**
    * Shuts down the proxy, kicking players with the default reason.

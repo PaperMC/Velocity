@@ -76,9 +76,9 @@ import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -168,7 +168,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public @NonNull BossBar createBossBar(
-      @NonNull Component title,
+      net.kyori.text.@NonNull Component title,
       @NonNull BossBarColor color,
       @NonNull BossBarOverlay overlay,
       float progress) {
@@ -392,7 +392,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param explicitExit whether the user explicitly shut down the proxy
    * @param reason message to kick online players with
    */
-  public void shutdown(boolean explicitExit, TextComponent reason) {
+  public void shutdown(boolean explicitExit, Component reason) {
     if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
       throw new AssertionError();
     }
@@ -461,7 +461,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Calls {@link #shutdown(boolean, TextComponent)} with the default reason "Proxy shutting down."
+   * Calls {@link #shutdown(boolean, Component)} with the default reason "Proxy shutting down."
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    */
@@ -470,7 +470,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public void shutdown(TextComponent reason) {
+  public void shutdown(Component reason) {
     shutdown(true, reason);
   }
 
@@ -554,7 +554,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public void broadcast(Component component) {
+  public void broadcast(net.kyori.text.Component component) {
     Preconditions.checkNotNull(component, "component");
     Chat chat = Chat.createClientbound(component);
     for (ConnectedPlayer player : connectionsByUuid.values()) {
