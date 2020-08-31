@@ -573,16 +573,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
     KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
         !kickedFromCurrent, result);
-    handleKickEvent(originalEvent, friendlyReason);
+    handleKickEvent(originalEvent, friendlyReason, kickedFromCurrent);
   }
 
-  private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason) {
+  private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
+      boolean kickedFromCurrent) {
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
           connectionInFlight = null;
+
           // Make sure we clear the current connected server as the connection is invalid.
-          connectedServer = null;
+          boolean previouslyConnected = connectedServer != null;
+          if (kickedFromCurrent) {
+            connectedServer = null;
+          }
 
           if (!isActive()) {
             // If the connection is no longer active, it makes no sense to try and recover it.
@@ -628,7 +633,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 }, connection.eventLoop());
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
-            if (event.kickedDuringServerConnect()) {
+            if (event.kickedDuringServerConnect() && previouslyConnected) {
               sendMessage(res.getMessageComponent());
             } else {
               disconnect(res.getMessageComponent());
