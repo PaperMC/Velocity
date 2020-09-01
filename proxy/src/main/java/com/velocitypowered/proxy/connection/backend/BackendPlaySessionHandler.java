@@ -173,6 +173,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       RootCommandNode<CommandSource> dispatcherRootNode =
           (RootCommandNode<CommandSource>)
               filterNode(server.getCommandManager().getDispatcher().getRoot());
+      assert dispatcherRootNode != null : "Filtering root node returned null.";
       Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
         CommandNode<CommandSource> existingServerChild = rootNode.getChild(node.getName());

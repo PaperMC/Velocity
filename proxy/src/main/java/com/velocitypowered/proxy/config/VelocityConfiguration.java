@@ -22,11 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -73,13 +72,15 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
-      boolean announceForge, PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
+      boolean preventClientProxyConnections, boolean announceForge,
+      PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
       ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics, Messages messages) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
     this.onlineMode = onlineMode;
+    this.preventClientProxyConnections = preventClientProxyConnections;
     this.announceForge = announceForge;
     this.playerInfoForwardingMode = playerInfoForwardingMode;
     this.forwardingSecret = forwardingSecret;
@@ -460,6 +461,8 @@ public class VelocityConfiguration implements ProxyConfig {
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean announceForge = config.getOrElse("announce-forge", true);
+    Boolean preventClientProxyConnections = config.getOrElse("prevent-client-proxy-connections",
+        true);
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
 
     return new VelocityConfiguration(
@@ -468,6 +471,7 @@ public class VelocityConfiguration implements ProxyConfig {
         maxPlayers,
         onlineMode,
         announceForge,
+        preventClientProxyConnections,
         forwardingMode,
         forwardingSecret,
         kickExisting,
@@ -484,7 +488,7 @@ public class VelocityConfiguration implements ProxyConfig {
   private static String generateRandomString(int length) {
     String chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
     StringBuilder builder = new StringBuilder();
-    Random rnd = new Random();
+    Random rnd = new SecureRandom();
     for (int i = 0; i < length; i++) {
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
@@ -502,7 +506,7 @@ public class VelocityConfiguration implements ProxyConfig {
         "factions", "127.0.0.1:30067",
         "minigames", "127.0.0.1:30068"
     );
-    private List<String> attemptConnectionOrder = Arrays.asList("lobby");
+    private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
     private Servers() {
     }

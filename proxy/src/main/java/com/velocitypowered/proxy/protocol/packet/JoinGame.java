@@ -246,8 +246,7 @@ public class JoinGame implements MinecraftPacket {
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       buf.writeByte(previousGamemode);
-      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(
-          new String[dimensionRegistry.getLevelNames().size()]));
+      ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(new String[0]));
       CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
       ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {

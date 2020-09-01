@@ -27,7 +27,6 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
@@ -39,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -100,16 +98,13 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           }
         })
         .connect(serverInfo.getAddress())
-        .addListener(new ChannelFutureListener() {
-          @Override
-          public void operationComplete(ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
-              MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
-              conn.setSessionHandler(new PingSessionHandler(
-                  pingFuture, VelocityRegisteredServer.this, conn, version));
-            } else {
-              pingFuture.completeExceptionally(future.cause());
-            }
+        .addListener((ChannelFutureListener) future -> {
+          if (future.isSuccess()) {
+            MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
+            conn.setSessionHandler(new PingSessionHandler(
+                pingFuture, VelocityRegisteredServer.this, conn, version));
+          } else {
+            pingFuture.completeExceptionally(future.cause());
           }
         });
     return pingFuture;

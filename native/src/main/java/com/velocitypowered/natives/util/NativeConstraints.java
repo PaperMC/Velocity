@@ -27,19 +27,14 @@ public class NativeConstraints {
 
   static final BooleanSupplier NATIVE_BASE = () -> NATIVES_ENABLED && CAN_GET_MEMORYADDRESS;
 
-  static final BooleanSupplier LINUX_X86_64 = () -> {
-    return NATIVE_BASE.getAsBoolean()
-        && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
-        && IS_AMD64;
-  };
+  static final BooleanSupplier LINUX_X86_64 = () -> NATIVE_BASE.getAsBoolean()
+      && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
+      && IS_AMD64;
 
-  static final BooleanSupplier LINUX_AARCH64 = () -> {
-    return NATIVE_BASE.getAsBoolean()
-        && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
-        && IS_AARCH64;
-  };
+  static final BooleanSupplier LINUX_AARCH64 = () -> NATIVE_BASE.getAsBoolean()
+      && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
+      && IS_AARCH64;
 
-  static final BooleanSupplier JAVA_11 = () -> {
-    return Double.parseDouble(System.getProperty("java.specification.version")) >= 11;
-  };
+  static final BooleanSupplier JAVA_11 = () -> Double.parseDouble(
+      System.getProperty("java.specification.version")) >= 11;
 }

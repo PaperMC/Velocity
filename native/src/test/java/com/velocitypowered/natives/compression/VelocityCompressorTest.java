@@ -23,7 +23,7 @@ import org.junit.jupiter.api.condition.JRE;
 
 class VelocityCompressorTest {
 
-  private static byte[] TEST_DATA = new byte[1 << 14];
+  private static final byte[] TEST_DATA = new byte[1 << 14];
 
   @BeforeAll
   static void checkNatives() throws IOException {

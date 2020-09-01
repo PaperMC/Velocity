@@ -24,6 +24,7 @@
 
 package com.velocitypowered.api.util;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -41,9 +42,7 @@ class FastUuidSansHyphens {
   private static final long[] HEX_VALUES = new long[128];
 
   static {
-    for (int i = 0; i < HEX_VALUES.length; i++) {
-      HEX_VALUES[i] = -1;
-    }
+    Arrays.fill(HEX_VALUES, -1);
 
     HEX_VALUES['0'] = 0x0;
     HEX_VALUES['1'] = 0x1;

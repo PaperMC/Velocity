@@ -15,8 +15,8 @@ public class HeaderAndFooter implements MinecraftPacket {
   private static final String EMPTY_COMPONENT = "{\"translate\":\"\"}";
   private static final HeaderAndFooter RESET = new HeaderAndFooter();
 
-  private String header;
-  private String footer;
+  private final String header;
+  private final String footer;
 
   public HeaderAndFooter() {
     this(EMPTY_COMPONENT, EMPTY_COMPONENT);

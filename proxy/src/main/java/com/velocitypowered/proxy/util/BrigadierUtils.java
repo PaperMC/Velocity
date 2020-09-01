@@ -127,25 +127,6 @@ public final class BrigadierUtils {
     return command.toLowerCase(Locale.ENGLISH);
   }
 
-  /**
-   * Prepares the given command node prior for hinting metadata to
-   * a {@link com.velocitypowered.api.command.Command}.
-   *
-   * @param node the command node to be wrapped
-   * @param command the command to execute
-   * @return the wrapped command node
-   */
-  public static CommandNode<CommandSource> wrapForHinting(
-          final CommandNode<CommandSource> node, final @Nullable Command<CommandSource> command) {
-    Preconditions.checkNotNull(node, "node");
-    ArgumentBuilder<CommandSource, ?> builder = node.createBuilder();
-    builder.executes(command);
-    for (CommandNode<CommandSource> child : node.getChildren()) {
-      builder.then(wrapForHinting(child, command));
-    }
-    return builder.build();
-  }
-
   private BrigadierUtils() {
     throw new AssertionError();
   }

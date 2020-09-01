@@ -3,8 +3,6 @@ package com.velocitypowered.natives.encryption;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.channel.ChannelHandlerContext;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;

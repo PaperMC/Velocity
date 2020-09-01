@@ -2,7 +2,6 @@ package com.velocitypowered.api.event.connection;
 
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CANCELLED_BY_PROXY;
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CONFLICTING_LOGIN;
-import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.PRE_SERVER_JOIN;
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN;
 
 import com.google.common.base.Preconditions;

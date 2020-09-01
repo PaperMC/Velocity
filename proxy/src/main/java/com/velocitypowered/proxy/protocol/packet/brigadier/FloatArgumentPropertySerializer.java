@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf;
 
 class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<FloatArgumentType> {
 
-  static FloatArgumentPropertySerializer FLOAT = new FloatArgumentPropertySerializer();
+  static final FloatArgumentPropertySerializer FLOAT = new FloatArgumentPropertySerializer();
 
   private FloatArgumentPropertySerializer() {
 

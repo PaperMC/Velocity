@@ -58,7 +58,7 @@ public interface ProxyServer extends Audience {
    * Broadcasts a message to all players currently online.
    *
    * @param component the message to send
-   * @deprecated Use {@link #sendMessage(Component)} instead
+   * @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)} instead
    */
   @Deprecated
   void broadcast(net.kyori.text.Component component);

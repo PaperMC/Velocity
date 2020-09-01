@@ -161,10 +161,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     this.pingReceived = true;
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
-        .thenAcceptAsync(event -> {
-          connection.closeWith(LegacyDisconnect.fromServerPing(event.getPing(),
-              packet.getVersion()));
-        }, connection.eventLoop());
+        .thenAcceptAsync(event -> connection.closeWith(
+            LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
+            connection.eventLoop());
     return true;
   }
 

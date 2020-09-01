@@ -225,8 +225,6 @@ public class Metrics {
         )
     ) {
       VelocityServer.GENERAL_GSON.toJson(object, writer);
-    } catch (IOException e) {
-      throw e;
     }
     return os.toByteArray();
   }

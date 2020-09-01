@@ -276,8 +276,8 @@ public enum ProtocolUtils {
       return;
     }
     writeVarInt(buf, stringArray.length);
-    for (int i = 0; i < stringArray.length; i++) {
-      writeString(buf, stringArray[i]);
+    for (String s : stringArray) {
+      writeString(buf, s);
     }
   }
 
