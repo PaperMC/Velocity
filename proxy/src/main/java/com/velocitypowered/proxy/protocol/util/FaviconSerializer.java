@@ -11,6 +11,12 @@ import java.lang.reflect.Type;
 
 public final class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
 
+  public static final FaviconSerializer INSTANCE = new FaviconSerializer();
+
+  private FaviconSerializer() {
+
+  }
+
   @Override
   public Favicon deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
     return new Favicon(json.getAsString());

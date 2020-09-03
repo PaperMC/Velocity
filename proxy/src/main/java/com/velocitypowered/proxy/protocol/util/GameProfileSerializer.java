@@ -16,7 +16,12 @@ import java.util.List;
 public final class GameProfileSerializer implements JsonSerializer<GameProfile>,
     JsonDeserializer<GameProfile> {
 
+  public static final GameProfileSerializer INSTANCE = new GameProfileSerializer();
   private static final Type propertyList = new TypeToken<List<Property>>() {}.getType();
+
+  private GameProfileSerializer() {
+
+  }
 
   @Override
   public GameProfile deserialize(JsonElement json, Type typeOfT,

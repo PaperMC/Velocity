@@ -91,20 +91,20 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GENERAL_GSON = new GsonBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
-      .registerTypeHierarchyAdapter(GameProfile.class, new GameProfileSerializer())
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
       .create();
   private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
       .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
       .serializer()
       .newBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
   private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
       .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
       .serializer()
       .newBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, new FaviconSerializer())
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
 
   private final ConnectionManager cm;
