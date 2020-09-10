@@ -49,7 +49,7 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
     }
 
     byte count = item.getByte("Count", (byte) 1);
-    return new ShowItem(key, count, BinaryTagHolder.of(snbt));
+    return ShowItem.of(key, count, BinaryTagHolder.of(snbt));
   }
 
   @Override
@@ -65,7 +65,7 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
       name = TextComponent.of(item.getString("name"));
     }
 
-    return new ShowEntity(Key.of(item.getString("type")),
+    return ShowEntity.of(Key.of(item.getString("type")),
         UUID.fromString(item.getString("id")),
         name);
   }
