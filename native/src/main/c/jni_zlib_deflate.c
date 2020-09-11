@@ -7,7 +7,7 @@
 
 JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibDeflate_init(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jint level)
 {
     struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(level);
@@ -21,7 +21,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_init(JNIEnv *env,
 
 JNIEXPORT void JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibDeflate_free(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ctx)
 {
     libdeflate_free_compressor((struct libdeflate_compressor *) ctx);
@@ -29,7 +29,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_free(JNIEnv *env,
 
 JNIEXPORT jboolean JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibDeflate_process(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ctx,
     jlong sourceAddress,
     jint sourceLength,

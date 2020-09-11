@@ -7,10 +7,10 @@ import java.util.zip.DataFormatException;
  */
 class NativeZlibInflate {
 
-  native long init();
+  static native long init();
 
-  native long free(long ctx);
+  static native long free(long ctx);
 
-  native boolean process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
-      int destinationLength) throws DataFormatException;
+  static  native boolean process(long ctx, long sourceAddress, int sourceLength,
+      long destinationAddress, int destinationLength) throws DataFormatException;
 }

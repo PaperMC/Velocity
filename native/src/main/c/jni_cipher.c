@@ -8,7 +8,7 @@ typedef unsigned char byte;
 
 JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jbyteArray key,
     jboolean encrypt)
 {
@@ -41,7 +41,7 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
 
 JNIEXPORT void JNICALL
 Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_free(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ptr)
 {
     EVP_CIPHER_CTX_free((EVP_CIPHER_CTX *) ptr);
@@ -49,7 +49,7 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_free(JNIEnv *env,
 
 JNIEXPORT void JNICALL
 Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_process(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ptr,
     jlong source,
     jint len,
