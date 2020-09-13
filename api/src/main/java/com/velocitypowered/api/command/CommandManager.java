@@ -122,4 +122,12 @@ public interface CommandManager {
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
   CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
+
+  /**
+   * Returns whether the given alias is registered on this manager.
+   *
+   * @param alias the command alias to check
+   * @return {@code true} if the alias is registered
+   */
+  boolean hasCommand(String alias);
 }

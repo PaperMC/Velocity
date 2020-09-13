@@ -227,6 +227,7 @@ public class VelocityCommandManager implements CommandManager {
    * @param alias the command alias to check
    * @return {@code true} if the alias is registered
    */
+  @Override
   public boolean hasCommand(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
     return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
