@@ -69,7 +69,7 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
       if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
         environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
             + qualifiedName
-            + ". IDs must start alphabetically, have alphanumeric characters, and can "
+            + ". IDs must start alphabetically,be lowercase, have alphanumeric characters, and can "
             + "contain dashes or underscores.");
         return false;
       }
