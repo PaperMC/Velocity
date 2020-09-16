@@ -34,8 +34,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_process(JNIEnv *e
     jlong sourceAddress,
     jint sourceLength,
     jlong destinationAddress,
-    jint destinationLength,
-    jboolean finish)
+    jint destinationLength)
 {
     struct libdeflate_compressor *compressor = (struct libdeflate_compressor *) ctx;
     size_t produced = libdeflate_zlib_compress(compressor, (void *) sourceAddress, sourceLength,

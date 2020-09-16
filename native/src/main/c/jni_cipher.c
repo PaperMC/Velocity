@@ -12,25 +12,28 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     jbyteArray key,
     jboolean encrypt)
 {
+    jsize keyLen = (*env)->GetArrayLength(env, key);
+    if (keyLen != 16) {
+        throwException(env, "java/lang/IllegalArgumentException", "cipher not 16 bytes");
+        return 0;
+    }
+
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (ctx == NULL) {
         throwException(env, "java/lang/OutOfMemoryError", "allocate cipher");
         return 0;
     }
 
-    jsize keyLen = (*env)->GetArrayLength(env, key);
-    jbyte* keyBytes = (*env)->GetPrimitiveArrayCritical(env, key, NULL);
-    if (keyBytes == NULL) {
-        EVP_CIPHER_CTX_free(ctx);
-        throwException(env, "java/lang/OutOfMemoryError", "cipher get key");
+    // Since we know the array size is always bounded, we can just use Get<Primitive>ArrayRegion
+    // and save ourselves some error-checking headaches.
+    jbyte keyBytes[16];
+    (*env)->GetByteArrayRegion(env, key, 0, keyLen, (jbyte*) keyBytes);
+    if ((*env)->ExceptionCheck(env)) {
         return 0;
     }
 
     int result = EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) keyBytes,
         encrypt);
-    // Release the key byte array now - we won't need it
-    (*env)->ReleasePrimitiveArrayCritical(env, key, keyBytes, 0);
-
     if (result != 1) {
         EVP_CIPHER_CTX_free(ctx);
         throwException(env, "java/security/GeneralSecurityException", "openssl initialize cipher");

@@ -53,5 +53,9 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_process(JNIEnv *e
             // These cases are the same for us. We expect the full uncompressed size to be known.
             throwException(env, "java/util/zip/DataFormatException", "uncompressed size is inaccurate");
             return JNI_FALSE;
+        default:
+            // Unhandled case
+            throwException(env, "java/util/zip/DataFormatException", "unknown libdeflate return code");
+            return JNI_FALSE;
     }
 }
