@@ -22,12 +22,12 @@ allprojects {
         // dependency versions
         textVersion = '3.0.4'
         adventureVersion = '4.0.0-SNAPSHOT'
-        junitVersion = '5.3.0-M1'
-        slf4jVersion = '1.7.25'
+        junitVersion = '5.7.0'
+        slf4jVersion = '1.7.30'
         log4jVersion = '2.13.3'
-        nettyVersion = '4.1.51.Final'
+        nettyVersion = '4.1.52.Final'
         guavaVersion = '25.1-jre'
-        checkerFrameworkVersion = '2.7.0'
+        checkerFrameworkVersion = '3.6.1'
         configurateVersion = '3.7.1'
 
         getCurrentShortRevision = {
