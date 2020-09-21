@@ -29,8 +29,6 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
   public void inflate(ByteBuf source, ByteBuf destination, int uncompressedSize)
       throws DataFormatException {
     ensureNotDisposed();
-    source.memoryAddress();
-    destination.memoryAddress();
 
     // libdeflate recommends we work with a known uncompressed size - so we work strictly within
     // those parameters. If the uncompressed size doesn't match the compressed size, then we will
