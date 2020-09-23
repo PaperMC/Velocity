@@ -10,7 +10,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * A {@link DataOutput} equivalent to {@link ByteBufDataInput}.
+ * A {@link ByteArrayDataOutput} equivalent to {@link ByteBufDataInput}.
  */
 public class ByteBufDataOutput extends OutputStream implements ByteArrayDataOutput {
 

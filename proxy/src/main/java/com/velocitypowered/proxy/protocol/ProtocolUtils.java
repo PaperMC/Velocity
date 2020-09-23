@@ -271,10 +271,6 @@ public enum ProtocolUtils {
    * @param stringArray the array to write
    */
   public static void writeStringArray(ByteBuf buf, String[] stringArray) {
-    if (stringArray == null) {
-      writeVarInt(buf, 0);
-      return;
-    }
     writeVarInt(buf, stringArray.length);
     for (String s : stringArray) {
       writeString(buf, s);
@@ -292,7 +288,7 @@ public enum ProtocolUtils {
       writeString(buf, property.getName());
       writeString(buf, property.getValue());
       String signature = property.getSignature();
-      if (signature != null) {
+      if (signature != null && !signature.isEmpty()) {
         buf.writeBoolean(true);
         writeString(buf, signature);
       } else {
