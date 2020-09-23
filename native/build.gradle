@@ -1,9 +1,11 @@
 plugins {
     id 'java-library'
     id 'checkstyle'
+    id 'maven-publish'
 }
 
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/publish.gradle'
 
 dependencies {
     implementation "com.google.guava:guava:${guavaVersion}"
