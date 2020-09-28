@@ -504,7 +504,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       userMessage = "Unable to connect to " + server.getServerInfo().getName() + ". Try again "
           + "later.";
     }
-    handleConnectionException(server, null, TextComponent.of(userMessage,
+    handleConnectionException(server, null, Component.text(userMessage,
         NamedTextColor.RED), safe);
   }
 
@@ -527,7 +527,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
-      handleConnectionException(server, disconnectReason, TextComponent.builder()
+      handleConnectionException(server, disconnectReason, Component.text()
           .append(messages.getKickPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
@@ -535,7 +535,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
-      handleConnectionException(server, disconnectReason, TextComponent.builder()
+      handleConnectionException(server, disconnectReason, Component.text()
           .append(messages.getDisconnectPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
