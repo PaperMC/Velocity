@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -59,7 +60,7 @@ public class VelocityCommand implements SimpleCommand {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(TextComponent.of(commandText, NamedTextColor.RED));
+    source.sendMessage(Component.text(commandText, NamedTextColor.RED));
   }
 
   @Override
@@ -142,15 +143,15 @@ public class VelocityCommand implements SimpleCommand {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(TextComponent.of("Configuration reloaded.", NamedTextColor.GREEN));
+          source.sendMessage(Component.text("Configuration reloaded.", NamedTextColor.GREEN));
         } else {
-          source.sendMessage(TextComponent.of(
+          source.sendMessage(Component.text(
               "Unable to reload your configuration. Check the console for more details.",
               NamedTextColor.RED));
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
-        source.sendMessage(TextComponent.of(
+        source.sendMessage(Component.text(
             "Unable to reload your configuration. Check the console for more details.",
             NamedTextColor.RED));
       }
@@ -173,16 +174,16 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity version", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity version", NamedTextColor.RED));
         return;
       }
 
       ProxyVersion version = server.getVersion();
 
-      TextComponent velocity = TextComponent.builder(version.getName() + " ")
+      TextComponent velocity = Component.text().content(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(NamedTextColor.DARK_AQUA)
-          .append(TextComponent.of(version.getVersion()).decoration(TextDecoration.BOLD, false))
+          .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
       TextComponent copyright = TextComponent
           .of("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
@@ -191,15 +192,15 @@ public class VelocityCommand implements SimpleCommand {
       source.sendMessage(copyright);
 
       if (version.getName().equals("Velocity")) {
-        TextComponent velocityWebsite = TextComponent.builder()
+        TextComponent velocityWebsite = Component.text()
             .content("Visit the ")
-            .append(TextComponent.builder("Velocity website")
+            .append(Component.text().content("Velocity website")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(
                     ClickEvent.openUrl("https://www.velocitypowered.com"))
                 .build())
-            .append(TextComponent.of(" or the "))
-            .append(TextComponent.builder("Velocity GitHub")
+            .append(Component.text(" or the "))
+            .append(Component.text().content("Velocity GitHub")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(ClickEvent.openUrl(
                     "https://github.com/VelocityPowered/Velocity"))
@@ -226,7 +227,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(TextComponent.of("/velocity plugins", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity plugins", NamedTextColor.RED));
         return;
       }
 
@@ -234,17 +235,17 @@ public class VelocityCommand implements SimpleCommand {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(TextComponent.of("No plugins installed.", NamedTextColor.YELLOW));
+        source.sendMessage(Component.text("No plugins installed.", NamedTextColor.YELLOW));
         return;
       }
 
-      TextComponent.Builder output = TextComponent.builder("Plugins: ")
+      TextComponent.Builder output = Component.text().content("Plugins: ")
           .color(NamedTextColor.YELLOW);
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
         output.append(componentForPlugin(plugin.getDescription()));
         if (i + 1 < pluginCount) {
-          output.append(TextComponent.of(", "));
+          output.append(Component.text(", "));
         }
       }
 
@@ -255,28 +256,28 @@ public class VelocityCommand implements SimpleCommand {
       String pluginInfo = description.getName().orElse(description.getId())
           + description.getVersion().map(v -> " " + v).orElse("");
 
-      TextComponent.Builder hoverText = TextComponent.builder(pluginInfo);
+      TextComponent.Builder hoverText = Component.text().content(pluginInfo);
 
       description.getUrl().ifPresent(url -> {
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.of("Website: " + url));
+        hoverText.append(Component.newline());
+        hoverText.append(Component.text("Website: " + url));
       });
       if (!description.getAuthors().isEmpty()) {
-        hoverText.append(TextComponent.newline());
+        hoverText.append(Component.newline());
         if (description.getAuthors().size() == 1) {
-          hoverText.append(TextComponent.of("Author: " + description.getAuthors().get(0)));
+          hoverText.append(Component.text("Author: " + description.getAuthors().get(0)));
         } else {
-          hoverText.append(TextComponent.of("Authors: " + Joiner.on(", ")
+          hoverText.append(Component.text("Authors: " + Joiner.on(", ")
               .join(description.getAuthors())));
         }
       }
       description.getDescription().ifPresent(pdesc -> {
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.newline());
-        hoverText.append(TextComponent.of(pdesc));
+        hoverText.append(Component.newline());
+        hoverText.append(Component.newline());
+        hoverText.append(Component.text(pdesc));
       });
 
-      return TextComponent.of(description.getId(), NamedTextColor.GRAY)
+      return Component.text(description.getId(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
 

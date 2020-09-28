@@ -344,14 +344,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           player.createConnectionRequest(next.get()).connectWithIndication()
               .whenComplete((success, ex) -> {
                 if (ex != null || success == null || !success) {
-                  player.disconnect(TextComponent.of("Your server has been changed, but we could "
+                  player.disconnect(Component.text("Your server has been changed, but we could "
                       + "not move you to any fallback servers."));
                 }
                 latch.countDown();
               });
         } else {
           latch.countDown();
-          player.disconnect(TextComponent.of("Your server has been changed, but we could "
+          player.disconnect(Component.text("Your server has been changed, but we could "
               + "not move you to any fallback servers."));
         }
       }
@@ -466,7 +466,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param explicitExit whether the user explicitly shut down the proxy
    */
   public void shutdown(boolean explicitExit) {
-    shutdown(explicitExit, TextComponent.of("Proxy shutting down."));
+    shutdown(explicitExit, Component.text("Proxy shutting down."));
   }
 
   @Override
@@ -520,7 +520,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     } else {
       ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
       if (existing != null) {
-        existing.disconnect(TranslatableComponent.of("multiplayer.disconnect.duplicate_login"));
+        existing.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
       }
 
       // We can now replace the entries as needed.
