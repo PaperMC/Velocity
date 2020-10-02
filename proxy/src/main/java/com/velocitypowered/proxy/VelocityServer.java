@@ -456,8 +456,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     };
 
-    Thread thread = new Thread(shutdownProcess);
-    thread.start();
+    if (explicitExit) {
+      Thread thread = new Thread(shutdownProcess);
+      thread.start();
+    } else {
+      shutdownProcess.run();
+    }
   }
 
   /**
