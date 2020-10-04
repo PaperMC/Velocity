@@ -15,6 +15,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
@@ -34,8 +35,11 @@ import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.Chat;
-import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
+import com.velocitypowered.proxy.protocol.util.ping.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
+import com.velocitypowered.proxy.protocol.util.ping.PlayersSerializer;
+import com.velocitypowered.proxy.protocol.util.ping.ServerPingSerializer;
+import com.velocitypowered.proxy.protocol.util.ping.VersionSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -77,8 +81,6 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -91,20 +93,26 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GENERAL_GSON = new GsonBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
       .create();
   private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
       .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
       .serializer()
       .newBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.class, ServerPingSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.Version.class, VersionSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.Players.class, PlayersSerializer.INSTANCE)
       .create();
   private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
       .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
       .serializer()
       .newBuilder()
-      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.class, ServerPingSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.Version.class, VersionSerializer.INSTANCE)
+      .registerTypeAdapter(ServerPing.Players.class, PlayersSerializer.INSTANCE)
       .create();
 
   private final ConnectionManager cm;

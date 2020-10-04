@@ -7,10 +7,10 @@ fi
 
 echo "Compiling libdeflate..."
 cd libdeflate || exit
-CFLAGS="-fPIC -O2" make
+CFLAGS="-fPIC -O2 -fomit-frame-pointer" make
 cd ..
 
-CFLAGS="-O3 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/linux/ -fPIC -shared -Wl,-z,noexecstack"
+CFLAGS="-O2 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/linux/ -fPIC -shared -Wl,-z,noexecstack -fomit-frame-pointer"
 ARCH=$(uname -m)
 mkdir -p src/main/resources/linux_$ARCH
 gcc $CFLAGS -Ilibdeflate src/main/c/jni_util.c src/main/c/jni_zlib_deflate.c src/main/c/jni_zlib_inflate.c \
