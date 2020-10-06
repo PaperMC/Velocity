@@ -63,23 +63,6 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
     }
   }
 
-  @Override
-  public boolean deflateSingle(ByteBuf source, ByteBuf destination) throws DataFormatException {
-    ensureNotDisposed();
-
-    long sourceAddress = source.memoryAddress() + source.readerIndex();
-    long destinationAddress = destination.memoryAddress() + destination.writerIndex();
-
-    int produced = deflate.process(deflateCtx, sourceAddress, source.readableBytes(),
-        destinationAddress, destination.writableBytes());
-    if (produced > 0) {
-      destination.writerIndex(destination.writerIndex() + produced);
-      return true;
-    }
-
-    return false;
-  }
-
   private void ensureNotDisposed() {
     Preconditions.checkState(!disposed, "Object already disposed");
   }

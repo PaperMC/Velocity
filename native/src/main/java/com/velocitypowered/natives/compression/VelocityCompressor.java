@@ -14,9 +14,4 @@ public interface VelocityCompressor extends Disposable, Native {
       throws DataFormatException;
 
   void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException;
-
-  default boolean deflateSingle(ByteBuf source, ByteBuf destination) throws DataFormatException {
-    deflate(source, destination);
-    return true;
-  }
 }

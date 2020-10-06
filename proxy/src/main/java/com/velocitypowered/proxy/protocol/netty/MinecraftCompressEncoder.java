@@ -21,20 +21,14 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
   protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
     int uncompressed = msg.readableBytes();
     if (uncompressed <= threshold) {
-      // Under the threshold, only indicate the message was too small
+      // Under the threshold, there is nothing to do.
       ProtocolUtils.writeVarInt(out, 0);
       out.writeBytes(msg);
     } else {
       ProtocolUtils.writeVarInt(out, uncompressed);
       ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
       try {
-        if (!compressor.deflateSingle(compatibleIn, out)) {
-          // The packet would have been too big. Clear the output buffer and use an uncompressed
-          // packet instead.
-          out.clear();
-          ProtocolUtils.writeVarInt(out, 0);
-          out.writeBytes(msg);
-        }
+        compressor.deflate(compatibleIn, out);
       } finally {
         compatibleIn.release();
       }
