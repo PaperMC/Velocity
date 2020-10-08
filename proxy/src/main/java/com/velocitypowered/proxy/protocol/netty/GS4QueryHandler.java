@@ -128,7 +128,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
         // Build initial query response
         QueryResponse response = createInitialResponse();
-        boolean isBasic = queryMessage.isReadable();
+        boolean isBasic = !queryMessage.isReadable();
 
         // Call event and write response
         server.getEventManager()
