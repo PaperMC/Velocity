@@ -20,6 +20,7 @@ import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.net.InetSocketAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +59,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
         .getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayer().getRemoteAddress().getHostString(),
+          cleanRemoteAddress(serverConn.getPlayer().getRemoteAddress()),
           serverConn.getPlayer().getGameProfile());
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
@@ -124,6 +125,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
       );
+    }
+  }
+
+  private static String cleanRemoteAddress(InetSocketAddress address) {
+    String addressString = address.getAddress().getHostAddress();
+    int ipv6ScopeIdx = addressString.indexOf('%');
+    if (ipv6ScopeIdx == -1) {
+      return addressString;
+    } else {
+      return addressString.substring(0, ipv6ScopeIdx);
     }
   }
 
