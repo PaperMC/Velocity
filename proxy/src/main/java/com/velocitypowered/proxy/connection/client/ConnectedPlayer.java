@@ -68,8 +68,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -90,6 +90,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
+  private final Identity identity = new IdentityImpl();
   /**
    * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
    */
@@ -126,6 +127,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
+  }
+
+  @Override
+  public @NonNull Identity identity() {
+    return this.identity;
   }
 
   @Override
@@ -258,16 +264,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
-    connection.write(Chat.createClientbound(message, this.getProtocolVersion()));
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
+    connection.write(Chat.createClientbound(identity, message, this.getProtocolVersion()));
   }
 
   @Override
-  public void sendMessage(@NonNull Component message, @NonNull MessageType type) {
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
+      @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
-    Chat packet = Chat.createClientbound(message, this.getProtocolVersion());
+    Chat packet = Chat.createClientbound(identity, message, this.getProtocolVersion());
     packet.setType(type == MessageType.CHAT ? Chat.CHAT_TYPE : Chat.SYSTEM_TYPE);
     connection.write(packet);
   }
@@ -869,6 +876,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     // Otherwise, we need to see if the player already knows this channel or it's known by the
     // proxy.
     return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
+  }
+
+  private class IdentityImpl implements Identity {
+    @Override
+    public @NonNull UUID uuid() {
+      return ConnectedPlayer.this.getUniqueId();
+    }
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

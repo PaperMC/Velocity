@@ -1,7 +1,9 @@
 package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.permission.PermissionSubject;
-import com.velocitypowered.api.proxy.ProxyAudience;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.audience.MessageType;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -9,7 +11,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Represents something that can be used to run a {@link Command}.
  */
-public interface CommandSource extends PermissionSubject, ProxyAudience {
+public interface CommandSource extends Audience, PermissionSubject {
 
   /**
    * Sends the specified {@code component} to the invoker.
@@ -21,7 +23,8 @@ public interface CommandSource extends PermissionSubject, ProxyAudience {
   void sendMessage(net.kyori.text.Component component);
 
   @Override
-  default void sendMessage(@NonNull Component message) {
+  default void sendMessage(@NonNull Identity identity, @NonNull Component message,
+                           @NonNull MessageType type) {
     this.sendMessage(LegacyText3ComponentSerializer.get().serialize(message));
   }
 }

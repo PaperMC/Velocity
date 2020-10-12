@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -35,7 +36,7 @@ public class ServerCommand implements SimpleCommand {
     final String[] args = invocation.arguments();
 
     if (!(source instanceof Player)) {
-      source.sendMessage(Component.text("Only players may run this command.",
+      source.sendMessage(Identity.nil(), Component.text("Only players may run this command.",
           NamedTextColor.RED));
       return;
     }
@@ -46,7 +47,7 @@ public class ServerCommand implements SimpleCommand {
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
-        player.sendMessage(
+        player.sendMessage(Identity.nil(),
             Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
         return;
       }
@@ -60,12 +61,12 @@ public class ServerCommand implements SimpleCommand {
   private void outputServerInformation(Player executor) {
     String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
         .map(ServerInfo::getName).orElse("<unknown>");
-    executor.sendMessage(Component.text("You are currently connected to " + currentServer + ".",
-        NamedTextColor.YELLOW));
+    executor.sendMessage(Identity.nil(), Component.text(
+        "You are currently connected to " + currentServer + ".", NamedTextColor.YELLOW));
 
     List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     if (servers.size() > MAX_SERVERS_TO_LIST) {
-      executor.sendMessage(Component.text(
+      executor.sendMessage(Identity.nil(), Component.text(
           "Too many servers to list. Tab-complete to show all servers.", NamedTextColor.RED));
       return;
     }
@@ -81,7 +82,7 @@ public class ServerCommand implements SimpleCommand {
       }
     }
 
-    executor.sendMessage(serverListBuilder.build());
+    executor.sendMessage(Identity.nil(), serverListBuilder.build());
   }
 
   private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {

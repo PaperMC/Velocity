@@ -14,13 +14,14 @@ import com.velocitypowered.api.util.title.Title;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.text.Component;
 
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface Player extends CommandSource, InboundConnection, ChannelMessageSource,
-    ChannelMessageSink {
+public interface Player extends CommandSource, Identified, InboundConnection,
+    ChannelMessageSource, ChannelMessageSink {
 
   /**
    * Returns the player's current username.

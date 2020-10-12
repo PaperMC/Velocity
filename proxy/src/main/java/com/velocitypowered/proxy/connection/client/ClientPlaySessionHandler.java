@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -137,7 +138,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.getUsername(), e);
-            player.sendMessage(
+            player.sendMessage(Identity.nil(),
                 Component.text("An error occurred while running this command.",
                     NamedTextColor.RED));
             return null;
