@@ -208,7 +208,8 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse = dispatcher.parse(cmdLine, source);
+    ParseResults<CommandSource> parse =
+        dispatcher.parse(BrigadierUtils.normalizeInput(cmdLine, false), source);
     return dispatcher.getCompletionSuggestions(parse)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
