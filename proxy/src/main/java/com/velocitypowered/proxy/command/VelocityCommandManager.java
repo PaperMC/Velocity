@@ -155,8 +155,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     String normalizedInput = BrigadierUtils.normalizeInput(cmdLine, true);
-    String[] args = normalizedInput.split(" ");
-    if (dispatcher.getRoot().getChild(args[0]) == null) {
+    if (dispatcher.getRoot().getChild(BrigadierUtils.getCommandName(normalizedInput)) == null) {
       return false;
     }
     ParseResults<CommandSource> results = dispatcher.parse(normalizedInput, source);
@@ -209,8 +208,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse =
-        dispatcher.parse(BrigadierUtils.normalizeInput(cmdLine, false), source);
+    ParseResults<CommandSource> parse = dispatcher.parse(cmdLine, source);
     return dispatcher.getCompletionSuggestions(parse)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }

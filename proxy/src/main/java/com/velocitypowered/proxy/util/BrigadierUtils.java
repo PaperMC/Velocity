@@ -92,6 +92,20 @@ public final class BrigadierUtils {
   }
 
   /**
+   * Returns the command name from the specified input.
+   *
+   * @param input command input
+   * @return command name from the specified input
+   */
+  public static String getCommandName(final String input) {
+    int firstSpace = input.indexOf(' ');
+    if (firstSpace == -1) {
+      return input;
+    }
+    return input.substring(0, firstSpace);
+  }
+
+  /**
    * Returns the splitted arguments of a command node built with
    * {@link #buildRawArgumentsLiteral(String, Command, SuggestionProvider)}.
    *
