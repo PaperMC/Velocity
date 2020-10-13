@@ -100,9 +100,9 @@ public final class BrigadierUtils {
   public static String getCommandName(final String input) {
     int firstSpace = input.indexOf(' ');
     if (firstSpace == -1) {
-      return input;
+      return input.toLowerCase(Locale.ENGLISH);
     }
-    return input.substring(0, firstSpace);
+    return input.substring(0, firstSpace).toLowerCase(Locale.ENGLISH);
   }
 
   /**
