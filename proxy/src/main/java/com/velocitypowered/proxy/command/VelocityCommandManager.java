@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
@@ -155,19 +154,18 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> results = parse(cmdLine, source, true);
+    String normalizedInput = BrigadierUtils.normalizeInput(cmdLine, true);
+    String[] args = normalizedInput.split(" ");
+    if (dispatcher.getRoot().getChild(args[0]) == null) {
+      return false;
+    }
+    ParseResults<CommandSource> results = dispatcher.parse(normalizedInput, source);
     try {
       return dispatcher.execute(results) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
-      boolean isSyntaxError = !e.getType().equals(
-              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
-      if (isSyntaxError) {
-        source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
-        // This is, of course, a lie, but the API will need to change...
-        return true;
-      } else {
-        return false;
-      }
+      source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+      // This is, of course, a lie, but the API will need to change...
+      return true;
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
@@ -211,15 +209,10 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse = parse(cmdLine, source, false);
+    ParseResults<CommandSource> parse =
+        dispatcher.parse(BrigadierUtils.normalizeInput(cmdLine, false), source);
     return dispatcher.getCompletionSuggestions(parse)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
-  }
-
-  private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
-                                            final boolean trim) {
-    String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
-    return dispatcher.parse(normalized, source);
   }
 
   /**
