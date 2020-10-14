@@ -158,7 +158,8 @@ class BungeeCordMessageResponder {
     if (target.equals("ALL")) {
       proxy.sendMessage(Identity.nil(), messageComponent);
     } else {
-      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(), messageComponent));
+      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(),
+          messageComponent));
     }
   }
 
