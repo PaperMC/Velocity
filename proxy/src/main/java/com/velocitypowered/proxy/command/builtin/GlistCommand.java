@@ -104,7 +104,7 @@ public class GlistCommand {
     }
 
     TextComponent.Builder builder = Component.text()
-        .append(TextComponent.of("[" + server.getServerInfo().getName() + "] ",
+        .append(Component.text("[" + server.getServerInfo().getName() + "] ",
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
@@ -112,7 +112,7 @@ public class GlistCommand {
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);
-      builder.append(player.getUsername());
+      builder.append(Component.text(player.getUsername()));
 
       if (i + 1 < onServer.size()) {
         builder.append(Component.text(", "));

@@ -630,7 +630,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      sendMessage(server.getConfiguration().getMessages()
+                      sendMessage(Identity.nil(), server.getConfiguration().getMessages()
                           .getMovedToNewServerPrefix().append(friendlyReason));
                       break;
                     default:
@@ -641,7 +641,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
             if (event.kickedDuringServerConnect() && previouslyConnected) {
-              sendMessage(res.getMessageComponent());
+              sendMessage(Identity.nil(), res.getMessageComponent());
             } else {
               disconnect(res.getMessageComponent());
             }
@@ -981,10 +981,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
             switch (status.getStatus()) {
               case ALREADY_CONNECTED:
-                sendMessage(ConnectionMessages.ALREADY_CONNECTED);
+                sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
                 break;
               case CONNECTION_IN_PROGRESS:
-                sendMessage(ConnectionMessages.IN_PROGRESS);
+                sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
                 break;
               case CONNECTION_CANCELLED:
                 // Ignored; the plugin probably already handled this.

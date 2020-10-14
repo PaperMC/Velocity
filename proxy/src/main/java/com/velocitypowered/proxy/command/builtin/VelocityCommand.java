@@ -187,8 +187,8 @@ public class VelocityCommand implements SimpleCommand {
           .color(NamedTextColor.DARK_AQUA)
           .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
-      TextComponent copyright = TextComponent
-          .of("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
+      TextComponent copyright = Component
+          .text("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
               + " is freely licensed under the terms of the MIT License.");
       source.sendMessage(Identity.nil(), velocity);
       source.sendMessage(Identity.nil(), copyright);
