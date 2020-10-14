@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.List;
 import java.util.Optional;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -59,7 +60,7 @@ public class GlistCommand {
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
-    source.sendMessage(
+    source.sendMessage(Identity.nil(),
         Component.text().content("To view all players on servers, use ")
             .color(NamedTextColor.YELLOW)
             .append(Component.text("/glist all", NamedTextColor.DARK_AQUA))
@@ -79,7 +80,7 @@ public class GlistCommand {
     } else {
       Optional<RegisteredServer> registeredServer = server.getServer(serverName);
       if (!registeredServer.isPresent()) {
-        source.sendMessage(
+        source.sendMessage(Identity.nil(),
             Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
         return -1;
       }
@@ -89,7 +90,8 @@ public class GlistCommand {
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    target.sendMessage(Component.text().content("There are ").color(NamedTextColor.YELLOW)
+    target.sendMessage(Identity.nil(), Component.text()
+        .content("There are ").color(NamedTextColor.YELLOW)
         .append(Component.text(server.getAllPlayers().size(), NamedTextColor.GREEN))
         .append(Component.text(" player(s) online.", NamedTextColor.YELLOW))
         .build());
@@ -117,6 +119,6 @@ public class GlistCommand {
       }
     }
 
-    target.sendMessage(builder.build());
+    target.sendMessage(Identity.nil(), builder.build());
   }
 }

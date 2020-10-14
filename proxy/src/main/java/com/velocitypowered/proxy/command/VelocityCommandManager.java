@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -162,7 +163,7 @@ public class VelocityCommandManager implements CommandManager {
       boolean isSyntaxError = !e.getType().equals(
               CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
-        source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+        source.sendMessage(Identity.nil(), Component.text(e.getMessage(), NamedTextColor.RED));
         // This is, of course, a lie, but the API will need to change...
         return true;
       } else {

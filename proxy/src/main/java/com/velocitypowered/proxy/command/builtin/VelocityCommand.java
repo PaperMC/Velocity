@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -60,7 +61,7 @@ public class VelocityCommand implements SimpleCommand {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(Component.text(commandText, NamedTextColor.RED));
+    source.sendMessage(Identity.nil(), Component.text(commandText, NamedTextColor.RED));
   }
 
   @Override
@@ -143,15 +144,16 @@ public class VelocityCommand implements SimpleCommand {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(Component.text("Configuration reloaded.", NamedTextColor.GREEN));
+          source.sendMessage(Identity.nil(), Component.text(
+              "Configuration reloaded.", NamedTextColor.GREEN));
         } else {
-          source.sendMessage(Component.text(
+          source.sendMessage(Identity.nil(), Component.text(
               "Unable to reload your configuration. Check the console for more details.",
               NamedTextColor.RED));
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
-        source.sendMessage(Component.text(
+        source.sendMessage(Identity.nil(), Component.text(
             "Unable to reload your configuration. Check the console for more details.",
             NamedTextColor.RED));
       }
@@ -174,7 +176,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Component.text("/velocity version", NamedTextColor.RED));
+        source.sendMessage(Identity.nil(), Component.text("/velocity version", NamedTextColor.RED));
         return;
       }
 
@@ -188,8 +190,8 @@ public class VelocityCommand implements SimpleCommand {
       TextComponent copyright = TextComponent
           .of("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
               + " is freely licensed under the terms of the MIT License.");
-      source.sendMessage(velocity);
-      source.sendMessage(copyright);
+      source.sendMessage(Identity.nil(), velocity);
+      source.sendMessage(Identity.nil(), copyright);
 
       if (version.getName().equals("Velocity")) {
         TextComponent velocityWebsite = Component.text()
@@ -206,7 +208,7 @@ public class VelocityCommand implements SimpleCommand {
                     "https://github.com/VelocityPowered/Velocity"))
                 .build())
             .build();
-        source.sendMessage(velocityWebsite);
+        source.sendMessage(Identity.nil(), velocityWebsite);
       }
     }
 
@@ -227,7 +229,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Component.text("/velocity plugins", NamedTextColor.RED));
+        source.sendMessage(Identity.nil(), Component.text("/velocity plugins", NamedTextColor.RED));
         return;
       }
 
@@ -235,7 +237,8 @@ public class VelocityCommand implements SimpleCommand {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(Component.text("No plugins installed.", NamedTextColor.YELLOW));
+        source.sendMessage(Identity.nil(), Component.text(
+            "No plugins installed.", NamedTextColor.YELLOW));
         return;
       }
 
@@ -249,7 +252,7 @@ public class VelocityCommand implements SimpleCommand {
         }
       }
 
-      source.sendMessage(output.build());
+      source.sendMessage(Identity.nil(), output.build());
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
