@@ -72,7 +72,10 @@ public enum ProtocolVersion {
   static {
     Map<Integer, ProtocolVersion> versions = new HashMap<>();
     for (ProtocolVersion version : values()) {
-      versions.put(version.protocol, version);
+      // For versions where the snapshot is compatible with the prior release version, Mojang will
+      // default to that. Follow that behavior since there is precedent (all the Minecraft 1.8
+      // minor releases use the same protocol version).
+      versions.putIfAbsent(version.protocol, version);
       if (version.snapshotProtocol != -1) {
         versions.put(version.snapshotProtocol, version);
       }
