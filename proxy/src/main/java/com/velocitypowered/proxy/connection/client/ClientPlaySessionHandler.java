@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
@@ -329,20 +330,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      player.getConnection().delayedWrite(joinGame);
-      // Since 1.16 this dynamic changed:
-      // We don't need to send two dimension swiches anymore!
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
-        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-        player.getConnection().delayedWrite(
-                new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-                    joinGame.getGamemode(), joinGame.getLevelType(),
-                    false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-                    joinGame.getCurrentDimensionData()));
+
+      int sentOldDim = joinGame.getDimension();
+      if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
+        // Before Minecraft 1.16, we could not switch to the same dimension without sending an
+        // additional respawn. On older versions of Minecraft this forces the client to perform
+        // garbage collection which adds additional latency.
+        joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
       }
+      player.getConnection().delayedWrite(joinGame);
 
       player.getConnection().delayedWrite(
-          new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+          new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
               false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
               joinGame.getCurrentDimensionData()));
