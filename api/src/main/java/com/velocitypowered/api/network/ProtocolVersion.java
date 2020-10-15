@@ -41,10 +41,14 @@ public enum ProtocolVersion {
   MINECRAFT_1_16_1(736, "1.16.1"),
   MINECRAFT_1_16_2(751, "1.16.2"),
   MINECRAFT_1_16_3(753, "1.16.3"),
-  MINECRAFT_1_16_4(754, "1.16.4");
+  MINECRAFT_1_16_4(754, 1, "1.16.4");
+
+  private static final int SNAPSHOT_BIT = 30;
 
   private final int protocol;
+  private final int snapshotProtocol;
   private final String name;
+  private final boolean snapshot;
 
   /**
    * Represents the lowest supported version.
@@ -70,6 +74,9 @@ public enum ProtocolVersion {
     Map<Integer, ProtocolVersion> versions = new HashMap<>();
     for (ProtocolVersion version : values()) {
       versions.put(version.protocol, version);
+      if (version.snapshotProtocol != -1) {
+        versions.put(version.snapshotProtocol, version);
+      }
     }
 
     ID_TO_PROTOCOL_CONSTANT = ImmutableMap.copyOf(versions);
@@ -93,8 +100,19 @@ public enum ProtocolVersion {
   }
 
   ProtocolVersion(int protocol, String name) {
+    this(protocol, -1, name);
+  }
+
+  ProtocolVersion(int protocol, int snapshotProtocol, String name) {
+    if (snapshotProtocol != -1) {
+      this.snapshotProtocol = (1 << SNAPSHOT_BIT) | snapshotProtocol;
+    } else {
+      this.snapshotProtocol = -1;
+    }
+
     this.protocol = protocol;
     this.name = name;
+    this.snapshot = true;
   }
 
   /**
