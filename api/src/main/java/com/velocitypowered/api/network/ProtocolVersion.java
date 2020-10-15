@@ -48,7 +48,6 @@ public enum ProtocolVersion {
   private final int protocol;
   private final int snapshotProtocol;
   private final String name;
-  private final boolean snapshot;
 
   /**
    * Represents the lowest supported version.
@@ -112,7 +111,6 @@ public enum ProtocolVersion {
 
     this.protocol = protocol;
     this.name = name;
-    this.snapshot = true;
   }
 
   /**
