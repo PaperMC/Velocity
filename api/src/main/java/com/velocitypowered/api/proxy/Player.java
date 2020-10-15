@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.identity.Identified;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 
 /**
@@ -77,7 +78,8 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * Sends a chat message to the player's client.
    *
    * @param component the chat message to send
-   * @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)}
+   * @deprecated Use {@link #sendMessage(Identified, Component)}
+   *     or {@link #sendMessage(Identity, Component)} instead
    */
   @Deprecated
   @Override
@@ -90,8 +92,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param component the chat message to send
    * @param position the position for the message
-   * @deprecated Use @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)} or
-   *             {@link #sendActionBar(net.kyori.adventure.text.Component)}
+   * @deprecated Use @deprecated Use {@link #sendMessage(Identified, Component)} or
+   *     {@link #sendMessage(Identity, Component)} for chat messages, or
+   *     {@link #sendActionBar(net.kyori.adventure.text.Component)} for action bar messages
    */
   @Deprecated
   void sendMessage(net.kyori.text.Component component, MessagePosition position);

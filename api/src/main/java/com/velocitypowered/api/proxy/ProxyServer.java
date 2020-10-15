@@ -18,6 +18,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.identity.Identified;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -26,7 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public interface ProxyServer extends Audience {
 
   /**
-   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   * Shuts down the proxy, kicking players with the specified {@code reason}.
    *
    * @param reason message to kick online players with
    */
@@ -58,7 +61,8 @@ public interface ProxyServer extends Audience {
    * Broadcasts a message to all players currently online.
    *
    * @param component the message to send
-   * @deprecated Use {@link #sendMessage(net.kyori.adventure.text.Component)} instead
+   * @deprecated Use {@link #sendMessage(Identified, Component)}
+   *     or {@link #sendMessage(Identity, Component)} instead
    */
   @Deprecated
   void broadcast(net.kyori.text.Component component);
