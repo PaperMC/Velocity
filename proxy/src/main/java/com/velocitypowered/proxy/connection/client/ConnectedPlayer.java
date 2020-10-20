@@ -281,11 +281,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
-    if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    ProtocolVersion playerVersion = getProtocolVersion();
+    if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      // We do not need to use the title packets in 1.16.2+
+      // https://bugs.mojang.com/browse/MC-119145
+      Chat chat = Chat.createClientbound(Identity.nil(), message, getProtocolVersion());
+      chat.setType(Chat.ACTION_TYPE);
+      connection.write(chat);
+    } else if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // We can use the title packet instead.
       TitlePacket pkt = new TitlePacket();
       pkt.setAction(TitlePacket.SET_ACTION_BAR);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion())
+      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
           .serialize(message));
       connection.write(pkt);
     } else {
@@ -295,7 +302,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
       Chat chat = new Chat();
       chat.setMessage(object.toString());
-      chat.setType((byte) 1);
+      chat.setType(Chat.ACTION_TYPE);
       connection.write(chat);
     }
   }
