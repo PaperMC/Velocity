@@ -18,20 +18,10 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.6'
     api "com.google.guava:guava:${guavaVersion}"
 
-    // DEPRECATED: Will be removed in Velocity 2.0.0
-    api "net.kyori:text-api:${textVersion}"
-    api "net.kyori:text-serializer-gson:${textVersion}"
-    api "net.kyori:text-serializer-legacy:${textVersion}"
-    api "net.kyori:text-serializer-plain:${textVersion}"
-
-    // DEPRECATED: Will be removed in Velocity 2.0.0
-    api 'com.moandjiezana.toml:toml4j:0.7.2'
-
     api "net.kyori:adventure-api:${adventureVersion}"
     api "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
     api "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
     api "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
-    api "net.kyori:adventure-text-serializer-legacy-text3:${adventurePlatformVersion}"
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:4.2.3'

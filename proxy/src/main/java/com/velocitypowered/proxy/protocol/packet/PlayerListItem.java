@@ -179,7 +179,7 @@ public class PlayerListItem implements MinecraftPacket {
           .setProperties(entry.getProfile().getProperties())
           .setLatency(entry.getLatency())
           .setGameMode(entry.getGameMode())
-          .setDisplayName(entry.getDisplayNameComponent().orElse(null));
+          .setDisplayName(entry.getDisplayName().orElse(null));
     }
 
     public @Nullable UUID getUuid() {

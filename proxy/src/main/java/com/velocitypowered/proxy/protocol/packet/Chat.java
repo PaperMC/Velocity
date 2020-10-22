@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
@@ -99,24 +100,12 @@ public class Chat implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Deprecated
-  public static Chat createClientbound(net.kyori.text.Component component) {
-    return createClientbound(component, CHAT_TYPE, EMPTY_SENDER);
-  }
-
-  @Deprecated
-  public static Chat createClientbound(net.kyori.text.Component component, byte type, UUID sender) {
-    Preconditions.checkNotNull(component, "component");
-    return new Chat(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
-        .serialize(component), type, sender);
-  }
-
   public static Chat createClientbound(Identity identity,
-      net.kyori.adventure.text.Component component, ProtocolVersion version) {
+      Component component, ProtocolVersion version) {
     return createClientbound(component, CHAT_TYPE, identity.uuid(), version);
   }
 
-  public static Chat createClientbound(net.kyori.adventure.text.Component component, byte type,
+  public static Chat createClientbound(Component component, byte type,
       UUID sender, ProtocolVersion version) {
     Preconditions.checkNotNull(component, "component");
     return new Chat(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,

@@ -38,7 +38,7 @@ public class LegacyDisconnect {
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
             cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
-                response.getDescriptionComponent()))),
+                response.getDescription()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
       case MINECRAFT_1_4:
@@ -49,7 +49,7 @@ public class LegacyDisconnect {
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
             getFirstLine(LegacyComponentSerializer.legacySection().serialize(response
-                .getDescriptionComponent())),
+                .getDescription())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
         ));

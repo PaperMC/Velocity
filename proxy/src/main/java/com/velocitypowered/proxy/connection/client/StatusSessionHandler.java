@@ -123,7 +123,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             return new ServerPing(
                 fallback.getVersion(),
                 fallback.getPlayers().orElse(null),
-                response.getDescriptionComponent(),
+                response.getDescription(),
                 fallback.getFavicon().orElse(null),
                 response.getModinfo().orElse(null)
             );

@@ -166,7 +166,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           }
 
           PreLoginComponentResult result = event.getResult();
-          Optional<Component> disconnectReason = result.getReasonComponent();
+          Optional<Component> disconnectReason = result.getReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
             mcConnection.closeWith(Disconnect.create(disconnectReason.get(),
@@ -260,7 +260,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          Optional<Component> reason = event.getResult().getReasonComponent();
+          Optional<Component> reason = event.getResult().getReason();
           if (reason.isPresent()) {
             player.disconnect0(reason.get(), true);
           } else {

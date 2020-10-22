@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
@@ -25,13 +24,6 @@ public class VelocityTabList implements TabList {
 
   public VelocityTabList(MinecraftConnection connection) {
     this.connection = connection;
-  }
-
-  @Override
-  public void setHeaderAndFooter(Component header, Component footer) {
-    Preconditions.checkNotNull(header, "header");
-    Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooter.create(header, footer));
   }
 
   @Override

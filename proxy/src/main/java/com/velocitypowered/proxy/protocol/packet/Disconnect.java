@@ -6,8 +6,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.text.Component;
-import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Disconnect implements MinecraftPacket {
@@ -57,14 +56,7 @@ public class Disconnect implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Deprecated
-  public static Disconnect create(Component component) {
-    Preconditions.checkNotNull(component, "component");
-    return new Disconnect(GsonComponentSerializer.INSTANCE.serialize(component));
-  }
-
-  public static Disconnect create(net.kyori.adventure.text.Component component,
-      ProtocolVersion version) {
+  public static Disconnect create(Component component, ProtocolVersion version) {
     Preconditions.checkNotNull(component, "component");
     return new Disconnect(ProtocolUtils.getJsonChatSerializer(version).serialize(component));
   }

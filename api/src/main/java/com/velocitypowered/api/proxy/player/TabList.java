@@ -18,16 +18,6 @@ public interface TabList {
    *
    * @param header the header component
    * @param footer the footer component
-   * @deprecated Use {@link #setHeaderAndFooter(Component, Component)} instead
-   */
-  @Deprecated
-  void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer);
-
-  /**
-   * Sets the tab list header and footer for the player.
-   *
-   * @param header the header component
-   * @param footer the footer component
    */
   void setHeaderAndFooter(Component header, Component footer);
 

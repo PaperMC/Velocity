@@ -51,13 +51,6 @@ public class HeaderAndFooter implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static HeaderAndFooter create(net.kyori.text.Component header,
-      net.kyori.text.Component footer) {
-    return new HeaderAndFooter(
-        net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE.serialize(header),
-        net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE.serialize(footer));
-  }
-
   public static HeaderAndFooter create(net.kyori.adventure.text.Component header,
       net.kyori.adventure.text.Component footer, ProtocolVersion protocolVersion) {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);

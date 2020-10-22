@@ -3,7 +3,7 @@ package com.velocitypowered.api.proxy;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
 
 /**
  * Provides a fluent interface to send a connection request to another server on the proxy. A
@@ -67,17 +67,8 @@ public interface ConnectionRequestBuilder {
      * Returns an (optional) textual reason for the failure to connect to the server.
      *
      * @return the reason why the user could not connect to the server
-     * @deprecated Use {@link #getReasonComponent()} instead
      */
-    @Deprecated
     Optional<Component> getReason();
-
-    /**
-     * Returns an (optional) textual reason for the failure to connect to the server.
-     *
-     * @return the reason why the user could not connect to the server
-     */
-    Optional<net.kyori.adventure.text.Component> getReasonComponent();
 
     /**
      * Returns the server we actually tried to connect to.
