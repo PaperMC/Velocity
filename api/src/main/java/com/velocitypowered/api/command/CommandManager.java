@@ -46,9 +46,7 @@ public interface CommandManager {
    * @param command the command to register
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered
-   * @deprecated Prefer {@link #register(CommandMeta, Command)} instead.
    */
-  @Deprecated
   void register(String alias, Command command, String... otherAliases);
 
   /**
