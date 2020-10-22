@@ -1,12 +1,12 @@
 package com.velocitypowered.proxy.protocol.netty;
 
-import static com.velocitypowered.api.event.proxy.ProxyQueryEvent.QueryType.BASIC;
-import static com.velocitypowered.api.event.proxy.ProxyQueryEvent.QueryType.FULL;
+import static com.velocitypowered.api.event.connection.ProxyQueryEvent.QueryType.BASIC;
+import static com.velocitypowered.api.event.connection.ProxyQueryEvent.QueryType.FULL;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.event.proxy.ProxyQueryEvent;
+import com.velocitypowered.api.event.connection.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;

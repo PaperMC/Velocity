@@ -1,4 +1,4 @@
-package com.velocitypowered.api.event.proxy;
+package com.velocitypowered.api.event.lifecycle;
 
 /**
  * This event is fired when the proxy is reloaded by the user using {@code /velocity reload}.
