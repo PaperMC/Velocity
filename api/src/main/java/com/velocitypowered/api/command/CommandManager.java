@@ -36,25 +36,14 @@ public interface CommandManager {
   /**
    * Registers the specified command with the specified aliases.
    *
-   * @param command the command to register
-   * @param aliases the command aliases
-   *
-   * @throws IllegalArgumentException if one of the given aliases is already registered
-   * @deprecated This method requires at least one alias, but this is only enforced at runtime.
-   *             Prefer {@link #register(String, Command, String...)}
-   */
-  @Deprecated
-  void register(Command command, String... aliases);
-
-  /**
-   * Registers the specified command with the specified aliases.
-   *
    * @param alias the first command alias
    * @param command the command to register
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered
    */
-  void register(String alias, Command command, String... otherAliases);
+  default void register(String alias, Command command, String... otherAliases) {
+    register(metaBuilder(alias).aliases(otherAliases).build(), command);
+  }
 
   /**
    * Registers the specified Brigadier command.
