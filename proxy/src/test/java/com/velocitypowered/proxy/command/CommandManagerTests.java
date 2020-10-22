@@ -17,7 +17,6 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
@@ -27,7 +26,6 @@ import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.jupiter.api.Test;
 
 public class CommandManagerTests {
@@ -53,8 +51,8 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     assertFalse(manager.hasCommand("foo"));
     assertTrue(manager.getDispatcher().getRoot().getChildren().isEmpty());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo"));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "bar"));
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "bar").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "").join().isEmpty());
   }
 
@@ -162,14 +160,15 @@ public class CommandManagerTests {
     node.addChild(quantityNode);
     manager.register(new BrigadierCommand(node));
 
-    assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "buy ").join());
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "buy ").join());
     assertTrue(executed.compareAndSet(true, false), "was executed");
-    assertTrue(manager.executeImmediatelyAsync(MockCommandSource.INSTANCE, "buy 14").join());
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 14").join());
     assertTrue(checkedRequires.compareAndSet(true, false));
     assertTrue(executed.get());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9"),
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
             "Invalid arg returns false");
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas"));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas")
+        .join());
     assertTrue(checkedRequires.get());
   }
 
@@ -184,7 +183,7 @@ public class CommandManagerTests {
     };
     manager.register("foo", command);
 
-    assertTrue(manager.executeAsync(MockCommandSource.INSTANCE, "foo bar 254").join());
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar 254").join());
     assertTrue(executed.get());
 
     SimpleCommand noPermsCommand = new SimpleCommand() {
@@ -200,8 +199,9 @@ public class CommandManagerTests {
     };
 
     manager.register("dangerous", noPermsCommand, "veryDangerous");
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous"));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123"));
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous").join());
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123")
+        .join());
   }
 
   @Test
@@ -218,7 +218,8 @@ public class CommandManagerTests {
     };
     manager.register("sendMe", command);
 
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendMe lobby 23"));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendMe lobby 23")
+        .join());
     assertTrue(executed.compareAndSet(true, false));
 
     RawCommand noArgsCommand = new RawCommand() {
@@ -230,9 +231,9 @@ public class CommandManagerTests {
     };
     manager.register("noargs", noArgsCommand);
 
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs"));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs").join());
     assertTrue(executed.get());
-    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs "));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "noargs ").join());
 
     RawCommand noPermsCommand = new RawCommand() {
       @Override
@@ -247,7 +248,8 @@ public class CommandManagerTests {
     };
 
     manager.register("sendThem", noPermsCommand);
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo"));
+    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo")
+        .join());
   }
 
   @Test
@@ -410,16 +412,16 @@ public class CommandManagerTests {
     manager.register(meta, command);
 
     expectedArgs.set("notBarOrBaz");
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo notBarOrBaz"));
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo notBarOrBaz").join());
     assertTrue(executed.compareAndSet(true, false));
     expectedArgs.set("anotherArg 123");
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "Foo2 anotherArg 123"));
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "Foo2 anotherArg 123").join());
     assertTrue(executed.compareAndSet(true, false));
     expectedArgs.set("bar");
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar"));
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo bar").join());
     assertTrue(executed.compareAndSet(true, false));
     expectedArgs.set("bar 123");
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo2 bar 123"));
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo2 bar 123").join());
     assertTrue(executed.compareAndSet(true, false));
 
     assertEquals(ImmutableList.of("bar", "baz", "raw"),

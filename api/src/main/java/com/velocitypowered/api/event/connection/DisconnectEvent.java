@@ -1,9 +1,5 @@
 package com.velocitypowered.api.event.connection;
 
-import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CANCELLED_BY_PROXY;
-import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.CONFLICTING_LOGIN;
-import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN;
-
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 
@@ -16,17 +12,6 @@ public final class DisconnectEvent {
   private final Player player;
   private final LoginStatus loginStatus;
 
-  @Deprecated
-  public DisconnectEvent(Player player) {
-    this(player, false);
-  }
-
-  @Deprecated
-  public DisconnectEvent(Player player,
-      boolean disconnectedDuringLogin) {
-    this(player, disconnectedDuringLogin ? CANCELLED_BY_PROXY : SUCCESSFUL_LOGIN);
-  }
-
   public DisconnectEvent(Player player, LoginStatus loginStatus) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.loginStatus = Preconditions.checkNotNull(loginStatus, "loginStatus");
@@ -34,11 +19,6 @@ public final class DisconnectEvent {
 
   public Player getPlayer() {
     return player;
-  }
-
-  @Deprecated
-  public boolean disconnectedDuringLogin() {
-    return this.loginStatus == CANCELLED_BY_PROXY || this.loginStatus == CONFLICTING_LOGIN;
   }
 
   public LoginStatus getLoginStatus() {
