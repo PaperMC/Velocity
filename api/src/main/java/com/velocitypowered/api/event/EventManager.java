@@ -39,7 +39,7 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  <E> void register(Object plugin, Class<E> eventClass, PostOrder postOrder,
+  <E> void register(Object plugin, Class<E> eventClass, short postOrder,
       EventHandler<E> handler);
 
   /**

@@ -94,11 +94,10 @@ public class VelocityEventManager implements EventManager {
 
   @Override
   @SuppressWarnings("type.argument.type.incompatible")
-  public <E> void register(Object plugin, Class<E> eventClass, PostOrder postOrder,
+  public <E> void register(Object plugin, Class<E> eventClass, short postOrder,
       EventHandler<E> handler) {
     ensurePlugin(plugin);
     Preconditions.checkNotNull(eventClass, "eventClass");
-    Preconditions.checkNotNull(postOrder, "postOrder");
     Preconditions.checkNotNull(handler, "listener");
 
     registeredHandlersByPlugin.put(plugin, handler);
@@ -201,7 +200,7 @@ public class VelocityEventManager implements EventManager {
 
     @Override
     public int postOrder(@NonNull Object listener, @NonNull Method method) {
-      return method.getAnnotation(Subscribe.class).order().ordinal();
+      return method.getAnnotation(Subscribe.class).order();
     }
 
     @Override
@@ -213,11 +212,11 @@ public class VelocityEventManager implements EventManager {
   private static class KyoriToVelocityHandler<E> implements EventSubscriber<E> {
 
     private final EventHandler<E> handler;
-    private final int postOrder;
+    private final short postOrder;
 
-    private KyoriToVelocityHandler(EventHandler<E> handler, PostOrder postOrder) {
+    private KyoriToVelocityHandler(EventHandler<E> handler, short postOrder) {
       this.handler = handler;
-      this.postOrder = postOrder.ordinal();
+      this.postOrder = postOrder;
     }
 
     @Override

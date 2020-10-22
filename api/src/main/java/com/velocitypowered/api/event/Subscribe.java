@@ -17,6 +17,6 @@ public @interface Subscribe {
    *
    * @return the order
    */
-  PostOrder order() default PostOrder.NORMAL;
+  short order() default PostOrder.NORMAL;
 
 }
