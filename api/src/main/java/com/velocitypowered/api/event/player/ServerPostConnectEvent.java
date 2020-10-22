@@ -2,7 +2,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

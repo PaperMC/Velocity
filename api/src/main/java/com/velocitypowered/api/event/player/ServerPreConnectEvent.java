@@ -2,9 +2,9 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;

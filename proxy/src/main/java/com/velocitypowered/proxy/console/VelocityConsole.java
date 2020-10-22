@@ -2,10 +2,10 @@ package com.velocitypowered.proxy.console;
 
 import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
 
+import com.velocitypowered.api.command.ConsoleCommandSource;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.adventure.identity.Identity;

@@ -1,9 +1,10 @@
-package com.velocitypowered.api.proxy;
+package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -77,15 +78,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * @return a new connection request
    */
   ConnectionRequestBuilder createConnectionRequest(RegisteredServer server);
-
-  /**
-   * Gets the player's profile properties.
-   *
-   * <p>The returned list may be unmodifiable.</p>
-   *
-   * @return the player's profile properties
-   */
-  List<GameProfile.Property> getGameProfileProperties();
 
   /**
    * Sets the player's profile properties.

@@ -1,10 +1,6 @@
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.proxy.Player;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * Represents a command that can be executed by a {@link CommandSource}

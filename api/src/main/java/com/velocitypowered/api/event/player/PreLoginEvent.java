@@ -2,7 +2,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.proxy.connection.InboundConnection;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;

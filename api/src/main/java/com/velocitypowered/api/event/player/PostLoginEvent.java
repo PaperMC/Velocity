@@ -1,7 +1,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * This event is fired once the player has been fully initialized and is about to connect to their

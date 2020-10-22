@@ -1,5 +1,6 @@
-package com.velocitypowered.api.proxy;
+package com.velocitypowered.api.proxy.player;
 
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

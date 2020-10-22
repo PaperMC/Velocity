@@ -1,7 +1,7 @@
 package com.velocitypowered.proxy.connection.util;
 
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;

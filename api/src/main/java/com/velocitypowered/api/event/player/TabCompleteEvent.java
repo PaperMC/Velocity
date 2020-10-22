@@ -2,7 +2,7 @@ package com.velocitypowered.api.event.player;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

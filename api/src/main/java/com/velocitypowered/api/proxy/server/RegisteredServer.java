@@ -1,6 +1,6 @@
 package com.velocitypowered.api.proxy.server;
 
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;

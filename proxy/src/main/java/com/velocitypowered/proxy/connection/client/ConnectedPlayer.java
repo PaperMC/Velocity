@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.connection.client;
 
-import static com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
+import static com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
 import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -20,10 +20,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.connection.Player;
+import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -323,13 +323,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public List<GameProfile.Property> getGameProfileProperties() {
-    return this.profile.getProperties();
-  }
-
-  @Override
   public void setGameProfileProperties(List<GameProfile.Property> properties) {
-    this.profile = profile.withProperties(Preconditions.checkNotNull(properties));
+    this.profile = profile.withProperties(properties);
   }
 
   @Override

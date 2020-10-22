@@ -1,7 +1,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * This event is fired when the status of a resource pack sent to the player by the server is

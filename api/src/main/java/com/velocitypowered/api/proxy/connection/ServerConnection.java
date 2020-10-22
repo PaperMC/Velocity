@@ -1,4 +1,4 @@
-package com.velocitypowered.api.proxy;
+package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;

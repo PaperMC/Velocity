@@ -7,8 +7,9 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.proxy.VelocityServer;
@@ -64,7 +65,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   /**
    * Connects to the server.
-   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
+   * @return a {@link ConnectionRequestBuilder.Result} representing
    *         whether or not the connect succeeded
    */
   public CompletableFuture<Impl> connect() {

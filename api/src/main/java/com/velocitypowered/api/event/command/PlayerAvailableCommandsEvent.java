@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * Allows plugins to modify the packet indicating commands available on the server to a

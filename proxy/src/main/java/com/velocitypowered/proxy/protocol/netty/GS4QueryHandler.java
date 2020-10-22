@@ -10,7 +10,7 @@ import com.velocitypowered.api.event.connection.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import com.velocitypowered.proxy.VelocityServer;
 import io.netty.buffer.ByteBuf;
