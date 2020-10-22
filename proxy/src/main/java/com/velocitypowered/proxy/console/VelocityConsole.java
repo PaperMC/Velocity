@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
@@ -119,8 +120,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command)) {
-        sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+      if (!this.server.getCommandManager().execute(this, command).join()) {
+        sendMessage(Component.text("Command not found.", NamedTextColor.RED));
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);

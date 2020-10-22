@@ -130,13 +130,7 @@ public class VelocityCommandManager implements CommandManager {
     return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
   }
 
-  @Override
-  public boolean execute(final CommandSource source, final String cmdLine) {
-    return executeAsync(source, cmdLine).join();
-  }
-
-  @Override
-  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
+  private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -160,27 +154,27 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CompletableFuture<Boolean> executeAsync(final CommandSource source, final String cmdLine) {
+  public CompletableFuture<Boolean> execute(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    return callCommandEvent(source, cmdLine).thenApply(event -> {
+    return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
       CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-      return executeImmediately(source, commandResult.getCommand().orElse(event.getCommand()));
-    });
+      return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
+    }, eventManager.getService());
   }
 
   @Override
-  public CompletableFuture<Boolean> executeImmediatelyAsync(
+  public CompletableFuture<Boolean> executeImmediately(
           final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-        () -> executeImmediately(source, cmdLine), eventManager.getService());
+        () -> executeImmediately0(source, cmdLine), eventManager.getService());
   }
 
   /**
