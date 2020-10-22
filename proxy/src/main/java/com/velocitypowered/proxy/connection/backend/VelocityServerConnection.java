@@ -45,6 +45,8 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -98,9 +100,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
+    SocketAddress destinationAddress = registeredServer.getServerInfo().getAddress();
+    server.createBootstrap(proxyPlayer.getConnection().eventLoop(), destinationAddress)
         .handler(server.getBackendChannelInitializer())
-        .connect(registeredServer.getServerInfo().getAddress())
+        .connect(destinationAddress)
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             connection = new MinecraftConnection(future.channel(), server);
@@ -124,23 +127,37 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   String getPlayerRemoteAddressAsString() {
-    final String addr = proxyPlayer.getRemoteAddress().getAddress().getHostAddress();
-    int ipv6ScopeIdx = addr.indexOf('%');
-    if (ipv6ScopeIdx == -1) {
-      return addr;
-    } else {
-      return addr.substring(0, ipv6ScopeIdx);
+    final SocketAddress address = proxyPlayer.getRemoteAddress();
+    if (!(address instanceof InetSocketAddress)) {
+      return address.toString();
     }
+    final String host = ((InetSocketAddress) address).getAddress().getHostAddress();
+    int ipv6ScopeIdx = host.indexOf('%');
+    if (ipv6ScopeIdx == -1) {
+      return host;
+    }
+    return host.substring(0, ipv6ScopeIdx);
+  }
+
+  private String getHandshakeRemoteAddress() {
+    return proxyPlayer.getVirtualHost()
+        .map(InetSocketAddress::getHostString)
+        .or(() -> Optional.of(registeredServer.getServerInfo().getAddress())
+            .filter(addr -> addr instanceof InetSocketAddress)
+            .map(addr -> ((InetSocketAddress) addr).getHostString()))
+        .orElse("");
   }
 
   private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
+    SocketAddress playerRemoteAddress = proxyPlayer.getRemoteAddress();
+    if (!(playerRemoteAddress instanceof InetSocketAddress)) {
+      return getHandshakeRemoteAddress();
+    }
     StringBuilder data = new StringBuilder()
-        .append(proxyPlayer.getVirtualHost()
-            .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getHostString())
+        .append(getHandshakeRemoteAddress())
         .append('\0')
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
@@ -171,10 +188,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    String playerVhost = proxyPlayer.getVirtualHost()
-        .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-        .getHostString();
-
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
@@ -184,12 +197,15 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(getHandshakeRemoteAddress() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
-      handshake.setServerAddress(playerVhost);
+      handshake.setServerAddress(getHandshakeRemoteAddress());
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    SocketAddress destinationAddr = registeredServer.getServerInfo().getAddress();
+    if (destinationAddr instanceof InetSocketAddress) {
+      handshake.setPort(((InetSocketAddress) destinationAddr).getPort());
+    }
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);

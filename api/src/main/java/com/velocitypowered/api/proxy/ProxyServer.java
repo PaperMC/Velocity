@@ -18,7 +18,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.util.ProxyVersion;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -179,7 +179,7 @@ public interface ProxyServer extends Audience {
    *
    * @return the address the proxy is bound to
    */
-  InetSocketAddress getBoundAddress();
+  SocketAddress getBoundAddress();
 
   /**
    * Gets the {@link ProxyConfig} instance.

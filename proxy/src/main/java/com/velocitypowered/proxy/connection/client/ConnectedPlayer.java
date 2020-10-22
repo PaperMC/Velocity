@@ -81,6 +81,7 @@ import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
@@ -304,8 +305,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
-    return (InetSocketAddress) connection.getRemoteAddress();
+  public SocketAddress getRemoteAddress() {
+    return connection.getRemoteAddress();
   }
 
   @Override

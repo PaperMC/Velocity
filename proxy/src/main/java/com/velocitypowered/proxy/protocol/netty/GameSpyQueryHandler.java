@@ -35,6 +35,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -92,8 +93,8 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
         .maxPlayers(server.getConfiguration().getShowMaxPlayers())
-        .proxyPort(server.getConfiguration().getBind().getPort())
-        .proxyHost(server.getConfiguration().getBind().getHostString())
+        .proxyPort(((InetSocketAddress) server.getConfiguration().getBind()).getPort())
+        .proxyHost(((InetSocketAddress) server.getConfiguration().getBind()).getHostString())
         .players(server.getAllPlayers().stream().map(Player::getUsername)
             .collect(Collectors.toList()))
         .proxyVersion("Velocity")

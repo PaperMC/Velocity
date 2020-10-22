@@ -9,22 +9,22 @@ package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ListenerType;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 /**
  * This event is fired by the proxy after a listener starts accepting connections.
  */
 public final class ListenerBoundEvent {
 
-  private final InetSocketAddress address;
+  private final SocketAddress address;
   private final ListenerType listenerType;
 
-  public ListenerBoundEvent(InetSocketAddress address, ListenerType listenerType) {
+  public ListenerBoundEvent(SocketAddress address, ListenerType listenerType) {
     this.address = Preconditions.checkNotNull(address, "address");
     this.listenerType = Preconditions.checkNotNull(listenerType, "listenerType");
   }
 
-  public InetSocketAddress getAddress() {
+  public SocketAddress getAddress() {
     return address;
   }
 
