@@ -32,29 +32,6 @@ public interface CommandNodeFactory<T extends Command> {
         }
       };
 
-  CommandNodeFactory<Command> FALLBACK = (alias, command) ->
-      BrigadierUtils.buildRawArgumentsLiteral(alias,
-        context -> {
-          CommandSource source = context.getSource();
-          String[] args = BrigadierUtils.getSplitArguments(context);
-
-          if (!command.hasPermission(source, args)) {
-            return BrigadierCommand.FORWARD;
-          }
-          command.execute(source, args);
-          return 1;
-        },
-        (context, builder) -> {
-          String[] args = BrigadierUtils.getSplitArguments(context);
-          return command.suggestAsync(context.getSource(), args).thenApply(values -> {
-            for (String value : values) {
-              builder.suggest(value);
-            }
-
-            return builder.build();
-          });
-        });
-
   /**
    * Returns a Brigadier node for the execution of the given command.
    *

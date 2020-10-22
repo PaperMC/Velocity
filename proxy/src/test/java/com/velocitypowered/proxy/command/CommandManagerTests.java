@@ -105,28 +105,15 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
     RawCommand command = new NoopRawCommand();
 
-    assertThrows(IllegalArgumentException.class, () -> manager.register(command),
-            "no aliases throws");
-    manager.register(command, "foO", "BAR");
+    manager.register("foO", command, "BAR");
     assertTrue(manager.hasCommand("fOo"));
     assertTrue(manager.hasCommand("bar"));
   }
 
   @Test
-  void testDeprecatedRegister() {
-    VelocityCommandManager manager = createManager();
-    Command command = new NoopDeprecatedCommand();
-
-    manager.register("foo", command);
-    assertTrue(manager.hasCommand("foO"));
-  }
-
-  @Test
   void testAlreadyRegisteredThrows() {
     VelocityCommandManager manager = createManager();
-    manager.register("bar", new NoopDeprecatedCommand());
-    assertThrows(IllegalArgumentException.class, () ->
-            manager.register("BAR", new NoopSimpleCommand()));
+    manager.register("BAR", new NoopSimpleCommand());
     assertThrows(IllegalArgumentException.class, () -> {
       CommandMeta meta = manager.metaBuilder("baz")
               .aliases("BAr")
@@ -264,35 +251,6 @@ public class CommandManagerTests {
   }
 
   @Test
-  void testDeprecatedExecute() {
-    VelocityCommandManager manager = createManager();
-    AtomicBoolean executed = new AtomicBoolean(false);
-    Command command = new Command() {
-      @Override
-      public void execute(final CommandSource source, final String @NonNull [] args) {
-        assertEquals(MockCommandSource.INSTANCE, source);
-        assertArrayEquals(new String[] { "boo", "123" }, args);
-        executed.set(true);
-      }
-    };
-    manager.register("foo", command);
-
-    assertTrue(manager.execute(MockCommandSource.INSTANCE, "foo boo 123"));
-    assertTrue(executed.get());
-
-    Command noPermsCommand = new Command() {
-      @Override
-      public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-        return false;
-      }
-    };
-
-    manager.register("oof", noPermsCommand, "veryOof");
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "veryOOF"));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321"));
-  }
-
-  @Test
   void testSuggestions() {
     VelocityCommandManager manager = createManager();
 
@@ -352,24 +310,8 @@ public class CommandManagerTests {
     };
     manager.register("raw", rawCommand);
 
-    Command deprecatedCommand = new Command() {
-      @Override
-      public List<String> suggest(
-              final CommandSource source, final String @NonNull [] currentArgs) {
-        switch (currentArgs.length) {
-          case 0:
-            return ImmutableList.of("boo", "scary");
-          case 1:
-            return ImmutableList.of("123", "456");
-          default:
-            return ImmutableList.of();
-        }
-      }
-    };
-    manager.register("deprecated", deprecatedCommand);
-
     assertEquals(
-            ImmutableList.of("brigadier", "deprecated", "raw", "simple"),
+            ImmutableList.of("brigadier", "raw", "simple"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "").join(),
             "literals are in alphabetical order");
     assertEquals(
@@ -403,16 +345,6 @@ public class CommandManagerTests {
     assertEquals(
             ImmutableList.of("11", "13", "17"),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "rAW bar ").join());
-    assertEquals(
-            ImmutableList.of("boo", "scary"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated ").join());
-    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated")
-            .join().isEmpty());
-    assertEquals(
-            ImmutableList.of("123", "456"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "deprEcated foo ").join());
-    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "deprecated foo 789 ")
-            .join().isEmpty());
   }
 
   @Test
@@ -510,13 +442,6 @@ public class CommandManagerTests {
   static class NoopRawCommand implements RawCommand {
     @Override
     public void execute(final Invocation invocation) {
-
-    }
-  }
-
-  static class NoopDeprecatedCommand implements Command {
-    @Override
-    public void execute(final CommandSource source, final String @NonNull [] args) {
 
     }
   }

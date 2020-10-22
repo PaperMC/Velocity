@@ -19,14 +19,12 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
@@ -52,20 +50,6 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public void register(final Command command, final String... aliases) {
-    Preconditions.checkArgument(aliases.length > 0, "no aliases provided");
-    register(aliases[0], command, Arrays.copyOfRange(aliases, 1, aliases.length));
-  }
-
-  @Override
-  public void register(final String alias, final Command command, final String... otherAliases) {
-    Preconditions.checkNotNull(alias, "alias");
-    Preconditions.checkNotNull(command, "command");
-    Preconditions.checkNotNull(otherAliases, "otherAliases");
-    register(metaBuilder(alias).aliases(otherAliases).build(), command);
-  }
-
-  @Override
   public void register(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
     register(metaBuilder(command).build(), command);
@@ -85,20 +69,10 @@ public class VelocityCommandManager implements CommandManager {
     } else if (command instanceof SimpleCommand) {
       node = CommandNodeFactory.SIMPLE.create(primaryAlias, (SimpleCommand) command);
     } else if (command instanceof RawCommand) {
-      // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
-      // have side-effect free #suggest methods. We rely on the newer RawCommand
-      // throwing UOE.
-      RawCommand asRaw = (RawCommand) command;
-      try {
-        asRaw.suggest(null, new String[0]);
-      } catch (final UnsupportedOperationException e) {
-        node = CommandNodeFactory.RAW.create(primaryAlias, asRaw);
-      } catch (final Exception ignored) {
-        // The implementation probably relies on a non-null source
-      }
-    }
-    if (node == null) {
-      node = CommandNodeFactory.FALLBACK.create(primaryAlias, command);
+      node = CommandNodeFactory.RAW.create(primaryAlias, (RawCommand) command);
+    } else {
+      throw new IllegalArgumentException("Unknown command implementation for "
+          + command.getClass().getName());
     }
 
     if (!(command instanceof BrigadierCommand)) {
