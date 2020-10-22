@@ -44,6 +44,16 @@ public class Velocity {
    * @param args the arguments to the proxy
    */
   public static void main(String... args) {
+    logger.warn("Velocity 2.0.0 is under active development and WILL NOT WORK WITH YOUR"
+        + " EXISTING PLUGINS!");
+    if (!Boolean.getBoolean("velocity.i-understand-what-im-doing")) {
+      logger.warn("Unless you are a developer, you shouldn't be using these builds.");
+      logger.warn("If you are very sure what you know what you're doing, run the proxy"
+          + " with the Java flag -Dvelocity.i-understand-what-im-doing=true.");
+      logger.warn("The proxy will now shut down.");
+      System.exit(1);
+    }
+
     final ProxyOptions options = new ProxyOptions(args);
     if (options.isHelp()) {
       return;
