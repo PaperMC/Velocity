@@ -6,7 +6,7 @@ import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired after the {@link com.velocitypowered.api.event.connection.PreLoginEvent} in
+ * This event is fired after the {@link PreLoginEvent} in
  * order to set up the game profile for the user. This can be used to configure a custom profile for
  * a user, i.e. skin replacement.
  */

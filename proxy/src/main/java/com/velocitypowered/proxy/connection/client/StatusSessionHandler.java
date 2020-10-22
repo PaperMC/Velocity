@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
-import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.event.connection.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;

@@ -8,12 +8,12 @@ import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
-import com.velocitypowered.api.event.connection.LoginEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
-import com.velocitypowered.api.event.connection.PreLoginEvent;
-import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
+import com.velocitypowered.api.event.player.DisconnectEvent;
+import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
+import com.velocitypowered.api.event.player.LoginEvent;
+import com.velocitypowered.api.event.player.PostLoginEvent;
+import com.velocitypowered.api.event.player.PreLoginEvent;
+import com.velocitypowered.api.event.player.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;

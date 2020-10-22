@@ -1,4 +1,4 @@
-package com.velocitypowered.api.event.proxy;
+package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.InboundConnection;
