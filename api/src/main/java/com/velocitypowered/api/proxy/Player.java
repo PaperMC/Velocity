@@ -28,7 +28,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   String getUsername();
 
-
   /**
    * Returns the player's UUID.
    *

@@ -47,6 +47,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,16 +201,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // init console permissions after plugins are loaded
     console.setupPermissions();
 
+    final SocketAddress bindAddr = configuration.getBind();
     final Integer port = this.options.getPort();
-    if (port != null) {
+    if (port != null && bindAddr instanceof InetSocketAddress) {
       logger.debug("Overriding bind port to {} from command line option", port);
-      this.cm.bind(new InetSocketAddress(configuration.getBind().getHostString(), port));
+      this.cm.bind(new InetSocketAddress(((InetSocketAddress) bindAddr).getHostString(), port));
     } else {
       this.cm.bind(configuration.getBind());
     }
 
-    if (configuration.isQueryEnabled()) {
-      this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
+    if (configuration.isQueryEnabled() && bindAddr instanceof InetSocketAddress) {
+      this.cm.queryBind(((InetSocketAddress) bindAddr).getHostString(),
+          configuration.getQueryPort());
     }
 
     Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
@@ -271,8 +274,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
-    return this.cm.createWorker(group);
+  public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {
+    return this.cm.createWorker(group, target);
   }
 
   public ChannelInitializer<Channel> getBackendChannelInitializer() {
@@ -348,19 +351,22 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     // If we have a new bind address, bind to it
-    if (!configuration.getBind().equals(newConfiguration.getBind())) {
+    SocketAddress oldBind = configuration.getBind();
+    SocketAddress newBind = newConfiguration.getBind();
+    if (!configuration.getBind().equals(newBind)) {
       this.cm.bind(newConfiguration.getBind());
       this.cm.close(configuration.getBind());
     }
 
     if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
-        || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
+        || newConfiguration.getQueryPort() != configuration.getQueryPort()
+        && oldBind instanceof InetSocketAddress)) {
       this.cm.close(new InetSocketAddress(
-          configuration.getBind().getHostString(), configuration.getQueryPort()));
+          ((InetSocketAddress) oldBind).getHostString(), configuration.getQueryPort()));
     }
 
-    if (newConfiguration.isQueryEnabled()) {
-      this.cm.queryBind(newConfiguration.getBind().getHostString(),
+    if (newConfiguration.isQueryEnabled() && newBind instanceof InetSocketAddress) {
+      this.cm.queryBind(((InetSocketAddress) newBind).getHostString(),
           newConfiguration.getQueryPort());
     }
 
@@ -615,7 +621,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public InetSocketAddress getBoundAddress() {
+  public SocketAddress getBoundAddress() {
     if (configuration == null) {
       throw new IllegalStateException(
           "No configuration"); // even though you'll never get the chance... heh, heh

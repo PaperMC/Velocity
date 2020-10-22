@@ -79,7 +79,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop)
+    server.createBootstrap(loop, serverInfo.getAddress())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {

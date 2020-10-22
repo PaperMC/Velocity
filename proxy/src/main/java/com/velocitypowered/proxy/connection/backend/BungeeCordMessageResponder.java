@@ -16,6 +16,9 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.unix.DomainSocketAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
@@ -63,8 +66,16 @@ class BungeeCordMessageResponder {
     ByteBuf buf = Unpooled.buffer();
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
     out.writeUTF("IP");
-    out.writeUTF(player.getRemoteAddress().getHostString());
-    out.writeInt(player.getRemoteAddress().getPort());
+
+    SocketAddress address = player.getRemoteAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress serverInetAddr = (InetSocketAddress) address;
+      out.writeUTF(serverInetAddr.getHostString());
+      out.writeInt(serverInetAddr.getPort());
+    } else {
+      out.writeUTF("unix://" + ((DomainSocketAddress) address).path());
+      out.writeInt(0);
+    }
     sendResponseOnConnection(buf);
   }
 
@@ -203,8 +214,15 @@ class BungeeCordMessageResponder {
 
       out.writeUTF("IPOther");
       out.writeUTF(player.getUsername());
-      out.writeUTF(player.getRemoteAddress().getHostString());
-      out.writeInt(player.getRemoteAddress().getPort());
+      SocketAddress address = player.getRemoteAddress();
+      if (address instanceof InetSocketAddress) {
+        InetSocketAddress serverInetAddr = (InetSocketAddress) address;
+        out.writeUTF(serverInetAddr.getHostString());
+        out.writeInt(serverInetAddr.getPort());
+      } else {
+        out.writeUTF("unix://" + ((DomainSocketAddress) address).path());
+        out.writeInt(0);
+      }
 
       sendResponseOnConnection(buf);
     });
@@ -217,8 +235,15 @@ class BungeeCordMessageResponder {
 
       out.writeUTF("ServerIP");
       out.writeUTF(info.getServerInfo().getName());
-      out.writeUTF(info.getServerInfo().getAddress().getHostString());
-      out.writeShort(info.getServerInfo().getAddress().getPort());
+      SocketAddress address = info.getServerInfo().getAddress();
+      if (address instanceof InetSocketAddress) {
+        InetSocketAddress serverInetAddr = (InetSocketAddress) address;
+        out.writeUTF(serverInetAddr.getHostString());
+        out.writeShort(serverInetAddr.getPort());
+      } else {
+        out.writeUTF("unix://" + ((DomainSocketAddress) address).path());
+        out.writeShort(0);
+      }
 
       sendResponseOnConnection(buf);
     });

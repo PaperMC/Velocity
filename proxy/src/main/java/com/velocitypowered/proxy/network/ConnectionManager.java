@@ -18,6 +18,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,7 @@ public final class ConnectionManager {
   private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
       1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
-  private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
+  private final Map<SocketAddress, Channel> endpoints = new HashMap<>();
   private final TransportType transportType;
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
@@ -90,18 +91,20 @@ public final class ConnectionManager {
    *
    * @param address the address to bind to
    */
-  public void bind(final InetSocketAddress address) {
+  public void bind(final SocketAddress address) {
     final ServerBootstrap bootstrap = new ServerBootstrap()
-        .channelFactory(this.transportType.serverSocketChannelFactory)
+        .channelFactory(this.transportType.getServerChannelFactory(address))
         .group(this.bossGroup, this.workerGroup)
         .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
         .childHandler(this.serverChannelInitializer.get())
-        .childOption(ChannelOption.TCP_NODELAY, true)
-        .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    if (address instanceof InetSocketAddress) {
+      bootstrap.childOption(ChannelOption.TCP_NODELAY, true)
+          .childOption(ChannelOption.IP_TOS, 0x18);
+      if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+        bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+      }
     }
 
     bootstrap.bind()
@@ -142,15 +145,15 @@ public final class ConnectionManager {
   }
 
   /**
-   * Creates a TCP {@link Bootstrap} using Velocity's event loops.
+   * Creates a {@link Bootstrap} using Velocity's event loops.
    *
    * @param group the event loop group to use. Use {@code null} for the default worker group.
-   *
+   * @param target the address the client will connect to
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker(@Nullable EventLoopGroup group) {
+  public Bootstrap createWorker(@Nullable EventLoopGroup group, SocketAddress target) {
     Bootstrap bootstrap = new Bootstrap()
-        .channelFactory(this.transportType.socketChannelFactory)
+        .channelFactory(this.transportType.getClientChannelFactory(target))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
@@ -167,7 +170,7 @@ public final class ConnectionManager {
    *
    * @param oldBind the endpoint to close
    */
-  public void close(InetSocketAddress oldBind) {
+  public void close(SocketAddress oldBind) {
     Channel serverChannel = endpoints.remove(oldBind);
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
     LOGGER.info("Closing endpoint {}", serverChannel.localAddress());

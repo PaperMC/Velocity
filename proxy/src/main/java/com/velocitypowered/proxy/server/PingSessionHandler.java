@@ -11,6 +11,8 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 public class PingSessionHandler implements MinecraftSessionHandler {
@@ -33,8 +35,16 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.STATUS_ID);
-    handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
-    handshake.setPort(server.getServerInfo().getAddress().getPort());
+
+    SocketAddress address = server.getServerInfo().getAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress socketAddr = (InetSocketAddress) address;
+      handshake.setServerAddress(socketAddr.getHostString());
+      handshake.setPort(socketAddr.getPort());
+    } else {
+      // Just fake it
+      handshake.setServerAddress("127.0.0.1");
+    }
     handshake.setProtocolVersion(version);
     connection.delayedWrite(handshake);
 

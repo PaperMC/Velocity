@@ -21,6 +21,7 @@ import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
@@ -128,13 +129,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
   }
 
-  private static String cleanRemoteAddress(InetSocketAddress address) {
-    String addressString = address.getAddress().getHostAddress();
-    int ipv6ScopeIdx = addressString.indexOf('%');
-    if (ipv6ScopeIdx == -1) {
-      return addressString;
+  private static String cleanRemoteAddress(SocketAddress address) {
+    if (address instanceof InetSocketAddress) {
+      String addressString = ((InetSocketAddress) address).getAddress().getHostAddress();
+      int ipv6ScopeIdx = addressString.indexOf('%');
+      if (ipv6ScopeIdx == -1) {
+        return addressString;
+      } else {
+        return addressString.substring(0, ipv6ScopeIdx);
+      }
     } else {
-      return addressString.substring(0, ipv6ScopeIdx);
+      // Fake it
+      return "127.0.0.1";
     }
   }
 

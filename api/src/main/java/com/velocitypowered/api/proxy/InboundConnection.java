@@ -3,6 +3,7 @@ package com.velocitypowered.api.proxy;
 import com.velocitypowered.api.network.ProtocolVersion;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Optional;
 
 /**
@@ -11,11 +12,11 @@ import java.util.Optional;
 public interface InboundConnection {
 
   /**
-   * Returns the player's IP address.
+   * Returns the player's remote address.
    *
-   * @return the player's IP
+   * @return the player's remote address
    */
-  InetSocketAddress getRemoteAddress();
+  SocketAddress getRemoteAddress();
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.

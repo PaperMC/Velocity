@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -212,7 +213,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-  public InetSocketAddress getBind() {
+  public SocketAddress getBind() {
     return AddressUtil.parseAndResolveAddress(bind);
   }
 
