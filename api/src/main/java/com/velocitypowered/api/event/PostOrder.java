@@ -1,7 +1,7 @@
 package com.velocitypowered.api.event;
 
 /**
- * Represents the order an event will be posted to a listener method, relative to other listeners.
+ * Provides convenient shorthands for represents the order an event will be posted to a listener.
  */
 public enum PostOrder {
   ;
