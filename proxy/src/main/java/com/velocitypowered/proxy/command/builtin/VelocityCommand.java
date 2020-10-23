@@ -3,19 +3,27 @@ package com.velocitypowered.proxy.command.builtin;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.gson.JsonObject;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.util.InformationUtils;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -52,6 +60,7 @@ public class VelocityCommand implements SimpleCommand {
         .put("version", new Info(server))
         .put("plugins", new Plugins(server))
         .put("reload", new Reload(server))
+        .put("dump", new Dump(server))
         .build();
   }
 
@@ -282,6 +291,46 @@ public class VelocityCommand implements SimpleCommand {
 
       return Component.text(description.getId(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
+    }
+
+    @Override
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
+      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+    }
+  }
+
+  private static class Dump implements SubCommand {
+
+    private final ProxyServer server;
+
+    private Dump(ProxyServer server) {
+      this.server = server;
+    }
+
+    @Override
+    public void execute(CommandSource source, String @NonNull [] args) {
+      if (args.length != 0) {
+        source.sendMessage(Identity.nil(), Component.text("/velocity dump", NamedTextColor.RED));
+        return;
+      }
+
+      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
+      JsonObject servers = new JsonObject();
+      for (RegisteredServer iter : allServers) {
+        servers.add(iter.getServerInfo().getName(),
+                InformationUtils.collectServerInfo(iter));
+      }
+
+      JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.getConfiguration());
+      proxyConfig.add("servers", servers);
+
+      JsonObject dump = new JsonObject();
+      dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
+      dump.add("platform", InformationUtils.collectEnvironmentInfo());
+      dump.add("config", proxyConfig);
+      dump.add("plugins", InformationUtils.collectPluginInfo(server));
+
+      // TODO: Finish
     }
 
     @Override
