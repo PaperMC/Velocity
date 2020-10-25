@@ -5,7 +5,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.CharStreams;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
@@ -17,6 +21,12 @@ import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -320,9 +330,18 @@ public class VelocityCommand implements SimpleCommand {
         servers.add(iter.getServerInfo().getName(),
                 InformationUtils.collectServerInfo(iter));
       }
+      JsonArray connectOrder = new JsonArray();
+      List<String> attemptedConnectionOrder = ImmutableList.copyOf(
+              server.getConfiguration().getAttemptConnectionOrder());
+      for (int i = 0; i < attemptedConnectionOrder.size(); i++) {
+        connectOrder.add(attemptedConnectionOrder.get(i));
+      }
 
       JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.getConfiguration());
       proxyConfig.add("servers", servers);
+      proxyConfig.add("connectOrder", connectOrder);
+      proxyConfig.add("forcedHosts",
+              InformationUtils.collectForcedHosts(server.getConfiguration()));
 
       JsonObject dump = new JsonObject();
       dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
@@ -330,7 +349,90 @@ public class VelocityCommand implements SimpleCommand {
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
 
-      // TODO: Finish
+      source.sendMessage(Component.text().content("Uploading gathered information...").build());
+
+      HttpURLConnection upload = null;
+      try {
+        upload = (HttpURLConnection) new URL("https://dump.velocitypowered.com/documents")
+                .openConnection();
+      } catch (IOException e1) {
+        // Couldn't open connection;
+        source.sendMessage(
+                Component.text()
+                        .content("Failed to open a connection!")
+                        .color(NamedTextColor.RED).build());
+        return;
+      }
+      upload.setRequestProperty("Content-Type", "text/plain");
+      upload.addRequestProperty(
+              "User-Agent", server.getVersion().getName() + "/"
+                      + server.getVersion().getVersion());
+      try {
+        upload.setRequestMethod("POST");
+        upload.setDoOutput(true);
+
+        OutputStream uploadStream = upload.getOutputStream();
+        uploadStream.write(
+                InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
+        uploadStream.close();
+      } catch (IOException e2) {
+        // Couldn't POST the Data
+        source.sendMessage(
+                Component.text()
+                        .content("Couldn't upload the data!")
+                        .color(NamedTextColor.RED).build());
+        return;
+      }
+      String rawResponse = null;
+      try {
+        rawResponse = CharStreams.toString(
+                new InputStreamReader(upload.getInputStream(), StandardCharsets.UTF_8));
+        upload.getInputStream().close();
+      } catch (IOException e3) {
+        // Couldn't read response
+        source.sendMessage(
+                Component.text()
+                        .content("Invalid server response received!")
+                        .color(NamedTextColor.RED).build());
+      }
+      JsonObject returned = null;
+      try {
+        returned = InformationUtils.parseString(rawResponse);
+        if (returned == null || !returned.has("key")) {
+          throw new JsonParseException("Invalid json response");
+        }
+      } catch (JsonSyntaxException e4) {
+        // Mangled json
+        source.sendMessage(
+                Component.text()
+                        .content("Server responded with invalid data!")
+                        .color(NamedTextColor.RED).build());
+        return;
+      } catch (JsonParseException e5) {
+        // Backend error?
+        source.sendMessage(
+                Component.text()
+                        .content("Data was uploaded successfully but couldn't be posted")
+                        .color(NamedTextColor.RED).build());
+        return;
+      }
+      TextComponent response = Component.text()
+              .content("Created an anonymised report containing useful information about")
+              .append(Component.newline()
+              .append(
+                      Component.text("this proxy. If a developer requested it"
+                              + ", you may share the"))
+              .append(Component.newline())
+              .append(Component.text("following link with them:"))
+              .append(Component.newline())
+              .append(Component.text("https://dump.velocitypowered.com/"
+                      + returned.get("key").getAsString() + ".json")
+                      .color(NamedTextColor.GREEN)))
+              .append(Component.newline())
+              .append(Component.text("Note: This link is only valid for a few days"))
+              .build();
+      source.sendMessage(response);
+
     }
 
     @Override

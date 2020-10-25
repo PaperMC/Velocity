@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.util;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -16,9 +17,15 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 
 import io.netty.channel.unix.DomainSocketAddress;
+
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
+import java.util.Map;
+
 import joptsimple.internal.Strings;
 
 public enum InformationUtils {
@@ -85,6 +92,75 @@ public enum InformationUtils {
   }
 
   /**
+   * Creates a {@link JsonObject} containing information about the
+   * forced hosts of the {@link ProxyConfig} instance.
+   *
+   * @return {@link JsonArray} containing forced hosts
+   */
+  public static JsonObject collectForcedHosts(ProxyConfig config) {
+    JsonObject forcedHosts = new JsonObject();
+    Map<String, List<String>> allForcedHosts = ImmutableMap.copyOf(
+            config.getForcedHosts());
+    for (Map.Entry<String, List<String>> entry : allForcedHosts.entrySet()) {
+      JsonArray host = new JsonArray();
+      for (int i = 0; i < entry.getValue().size(); i++) {
+        host.add(entry.getValue().get(i));
+      }
+      forcedHosts.add(entry.getKey(), host);
+    }
+    return forcedHosts;
+  }
+
+  /**
+   * Anonymises or redacts a given {@link InetAddress}
+   * public address bits.
+   *
+   * @param address The address to redact
+   * @return {@link String} address with public parts redacted
+   */
+  public static String anonymizeInetAddress(InetAddress address) {
+    if (address instanceof Inet4Address) {
+      Inet4Address v4 = (Inet4Address) address;
+      if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
+              || v4.isLinkLocalAddress()
+              || v4.isSiteLocalAddress()) {
+        return address.getHostAddress();
+      } else {
+        byte[] addr = v4.getAddress();
+        return (addr[0] & 0xff) + "." + (addr[1] & 0xff) + ".XXX.XXX";
+      }
+    } else if (address instanceof Inet6Address) {
+      Inet6Address v6 = (Inet6Address) address;
+      if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
+              || v6.isSiteLocalAddress()
+              || v6.isSiteLocalAddress()) {
+        return address.getHostAddress();
+      } else {
+        String[] bits = v6.getHostAddress().split(":");
+        String ret = "";
+        boolean flag = false;
+        for (int iter = 0; iter < bits.length; iter++) {
+          if (flag) {
+            ret += ":X";
+            continue;
+          }
+          if (!bits[iter].equals("0")) {
+            if (iter == 0) {
+              ret = bits[iter];
+            } else {
+              ret = "::" + bits[iter];
+            }
+            flag = true;
+          }
+        }
+        return ret;
+      }
+    } else {
+      return address.getHostAddress();
+    }
+  }
+
+  /**
    * Creates a {@link JsonObject} containing most relevant
    * information of the {@link RegisteredServer} for diagnosis.
    *
@@ -97,18 +173,22 @@ public enum InformationUtils {
     SocketAddress address = server.getServerInfo().getAddress();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress iaddr = (InetSocketAddress) address;
-      info.addProperty("socketType", "EventLoop");
+      info.addProperty("socketType", "EventLoop/NIO");
       info.addProperty("unresolved", iaddr.isUnresolved());
-      // Greetings form Netty 4aa10db9
-      info.addProperty("host", iaddr.getHostString());
+      if (iaddr.isUnresolved()) {
+        // Greetings form Netty 4aa10db9
+        info.addProperty("host", iaddr.getHostString());
+      } else {
+        info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));
+      }
       info.addProperty("port", iaddr.getPort());
     } else if (address instanceof DomainSocketAddress) {
       DomainSocketAddress daddr = (DomainSocketAddress) address;
       info.addProperty("socketType", "Unix/Epoll");
-      info.addProperty("host", daddr.path());
+      info.addProperty("path", daddr.path());
     } else {
       info.addProperty("socketType", "Unknown/Generic");
-      info.addProperty("host", address.toString());
+      info.addProperty("info", address.toString());
     }
     return info;
   }
@@ -133,6 +213,26 @@ public enum InformationUtils {
    */
   public static JsonObject collectProxyConfig(ProxyConfig config) {
     return (JsonObject) serializeObject(config, true);
+  }
+
+  /**
+   * Creates a human-readable String from a {@link JsonElement}.
+   *
+   * @param json the {@link JsonElement} object
+   * @return the human-readable String
+   */
+  public static String toHumanReadableString(JsonElement json) {
+    return GSON_WITHOUT_EXCLUDES.toJson(json);
+  }
+
+  /**
+   * Creates a {@link JsonObject} from a String.
+   *
+   * @param toParse the String to parse
+   * @return {@link JsonObject} object
+   */
+  public static JsonObject parseString(String toParse) {
+    return GSON_WITHOUT_EXCLUDES.fromJson(toParse, JsonObject.class);
   }
 
   private static JsonElement serializeObject(Object toSerialize, boolean withExcludes) {
