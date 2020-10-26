@@ -115,12 +115,10 @@ public class VelocityEventManager implements EventManager {
       return CompletableFuture.completedFuture(event);
     }
 
-    CompletableFuture<E> eventFuture = new CompletableFuture<>();
-    service.execute(() -> {
+    return CompletableFuture.supplyAsync(() -> {
       fireEvent(event);
-      eventFuture.complete(event);
-    });
-    return eventFuture;
+      return event;
+    }, service);
   }
 
   @Override

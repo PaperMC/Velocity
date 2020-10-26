@@ -163,7 +163,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
             LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
-            connection.eventLoop());
+            connection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling legacy ping {}", packet, ex);
+          return null;
+        });
     return true;
   }
 
@@ -189,7 +193,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                   .toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },
-            connection.eventLoop());
+            connection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling status request {}", packet, ex);
+          return null;
+        });
     return true;
   }
 
