@@ -757,7 +757,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     DisconnectEvent event = new DisconnectEvent(this, status);
-    server.getEventManager().fire(event).thenRun(() -> this.teardownFuture.complete(null));
+    server.getEventManager().fire(event).whenComplete((val, ex) -> {
+      if (ex == null) {
+        this.teardownFuture.complete(null);
+      } else {
+        this.teardownFuture.completeExceptionally(ex);
+      }
+    });
   }
 
   public CompletableFuture<Void> getTeardownFuture() {

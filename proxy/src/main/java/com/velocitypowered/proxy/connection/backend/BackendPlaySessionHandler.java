@@ -149,7 +149,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 Unpooled.wrappedBuffer(copy));
             playerConnection.write(copied);
           }
-        }, playerConnection.eventLoop());
+        }, playerConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling plugin message {}", packet, ex);
+          return null;
+        });
     return true;
   }
 
@@ -186,7 +190,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     server.getEventManager().fire(
         new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
-        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop());
+        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling available commands for {}", playerConnection, ex);
+          return null;
+        });
     return true;
   }
 

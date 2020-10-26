@@ -425,8 +425,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
                   .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
 
           playersTeardownFuture.get(10, TimeUnit.SECONDS);
-        } catch (TimeoutException | ExecutionException e) {
+        } catch (TimeoutException e) {
           timedOut = true;
+        } catch (ExecutionException e) {
+          timedOut = true;
+          logger.error("Exception while tearing down player connections", e);
         }
 
         eventManager.fireShutdownEvent();
