@@ -23,8 +23,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
-import joptsimple.internal.Strings;
-
 public enum InformationUtils {
   ;
 
@@ -51,8 +49,11 @@ public enum InformationUtils {
         current.addProperty("version", desc.getVersion().get());
       }
       if (!desc.getAuthors().isEmpty()) {
-        current.addProperty("authors",
-                Strings.join(desc.getAuthors(), ","));
+        JsonArray authorsArray = new JsonArray();
+        for (String author : desc.getAuthors()) {
+          authorsArray.add(author);
+        }
+        current.add("authors", authorsArray);
       }
       if (desc.getDescription().isPresent()) {
         current.addProperty("description", desc.getDescription().get());
