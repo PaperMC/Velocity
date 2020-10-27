@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.CharStreams;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -21,17 +21,15 @@ import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import net.kyori.adventure.identity.Identity;
@@ -43,6 +41,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.BoundRequestBuilder;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class VelocityCommand implements SimpleCommand {
@@ -311,6 +313,7 @@ public class VelocityCommand implements SimpleCommand {
 
   private static class Dump implements SubCommand {
 
+    private static final Logger logger = LogManager.getLogger(Dump.class);
     private final ProxyServer server;
 
     private Dump(ProxyServer server) {
@@ -350,89 +353,92 @@ public class VelocityCommand implements SimpleCommand {
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
 
       source.sendMessage(Component.text().content("Uploading gathered information...").build());
+      AsyncHttpClient httpClient = ((VelocityServer) server).getAsyncHttpClient();
 
-      HttpURLConnection upload = null;
-      try {
-        upload = (HttpURLConnection) new URL("https://dump.velocitypowered.com/documents")
-                .openConnection();
-      } catch (IOException e1) {
-        // Couldn't open connection;
-        source.sendMessage(
-                Component.text()
-                        .content("Failed to open a connection!")
-                        .color(NamedTextColor.RED).build());
-        return;
-      }
-      upload.setRequestProperty("Content-Type", "text/plain");
-      upload.addRequestProperty(
-              "User-Agent", server.getVersion().getName() + "/"
-                      + server.getVersion().getVersion());
-      try {
-        upload.setRequestMethod("POST");
-        upload.setDoOutput(true);
+      BoundRequestBuilder request =
+              httpClient.preparePost("https://dump.velocitypowered.com/documents");
+      request.setHeader("Content-Type", "text/plain");
+      request.addHeader("User-Agent", server.getVersion().getName() + "/"
+              + server.getVersion().getVersion());
+      request.setBody(
+              InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
 
-        OutputStream uploadStream = upload.getOutputStream();
-        uploadStream.write(
-                InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
-        uploadStream.close();
-      } catch (IOException e2) {
-        // Couldn't POST the Data
-        source.sendMessage(
-                Component.text()
-                        .content("Couldn't upload the data!")
-                        .color(NamedTextColor.RED).build());
-        return;
-      }
-      String rawResponse = null;
-      try {
-        rawResponse = CharStreams.toString(
-                new InputStreamReader(upload.getInputStream(), StandardCharsets.UTF_8));
-        upload.getInputStream().close();
-      } catch (IOException e3) {
-        // Couldn't read response
-        source.sendMessage(
-                Component.text()
-                        .content("Invalid server response received!")
-                        .color(NamedTextColor.RED).build());
-      }
-      JsonObject returned = null;
-      try {
-        returned = InformationUtils.parseString(rawResponse);
-        if (returned == null || !returned.has("key")) {
-          throw new JsonParseException("Invalid json response");
+      ListenableFuture<Response> future = request.execute();
+      future.addListener(() -> {
+        try {
+          Response response = future.get();
+          if (response.getStatusCode() != 200) {
+            source.sendMessage(Component.text()
+                    .content("An error occurred while communicating with the Velocity servers. "
+                            + "The servers may be temporarily unavailable or there is an issue "
+                            + "with your network settings. You can find more information in the "
+                            + "log or console of your Velocity server.")
+                    .color(NamedTextColor.RED).build());
+            logger.error("Invalid status code while POST-ing Velocity dump: "
+                    + response.getStatusCode());
+            logger.error("Headers: \n--------------BEGIN HEADERS--------------\n"
+                    + response.getHeaders().toString()
+                    + "\n---------------END HEADERS---------------");
+            return;
+          }
+          JsonObject key = InformationUtils.parseString(
+                  response.getResponseBody(StandardCharsets.UTF_8));
+          if (!key.has("key")) {
+            throw new JsonSyntaxException("Missing Dump-Url-response");
+          }
+          String url = "https://dump.velocitypowered.com/"
+                  + key.get("key").getAsString() + ".json";
+          source.sendMessage(Component.text()
+                  .content("Created an anonymised report containing useful information about "
+                          + "this proxy. If a developer requested it, you may share the "
+                          + "following link with them:")
+                  .append(Component.newline())
+                  .append(Component.text(">> " + url)
+                          .color(NamedTextColor.GREEN)
+                          .clickEvent(ClickEvent.openUrl(url)))
+                 .append(Component.newline())
+                 .append(Component.text("Note: This link is only valid for a few days")
+                          .color(NamedTextColor.GRAY)
+                 ).build());
+        } catch (InterruptedException e) {
+          source.sendMessage(Component.text()
+                  .content("Could not complete the request, the command was interrupted."
+                          + "Please refer to the proxy-log or console for more information.")
+                  .color(NamedTextColor.RED).build());
+          logger.error("Failed to complete dump command, "
+                  + "the executor was interrupted: " + e.getMessage());
+          e.printStackTrace();
+        } catch (ExecutionException e) {
+          TextComponent.Builder message = Component.text()
+                  .content("An error occurred while attempting to upload the gathered "
+                          + "information to the Velocity servers.")
+                  .append(Component.newline())
+                  .color(NamedTextColor.RED);
+          if (e.getCause() instanceof UnknownHostException
+              || e.getCause() instanceof ConnectException) {
+            message.append(Component.text(
+                    "Likely cause: Invalid system DNS settings or no internet connection"));
+          }
+          source.sendMessage(message
+                  .append(Component.newline()
+                  .append(Component.text(
+                          "Error details can be found in the proxy log / console"))
+                  ).build());
+
+          logger.error("Failed to complete dump command, "
+                  + "the executor encountered an Exception: " + e.getCause().getMessage());
+          e.getCause().printStackTrace();
+        } catch (JsonParseException e) {
+          source.sendMessage(Component.text()
+                  .content("An error occurred on the Velocity-servers and the dump could not "
+                          + "be completed. Please contact the Velocity staff about this problem. "
+                          + "If you do, provide the details about this error from the Velocity "
+                          + "console or server log.")
+                  .color(NamedTextColor.RED).build());
+          logger.error("Invalid response from the Velocity servers: " + e.getMessage());
+          e.printStackTrace();
         }
-      } catch (JsonSyntaxException e4) {
-        // Mangled json
-        source.sendMessage(
-                Component.text()
-                        .content("Server responded with invalid data!")
-                        .color(NamedTextColor.RED).build());
-        return;
-      } catch (JsonParseException e5) {
-        // Backend error?
-        source.sendMessage(
-                Component.text()
-                        .content("Data was uploaded successfully but couldn't be posted")
-                        .color(NamedTextColor.RED).build());
-        return;
-      }
-      TextComponent response = Component.text()
-              .content("Created an anonymised report containing useful information about")
-              .append(Component.newline()
-              .append(
-                      Component.text("this proxy. If a developer requested it"
-                              + ", you may share the"))
-              .append(Component.newline())
-              .append(Component.text("following link with them:"))
-              .append(Component.newline())
-              .append(Component.text("https://dump.velocitypowered.com/"
-                      + returned.get("key").getAsString() + ".json")
-                      .color(NamedTextColor.GREEN)))
-              .append(Component.newline())
-              .append(Component.text("Note: This link is only valid for a few days"))
-              .build();
-      source.sendMessage(response);
-
+      }, MoreExecutors.directExecutor());
     }
 
     @Override

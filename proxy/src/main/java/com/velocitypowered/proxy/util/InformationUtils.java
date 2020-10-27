@@ -173,8 +173,6 @@ public enum InformationUtils {
     SocketAddress address = server.getServerInfo().getAddress();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress iaddr = (InetSocketAddress) address;
-      info.addProperty("socketType", "EventLoop/NIO");
-      info.addProperty("unresolved", iaddr.isUnresolved());
       if (iaddr.isUnresolved()) {
         // Greetings form Netty 4aa10db9
         info.addProperty("host", iaddr.getHostString());
@@ -184,10 +182,8 @@ public enum InformationUtils {
       info.addProperty("port", iaddr.getPort());
     } else if (address instanceof DomainSocketAddress) {
       DomainSocketAddress daddr = (DomainSocketAddress) address;
-      info.addProperty("socketType", "Unix/Epoll");
       info.addProperty("path", daddr.path());
     } else {
-      info.addProperty("socketType", "Unknown/Generic");
       info.addProperty("info", address.toString());
     }
     return info;
