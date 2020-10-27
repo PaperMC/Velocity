@@ -18,7 +18,7 @@ public final class DurationUtils {
    * @param duration the duration to convert into Minecraft ticks
    * @return the duration represented as the number of Minecraft ticks
    */
-  public static long convertDurationToTicks(Duration duration) {
+  public static long toTicks(Duration duration) {
     return duration.toMillis() / ONE_TICK_IN_MILLISECONDS;
   }
 }

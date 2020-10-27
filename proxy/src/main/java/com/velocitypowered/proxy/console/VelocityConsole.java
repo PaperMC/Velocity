@@ -8,6 +8,8 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
@@ -38,7 +40,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     logger.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
         .serialize(message));
   }

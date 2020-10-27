@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
@@ -43,7 +44,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -137,8 +139,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.getUsername(), e);
-            player.sendMessage(
-                TextComponent.of("An error occurred while running this command.",
+            player.sendMessage(Identity.nil(),
+                Component.text("An error occurred while running this command.",
                     NamedTextColor.RED));
             return null;
           });
@@ -155,7 +157,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 smc.write(packet);
               }
             }
-          }, smc.eventLoop());
+          }, smc.eventLoop())
+          .exceptionally((ex) -> {
+            logger.error("Exception while handling player chat for {}", player, ex);
+            return null;
+          });
     }
     return true;
   }
@@ -223,7 +229,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                       Unpooled.wrappedBuffer(copy));
                   backendConn.write(message);
                 }
-              }, backendConn.eventLoop());
+              }, backendConn.eventLoop())
+                  .exceptionally((ex) -> {
+                    logger.error("Exception while handling plugin message packet for {}",
+                        player, ex);
+                    return null;
+                  });
             }
           }
         }
@@ -328,20 +339,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Most notably, by having the client accept the join game packet, we can work around the need
       // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
       // improving compatibility with mods.
-      player.getConnection().delayedWrite(joinGame);
-      // Since 1.16 this dynamic changed:
-      // We don't need to send two dimension swiches anymore!
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
-        int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-        player.getConnection().delayedWrite(
-                new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-                    joinGame.getGamemode(), joinGame.getLevelType(),
-                    false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-                    joinGame.getCurrentDimensionData()));
+
+      int sentOldDim = joinGame.getDimension();
+      if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
+        // Before Minecraft 1.16, we could not switch to the same dimension without sending an
+        // additional respawn. On older versions of Minecraft this forces the client to perform
+        // garbage collection which adds additional latency.
+        joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
       }
+      player.getConnection().delayedWrite(joinGame);
 
       player.getConnection().delayedWrite(
-          new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+          new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
               joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
               false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
               joinGame.getCurrentDimensionData()));
@@ -423,7 +432,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             resp.getOffers().addAll(offers);
             player.getConnection().write(resp);
           }
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling command tab completion for player {} executing {}",
+              player, command, ex);
+          return null;
+        });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -475,7 +489,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 player.getUsername(),
                 command, e);
           }
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing command tab completion, with request {} and response {}",
+              request, response, ex);
+          return null;
+        });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -490,7 +510,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             response.getOffers().add(new Offer(s));
           }
           player.getConnection().write(response);
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing regular tab completion, with request {} and response{}",
+              request, response, ex);
+          return null;
+        });
   }
 
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,

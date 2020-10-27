@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
@@ -14,6 +15,7 @@ public class Chat implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
+  public static final byte GAME_INFO_TYPE = (byte) 2;
 
   public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
   public static final UUID EMPTY_SENDER = new UUID(0, 0);
@@ -109,9 +111,9 @@ public class Chat implements MinecraftPacket {
         .serialize(component), type, sender);
   }
 
-  public static Chat createClientbound(net.kyori.adventure.text.Component component,
-      ProtocolVersion version) {
-    return createClientbound(component, CHAT_TYPE, EMPTY_SENDER, version);
+  public static Chat createClientbound(Identity identity,
+      net.kyori.adventure.text.Component component, ProtocolVersion version) {
+    return createClientbound(component, CHAT_TYPE, identity.uuid(), version);
   }
 
   public static Chat createClientbound(net.kyori.adventure.text.Component component, byte type,

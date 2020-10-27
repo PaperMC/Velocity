@@ -7,6 +7,7 @@ import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -42,20 +43,20 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
 
-  private String bind = "0.0.0.0:25577";
-  private String motd = "&3A Velocity Server";
-  private int showMaxPlayers = 500;
-  private boolean onlineMode = true;
-  private boolean preventClientProxyConnections = false;
-  private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
+  @Expose private String bind = "0.0.0.0:25577";
+  @Expose private String motd = "&3A Velocity Server";
+  @Expose private int showMaxPlayers = 500;
+  @Expose private boolean onlineMode = true;
+  @Expose private boolean preventClientProxyConnections = false;
+  @Expose private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
   private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
-  private boolean announceForge = false;
-  private boolean onlineModeKickExistingPlayers = false;
-  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
+  @Expose private boolean announceForge = false;
+  @Expose private boolean onlineModeKickExistingPlayers = false;
+  @Expose private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
   private final Servers servers;
   private final ForcedHosts forcedHosts;
-  private final Advanced advanced;
-  private final Query query;
+  @Expose private final Advanced advanced;
+  @Expose private final Query query;
   private final Metrics metrics;
   private final Messages messages;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
@@ -622,18 +623,18 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Advanced {
 
-    private int compressionThreshold = 256;
-    private int compressionLevel = -1;
-    private int loginRatelimit = 3000;
-    private int connectionTimeout = 5000;
-    private int readTimeout = 30000;
-    private boolean proxyProtocol = false;
-    private boolean tcpFastOpen = false;
-    private boolean bungeePluginMessageChannel = true;
-    private boolean showPingRequests = false;
-    private boolean failoverOnUnexpectedServerDisconnect = true;
-    private boolean announceProxyCommands = true;
-    private boolean logCommandExecutions = false;
+    @Expose private int compressionThreshold = 256;
+    @Expose private int compressionLevel = -1;
+    @Expose private int loginRatelimit = 3000;
+    @Expose private int connectionTimeout = 5000;
+    @Expose private int readTimeout = 30000;
+    @Expose private boolean proxyProtocol = false;
+    @Expose private boolean tcpFastOpen = false;
+    @Expose private boolean bungeePluginMessageChannel = true;
+    @Expose private boolean showPingRequests = false;
+    @Expose private boolean failoverOnUnexpectedServerDisconnect = true;
+    @Expose private boolean announceProxyCommands = true;
+    @Expose private boolean logCommandExecutions = false;
 
     private Advanced() {
     }
@@ -725,10 +726,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Query {
 
-    private boolean queryEnabled = false;
-    private int queryPort = 25577;
-    private String queryMap = "Velocity";
-    private boolean showPlugins = false;
+    @Expose private boolean queryEnabled = false;
+    @Expose private int queryPort = 25577;
+    @Expose private String queryMap = "Velocity";
+    @Expose private boolean showPlugins = false;
 
     private Query() {
     }

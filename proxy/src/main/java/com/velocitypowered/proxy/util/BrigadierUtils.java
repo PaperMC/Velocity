@@ -1,10 +1,8 @@
 package com.velocitypowered.proxy.util;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -13,7 +11,6 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Locale;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides utilities for working with Brigadier commands.

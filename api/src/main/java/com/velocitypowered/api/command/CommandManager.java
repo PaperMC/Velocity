@@ -46,9 +46,7 @@ public interface CommandManager {
    * @param command the command to register
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered
-   * @deprecated Prefer {@link #register(CommandMeta, Command)} instead.
    */
-  @Deprecated
   void register(String alias, Command command, String... otherAliases);
 
   /**
@@ -122,4 +120,12 @@ public interface CommandManager {
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
   CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
+
+  /**
+   * Returns whether the given alias is registered on this manager.
+   *
+   * @param alias the command alias to check
+   * @return {@code true} if the alias is registered
+   */
+  boolean hasCommand(String alias);
 }

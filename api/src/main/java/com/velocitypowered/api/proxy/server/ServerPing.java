@@ -133,8 +133,9 @@ public final class ServerPing {
 
   /**
    * Returns a copy of this {@link ServerPing} instance as a builder so that it can be modified.
-   * It is guaranteed that {@code ping.asBuilder().ping().equals(ping)}: that is, if no other
-   * changes are made to the returned builder, the built instance will equal the original instance.
+   * It is guaranteed that {@code ping.asBuilder().build().equals(ping)} is true: that is, if no
+   * other changes are made to the returned builder, the built instance will equal the original
+   * instance.
    *
    * @return a copy of this instance as a {@link Builder}
    */

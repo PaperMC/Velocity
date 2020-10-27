@@ -68,8 +68,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -90,6 +90,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
+  private final Identity identity = new IdentityImpl();
   /**
    * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
    */
@@ -126,6 +127,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
+  }
+
+  @Override
+  public @NonNull Identity identity() {
+    return this.identity;
   }
 
   @Override
@@ -258,27 +264,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void sendMessage(net.kyori.adventure.text.@NonNull Component message) {
-    connection.write(Chat.createClientbound(message, this.getProtocolVersion()));
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
+    connection.write(Chat.createClientbound(identity, message, this.getProtocolVersion()));
   }
 
   @Override
-  public void sendMessage(@NonNull Component message, @NonNull MessageType type) {
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
+      @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
-    Chat packet = Chat.createClientbound(message, this.getProtocolVersion());
+    Chat packet = Chat.createClientbound(identity, message, this.getProtocolVersion());
     packet.setType(type == MessageType.CHAT ? Chat.CHAT_TYPE : Chat.SYSTEM_TYPE);
     connection.write(packet);
   }
 
   @Override
   public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
-    if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
-      // We can use the title packet instead.
+    ProtocolVersion playerVersion = getProtocolVersion();
+    if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+      // Use the title packet instead.
       TitlePacket pkt = new TitlePacket();
       pkt.setAction(TitlePacket.SET_ACTION_BAR);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion())
+      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
           .serialize(message));
       connection.write(pkt);
     } else {
@@ -288,7 +296,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
       Chat chat = new Chat();
       chat.setMessage(object.toString());
-      chat.setType((byte) 1);
+      chat.setType(Chat.GAME_INFO_TYPE);
       connection.write(chat);
     }
   }
@@ -311,9 +319,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
     net.kyori.adventure.title.Title.Times times = title.times();
     if (times != null) {
-      timesPkt.setFadeIn((int) DurationUtils.convertDurationToTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.convertDurationToTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.convertDurationToTicks(times.fadeOut()));
+      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
+      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
+      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
     }
     connection.delayedWrite(timesPkt);
 
@@ -504,7 +512,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       userMessage = "Unable to connect to " + server.getServerInfo().getName() + ". Try again "
           + "later.";
     }
-    handleConnectionException(server, null, TextComponent.of(userMessage,
+    handleConnectionException(server, null, Component.text(userMessage,
         NamedTextColor.RED), safe);
   }
 
@@ -527,7 +535,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
-      handleConnectionException(server, disconnectReason, TextComponent.builder()
+      handleConnectionException(server, disconnectReason, Component.text()
           .append(messages.getKickPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
@@ -535,7 +543,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
-      handleConnectionException(server, disconnectReason, TextComponent.builder()
+      handleConnectionException(server, disconnectReason, Component.text()
           .append(messages.getDisconnectPrefix(server.getServerInfo().getName()))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
@@ -623,7 +631,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      sendMessage(server.getConfiguration().getMessages()
+                      sendMessage(Identity.nil(), server.getConfiguration().getMessages()
                           .getMovedToNewServerPrefix().append(friendlyReason));
                       break;
                     default:
@@ -634,7 +642,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
             if (event.kickedDuringServerConnect() && previouslyConnected) {
-              sendMessage(res.getMessageComponent());
+              sendMessage(Identity.nil(), res.getMessageComponent());
             } else {
               disconnect(res.getMessageComponent());
             }
@@ -749,7 +757,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     DisconnectEvent event = new DisconnectEvent(this, status);
-    server.getEventManager().fire(event).thenRun(() -> this.teardownFuture.complete(null));
+    server.getEventManager().fire(event).whenComplete((val, ex) -> {
+      if (ex == null) {
+        this.teardownFuture.complete(null);
+      } else {
+        this.teardownFuture.completeExceptionally(ex);
+      }
+    });
   }
 
   public CompletableFuture<Void> getTeardownFuture() {
@@ -871,6 +885,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
   }
 
+  private class IdentityImpl implements Identity {
+    @Override
+    public @NonNull UUID uuid() {
+      return ConnectedPlayer.this.getUniqueId();
+    }
+  }
+
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
@@ -967,10 +988,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
             switch (status.getStatus()) {
               case ALREADY_CONNECTED:
-                sendMessage(ConnectionMessages.ALREADY_CONNECTED);
+                sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
                 break;
               case CONNECTION_IN_PROGRESS:
-                sendMessage(ConnectionMessages.IN_PROGRESS);
+                sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
                 break;
               case CONNECTION_CANCELLED:
                 // Ignored; the plugin probably already handled this.

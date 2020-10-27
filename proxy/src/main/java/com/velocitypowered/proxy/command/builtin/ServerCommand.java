@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -34,7 +36,7 @@ public class ServerCommand implements SimpleCommand {
     final String[] args = invocation.arguments();
 
     if (!(source instanceof Player)) {
-      source.sendMessage(TextComponent.of("Only players may run this command.",
+      source.sendMessage(Identity.nil(), Component.text("Only players may run this command.",
           NamedTextColor.RED));
       return;
     }
@@ -45,8 +47,8 @@ public class ServerCommand implements SimpleCommand {
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
-        player.sendMessage(
-            TextComponent.of("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+        player.sendMessage(Identity.nil(),
+            Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
         return;
       }
 
@@ -59,45 +61,45 @@ public class ServerCommand implements SimpleCommand {
   private void outputServerInformation(Player executor) {
     String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
         .map(ServerInfo::getName).orElse("<unknown>");
-    executor.sendMessage(TextComponent.of("You are currently connected to " + currentServer + ".",
-        NamedTextColor.YELLOW));
+    executor.sendMessage(Identity.nil(), Component.text(
+        "You are currently connected to " + currentServer + ".", NamedTextColor.YELLOW));
 
     List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     if (servers.size() > MAX_SERVERS_TO_LIST) {
-      executor.sendMessage(TextComponent.of(
+      executor.sendMessage(Identity.nil(), Component.text(
           "Too many servers to list. Tab-complete to show all servers.", NamedTextColor.RED));
       return;
     }
 
     // Assemble the list of servers as components
-    TextComponent.Builder serverListBuilder = TextComponent.builder("Available servers: ")
+    TextComponent.Builder serverListBuilder = Component.text().content("Available servers: ")
         .color(NamedTextColor.YELLOW);
     for (int i = 0; i < servers.size(); i++) {
       RegisteredServer rs = servers.get(i);
       serverListBuilder.append(formatServerComponent(currentServer, rs));
       if (i != servers.size() - 1) {
-        serverListBuilder.append(TextComponent.of(", ", NamedTextColor.GRAY));
+        serverListBuilder.append(Component.text(", ", NamedTextColor.GRAY));
       }
     }
 
-    executor.sendMessage(serverListBuilder.build());
+    executor.sendMessage(Identity.nil(), serverListBuilder.build());
   }
 
   private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {
     ServerInfo serverInfo = server.getServerInfo();
-    TextComponent serverTextComponent = TextComponent.of(serverInfo.getName());
+    TextComponent serverTextComponent = Component.text(serverInfo.getName());
 
     String playersText = server.getPlayersConnected().size() + " player(s) online";
     if (serverInfo.getName().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
-              showText(TextComponent.of("Currently connected to this server\n" + playersText))
+              showText(Component.text("Currently connected to this server\n" + playersText))
           );
     } else {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
           .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
           .hoverEvent(
-              showText(TextComponent.of("Click to connect to this server\n" + playersText))
+              showText(Component.text("Click to connect to this server\n" + playersText))
           );
     }
     return serverTextComponent;

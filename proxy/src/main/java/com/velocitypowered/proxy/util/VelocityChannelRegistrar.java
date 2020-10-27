@@ -21,8 +21,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   public void register(ChannelIdentifier... identifiers) {
     for (ChannelIdentifier identifier : identifiers) {
       Preconditions.checkArgument(identifier instanceof LegacyChannelIdentifier
-              || identifier instanceof MinecraftChannelIdentifier,
-          "identifier is unknown");
+          || identifier instanceof MinecraftChannelIdentifier, "identifier is unknown");
     }
 
     for (ChannelIdentifier identifier : identifiers) {

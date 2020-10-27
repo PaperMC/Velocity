@@ -1,9 +1,11 @@
 plugins {
     id 'java-library'
     id 'checkstyle'
+    id 'maven-publish'
 }
 
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/publish.gradle'
 
 dependencies {
     implementation "com.google.guava:guava:${guavaVersion}"
@@ -12,4 +14,12 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }

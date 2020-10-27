@@ -18,6 +18,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.Optional;
 import java.util.StringJoiner;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -155,9 +156,10 @@ class BungeeCordMessageResponder {
 
     Component messageComponent = serializer.deserialize(message);
     if (target.equals("ALL")) {
-      proxy.sendMessage(messageComponent);
+      proxy.sendMessage(Identity.nil(), messageComponent);
     } else {
-      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(messageComponent));
+      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(),
+          messageComponent));
     }
   }
 

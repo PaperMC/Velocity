@@ -17,6 +17,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.List;
 import java.util.Optional;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -58,10 +60,11 @@ public class GlistCommand {
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
-    source.sendMessage(
-        TextComponent.builder("To view all players on servers, use ", NamedTextColor.YELLOW)
-            .append("/glist all", NamedTextColor.DARK_AQUA)
-            .append(".", NamedTextColor.YELLOW)
+    source.sendMessage(Identity.nil(),
+        Component.text().content("To view all players on servers, use ")
+            .color(NamedTextColor.YELLOW)
+            .append(Component.text("/glist all", NamedTextColor.DARK_AQUA))
+            .append(Component.text(".", NamedTextColor.YELLOW))
             .build());
     return 1;
   }
@@ -77,8 +80,8 @@ public class GlistCommand {
     } else {
       Optional<RegisteredServer> registeredServer = server.getServer(serverName);
       if (!registeredServer.isPresent()) {
-        source.sendMessage(
-            TextComponent.of("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+        source.sendMessage(Identity.nil(),
+            Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);
@@ -87,9 +90,10 @@ public class GlistCommand {
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    target.sendMessage(TextComponent.builder("There are ", NamedTextColor.YELLOW)
-        .append(Integer.toString(server.getAllPlayers().size()), NamedTextColor.GREEN)
-        .append(" player(s) online.", NamedTextColor.YELLOW)
+    target.sendMessage(Identity.nil(), Component.text()
+        .content("There are ").color(NamedTextColor.YELLOW)
+        .append(Component.text(server.getAllPlayers().size(), NamedTextColor.GREEN))
+        .append(Component.text(" player(s) online.", NamedTextColor.YELLOW))
         .build());
   }
 
@@ -99,22 +103,22 @@ public class GlistCommand {
       return;
     }
 
-    TextComponent.Builder builder = TextComponent.builder()
-        .append(TextComponent.of("[" + server.getServerInfo().getName() + "] ",
+    TextComponent.Builder builder = Component.text()
+        .append(Component.text("[" + server.getServerInfo().getName() + "] ",
             NamedTextColor.DARK_AQUA))
-        .append("(" + onServer.size() + ")", NamedTextColor.GRAY)
-        .append(": ")
+        .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
+        .append(Component.text(": "))
         .resetStyle();
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);
-      builder.append(player.getUsername());
+      builder.append(Component.text(player.getUsername()));
 
       if (i + 1 < onServer.size()) {
-        builder.append(", ");
+        builder.append(Component.text(", "));
       }
     }
 
-    target.sendMessage(builder.build());
+    target.sendMessage(Identity.nil(), builder.build());
   }
 }
