@@ -1,6 +1,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -25,6 +26,8 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
         player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
+      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+        return true;
       }
       serverConn.ensureConnected().write(packet.retain());
     }
