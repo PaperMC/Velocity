@@ -120,6 +120,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
               continue;
             }
 
+            if (response.getDescriptionComponent() == null) {
+              continue;
+            }
+
             return new ServerPing(
                 fallback.getVersion(),
                 fallback.getPlayers().orElse(null),
