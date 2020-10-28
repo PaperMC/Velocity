@@ -27,7 +27,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 @SuppressFBWarnings(value = "OS_OPEN_STREAM", justification = "Most methods in this class open "
     + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
     + "nothing.")
-class BungeeCordMessageResponder {
+public class BungeeCordMessageResponder {
 
   private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier
       .create("bungeecord", "main");
@@ -40,6 +40,11 @@ class BungeeCordMessageResponder {
   BungeeCordMessageResponder(VelocityServer proxy, ConnectedPlayer player) {
     this.proxy = proxy;
     this.player = player;
+  }
+
+  public static boolean isBungeeCordMessage(PluginMessage message) {
+    return MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
+        .equals(message.getChannel());
   }
 
   private void processConnect(ByteBufDataInput in) {
@@ -307,8 +312,7 @@ class BungeeCordMessageResponder {
       return false;
     }
 
-    if (!MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
-        .equals(message.getChannel())) {
+    if (!isBungeeCordMessage(message)) {
       return false;
     }
 

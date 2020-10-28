@@ -16,6 +16,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
+import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -194,6 +195,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil
             .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+        return true;
       } else {
         if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
           // We must bypass the currently-connected server when forwarding Forge packets.
