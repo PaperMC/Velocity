@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import org.apache.logging.log4j.LogManager;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
@@ -163,7 +164,12 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
               // Send the response
               DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
               ctx.writeAndFlush(responsePacket, ctx.voidPromise());
-            }, ctx.channel().eventLoop());
+            }, ctx.channel().eventLoop())
+            .exceptionally((ex) -> {
+              LogManager.getLogger(getClass()).error(
+                  "Exception while writing GS4 response for query from {}", senderAddress, ex);
+              return null;
+            });
         break;
       }
       default:

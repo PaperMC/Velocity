@@ -4,9 +4,9 @@ import java.security.GeneralSecurityException;
 
 class OpenSslCipherImpl {
 
-  native long init(byte[] key, boolean encrypt) throws GeneralSecurityException;
+  static native long init(byte[] key, boolean encrypt) throws GeneralSecurityException;
 
-  native void process(long ctx, long source, int len, long dest);
+  static native void process(long ctx, long source, int len, long dest);
 
-  native void free(long ptr);
+  static native void free(long ptr);
 }

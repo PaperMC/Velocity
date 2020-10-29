@@ -5,10 +5,10 @@ package com.velocitypowered.natives.compression;
  */
 class NativeZlibDeflate {
 
-  native long init(int level);
+  static native long init(int level);
 
-  native long free(long ctx);
+  static native long free(long ctx);
 
-  native int process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
+  static native int process(long ctx, long sourceAddress, int sourceLength, long destinationAddress,
       int destinationLength);
 }

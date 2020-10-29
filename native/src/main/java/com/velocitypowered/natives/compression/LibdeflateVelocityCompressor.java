@@ -9,9 +9,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = LibdeflateVelocityCompressor::new;
 
-  private final NativeZlibInflate inflate = new NativeZlibInflate();
   private final long inflateCtx;
-  private final NativeZlibDeflate deflate = new NativeZlibDeflate();
   private final long deflateCtx;
   private boolean disposed = false;
 
@@ -21,8 +19,8 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
       throw new IllegalArgumentException("Invalid compression level " + level);
     }
 
-    this.inflateCtx = inflate.init();
-    this.deflateCtx = deflate.init(correctedLevel);
+    this.inflateCtx = NativeZlibInflate.init();
+    this.deflateCtx = NativeZlibDeflate.init(correctedLevel);
   }
 
   @Override
@@ -38,7 +36,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
     long sourceAddress = source.memoryAddress() + source.readerIndex();
     long destinationAddress = destination.memoryAddress() + destination.writerIndex();
 
-    inflate.process(inflateCtx, sourceAddress, source.readableBytes(), destinationAddress,
+    NativeZlibInflate.process(inflateCtx, sourceAddress, source.readableBytes(), destinationAddress,
         uncompressedSize);
     destination.writerIndex(destination.writerIndex() + uncompressedSize);
   }
@@ -51,7 +49,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
       long sourceAddress = source.memoryAddress() + source.readerIndex();
       long destinationAddress = destination.memoryAddress() + destination.writerIndex();
 
-      int produced = deflate.process(deflateCtx, sourceAddress, source.readableBytes(),
+      int produced = NativeZlibDeflate.process(deflateCtx, sourceAddress, source.readableBytes(),
           destinationAddress, destination.writableBytes());
       if (produced > 0) {
         destination.writerIndex(destination.writerIndex() + produced);
@@ -70,8 +68,8 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
   @Override
   public void close() {
     if (!disposed) {
-      inflate.free(inflateCtx);
-      deflate.free(deflateCtx);
+      NativeZlibInflate.free(inflateCtx);
+      NativeZlibDeflate.free(deflateCtx);
     }
     disposed = true;
   }

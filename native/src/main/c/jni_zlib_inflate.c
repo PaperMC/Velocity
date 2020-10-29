@@ -7,7 +7,7 @@
 
 JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibInflate_init(JNIEnv *env,
-    jobject obj)
+    jclass clazz)
 {
     struct libdeflate_decompressor *decompress = libdeflate_alloc_decompressor();
     if (decompress == NULL) {
@@ -21,7 +21,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_init(JNIEnv *env,
 
 JNIEXPORT void JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibInflate_free(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ctx)
 {
     libdeflate_free_decompressor((struct libdeflate_decompressor *) ctx);
@@ -29,7 +29,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_free(JNIEnv *env,
 
 JNIEXPORT jboolean JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibInflate_process(JNIEnv *env,
-    jobject obj,
+    jclass clazz,
     jlong ctx,
     jlong sourceAddress,
     jint sourceLength,
@@ -52,6 +52,10 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_process(JNIEnv *e
         case LIBDEFLATE_INSUFFICIENT_SPACE:
             // These cases are the same for us. We expect the full uncompressed size to be known.
             throwException(env, "java/util/zip/DataFormatException", "uncompressed size is inaccurate");
+            return JNI_FALSE;
+        default:
+            // Unhandled case
+            throwException(env, "java/util/zip/DataFormatException", "unknown libdeflate return code");
             return JNI_FALSE;
     }
 }

@@ -16,6 +16,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
+import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -157,7 +158,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 smc.write(packet);
               }
             }
-          }, smc.eventLoop());
+          }, smc.eventLoop())
+          .exceptionally((ex) -> {
+            logger.error("Exception while handling player chat for {}", player, ex);
+            return null;
+          });
     }
     return true;
   }
@@ -190,6 +195,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil
             .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+        return true;
       } else {
         if (serverConn.getPhase() == BackendConnectionPhases.IN_TRANSITION) {
           // We must bypass the currently-connected server when forwarding Forge packets.
@@ -225,7 +232,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                       Unpooled.wrappedBuffer(copy));
                   backendConn.write(message);
                 }
-              }, backendConn.eventLoop());
+              }, backendConn.eventLoop())
+                  .exceptionally((ex) -> {
+                    logger.error("Exception while handling plugin message packet for {}",
+                        player, ex);
+                    return null;
+                  });
             }
           }
         }
@@ -423,7 +435,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             resp.getOffers().addAll(offers);
             player.getConnection().write(resp);
           }
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling command tab completion for player {} executing {}",
+              player, command, ex);
+          return null;
+        });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -475,7 +492,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 player.getUsername(),
                 command, e);
           }
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing command tab completion, with request {} and response {}",
+              request, response, ex);
+          return null;
+        });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -490,7 +513,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             response.getOffers().add(new Offer(s));
           }
           player.getConnection().write(response);
-        }, player.getConnection().eventLoop());
+        }, player.getConnection().eventLoop())
+        .exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing regular tab completion, with request {} and response{}",
+              request, response, ex);
+          return null;
+        });
   }
 
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,

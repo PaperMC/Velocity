@@ -19,13 +19,11 @@ public class NativeVelocityCipher implements VelocityCipher {
       return new NativeVelocityCipher(false, key);
     }
   };
-  private static final OpenSslCipherImpl impl = new OpenSslCipherImpl();
-
   private final long ctx;
   private boolean disposed = false;
 
   private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
-    this.ctx = impl.init(key.getEncoded(), encrypt);
+    this.ctx = OpenSslCipherImpl.init(key.getEncoded(), encrypt);
   }
 
   @Override
@@ -35,13 +33,13 @@ public class NativeVelocityCipher implements VelocityCipher {
     long base = source.memoryAddress() + source.readerIndex();
     int len = source.readableBytes();
 
-    impl.process(ctx, base, len, base);
+    OpenSslCipherImpl.process(ctx, base, len, base);
   }
 
   @Override
   public void close() {
     if (!disposed) {
-      impl.free(ctx);
+      OpenSslCipherImpl.free(ctx);
     }
     disposed = true;
   }

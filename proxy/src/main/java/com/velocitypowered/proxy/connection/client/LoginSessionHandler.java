@@ -183,7 +183,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           } else {
             initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
           }
-        }, mcConnection.eventLoop());
+        }, mcConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception in pre-login stage", ex);
+          return null;
+        });
   }
 
   private EncryptionRequest generateEncryptionRequest() {
@@ -202,6 +206,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         server.getConfiguration().getPlayerInfoForwardingMode());
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
         onlineMode);
+    final GameProfile finalProfile = profile;
 
     server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
       if (mcConnection.isClosed()) {
@@ -229,6 +234,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               completeLoginProtocolPhaseAndInitialize(player);
             }
           }, mcConnection.eventLoop());
+    }).exceptionally((ex) -> {
+      logger.error("Exception during connection of {}", finalProfile, ex);
+      return null;
     });  
   }
 
@@ -274,7 +282,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenRun(() -> connectToInitialServer(player));
           }
-        }, mcConnection.eventLoop());
+        }, mcConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while completing login initialisation phase for {}", player, ex);
+          return null;
+        });
   }
 
   private void connectToInitialServer(ConnectedPlayer player) {
@@ -291,7 +303,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();
-        }, mcConnection.eventLoop());
+        }, mcConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while connecting {} to initial server", player, ex);
+          return null;
+        });
   }
 
   @Override
