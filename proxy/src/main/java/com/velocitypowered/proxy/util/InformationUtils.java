@@ -16,10 +16,12 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 
+import io.netty.channel.unix.DomainSocketAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -168,14 +170,22 @@ public enum InformationUtils {
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
     info.addProperty("currentPlayers", server.getPlayersConnected().size());
-    InetSocketAddress iaddr = server.getServerInfo().getAddress();
-    if (iaddr.isUnresolved()) {
-      // Greetings form Netty 4aa10db9
-      info.addProperty("host", iaddr.getHostString());
+    SocketAddress address = server.getServerInfo().getAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress iaddr = (InetSocketAddress) address;
+      if (iaddr.isUnresolved()) {
+        // Greetings form Netty 4aa10db9
+        info.addProperty("host", iaddr.getHostString());
+      } else {
+        info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));
+      }
+      info.addProperty("port", iaddr.getPort());
+    } else if (address instanceof DomainSocketAddress) {
+      DomainSocketAddress daddr = (DomainSocketAddress) address;
+      info.addProperty("path", daddr.path());
     } else {
-      info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));
+      info.addProperty("info", address.toString());
     }
-    info.addProperty("port", iaddr.getPort());
     return info;
   }
 

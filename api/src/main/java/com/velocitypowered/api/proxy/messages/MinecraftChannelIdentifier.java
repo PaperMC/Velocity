@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import net.kyori.minecraft.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -70,26 +69,12 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
     return create(namespace, name);
   }
 
-  /**
-   * Creates an channel identifier from the specified Minecraft identifier.
-   *
-   * @param key the Minecraft key to use
-   * @return a new channel identifier
-   */
-  public static MinecraftChannelIdentifier from(Key key) {
-    return create(key.namespace(), key.value());
-  }
-
   public String getNamespace() {
     return namespace;
   }
 
   public String getName() {
     return name;
-  }
-
-  public Key asKey() {
-    return Key.of(namespace, name);
   }
 
   @Override

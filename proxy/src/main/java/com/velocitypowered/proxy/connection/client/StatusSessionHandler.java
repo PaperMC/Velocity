@@ -120,7 +120,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
               continue;
             }
 
-            if (response.getDescriptionComponent() == null) {
+            if (response.getDescription() == null) {
               continue;
             }
 
