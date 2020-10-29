@@ -43,7 +43,7 @@ public class BungeeCordMessageResponder {
   }
 
   public static boolean isBungeeCordMessage(PluginMessage message) {
-    return MODERN_CHANNEL.getId().equals(message.getChannel()) && !LEGACY_CHANNEL.getId()
+    return MODERN_CHANNEL.getId().equals(message.getChannel()) || LEGACY_CHANNEL.getId()
         .equals(message.getChannel());
   }
 
