@@ -1,10 +1,10 @@
 package com.velocitypowered.proxy.protocol.netty;
 
+import com.velocitypowered.proxy.protocol.netty.VarintByteDecoder.DecodeResult;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.util.ByteProcessor;
 import java.util.List;
 
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
@@ -13,7 +13,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Bad packet length");
   private static final QuietDecoderException VARINT_BIG_CACHED =
       new QuietDecoderException("VarInt too big");
-  private final VarintByteDecoder reader = new VarintByteDecoder();
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
@@ -22,7 +21,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    reader.reset();
+    final VarintByteDecoder reader = new VarintByteDecoder();
 
     int varintEnd = in.forEachByte(reader);
     if (varintEnd == -1) {
@@ -31,53 +30,23 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    if (reader.result == DecodeResult.SUCCESS) {
-      if (reader.readVarint < 0) {
+    if (reader.getResult() == DecodeResult.SUCCESS) {
+      int readVarint = reader.getReadVarint();
+      int bytesRead = reader.getBytesRead();
+      if (readVarint < 0) {
         throw BAD_LENGTH_CACHED;
-      } else if (reader.readVarint == 0) {
+      } else if (readVarint == 0) {
         // skip over the empty packet and ignore it
         in.readerIndex(varintEnd + 1);
       } else {
-        int minimumRead = reader.bytesRead + reader.readVarint;
+        int minimumRead = bytesRead + readVarint;
         if (in.isReadable(minimumRead)) {
-          out.add(in.retainedSlice(varintEnd + 1, reader.readVarint));
+          out.add(in.retainedSlice(varintEnd + 1, readVarint));
           in.skipBytes(minimumRead);
         }
       }
-    } else if (reader.result == DecodeResult.TOO_BIG) {
+    } else if (reader.getResult() == DecodeResult.TOO_BIG) {
       throw VARINT_BIG_CACHED;
     }
-  }
-
-  private static class VarintByteDecoder implements ByteProcessor {
-    private int readVarint;
-    private int bytesRead;
-    private DecodeResult result = DecodeResult.TOO_SHORT;
-
-    @Override
-    public boolean process(byte k) {
-      readVarint |= (k & 0x7F) << bytesRead++ * 7;
-      if (bytesRead > 3) {
-        result = DecodeResult.TOO_BIG;
-        return false;
-      }
-      if ((k & 0x80) != 128) {
-        result = DecodeResult.SUCCESS;
-        return false;
-      }
-      return true;
-    }
-
-    void reset() {
-      readVarint = 0;
-      bytesRead = 0;
-      result = DecodeResult.TOO_SHORT;
-    }
-  }
-
-  private enum DecodeResult {
-    SUCCESS,
-    TOO_SHORT,
-    TOO_BIG
   }
 }
