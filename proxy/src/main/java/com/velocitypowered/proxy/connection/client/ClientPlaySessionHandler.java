@@ -403,8 +403,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void doSafeClientServerSwitch(JoinGame joinGame) {
     // Some clients do not behave well with the "fast" respawn sequence. In this case we will use
-    // a "safe" respawn sequence that involves sending three packets to the clients. They have the
-    // same affect but tend to work better with buggier clients (Forge 1.8 in particular).
+    // a "safe" respawn sequence that involves sending three packets to the client. They have the
+    // same effect but tend to work better with buggier clients (Forge 1.8 in particular).
 
     // Send the JoinGame packet itself, unmodified.
     player.getConnection().delayedWrite(joinGame);
