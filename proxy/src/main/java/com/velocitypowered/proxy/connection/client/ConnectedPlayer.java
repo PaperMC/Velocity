@@ -871,12 +871,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       ResourcePackRequest request = new ResourcePackRequest();
       request.setUrl(url);
       request.setHash("");
+      request.setRequired(false);
       connection.write(request);
     }
   }
 
   @Override
-  public void sendResourcePack(String url, byte[] hash) {
+  public void sendResourcePack(String url, byte[] hash, boolean isRequired) {
     Preconditions.checkNotNull(url, "url");
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
@@ -885,8 +886,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       ResourcePackRequest request = new ResourcePackRequest();
       request.setUrl(url);
       request.setHash(ByteBufUtil.hexDump(hash));
+      request.setRequired(isRequired);
       connection.write(request);
     }
+  }
+
+  @Override
+  public void sendResourcePack(String url, byte[] hash) {
+    sendResourcePack(url, hash, false);
   }
 
   /**

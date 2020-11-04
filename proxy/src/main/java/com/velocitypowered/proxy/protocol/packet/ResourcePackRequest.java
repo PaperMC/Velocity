@@ -30,6 +30,7 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   private @MonotonicNonNull String url;
   private @MonotonicNonNull String hash;
+  private boolean isRequired; // 1.17+
 
   public @Nullable String getUrl() {
     return url;
@@ -37,6 +38,10 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   public void setUrl(String url) {
     this.url = url;
+  }
+
+  public boolean isRequired() {
+    return isRequired;
   }
 
   public @Nullable String getHash() {
@@ -47,10 +52,17 @@ public class ResourcePackRequest implements MinecraftPacket {
     this.hash = hash;
   }
 
+  public void setRequired(boolean required) {
+    isRequired = required;
+  }
+
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     this.url = ProtocolUtils.readString(buf);
     this.hash = ProtocolUtils.readString(buf);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+      this.isRequired = buf.readBoolean();
+    }
   }
 
   @Override
@@ -60,6 +72,9 @@ public class ResourcePackRequest implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, url);
     ProtocolUtils.writeString(buf, hash);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+      buf.writeBoolean(isRequired);
+    }
   }
 
   @Override

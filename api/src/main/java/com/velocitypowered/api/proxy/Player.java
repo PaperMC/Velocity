@@ -239,4 +239,19 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+
+  /**
+   * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
+   * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
+   * In 1.17 and newer you can additionally specify
+   * whether the resource pack is required or not. Setting this for an older client will have
+   * no effect.
+   *
+   * @param url the URL for the resource pack
+   * @param hash the SHA-1 hash value for the resource pack
+   * @param isRequired flag to set the resource pack as required in 1.17+
+   */
+  void sendResourcePack(String url, byte[] hash, boolean isRequired);
+ 
 }
