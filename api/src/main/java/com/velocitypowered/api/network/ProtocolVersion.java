@@ -122,7 +122,7 @@ public enum ProtocolVersion {
    * @return the protocol version
    */
   public int getProtocol() {
-    return protocol;
+    return protocol == -1 ? snapshotProtocol : protocol;
   }
 
   /**
