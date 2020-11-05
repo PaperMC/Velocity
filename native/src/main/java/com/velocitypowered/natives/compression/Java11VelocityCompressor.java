@@ -66,7 +66,7 @@ public class Java11VelocityCompressor implements VelocityCompressor {
       final int origIdx = source.readerIndex();
       INFLATE_SET_INPUT.invokeExact(inflater, source.nioBuffer());
 
-      while (!inflater.finished() && inflater.getBytesRead() < source.readableBytes()) {
+      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
         if (!destination.isWritable()) {
           ensureMaxSize(destination, uncompressedSize);
           destination.ensureWritable(ZLIB_BUFFER_SIZE);
@@ -78,13 +78,18 @@ public class Java11VelocityCompressor implements VelocityCompressor {
         destination.writerIndex(destination.writerIndex() + produced);
       }
 
+      if (inflater.getBytesWritten() != uncompressedSize) {
+        throw new DataFormatException("Did not write the exact expected number of"
+            + " uncompressed bytes, expected " + uncompressedSize);
+      }
       source.readerIndex(origIdx + inflater.getTotalIn());
-      inflater.reset();
     } catch (Throwable e) {
       if (e instanceof DataFormatException) {
         throw (DataFormatException) e;
       }
       throw new RuntimeException(e);
+    } finally {
+      inflater.reset();
     }
   }
 
