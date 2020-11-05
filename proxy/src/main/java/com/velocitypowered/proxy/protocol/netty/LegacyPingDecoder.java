@@ -23,7 +23,7 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
     }
 
     if (!ctx.channel().isActive()) {
-      in.skipBytes(in.readableBytes());
+      in.clear();
       return;
     }
 

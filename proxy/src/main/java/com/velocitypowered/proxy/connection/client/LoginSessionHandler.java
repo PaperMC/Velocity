@@ -208,7 +208,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         onlineMode);
     final GameProfile finalProfile = profile;
 
-    server.getEventManager().fire(profileRequestEvent).thenCompose(profileEvent -> {
+    server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
       if (mcConnection.isClosed()) {
         // The player disconnected after we authenticated them.
         return CompletableFuture.completedFuture(null);
@@ -234,7 +234,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               completeLoginProtocolPhaseAndInitialize(player);
             }
           }, mcConnection.eventLoop());
-    }).exceptionally((ex) -> {
+    }, mcConnection.eventLoop()).exceptionally((ex) -> {
       logger.error("Exception during connection of {}", finalProfile, ex);
       return null;
     });  

@@ -223,20 +223,21 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      boolean is1Point8 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0;
-      boolean isLegacyOrPing = this.getState() == StateRegistry.HANDSHAKE
-          || this.getState() == StateRegistry.STATUS;
-      if (channel.eventLoop().inEventLoop() && (is1Point8 || isLegacyOrPing)) {
+      boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
+          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
+      if (is17 && this.getState() != StateRegistry.STATUS) {
+        channel.eventLoop().execute(() -> {
+          // 1.7.x versions have a race condition with switching protocol states, so just explicitly
+          // close the connection after a short while.
+          this.setAutoReading(false);
+          channel.eventLoop().schedule(() -> {
+            knownDisconnect = true;
+            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+          }, 250, TimeUnit.MILLISECONDS);
+        });
+      } else {
         knownDisconnect = true;
         channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
-      } else {
-        // 1.7.x versions have a race condition with switching protocol states, so just explicitly
-        // close the connection after a short while.
-        this.setAutoReading(false);
-        channel.eventLoop().schedule(() -> {
-          knownDisconnect = true;
-          channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
-        }, 250, TimeUnit.MILLISECONDS);
       }
     }
   }
