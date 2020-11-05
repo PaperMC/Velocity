@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.lifecycle.ProxyInitializeEvent;
 import com.velocitypowered.api.event.lifecycle.ProxyReloadEvent;
+import com.velocitypowered.api.event.lifecycle.ProxyShutdownEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -30,7 +31,8 @@ import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.serialization.FaviconSerializer;
 import com.velocitypowered.proxy.network.serialization.GameProfileSerializer;
-import com.velocitypowered.proxy.plugin.VelocityEventManager;
+import com.velocitypowered.proxy.event.VelocityEventManager;
+import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
@@ -422,7 +424,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           logger.error("Exception while tearing down player connections", e);
         }
 
-        eventManager.fireShutdownEvent();
+        try {
+          eventManager.fire(new ProxyShutdownEvent()).get(10, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+          timedOut = true;
+        } catch (ExecutionException e) {
+          timedOut = true;
+          logger.error("Exception while firing the shutdown event", e);
+        }
 
         timedOut = !eventManager.shutdown() || timedOut;
         timedOut = !scheduler.shutdown() || timedOut;

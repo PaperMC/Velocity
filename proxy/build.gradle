@@ -69,7 +69,6 @@ dependencies {
     runtimeOnly 'com.lmax:disruptor:3.4.2' // Async loggers
 
     implementation 'it.unimi.dsi:fastutil:8.4.1'
-    implementation 'net.kyori:event-method-asm:4.0.0-SNAPSHOT'
     implementation 'net.kyori:adventure-nbt:4.0.0-SNAPSHOT'
 
     implementation 'org.asynchttpclient:async-http-client:2.12.1'
@@ -77,6 +76,8 @@ dependencies {
     implementation 'com.spotify:completable-futures:0.3.3'
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
+
+    implementation 'org.lanternpowered:lmbda:2.0.0-SNAPSHOT'
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.1.2'
 
@@ -128,4 +129,8 @@ shadowJar {
 
 artifacts {
     archives shadowJar
+}
+
+test {
+    useJUnitPlatform()
 }
