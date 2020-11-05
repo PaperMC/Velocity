@@ -65,7 +65,7 @@ class VelocityCompressorTest {
   @Test
   @EnabledOnJre(JRE.JAVA_11)
   void java11IntegrityCheckDirect() throws DataFormatException {
-    VelocityCompressor compressor = Java11VelocityCompressor.FACTORY
+    VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
     check(compressor, () -> Unpooled.directBuffer(TEST_DATA.length + 32));
   }
@@ -73,7 +73,7 @@ class VelocityCompressorTest {
   @Test
   @EnabledOnJre(JRE.JAVA_11)
   void java11IntegrityCheckHeap() throws DataFormatException {
-    VelocityCompressor compressor = Java11VelocityCompressor.FACTORY
+    VelocityCompressor compressor = JavaVelocityCompressor.FACTORY
         .create(Deflater.DEFAULT_COMPRESSION);
     check(compressor, () -> Unpooled.buffer(TEST_DATA.length + 32));
   }
@@ -82,7 +82,7 @@ class VelocityCompressorTest {
       throws DataFormatException {
     ByteBuf source = bufSupplier.get();
     ByteBuf dest = bufSupplier.get();
-    ByteBuf decompressed = bufSupplier.get();
+    ByteBuf decompressed = Unpooled.directBuffer(16);
 
     source.writeBytes(TEST_DATA);
     int uncompressedData = source.readableBytes();

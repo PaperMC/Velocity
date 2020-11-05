@@ -2,7 +2,6 @@ package com.velocitypowered.natives.util;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
-import com.velocitypowered.natives.compression.Java11VelocityCompressor;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.LibdeflateVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
@@ -71,9 +70,7 @@ public class Natives {
               "libdeflate (Linux aarch64)",
               LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.JAVA_11, () -> {
-          }, "Java 11", () -> Java11VelocityCompressor.FACTORY),
-          new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
-          }, "Java", JavaVelocityCompressor.FACTORY)
+          }, "Java", () -> JavaVelocityCompressor.FACTORY)
       )
   );
 
