@@ -34,23 +34,29 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     checkArgument(source.nioBufferCount() == 1, "source has multiple backing buffers");
     checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
 
-    int origIdx = source.readerIndex();
+    final int origIdx = source.readerIndex();
     inflater.setInput(source.nioBuffer());
 
-    while (!inflater.finished() && inflater.getBytesRead() < source.readableBytes()) {
-      if (!destination.isWritable()) {
-        ensureMaxSize(destination, uncompressedSize);
-        destination.ensureWritable(ZLIB_BUFFER_SIZE);
+    try {
+      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
+        if (!destination.isWritable()) {
+          destination.ensureWritable(ZLIB_BUFFER_SIZE);
+        }
+
+        ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
+            destination.writableBytes());
+        int produced = inflater.inflate(destNioBuf);
+        destination.writerIndex(destination.writerIndex() + produced);
       }
 
-      ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
-          destination.writableBytes());
-      int produced = inflater.inflate(destNioBuf);
+      if (inflater.getBytesWritten() != uncompressedSize) {
+        throw new DataFormatException("Did not write the exact expected number of"
+            + " uncompressed bytes, expected " + uncompressedSize);
+      }
       source.readerIndex(origIdx + inflater.getTotalIn());
-      destination.writerIndex(destination.writerIndex() + produced);
+    } finally {
+      inflater.reset();
     }
-
-    inflater.reset();
   }
 
   @Override
