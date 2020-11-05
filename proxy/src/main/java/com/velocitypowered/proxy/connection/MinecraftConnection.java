@@ -225,7 +225,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (channel.isActive()) {
       boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
           && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
-      if (is17) {
+      if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
