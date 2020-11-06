@@ -20,4 +20,11 @@ public interface CommandInvocation<T> {
    * @return the command arguments
    */
   T arguments();
+
+  /**
+   * Returns the alias used to invoke the command.
+   *
+   * @return the command used to invoke the command.
+   */
+  String alias();
 }
