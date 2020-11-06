@@ -8,6 +8,11 @@ apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 sourceSets {
     ap {
         compileClasspath += main.compileClasspath + main.output
