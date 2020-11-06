@@ -34,7 +34,7 @@ public class TitlePacket implements Packet {
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, action);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // 1.11+ shifted the action enum by 1 to handle the action bar
       switch (action) {
         case SET_TITLE:
@@ -121,21 +121,21 @@ public class TitlePacket implements Packet {
 
   public static TitlePacket hideForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.HIDE
+    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.HIDE
         : TitlePacket.HIDE_OLD);
     return packet;
   }
 
   public static TitlePacket resetForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.RESET
+    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.RESET
         : TitlePacket.RESET_OLD);
     return packet;
   }
 
   public static TitlePacket timesForProtocolVersion(ProtocolVersion version) {
     TitlePacket packet = new TitlePacket();
-    packet.setAction(version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0 ? TitlePacket.SET_TIMES
+    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.SET_TIMES
         : TitlePacket.SET_TIMES_OLD);
     return packet;
   }

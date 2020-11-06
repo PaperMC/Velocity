@@ -93,7 +93,7 @@ class PacketRegistryTest {
         () -> registry.register(HandshakePacket.class, HandshakePacket::new,
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12, false)));
     assertThrows(IllegalArgumentException.class,
-        () -> registry.register(StatusPingPacket.class, StatusPingPacket::new,
+        () -> registry.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
             new StateRegistry.PacketMapping(0x00, MINECRAFT_1_13, false)));
   }
 

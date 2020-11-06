@@ -114,7 +114,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+        && handshake.getProtocolVersion().lt(ProtocolVersion.MINECRAFT_1_13)) {
       ic.disconnectQuietly(Component.text("This server is only compatible with 1.13 and above."));
       return;
     }
@@ -126,9 +126,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private ConnectionType getHandshakeConnectionType(HandshakePacket handshake) {
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
-        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+        && handshake.getProtocolVersion().lt(ProtocolVersion.MINECRAFT_1_13)) {
       return ConnectionTypes.LEGACY_FORGE;
-    } else if (handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+    } else if (handshake.getProtocolVersion().lte(ProtocolVersion.MINECRAFT_1_7_6)) {
       // 1.7 Forge will not notify us during handshake. UNDETERMINED will listen for incoming
       // forge handshake attempts. Also sends a reset handshake packet on every transition.
       return ConnectionTypes.UNDETERMINED_17;

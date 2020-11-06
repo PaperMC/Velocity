@@ -9,47 +9,48 @@ import io.netty.buffer.ByteBuf;
 
 public class KeepAlivePacket implements Packet {
 
-  private long randomId;
-
-  public long getRandomId() {
-    return randomId;
-  }
-
-  public void setRandomId(long randomId) {
-    this.randomId = randomId;
-  }
-
-  @Override
-  public String toString() {
-    return "KeepAlive{"
-        + "randomId=" + randomId
-        + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
+  public static final Decoder<KeepAlivePacket> DECODER = (buf, direction, version) -> {
+    final long randomId;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
       randomId = buf.readLong();
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    } else if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       randomId = ProtocolUtils.readVarInt(buf);
     } else {
       randomId = buf.readInt();
     }
+    return new KeepAlivePacket(randomId);
+  };
+
+  private final long randomId;
+
+  public KeepAlivePacket(final long randomId) {
+    this.randomId = randomId;
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {
       buf.writeLong(randomId);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    } else if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeVarInt(buf, (int) randomId);
     } else {
       buf.writeInt((int) randomId);
     }
   }
 
+  public long getRandomId() {
+    return randomId;
+  }
+
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public String toString() {
+    return "KeepAlive{"
+      + "randomId=" + randomId
+      + '}';
   }
 }

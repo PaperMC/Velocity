@@ -6,9 +6,16 @@ import io.netty.buffer.ByteBuf;
 
 public interface Packet {
 
-  void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion);
+  @Deprecated
+  default void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
+    throw new IllegalStateException();
+  }
 
   void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion);
 
   boolean handle(MinecraftSessionHandler handler);
+
+  interface Decoder<P extends Packet> {
+    P decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version);
+  }
 }

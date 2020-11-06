@@ -44,7 +44,7 @@ public class EncryptionRequestPacket implements Packet {
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.serverId = ProtocolUtils.readString(buf, 20);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       publicKey = ProtocolUtils.readByteArray(buf, 256);
       verifyToken = ProtocolUtils.readByteArray(buf, 16);
     } else {
@@ -57,7 +57,7 @@ public class EncryptionRequestPacket implements Packet {
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeString(buf, this.serverId);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeByteArray(buf, publicKey);
       ProtocolUtils.writeByteArray(buf, verifyToken);
     } else {

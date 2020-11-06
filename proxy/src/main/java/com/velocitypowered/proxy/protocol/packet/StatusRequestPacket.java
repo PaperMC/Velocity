@@ -9,14 +9,9 @@ import io.netty.buffer.ByteBuf;
 public class StatusRequestPacket implements Packet {
 
   public static final StatusRequestPacket INSTANCE = new StatusRequestPacket();
+  public static Decoder<StatusRequestPacket> DECODER = (buf, direction, version) -> INSTANCE;
 
   private StatusRequestPacket() {
-
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    // There is no additional data to decode.
   }
 
   @Override
@@ -25,12 +20,12 @@ public class StatusRequestPacket implements Packet {
   }
 
   @Override
-  public String toString() {
-    return "StatusRequest";
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
   }
 
   @Override
-  public boolean handle(MinecraftSessionHandler handler) {
-    return handler.handle(this);
+  public String toString() {
+    return "StatusRequestPacket";
   }
 }

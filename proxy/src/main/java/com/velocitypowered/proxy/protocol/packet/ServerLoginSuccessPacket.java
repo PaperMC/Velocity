@@ -47,9 +47,9 @@ public class ServerLoginSuccessPacket implements Packet {
 
   @Override
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       uuid = ProtocolUtils.readUuidIntArray(buf);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
+    } else if (version.gte(ProtocolVersion.MINECRAFT_1_7_6)) {
       uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
     } else {
       uuid = UuidUtils.fromUndashed(ProtocolUtils.readString(buf, 32));
@@ -62,9 +62,9 @@ public class ServerLoginSuccessPacket implements Packet {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       ProtocolUtils.writeUuidIntArray(buf, uuid);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
+    } else if (version.gte(ProtocolVersion.MINECRAFT_1_7_6)) {
       ProtocolUtils.writeString(buf, uuid.toString());
     } else {
       ProtocolUtils.writeString(buf, UuidUtils.toUndashed(uuid));

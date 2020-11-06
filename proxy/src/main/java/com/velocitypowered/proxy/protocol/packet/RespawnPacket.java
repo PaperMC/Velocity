@@ -115,8 +115,8 @@ public class RespawnPacket implements Packet {
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     String dimensionIdentifier = null;
     String levelName = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
+      if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
         CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf);
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
@@ -128,14 +128,14 @@ public class RespawnPacket implements Packet {
     } else {
       this.dimension = buf.readInt();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_15)) {
       this.partialHashedSeed = buf.readLong();
     }
     this.gamemode = buf.readByte();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       this.previousGamemode = buf.readByte();
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
@@ -148,8 +148,8 @@ public class RespawnPacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
+      if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
         ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
@@ -159,14 +159,14 @@ public class RespawnPacket implements Packet {
     } else {
       buf.writeInt(dimension);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_13_2)) {
       buf.writeByte(difficulty);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_15)) {
       buf.writeLong(partialHashedSeed);
     }
     buf.writeByte(gamemode);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       buf.writeByte(previousGamemode);
       buf.writeBoolean(dimensionInfo.isDebugType());
       buf.writeBoolean(dimensionInfo.isFlat());

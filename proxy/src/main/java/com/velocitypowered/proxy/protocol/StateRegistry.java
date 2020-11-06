@@ -18,8 +18,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.SUPPORTED_VERSIONS
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
-import com.velocitypowered.proxy.protocol.packet.ChatPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundChatPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundChatPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
@@ -43,6 +44,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -65,14 +67,14 @@ public enum StateRegistry {
   },
   STATUS {
     {
-      serverbound.register(StatusRequestPacket.class, () -> StatusRequestPacket.INSTANCE,
+      serverbound.registerNew(StatusRequestPacket.class, StatusRequestPacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
-      serverbound.register(StatusPingPacket.class, StatusPingPacket::new,
+      serverbound.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
 
       clientbound.register(StatusResponsePacket.class, StatusResponsePacket::new,
           map(0x00, MINECRAFT_1_7_2, false));
-      clientbound.register(StatusPingPacket.class, StatusPingPacket::new,
+      clientbound.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
     }
   },
@@ -88,7 +90,7 @@ public enum StateRegistry {
           map(0x01, MINECRAFT_1_12_1, false),
           map(0x05, MINECRAFT_1_13, false),
           map(0x06, MINECRAFT_1_14, false));
-      serverbound.register(ChatPacket.class, ChatPacket::new,
+      serverbound.registerNew(ServerboundChatPacket.class, ServerboundChatPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false),
           map(0x02, MINECRAFT_1_9, false),
           map(0x03, MINECRAFT_1_12, false),
@@ -107,7 +109,7 @@ public enum StateRegistry {
           map(0x09, MINECRAFT_1_12_1, false),
           map(0x0A, MINECRAFT_1_13, false),
           map(0x0B, MINECRAFT_1_14, false));
-      serverbound.register(KeepAlivePacket.class, KeepAlivePacket::new,
+      serverbound.registerNew(KeepAlivePacket.class, KeepAlivePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x0B, MINECRAFT_1_9, false),
           map(0x0C, MINECRAFT_1_12, false),
@@ -128,7 +130,7 @@ public enum StateRegistry {
           map(0x0C, MINECRAFT_1_9, false),
           map(0x0D, MINECRAFT_1_15, false),
           map(0x0C, MINECRAFT_1_16, false));
-      clientbound.register(ChatPacket.class, ChatPacket::new,
+      clientbound.register(ClientboundChatPacket.class, ClientboundChatPacket::new,
           map(0x02, MINECRAFT_1_7_2, true),
           map(0x0F, MINECRAFT_1_9, true),
           map(0x0E, MINECRAFT_1_13, true),
@@ -162,7 +164,7 @@ public enum StateRegistry {
           map(0x1B, MINECRAFT_1_15, false),
           map(0x1A, MINECRAFT_1_16, false),
           map(0x19, MINECRAFT_1_16_2, false));
-      clientbound.register(KeepAlivePacket.class, KeepAlivePacket::new,
+      clientbound.registerNew(KeepAlivePacket.class, KeepAlivePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x1F, MINECRAFT_1_9, false),
           map(0x21, MINECRAFT_1_13, false),
@@ -242,7 +244,7 @@ public enum StateRegistry {
           map(0x01, MINECRAFT_1_7_2, false));
       clientbound.register(ServerLoginSuccessPacket.class, ServerLoginSuccessPacket::new,
           map(0x02, MINECRAFT_1_7_2, false));
-      clientbound.register(SetCompressionPacket.class, SetCompressionPacket::new,
+      clientbound.registerNew(SetCompressionPacket.class, SetCompressionPacket.DECODER,
           map(0x03, MINECRAFT_1_8, false));
       clientbound.register(LoginPluginMessagePacket.class, LoginPluginMessagePacket::new,
           map(0x04, MINECRAFT_1_13, false));
@@ -290,7 +292,7 @@ public enum StateRegistry {
       return registry;
     }
 
-    <P extends Packet> void register(Class<P> clazz, Supplier<P> packetSupplier,
+    <P extends Packet> void registerNew(Class<P> clazz, Packet.Decoder<P> decoder,
                                      PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
@@ -329,6 +331,53 @@ public enum StateRegistry {
           }
 
           if (!current.encodeOnly) {
+            registry.packetIdToDecoder.put(current.id, decoder);
+          }
+          registry.packetClassToId.put(clazz, current.id);
+        }
+      }
+    }
+
+    @Deprecated
+    <P extends Packet> void register(Class<P> clazz, Supplier<P> packetSupplier,
+                                     PacketMapping... mappings) {
+      if (mappings.length == 0) {
+        throw new IllegalArgumentException("At least one mapping must be provided.");
+      }
+
+      for (int i = 0; i < mappings.length; i++) {
+        PacketMapping current = mappings[i];
+        PacketMapping next = (i + 1 < mappings.length) ? mappings[i + 1] : current;
+        ProtocolVersion from = current.protocolVersion;
+        ProtocolVersion to = current == next ? getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
+
+        if (from.gte(to) && from != getLast(SUPPORTED_VERSIONS)) {
+          throw new IllegalArgumentException(String.format(
+              "Next mapping version (%s) should be lower then current (%s)", to, from));
+        }
+
+        for (ProtocolVersion protocol : EnumSet.range(from, to)) {
+          if (protocol == to && next != current) {
+            break;
+          }
+          ProtocolRegistry registry = this.versions.get(protocol);
+          if (registry == null) {
+            throw new IllegalArgumentException("Unknown protocol version "
+                + current.protocolVersion);
+          }
+
+          if (registry.packetIdToSupplier.containsKey(current.id)) {
+            throw new IllegalArgumentException("Can not register class " + clazz.getSimpleName()
+                + " with id " + current.id + " for " + registry.version
+                + " because another packet is already registered");
+          }
+
+          if (registry.packetClassToId.containsKey(clazz)) {
+            throw new IllegalArgumentException(clazz.getSimpleName()
+                + " is already registered for version " + registry.version);
+          }
+
+          if (!current.encodeOnly) {
             registry.packetIdToSupplier.put(current.id, packetSupplier);
           }
           registry.packetClassToId.put(clazz, current.id);
@@ -339,7 +388,10 @@ public enum StateRegistry {
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
+      @Deprecated
       final IntObjectMap<Supplier<? extends Packet>> packetIdToSupplier =
+          new IntObjectHashMap<>(16, 0.5f);
+      final IntObjectMap<Packet.Decoder<? extends Packet>> packetIdToDecoder =
           new IntObjectHashMap<>(16, 0.5f);
       final Object2IntMap<Class<? extends Packet>> packetClassToId =
           new Object2IntOpenHashMap<>(16, 0.5f);
@@ -355,12 +407,21 @@ public enum StateRegistry {
        * @param id the packet ID
        * @return the packet instance, or {@code null} if the ID is not registered
        */
+      @Deprecated
       public @Nullable Packet createPacket(final int id) {
         final Supplier<? extends Packet> supplier = this.packetIdToSupplier.get(id);
         if (supplier == null) {
           return null;
         }
         return supplier.get();
+      }
+
+      public @Nullable Packet decodePacket(final int id, ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
+        final Packet.Decoder<? extends Packet> decoder = this.packetIdToDecoder.get(id);
+        if (decoder == null) {
+          return null;
+        }
+        return decoder.decode(buf, direction, protocolVersion);
       }
 
       /**

@@ -44,7 +44,7 @@ public class PlayerListItemPacket implements Packet {
 
   @Override
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
 
@@ -94,7 +94,7 @@ public class PlayerListItemPacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeVarInt(buf, action);
       ProtocolUtils.writeVarInt(buf, items.size());
       for (Item item : items) {

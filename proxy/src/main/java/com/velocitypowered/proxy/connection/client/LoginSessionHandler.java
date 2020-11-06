@@ -242,7 +242,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
     int threshold = server.getConfiguration().getCompressionThreshold();
-    if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
+    if (threshold >= 0 && mcConnection.getProtocolVersion().gte(MINECRAFT_1_8)) {
       mcConnection.write(new SetCompressionPacket(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }

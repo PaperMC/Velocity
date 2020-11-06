@@ -6,11 +6,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import net.kyori.coffee.Ordered;
 
 /**
  * Represents each Minecraft protocol version.
  */
-public enum ProtocolVersion {
+public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
   MINECRAFT_1_7_2(4, "1.7.2"),

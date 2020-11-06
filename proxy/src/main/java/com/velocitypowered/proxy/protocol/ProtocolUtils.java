@@ -459,7 +459,7 @@ public enum ProtocolUtils {
    * @return the appropriate {@link GsonComponentSerializer}
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       return MODERN_SERIALIZER;
     }
     return PRE_1_16_SERIALIZER;

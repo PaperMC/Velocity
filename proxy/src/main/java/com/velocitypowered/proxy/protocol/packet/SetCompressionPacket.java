@@ -9,33 +9,15 @@ import io.netty.buffer.ByteBuf;
 
 public class SetCompressionPacket implements Packet {
 
-  private int threshold;
+  public static final Decoder<SetCompressionPacket> DECODER = (buf, direction, version) -> {
+    final int threshold = ProtocolUtils.readVarInt(buf);
+    return new SetCompressionPacket(threshold);
+  };
 
-  public SetCompressionPacket() {
-  }
+  private final int threshold;
 
   public SetCompressionPacket(int threshold) {
     this.threshold = threshold;
-  }
-
-  public int getThreshold() {
-    return threshold;
-  }
-
-  public void setThreshold(int threshold) {
-    this.threshold = threshold;
-  }
-
-  @Override
-  public String toString() {
-    return "SetCompression{"
-        + "threshold=" + threshold
-        + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    this.threshold = ProtocolUtils.readVarInt(buf);
   }
 
   @Override
@@ -43,8 +25,19 @@ public class SetCompressionPacket implements Packet {
     ProtocolUtils.writeVarInt(buf, threshold);
   }
 
+  public int getThreshold() {
+    return threshold;
+  }
+
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public String toString() {
+    return "SetCompression{"
+      + "threshold=" + threshold
+      + '}';
   }
 }

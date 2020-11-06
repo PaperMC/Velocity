@@ -112,7 +112,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     BossBarPacket rgbPacket = holder.createTitleUpdate(
         newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (player.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
         player.getConnection().write(rgbPacket);
       } else {
         player.getConnection().write(pre116Packet);

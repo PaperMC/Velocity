@@ -101,13 +101,13 @@ public class ClientSettingsPacket implements Packet {
     this.chatVisibility = ProtocolUtils.readVarInt(buf);
     this.chatColors = buf.readBoolean();
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_7_6)) {
       this.difficulty = buf.readByte();
     }
 
     this.skinParts = buf.readUnsignedByte();
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_9)) {
       this.mainHand = ProtocolUtils.readVarInt(buf);
     }
   }
@@ -122,13 +122,13 @@ public class ClientSettingsPacket implements Packet {
     ProtocolUtils.writeVarInt(buf, chatVisibility);
     buf.writeBoolean(chatColors);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_7_6)) {
       buf.writeByte(difficulty);
     }
 
     buf.writeByte(skinParts);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_9)) {
       ProtocolUtils.writeVarInt(buf, mainHand);
     }
   }

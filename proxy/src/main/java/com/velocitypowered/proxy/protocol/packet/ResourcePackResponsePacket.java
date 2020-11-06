@@ -23,7 +23,7 @@ public class ResourcePackResponsePacket implements Packet {
 
   @Override
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+    if (protocolVersion.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
       this.hash = ProtocolUtils.readString(buf);
     }
     this.status = Status.values()[ProtocolUtils.readVarInt(buf)];
@@ -31,7 +31,7 @@ public class ResourcePackResponsePacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+    if (protocolVersion.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
       ProtocolUtils.writeString(buf, hash);
     }
     ProtocolUtils.writeVarInt(buf, status.ordinal());

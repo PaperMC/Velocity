@@ -61,7 +61,7 @@ public class TabCompleteResponsePacket implements Packet {
 
   @Override
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(MINECRAFT_1_13) >= 0) {
+    if (version.gte(MINECRAFT_1_13)) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
       this.start = ProtocolUtils.readVarInt(buf);
       this.length = ProtocolUtils.readVarInt(buf);
@@ -82,7 +82,7 @@ public class TabCompleteResponsePacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(MINECRAFT_1_13) >= 0) {
+    if (version.gte(MINECRAFT_1_13)) {
       ProtocolUtils.writeVarInt(buf, this.transactionId);
       ProtocolUtils.writeVarInt(buf, this.start);
       ProtocolUtils.writeVarInt(buf, this.length);

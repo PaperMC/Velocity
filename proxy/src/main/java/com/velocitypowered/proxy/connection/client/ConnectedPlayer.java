@@ -38,12 +38,13 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ChatPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundChatPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundChatPacket;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -112,7 +113,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (connection.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_8)) {
       this.tabList = new VelocityTabList(connection);
     } else {
       this.tabList = new VelocityTabListLegacy(connection);
@@ -227,25 +228,24 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    connection.write(ChatPacket.createClientbound(identity, message, this.getProtocolVersion()));
-  }
-
-  @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
       @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
-    ChatPacket packet = ChatPacket.createClientbound(identity, message, this.getProtocolVersion());
-    packet.setType(type == MessageType.CHAT ? ChatPacket.CHAT_TYPE : ChatPacket.SYSTEM_TYPE);
-    connection.write(packet);
+    connection.write(new ClientboundChatPacket(
+        ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion()).serialize(message),
+        type == MessageType.CHAT
+            ? ClientboundChatPacket.CHAT_TYPE
+            : ClientboundChatPacket.SYSTEM_TYPE,
+        identity.uuid()
+    ));
   }
 
   @Override
   public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
     ProtocolVersion playerVersion = getProtocolVersion();
-    if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    if (playerVersion.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
       TitlePacket pkt = new TitlePacket();
       pkt.setAction(TitlePacket.SET_ACTION_BAR);
@@ -257,10 +257,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
       object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
-      ChatPacket chat = new ChatPacket();
-      chat.setMessage(object.toString());
-      chat.setType(ChatPacket.GAME_INFO_TYPE);
-      connection.write(chat);
+      connection.write(new ClientboundChatPacket(
+          object.toString(),
+          ClientboundChatPacket.GAME_INFO_TYPE,
+          Identity.nil().uuid()
+      ));
     }
   }
 
@@ -672,10 +673,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void spoofChatInput(String input) {
-    Preconditions.checkArgument(input.length() <= ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH,
-        "input cannot be greater than " + ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH
+    Preconditions.checkArgument(input.length() <= ServerboundChatPacket.MAX_MESSAGE_LENGTH,
+        "input cannot be greater than " + ServerboundChatPacket.MAX_MESSAGE_LENGTH
             + " characters in length");
-    ensureBackendConnection().write(ChatPacket.createServerbound(input));
+    ensureBackendConnection().write(new ServerboundChatPacket(input));
   }
 
   @Override
@@ -707,9 +708,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
-      KeepAlivePacket keepAlive = new KeepAlivePacket();
-      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
-      connection.write(keepAlive);
+      connection.write(new KeepAlivePacket(ThreadLocalRandom.current().nextLong()));
     }
   }
 
@@ -751,7 +750,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     boolean minecraftOrFmlMessage;
 
     // By default, all internal Minecraft and Forge channels are forwarded from the server.
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_12_2)) {
       String channel = message.getChannel();
       minecraftOrFmlMessage = channel.startsWith("MC|")
           || channel.startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)

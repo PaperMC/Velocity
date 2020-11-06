@@ -33,7 +33,7 @@ public class EncryptionResponsePacket implements Packet {
 
   @Override
   public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
       this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
     } else {
@@ -44,7 +44,7 @@ public class EncryptionResponsePacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
       ProtocolUtils.writeByteArray(buf, verifyToken);
     } else {

@@ -8,11 +8,15 @@ import io.netty.buffer.ByteBuf;
 
 public class StatusPingPacket implements Packet {
 
-  private long randomId;
+  public static Decoder<StatusPingPacket> DECODER = (buf, direction, version) -> {
+    final long randomId = buf.readLong();
+    return new StatusPingPacket(randomId);
+  };
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    randomId = buf.readLong();
+  private final long randomId;
+
+  public StatusPingPacket(final long randomId) {
+    this.randomId = randomId;
   }
 
   @Override
