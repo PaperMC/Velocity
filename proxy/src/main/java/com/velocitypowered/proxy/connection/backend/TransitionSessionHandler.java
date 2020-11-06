@@ -14,10 +14,10 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
+import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -60,13 +60,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(KeepAlive packet) {
+  public boolean handle(KeepAlivePacket packet) {
     serverConn.ensureConnected().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(JoinGame packet) {
+  public boolean handle(JoinGamePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
 
@@ -132,7 +132,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(Disconnect packet) {
+  public boolean handle(DisconnectPacket packet) {
     final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
 
@@ -150,7 +150,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
+  public boolean handle(PluginMessagePacket packet) {
     if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
         .getProtocolVersion(), packet)) {
       return true;

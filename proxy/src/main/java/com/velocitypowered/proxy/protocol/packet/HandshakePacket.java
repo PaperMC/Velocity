@@ -2,11 +2,12 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class Handshake implements MinecraftPacket {
+public class HandshakePacket implements Packet {
 
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
@@ -56,7 +57,7 @@ public class Handshake implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion ignored) {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
     this.protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
     this.serverAddress = ProtocolUtils.readString(buf);
@@ -65,7 +66,7 @@ public class Handshake implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion ignored) {
     ProtocolUtils.writeVarInt(buf, this.protocolVersion.getProtocol());
     ProtocolUtils.writeString(buf, this.serverAddress);
     buf.writeShort(this.port);

@@ -2,23 +2,24 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class LoginPluginMessage extends DeferredByteBufHolder implements MinecraftPacket {
+public class LoginPluginMessagePacket extends DeferredByteBufHolder implements Packet {
 
   private int id;
   private @Nullable String channel;
 
-  public LoginPluginMessage() {
+  public LoginPluginMessagePacket() {
     super(null);
   }
 
-  public LoginPluginMessage(int id, @Nullable String channel, ByteBuf data) {
+  public LoginPluginMessagePacket(int id, @Nullable String channel, ByteBuf data) {
     super(data);
     this.id = id;
     this.channel = channel;
@@ -45,7 +46,7 @@ public class LoginPluginMessage extends DeferredByteBufHolder implements Minecra
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.id = ProtocolUtils.readVarInt(buf);
     this.channel = ProtocolUtils.readString(buf);
     if (buf.isReadable()) {
@@ -56,7 +57,7 @@ public class LoginPluginMessage extends DeferredByteBufHolder implements Minecra
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified!");

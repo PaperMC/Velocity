@@ -2,12 +2,13 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ClientSettings implements MinecraftPacket {
+public class ClientSettingsPacket implements Packet {
 
   private @Nullable String locale;
   private byte viewDistance;
@@ -17,11 +18,11 @@ public class ClientSettings implements MinecraftPacket {
   private short skinParts;
   private int mainHand;
 
-  public ClientSettings() {
+  public ClientSettingsPacket() {
   }
 
-  public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-      short skinParts, int mainHand) {
+  public ClientSettingsPacket(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
+                              short skinParts, int mainHand) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
@@ -94,7 +95,7 @@ public class ClientSettings implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.locale = ProtocolUtils.readString(buf, 16);
     this.viewDistance = buf.readByte();
     this.chatVisibility = ProtocolUtils.readVarInt(buf);
@@ -112,7 +113,7 @@ public class ClientSettings implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (locale == null) {
       throw new IllegalStateException("No locale specified");
     }

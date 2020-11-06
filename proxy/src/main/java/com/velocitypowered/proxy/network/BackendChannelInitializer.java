@@ -8,7 +8,7 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.netty.AutoReadHolderHandler;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
@@ -37,9 +37,9 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,
-            new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
+            new MinecraftDecoder(ProtocolDirection.CLIENTBOUND))
         .addLast(FLOW_HANDLER, new AutoReadHolderHandler())
         .addLast(MINECRAFT_ENCODER,
-            new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
+            new MinecraftEncoder(ProtocolDirection.SERVERBOUND));
   }
 }

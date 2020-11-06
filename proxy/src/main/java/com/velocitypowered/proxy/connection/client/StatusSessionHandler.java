@@ -13,11 +13,11 @@ import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
-import com.velocitypowered.proxy.protocol.packet.LegacyPing;
-import com.velocitypowered.proxy.protocol.packet.StatusPing;
-import com.velocitypowered.proxy.protocol.packet.StatusRequest;
-import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyDisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyPingPacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
@@ -158,7 +158,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LegacyPing packet) {
+  public boolean handle(LegacyPingPacket packet) {
     if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
@@ -166,7 +166,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     getInitialPing()
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
-            LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
+            LegacyDisconnectPacket.fromServerPing(event.getPing(), packet.getVersion())),
             connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);
@@ -176,13 +176,13 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StatusPing packet) {
+  public boolean handle(StatusPingPacket packet) {
     connection.closeWith(packet);
     return true;
   }
 
   @Override
-  public boolean handle(StatusRequest packet) {
+  public boolean handle(StatusRequestPacket packet) {
     if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
@@ -195,7 +195,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
               StringBuilder json = new StringBuilder();
               VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
                   .toJson(event.getPing(), json);
-              connection.write(new StatusResponse(json));
+              connection.write(new StatusResponsePacket(json));
             },
             connection.eventLoop())
         .exceptionally((ex) -> {

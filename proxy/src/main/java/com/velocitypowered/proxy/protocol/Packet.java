@@ -4,11 +4,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 
-public interface MinecraftPacket {
+public interface Packet {
 
-  void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion);
+  void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion);
 
-  void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion);
+  void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion);
 
   boolean handle(MinecraftSessionHandler handler);
 }

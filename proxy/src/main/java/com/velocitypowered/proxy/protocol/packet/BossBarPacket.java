@@ -2,13 +2,14 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class BossBar implements MinecraftPacket {
+public class BossBarPacket implements Packet {
 
   public static final int ADD = 0;
   public static final int REMOVE = 1;
@@ -16,6 +17,7 @@ public class BossBar implements MinecraftPacket {
   public static final int UPDATE_NAME = 3;
   public static final int UPDATE_STYLE = 4;
   public static final int UPDATE_PROPERTIES = 5;
+
   private @Nullable UUID uuid;
   private int action;
   private @Nullable String name;
@@ -97,7 +99,7 @@ public class BossBar implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.uuid = ProtocolUtils.readUuid(buf);
     this.action = ProtocolUtils.readVarInt(buf);
     switch (action) {
@@ -129,7 +131,7 @@ public class BossBar implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (uuid == null) {
       throw new IllegalStateException("No boss bar UUID specified");
     }
@@ -174,8 +176,8 @@ public class BossBar implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static BossBar createRemovePacket(UUID id) {
-    BossBar packet = new BossBar();
+  public static BossBarPacket createRemovePacket(UUID id) {
+    BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
     packet.setAction(REMOVE);
     return packet;

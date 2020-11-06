@@ -2,19 +2,20 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class StatusResponse implements MinecraftPacket {
+public class StatusResponsePacket implements Packet {
 
   private @Nullable CharSequence status;
 
-  public StatusResponse() {
+  public StatusResponsePacket() {
   }
 
-  public StatusResponse(CharSequence status) {
+  public StatusResponsePacket(CharSequence status) {
     this.status = status;
   }
 
@@ -33,12 +34,12 @@ public class StatusResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     status = ProtocolUtils.readString(buf, Short.MAX_VALUE);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (status == null) {
       throw new IllegalStateException("Status is not specified");
     }

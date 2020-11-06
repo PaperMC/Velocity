@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packet;
+package com.velocitypowered.proxy.protocol.packet.legacy;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -8,7 +8,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 
-public class LegacyDisconnect {
+public class LegacyDisconnectPacket {
 
   private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0,
       ImmutableList.of());
@@ -17,7 +17,7 @@ public class LegacyDisconnect {
 
   private final String reason;
 
-  private LegacyDisconnect(String reason) {
+  private LegacyDisconnectPacket(String reason) {
     this.reason = reason;
   }
 
@@ -27,8 +27,8 @@ public class LegacyDisconnect {
    * @param version the requesting clients' version
    * @return the disconnect packet
    */
-  public static LegacyDisconnect fromServerPing(ServerPing response,
-      LegacyMinecraftPingVersion version) {
+  public static LegacyDisconnectPacket fromServerPing(ServerPing response,
+                                                      LegacyMinecraftPingVersion version) {
     Players players = response.getPlayers().orElse(FAKE_PLAYERS);
 
     switch (version) {
@@ -36,7 +36,7 @@ public class LegacyDisconnect {
         // Minecraft 1.3 and below use the section symbol as a delimiter. Accordingly, we must
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
-        return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
+        return new LegacyDisconnectPacket(String.join(LEGACY_COLOR_CODE,
             cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
                 response.getDescription()))),
             Integer.toString(players.getOnline()),
@@ -44,7 +44,7 @@ public class LegacyDisconnect {
       case MINECRAFT_1_4:
       case MINECRAFT_1_6:
         // Minecraft 1.4-1.6 provide support for more fields, and additionally support color codes.
-        return new LegacyDisconnect(String.join("\0",
+        return new LegacyDisconnectPacket(String.join("\0",
             LEGACY_COLOR_CODE + "1",
             Integer.toString(response.getVersion().getProtocol()),
             response.getVersion().getName(),
@@ -72,10 +72,10 @@ public class LegacyDisconnect {
    * @param component the component to convert
    * @return the disconnect packet
    */
-  public static LegacyDisconnect from(TextComponent component) {
+  public static LegacyDisconnectPacket from(TextComponent component) {
     // We intentionally use the legacy serializers, because the old clients can't understand JSON.
     String serialized = LegacyComponentSerializer.legacySection().serialize(component);
-    return new LegacyDisconnect(serialized);
+    return new LegacyDisconnectPacket(serialized);
   }
 
   public String getReason() {

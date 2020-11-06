@@ -5,7 +5,8 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerListItem implements MinecraftPacket {
+public class PlayerListItemPacket implements Packet {
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;
@@ -25,12 +26,12 @@ public class PlayerListItem implements MinecraftPacket {
   private int action;
   private final List<Item> items = new ArrayList<>();
 
-  public PlayerListItem(int action, List<Item> items) {
+  public PlayerListItemPacket(int action, List<Item> items) {
     this.action = action;
     this.items.addAll(items);
   }
 
-  public PlayerListItem() {
+  public PlayerListItemPacket() {
   }
 
   public int getAction() {
@@ -42,7 +43,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
@@ -92,7 +93,7 @@ public class PlayerListItem implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       ProtocolUtils.writeVarInt(buf, action);
       ProtocolUtils.writeVarInt(buf, items.size());

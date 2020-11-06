@@ -19,9 +19,9 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AvailableCommands implements MinecraftPacket {
+public class AvailableCommandsPacket implements Packet {
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
   private static final byte NODE_TYPE_ROOT = 0x00;
@@ -61,7 +61,7 @@ public class AvailableCommands implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     int commands = ProtocolUtils.readVarInt(buf);
     WireNode[] wireNodes = new WireNode[commands];
     for (int i = 0; i < commands; i++) {
@@ -93,7 +93,7 @@ public class AvailableCommands implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     // Assign all the children an index.
     Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
     Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenHashMap<>();

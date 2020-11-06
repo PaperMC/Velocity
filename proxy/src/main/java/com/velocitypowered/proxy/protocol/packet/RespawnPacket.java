@@ -4,12 +4,13 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
-public class Respawn implements MinecraftPacket {
+public class RespawnPacket implements Packet {
 
   private int dimension;
   private long partialHashedSeed;
@@ -21,12 +22,12 @@ public class Respawn implements MinecraftPacket {
   private short previousGamemode; // 1.16+
   private DimensionData currentDimensionData; // 1.16.2+
 
-  public Respawn() {
+  public RespawnPacket() {
   }
 
-  public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
-      String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo,
-      short previousGamemode, DimensionData currentDimensionData) {
+  public RespawnPacket(int dimension, long partialHashedSeed, short difficulty, short gamemode,
+                       String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo,
+                       short previousGamemode, DimensionData currentDimensionData) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
@@ -111,7 +112,7 @@ public class Respawn implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
@@ -146,7 +147,7 @@ public class Respawn implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
         ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());

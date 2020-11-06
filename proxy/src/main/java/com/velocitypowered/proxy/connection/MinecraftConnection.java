@@ -19,7 +19,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherEncoder;
@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -116,10 +117,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         return;
       }
 
-      if (msg instanceof MinecraftPacket) {
-        MinecraftPacket pkt = (MinecraftPacket) msg;
+      if (msg instanceof Packet) {
+        Packet pkt = (Packet) msg;
         if (!pkt.handle(sessionHandler)) {
-          sessionHandler.handleGeneric((MinecraftPacket) msg);
+          sessionHandler.handleGeneric((Packet) msg);
         }
       } else if (msg instanceof HAProxyMessage) {
         HAProxyMessage proxyMessage = (HAProxyMessage) msg;
@@ -368,7 +369,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the compression threshold on the connection. You are responsible for sending
-   * {@link com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * {@link SetCompressionPacket} beforehand.
    * @param threshold the compression threshold to use
    */
   public void setCompressionThreshold(int threshold) {

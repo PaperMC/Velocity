@@ -4,12 +4,13 @@ import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
-public class EncryptionRequest implements MinecraftPacket {
+public class EncryptionRequestPacket implements Packet {
 
   private String serverId = "";
   private byte[] publicKey = EMPTY_BYTE_ARRAY;
@@ -40,7 +41,7 @@ public class EncryptionRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.serverId = ProtocolUtils.readString(buf, 20);
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
@@ -53,7 +54,7 @@ public class EncryptionRequest implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeString(buf, this.serverId);
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {

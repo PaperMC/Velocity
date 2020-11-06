@@ -5,8 +5,8 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
+import com.velocitypowered.proxy.protocol.packet.PlayerListItemPacket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,12 +31,12 @@ public class VelocityTabList implements TabList {
       net.kyori.adventure.text.Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooter.create(header, footer, connection.getProtocolVersion()));
+    connection.write(HeaderAndFooterPacket.create(header, footer, connection.getProtocolVersion()));
   }
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    connection.write(HeaderAndFooterPacket.reset());
   }
 
   @Override
@@ -49,9 +49,9 @@ public class VelocityTabList implements TabList {
     Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
         "Not a Velocity tab list entry");
 
-    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-    connection.write(
-        new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
+    PlayerListItemPacket.Item packetItem = PlayerListItemPacket.Item.from(entry);
+    connection.write(new PlayerListItemPacket(PlayerListItemPacket.ADD_PLAYER,
+        Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
   }
 
@@ -61,9 +61,9 @@ public class VelocityTabList implements TabList {
 
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(
-          new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
+      PlayerListItemPacket.Item packetItem = PlayerListItemPacket.Item.from(entry);
+      connection.write(new PlayerListItemPacket(PlayerListItemPacket.REMOVE_PLAYER,
+          Collections.singletonList(packetItem)));
     }
 
     return Optional.ofNullable(entry);
@@ -85,12 +85,12 @@ public class VelocityTabList implements TabList {
     if (listEntries.isEmpty()) {
       return;
     }
-    List<PlayerListItem.Item> items = new ArrayList<>(listEntries.size());
+    List<PlayerListItemPacket.Item> items = new ArrayList<>(listEntries.size());
     for (TabListEntry value : listEntries) {
-      items.add(PlayerListItem.Item.from(value));
+      items.add(PlayerListItemPacket.Item.from(value));
     }
     entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+    connection.delayedWrite(new PlayerListItemPacket(PlayerListItemPacket.REMOVE_PLAYER, items));
   }
 
   @Override
@@ -109,19 +109,19 @@ public class VelocityTabList implements TabList {
    *
    * @param packet the packet to process
    */
-  public void processBackendPacket(PlayerListItem packet) {
+  public void processBackendPacket(PlayerListItemPacket packet) {
     // Packets are already forwarded on, so no need to do that here
-    for (PlayerListItem.Item item : packet.getItems()) {
+    for (PlayerListItemPacket.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
       assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
 
-      if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
+      if (packet.getAction() != PlayerListItemPacket.ADD_PLAYER && !entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;
       }
 
       switch (packet.getAction()) {
-        case PlayerListItem.ADD_PLAYER: {
+        case PlayerListItemPacket.ADD_PLAYER: {
           // ensure that name and properties are available
           String name = item.getName();
           List<GameProfile.Property> properties = item.getProperties();
@@ -137,24 +137,24 @@ public class VelocityTabList implements TabList {
               .build());
           break;
         }
-        case PlayerListItem.REMOVE_PLAYER:
+        case PlayerListItemPacket.REMOVE_PLAYER:
           entries.remove(uuid);
           break;
-        case PlayerListItem.UPDATE_DISPLAY_NAME: {
+        case PlayerListItemPacket.UPDATE_DISPLAY_NAME: {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setDisplayNameInternal(item.getDisplayName());
           }
           break;
         }
-        case PlayerListItem.UPDATE_LATENCY: {
+        case PlayerListItemPacket.UPDATE_LATENCY: {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
           break;
         }
-        case PlayerListItem.UPDATE_GAMEMODE: {
+        case PlayerListItemPacket.UPDATE_GAMEMODE: {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setGameModeInternal(item.getGameMode());
@@ -170,8 +170,8 @@ public class VelocityTabList implements TabList {
 
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
+      PlayerListItemPacket.Item packetItem = PlayerListItemPacket.Item.from(entry);
+      connection.write(new PlayerListItemPacket(action, Collections.singletonList(packetItem)));
     }
   }
 }

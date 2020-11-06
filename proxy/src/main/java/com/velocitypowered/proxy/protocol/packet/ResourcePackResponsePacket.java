@@ -3,13 +3,13 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent.Status;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-public class ResourcePackResponse implements MinecraftPacket {
+public class ResourcePackResponsePacket implements Packet {
 
   private String hash = "";
   private @MonotonicNonNull Status status;
@@ -22,7 +22,7 @@ public class ResourcePackResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
       this.hash = ProtocolUtils.readString(buf);
     }
@@ -30,7 +30,7 @@ public class ResourcePackResponse implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
       ProtocolUtils.writeString(buf, hash);
     }

@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.protocol.netty;
 
-import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyDisconnectPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,7 +8,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 import java.nio.charset.StandardCharsets;
 
 @ChannelHandler.Sharable
-public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnect> {
+public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnectPacket> {
 
   public static final LegacyPingEncoder INSTANCE = new LegacyPingEncoder();
 
@@ -16,7 +16,7 @@ public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnect> {
   }
 
   @Override
-  protected void encode(ChannelHandlerContext ctx, LegacyDisconnect msg, ByteBuf out)
+  protected void encode(ChannelHandlerContext ctx, LegacyDisconnectPacket msg, ByteBuf out)
       throws Exception {
     out.writeByte(0xff);
     writeLegacyString(out, msg.getReason());

@@ -2,14 +2,14 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ResourcePackRequest implements MinecraftPacket {
+public class ResourcePackRequestPacket implements Packet {
 
   private @MonotonicNonNull String url;
   private @MonotonicNonNull String hash;
@@ -31,13 +31,13 @@ public class ResourcePackRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     this.url = ProtocolUtils.readString(buf);
     this.hash = ProtocolUtils.readString(buf);
   }
 
   @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
     if (url == null || hash == null) {
       throw new IllegalStateException("Packet not fully filled in yet!");
     }

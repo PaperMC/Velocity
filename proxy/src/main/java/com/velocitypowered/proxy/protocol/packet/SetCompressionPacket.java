@@ -2,18 +2,19 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class SetCompression implements MinecraftPacket {
+public class SetCompressionPacket implements Packet {
 
   private int threshold;
 
-  public SetCompression() {
+  public SetCompressionPacket() {
   }
 
-  public SetCompression(int threshold) {
+  public SetCompressionPacket(int threshold) {
     this.threshold = threshold;
   }
 
@@ -33,12 +34,12 @@ public class SetCompression implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.threshold = ProtocolUtils.readVarInt(buf);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, threshold);
   }
 

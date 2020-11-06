@@ -2,23 +2,24 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-public class LoginPluginResponse extends DeferredByteBufHolder implements MinecraftPacket {
+public class LoginPluginResponsePacket extends DeferredByteBufHolder implements Packet {
 
   private int id;
   private boolean success;
 
-  public LoginPluginResponse() {
+  public LoginPluginResponsePacket() {
     super(Unpooled.EMPTY_BUFFER);
   }
 
-  public LoginPluginResponse(int id, boolean success, @MonotonicNonNull ByteBuf buf) {
+  public LoginPluginResponsePacket(int id, boolean success, @MonotonicNonNull ByteBuf buf) {
     super(buf);
     this.id = id;
     this.success = success;
@@ -50,7 +51,7 @@ public class LoginPluginResponse extends DeferredByteBufHolder implements Minecr
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.id = ProtocolUtils.readVarInt(buf);
     this.success = buf.readBoolean();
     if (buf.isReadable()) {
@@ -61,7 +62,7 @@ public class LoginPluginResponse extends DeferredByteBufHolder implements Minecr
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     buf.writeBoolean(success);
     buf.writeBytes(content());

@@ -4,23 +4,24 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.transfor
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PluginMessage extends DeferredByteBufHolder implements MinecraftPacket {
+public class PluginMessagePacket extends DeferredByteBufHolder implements Packet {
 
   private @Nullable String channel;
 
-  public PluginMessage() {
+  public PluginMessagePacket() {
     super(null);
   }
 
-  public PluginMessage(String channel,
-      @MonotonicNonNull ByteBuf backing) {
+  public PluginMessagePacket(String channel,
+                             @MonotonicNonNull ByteBuf backing) {
     super(backing);
     this.channel = channel;
   }
@@ -45,7 +46,7 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.channel = ProtocolUtils.readString(buf);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       this.channel = transformLegacyToModernChannel(this.channel);
@@ -59,7 +60,7 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }
@@ -82,42 +83,42 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
   }
 
   @Override
-  public PluginMessage copy() {
-    return (PluginMessage) super.copy();
+  public PluginMessagePacket copy() {
+    return (PluginMessagePacket) super.copy();
   }
 
   @Override
-  public PluginMessage duplicate() {
-    return (PluginMessage) super.duplicate();
+  public PluginMessagePacket duplicate() {
+    return (PluginMessagePacket) super.duplicate();
   }
 
   @Override
-  public PluginMessage retainedDuplicate() {
-    return (PluginMessage) super.retainedDuplicate();
+  public PluginMessagePacket retainedDuplicate() {
+    return (PluginMessagePacket) super.retainedDuplicate();
   }
 
   @Override
-  public PluginMessage replace(ByteBuf content) {
-    return (PluginMessage) super.replace(content);
+  public PluginMessagePacket replace(ByteBuf content) {
+    return (PluginMessagePacket) super.replace(content);
   }
 
   @Override
-  public PluginMessage retain() {
-    return (PluginMessage) super.retain();
+  public PluginMessagePacket retain() {
+    return (PluginMessagePacket) super.retain();
   }
 
   @Override
-  public PluginMessage retain(int increment) {
-    return (PluginMessage) super.retain(increment);
+  public PluginMessagePacket retain(int increment) {
+    return (PluginMessagePacket) super.retain(increment);
   }
 
   @Override
-  public PluginMessage touch() {
-    return (PluginMessage) super.touch();
+  public PluginMessagePacket touch() {
+    return (PluginMessagePacket) super.touch();
   }
 
   @Override
-  public PluginMessage touch(Object hint) {
-    return (PluginMessage) super.touch(hint);
+  public PluginMessagePacket touch(Object hint) {
+    return (PluginMessagePacket) super.touch(hint);
   }
 }

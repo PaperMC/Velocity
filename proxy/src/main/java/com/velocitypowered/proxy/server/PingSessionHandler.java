@@ -7,9 +7,9 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
-import com.velocitypowered.proxy.protocol.packet.StatusRequest;
-import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -33,7 +33,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    Handshake handshake = new Handshake();
+    HandshakePacket handshake = new HandshakePacket();
     handshake.setNextStatus(StateRegistry.STATUS_ID);
 
     SocketAddress address = server.getServerInfo().getAddress();
@@ -49,13 +49,13 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     connection.delayedWrite(handshake);
 
     connection.setState(StateRegistry.STATUS);
-    connection.delayedWrite(StatusRequest.INSTANCE);
+    connection.delayedWrite(StatusRequestPacket.INSTANCE);
 
     connection.flush();
   }
 
   @Override
-  public boolean handle(StatusResponse packet) {
+  public boolean handle(StatusResponsePacket packet) {
     // All good!
     completed = true;
     connection.close(true);

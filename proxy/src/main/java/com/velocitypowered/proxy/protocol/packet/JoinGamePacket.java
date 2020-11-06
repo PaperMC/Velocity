@@ -6,14 +6,16 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
-import com.velocitypowered.proxy.protocol.*;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class JoinGame implements MinecraftPacket {
+public class JoinGamePacket implements Packet {
 
   private int entityId;
   private short gamemode;
@@ -163,7 +165,7 @@ public class JoinGame implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     this.entityId = buf.readInt();
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
       this.isHardcore = buf.readBoolean();
@@ -236,7 +238,7 @@ public class JoinGame implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     buf.writeInt(entityId);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
       buf.writeBoolean(isHardcore);

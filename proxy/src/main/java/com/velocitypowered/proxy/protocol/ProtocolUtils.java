@@ -465,14 +465,4 @@ public enum ProtocolUtils {
     return PRE_1_16_SERIALIZER;
   }
 
-  public enum Direction {
-    SERVERBOUND,
-    CLIENTBOUND;
-
-    public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
-        ProtocolVersion version) {
-      return (this == SERVERBOUND ? state.serverbound : state.clientbound)
-          .getProtocolRegistry(version);
-    }
-  }
 }

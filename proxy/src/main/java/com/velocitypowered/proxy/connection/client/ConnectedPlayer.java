@@ -38,12 +38,12 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Chat;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ChatPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -186,7 +186,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
-  void setPlayerSettings(ClientSettings settings) {
+  void setPlayerSettings(ClientSettingsPacket settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
@@ -228,7 +228,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    connection.write(Chat.createClientbound(identity, message, this.getProtocolVersion()));
+    connection.write(ChatPacket.createClientbound(identity, message, this.getProtocolVersion()));
   }
 
   @Override
@@ -237,8 +237,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
-    Chat packet = Chat.createClientbound(identity, message, this.getProtocolVersion());
-    packet.setType(type == MessageType.CHAT ? Chat.CHAT_TYPE : Chat.SYSTEM_TYPE);
+    ChatPacket packet = ChatPacket.createClientbound(identity, message, this.getProtocolVersion());
+    packet.setType(type == MessageType.CHAT ? ChatPacket.CHAT_TYPE : ChatPacket.SYSTEM_TYPE);
     connection.write(packet);
   }
 
@@ -257,9 +257,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
       object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
-      Chat chat = new Chat();
+      ChatPacket chat = new ChatPacket();
       chat.setMessage(object.toString());
-      chat.setType(Chat.GAME_INFO_TYPE);
+      chat.setType(ChatPacket.GAME_INFO_TYPE);
       connection.write(chat);
     }
   }
@@ -343,7 +343,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(Disconnect.create(reason, this.getProtocolVersion()));
+    connection.closeWith(DisconnectPacket.create(reason, this.getProtocolVersion()));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -402,7 +402,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param disconnect the disconnect packet
    * @param safe whether or not we can safely reconnect to a new server
    */
-  public void handleConnectionException(RegisteredServer server, Disconnect disconnect,
+  public void handleConnectionException(RegisteredServer server, DisconnectPacket disconnect,
       boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
@@ -507,7 +507,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case SERVER_DISCONNECTED:
                       Component reason = status.getReason()
                           .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                      handleConnectionException(res.getServer(), Disconnect.create(reason,
+                      handleConnectionException(res.getServer(), DisconnectPacket.create(reason,
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
@@ -664,24 +664,25 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
+    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
+        Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
   }
 
   @Override
   public void spoofChatInput(String input) {
-    Preconditions.checkArgument(input.length() <= Chat.MAX_SERVERBOUND_MESSAGE_LENGTH,
-        "input cannot be greater than " + Chat.MAX_SERVERBOUND_MESSAGE_LENGTH
+    Preconditions.checkArgument(input.length() <= ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH,
+        "input cannot be greater than " + ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
-    ensureBackendConnection().write(Chat.createServerbound(input));
+    ensureBackendConnection().write(ChatPacket.createServerbound(input));
   }
 
   @Override
   public void sendResourcePack(String url) {
     Preconditions.checkNotNull(url, "url");
 
-    ResourcePackRequest request = new ResourcePackRequest();
+    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
     request.setUrl(url);
     request.setHash("");
     connection.write(request);
@@ -693,20 +694,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
 
-    ResourcePackRequest request = new ResourcePackRequest();
+    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
     request.setUrl(url);
     request.setHash(ByteBufUtil.hexDump(hash));
     connection.write(request);
   }
 
   /**
-   * Sends a {@link KeepAlive} packet to the player with a random ID.
+   * Sends a {@link KeepAlivePacket} packet to the player with a random ID.
    * The response will be ignored by Velocity as it will not match the
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
-      KeepAlive keepAlive = new KeepAlive();
+      KeepAlivePacket keepAlive = new KeepAlivePacket();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
@@ -746,7 +747,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param message the plugin message to forward to the client
    * @return {@code true} if the message can be forwarded, {@code false} otherwise
    */
-  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessage message) {
+  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessagePacket message) {
     boolean minecraftOrFmlMessage;
 
     // By default, all internal Minecraft and Forge channels are forwarded from the server.
@@ -879,7 +880,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               case SERVER_DISCONNECTED:
                 Component reason = status.getReason()
                     .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                handleConnectionException(toConnect, Disconnect.create(reason,
+                handleConnectionException(toConnect, DisconnectPacket.create(reason,
                     getProtocolVersion()), status.isSafe());
                 break;
               default:

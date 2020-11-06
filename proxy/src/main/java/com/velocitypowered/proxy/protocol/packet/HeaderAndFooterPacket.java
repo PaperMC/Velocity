@@ -5,24 +5,25 @@ import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
-public class HeaderAndFooter implements MinecraftPacket {
+public class HeaderAndFooterPacket implements Packet {
 
   private static final String EMPTY_COMPONENT = "{\"translate\":\"\"}";
-  private static final HeaderAndFooter RESET = new HeaderAndFooter();
+  private static final HeaderAndFooterPacket RESET = new HeaderAndFooterPacket();
 
   private final String header;
   private final String footer;
 
-  public HeaderAndFooter() {
+  public HeaderAndFooterPacket() {
     this(EMPTY_COMPONENT, EMPTY_COMPONENT);
   }
 
-  public HeaderAndFooter(String header, String footer) {
+  public HeaderAndFooterPacket(String header, String footer) {
     this.header = Preconditions.checkNotNull(header, "header");
     this.footer = Preconditions.checkNotNull(footer, "footer");
   }
@@ -36,12 +37,12 @@ public class HeaderAndFooter implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     writeString(buf, header);
     writeString(buf, footer);
   }
@@ -51,13 +52,13 @@ public class HeaderAndFooter implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static HeaderAndFooter create(net.kyori.adventure.text.Component header,
-      net.kyori.adventure.text.Component footer, ProtocolVersion protocolVersion) {
+  public static HeaderAndFooterPacket create(net.kyori.adventure.text.Component header,
+                                             net.kyori.adventure.text.Component footer, ProtocolVersion protocolVersion) {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);
-    return new HeaderAndFooter(serializer.serialize(header), serializer.serialize(footer));
+    return new HeaderAndFooterPacket(serializer.serialize(header), serializer.serialize(footer));
   }
 
-  public static HeaderAndFooter reset() {
+  public static HeaderAndFooterPacket reset() {
     return RESET;
   }
 }

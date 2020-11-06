@@ -5,7 +5,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TabCompleteResponse implements MinecraftPacket {
+public class TabCompleteResponsePacket implements Packet {
 
   private int transactionId;
   private int start;
@@ -59,7 +60,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(MINECRAFT_1_13) >= 0) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
       this.start = ProtocolUtils.readVarInt(buf);
@@ -80,7 +81,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(MINECRAFT_1_13) >= 0) {
       ProtocolUtils.writeVarInt(buf, this.transactionId);
       ProtocolUtils.writeVarInt(buf, this.start);

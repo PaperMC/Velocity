@@ -2,12 +2,13 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TitlePacket implements MinecraftPacket {
+public class TitlePacket implements Packet {
 
   public static final int SET_TITLE = 0;
   public static final int SET_SUBTITLE = 1;
@@ -26,12 +27,12 @@ public class TitlePacket implements MinecraftPacket {
   private int fadeOut;
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     throw new UnsupportedOperationException(); // encode only
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, action);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // 1.11+ shifted the action enum by 1 to handle the action bar

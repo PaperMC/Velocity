@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
@@ -15,7 +15,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
+  public boolean handle(PluginMessagePacket packet) {
     VelocityServerConnection serverConn = player.getConnectionInFlight();
     if (serverConn != null) {
       if (player.getPhase().handle(player, packet, serverConn)) {

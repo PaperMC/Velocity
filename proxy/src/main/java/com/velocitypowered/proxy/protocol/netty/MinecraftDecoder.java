@@ -2,7 +2,8 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -18,7 +19,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       new QuietDecoderException("A packet did not decode successfully (invalid data). If you are a "
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
-  private final ProtocolUtils.Direction direction;
+  private final ProtocolDirection direction;
   private StateRegistry state;
   private StateRegistry.PacketRegistry.ProtocolRegistry registry;
 
@@ -27,9 +28,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
    *
    * @param direction the direction from which we decode from
    */
-  public MinecraftDecoder(ProtocolUtils.Direction direction) {
+  public MinecraftDecoder(ProtocolDirection direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = direction.getProtocolRegistry(StateRegistry.HANDSHAKE,
+    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(direction,
         ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
@@ -52,7 +53,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
-    MinecraftPacket packet = this.registry.createPacket(packetId);
+    Packet packet = this.registry.createPacket(packetId);
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
@@ -74,7 +75,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Exception handleNotReadEnough(MinecraftPacket packet, int packetId) {
+  private Exception handleNotReadEnough(Packet packet, int packetId) {
     if (DEBUG) {
       return new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " "
           + getExtraConnectionDetail(packetId));
@@ -83,7 +84,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Exception handleDecodeFailure(Exception cause, MinecraftPacket packet, int packetId) {
+  private Exception handleDecodeFailure(Exception cause, Packet packet, int packetId) {
     if (DEBUG) {
       return new CorruptedFrameException(
           "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
@@ -98,7 +99,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.registry = direction.getProtocolRegistry(state, protocolVersion);
+    this.registry = state.getProtocolRegistry(direction, protocolVersion);
   }
 
   public void setState(StateRegistry state) {

@@ -26,12 +26,12 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
-import com.velocitypowered.proxy.protocol.packet.ServerLogin;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
-import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -58,7 +58,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
   private final InitialInboundConnection inbound;
-  private @MonotonicNonNull ServerLogin login;
+  private @MonotonicNonNull ServerLoginPacket login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
@@ -70,15 +70,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ServerLogin packet) {
+  public boolean handle(ServerLoginPacket packet) {
     this.login = packet;
     beginPreLogin();
     return true;
   }
 
   @Override
-  public boolean handle(EncryptionResponse packet) {
-    ServerLogin login = this.login;
+  public boolean handle(EncryptionResponsePacket packet) {
+    ServerLoginPacket login = this.login;
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
@@ -153,7 +153,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void beginPreLogin() {
-    ServerLogin login = this.login;
+    ServerLoginPacket login = this.login;
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
@@ -169,7 +169,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Optional<Component> disconnectReason = result.getReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
-            mcConnection.closeWith(Disconnect.create(disconnectReason.get(),
+            mcConnection.closeWith(DisconnectPacket.create(disconnectReason.get(),
                 inbound.getProtocolVersion()));
             return;
           }
@@ -177,7 +177,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result
               .isOnlineModeAllowed())) {
             // Request encryption.
-            EncryptionRequest request = generateEncryptionRequest();
+            EncryptionRequestPacket request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
             mcConnection.write(request);
           } else {
@@ -190,11 +190,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         });
   }
 
-  private EncryptionRequest generateEncryptionRequest() {
+  private EncryptionRequestPacket generateEncryptionRequest() {
     byte[] verify = new byte[4];
     ThreadLocalRandom.current().nextBytes(verify);
 
-    EncryptionRequest request = new EncryptionRequest();
+    EncryptionRequestPacket request = new EncryptionRequestPacket();
     request.setPublicKey(server.getServerKeyPair().getPublic().getEncoded());
     request.setVerifyToken(verify);
     return request;
@@ -243,7 +243,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
     int threshold = server.getConfiguration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      mcConnection.write(new SetCompression(threshold));
+      mcConnection.write(new SetCompressionPacket(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
     VelocityConfiguration configuration = server.getConfiguration();
@@ -251,7 +251,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
       playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
     }
-    ServerLoginSuccess success = new ServerLoginSuccess();
+    ServerLoginSuccessPacket success = new ServerLoginSuccessPacket();
     success.setUsername(player.getUsername());
     success.setUuid(playerUniqueId);
     mcConnection.write(success);

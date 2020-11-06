@@ -7,12 +7,13 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TabCompleteRequest implements MinecraftPacket {
+public class TabCompleteRequestPacket implements Packet {
 
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
 
@@ -77,7 +78,7 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(MINECRAFT_1_13) >= 0) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
       this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
@@ -96,7 +97,7 @@ public class TabCompleteRequest implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");
     }

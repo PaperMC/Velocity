@@ -3,7 +3,8 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.identity.Identity;
@@ -12,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
 
-public class Chat implements MinecraftPacket {
+public class ChatPacket implements Packet {
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
@@ -25,10 +26,10 @@ public class Chat implements MinecraftPacket {
   private byte type;
   private @Nullable UUID sender;
 
-  public Chat() {
+  public ChatPacket() {
   }
 
-  public Chat(String message, byte type, UUID sender) {
+  public ChatPacket(String message, byte type, UUID sender) {
     this.message = message;
     this.type = type;
     this.sender = sender;
@@ -71,9 +72,9 @@ public class Chat implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     message = ProtocolUtils.readString(buf);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (direction == ProtocolDirection.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       type = buf.readByte();
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         sender = ProtocolUtils.readUuid(buf);
@@ -82,12 +83,12 @@ public class Chat implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (message == null) {
       throw new IllegalStateException("Message is not specified");
     }
     ProtocolUtils.writeString(buf, message);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (direction == ProtocolDirection.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       buf.writeByte(type);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);
@@ -100,19 +101,19 @@ public class Chat implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static Chat createClientbound(Identity identity,
-      Component component, ProtocolVersion version) {
+  public static ChatPacket createClientbound(Identity identity,
+                                             Component component, ProtocolVersion version) {
     return createClientbound(component, CHAT_TYPE, identity.uuid(), version);
   }
 
-  public static Chat createClientbound(Component component, byte type,
-      UUID sender, ProtocolVersion version) {
+  public static ChatPacket createClientbound(Component component, byte type,
+                                             UUID sender, ProtocolVersion version) {
     Preconditions.checkNotNull(component, "component");
-    return new Chat(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,
+    return new ChatPacket(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,
         sender);
   }
 
-  public static Chat createServerbound(String message) {
-    return new Chat(message, CHAT_TYPE, EMPTY_SENDER);
+  public static ChatPacket createServerbound(String message) {
+    return new ChatPacket(message, CHAT_TYPE, EMPTY_SENDER);
   }
 }

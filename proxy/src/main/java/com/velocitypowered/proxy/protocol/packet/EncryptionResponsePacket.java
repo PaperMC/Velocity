@@ -4,12 +4,13 @@ import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
+import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
-public class EncryptionResponse implements MinecraftPacket {
+public class EncryptionResponsePacket implements Packet {
 
   private byte[] sharedSecret = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
@@ -31,7 +32,7 @@ public class EncryptionResponse implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 256);
       this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
@@ -42,7 +43,7 @@ public class EncryptionResponse implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
       ProtocolUtils.writeByteArray(buf, verifyToken);

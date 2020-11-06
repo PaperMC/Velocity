@@ -12,12 +12,12 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
-import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
-import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
-import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyDisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyHandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.legacy.LegacyPingPacket;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -41,7 +41,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LegacyPing packet) {
+  public boolean handle(LegacyPingPacket packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
     StatusSessionHandler handler = new StatusSessionHandler(server, connection,
         new LegacyInboundConnection(connection, packet));
@@ -51,14 +51,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LegacyHandshake packet) {
-    connection.closeWith(LegacyDisconnect
+  public boolean handle(LegacyHandshakePacket packet) {
+    connection.closeWith(LegacyDisconnectPacket
         .from(Component.text("Your client is old, please upgrade!", NamedTextColor.RED)));
     return true;
   }
 
   @Override
-  public boolean handle(Handshake handshake) {
+  public boolean handle(HandshakePacket handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
@@ -97,7 +97,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
   }
 
-  private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
+  private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
       ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client"));
       return;
@@ -123,7 +123,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
   }
 
-  private ConnectionType getHandshakeConnectionType(Handshake handshake) {
+  private ConnectionType getHandshakeConnectionType(HandshakePacket handshake) {
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
@@ -164,7 +164,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleGeneric(MinecraftPacket packet) {
+  public void handleGeneric(Packet packet) {
     // Unknown packet received. Better to close the connection.
     connection.close(true);
   }
@@ -178,10 +178,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static class LegacyInboundConnection implements InboundConnection {
 
     private final MinecraftConnection connection;
-    private final LegacyPing ping;
+    private final LegacyPingPacket ping;
 
     private LegacyInboundConnection(MinecraftConnection connection,
-        LegacyPing ping) {
+        LegacyPingPacket ping) {
       this.connection = connection;
       this.ping = ping;
     }

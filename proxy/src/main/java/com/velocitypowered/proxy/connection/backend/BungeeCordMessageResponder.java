@@ -9,7 +9,7 @@ import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -45,7 +45,7 @@ public class BungeeCordMessageResponder {
     this.player = player;
   }
 
-  public static boolean isBungeeCordMessage(PluginMessage message) {
+  public static boolean isBungeeCordMessage(PluginMessagePacket message) {
     return MODERN_CHANNEL.getId().equals(message.getChannel()) || LEGACY_CHANNEL.getId()
         .equals(message.getChannel());
   }
@@ -312,7 +312,7 @@ public class BungeeCordMessageResponder {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
     String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
 
-    PluginMessage msg = null;
+    PluginMessagePacket msg = null;
     boolean released = false;
 
     try {
@@ -322,7 +322,7 @@ public class BungeeCordMessageResponder {
       }
 
       MinecraftConnection serverConn = vsc.ensureConnected();
-      msg = new PluginMessage(chan, buf);
+      msg = new PluginMessagePacket(chan, buf);
       serverConn.write(msg);
       released = true;
     } finally {
@@ -332,7 +332,7 @@ public class BungeeCordMessageResponder {
     }
   }
 
-  boolean process(PluginMessage message) {
+  boolean process(PluginMessagePacket message) {
     if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
       return false;
     }

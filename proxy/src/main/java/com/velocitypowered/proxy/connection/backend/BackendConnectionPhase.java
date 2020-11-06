@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 
 /**
  * Provides connection phase specific actions.
@@ -21,7 +21,7 @@ public interface BackendConnectionPhase {
    */
   default boolean handle(VelocityServerConnection server,
                          ConnectedPlayer player,
-                         PluginMessage message) {
+                         PluginMessagePacket message) {
     return false;
   }
 
