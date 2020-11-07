@@ -146,7 +146,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(pme -> {
           if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
             PluginMessage copied = new PluginMessage(packet.getChannel(),
-                Unpooled.wrappedBuffer(copy));
+                Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(copy)));
             playerConnection.write(copied);
           }
         }, playerConnection.eventLoop())
