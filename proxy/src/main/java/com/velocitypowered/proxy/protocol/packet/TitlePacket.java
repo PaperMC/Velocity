@@ -1,34 +1,95 @@
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.primitives.Ints;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.DurationUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Arrays;
+import net.kyori.adventure.title.Title;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TitlePacket implements Packet {
+
+  public static final Decoder<TitlePacket> DECODER = (buf, direction, version) -> {
+    throw new UnsupportedOperationException();
+  };
+
+  public static TitlePacket hide(final ProtocolVersion version) {
+    return version.gte(ProtocolVersion.MINECRAFT_1_11)
+      ? Instances.HIDE
+      : Instances.HIDE_OLD;
+  }
+
+  public static TitlePacket reset(final ProtocolVersion version) {
+    return version.gte(ProtocolVersion.MINECRAFT_1_11)
+      ? Instances.RESET
+      : Instances.RESET_OLD;
+  }
+
+  public static TitlePacket times(final ProtocolVersion version, final Title.Times times) {
+    final int action = version.gte(ProtocolVersion.MINECRAFT_1_11)
+      ? SET_TIMES
+      : SET_TIMES_OLD;
+    return new TitlePacket(
+      action,
+      (int) DurationUtils.toTicks(times.fadeIn()),
+      (int) DurationUtils.toTicks(times.stay()),
+      (int) DurationUtils.toTicks(times.fadeOut())
+    );
+  }
 
   public static final int SET_TITLE = 0;
   public static final int SET_SUBTITLE = 1;
   public static final int SET_ACTION_BAR = 2;
   public static final int SET_TIMES = 3;
-  public static final int SET_TIMES_OLD = 2;
   public static final int HIDE = 4;
-  public static final int HIDE_OLD = 3;
   public static final int RESET = 5;
+
+  public static final int SET_TIMES_OLD = 2;
+  public static final int HIDE_OLD = 3;
   public static final int RESET_OLD = 4;
 
-  private int action;
-  private @Nullable String component;
-  private int fadeIn;
-  private int stay;
-  private int fadeOut;
+  private final int action;
+  private final @Nullable String component;
+  private final int fadeIn;
+  private final int stay;
+  private final int fadeOut;
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException(); // encode only
+  private TitlePacket(final int action) {
+    checkAction(action, HIDE, RESET, HIDE_OLD, RESET_OLD);
+    this.action = action;
+    this.component = null;
+    this.fadeIn = -1;
+    this.stay = -1;
+    this.fadeOut = -1;
+  }
+
+  public TitlePacket(final int action, final String component) {
+    checkAction(action, SET_TITLE, SET_SUBTITLE, SET_ACTION_BAR);
+    this.action = action;
+    this.component = component;
+    this.fadeIn = -1;
+    this.stay = -1;
+    this.fadeOut = -1;
+  }
+
+  public TitlePacket(final int action, final int fadeIn, final int stay, final int fadeOut) {
+    checkAction(action, SET_TIMES, SET_TIMES_OLD);
+    this.action = action;
+    this.component = null;
+    this.fadeIn = fadeIn;
+    this.stay = stay;
+    this.fadeOut = fadeOut;
+  }
+
+  private static void checkAction(final int action, final int... validActions) {
+    if (!Ints.contains(validActions, action)) {
+      throw new IllegalArgumentException("Invalid action " + action + ", expected one of: " + Arrays.toString(validActions));
+    }
   }
 
   @Override
@@ -79,80 +140,50 @@ public class TitlePacket implements Packet {
     }
   }
 
-  public int getAction() {
-    return action;
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
   }
 
-  public void setAction(int action) {
-    this.action = action;
+  public int getAction() {
+    return action;
   }
 
   public @Nullable String getComponent() {
     return component;
   }
 
-  public void setComponent(@Nullable String component) {
-    this.component = component;
-  }
-
   public int getFadeIn() {
     return fadeIn;
-  }
-
-  public void setFadeIn(int fadeIn) {
-    this.fadeIn = fadeIn;
   }
 
   public int getStay() {
     return stay;
   }
 
-  public void setStay(int stay) {
-    this.stay = stay;
-  }
-
   public int getFadeOut() {
     return fadeOut;
-  }
-
-  public void setFadeOut(int fadeOut) {
-    this.fadeOut = fadeOut;
-  }
-
-  public static TitlePacket hideForProtocolVersion(ProtocolVersion version) {
-    TitlePacket packet = new TitlePacket();
-    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.HIDE
-        : TitlePacket.HIDE_OLD);
-    return packet;
-  }
-
-  public static TitlePacket resetForProtocolVersion(ProtocolVersion version) {
-    TitlePacket packet = new TitlePacket();
-    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.RESET
-        : TitlePacket.RESET_OLD);
-    return packet;
-  }
-
-  public static TitlePacket timesForProtocolVersion(ProtocolVersion version) {
-    TitlePacket packet = new TitlePacket();
-    packet.setAction(version.gte(ProtocolVersion.MINECRAFT_1_11) ? TitlePacket.SET_TIMES
-        : TitlePacket.SET_TIMES_OLD);
-    return packet;
   }
 
   @Override
   public String toString() {
     return "TitlePacket{"
-        + "action=" + action
-        + ", component='" + component + '\''
-        + ", fadeIn=" + fadeIn
-        + ", stay=" + stay
-        + ", fadeOut=" + fadeOut
-        + '}';
+      + "action=" + action
+      + ", component='" + component + '\''
+      + ", fadeIn=" + fadeIn
+      + ", stay=" + stay
+      + ", fadeOut=" + fadeOut
+      + '}';
   }
 
-  @Override
-  public boolean handle(MinecraftSessionHandler handler) {
-    return handler.handle(this);
+  public static final class Instances {
+    public static final TitlePacket HIDE = new TitlePacket(TitlePacket.HIDE);
+    public static final TitlePacket RESET = new TitlePacket(TitlePacket.RESET);
+
+    public static final TitlePacket HIDE_OLD = new TitlePacket(TitlePacket.HIDE_OLD);
+    public static final TitlePacket RESET_OLD = new TitlePacket(TitlePacket.RESET_OLD);
+
+    private Instances() {
+    }
   }
 }

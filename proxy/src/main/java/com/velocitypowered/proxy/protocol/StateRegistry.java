@@ -210,7 +210,7 @@ public enum StateRegistry {
           map(0x53, MINECRAFT_1_14, true),
           map(0x54, MINECRAFT_1_15, true),
           map(0x53, MINECRAFT_1_16, true));
-      clientbound.register(TitlePacket.class, TitlePacket::new,
+      clientbound.registerNew(TitlePacket.class, TitlePacket.DECODER,
           map(0x45, MINECRAFT_1_8, true),
           map(0x45, MINECRAFT_1_9, true),
           map(0x47, MINECRAFT_1_12, true),
@@ -416,7 +416,8 @@ public enum StateRegistry {
         return supplier.get();
       }
 
-      public @Nullable Packet decodePacket(final int id, ByteBuf buf, ProtocolDirection direction, ProtocolVersion protocolVersion) {
+      public @Nullable Packet decodePacket(final int id, ByteBuf buf, ProtocolDirection direction,
+                                           ProtocolVersion protocolVersion) {
         final Packet.Decoder<? extends Packet> decoder = this.packetIdToDecoder.get(id);
         if (decoder == null) {
           return null;

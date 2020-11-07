@@ -50,7 +50,6 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
-import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -247,11 +246,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
-      TitlePacket pkt = new TitlePacket();
-      pkt.setAction(TitlePacket.SET_ACTION_BAR);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
-          .serialize(message));
-      connection.write(pkt);
+      connection.write(new TitlePacket(
+          TitlePacket.SET_ACTION_BAR,
+          ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(message)
+      ));
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
       // legacy message and then inject the legacy text into a component... yuck!
@@ -270,36 +268,32 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
         .getProtocolVersion());
 
-    TitlePacket titlePkt = new TitlePacket();
-    titlePkt.setAction(TitlePacket.SET_TITLE);
-    titlePkt.setComponent(serializer.serialize(title.title()));
-    connection.delayedWrite(titlePkt);
+    connection.delayedWrite(new TitlePacket(
+        TitlePacket.SET_TITLE,
+        serializer.serialize(title.title())
+    ));
 
-    TitlePacket subtitlePkt = new TitlePacket();
-    subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
-    subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
-    connection.delayedWrite(subtitlePkt);
+    connection.delayedWrite(new TitlePacket(
+        TitlePacket.SET_SUBTITLE,
+        serializer.serialize(title.subtitle())
+    ));
 
-    TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
     net.kyori.adventure.title.Title.Times times = title.times();
     if (times != null) {
-      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      connection.delayedWrite(TitlePacket.times(this.getProtocolVersion(), times));
     }
-    connection.delayedWrite(timesPkt);
 
     connection.flush();
   }
 
   @Override
   public void clearTitle() {
-    connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    connection.write(TitlePacket.hide(this.getProtocolVersion()));
   }
 
   @Override
   public void resetTitle() {
-    connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    connection.write(TitlePacket.reset(this.getProtocolVersion()));
   }
 
   @Override
