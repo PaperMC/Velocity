@@ -36,17 +36,17 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.ClientboundChatPacket;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.ServerboundChatPacket;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.proxy.network.ProtocolUtils;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -186,7 +186,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
-  void setPlayerSettings(ClientSettingsPacket settings) {
+  void setPlayerSettings(ServerboundClientSettingsPacket settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
@@ -246,8 +246,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
-      connection.write(new TitlePacket(
-          TitlePacket.SET_ACTION_BAR,
+      connection.write(new ClientboundTitlePacket(
+          ClientboundTitlePacket.SET_ACTION_BAR,
           ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(message)
       ));
     } else {
@@ -268,19 +268,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
         .getProtocolVersion());
 
-    connection.delayedWrite(new TitlePacket(
-        TitlePacket.SET_TITLE,
+    connection.delayedWrite(new ClientboundTitlePacket(
+        ClientboundTitlePacket.SET_TITLE,
         serializer.serialize(title.title())
     ));
 
-    connection.delayedWrite(new TitlePacket(
-        TitlePacket.SET_SUBTITLE,
+    connection.delayedWrite(new ClientboundTitlePacket(
+        ClientboundTitlePacket.SET_SUBTITLE,
         serializer.serialize(title.subtitle())
     ));
 
     net.kyori.adventure.title.Title.Times times = title.times();
     if (times != null) {
-      connection.delayedWrite(TitlePacket.times(this.getProtocolVersion(), times));
+      connection.delayedWrite(ClientboundTitlePacket.times(this.getProtocolVersion(), times));
     }
 
     connection.flush();
@@ -288,12 +288,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void clearTitle() {
-    connection.write(TitlePacket.hide(this.getProtocolVersion()));
+    connection.write(ClientboundTitlePacket.hide(this.getProtocolVersion()));
   }
 
   @Override
   public void resetTitle() {
-    connection.write(TitlePacket.reset(this.getProtocolVersion()));
+    connection.write(ClientboundTitlePacket.reset(this.getProtocolVersion()));
   }
 
   @Override
@@ -338,7 +338,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(DisconnectPacket.create(reason, this.getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, this.getProtocolVersion()));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -397,7 +397,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param disconnect the disconnect packet
    * @param safe whether or not we can safely reconnect to a new server
    */
-  public void handleConnectionException(RegisteredServer server, DisconnectPacket disconnect,
+  public void handleConnectionException(RegisteredServer server, ClientboundDisconnectPacket disconnect,
       boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
@@ -502,7 +502,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case SERVER_DISCONNECTED:
                       Component reason = status.getReason()
                           .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                      handleConnectionException(res.getServer(), DisconnectPacket.create(reason,
+                      handleConnectionException(res.getServer(), ClientboundDisconnectPacket.create(reason,
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
@@ -677,10 +677,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendResourcePack(String url) {
     Preconditions.checkNotNull(url, "url");
 
-    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-    request.setUrl(url);
-    request.setHash("");
-    connection.write(request);
+    connection.write(new ClientboundResourcePackRequestPacket(url, ""));
   }
 
   @Override
@@ -689,20 +686,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
 
-    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-    request.setUrl(url);
-    request.setHash(ByteBufUtil.hexDump(hash));
-    connection.write(request);
+    connection.write(new ClientboundResourcePackRequestPacket(url, ByteBufUtil.hexDump(hash)));
   }
 
   /**
-   * Sends a {@link KeepAlivePacket} packet to the player with a random ID.
+   * Sends a {@link ClientboundKeepAlivePacket} packet to the player with a random ID.
    * The response will be ignored by Velocity as it will not match the
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
-      connection.write(new KeepAlivePacket(ThreadLocalRandom.current().nextLong()));
+      connection.write(new ClientboundKeepAlivePacket(ThreadLocalRandom.current().nextLong()));
     }
   }
 
@@ -873,7 +867,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               case SERVER_DISCONNECTED:
                 Component reason = status.getReason()
                     .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                handleConnectionException(toConnect, DisconnectPacket.create(reason,
+                handleConnectionException(toConnect, ClientboundDisconnectPacket.create(reason,
                     getProtocolVersion()), status.isSafe());
                 break;
               default:

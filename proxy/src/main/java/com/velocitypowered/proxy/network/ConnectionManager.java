@@ -6,8 +6,8 @@ import static org.asynchttpclient.Dsl.config;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
-import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
+import com.velocitypowered.proxy.network.pipeline.GS4QueryHandler;
+import com.velocitypowered.proxy.network.resolver.SeparatePoolInetNameResolver;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -60,9 +60,9 @@ public final class ConnectionManager {
     this.transportType = TransportType.bestType();
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
-    this.serverChannelInitializer = new ServerChannelInitializerHolder(
+    this.serverChannelInitializer = new ChannelInitializerHolder<>("server channel",
         new ServerChannelInitializer(this.server));
-    this.backendChannelInitializer = new BackendChannelInitializerHolder(
+    this.backendChannelInitializer = new ChannelInitializerHolder<>("backend channel",
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()

@@ -20,11 +20,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
-import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
+import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -143,7 +143,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    HandshakePacket handshake = new HandshakePacket();
+    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
@@ -165,7 +165,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
-    mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername()));
+    mc.delayedWrite(new ServerboundServerLoginPacket(proxyPlayer.getUsername()));
     mc.flush();
   }
 
@@ -308,7 +308,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   /**
-   * Gets whether the {@link JoinGamePacket}
+   * Gets whether the {@link ClientboundJoinGamePacket}
    * packet has been sent by this server.
    *
    * @return Whether the join has been completed.

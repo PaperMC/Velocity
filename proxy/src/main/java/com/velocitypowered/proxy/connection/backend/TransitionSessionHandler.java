@@ -14,11 +14,11 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
-import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -60,13 +60,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(KeepAlivePacket packet) {
+  public boolean handle(ClientboundKeepAlivePacket packet) {
     serverConn.ensureConnected().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(JoinGamePacket packet) {
+  public boolean handle(ClientboundJoinGamePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
 
@@ -132,7 +132,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(DisconnectPacket packet) {
+  public boolean handle(ClientboundDisconnectPacket packet) {
     final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
 

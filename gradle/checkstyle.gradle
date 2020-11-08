@@ -1,6 +1,9 @@
 checkstyle {
+    def configDirectory = new File(project.rootDir, ["config", "checkstyle"].join(File.separator))
+
     toolVersion '8.14'
-    configFile new File(project.rootDir, ['config', 'checkstyle', 'checkstyle.xml'].join(File.separator))
+    configFile new File(configDirectory, "checkstyle.xml")
+    configProperties = [configDirectory: configDirectory.getAbsolutePath()]
     
     // The build should immediately fail if we have errors.
     maxErrors = 0

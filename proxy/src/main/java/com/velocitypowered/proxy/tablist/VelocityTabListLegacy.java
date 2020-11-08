@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItemPacket;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItemPacket.Item;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -46,19 +46,21 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
-      connection.delayedWrite(new PlayerListItemPacket(PlayerListItemPacket.REMOVE_PLAYER,
-          Collections.singletonList(PlayerListItemPacket.Item.from(value))));
+      connection.delayedWrite(new ClientboundPlayerListItemPacket(
+          ClientboundPlayerListItemPacket.REMOVE_PLAYER,
+          Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(value))
+      ));
     }
     entries.clear();
     nameMapping.clear();
   }
 
   @Override
-  public void processBackendPacket(PlayerListItemPacket packet) {
+  public void processBackendPacket(ClientboundPlayerListItemPacket packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
-      case PlayerListItemPacket.ADD_PLAYER:
+      case ClientboundPlayerListItemPacket.ADD_PLAYER:
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
           VelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
@@ -74,7 +76,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
               .build());
         }
         break;
-      case PlayerListItemPacket.REMOVE_PLAYER:
+      case ClientboundPlayerListItemPacket.REMOVE_PLAYER:
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
@@ -91,12 +93,13 @@ public class VelocityTabListLegacy extends VelocityTabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       switch (action) {
-        case PlayerListItemPacket.UPDATE_LATENCY:
-        case PlayerListItemPacket.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
-          connection
-              // ADD_PLAYER also updates ping
-              .write(new PlayerListItemPacket(PlayerListItemPacket.ADD_PLAYER,
-                  Collections.singletonList(PlayerListItemPacket.Item.from(entry))));
+        case ClientboundPlayerListItemPacket.UPDATE_LATENCY:
+        case ClientboundPlayerListItemPacket.UPDATE_DISPLAY_NAME: // Add here because we
+          //                                                         removed beforehand
+          connection.write(new ClientboundPlayerListItemPacket(
+              ClientboundPlayerListItemPacket.ADD_PLAYER, // ADD_PLAYER also updates ping
+              Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(entry))
+          ));
           break;
         default:
           // Can't do anything else

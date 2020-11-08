@@ -6,8 +6,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class ChannelInitializerHolder<C extends Channel>
-    implements Supplier<ChannelInitializer<C>> {
+public class ChannelInitializerHolder<C extends Channel> implements Supplier<ChannelInitializer<C>> {
   private static final Logger LOGGER = LogManager.getLogger(ChannelInitializerHolder.class);
   private final String name;
   private ChannelInitializer<C> initializer;

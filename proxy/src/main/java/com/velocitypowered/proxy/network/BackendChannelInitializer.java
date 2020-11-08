@@ -8,12 +8,12 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.protocol.ProtocolDirection;
-import com.velocitypowered.proxy.protocol.netty.AutoReadHolderHandler;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.pipeline.AutoReadHolderHandler;
+import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintFrameDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -37,9 +37,9 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,
-            new MinecraftDecoder(ProtocolDirection.CLIENTBOUND))
+            new MinecraftDecoder(PacketDirection.CLIENTBOUND))
         .addLast(FLOW_HANDLER, new AutoReadHolderHandler())
         .addLast(MINECRAFT_ENCODER,
-            new MinecraftEncoder(ProtocolDirection.SERVERBOUND));
+            new MinecraftEncoder(PacketDirection.SERVERBOUND));
   }
 }
