@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerLoginSuccessPacket implements Packet {
+  public static final Decoder<ServerLoginSuccessPacket> DECODER = Decoder.method(ServerLoginSuccessPacket::new);
 
   private @Nullable UUID uuid;
   private @Nullable String username;
@@ -39,7 +40,7 @@ public class ServerLoginSuccessPacket implements Packet {
 
   @Override
   public String toString() {
-    return "ServerLoginSuccess{"
+    return "ServerLoginSuccessPacket{"
         + "uuid=" + uuid
         + ", username='" + username + '\''
         + '}';

@@ -17,6 +17,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerListItemPacket implements Packet {
+  public static final Decoder<PlayerListItemPacket> DECODER = Decoder.method(PlayerListItemPacket::new);
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;

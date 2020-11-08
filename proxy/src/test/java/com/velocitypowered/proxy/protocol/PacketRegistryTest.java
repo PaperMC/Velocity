@@ -25,7 +25,7 @@ class PacketRegistryTest {
   private StateRegistry.PacketRegistry setupRegistry() {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
-    registry.register(HandshakePacket.class, HandshakePacket::new,
+    registry.register(HandshakePacket.class, HandshakePacket.DECODER,
         new StateRegistry.PacketMapping(0x01, MINECRAFT_1_8, false),
         new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12, false));
     return registry;
@@ -63,7 +63,7 @@ class PacketRegistryTest {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
     assertThrows(IllegalArgumentException.class,
-        () -> registry.register(HandshakePacket.class, HandshakePacket::new));
+        () -> registry.register(HandshakePacket.class, HandshakePacket.DECODER));
     assertThrows(IllegalArgumentException.class,
         () -> registry.getProtocolRegistry(ProtocolVersion.UNKNOWN)
             .getPacketId(new HandshakePacket()));
@@ -74,11 +74,11 @@ class PacketRegistryTest {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
     assertThrows(IllegalArgumentException.class,
-        () -> registry.register(HandshakePacket.class, HandshakePacket::new,
+        () -> registry.register(HandshakePacket.class, HandshakePacket.DECODER,
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_13, false),
             new StateRegistry.PacketMapping(0x00, MINECRAFT_1_8, false)));
     assertThrows(IllegalArgumentException.class,
-        () -> registry.register(HandshakePacket.class, HandshakePacket::new,
+        () -> registry.register(HandshakePacket.class, HandshakePacket.DECODER,
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_13, false),
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_13, false)));
   }
@@ -87,13 +87,13 @@ class PacketRegistryTest {
   void failOnDuplicate() {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
-    registry.register(HandshakePacket.class, HandshakePacket::new,
+    registry.register(HandshakePacket.class, HandshakePacket.DECODER,
         new StateRegistry.PacketMapping(0x00, MINECRAFT_1_8, false));
     assertThrows(IllegalArgumentException.class,
-        () -> registry.register(HandshakePacket.class, HandshakePacket::new,
+        () -> registry.register(HandshakePacket.class, HandshakePacket.DECODER,
             new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12, false)));
     assertThrows(IllegalArgumentException.class,
-        () -> registry.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
+        () -> registry.register(StatusPingPacket.class, StatusPingPacket.DECODER,
             new StateRegistry.PacketMapping(0x00, MINECRAFT_1_13, false)));
   }
 
@@ -101,7 +101,7 @@ class PacketRegistryTest {
   void shouldNotFailWhenRegisterLatestProtocolVersion() {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
-    assertDoesNotThrow(() -> registry.register(HandshakePacket.class, HandshakePacket::new,
+    assertDoesNotThrow(() -> registry.register(HandshakePacket.class, HandshakePacket.DECODER,
         new StateRegistry.PacketMapping(0x00, MINECRAFT_1_8, false),
         new StateRegistry.PacketMapping(0x01, getLast(ProtocolVersion.SUPPORTED_VERSIONS),
             false)));
@@ -111,7 +111,7 @@ class PacketRegistryTest {
   void registrySuppliesCorrectPacketsByProtocol() {
     StateRegistry.PacketRegistry registry = new StateRegistry.PacketRegistry(
         ProtocolDirection.CLIENTBOUND);
-    registry.register(HandshakePacket.class, HandshakePacket::new,
+    registry.register(HandshakePacket.class, HandshakePacket.DECODER,
         new StateRegistry.PacketMapping(0x00, MINECRAFT_1_12, false),
         new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12_1, false),
         new StateRegistry.PacketMapping(0x02, MINECRAFT_1_13, false));

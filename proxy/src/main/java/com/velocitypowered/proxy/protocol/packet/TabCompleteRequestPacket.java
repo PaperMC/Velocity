@@ -15,6 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteRequestPacket implements Packet {
 
+  public static final Decoder<TabCompleteRequestPacket> DECODER = Decoder.method(TabCompleteRequestPacket::new);
+
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
 
   private @Nullable String command;

@@ -11,7 +11,7 @@ public class KeepAlivePacket implements Packet {
 
   public static final Decoder<KeepAlivePacket> DECODER = (buf, direction, version) -> {
     final long randomId;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {
       randomId = buf.readLong();
     } else if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       randomId = ProtocolUtils.readVarInt(buf);
@@ -38,18 +38,18 @@ public class KeepAlivePacket implements Packet {
     }
   }
 
-  public long getRandomId() {
-    return randomId;
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
 
+  public long getRandomId() {
+    return randomId;
+  }
+
   @Override
   public String toString() {
-    return "KeepAlive{"
+    return "KeepAlivePacket{"
       + "randomId=" + randomId
       + '}';
   }

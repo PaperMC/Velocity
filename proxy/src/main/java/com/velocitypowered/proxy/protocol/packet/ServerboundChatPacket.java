@@ -6,7 +6,6 @@ import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundChatPacket implements Packet {
 
@@ -17,7 +16,7 @@ public class ServerboundChatPacket implements Packet {
 
   public static final int MAX_MESSAGE_LENGTH = 256;
 
-  private final @Nullable String message;
+  private final String message;
 
   public ServerboundChatPacket(String message) {
     this.message = message;
@@ -25,17 +24,7 @@ public class ServerboundChatPacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    if (message == null) {
-      throw new IllegalStateException("Message is not specified");
-    }
     ProtocolUtils.writeString(buf, message);
-  }
-
-  public String getMessage() {
-    if (message == null) {
-      throw new IllegalStateException("Message is not specified");
-    }
-    return message;
   }
 
   @Override
@@ -43,9 +32,13 @@ public class ServerboundChatPacket implements Packet {
     return handler.handle(this);
   }
 
+  public String getMessage() {
+    return message;
+  }
+
   @Override
   public String toString() {
-    return "Chat{"
+    return "ServerboundChatPacket{"
       + "message='" + message + '\''
       + '}';
   }

@@ -11,6 +11,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BossBarPacket implements Packet {
 
+  public static final Decoder<BossBarPacket> DECODER = Decoder.method(BossBarPacket::new);
+
   public static final int ADD = 0;
   public static final int REMOVE = 1;
   public static final int UPDATE_PERCENT = 2;
@@ -87,7 +89,7 @@ public class BossBarPacket implements Packet {
 
   @Override
   public String toString() {
-    return "BossBar{"
+    return "BossBarPacket{"
         + "uuid=" + uuid
         + ", action=" + action
         + ", name='" + name + '\''

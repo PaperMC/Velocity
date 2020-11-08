@@ -53,27 +53,17 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
-    final boolean decoded;
-    Packet packet = this.registry.decodePacket(packetId, buf, direction, registry.version);
-    if (packet == null) {
-      packet = this.registry.createPacket(packetId);
-      decoded = false;
-    } else {
-      decoded = true;
+    Packet packet = null;
+    try {
+      packet = this.registry.decodePacket(packetId, buf, direction, registry.version);
+    } catch (Exception e) {
+      throw handleDecodeFailure(e, packet, packetId); // TODO: packet is always null
     }
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
     } else {
       try {
-        if (!decoded) {
-          try {
-            packet.decode(buf, direction, registry.version);
-          } catch (Exception e) {
-            throw handleDecodeFailure(e, packet, packetId);
-          }
-        }
-
         if (buf.isReadable()) {
           throw handleNotReadEnough(packet, packetId);
         }

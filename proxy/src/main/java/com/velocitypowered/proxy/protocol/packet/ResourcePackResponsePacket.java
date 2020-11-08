@@ -11,6 +11,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class ResourcePackResponsePacket implements Packet {
 
+  public static final Decoder<ResourcePackResponsePacket> DECODER = Decoder.method(ResourcePackResponsePacket::new);
+
   private String hash = "";
   private @MonotonicNonNull Status status;
 
@@ -44,7 +46,7 @@ public class ResourcePackResponsePacket implements Packet {
 
   @Override
   public String toString() {
-    return "ResourcePackResponse{"
+    return "ResourcePackResponsePacket{"
         + "hash=" + hash + ", "
         + "status=" + status
         + '}';

@@ -36,6 +36,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AvailableCommandsPacket implements Packet {
+  public static final Decoder<AvailableCommandsPacket> DECODER = Decoder.method(AvailableCommandsPacket::new);
+
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
   private static final byte NODE_TYPE_ROOT = 0x00;

@@ -6,12 +6,7 @@ import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import io.netty.buffer.ByteBuf;
 
-public class LegacyHandshakePacket implements Packet {
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException();
-  }
+public class LegacyHandshakePacket implements LegacyPacket, Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {

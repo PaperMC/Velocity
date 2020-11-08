@@ -7,56 +7,34 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.Packet;
 import com.velocitypowered.proxy.protocol.ProtocolDirection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PluginMessagePacket extends DeferredByteBufHolder implements Packet {
+public class PluginMessagePacket extends DefaultByteBufHolder implements Packet {
 
-  private @Nullable String channel;
+  public static final Decoder<PluginMessagePacket> DECODER = (buf, direction, version) -> {
+    String channel = ProtocolUtils.readString(buf);
+    if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
+      channel = transformLegacyToModernChannel(channel);
+    }
+    final ByteBuf data;
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+      data = buf.readRetainedSlice(buf.readableBytes());
+    } else {
+      data = ProtocolUtils.readRetainedByteBufSlice17(buf);
+    }
+    return new PluginMessagePacket(channel, data);
+  };
 
-  public PluginMessagePacket() {
-    super(null);
-  }
+  private final @Nullable String channel;
 
   public PluginMessagePacket(String channel,
                              @MonotonicNonNull ByteBuf backing) {
     super(backing);
     this.channel = channel;
-  }
-
-  public String getChannel() {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified.");
-    }
-    return channel;
-  }
-
-  public void setChannel(String channel) {
-    this.channel = channel;
-  }
-
-  @Override
-  public String toString() {
-    return "PluginMessage{"
-        + "channel='" + channel + '\''
-        + ", data=" + super.toString()
-        + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolDirection direction, ProtocolVersion version) {
-    this.channel = ProtocolUtils.readString(buf);
-    if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
-      this.channel = transformLegacyToModernChannel(this.channel);
-    }
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      this.replace(buf.readRetainedSlice(buf.readableBytes()));
-    } else {
-      this.replace(ProtocolUtils.readRetainedByteBufSlice17(buf));
-    }
-
   }
 
   @Override
@@ -74,7 +52,6 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Packet
     } else {
       ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
     }
-
   }
 
   @Override
@@ -82,24 +59,16 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Packet
     return handler.handle(this);
   }
 
-  @Override
-  public PluginMessagePacket copy() {
-    return (PluginMessagePacket) super.copy();
-  }
-
-  @Override
-  public PluginMessagePacket duplicate() {
-    return (PluginMessagePacket) super.duplicate();
-  }
-
-  @Override
-  public PluginMessagePacket retainedDuplicate() {
-    return (PluginMessagePacket) super.retainedDuplicate();
+  public String getChannel() {
+    if (channel == null) {
+      throw new IllegalStateException("Channel is not specified.");
+    }
+    return channel;
   }
 
   @Override
   public PluginMessagePacket replace(ByteBuf content) {
-    return (PluginMessagePacket) super.replace(content);
+    return new PluginMessagePacket(this.channel, content);
   }
 
   @Override
@@ -120,5 +89,27 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Packet
   @Override
   public PluginMessagePacket touch(Object hint) {
     return (PluginMessagePacket) super.touch(hint);
+  }
+
+  @Override
+  public String toString() {
+    return "PluginMessagePacket{"
+      + "channel='" + channel + '\''
+      + ", data=" + super.toString()
+      + '}';
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if(this == other) return true;
+    if(other == null || this.getClass() != other.getClass()) return false;
+    final PluginMessagePacket that = (PluginMessagePacket) other;
+    return Objects.equals(this.channel, that.channel)
+      && super.equals(other);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.channel, super.hashCode());
   }
 }

@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 
 public class StatusPingPacket implements Packet {
 
-  public static Decoder<StatusPingPacket> DECODER = (buf, direction, version) -> {
+  public static final Decoder<StatusPingPacket> DECODER = (buf, direction, version) -> {
     final long randomId = buf.readLong();
     return new StatusPingPacket(randomId);
   };

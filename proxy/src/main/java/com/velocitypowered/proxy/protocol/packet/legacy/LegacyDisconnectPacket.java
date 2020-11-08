@@ -8,7 +8,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 
-public class LegacyDisconnectPacket {
+public class LegacyDisconnectPacket implements LegacyPacket {
 
   private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0,
       ImmutableList.of());

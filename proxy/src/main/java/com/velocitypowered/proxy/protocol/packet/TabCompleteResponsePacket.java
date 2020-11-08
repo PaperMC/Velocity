@@ -16,6 +16,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteResponsePacket implements Packet {
 
+  public static final Decoder<TabCompleteResponsePacket> DECODER = Decoder.method(TabCompleteResponsePacket::new);
+
   private int transactionId;
   private int start;
   private int length;
@@ -51,7 +53,7 @@ public class TabCompleteResponsePacket implements Packet {
 
   @Override
   public String toString() {
-    return "TabCompleteResponse{"
+    return "TabCompleteResponsePacket{"
         + "transactionId=" + transactionId
         + ", start=" + start
         + ", length=" + length

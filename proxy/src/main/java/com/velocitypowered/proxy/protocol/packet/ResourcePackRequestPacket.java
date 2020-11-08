@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ResourcePackRequestPacket implements Packet {
+  public static final Decoder<ResourcePackRequestPacket> DECODER = Decoder.method(ResourcePackRequestPacket::new);
 
   private @MonotonicNonNull String url;
   private @MonotonicNonNull String hash;
@@ -52,7 +53,7 @@ public class ResourcePackRequestPacket implements Packet {
 
   @Override
   public String toString() {
-    return "ResourcePackRequest{"
+    return "ResourcePackRequestPacket{"
         + "url='" + url + '\''
         + ", hash='" + hash + '\''
         + '}';

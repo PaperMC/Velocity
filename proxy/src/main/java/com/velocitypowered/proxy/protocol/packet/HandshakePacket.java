@@ -9,6 +9,8 @@ import io.netty.buffer.ByteBuf;
 
 public class HandshakePacket implements Packet {
 
+  public static final Decoder<HandshakePacket> DECODER = Decoder.method(HandshakePacket::new);
+
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
   private int port;
@@ -48,7 +50,7 @@ public class HandshakePacket implements Packet {
 
   @Override
   public String toString() {
-    return "Handshake{"
+    return "HandshakePacket{"
         + "protocolVersion=" + protocolVersion
         + ", serverAddress='" + serverAddress + '\''
         + ", port=" + port

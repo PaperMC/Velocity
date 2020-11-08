@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerLoginPacket implements Packet {
+  public static final Decoder<ServerLoginPacket> DECODER = Decoder.method(ServerLoginPacket::new);
 
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
 
@@ -32,7 +33,7 @@ public class ServerLoginPacket implements Packet {
 
   @Override
   public String toString() {
-    return "ServerLogin{"
+    return "ServerLoginPacket{"
         + "username='" + username + '\''
         + '}';
   }

@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionResponsePacket implements Packet {
+  public static final Decoder<EncryptionResponsePacket> DECODER = Decoder.method(EncryptionResponsePacket::new);
 
   private byte[] sharedSecret = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
@@ -25,7 +26,7 @@ public class EncryptionResponsePacket implements Packet {
 
   @Override
   public String toString() {
-    return "EncryptionResponse{"
+    return "EncryptionResponsePacket{"
         + "sharedSecret=" + Arrays.toString(sharedSecret)
         + ", verifyToken=" + Arrays.toString(verifyToken)
         + '}';

@@ -16,6 +16,7 @@ import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGamePacket implements Packet {
+  public static final Decoder<JoinGamePacket> DECODER = Decoder.method(JoinGamePacket::new);
 
   private int entityId;
   private short gamemode;
@@ -148,7 +149,7 @@ public class JoinGamePacket implements Packet {
 
   @Override
   public String toString() {
-    return "JoinGame{"
+    return "JoinGamePacket{"
         + "entityId=" + entityId
         + ", gamemode=" + gamemode
         + ", dimension=" + dimension

@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf;
 public class StatusRequestPacket implements Packet {
 
   public static final StatusRequestPacket INSTANCE = new StatusRequestPacket();
-  public static Decoder<StatusRequestPacket> DECODER = (buf, direction, version) -> INSTANCE;
+  public static final Decoder<StatusRequestPacket> DECODER = (buf, direction, version) -> INSTANCE;
 
   private StatusRequestPacket() {
   }

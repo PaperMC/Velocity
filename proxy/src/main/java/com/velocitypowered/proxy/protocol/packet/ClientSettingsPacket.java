@@ -10,6 +10,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettingsPacket implements Packet {
 
+  public static final Decoder<ClientSettingsPacket> DECODER = Decoder.method(ClientSettingsPacket::new);
+
   private @Nullable String locale;
   private byte viewDistance;
   private int chatVisibility;
@@ -84,7 +86,7 @@ public class ClientSettingsPacket implements Packet {
 
   @Override
   public String toString() {
-    return "ClientSettings{"
+    return "ClientSettingsPacket{"
         + "locale='" + locale + '\''
         + ", viewDistance=" + viewDistance
         + ", chatVisibility=" + chatVisibility

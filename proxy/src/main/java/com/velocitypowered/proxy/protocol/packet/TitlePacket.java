@@ -14,9 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TitlePacket implements Packet {
 
-  public static final Decoder<TitlePacket> DECODER = (buf, direction, version) -> {
-    throw new UnsupportedOperationException();
-  };
+  public static final Decoder<TitlePacket> DECODER = Decoder.unsupported();
 
   public static TitlePacket hide(final ProtocolVersion version) {
     return version.gte(ProtocolVersion.MINECRAFT_1_11)

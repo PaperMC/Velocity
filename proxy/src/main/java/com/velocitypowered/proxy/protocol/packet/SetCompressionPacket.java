@@ -36,7 +36,7 @@ public class SetCompressionPacket implements Packet {
 
   @Override
   public String toString() {
-    return "SetCompression{"
+    return "SetCompressionPacket{"
       + "threshold=" + threshold
       + '}';
   }

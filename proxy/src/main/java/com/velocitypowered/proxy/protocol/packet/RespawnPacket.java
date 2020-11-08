@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class RespawnPacket implements Packet {
+  public static final Decoder<RespawnPacket> DECODER = Decoder.method(RespawnPacket::new);
 
   private int dimension;
   private long partialHashedSeed;
@@ -97,7 +98,7 @@ public class RespawnPacket implements Packet {
 
   @Override
   public String toString() {
-    return "Respawn{"
+    return "RespawnPacket{"
         + "dimension=" + dimension
         + ", partialHashedSeed=" + partialHashedSeed
         + ", difficulty=" + difficulty

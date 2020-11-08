@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DisconnectPacket implements Packet {
+  public static final Decoder<DisconnectPacket> DECODER = Decoder.method(DisconnectPacket::new);
 
   private @Nullable String reason;
 
@@ -34,7 +35,7 @@ public class DisconnectPacket implements Packet {
 
   @Override
   public String toString() {
-    return "Disconnect{"
+    return "DisconnectPacket{"
         + "reason='" + reason + '\''
         + '}';
   }

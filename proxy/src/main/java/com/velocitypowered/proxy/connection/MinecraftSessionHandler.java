@@ -40,39 +40,30 @@ public interface MinecraftSessionHandler {
   }
 
   default void handleGeneric(Packet packet) {
-
   }
 
   default void handleUnknown(ByteBuf buf) {
-
   }
 
   default void connected() {
-
   }
 
   default void disconnected() {
-
   }
 
   default void activated() {
-
   }
 
   default void deactivated() {
-
   }
 
   default void exception(Throwable throwable) {
-
   }
 
   default void writabilityChanged() {
-
   }
 
   default void readCompleted() {
-
   }
 
   default boolean handle(AvailableCommandsPacket commands) {
@@ -120,14 +111,6 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(KeepAlivePacket packet) {
-    return false;
-  }
-
-  default boolean handle(LegacyHandshakePacket packet) {
-    return false;
-  }
-
-  default boolean handle(LegacyPingPacket packet) {
     return false;
   }
 
@@ -192,6 +175,16 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ResourcePackResponsePacket packet) {
+    return false;
+  }
+
+  // Legacy
+
+  default boolean handle(LegacyHandshakePacket packet) {
+    return false;
+  }
+
+  default boolean handle(LegacyPingPacket packet) {
     return false;
   }
 }

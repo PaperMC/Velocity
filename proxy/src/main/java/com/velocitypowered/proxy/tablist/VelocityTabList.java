@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItemPacket;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
@@ -31,7 +33,12 @@ public class VelocityTabList implements TabList {
       net.kyori.adventure.text.Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooterPacket.create(header, footer, connection.getProtocolVersion()));
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(
+        connection.getProtocolVersion());
+    connection.write(new HeaderAndFooterPacket(
+        serializer.serialize(header),
+        serializer.serialize(footer)
+    ));
   }
 
   @Override

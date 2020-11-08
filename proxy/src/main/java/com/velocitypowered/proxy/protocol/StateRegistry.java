@@ -59,57 +59,54 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum StateRegistry {
 
-  HANDSHAKE {
+  HANDSHAKE(true) {
     {
-      serverbound.register(HandshakePacket.class, HandshakePacket::new,
+      serverbound.register(HandshakePacket.class, HandshakePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
     }
   },
-  STATUS {
+  STATUS(true) {
     {
-      serverbound.registerNew(StatusRequestPacket.class, StatusRequestPacket.DECODER,
+      serverbound.register(StatusRequestPacket.class, StatusRequestPacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
-      serverbound.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
+      serverbound.register(StatusPingPacket.class, StatusPingPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
 
-      clientbound.register(StatusResponsePacket.class, StatusResponsePacket::new,
+      clientbound.register(StatusResponsePacket.class, StatusResponsePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
-      clientbound.registerNew(StatusPingPacket.class, StatusPingPacket.DECODER,
+      clientbound.register(StatusPingPacket.class, StatusPingPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
     }
   },
-  PLAY {
+  PLAY(false) {
     {
-      serverbound.fallback = false;
-      clientbound.fallback = false;
-
-      serverbound.register(TabCompleteRequestPacket.class, TabCompleteRequestPacket::new,
+      serverbound.register(TabCompleteRequestPacket.class, TabCompleteRequestPacket.DECODER,
           map(0x14, MINECRAFT_1_7_2, false),
           map(0x01, MINECRAFT_1_9, false),
           map(0x02, MINECRAFT_1_12, false),
           map(0x01, MINECRAFT_1_12_1, false),
           map(0x05, MINECRAFT_1_13, false),
           map(0x06, MINECRAFT_1_14, false));
-      serverbound.registerNew(ServerboundChatPacket.class, ServerboundChatPacket.DECODER,
+      serverbound.register(ServerboundChatPacket.class, ServerboundChatPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false),
           map(0x02, MINECRAFT_1_9, false),
           map(0x03, MINECRAFT_1_12, false),
           map(0x02, MINECRAFT_1_12_1, false),
           map(0x03, MINECRAFT_1_14, false));
-      serverbound.register(ClientSettingsPacket.class, ClientSettingsPacket::new,
+      serverbound.register(ClientSettingsPacket.class, ClientSettingsPacket.DECODER,
           map(0x15, MINECRAFT_1_7_2, false),
           map(0x04, MINECRAFT_1_9, false),
           map(0x05, MINECRAFT_1_12, false),
           map(0x04, MINECRAFT_1_12_1, false),
           map(0x05, MINECRAFT_1_14, false));
-      serverbound.register(PluginMessagePacket.class, PluginMessagePacket::new,
+      serverbound.register(PluginMessagePacket.class, PluginMessagePacket.DECODER,
           map(0x17, MINECRAFT_1_7_2, false),
           map(0x09, MINECRAFT_1_9, false),
           map(0x0A, MINECRAFT_1_12, false),
           map(0x09, MINECRAFT_1_12_1, false),
           map(0x0A, MINECRAFT_1_13, false),
           map(0x0B, MINECRAFT_1_14, false));
-      serverbound.registerNew(KeepAlivePacket.class, KeepAlivePacket.DECODER,
+      serverbound.register(KeepAlivePacket.class, KeepAlivePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x0B, MINECRAFT_1_9, false),
           map(0x0C, MINECRAFT_1_12, false),
@@ -117,7 +114,7 @@ public enum StateRegistry {
           map(0x0E, MINECRAFT_1_13, false),
           map(0x0F, MINECRAFT_1_14, false),
           map(0x10, MINECRAFT_1_16, false));
-      serverbound.register(ResourcePackResponsePacket.class, ResourcePackResponsePacket::new,
+      serverbound.register(ResourcePackResponsePacket.class, ResourcePackResponsePacket.DECODER,
           map(0x19, MINECRAFT_1_8, false),
           map(0x16, MINECRAFT_1_9, false),
           map(0x18, MINECRAFT_1_12, false),
@@ -126,29 +123,29 @@ public enum StateRegistry {
           map(0x20, MINECRAFT_1_16, false),
           map(0x21, MINECRAFT_1_16_2, false));
 
-      clientbound.register(BossBarPacket.class, BossBarPacket::new,
+      clientbound.register(BossBarPacket.class, BossBarPacket.DECODER,
           map(0x0C, MINECRAFT_1_9, false),
           map(0x0D, MINECRAFT_1_15, false),
           map(0x0C, MINECRAFT_1_16, false));
-      clientbound.register(ClientboundChatPacket.class, ClientboundChatPacket::new,
+      clientbound.register(ClientboundChatPacket.class, ClientboundChatPacket.DECODER,
           map(0x02, MINECRAFT_1_7_2, true),
           map(0x0F, MINECRAFT_1_9, true),
           map(0x0E, MINECRAFT_1_13, true),
           map(0x0F, MINECRAFT_1_15, true),
           map(0x0E, MINECRAFT_1_16, true));
-      clientbound.register(TabCompleteResponsePacket.class, TabCompleteResponsePacket::new,
+      clientbound.register(TabCompleteResponsePacket.class, TabCompleteResponsePacket.DECODER,
           map(0x3A, MINECRAFT_1_7_2, false),
           map(0x0E, MINECRAFT_1_9, false),
           map(0x10, MINECRAFT_1_13, false),
           map(0x11, MINECRAFT_1_15, false),
           map(0x10, MINECRAFT_1_16, false),
           map(0x0F, MINECRAFT_1_16_2, false));
-      clientbound.register(AvailableCommandsPacket.class, AvailableCommandsPacket::new,
+      clientbound.register(AvailableCommandsPacket.class, AvailableCommandsPacket.DECODER,
           map(0x11, MINECRAFT_1_13, false),
           map(0x12, MINECRAFT_1_15, false),
           map(0x11, MINECRAFT_1_16, false),
           map(0x10, MINECRAFT_1_16_2, false));
-      clientbound.register(PluginMessagePacket.class, PluginMessagePacket::new,
+      clientbound.register(PluginMessagePacket.class, PluginMessagePacket.DECODER,
           map(0x3F, MINECRAFT_1_7_2, false),
           map(0x18, MINECRAFT_1_9, false),
           map(0x19, MINECRAFT_1_13, false),
@@ -156,7 +153,7 @@ public enum StateRegistry {
           map(0x19, MINECRAFT_1_15, false),
           map(0x18, MINECRAFT_1_16, false),
           map(0x17, MINECRAFT_1_16_2, false));
-      clientbound.register(DisconnectPacket.class, DisconnectPacket::new,
+      clientbound.register(DisconnectPacket.class, DisconnectPacket.DECODER,
           map(0x40, MINECRAFT_1_7_2, false),
           map(0x1A, MINECRAFT_1_9, false),
           map(0x1B, MINECRAFT_1_13, false),
@@ -164,7 +161,7 @@ public enum StateRegistry {
           map(0x1B, MINECRAFT_1_15, false),
           map(0x1A, MINECRAFT_1_16, false),
           map(0x19, MINECRAFT_1_16_2, false));
-      clientbound.registerNew(KeepAlivePacket.class, KeepAlivePacket.DECODER,
+      clientbound.register(KeepAlivePacket.class, KeepAlivePacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x1F, MINECRAFT_1_9, false),
           map(0x21, MINECRAFT_1_13, false),
@@ -172,7 +169,7 @@ public enum StateRegistry {
           map(0x21, MINECRAFT_1_15, false),
           map(0x20, MINECRAFT_1_16, false),
           map(0x1F, MINECRAFT_1_16_2, false));
-      clientbound.register(JoinGamePacket.class, JoinGamePacket::new,
+      clientbound.register(JoinGamePacket.class, JoinGamePacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false),
           map(0x23, MINECRAFT_1_9, false),
           map(0x25, MINECRAFT_1_13, false),
@@ -180,7 +177,7 @@ public enum StateRegistry {
           map(0x26, MINECRAFT_1_15, false),
           map(0x25, MINECRAFT_1_16, false),
           map(0x24, MINECRAFT_1_16_2, false));
-      clientbound.register(RespawnPacket.class, RespawnPacket::new,
+      clientbound.register(RespawnPacket.class, RespawnPacket.DECODER,
           map(0x07, MINECRAFT_1_7_2, true),
           map(0x33, MINECRAFT_1_9, true),
           map(0x34, MINECRAFT_1_12, true),
@@ -190,7 +187,7 @@ public enum StateRegistry {
           map(0x3B, MINECRAFT_1_15, true),
           map(0x3A, MINECRAFT_1_16, true),
           map(0x39, MINECRAFT_1_16_2, true));
-      clientbound.register(ResourcePackRequestPacket.class, ResourcePackRequestPacket::new,
+      clientbound.register(ResourcePackRequestPacket.class, ResourcePackRequestPacket.DECODER,
           map(0x48, MINECRAFT_1_8, true),
           map(0x32, MINECRAFT_1_9, true),
           map(0x33, MINECRAFT_1_12, true),
@@ -200,7 +197,7 @@ public enum StateRegistry {
           map(0x3A, MINECRAFT_1_15, true),
           map(0x39, MINECRAFT_1_16, true),
           map(0x38, MINECRAFT_1_16_2, true));
-      clientbound.register(HeaderAndFooterPacket.class, HeaderAndFooterPacket::new,
+      clientbound.register(HeaderAndFooterPacket.class, HeaderAndFooterPacket.DECODER,
           map(0x47, MINECRAFT_1_8, true),
           map(0x48, MINECRAFT_1_9, true),
           map(0x47, MINECRAFT_1_9_4, true),
@@ -210,7 +207,7 @@ public enum StateRegistry {
           map(0x53, MINECRAFT_1_14, true),
           map(0x54, MINECRAFT_1_15, true),
           map(0x53, MINECRAFT_1_16, true));
-      clientbound.registerNew(TitlePacket.class, TitlePacket.DECODER,
+      clientbound.register(TitlePacket.class, TitlePacket.DECODER,
           map(0x45, MINECRAFT_1_8, true),
           map(0x45, MINECRAFT_1_9, true),
           map(0x47, MINECRAFT_1_12, true),
@@ -219,7 +216,7 @@ public enum StateRegistry {
           map(0x4F, MINECRAFT_1_14, true),
           map(0x50, MINECRAFT_1_15, true),
           map(0x4F, MINECRAFT_1_16, true));
-      clientbound.register(PlayerListItemPacket.class, PlayerListItemPacket::new,
+      clientbound.register(PlayerListItemPacket.class, PlayerListItemPacket.DECODER,
           map(0x38, MINECRAFT_1_7_2, false),
           map(0x2D, MINECRAFT_1_9, false),
           map(0x2E, MINECRAFT_1_12_1, false),
@@ -230,31 +227,36 @@ public enum StateRegistry {
           map(0x32, MINECRAFT_1_16_2, false));
     }
   },
-  LOGIN {
+  LOGIN(true) {
     {
-      serverbound.register(ServerLoginPacket.class, ServerLoginPacket::new,
+      serverbound.register(ServerLoginPacket.class, ServerLoginPacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
-      serverbound.register(EncryptionResponsePacket.class, EncryptionResponsePacket::new,
+      serverbound.register(EncryptionResponsePacket.class, EncryptionResponsePacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
-      serverbound.register(LoginPluginResponsePacket.class, LoginPluginResponsePacket::new,
+      serverbound.register(LoginPluginResponsePacket.class, LoginPluginResponsePacket.DECODER,
           map(0x02, MINECRAFT_1_13, false));
-      clientbound.register(DisconnectPacket.class, DisconnectPacket::new,
+      clientbound.register(DisconnectPacket.class, DisconnectPacket.DECODER,
           map(0x00, MINECRAFT_1_7_2, false));
-      clientbound.register(EncryptionRequestPacket.class, EncryptionRequestPacket::new,
+      clientbound.register(EncryptionRequestPacket.class, EncryptionRequestPacket.DECODER,
           map(0x01, MINECRAFT_1_7_2, false));
-      clientbound.register(ServerLoginSuccessPacket.class, ServerLoginSuccessPacket::new,
+      clientbound.register(ServerLoginSuccessPacket.class, ServerLoginSuccessPacket.DECODER,
           map(0x02, MINECRAFT_1_7_2, false));
-      clientbound.registerNew(SetCompressionPacket.class, SetCompressionPacket.DECODER,
+      clientbound.register(SetCompressionPacket.class, SetCompressionPacket.DECODER,
           map(0x03, MINECRAFT_1_8, false));
-      clientbound.register(LoginPluginMessagePacket.class, LoginPluginMessagePacket::new,
+      clientbound.register(LoginPluginMessagePacket.class, LoginPluginMessagePacket.DECODER,
           map(0x04, MINECRAFT_1_13, false));
     }
   };
 
   public static final int STATUS_ID = 1;
   public static final int LOGIN_ID = 2;
-  public final PacketRegistry clientbound = new PacketRegistry(ProtocolDirection.CLIENTBOUND);
-  public final PacketRegistry serverbound = new PacketRegistry(ProtocolDirection.SERVERBOUND);
+  public final PacketRegistry clientbound;
+  public final PacketRegistry serverbound;
+
+  StateRegistry(boolean fallback) {
+    this.clientbound = new PacketRegistry(ProtocolDirection.CLIENTBOUND, fallback);
+    this.serverbound = new PacketRegistry(ProtocolDirection.SERVERBOUND, fallback);
+  }
 
   public PacketRegistry.ProtocolRegistry getProtocolRegistry(ProtocolDirection direction,
       ProtocolVersion version) {
@@ -266,10 +268,15 @@ public enum StateRegistry {
 
     private final ProtocolDirection direction;
     private final Map<ProtocolVersion, ProtocolRegistry> versions;
-    private boolean fallback = true;
+    private final boolean fallback;
 
     PacketRegistry(ProtocolDirection direction) {
+      this(direction, true);
+    }
+
+    PacketRegistry(ProtocolDirection direction, boolean fallback) {
       this.direction = direction;
+      this.fallback = fallback;
 
       Map<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap<>(ProtocolVersion.class);
       for (ProtocolVersion version : ProtocolVersion.values()) {
@@ -292,7 +299,7 @@ public enum StateRegistry {
       return registry;
     }
 
-    <P extends Packet> void registerNew(Class<P> clazz, Packet.Decoder<P> decoder,
+    <P extends Packet> void register(Class<P> clazz, Packet.Decoder<P> decoder,
                                      PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
@@ -338,53 +345,6 @@ public enum StateRegistry {
       }
     }
 
-    @Deprecated
-    <P extends Packet> void register(Class<P> clazz, Supplier<P> packetSupplier,
-                                     PacketMapping... mappings) {
-      if (mappings.length == 0) {
-        throw new IllegalArgumentException("At least one mapping must be provided.");
-      }
-
-      for (int i = 0; i < mappings.length; i++) {
-        PacketMapping current = mappings[i];
-        PacketMapping next = (i + 1 < mappings.length) ? mappings[i + 1] : current;
-        ProtocolVersion from = current.protocolVersion;
-        ProtocolVersion to = current == next ? getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
-
-        if (from.gte(to) && from != getLast(SUPPORTED_VERSIONS)) {
-          throw new IllegalArgumentException(String.format(
-              "Next mapping version (%s) should be lower then current (%s)", to, from));
-        }
-
-        for (ProtocolVersion protocol : EnumSet.range(from, to)) {
-          if (protocol == to && next != current) {
-            break;
-          }
-          ProtocolRegistry registry = this.versions.get(protocol);
-          if (registry == null) {
-            throw new IllegalArgumentException("Unknown protocol version "
-                + current.protocolVersion);
-          }
-
-          if (registry.packetIdToSupplier.containsKey(current.id)) {
-            throw new IllegalArgumentException("Can not register class " + clazz.getSimpleName()
-                + " with id " + current.id + " for " + registry.version
-                + " because another packet is already registered");
-          }
-
-          if (registry.packetClassToId.containsKey(clazz)) {
-            throw new IllegalArgumentException(clazz.getSimpleName()
-                + " is already registered for version " + registry.version);
-          }
-
-          if (!current.encodeOnly) {
-            registry.packetIdToSupplier.put(current.id, packetSupplier);
-          }
-          registry.packetClassToId.put(clazz, current.id);
-        }
-      }
-    }
-
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
@@ -408,7 +368,7 @@ public enum StateRegistry {
        * @return the packet instance, or {@code null} if the ID is not registered
        */
       @Deprecated
-      public @Nullable Packet createPacket(final int id) {
+      @Nullable Packet createPacket(final int id) {
         final Supplier<? extends Packet> supplier = this.packetIdToSupplier.get(id);
         if (supplier == null) {
           return null;
@@ -416,13 +376,22 @@ public enum StateRegistry {
         return supplier.get();
       }
 
+      /**
+       * Attempts to create a packet from the specified {@code id}.
+       *
+       * @param id the packet ID
+       * @param buf the bytebuf
+       * @param direction the packet direction
+       * @param version the protocol version
+       * @return the packet instance, or {@code null} if the ID is not registered
+       */
       public @Nullable Packet decodePacket(final int id, ByteBuf buf, ProtocolDirection direction,
-                                           ProtocolVersion protocolVersion) {
+                                           ProtocolVersion version) {
         final Packet.Decoder<? extends Packet> decoder = this.packetIdToDecoder.get(id);
         if (decoder == null) {
           return null;
         }
-        return decoder.decode(buf, direction, protocolVersion);
+        return decoder.decode(buf, direction, version);
       }
 
       /**

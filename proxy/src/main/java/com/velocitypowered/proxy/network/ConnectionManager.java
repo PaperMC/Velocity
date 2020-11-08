@@ -43,9 +43,9 @@ public final class ConnectionManager {
   // These are intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
-  public final ServerChannelInitializerHolder serverChannelInitializer;
+  public final ChannelInitializerHolder<Channel> serverChannelInitializer;
   @SuppressWarnings("WeakerAccess")
-  public final BackendChannelInitializerHolder backendChannelInitializer;
+  public final ChannelInitializerHolder<Channel> backendChannelInitializer;
 
   private final SeparatePoolInetNameResolver resolver;
   private final AsyncHttpClient httpClient;
@@ -198,7 +198,7 @@ public final class ConnectionManager {
     return bossGroup;
   }
 
-  public ServerChannelInitializerHolder getServerChannelInitializer() {
+  public ChannelInitializerHolder<Channel> getServerChannelInitializer() {
     return this.serverChannelInitializer;
   }
 
@@ -206,7 +206,7 @@ public final class ConnectionManager {
     return httpClient;
   }
 
-  public BackendChannelInitializerHolder getBackendChannelInitializer() {
+  public ChannelInitializerHolder<Channel> getBackendChannelInitializer() {
     return this.backendChannelInitializer;
   }
 }

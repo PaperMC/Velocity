@@ -72,9 +72,9 @@ class LegacyForgeUtil {
    * @return A copy of the reset packet
    */
   static PluginMessagePacket resetPacket() {
-    PluginMessagePacket msg = new PluginMessagePacket();
-    msg.setChannel(FORGE_LEGACY_HANDSHAKE_CHANNEL);
-    msg.replace(Unpooled.wrappedBuffer(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone()));
-    return msg;
+    return new PluginMessagePacket(
+        FORGE_LEGACY_HANDSHAKE_CHANNEL,
+        Unpooled.wrappedBuffer(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone())
+    );
   }
 }

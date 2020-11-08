@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public class ClientboundChatPacket implements Packet {
 
+  public static final Decoder<ClientboundChatPacket> DECODER = Decoder.method(ClientboundChatPacket::new);
+
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
   public static final byte GAME_INFO_TYPE = (byte) 2;
@@ -20,37 +22,13 @@ public class ClientboundChatPacket implements Packet {
   private byte type;
   private @Nullable UUID sender;
 
-  public ClientboundChatPacket() {
+  private ClientboundChatPacket() {
   }
 
   public ClientboundChatPacket(String message, byte type, UUID sender) {
     this.message = message;
     this.type = type;
     this.sender = sender;
-  }
-
-  public String getMessage() {
-    if (message == null) {
-      throw new IllegalStateException("Message is not specified");
-    }
-    return message;
-  }
-
-  public byte getType() {
-    return type;
-  }
-
-  public UUID getSenderUuid() {
-    return sender;
-  }
-
-  @Override
-  public String toString() {
-    return "ClientboundChatPacket{"
-        + "message='" + message + '\''
-        + ", type=" + type
-        + ", sender=" + sender
-        + '}';
   }
 
   @Override
@@ -81,5 +59,29 @@ public class ClientboundChatPacket implements Packet {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public String getMessage() {
+    if (message == null) {
+      throw new IllegalStateException("Message is not specified");
+    }
+    return message;
+  }
+
+  public byte getType() {
+    return type;
+  }
+
+  public UUID getSenderUuid() {
+    return sender;
+  }
+
+  @Override
+  public String toString() {
+    return "ClientboundChatPacket{"
+      + "message='" + message + '\''
+      + ", type=" + type
+      + ", sender=" + sender
+      + '}';
   }
 }

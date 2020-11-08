@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionRequestPacket implements Packet {
+  public static final Decoder<EncryptionRequestPacket> DECODER = Decoder.method(EncryptionRequestPacket::new);
 
   private String serverId = "";
   private byte[] publicKey = EMPTY_BYTE_ARRAY;
@@ -34,7 +35,7 @@ public class EncryptionRequestPacket implements Packet {
 
   @Override
   public String toString() {
-    return "EncryptionRequest{"
+    return "EncryptionRequestPacket{"
         + "publicKey=" + Arrays.toString(publicKey)
         + ", verifyToken=" + Arrays.toString(verifyToken)
         + '}';
