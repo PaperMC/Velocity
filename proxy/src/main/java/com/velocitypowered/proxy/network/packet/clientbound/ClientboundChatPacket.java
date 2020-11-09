@@ -6,12 +6,13 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundChatPacket implements Packet {
-  public static final Decoder<ClientboundChatPacket> DECODER = Decoder.method(ClientboundChatPacket::new);
+  public static final PacketReader<ClientboundChatPacket> DECODER = PacketReader.method(ClientboundChatPacket::new);
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;

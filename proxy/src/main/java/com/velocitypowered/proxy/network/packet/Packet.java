@@ -15,26 +15,4 @@ public interface Packet {
 
   boolean handle(PacketHandler handler);
 
-  interface Decoder<P extends Packet> {
-    P decode(final ByteBuf buf, final PacketDirection direction, final ProtocolVersion version);
-
-    static <P extends Packet> Decoder<P> unsupported() {
-      return (buf, direction, version) -> {
-        throw new UnsupportedOperationException();
-      };
-    }
-
-    static <P extends Packet> Decoder<P> instance(final P packet) {
-      return (buf, direction, version) -> packet;
-    }
-
-    @Deprecated
-    static <P extends Packet> Decoder<P> method(final Supplier<P> factory) {
-      return (buf, direction, version) -> {
-        final P packet = factory.get();
-        packet.decode(buf, direction, version);
-        return packet;
-      };
-    }
-  }
 }

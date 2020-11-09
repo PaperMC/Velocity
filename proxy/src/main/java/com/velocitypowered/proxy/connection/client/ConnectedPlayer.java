@@ -39,14 +39,15 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -659,7 +660,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
+    ClientboundPluginMessagePacket message = new ClientboundPluginMessagePacket(identifier.getId(),
         Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
@@ -734,7 +735,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param message the plugin message to forward to the client
    * @return {@code true} if the message can be forwarded, {@code false} otherwise
    */
-  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessagePacket message) {
+  public boolean canForwardPluginMessage(ProtocolVersion version, AbstractPluginMessagePacket<?> message) {
     boolean minecraftOrFmlMessage;
 
     // By default, all internal Minecraft and Forge channels are forwarded from the server.

@@ -10,6 +10,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
@@ -17,7 +18,7 @@ import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundJoinGamePacket implements Packet {
-  public static final Decoder<ClientboundJoinGamePacket> DECODER = Decoder.method(ClientboundJoinGamePacket::new);
+  public static final PacketReader<ClientboundJoinGamePacket> DECODER = PacketReader.method(ClientboundJoinGamePacket::new);
 
   private int entityId;
   private short gamemode;

@@ -6,10 +6,11 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundChatPacket implements Packet {
-  public static final Decoder<ServerboundChatPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundChatPacket> DECODER = (buf, direction, version) -> {
     final String message = ProtocolUtils.readString(buf);
     return new ServerboundChatPacket(message);
   };

@@ -7,11 +7,12 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundResourcePackResponsePacket implements Packet {
-  public static final Decoder<ServerboundResourcePackResponsePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundResourcePackResponsePacket> DECODER = (buf, direction, version) -> {
     final String hash;
     if (version.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
       hash = ProtocolUtils.readString(buf);

@@ -6,10 +6,11 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundHandshakePacket implements Packet {
-  public static final Decoder<ServerboundHandshakePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundHandshakePacket> DECODER = (buf, direction, version) -> {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
     final ProtocolVersion protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
     final String hostname = ProtocolUtils.readString(buf);

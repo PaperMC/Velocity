@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundTabCompleteResponsePacket implements Packet {
-  public static final Decoder<ClientboundTabCompleteResponsePacket> DECODER = Decoder.method(ClientboundTabCompleteResponsePacket::new);
+  public static final PacketReader<ClientboundTabCompleteResponsePacket> DECODER = PacketReader.method(ClientboundTabCompleteResponsePacket::new);
 
   private int transactionId;
   private int start;

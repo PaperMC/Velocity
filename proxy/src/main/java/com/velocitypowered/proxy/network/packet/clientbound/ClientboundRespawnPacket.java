@@ -8,11 +8,12 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class ClientboundRespawnPacket implements Packet {
-  public static final Decoder<ClientboundRespawnPacket> DECODER = Decoder.method(ClientboundRespawnPacket::new);
+  public static final PacketReader<ClientboundRespawnPacket> DECODER = PacketReader.method(ClientboundRespawnPacket::new);
 
   private int dimension;
   private long partialHashedSeed;

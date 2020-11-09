@@ -6,10 +6,11 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ClientboundSetCompressionPacket implements Packet {
-  public static final Decoder<ClientboundSetCompressionPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundSetCompressionPacket> DECODER = (buf, direction, version) -> {
     final int threshold = ProtocolUtils.readVarInt(buf);
     return new ClientboundSetCompressionPacket(threshold);
   };

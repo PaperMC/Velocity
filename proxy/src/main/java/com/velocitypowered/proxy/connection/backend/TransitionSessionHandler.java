@@ -15,10 +15,10 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -150,7 +150,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessagePacket packet) {
+  public boolean handle(ClientboundPluginMessagePacket packet) {
     if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
         .getProtocolVersion(), packet)) {
       return true;

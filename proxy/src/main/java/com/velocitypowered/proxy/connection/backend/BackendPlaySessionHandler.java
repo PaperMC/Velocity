@@ -17,14 +17,15 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundAvailableCommandsPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -64,7 +65,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
     MinecraftConnection serverMc = serverConn.ensureConnected();
     serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion())), ClientboundPluginMessagePacket.FACTORY
     ));
   }
 
@@ -102,7 +103,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessagePacket packet) {
+  public boolean handle(ClientboundPluginMessagePacket packet) {
     if (bungeecordMessageResponder.process(packet)) {
       return true;
     }
@@ -123,8 +124,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     if (PluginMessageUtil.isMcBrand(packet)) {
-      PluginMessagePacket rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet,
-          server.getVersion(), playerConnection.getProtocolVersion());
+      AbstractPluginMessagePacket<?> rewritten = PluginMessageUtil.rewriteMinecraftBrand(packet,
+          server.getVersion(), playerConnection.getProtocolVersion(), ClientboundPluginMessagePacket.FACTORY);
       playerConnection.write(rewritten);
       return true;
     }
@@ -145,7 +146,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     server.getEventManager().fire(event)
         .thenAcceptAsync(pme -> {
           if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
-            PluginMessagePacket copied = new PluginMessagePacket(packet.getChannel(),
+            ClientboundPluginMessagePacket copied = new ClientboundPluginMessagePacket(packet.getChannel(),
                 Unpooled.wrappedBuffer(copy));
             playerConnection.write(copied);
           }
@@ -244,8 +245,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(Packet packet) {
-    if (packet instanceof PluginMessagePacket) {
-      ((PluginMessagePacket) packet).retain();
+    if (packet instanceof AbstractPluginMessagePacket<?>) {
+      ((AbstractPluginMessagePacket<?>) packet).retain();
     }
     playerConnection.delayedWrite(packet);
   }

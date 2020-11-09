@@ -18,15 +18,18 @@ import static com.velocitypowered.api.network.ProtocolVersion.SUPPORTED_VERSIONS
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundAvailableCommandsPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundHeaderAndFooterPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
@@ -41,13 +44,12 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundEncryptio
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusPingPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
@@ -58,7 +60,6 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum StateRegistry {
@@ -128,8 +129,8 @@ public enum StateRegistry {
           map(0x05, MINECRAFT_1_14, false)
       );
       serverbound.register(
-          PluginMessagePacket.class,
-          PluginMessagePacket.DECODER,
+          ServerboundPluginMessagePacket.class,
+          ServerboundPluginMessagePacket.DECODER,
           map(0x17, MINECRAFT_1_7_2, false),
           map(0x09, MINECRAFT_1_9, false),
           map(0x0A, MINECRAFT_1_12, false),
@@ -195,8 +196,8 @@ public enum StateRegistry {
           map(0x10, MINECRAFT_1_16_2, false)
       );
       clientbound.register(
-          PluginMessagePacket.class,
-          PluginMessagePacket.DECODER,
+          ClientboundPluginMessagePacket.class,
+          ClientboundPluginMessagePacket.DECODER,
           map(0x3F, MINECRAFT_1_7_2, false),
           map(0x18, MINECRAFT_1_9, false),
           map(0x19, MINECRAFT_1_13, false),
@@ -400,7 +401,7 @@ public enum StateRegistry {
       return registry;
     }
 
-    <P extends Packet> void register(Class<P> clazz, Packet.Decoder<P> decoder,
+    <P extends Packet> void register(Class<P> clazz, PacketReader<P> decoder,
                                      PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
@@ -427,7 +428,7 @@ public enum StateRegistry {
                 + current.protocolVersion);
           }
 
-          if (registry.packetIdToSupplier.containsKey(current.id)) {
+          if (registry.packetIdToReader.containsKey(current.id)) {
             throw new IllegalArgumentException("Can not register class " + clazz.getSimpleName()
                 + " with id " + current.id + " for " + registry.version
                 + " because another packet is already registered");
@@ -439,7 +440,7 @@ public enum StateRegistry {
           }
 
           if (!current.encodeOnly) {
-            registry.packetIdToDecoder.put(current.id, decoder);
+            registry.packetIdToReader.put(current.id, decoder);
           }
           registry.packetClassToId.put(clazz, current.id);
         }
@@ -449,10 +450,7 @@ public enum StateRegistry {
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
-      @Deprecated
-      final IntObjectMap<Supplier<? extends Packet>> packetIdToSupplier =
-          new IntObjectHashMap<>(16, 0.5f);
-      final IntObjectMap<Packet.Decoder<? extends Packet>> packetIdToDecoder =
+      final IntObjectMap<PacketReader<? extends Packet>> packetIdToReader =
           new IntObjectHashMap<>(16, 0.5f);
       final Object2IntMap<Class<? extends Packet>> packetClassToId =
           new Object2IntOpenHashMap<>(16, 0.5f);
@@ -466,33 +464,18 @@ public enum StateRegistry {
        * Attempts to create a packet from the specified {@code id}.
        *
        * @param id the packet ID
-       * @return the packet instance, or {@code null} if the ID is not registered
-       */
-      @Deprecated
-      @Nullable Packet createPacket(final int id) {
-        final Supplier<? extends Packet> supplier = this.packetIdToSupplier.get(id);
-        if (supplier == null) {
-          return null;
-        }
-        return supplier.get();
-      }
-
-      /**
-       * Attempts to create a packet from the specified {@code id}.
-       *
-       * @param id the packet ID
        * @param buf the bytebuf
        * @param direction the packet direction
        * @param version the protocol version
        * @return the packet instance, or {@code null} if the ID is not registered
        */
-      public @Nullable Packet decodePacket(final int id, ByteBuf buf, PacketDirection direction,
-                                           ProtocolVersion version) {
-        final Packet.Decoder<? extends Packet> decoder = this.packetIdToDecoder.get(id);
+      public @Nullable Packet readPacket(final int id, ByteBuf buf, PacketDirection direction,
+                                         ProtocolVersion version) {
+        final PacketReader<? extends Packet> decoder = this.packetIdToReader.get(id);
         if (decoder == null) {
           return null;
         }
-        return decoder.decode(buf, direction, version);
+        return decoder.read(buf, direction, version);
       }
 
       /**
@@ -517,9 +500,9 @@ public enum StateRegistry {
 
   public static final class PacketMapping {
 
-    private final int id;
-    private final ProtocolVersion protocolVersion;
-    private final boolean encodeOnly;
+    final int id;
+    final ProtocolVersion protocolVersion;
+    final boolean encodeOnly;
 
     PacketMapping(int id, ProtocolVersion protocolVersion, boolean packetDecoding) {
       this.id = id;

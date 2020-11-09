@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.function.LongFunction;
 
 public abstract class AbstractKeepAlivePacket implements Packet {
-  protected static <P extends AbstractKeepAlivePacket> Decoder<P> decoder(final LongFunction<P> factory) {
+  protected static <P extends AbstractKeepAlivePacket> PacketReader<P> decoder(final LongFunction<P> factory) {
     return (buf, direction, version) -> {
       final long randomId;
       if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {

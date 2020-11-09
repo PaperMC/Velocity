@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.function.LongFunction;
 
 public abstract class AbstractStatusPingPacket implements Packet {
-  protected static <P extends AbstractStatusPingPacket> Decoder<P> decoder(final LongFunction<P> factory) {
+  protected static <P extends AbstractStatusPingPacket> PacketReader<P> decoder(final LongFunction<P> factory) {
     return (buf, direction, version) -> {
       final long randomId = buf.readLong();
       return factory.apply(randomId);

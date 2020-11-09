@@ -20,6 +20,7 @@ import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusPingPacket;
 
+import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 class PacketRegistryTest {
@@ -36,7 +37,7 @@ class PacketRegistryTest {
   @Test
   void packetRegistryWorks() {
     StateRegistry.PacketRegistry registry = setupRegistry();
-    Packet packet = registry.getProtocolRegistry(MINECRAFT_1_12).createPacket(0);
+    Packet packet = registry.getProtocolRegistry(MINECRAFT_1_12).readPacket(0, Unpooled.EMPTY_BUFFER, PacketDirection.SERVERBOUND, MINECRAFT_1_12);
     assertNotNull(packet, "Packet was not found in registry");
     assertEquals(ServerboundHandshakePacket.class,
         packet.getClass(), "Registry returned wrong class");
@@ -48,7 +49,7 @@ class PacketRegistryTest {
   @Test
   void packetRegistryLinkingWorks() {
     StateRegistry.PacketRegistry registry = setupRegistry();
-    Packet packet = registry.getProtocolRegistry(MINECRAFT_1_12_1).createPacket(0);
+    Packet packet = registry.getProtocolRegistry(MINECRAFT_1_12_1).readPacket(0, Unpooled.EMPTY_BUFFER, PacketDirection.SERVERBOUND, MINECRAFT_1_12);
     assertNotNull(packet, "Packet was not found in registry");
     assertEquals(ServerboundHandshakePacket.class,
         packet.getClass(), "Registry returned wrong class");
@@ -58,7 +59,7 @@ class PacketRegistryTest {
         "Registry did not return the correct packet ID");
     assertEquals(1, registry.getProtocolRegistry(MINECRAFT_1_11).getPacketId(packet),
         "Registry did not return the correct packet ID");
-    assertNull(registry.getProtocolRegistry(MINECRAFT_1_14_2).createPacket(0x01),
+    assertNull(registry.getProtocolRegistry(MINECRAFT_1_14_2).readPacket(0x01, Unpooled.EMPTY_BUFFER, PacketDirection.SERVERBOUND, MINECRAFT_1_12),
         "Registry should return a null");
   }
 
@@ -126,14 +127,19 @@ class PacketRegistryTest {
         new StateRegistry.PacketMapping(0x01, MINECRAFT_1_12_1, false),
         new StateRegistry.PacketMapping(0x02, MINECRAFT_1_13, false));
     assertEquals(ServerboundHandshakePacket.class,
-        registry.getProtocolRegistry(MINECRAFT_1_12).createPacket(0x00).getClass());
+        registry.getProtocolRegistry(MINECRAFT_1_12).readPacket(0x00, Unpooled.EMPTY_BUFFER,
+            PacketDirection.SERVERBOUND, MINECRAFT_1_12).getClass());
     assertEquals(ServerboundHandshakePacket.class,
-        registry.getProtocolRegistry(MINECRAFT_1_12_1).createPacket(0x01).getClass());
+        registry.getProtocolRegistry(MINECRAFT_1_12_1).readPacket(0x01, Unpooled.EMPTY_BUFFER,
+            PacketDirection.SERVERBOUND, MINECRAFT_1_12).getClass());
     assertEquals(ServerboundHandshakePacket.class,
-        registry.getProtocolRegistry(MINECRAFT_1_12_2).createPacket(0x01).getClass());
+        registry.getProtocolRegistry(MINECRAFT_1_12_2).readPacket(0x01, Unpooled.EMPTY_BUFFER,
+            PacketDirection.SERVERBOUND, MINECRAFT_1_12).getClass());
     assertEquals(ServerboundHandshakePacket.class,
-        registry.getProtocolRegistry(MINECRAFT_1_13).createPacket(0x02).getClass());
+        registry.getProtocolRegistry(MINECRAFT_1_13).readPacket(0x02, Unpooled.EMPTY_BUFFER,
+            PacketDirection.SERVERBOUND, MINECRAFT_1_12).getClass());
     assertEquals(ServerboundHandshakePacket.class,
-        registry.getProtocolRegistry(MINECRAFT_1_14_2).createPacket(0x02).getClass());
+        registry.getProtocolRegistry(MINECRAFT_1_14_2).readPacket(0x02, Unpooled.EMPTY_BUFFER,
+            PacketDirection.SERVERBOUND, MINECRAFT_1_12).getClass());
   }
 }

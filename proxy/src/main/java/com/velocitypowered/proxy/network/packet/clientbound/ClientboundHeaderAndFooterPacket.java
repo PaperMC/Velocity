@@ -8,10 +8,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ClientboundHeaderAndFooterPacket implements Packet {
-  public static final Decoder<ClientboundHeaderAndFooterPacket> DECODER = Decoder.method(ClientboundHeaderAndFooterPacket::new);
+  public static final PacketReader<ClientboundHeaderAndFooterPacket> DECODER = PacketReader.method(ClientboundHeaderAndFooterPacket::new);
 
   private static final String EMPTY_COMPONENT = "{\"translate\":\"\"}";
   private static final ClientboundHeaderAndFooterPacket RESET

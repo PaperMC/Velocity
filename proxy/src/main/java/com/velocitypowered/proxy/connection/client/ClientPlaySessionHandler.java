@@ -21,9 +21,11 @@ import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
 import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket.Offer;
@@ -31,9 +33,9 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePack
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -64,7 +66,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final ConnectedPlayer player;
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
-  private final Queue<PluginMessagePacket> loginPluginMessages = new ArrayDeque<>();
+  private final Queue<ServerboundPluginMessagePacket> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
   private @Nullable ServerboundTabCompleteRequestPacket outstandingTabComplete;
 
@@ -83,7 +85,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
         .getProtocolVersion());
     if (!channels.isEmpty()) {
-      PluginMessagePacket register = constructChannelsPacket(player.getProtocolVersion(), channels);
+      AbstractPluginMessagePacket<?> register = constructChannelsPacket(player.getProtocolVersion(),
+          channels, ClientboundPluginMessagePacket.FACTORY);
       player.getConnection().write(register);
       player.getKnownChannels().addAll(channels);
     }
@@ -91,7 +94,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void deactivated() {
-    for (PluginMessagePacket message : loginPluginMessages) {
+    for (ServerboundPluginMessagePacket message : loginPluginMessages) {
       ReferenceCountUtil.release(message);
     }
   }
@@ -180,7 +183,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessagePacket packet) {
+  public boolean handle(ServerboundPluginMessagePacket packet) {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
@@ -195,7 +198,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion(), ServerboundPluginMessagePacket.FACTORY));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -229,7 +232,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                   ByteBufUtil.getBytes(packet.content()));
               server.getEventManager().fire(event).thenAcceptAsync(pme -> {
                 if (pme.getResult().isAllowed()) {
-                  PluginMessagePacket message = new PluginMessagePacket(packet.getChannel(),
+                  ServerboundPluginMessagePacket message = new ServerboundPluginMessagePacket(packet.getChannel(),
                       Unpooled.wrappedBuffer(copy));
                   backendConn.write(message);
                 }
@@ -265,8 +268,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
-      if (packet instanceof PluginMessagePacket) {
-        ((PluginMessagePacket) packet).retain();
+      if (packet instanceof AbstractPluginMessagePacket<?>) {
+        ((AbstractPluginMessagePacket<?>) packet).retain();
       }
       smc.write(packet);
     }
@@ -356,11 +359,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     if (!player.getKnownChannels().isEmpty()) {
-      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels()));
+      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels(), ServerboundPluginMessagePacket.FACTORY));
     }
 
     // If we had plugin messages queued during login/FML handshake, send them now.
-    PluginMessagePacket pm;
+    ServerboundPluginMessagePacket pm;
     while ((pm = loginPluginMessages.poll()) != null) {
       serverMc.delayedWrite(pm);
     }
@@ -585,7 +588,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (serverConnection != null) {
       MinecraftConnection connection = serverConnection.getConnection();
       if (connection != null) {
-        PluginMessagePacket pm;
+        ServerboundPluginMessagePacket pm;
         while ((pm = loginPluginMessages.poll()) != null) {
           connection.write(pm);
         }

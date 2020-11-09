@@ -6,13 +6,14 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundBossBarPacket implements Packet {
 
-  public static final Decoder<ClientboundBossBarPacket> DECODER = Decoder.method(ClientboundBossBarPacket::new);
+  public static final PacketReader<ClientboundBossBarPacket> DECODER = PacketReader.method(ClientboundBossBarPacket::new);
 
   public static final int ADD = 0;
   public static final int REMOVE = 1;

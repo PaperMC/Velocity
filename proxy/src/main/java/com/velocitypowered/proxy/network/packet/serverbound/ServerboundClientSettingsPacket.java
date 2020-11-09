@@ -6,11 +6,12 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundClientSettingsPacket implements Packet {
-  public static final Decoder<ServerboundClientSettingsPacket> DECODER = Decoder.method(ServerboundClientSettingsPacket::new);
+  public static final PacketReader<ServerboundClientSettingsPacket> DECODER = PacketReader.method(ServerboundClientSettingsPacket::new);
 
   private @Nullable String locale;
   private byte viewDistance;

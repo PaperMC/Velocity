@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.Unpooled;
@@ -13,7 +14,7 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder implements Packet {
-  public static final Decoder<ClientboundLoginPluginMessagePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundLoginPluginMessagePacket> DECODER = (buf, direction, version) -> {
     final int id = ProtocolUtils.readVarInt(buf);
     final String channel = ProtocolUtils.readString(buf);
     final ByteBuf data;

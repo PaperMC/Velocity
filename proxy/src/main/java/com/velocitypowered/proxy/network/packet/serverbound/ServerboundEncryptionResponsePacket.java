@@ -6,10 +6,11 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundEncryptionResponsePacket implements Packet {
-  public static final Decoder<ServerboundEncryptionResponsePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundEncryptionResponsePacket> DECODER = (buf, direction, version) -> {
     final byte[] sharedSecret;
     final byte[] verifyToken;
     if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
@@ -25,7 +26,7 @@ public class ServerboundEncryptionResponsePacket implements Packet {
   private final byte[] sharedSecret;
   private final byte[] verifyToken;
 
-  public ServerboundEncryptionResponsePacket(final byte[] sharedSecret, final byte[] verifyToken) {
+  private ServerboundEncryptionResponsePacket(final byte[] sharedSecret, final byte[] verifyToken) {
     this.sharedSecret = sharedSecret;
     this.verifyToken = verifyToken;
   }

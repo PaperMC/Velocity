@@ -55,7 +55,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     int packetId = ProtocolUtils.readVarInt(buf);
     Packet packet = null;
     try {
-      packet = this.registry.decodePacket(packetId, buf, direction, registry.version);
+      packet = this.registry.readPacket(packetId, buf, direction, registry.version);
     } catch (Exception e) {
       throw handleDecodeFailure(e, packet, packetId); // TODO: packet is always null
     }

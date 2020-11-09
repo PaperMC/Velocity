@@ -7,12 +7,13 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 import java.util.UUID;
 
 public class ClientboundServerLoginSuccessPacket implements Packet {
-  public static final Decoder<ClientboundServerLoginSuccessPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundServerLoginSuccessPacket> DECODER = (buf, direction, version) -> {
     final UUID uuid;
     if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       uuid = ProtocolUtils.readUuidIntArray(buf);

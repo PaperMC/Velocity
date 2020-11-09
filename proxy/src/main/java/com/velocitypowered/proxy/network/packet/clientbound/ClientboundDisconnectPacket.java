@@ -7,12 +7,13 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundDisconnectPacket implements Packet {
-  public static final Decoder<ClientboundDisconnectPacket> DECODER = Decoder.method(ClientboundDisconnectPacket::new);
+  public static final PacketReader<ClientboundDisconnectPacket> DECODER = PacketReader.method(ClientboundDisconnectPacket::new);
 
   private @Nullable String reason;
 

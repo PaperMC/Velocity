@@ -1,38 +1,37 @@
-package com.velocitypowered.proxy.network.packet.shared;
+package com.velocitypowered.proxy.network.packet;
 
 import static com.velocitypowered.proxy.network.PluginMessageUtil.transformLegacyToModernChannel;
 
 import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
-import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.buffer.TypedDefaultByteBufHolder;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DefaultByteBufHolder;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PluginMessagePacket extends DefaultByteBufHolder implements Packet {
-  public static final Decoder<PluginMessagePacket> DECODER = (buf, direction, version) -> {
-    String channel = ProtocolUtils.readString(buf);
-    if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
-      channel = transformLegacyToModernChannel(channel);
-    }
-    final ByteBuf data;
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      data = buf.readRetainedSlice(buf.readableBytes());
-    } else {
-      data = ProtocolUtils.readRetainedByteBufSlice17(buf);
-    }
-    return new PluginMessagePacket(channel, data);
-  };
+public abstract class AbstractPluginMessagePacket<S extends AbstractPluginMessagePacket<S>> extends TypedDefaultByteBufHolder<S> implements Packet {
+  protected static <P extends AbstractPluginMessagePacket<P>> PacketReader<P> decoder(final Factory<P> factory) {
+    return (buf, direction, version) -> {
+      String channel = ProtocolUtils.readString(buf);
+      if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
+        channel = transformLegacyToModernChannel(channel);
+      }
+      final ByteBuf data;
+      if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+        data = buf.readRetainedSlice(buf.readableBytes());
+      } else {
+        data = ProtocolUtils.readRetainedByteBufSlice17(buf);
+      }
+      return factory.create(channel, data);
+    };
+  }
 
-  private final @Nullable String channel;
+  protected final @Nullable String channel;
 
-  public PluginMessagePacket(String channel,
-                             @MonotonicNonNull ByteBuf backing) {
+  protected AbstractPluginMessagePacket(String channel,
+                                     @MonotonicNonNull ByteBuf backing) {
     super(backing);
     this.channel = channel;
   }
@@ -54,41 +53,11 @@ public class PluginMessagePacket extends DefaultByteBufHolder implements Packet 
     }
   }
 
-  @Override
-  public boolean handle(PacketHandler handler) {
-    return handler.handle(this);
-  }
-
   public String getChannel() {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }
     return channel;
-  }
-
-  @Override
-  public PluginMessagePacket replace(ByteBuf content) {
-    return new PluginMessagePacket(this.channel, content);
-  }
-
-  @Override
-  public PluginMessagePacket retain() {
-    return (PluginMessagePacket) super.retain();
-  }
-
-  @Override
-  public PluginMessagePacket retain(int increment) {
-    return (PluginMessagePacket) super.retain(increment);
-  }
-
-  @Override
-  public PluginMessagePacket touch() {
-    return (PluginMessagePacket) super.touch();
-  }
-
-  @Override
-  public PluginMessagePacket touch(Object hint) {
-    return (PluginMessagePacket) super.touch(hint);
   }
 
   @Override
@@ -99,7 +68,7 @@ public class PluginMessagePacket extends DefaultByteBufHolder implements Packet 
     if (other == null || this.getClass() != other.getClass()) {
       return false;
     }
-    final PluginMessagePacket that = (PluginMessagePacket) other;
+    final AbstractPluginMessagePacket<?> that = (AbstractPluginMessagePacket<?>) other;
     return Objects.equals(this.channel, that.channel)
       && super.equals(other);
   }
@@ -115,5 +84,9 @@ public class PluginMessagePacket extends DefaultByteBufHolder implements Packet 
       .add("channel", this.channel)
       .add("data", this.contentToString())
       .toString();
+  }
+
+  public interface Factory<P extends AbstractPluginMessagePacket<P>> {
+    P create(final String channel, final ByteBuf data);
   }
 }

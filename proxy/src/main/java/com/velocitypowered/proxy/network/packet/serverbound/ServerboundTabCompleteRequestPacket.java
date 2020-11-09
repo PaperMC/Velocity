@@ -10,11 +10,12 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundTabCompleteRequestPacket implements Packet {
-  public static final Decoder<ServerboundTabCompleteRequestPacket> DECODER = Decoder.method(ServerboundTabCompleteRequestPacket::new);
+  public static final PacketReader<ServerboundTabCompleteRequestPacket> DECODER = PacketReader.method(ServerboundTabCompleteRequestPacket::new);
 
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
 

@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.util.DurationUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
@@ -14,7 +15,7 @@ import net.kyori.adventure.title.Title;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundTitlePacket implements Packet {
-  public static final Decoder<ClientboundTitlePacket> DECODER = Decoder.unsupported();
+  public static final PacketReader<ClientboundTitlePacket> DECODER = PacketReader.unsupported();
 
   public static ClientboundTitlePacket hide(final ProtocolVersion version) {
     return version.gte(ProtocolVersion.MINECRAFT_1_11)

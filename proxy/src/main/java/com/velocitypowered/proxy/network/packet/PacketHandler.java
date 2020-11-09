@@ -10,6 +10,7 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGameP
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
@@ -26,18 +27,14 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundEncryptio
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusPingPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 
 public interface PacketHandler {
-  default boolean handle(PluginMessagePacket packet) {
-    return false;
-  }
-
   /*
    * Clientbound
    */
@@ -79,6 +76,10 @@ public interface PacketHandler {
   }
 
   default boolean handle(ClientboundPlayerListItemPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundPluginMessagePacket packet) {
     return false;
   }
 
@@ -139,6 +140,10 @@ public interface PacketHandler {
   }
 
   default boolean handle(ServerboundLoginPluginResponsePacket packet) {
+    return false;
+  }
+
+  default boolean handle(ServerboundPluginMessagePacket packet) {
     return false;
   }
 

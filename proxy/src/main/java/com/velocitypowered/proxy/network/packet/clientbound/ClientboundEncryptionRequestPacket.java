@@ -8,10 +8,11 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 
 public class ClientboundEncryptionRequestPacket implements Packet {
-  public static final Decoder<ClientboundEncryptionRequestPacket> DECODER = Decoder.method(ClientboundEncryptionRequestPacket::new);
+  public static final PacketReader<ClientboundEncryptionRequestPacket> DECODER = PacketReader.method(ClientboundEncryptionRequestPacket::new);
 
   private String serverId = "";
   private byte[] publicKey = EMPTY_BYTE_ARRAY;

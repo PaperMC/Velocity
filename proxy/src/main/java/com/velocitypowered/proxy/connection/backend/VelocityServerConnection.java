@@ -23,8 +23,8 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
-import com.velocitypowered.proxy.network.packet.shared.PluginMessagePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -234,7 +234,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), data);
+    ServerboundPluginMessagePacket message = new ServerboundPluginMessagePacket(identifier.getId(), data);
     mc.write(message);
     return true;
   }

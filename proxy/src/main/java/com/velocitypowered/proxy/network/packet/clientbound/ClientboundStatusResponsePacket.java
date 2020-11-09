@@ -6,11 +6,12 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundStatusResponsePacket implements Packet {
-  public static final Decoder<ClientboundStatusResponsePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundStatusResponsePacket> DECODER = (buf, direction, version) -> {
     final String status = ProtocolUtils.readString(buf, Short.MAX_VALUE);
     return new ClientboundStatusResponsePacket(status);
   };

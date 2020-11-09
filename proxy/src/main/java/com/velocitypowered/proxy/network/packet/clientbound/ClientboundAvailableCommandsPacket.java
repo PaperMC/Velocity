@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.serialization.brigadier.ArgumentPropertyRegistry;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
@@ -36,7 +37,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundAvailableCommandsPacket implements Packet {
-  public static final Decoder<ClientboundAvailableCommandsPacket> DECODER = Decoder.method(ClientboundAvailableCommandsPacket::new);
+  public static final PacketReader<ClientboundAvailableCommandsPacket> DECODER = PacketReader.method(ClientboundAvailableCommandsPacket::new);
 
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 

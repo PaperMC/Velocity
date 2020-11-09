@@ -9,6 +9,7 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundPlayerListItemPacket implements Packet {
-  public static final Decoder<ClientboundPlayerListItemPacket> DECODER = Decoder.method(ClientboundPlayerListItemPacket::new);
+  public static final PacketReader<ClientboundPlayerListItemPacket> DECODER = PacketReader.method(ClientboundPlayerListItemPacket::new);
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;
