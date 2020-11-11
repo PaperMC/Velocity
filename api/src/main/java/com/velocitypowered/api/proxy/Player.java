@@ -226,7 +226,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
    */
-  void sendResourcePack(String url, byte[] hash);
+  default void sendResourcePack(String url, byte[] hash) {
+    sendResourcePack(url, hash, false);
+  }
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player

@@ -891,11 +891,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  @Override
-  public void sendResourcePack(String url, byte[] hash) {
-    sendResourcePack(url, hash, false);
-  }
-
   /**
    * Sends a {@link KeepAlive} packet to the player with a random ID.
    * The response will be ignored by Velocity as it will not match the
