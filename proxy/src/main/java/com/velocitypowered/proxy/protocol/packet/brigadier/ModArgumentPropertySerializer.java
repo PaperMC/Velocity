@@ -14,13 +14,9 @@ class ModArgumentPropertySerializer implements ArgumentPropertySerializer<ModArg
 
   @Override
   public @Nullable ModArgumentProperty deserialize(ByteBuf buf) {
-    byte[] serialized = ProtocolUtils.readByteArray(buf);
-    ByteBuf unrolled = Unpooled.wrappedBuffer(serialized);
-
-    String name = ProtocolUtils.readString(unrolled);
-    byte[] extraData = new byte[unrolled.readableBytes()];
-    unrolled.readBytes(extraData);
-    return new ModArgumentProperty(name, Unpooled.wrappedBuffer(extraData));
+    String identifier = ProtocolUtils.readString(buf);
+    byte[] extraData = ProtocolUtils.readByteArray(buf);
+    return new ModArgumentProperty(identifier, Unpooled.wrappedBuffer(extraData));
   }
 
   @Override
