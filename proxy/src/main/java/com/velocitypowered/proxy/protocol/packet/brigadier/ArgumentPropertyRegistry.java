@@ -103,8 +103,8 @@ public class ArgumentPropertyRegistry {
         GenericArgumentPropertySerializer.create(BoolArgumentType::bool));
     register("brigadier:long", LongArgumentType.class, LONG);
 
-    // Velocity internal argument types
-    register("velocity:mod_argument", ModArgumentProperty.class, MOD);
+    // Crossstitch support
+    register("crossstitch:mod_argument", ModArgumentProperty.class, MOD);
 
     // Minecraft argument types with extra properties
     empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
