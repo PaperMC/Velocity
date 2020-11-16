@@ -6,29 +6,31 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-public class ModArgumentProperty implements ArgumentType<byte[]> {
+public class ModArgumentProperty implements ArgumentType<ByteBuf> {
 
   private final String identifier;
-  private final byte[] data;
+  private final ByteBuf data;
 
-  public ModArgumentProperty(String identifier, byte[] data) {
+  public ModArgumentProperty(String identifier, ByteBuf data) {
     this.identifier = identifier;
-    this.data = data;
+    this.data = Unpooled.unreleasableBuffer(data.asReadOnly());
   }
 
   public String getIdentifier() {
     return identifier;
   }
 
-  public byte[] getData() {
-    return data;
+  public ByteBuf getData() {
+    return data.slice();
   }
 
   @Override
-  public byte[] parse(StringReader reader) throws CommandSyntaxException {
+  public ByteBuf parse(StringReader reader) throws CommandSyntaxException {
     throw new UnsupportedOperationException();
   }
 
