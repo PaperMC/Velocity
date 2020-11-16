@@ -125,11 +125,7 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    CommandNode<CommandSource> node =
-            dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH));
-    if (node != null) {
-      dispatcher.getRoot().getChildren().remove(node);
-    }
+    dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
   }
 
   /**
