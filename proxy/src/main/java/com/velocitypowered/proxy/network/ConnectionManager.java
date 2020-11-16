@@ -16,6 +16,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.incubator.channel.uring.IOUringChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.filter.FilterContext;
 import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
@@ -64,20 +66,23 @@ public final class ConnectionManager {
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
-    this.httpClient = asyncHttpClient(config()
-        .setEventLoopGroup(this.workerGroup)
+
+    DefaultAsyncHttpClientConfig.Builder httpClientBuilder = config()
         .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) {
             return new FilterContextBuilder<>(ctx)
-                .request(new RequestBuilder(ctx.getRequest())
+                .request(ctx.getRequest().toBuilder()
                     .setNameResolver(resolver)
                     .build())
                 .build();
           }
-        })
-        .build());
+        });
+    if (this.transportType != TransportType.IO_URING) {
+      httpClientBuilder = httpClientBuilder.setEventLoopGroup(this.workerGroup);
+    }
+    this.httpClient = asyncHttpClient(httpClientBuilder.build());
   }
 
   public void logChannelInformation() {
@@ -100,8 +105,12 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      if (transportType == TransportType.EPOLL) {
+        bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+      } else if (transportType == TransportType.IO_URING) {
+        bootstrap.option(IOUringChannelOption.TCP_FASTOPEN, 3);
+      }
     }
 
     bootstrap.bind()
@@ -156,8 +165,12 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      if (transportType == TransportType.EPOLL) {
+        bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+      } else if (transportType == TransportType.IO_URING) {
+        bootstrap.option(IOUringChannelOption.TCP_FASTOPEN_CONNECT, true);
+      }
     }
     return bootstrap;
   }

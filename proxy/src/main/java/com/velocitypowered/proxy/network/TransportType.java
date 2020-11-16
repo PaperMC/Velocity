@@ -15,6 +15,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.incubator.channel.uring.IOUring;
+import io.netty.incubator.channel.uring.IOUringDatagramChannel;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringServerSocketChannel;
+import io.netty.incubator.channel.uring.IOUringSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
@@ -26,7 +31,11 @@ enum TransportType {
   EPOLL("epoll", EpollServerSocketChannel::new,
       EpollSocketChannel::new,
       EpollDatagramChannel::new,
-      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
+      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type))),
+  IO_URING("io_uring", IOUringServerSocketChannel::new,
+      IOUringSocketChannel::new,
+      IOUringDatagramChannel::new,
+      (name, type) -> new IOUringEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
   final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
@@ -64,7 +73,9 @@ enum TransportType {
       return NIO;
     }
 
-    if (Epoll.isAvailable()) {
+    if (IOUring.isAvailable()) {
+      return IO_URING;
+    } else if (Epoll.isAvailable()) {
       return EPOLL;
     } else {
       return NIO;
