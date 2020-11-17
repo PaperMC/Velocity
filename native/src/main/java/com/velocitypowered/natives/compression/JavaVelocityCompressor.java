@@ -49,9 +49,9 @@ public class JavaVelocityCompressor implements VelocityCompressor {
         destination.writerIndex(destination.writerIndex() + produced);
       }
 
-      if (inflater.getBytesWritten() != uncompressedSize) {
-        throw new DataFormatException("Did not write the exact expected number of"
-            + " uncompressed bytes, expected " + uncompressedSize);
+      if (!inflater.finished()) {
+        throw new DataFormatException("Received a deflate stream that was too large, wanted "
+            + uncompressedSize);
       }
       source.readerIndex(origIdx + inflater.getTotalIn());
     } finally {
