@@ -55,9 +55,9 @@ allprojects {
             url 'https://oss.sonatype.org/content/groups/public/'
         }
 
-        // Brigadier
+        // Velocity repo
         maven {
-            url "https://libraries.minecraft.net"
+            url "https://nexus.velocitypowered.com/repository/maven-public/"
         }
     }
 

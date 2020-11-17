@@ -39,31 +39,25 @@ class LegacyForgeUtil {
    */
   static List<ModInfo.Mod> readModList(PluginMessagePacket message) {
     Preconditions.checkNotNull(message, "message");
-    Preconditions
-        .checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
+    Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
             "message is not a FML HS plugin message");
 
-    ByteBuf byteBuf = message.content().retainedSlice();
-    try {
-      byte discriminator = byteBuf.readByte();
+    ByteBuf contents = message.content().slice();
+    byte discriminator = contents.readByte();
+    if (discriminator == MOD_LIST_DISCRIMINATOR) {
+      ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
+      int modCount = ProtocolUtils.readVarInt(contents);
 
-      if (discriminator == MOD_LIST_DISCRIMINATOR) {
-        ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
-        int modCount = ProtocolUtils.readVarInt(byteBuf);
-
-        for (int index = 0; index < modCount; index++) {
-          String id = ProtocolUtils.readString(byteBuf);
-          String version = ProtocolUtils.readString(byteBuf);
-          mods.add(new ModInfo.Mod(id, version));
-        }
-
-        return mods.build();
+      for (int index = 0; index < modCount; index++) {
+        String id = ProtocolUtils.readString(contents);
+        String version = ProtocolUtils.readString(contents);
+        mods.add(new ModInfo.Mod(id, version));
       }
 
-      return ImmutableList.of();
-    } finally {
-      byteBuf.release();
+      return mods.build();
     }
+
+    return ImmutableList.of();
   }
 
   /**

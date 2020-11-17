@@ -8,6 +8,11 @@ apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 sourceSets {
     ap {
         compileClasspath += main.compileClasspath + main.output
@@ -31,7 +36,7 @@ dependencies {
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:4.2.3'
     api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-    api 'com.mojang:brigadier:1.0.17'
+    api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
 
     api "org.spongepowered:configurate-hocon:${configurateVersion}"
     api "org.spongepowered:configurate-yaml:${configurateVersion}"
