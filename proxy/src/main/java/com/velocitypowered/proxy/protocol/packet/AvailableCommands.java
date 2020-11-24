@@ -221,13 +221,14 @@ public class AvailableCommands implements MinecraftPacket {
       // that needs to come after this node is built.
       for (int child : children) {
         if (child < 0 || child >= wireNodes.length) {
-          throw new IllegalStateException("Node points to non-existent index " + redirectTo);
+          throw new IllegalStateException("Node points to non-existent index " + child);
         }
       }
 
       if (redirectTo != -1) {
         if (redirectTo < 0 || redirectTo >= wireNodes.length) {
-          throw new IllegalStateException("Node points to non-existent index " + redirectTo);
+          throw new IllegalStateException("Redirect node points to non-existent index "
+              + redirectTo);
         }
       }
 
