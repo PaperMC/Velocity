@@ -204,6 +204,7 @@ public class AvailableCommands implements MinecraftPacket {
     private final int redirectTo;
     private final @Nullable ArgumentBuilder<CommandSource, ?> args;
     private @MonotonicNonNull CommandNode<CommandSource> built;
+    private boolean validated;
 
     private WireNode(int idx, byte flags, int[] children, int redirectTo,
         @Nullable ArgumentBuilder<CommandSource, ?> args) {
@@ -212,18 +213,34 @@ public class AvailableCommands implements MinecraftPacket {
       this.children = children;
       this.redirectTo = redirectTo;
       this.args = args;
+      this.validated = false;
+    }
+
+    void validate(WireNode[] wireNodes) {
+      // Ensure all children exist. Note that we delay checking if the node has been built yet;
+      // that needs to come after this node is built.
+      for (int child : children) {
+        if (child < 0 || child >= wireNodes.length) {
+          throw new IllegalStateException("Node points to non-existent index " + child);
+        }
+      }
+
+      if (redirectTo != -1) {
+        if (redirectTo < 0 || redirectTo >= wireNodes.length) {
+          throw new IllegalStateException("Redirect node points to non-existent index "
+              + redirectTo);
+        }
+      }
+
+      this.validated = true;
     }
 
     boolean toNode(WireNode[] wireNodes) {
-      if (this.built == null) {
-        // Ensure all children exist. Note that we delay checking if the node has been built yet;
-        // that needs to come after this node is built.
-        for (int child : children) {
-          if (child >= wireNodes.length) {
-            throw new IllegalStateException("Node points to non-existent index " + redirectTo);
-          }
-        }
+      if (!this.validated) {
+        this.validate(wireNodes);
+      }
 
+      if (this.built == null) {
         int type = flags & FLAG_NODE_TYPE;
         if (type == NODE_TYPE_ROOT) {
           this.built = new RootCommandNode<>();
@@ -234,10 +251,6 @@ public class AvailableCommands implements MinecraftPacket {
 
           // Add any redirects
           if (redirectTo != -1) {
-            if (redirectTo >= wireNodes.length) {
-              throw new IllegalStateException("Node points to non-existent index " + redirectTo);
-            }
-
             WireNode redirect = wireNodes[redirectTo];
             if (redirect.built != null) {
               args.redirect(redirect.built);
