@@ -76,6 +76,10 @@ public class ArgumentPropertyRegistry {
       if (property.getResult() != null) {
         property.getSerializer().serialize(property.getResult(), buf);
       }
+    } else if (type instanceof ModArgumentProperty) {
+      ModArgumentProperty property = (ModArgumentProperty) type;
+      ProtocolUtils.writeString(buf, property.getIdentifier());
+      buf.writeBytes(property.getData());
     } else {
       ArgumentPropertySerializer serializer = byClass.get(type.getClass());
       String id = classToId.get(type.getClass());
@@ -97,6 +101,9 @@ public class ArgumentPropertyRegistry {
     register("brigadier:bool", BoolArgumentType.class,
         GenericArgumentPropertySerializer.create(BoolArgumentType::bool));
     register("brigadier:long", LongArgumentType.class, LONG);
+
+    // Crossstitch support
+    register("crossstitch:mod_argument", ModArgumentProperty.class, MOD);
 
     // Minecraft argument types with extra properties
     empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);

@@ -8,6 +8,11 @@ plugins {
 apply from: '../gradle/checkstyle.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 jar {
     manifest {
         def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"

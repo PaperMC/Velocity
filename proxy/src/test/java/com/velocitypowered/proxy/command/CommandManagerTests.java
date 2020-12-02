@@ -92,6 +92,7 @@ public class CommandManagerTests {
     assertTrue(manager.hasCommand("foO"));
     manager.unregister("fOo");
     assertFalse(manager.hasCommand("foo"));
+    assertFalse(manager.execute(MockCommandSource.INSTANCE, "foo").join());
 
     manager.register("foo", command, "bAr", "BAZ");
     assertTrue(manager.hasCommand("bar"));
