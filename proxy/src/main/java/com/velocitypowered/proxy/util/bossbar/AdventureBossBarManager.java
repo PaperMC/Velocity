@@ -3,8 +3,8 @@ package com.velocitypowered.proxy.util.bossbar;
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.network.ProtocolUtils;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
 import com.velocitypowered.proxy.util.collect.Enum2IntMap;
 import com.velocitypowered.proxy.util.concurrent.Once;
 import java.util.Collections;
@@ -107,12 +107,12 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    BossBarPacket pre116Packet = holder.createTitleUpdate(
+    ClientboundBossBarPacket pre116Packet = holder.createTitleUpdate(
         newName, ProtocolVersion.MINECRAFT_1_15_2);
-    BossBarPacket rgbPacket = holder.createTitleUpdate(
+    ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
         newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (player.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
         player.getConnection().write(rgbPacket);
       } else {
         player.getConnection().write(pre116Packet);
@@ -126,7 +126,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    BossBarPacket packet = holder
+    ClientboundBossBarPacket packet = holder
         .createPercentUpdate(newPercent);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
@@ -140,7 +140,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    BossBarPacket packet = holder.createColorUpdate(newColor);
+    ClientboundBossBarPacket packet = holder.createColorUpdate(newColor);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -153,7 +153,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    BossBarPacket packet = holder
+    ClientboundBossBarPacket packet = holder
         .createOverlayUpdate(newOverlay);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
@@ -167,7 +167,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    BossBarPacket packet = holder.createFlagsUpdate();
+    ClientboundBossBarPacket packet = holder.createFlagsUpdate();
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -188,14 +188,14 @@ public class AdventureBossBarManager implements BossBar.Listener {
       registrationOnce.run(() -> this.bar.addListener(AdventureBossBarManager.this));
     }
 
-    BossBarPacket createRemovePacket() {
-      return BossBarPacket.createRemovePacket(this.id);
+    ClientboundBossBarPacket createRemovePacket() {
+      return ClientboundBossBarPacket.createRemovePacket(this.id);
     }
 
-    BossBarPacket createAddPacket(ProtocolVersion version) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createAddPacket(ProtocolVersion version) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.ADD);
+      packet.setAction(ClientboundBossBarPacket.ADD);
       packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(bar.name()));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(bar.overlay().ordinal());
@@ -204,49 +204,49 @@ public class AdventureBossBarManager implements BossBar.Listener {
       return packet;
     }
 
-    BossBarPacket createPercentUpdate(float newPercent) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createPercentUpdate(float newPercent) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.UPDATE_PERCENT);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_PERCENT);
       packet.setPercent(newPercent);
       return packet;
     }
 
-    BossBarPacket createColorUpdate(Color color) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createColorUpdate(Color color) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.UPDATE_NAME);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_NAME);
       packet.setColor(COLORS_TO_PROTOCOL.get(color));
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
 
-    BossBarPacket createTitleUpdate(Component name,
-                                    ProtocolVersion version) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createTitleUpdate(Component name,
+                                               ProtocolVersion version) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.UPDATE_NAME);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_NAME);
       packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(name));
       return packet;
     }
 
-    BossBarPacket createFlagsUpdate() {
+    ClientboundBossBarPacket createFlagsUpdate() {
       return createFlagsUpdate(bar.flags());
     }
 
-    BossBarPacket createFlagsUpdate(Set<Flag> newFlags) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createFlagsUpdate(Set<Flag> newFlags) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.UPDATE_PROPERTIES);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_PROPERTIES);
       packet.setColor(COLORS_TO_PROTOCOL.get(this.bar.color()));
       packet.setFlags(this.serializeFlags(newFlags));
       return packet;
     }
 
-    BossBarPacket createOverlayUpdate(Overlay overlay) {
-      BossBarPacket packet = new BossBarPacket();
+    ClientboundBossBarPacket createOverlayUpdate(Overlay overlay) {
+      ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(BossBarPacket.UPDATE_PROPERTIES);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_PROPERTIES);
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(overlay));
       return packet;
     }

@@ -32,6 +32,7 @@ dependencies {
     api "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
     api "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
     api "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
+    api("net.kyori:coffee:1.0.0-SNAPSHOT")
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:4.2.3'
@@ -75,13 +76,13 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.source = '8'
-    options.links(
-            'https://www.slf4j.org/apidocs/',
-            'https://guava.dev/releases/30.0-jre/api/docs/',
-            'https://google.github.io/guice/api-docs/4.2/javadoc/',
-            'https://docs.oracle.com/javase/8/docs/api/',
-            'https://jd.adventure.kyori.net/api/4.0.0/'
-    )
+//    options.links(
+//            'https://www.slf4j.org/apidocs/',
+//            'https://guava.dev/releases/30.0-jre/api/docs/',
+//            'https://google.github.io/guice/api-docs/4.2/javadoc/',
+//            'https://docs.oracle.com/javase/8/docs/api/',
+//            'https://jd.adventure.kyori.net/api/4.0.0/'
+//    )
 
     // Disable the crazy super-strict doclint tool in Java 8
     options.addStringOption('Xdoclint:none', '-quiet')

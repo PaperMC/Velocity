@@ -19,15 +19,15 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.protocol.Packet;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCipherEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.Packet;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCipherDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCipherEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCompressDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCompressEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -224,8 +224,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
-          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
+      boolean is17 = this.getProtocolVersion().lt(ProtocolVersion.MINECRAFT_1_8)
+          && this.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_7_2);
       if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
@@ -369,7 +369,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the compression threshold on the connection. You are responsible for sending
-   * {@link SetCompressionPacket} beforehand.
+   * {@link ClientboundSetCompressionPacket} beforehand.
    * @param threshold the compression threshold to use
    */
   public void setCompressionThreshold(int threshold) {

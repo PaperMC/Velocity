@@ -225,7 +225,7 @@ public final class DimensionData {
     String registryIdentifier = dimTag.getString("name");
     CompoundBinaryTag details;
     Integer dimensionId = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
       dimensionId = dimTag.getInt("id");
       details = dimTag.getCompound("element");
     } else {
@@ -243,7 +243,7 @@ public final class DimensionData {
    */
   public CompoundBinaryTag encodeAsCompoundTag(ProtocolVersion version) {
     CompoundBinaryTag details = serializeDimensionDetails();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
       if (dimensionId == null) {
         throw new IllegalStateException("Tried to serialize a 1.16.2+ dimension registry entry "
             + "without an ID");

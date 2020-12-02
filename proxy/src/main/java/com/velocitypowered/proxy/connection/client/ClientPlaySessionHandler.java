@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.connection.client;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
-import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
+import static com.velocitypowered.proxy.network.PluginMessageUtil.constructChannelsPacket;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -19,21 +19,23 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.protocol.Packet;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
-import com.velocitypowered.proxy.protocol.packet.ChatPacket;
-import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
-import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket.Offer;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.Packet;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket.Offer;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -64,9 +66,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final ConnectedPlayer player;
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
-  private final Queue<PluginMessagePacket> loginPluginMessages = new ArrayDeque<>();
+  private final Queue<ServerboundPluginMessagePacket> loginPluginMessages = new ArrayDeque<>();
   private final VelocityServer server;
-  private @Nullable TabCompleteRequestPacket outstandingTabComplete;
+  private @Nullable ServerboundTabCompleteRequestPacket outstandingTabComplete;
 
   /**
    * Constructs a client play session handler.
@@ -83,7 +85,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
         .getProtocolVersion());
     if (!channels.isEmpty()) {
-      PluginMessagePacket register = constructChannelsPacket(player.getProtocolVersion(), channels);
+      AbstractPluginMessagePacket<?> register = constructChannelsPacket(player.getProtocolVersion(),
+          channels, ClientboundPluginMessagePacket.FACTORY);
       player.getConnection().write(register);
       player.getKnownChannels().addAll(channels);
     }
@@ -91,13 +94,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void deactivated() {
-    for (PluginMessagePacket message : loginPluginMessages) {
+    for (ServerboundPluginMessagePacket message : loginPluginMessages) {
       ReferenceCountUtil.release(message);
     }
   }
 
   @Override
-  public boolean handle(KeepAlivePacket packet) {
+  public boolean handle(ServerboundKeepAlivePacket packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
       MinecraftConnection smc = serverConnection.getConnection();
@@ -111,13 +114,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ClientSettingsPacket packet) {
+  public boolean handle(ServerboundClientSettingsPacket packet) {
     player.setPlayerSettings(packet);
     return false; // will forward onto the server
   }
 
   @Override
-  public boolean handle(ChatPacket packet) {
+  public boolean handle(ServerboundChatPacket packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
       return true;
@@ -154,7 +157,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (chatResult.isAllowed()) {
               Optional<String> eventMsg = pme.getResult().getMessage();
               if (eventMsg.isPresent()) {
-                smc.write(ChatPacket.createServerbound(eventMsg.get()));
+                smc.write(new ServerboundChatPacket(eventMsg.get()));
               } else {
                 smc.write(packet);
               }
@@ -169,7 +172,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(TabCompleteRequestPacket packet) {
+  public boolean handle(ServerboundTabCompleteRequestPacket packet) {
     boolean isCommand = !packet.isAssumeCommand() && packet.getCommand().startsWith("/");
 
     if (isCommand) {
@@ -180,7 +183,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessagePacket packet) {
+  public boolean handle(ServerboundPluginMessagePacket packet) {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
@@ -195,7 +198,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion(), ServerboundPluginMessagePacket.FACTORY));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -228,7 +231,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
               server.getEventManager().fire(event).thenAcceptAsync(pme -> {
                 if (pme.getResult().isAllowed()) {
-                  PluginMessagePacket message = new PluginMessagePacket(packet.getChannel(),
+                  ServerboundPluginMessagePacket message = new ServerboundPluginMessagePacket(packet.getChannel(),
                       Unpooled.wrappedBuffer(copy));
                   backendConn.write(message);
                 }
@@ -248,7 +251,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ResourcePackResponsePacket packet) {
+  public boolean handle(ServerboundResourcePackResponsePacket packet) {
     server.getEventManager().fireAndForget(new PlayerResourcePackStatusEvent(player,
         packet.getStatus()));
     return false;
@@ -264,8 +267,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
-      if (packet instanceof PluginMessagePacket) {
-        ((PluginMessagePacket) packet).retain();
+      if (packet instanceof AbstractPluginMessagePacket<?>) {
+        ((AbstractPluginMessagePacket<?>) packet).retain();
       }
       smc.write(packet);
     }
@@ -319,7 +322,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param joinGame the join game packet
    * @param destination the new server we are connecting to
    */
-  public void handleBackendJoinGame(JoinGamePacket joinGame, VelocityServerConnection destination) {
+  public void handleBackendJoinGame(ClientboundJoinGamePacket joinGame,
+                                    VelocityServerConnection destination) {
     final MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
@@ -344,9 +348,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
     for (UUID serverBossBar : serverBossBars) {
-      BossBarPacket deletePacket = new BossBarPacket();
+      ClientboundBossBarPacket deletePacket = new ClientboundBossBarPacket();
       deletePacket.setUuid(serverBossBar);
-      deletePacket.setAction(BossBarPacket.REMOVE);
+      deletePacket.setAction(ClientboundBossBarPacket.REMOVE);
       player.getConnection().delayedWrite(deletePacket);
     }
     serverBossBars.clear();
@@ -354,19 +358,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     if (!player.getKnownChannels().isEmpty()) {
-      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels()));
+      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels(), ServerboundPluginMessagePacket.FACTORY));
     }
 
     // If we had plugin messages queued during login/FML handshake, send them now.
-    PluginMessagePacket pm;
+    ServerboundPluginMessagePacket pm;
     while ((pm = loginPluginMessages.poll()) != null) {
       serverMc.delayedWrite(pm);
     }
 
     // Clear any title from the previous server.
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
+    if (player.getProtocolVersion().gte(MINECRAFT_1_8)) {
       player.getConnection()
-          .delayedWrite(TitlePacket.resetForProtocolVersion(player.getProtocolVersion()));
+          .delayedWrite(ClientboundTitlePacket.reset(player.getProtocolVersion()));
     }
 
     // Flush everything
@@ -375,7 +379,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     destination.completeJoin();
   }
 
-  private void doFastClientServerSwitch(JoinGamePacket joinGame) {
+  private void doFastClientServerSwitch(ClientboundJoinGamePacket joinGame) {
     // In order to handle switching to another server, you will need to send two packets:
     //
     // - The join game packet from the backend server, with a different dimension
@@ -385,7 +389,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
     // improving compatibility with mods.
     int sentOldDim = joinGame.getDimension();
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
+    if (player.getProtocolVersion().lt(MINECRAFT_1_16)) {
       // Before Minecraft 1.16, we could not switch to the same dimension without sending an
       // additional respawn. On older versions of Minecraft this forces the client to perform
       // garbage collection which adds additional latency.
@@ -394,13 +398,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().delayedWrite(joinGame);
 
     player.getConnection().delayedWrite(
-        new RespawnPacket(sentOldDim, joinGame.getPartialHashedSeed(),
+        new ClientboundRespawnPacket(sentOldDim, joinGame.getPartialHashedSeed(),
             joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
             joinGame.getCurrentDimensionData()));
   }
 
-  private void doSafeClientServerSwitch(JoinGamePacket joinGame) {
+  private void doSafeClientServerSwitch(ClientboundJoinGamePacket joinGame) {
     // Some clients do not behave well with the "fast" respawn sequence. In this case we will use
     // a "safe" respawn sequence that involves sending three packets to the client. They have the
     // same effect but tend to work better with buggier clients (Forge 1.8 in particular).
@@ -411,14 +415,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Send a respawn packet in a different dimension.
     int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
     player.getConnection().delayedWrite(
-        new RespawnPacket(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-            joinGame.getGamemode(), joinGame.getLevelType(),
+        new ClientboundRespawnPacket(tempDim, joinGame.getPartialHashedSeed(),
+            joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
             joinGame.getCurrentDimensionData()));
 
     // Now send a respawn packet in the correct dimension.
     player.getConnection().delayedWrite(
-        new RespawnPacket(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+        new ClientboundRespawnPacket(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
             joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
             joinGame.getCurrentDimensionData()));
@@ -428,7 +432,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return serverBossBars;
   }
 
-  private boolean handleCommandTabComplete(TabCompleteRequestPacket packet) {
+  private boolean handleCommandTabComplete(ServerboundTabCompleteRequestPacket packet) {
     // In 1.13+, we need to do additional work for the richer suggestions available.
     String command = packet.getCommand().substring(1);
     int commandEndPosition = command.indexOf(' ');
@@ -438,7 +442,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String commandLabel = command.substring(0, commandEndPosition);
     if (!server.getCommandManager().hasCommand(commandLabel)) {
-      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+      if (player.getProtocolVersion().lt(MINECRAFT_1_13)) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.
         outstandingTabComplete = packet;
@@ -458,7 +462,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
-            TabCompleteResponsePacket resp = new TabCompleteResponsePacket();
+            ClientboundTabCompleteResponsePacket resp = new ClientboundTabCompleteResponsePacket();
             resp.setTransactionId(packet.getTransactionId());
             resp.setStart(startPos);
             resp.setLength(packet.getCommand().length() - startPos);
@@ -474,8 +478,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
-  private boolean handleRegularTabComplete(TabCompleteRequestPacket packet) {
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+  private boolean handleRegularTabComplete(ServerboundTabCompleteRequestPacket packet) {
+    if (player.getProtocolVersion().lt(MINECRAFT_1_13)) {
       // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
       // additional tab completion support.
       outstandingTabComplete = packet;
@@ -488,7 +492,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    *
    * @param response the tab complete response from the backend
    */
-  public void handleTabCompleteResponse(TabCompleteResponsePacket response) {
+  public void handleTabCompleteResponse(ClientboundTabCompleteResponsePacket response) {
     if (outstandingTabComplete != null && !outstandingTabComplete.isAssumeCommand()) {
       if (outstandingTabComplete.getCommand().startsWith("/")) {
         this.finishCommandTabComplete(outstandingTabComplete, response);
@@ -502,12 +506,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
   }
 
-  private void finishCommandTabComplete(TabCompleteRequestPacket request,
-                                        TabCompleteResponsePacket response) {
+  private void finishCommandTabComplete(ServerboundTabCompleteRequestPacket request,
+                                        ClientboundTabCompleteResponsePacket response) {
     String command = request.getCommand().substring(1);
     server.getCommandManager().offerSuggestions(player, command)
         .thenAcceptAsync(offers -> {
-          boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+          boolean legacy = player.getProtocolVersion().lt(MINECRAFT_1_13);
           try {
             for (String offer : offers) {
               offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
@@ -532,8 +536,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         });
   }
 
-  private void finishRegularTabComplete(TabCompleteRequestPacket request,
-                                        TabCompleteResponsePacket response) {
+  private void finishRegularTabComplete(ServerboundTabCompleteRequestPacket request,
+                                        ClientboundTabCompleteResponsePacket response) {
     List<String> offers = new ArrayList<>();
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
@@ -563,13 +567,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
-      return CompletableFuture.runAsync(() -> smc.write(ChatPacket.createServerbound("/"
+      return CompletableFuture.runAsync(() -> smc.write(new ServerboundChatPacket("/"
           + commandToRun)), smc.eventLoop());
     } else {
       return server.getCommandManager().executeImmediately(player, commandToRun)
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
-              smc.write(ChatPacket.createServerbound("/" + commandToRun));
+              smc.write(new ServerboundChatPacket("/" + commandToRun));
             }
           }, smc.eventLoop());
     }
@@ -583,7 +587,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (serverConnection != null) {
       MinecraftConnection connection = serverConnection.getConnection();
       if (connection != null) {
-        PluginMessagePacket pm;
+        ServerboundPluginMessagePacket pm;
         while ((pm = loginPluginMessages.poll()) != null) {
           connection.write(pm);
         }

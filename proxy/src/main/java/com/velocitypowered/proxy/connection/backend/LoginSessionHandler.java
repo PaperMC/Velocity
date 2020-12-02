@@ -9,14 +9,14 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
-import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
+import com.velocitypowered.proxy.network.ProtocolUtils;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -49,12 +49,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(EncryptionRequestPacket packet) {
+  public boolean handle(ClientboundEncryptionRequestPacket packet) {
     throw new IllegalStateException("Backend server is online-mode!");
   }
 
   @Override
-  public boolean handle(LoginPluginMessagePacket packet) {
+  public boolean handle(ClientboundLoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
@@ -62,32 +62,33 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
           cleanRemoteAddress(serverConn.getPlayer().getRemoteAddress()),
           serverConn.getPlayer().getGameProfile());
-      LoginPluginResponsePacket response = new LoginPluginResponsePacket(packet.getId(), true,
-          forwardingData);
+      ServerboundLoginPluginResponsePacket response = new ServerboundLoginPluginResponsePacket(
+          packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
     } else {
       // Don't understand
-      mc.write(new LoginPluginResponsePacket(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+      mc.write(new ServerboundLoginPluginResponsePacket(packet.getId(), false,
+          Unpooled.EMPTY_BUFFER));
     }
     return true;
   }
 
   @Override
-  public boolean handle(DisconnectPacket packet) {
+  public boolean handle(ClientboundDisconnectPacket packet) {
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
     return true;
   }
 
   @Override
-  public boolean handle(SetCompressionPacket packet) {
+  public boolean handle(ClientboundSetCompressionPacket packet) {
     serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
   @Override
-  public boolean handle(ServerLoginSuccessPacket packet) {
+  public boolean handle(ClientboundServerLoginSuccessPacket packet) {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,

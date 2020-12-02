@@ -2,20 +2,20 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.SkinParts;
-import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettingsWrapper implements PlayerSettings {
 
   static final PlayerSettings DEFAULT = new ClientSettingsWrapper(
-      new ClientSettingsPacket("en_US", (byte) 10, 0, true, (short) 127, 1));
+      new ServerboundClientSettingsPacket("en_US", (byte) 10, 0, true, (short) 127, 1));
 
-  private final ClientSettingsPacket settings;
+  private final ServerboundClientSettingsPacket settings;
   private final SkinParts parts;
   private @Nullable Locale locale;
 
-  ClientSettingsWrapper(ClientSettingsPacket settings) {
+  ClientSettingsWrapper(ServerboundClientSettingsPacket settings) {
     this.settings = settings;
     this.parts = new SkinParts((byte) settings.getSkinParts());
   }

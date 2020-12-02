@@ -19,11 +19,11 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.ProtocolDirection;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintFrameDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintLengthEncoder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -91,9 +91,9 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolDirection.CLIENTBOUND))
+                    new MinecraftDecoder(PacketDirection.CLIENTBOUND))
                 .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolDirection.SERVERBOUND));
+                    new MinecraftEncoder(PacketDirection.SERVERBOUND));
 
             ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }

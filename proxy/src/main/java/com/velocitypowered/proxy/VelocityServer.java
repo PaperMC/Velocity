@@ -27,11 +27,11 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.network.ConnectionManager;
+import com.velocitypowered.proxy.network.ProtocolUtils;
+import com.velocitypowered.proxy.network.serialization.FaviconSerializer;
+import com.velocitypowered.proxy.network.serialization.GameProfileSerializer;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
-import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -645,7 +645,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   public static Gson getPingGsonInstance(ProtocolVersion version) {
-    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_PING_SERIALIZER
+    return version.gte(ProtocolVersion.MINECRAFT_1_16) ? POST_1_16_PING_SERIALIZER
         : PRE_1_16_PING_SERIALIZER;
   }
 }

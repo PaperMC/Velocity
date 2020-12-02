@@ -27,6 +27,10 @@
     <property name="eachLine" value="true"/>
   </module>
 
+  <module name="SuppressionFilter">
+    <property name="file" value="${configDirectory}/suppressions.xml"/>
+  </module>
+
   <module name="TreeWalker">
     <module name="OuterTypeFilename"/>
     <!-- <module name="IllegalTokenText">
@@ -42,7 +46,7 @@
       <property name="allowNonPrintableEscapes" value="true"/>
     </module>
     <module name="LineLength">
-      <property name="max" value="100"/>
+      <property name="max" value="150"/>
       <property name="ignorePattern"
         value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
     </module>

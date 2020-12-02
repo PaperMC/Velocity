@@ -11,13 +11,13 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
-import com.velocitypowered.proxy.protocol.ProtocolDirection;
-import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
-import com.velocitypowered.proxy.protocol.netty.LegacyPingEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.pipeline.LegacyPingDecoder;
+import com.velocitypowered.proxy.network.pipeline.LegacyPingEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintFrameDecoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
@@ -43,8 +43,8 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-        .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolDirection.SERVERBOUND))
-        .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolDirection.CLIENTBOUND));
+        .addLast(MINECRAFT_DECODER, new MinecraftDecoder(PacketDirection.SERVERBOUND))
+        .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(PacketDirection.CLIENTBOUND));
 
     final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
     connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));

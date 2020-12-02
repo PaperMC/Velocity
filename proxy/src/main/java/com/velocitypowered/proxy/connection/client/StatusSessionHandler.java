@@ -13,11 +13,11 @@ import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
-import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.legacy.LegacyDisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.legacy.LegacyPingPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusResponsePacket;
+import com.velocitypowered.proxy.network.packet.legacy.LegacyDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.legacy.LegacyPingPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusPingPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
@@ -176,13 +176,13 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StatusPingPacket packet) {
+  public boolean handle(ServerboundStatusPingPacket packet) {
     connection.closeWith(packet);
     return true;
   }
 
   @Override
-  public boolean handle(StatusRequestPacket packet) {
+  public boolean handle(ServerboundStatusRequestPacket packet) {
     if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
@@ -195,7 +195,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
               StringBuilder json = new StringBuilder();
               VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
                   .toJson(event.getPing(), json);
-              connection.write(new StatusResponsePacket(json));
+              connection.write(new ClientboundStatusResponsePacket(json));
             },
             connection.eventLoop())
         .exceptionally((ex) -> {

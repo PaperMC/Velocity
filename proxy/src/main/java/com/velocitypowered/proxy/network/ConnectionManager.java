@@ -6,8 +6,8 @@ import static org.asynchttpclient.Dsl.config;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
-import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
+import com.velocitypowered.proxy.network.pipeline.GS4QueryHandler;
+import com.velocitypowered.proxy.network.resolver.SeparatePoolInetNameResolver;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -43,9 +43,9 @@ public final class ConnectionManager {
   // These are intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
   @SuppressWarnings("WeakerAccess")
-  public final ServerChannelInitializerHolder serverChannelInitializer;
+  public final ChannelInitializerHolder<Channel> serverChannelInitializer;
   @SuppressWarnings("WeakerAccess")
-  public final BackendChannelInitializerHolder backendChannelInitializer;
+  public final ChannelInitializerHolder<Channel> backendChannelInitializer;
 
   private final SeparatePoolInetNameResolver resolver;
   private final AsyncHttpClient httpClient;
@@ -60,9 +60,9 @@ public final class ConnectionManager {
     this.transportType = TransportType.bestType();
     this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
     this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
-    this.serverChannelInitializer = new ServerChannelInitializerHolder(
+    this.serverChannelInitializer = new ChannelInitializerHolder<>("server channel",
         new ServerChannelInitializer(this.server));
-    this.backendChannelInitializer = new BackendChannelInitializerHolder(
+    this.backendChannelInitializer = new ChannelInitializerHolder<>("backend channel",
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
@@ -198,7 +198,7 @@ public final class ConnectionManager {
     return bossGroup;
   }
 
-  public ServerChannelInitializerHolder getServerChannelInitializer() {
+  public ChannelInitializerHolder<Channel> getServerChannelInitializer() {
     return this.serverChannelInitializer;
   }
 
@@ -206,7 +206,7 @@ public final class ConnectionManager {
     return httpClient;
   }
 
-  public BackendChannelInitializerHolder getBackendChannelInitializer() {
+  public ChannelInitializerHolder<Channel> getBackendChannelInitializer() {
     return this.backendChannelInitializer;
   }
 }

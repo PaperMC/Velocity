@@ -36,20 +36,21 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ChatPacket;
-import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.proxy.network.ProtocolUtils;
+import com.velocitypowered.proxy.network.StateRegistry;
+import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
-import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -112,7 +113,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (connection.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_8)) {
       this.tabList = new VelocityTabList(connection);
     } else {
       this.tabList = new VelocityTabListLegacy(connection);
@@ -186,7 +187,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
-  void setPlayerSettings(ClientSettingsPacket settings) {
+  void setPlayerSettings(ServerboundClientSettingsPacket settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
@@ -227,40 +228,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    connection.write(ChatPacket.createClientbound(identity, message, this.getProtocolVersion()));
-  }
-
-  @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
       @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
-    ChatPacket packet = ChatPacket.createClientbound(identity, message, this.getProtocolVersion());
-    packet.setType(type == MessageType.CHAT ? ChatPacket.CHAT_TYPE : ChatPacket.SYSTEM_TYPE);
-    connection.write(packet);
+    connection.write(new ClientboundChatPacket(
+        ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion()).serialize(message),
+        type == MessageType.CHAT
+            ? ClientboundChatPacket.CHAT_TYPE
+            : ClientboundChatPacket.SYSTEM_TYPE,
+        identity.uuid()
+    ));
   }
 
   @Override
   public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
     ProtocolVersion playerVersion = getProtocolVersion();
-    if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    if (playerVersion.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
-      TitlePacket pkt = new TitlePacket();
-      pkt.setAction(TitlePacket.SET_ACTION_BAR);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
-          .serialize(message));
-      connection.write(pkt);
+      connection.write(new ClientboundTitlePacket(
+          ClientboundTitlePacket.SET_ACTION_BAR,
+          ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(message)
+      ));
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
       object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
-      ChatPacket chat = new ChatPacket();
-      chat.setMessage(object.toString());
-      chat.setType(ChatPacket.GAME_INFO_TYPE);
-      connection.write(chat);
+      connection.write(new ClientboundChatPacket(
+          object.toString(),
+          ClientboundChatPacket.GAME_INFO_TYPE,
+          Identity.nil().uuid()
+      ));
     }
   }
 
@@ -269,36 +269,32 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
         .getProtocolVersion());
 
-    TitlePacket titlePkt = new TitlePacket();
-    titlePkt.setAction(TitlePacket.SET_TITLE);
-    titlePkt.setComponent(serializer.serialize(title.title()));
-    connection.delayedWrite(titlePkt);
+    connection.delayedWrite(new ClientboundTitlePacket(
+        ClientboundTitlePacket.SET_TITLE,
+        serializer.serialize(title.title())
+    ));
 
-    TitlePacket subtitlePkt = new TitlePacket();
-    subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
-    subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
-    connection.delayedWrite(subtitlePkt);
+    connection.delayedWrite(new ClientboundTitlePacket(
+        ClientboundTitlePacket.SET_SUBTITLE,
+        serializer.serialize(title.subtitle())
+    ));
 
-    TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
     net.kyori.adventure.title.Title.Times times = title.times();
     if (times != null) {
-      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      connection.delayedWrite(ClientboundTitlePacket.times(this.getProtocolVersion(), times));
     }
-    connection.delayedWrite(timesPkt);
 
     connection.flush();
   }
 
   @Override
   public void clearTitle() {
-    connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    connection.write(ClientboundTitlePacket.hide(this.getProtocolVersion()));
   }
 
   @Override
   public void resetTitle() {
-    connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    connection.write(ClientboundTitlePacket.reset(this.getProtocolVersion()));
   }
 
   @Override
@@ -343,7 +339,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void disconnect0(Component reason, boolean duringLogin) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(DisconnectPacket.create(reason, this.getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, this.getProtocolVersion()));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -402,7 +398,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param disconnect the disconnect packet
    * @param safe whether or not we can safely reconnect to a new server
    */
-  public void handleConnectionException(RegisteredServer server, DisconnectPacket disconnect,
+  public void handleConnectionException(RegisteredServer server, ClientboundDisconnectPacket disconnect,
       boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
@@ -507,7 +503,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case SERVER_DISCONNECTED:
                       Component reason = status.getReason()
                           .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                      handleConnectionException(res.getServer(), DisconnectPacket.create(reason,
+                      handleConnectionException(res.getServer(), ClientboundDisconnectPacket.create(reason,
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
@@ -664,7 +660,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
+    ClientboundPluginMessagePacket message = new ClientboundPluginMessagePacket(identifier.getId(),
         Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
@@ -672,20 +668,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void spoofChatInput(String input) {
-    Preconditions.checkArgument(input.length() <= ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH,
-        "input cannot be greater than " + ChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH
+    Preconditions.checkArgument(input.length() <= ServerboundChatPacket.MAX_MESSAGE_LENGTH,
+        "input cannot be greater than " + ServerboundChatPacket.MAX_MESSAGE_LENGTH
             + " characters in length");
-    ensureBackendConnection().write(ChatPacket.createServerbound(input));
+    ensureBackendConnection().write(new ServerboundChatPacket(input));
   }
 
   @Override
   public void sendResourcePack(String url) {
     Preconditions.checkNotNull(url, "url");
 
-    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-    request.setUrl(url);
-    request.setHash("");
-    connection.write(request);
+    connection.write(new ClientboundResourcePackRequestPacket(url, ""));
   }
 
   @Override
@@ -694,22 +687,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
 
-    ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-    request.setUrl(url);
-    request.setHash(ByteBufUtil.hexDump(hash));
-    connection.write(request);
+    connection.write(new ClientboundResourcePackRequestPacket(url, ByteBufUtil.hexDump(hash)));
   }
 
   /**
-   * Sends a {@link KeepAlivePacket} packet to the player with a random ID.
+   * Sends a {@link ClientboundKeepAlivePacket} packet to the player with a random ID.
    * The response will be ignored by Velocity as it will not match the
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY) {
-      KeepAlivePacket keepAlive = new KeepAlivePacket();
-      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
-      connection.write(keepAlive);
+      connection.write(new ClientboundKeepAlivePacket(ThreadLocalRandom.current().nextLong()));
     }
   }
 
@@ -747,11 +735,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param message the plugin message to forward to the client
    * @return {@code true} if the message can be forwarded, {@code false} otherwise
    */
-  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessagePacket message) {
+  public boolean canForwardPluginMessage(ProtocolVersion version, AbstractPluginMessagePacket<?> message) {
     boolean minecraftOrFmlMessage;
 
     // By default, all internal Minecraft and Forge channels are forwarded from the server.
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
+    if (version.lte(ProtocolVersion.MINECRAFT_1_12_2)) {
       String channel = message.getChannel();
       minecraftOrFmlMessage = channel.startsWith("MC|")
           || channel.startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)
@@ -880,7 +868,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               case SERVER_DISCONNECTED:
                 Component reason = status.getReason()
                     .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                handleConnectionException(toConnect, DisconnectPacket.create(reason,
+                handleConnectionException(toConnect, ClientboundDisconnectPacket.create(reason,
                     getProtocolVersion()), status.isSafe());
                 break;
               default:

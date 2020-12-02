@@ -4,8 +4,8 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
@@ -20,10 +20,10 @@ public final class InitialInboundConnection implements InboundConnection,
 
   private final MinecraftConnection connection;
   private final String cleanedAddress;
-  private final HandshakePacket handshake;
+  private final ServerboundHandshakePacket handshake;
 
   InitialInboundConnection(MinecraftConnection connection, String cleanedAddress,
-      HandshakePacket handshake) {
+      ServerboundHandshakePacket handshake) {
     this.connection = connection;
     this.cleanedAddress = cleanedAddress;
     this.handshake = handshake;
@@ -61,7 +61,7 @@ public final class InitialInboundConnection implements InboundConnection,
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(DisconnectPacket.create(reason, getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
   }
 
   /**
@@ -69,6 +69,6 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnectQuietly(Component reason) {
-    connection.closeWith(DisconnectPacket.create(reason, getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
   }
 }

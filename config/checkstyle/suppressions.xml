@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN" "http://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+  <!-- no javadoc warning for implementation -->
+  <suppress files="src[\\/]main[\\/]java[\\/]com[\\/]velocitypowered[\\/]proxy[\\/].*" checks="JavadocMethod"/>
+</suppressions>
