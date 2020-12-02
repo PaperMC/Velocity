@@ -1,4 +1,4 @@
-package com.velocitypowered.proxy.protocol.packet.brigadier;
+package com.velocitypowered.proxy.network.serialization.brigadier;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;

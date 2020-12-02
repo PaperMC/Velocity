@@ -5,6 +5,7 @@ import static com.velocitypowered.proxy.network.serialization.brigadier.EmptyArg
 import static com.velocitypowered.proxy.network.serialization.brigadier.FloatArgumentPropertySerializer.FLOAT;
 import static com.velocitypowered.proxy.network.serialization.brigadier.IntegerArgumentPropertySerializer.INTEGER;
 import static com.velocitypowered.proxy.network.serialization.brigadier.LongArgumentPropertySerializer.LONG;
+import static com.velocitypowered.proxy.network.serialization.brigadier.ModArgumentPropertySerializer.MOD;
 import static com.velocitypowered.proxy.network.serialization.brigadier.StringArgumentPropertySerializer.STRING;
 
 import com.mojang.brigadier.arguments.ArgumentType;

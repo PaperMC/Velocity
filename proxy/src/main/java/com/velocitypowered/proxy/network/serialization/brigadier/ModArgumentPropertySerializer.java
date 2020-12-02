@@ -1,6 +1,6 @@
-package com.velocitypowered.proxy.protocol.packet.brigadier;
+package com.velocitypowered.proxy.network.serialization.brigadier;
 
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.network.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
