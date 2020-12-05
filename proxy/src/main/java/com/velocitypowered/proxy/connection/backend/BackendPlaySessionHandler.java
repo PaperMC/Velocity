@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlive
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket;
+import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -65,7 +66,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
     MinecraftConnection serverMc = serverConn.ensureConnected();
     serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion())), ClientboundPluginMessagePacket.FACTORY
+        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion())), ServerboundPluginMessagePacket.FACTORY
     ));
   }
 
