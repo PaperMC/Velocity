@@ -147,6 +147,20 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   void clearHeaderAndFooter();
 
   /**
+   * Returns the player's player list header.
+   *
+   * @return this player's player list header
+   */
+  Component getPlayerListHeader();
+
+  /**
+   * Returns the player's player list footer.
+   *
+   * @return this player's tab list
+   */
+  Component getPlayerListFooter();
+
+  /**
    * Returns the player's tab list.
    *
    * @return this player's tab list
