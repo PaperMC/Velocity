@@ -28,7 +28,9 @@ public interface TabList {
    *
    * @param header the header component
    * @param footer the footer component
+   * @deprecated Use {@link Player#sendPlayerListHeaderAndFooter(Component, Component)} instead
    */
+  @Deprecated
   void setHeaderAndFooter(Component header, Component footer);
 
   /**

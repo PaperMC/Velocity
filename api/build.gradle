@@ -32,11 +32,12 @@ dependencies {
     // DEPRECATED: Will be removed in Velocity 2.0.0
     api 'com.moandjiezana.toml:toml4j:0.7.2'
 
-    api "net.kyori:adventure-api:${adventureVersion}"
-    api "net.kyori:adventure-text-serializer-gson:${adventureVersion}"
-    api "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
-    api "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
-    api "net.kyori:adventure-text-serializer-legacy-text3:${adventurePlatformVersion}"
+    api(platform("net.kyori:adventure-bom:${adventureVersion}"))
+    api("net.kyori:adventure-api")
+    api("net.kyori:adventure-text-serializer-gson")
+    api("net.kyori:adventure-text-serializer-legacy")
+    api("net.kyori:adventure-text-serializer-plain")
+    api("net.kyori:adventure-text-serializer-legacy-text3:${adventurePlatformVersion}") // adventure-platform
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:4.2.3'

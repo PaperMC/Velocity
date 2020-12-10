@@ -45,6 +45,7 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
@@ -61,6 +62,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -105,6 +107,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
+  private Component playerListHeader = Component.empty();
+  private Component playerListFooter = Component.empty();
   private final VelocityTabList tabList;
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
@@ -115,11 +119,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.tabList = new VelocityTabList(connection);
-    } else {
-      this.tabList = new VelocityTabListLegacy(connection);
-    }
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
@@ -127,6 +126,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
+
+    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.tabList = new VelocityTabList(this);
+    } else {
+      this.tabList = new VelocityTabListLegacy(this);
+    }
   }
 
   @Override
@@ -302,6 +307,33 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
+  public Component getPlayerListHeader() {
+    return this.playerListHeader;
+  }
+
+  @Override
+  public Component getPlayerListFooter() {
+    return this.playerListFooter;
+  }
+
+  @Override
+  public void sendPlayerListHeader(@NonNull final Component header) {
+    this.sendPlayerListHeaderAndFooter(header, this.playerListFooter);
+  }
+
+  @Override
+  public void sendPlayerListFooter(@NonNull final Component footer) {
+    this.sendPlayerListHeaderAndFooter(this.playerListHeader, footer);
+  }
+
+  @Override
+  public void sendPlayerListHeaderAndFooter(final Component header, final Component footer) {
+    this.playerListHeader = Objects.requireNonNull(header, "header");
+    this.playerListFooter = Objects.requireNonNull(footer, "footer");
+    this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
+  }
+
+  @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
         .getProtocolVersion());
@@ -363,6 +395,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.profile = profile.withProperties(Preconditions.checkNotNull(properties));
   }
 
+  @Deprecated
   @Override
   public void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer) {
     tabList.setHeaderAndFooter(header, footer);
