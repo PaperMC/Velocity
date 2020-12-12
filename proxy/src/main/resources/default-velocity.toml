@@ -33,7 +33,7 @@ prevent-client-proxy-connections = false
 #                  Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.
 player-info-forwarding-mode = "NONE"
 
-# If you are using modern or BungeeGuard IP forwarding, configure an unique secret here.
+# If you are using modern or BungeeGuard IP forwarding, configure a unique secret here.
 forwarding-secret = ""
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
@@ -69,7 +69,7 @@ lobby = "127.0.0.1:30066"
 factions = "127.0.0.1:30067"
 minigames = "127.0.0.1:30068"
 
-# In what order we should try servers when a player logs in or is kicked from aserver.
+# In what order we should try servers when a player logs in or is kicked from a server.
 try = [
   "lobby"
 ]
