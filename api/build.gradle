@@ -37,7 +37,9 @@ dependencies {
     api("net.kyori:adventure-text-serializer-gson")
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
-    api("net.kyori:adventure-text-serializer-legacy-text3:${adventurePlatformVersion}") // adventure-platform
+    api("net.kyori:adventure-text-serializer-legacy-text3:${adventurePlatformVersion}") {
+        transitive = false
+    }
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:4.2.3'
