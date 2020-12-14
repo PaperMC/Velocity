@@ -1,15 +1,11 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Objects;
-import javax.imageio.ImageIO;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -65,23 +61,17 @@ public final class Favicon {
   }
 
   /**
-   * Creates a new {@code Favicon} from the specified {@code image}.
+   * Creates a new {@code Favicon} from the specified {@code buffer}.
    *
-   * @param image the image to use for the favicon
+   * @param buffer the buffer to use for the favicon
    * @return the created {@link Favicon} instance
+   * @throws IOException if the file could not be read from the path
    */
-  public static Favicon create(BufferedImage image) {
-    Preconditions.checkNotNull(image, "image");
-    Preconditions.checkArgument(image.getWidth() == 64 && image.getHeight() == 64,
-        "Image is not 64x64 (found %sx%s)", image.getWidth(),image.getHeight());
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    try {
-      ImageIO.write(image, "PNG", os);
-    } catch (IOException e) {
-      throw new AssertionError(e);
+  public static Favicon create(byte[] buffer) throws IOException {
+    if (!FaviconChecker.check(buffer)) {
+      throw new IllegalArgumentException("Image is not a PNG file or does not have 64x64 dimensions");
     }
-    return new Favicon(
-        "data:image/png;base64," + Base64.getEncoder().encodeToString(os.toByteArray()));
+    return new Favicon("data:image/png;base64," + Base64.getEncoder().encodeToString(buffer));
   }
 
   /**
@@ -92,12 +82,6 @@ public final class Favicon {
    * @throws IOException if the file could not be read from the path
    */
   public static Favicon create(Path path) throws IOException {
-    try (InputStream stream = Files.newInputStream(path)) {
-      BufferedImage image = ImageIO.read(stream);
-      if (image == null) {
-        throw new IOException("Unable to read the image.");
-      }
-      return create(image);
-    }
+    return create(Files.readAllBytes(path));
   }
 }

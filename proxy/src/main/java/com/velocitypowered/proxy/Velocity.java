@@ -11,10 +11,6 @@ public class Velocity {
   private static final Logger logger = LogManager.getLogger(Velocity.class);
 
   static {
-    // We use BufferedImage for favicons, and on macOS this puts the Java application in the dock.
-    // How inconvenient. Force AWT to work with its head chopped off.
-    System.setProperty("java.awt.headless", "true");
-
     // By default, Netty allocates 16MiB arenas for the PooledByteBufAllocator. This is too much
     // memory for Minecraft, which imposes a maximum packet size of 2MiB! We'll use 4MiB as a more
     // sane default.
