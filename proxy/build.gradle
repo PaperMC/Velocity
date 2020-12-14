@@ -52,7 +52,6 @@ dependencies {
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}"
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64"
-    implementation "io.netty:netty-resolver-dns:${nettyVersion}"
 
     implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
