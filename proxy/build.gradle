@@ -13,6 +13,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+test {
+    useJUnitPlatform()
+}
+
 jar {
     manifest {
         def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"

@@ -91,6 +91,10 @@ javadoc {
     options.source = '8'
 }
 
+test {
+    useJUnitPlatform()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
