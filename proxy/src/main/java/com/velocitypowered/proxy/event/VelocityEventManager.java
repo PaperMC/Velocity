@@ -476,7 +476,9 @@ public class VelocityEventManager implements EventManager {
       try {
         task.run(this);
       } catch (final Throwable t) {
-        resumeWithException(t);
+        // validateOnlyOnce false here so don't get an exception if the
+        // continuation was resumed before
+        resume(t, false);
       }
       return !CONTINUATION_TASK_STATE.compareAndSet(
           this, TASK_STATE_EXECUTING, TASK_STATE_DEFAULT);
@@ -484,17 +486,21 @@ public class VelocityEventManager implements EventManager {
 
     @Override
     public void resume() {
-      resume(null);
+      resume(null, true);
     }
 
-    void resume(final @Nullable Throwable exception) {
+    void resume(final @Nullable Throwable exception, final boolean validateOnlyOnce) {
+      final boolean changed = CONTINUATION_TASK_RESUMED.compareAndSet(this, false, true);
       // Only allow the continuation to be resumed once
-      if (!CONTINUATION_TASK_RESUMED.compareAndSet(this, false, true)) {
+      if (!changed && validateOnlyOnce) {
         throw new IllegalStateException("The continuation can only be resumed once.");
       }
       final HandlerRegistration registration = registrations[index];
       if (exception != null) {
         logHandlerException(registration, exception);
+      }
+      if (!changed) {
+        return;
       }
       if (index + 1 == registrations.length) {
         // Optimization: don't schedule a task just to complete the future
@@ -511,7 +517,7 @@ public class VelocityEventManager implements EventManager {
 
     @Override
     public void resumeWithException(final Throwable exception) {
-      resume(requireNonNull(exception, "exception"));
+      resume(requireNonNull(exception, "exception"), true);
     }
   }
 
