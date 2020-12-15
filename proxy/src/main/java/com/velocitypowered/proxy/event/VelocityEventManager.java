@@ -2,9 +2,8 @@ package com.velocitypowered.proxy.event;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -40,7 +39,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.lanternpowered.lmbda.LambdaFactory;
 import org.lanternpowered.lmbda.LambdaType;
@@ -63,20 +61,10 @@ public class VelocityEventManager implements EventManager {
 
   private final Multimap<Class<?>, HandlerRegistration> handlersByType = HashMultimap.create();
   private final LoadingCache<Class<?>, @Nullable HandlersCache> handlersCache =
-      CacheBuilder.newBuilder().build(new CacheLoader<>() {
-        @Override
-        public @Nullable HandlersCache load(final @NonNull Class<?> key) {
-          return bakeHandlers(key);
-        }
-      });
+      Caffeine.newBuilder().build(this::bakeHandlers);
 
   private final LoadingCache<Method, UntargetedEventHandler> untargetedMethodHandlers =
-      CacheBuilder.newBuilder().weakValues().build(new CacheLoader<>() {
-        @Override
-        public UntargetedEventHandler load(final @NonNull Method key) throws Exception {
-          return buildUntargetedMethodHandler(key);
-        }
-      });
+      Caffeine.newBuilder().weakValues().build(this::buildUntargetedMethodHandler);
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -327,7 +315,8 @@ public class VelocityEventManager implements EventManager {
         continue;
       }
       final UntargetedEventHandler untargetedHandler =
-          untargetedMethodHandlers.getUnchecked(info.method);
+          untargetedMethodHandlers.get(info.method);
+      requireNonNull(untargetedHandler);
       final EventHandler<Object> handler = event -> untargetedHandler.execute(listener, event);
       registrations.add(new HandlerRegistration(pluginContainer, info.order,
           info.eventType, listener, handler, info.asyncType));
@@ -394,7 +383,7 @@ public class VelocityEventManager implements EventManager {
   @Override
   public void fireAndForget(final Object event) {
     requireNonNull(event, "event");
-    final HandlersCache handlersCache = this.handlersCache.getUnchecked(event.getClass());
+    final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
     if (handlersCache == null) {
       // Optimization: nobody's listening.
       return;
@@ -405,7 +394,7 @@ public class VelocityEventManager implements EventManager {
   @Override
   public <E> CompletableFuture<E> fire(final E event) {
     requireNonNull(event, "event");
-    final HandlersCache handlersCache = this.handlersCache.getUnchecked(event.getClass());
+    final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
     if (handlersCache == null) {
       // Optimization: nobody's listening.
       return CompletableFuture.completedFuture(event);
