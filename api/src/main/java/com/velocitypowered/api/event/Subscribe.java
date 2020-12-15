@@ -13,10 +13,23 @@ import java.lang.annotation.Target;
 public @interface Subscribe {
 
   /**
-   * The order events will be posted to this listener.
+   * The order events will be posted to this handler.
    *
    * @return the order
    */
   short order() default PostOrder.NORMAL;
 
+  /**
+   * Whether the handler is required to be called asynchronously.
+   *
+   * <p>If this method returns {@code true}, the method is guaranteed to be executed
+   * asynchronously from the current thread. Otherwise, the handler may be executed on the
+   * current thread or asynchronously.</p>
+   *
+   * <p>If any method handler targeting an event type is marked with {@code true}, then every
+   * handler targeting that event type will be executed asynchronously.</p>
+   *
+   * @return Requires async
+   */
+  boolean async() default false;
 }

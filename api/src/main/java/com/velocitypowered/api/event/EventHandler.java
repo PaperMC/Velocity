@@ -7,5 +7,5 @@ package com.velocitypowered.api.event;
 @FunctionalInterface
 public interface EventHandler<E> {
 
-  void execute(E event);
+  EventTask execute(E event);
 }
