@@ -316,7 +316,7 @@ public class VelocityEventManager implements EventManager {
       }
       final UntargetedEventHandler untargetedHandler =
           untargetedMethodHandlers.get(info.method);
-      requireNonNull(untargetedHandler);
+      assert untargetedHandler != null;
       final EventHandler<Object> handler = event -> untargetedHandler.execute(listener, event);
       registrations.add(new HandlerRegistration(pluginContainer, info.order,
           info.eventType, listener, handler, info.asyncType));
