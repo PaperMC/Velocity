@@ -569,7 +569,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getKickPrefix(server.getServerInfo().getName()))
+          .append(messages.getKickPrefix(server.getServerInfo().getName())
+              .colorIfAbsent(NamedTextColor.RED))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
           .build(), safe);
@@ -577,8 +578,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getDisconnectPrefix(server.getServerInfo().getName()))
-          .color(NamedTextColor.RED)
+          .append(messages.getDisconnectPrefix(server.getServerInfo().getName())
+              .colorIfAbsent(NamedTextColor.RED))
           .append(disconnectReason)
           .build(), safe);
     }
