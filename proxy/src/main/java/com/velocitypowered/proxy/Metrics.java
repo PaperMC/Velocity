@@ -18,6 +18,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
@@ -32,6 +33,8 @@ import org.asynchttpclient.Response;
  * Check out https://bStats.org/ to learn more about bStats!
  */
 public class Metrics {
+
+  private static final int ONE_MINUTE_MS = 60_000;
 
   // The version of this bStats class
   private static final int B_STATS_METRICS_REVISION = 2;
@@ -96,12 +99,14 @@ public class Metrics {
    */
   private void startSubmitting() {
     final Timer timer = new Timer(true);
+    long initialDelay = ONE_MINUTE_MS * 3 + (((long) (ThreadLocalRandom.current().nextDouble() * 2
+        * ONE_MINUTE_MS)));
     timer.scheduleAtFixedRate(new TimerTask() {
       @Override
       public void run() {
         submitData();
       }
-    }, 1000, 1000 * 60 * 30);
+    }, initialDelay, 1000 * 60 * 30);
     // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough
     // time to start.
     //
