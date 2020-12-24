@@ -82,6 +82,10 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
+test {
+    useJUnitPlatform()
+}
+
 shadowJar {
     exclude 'it/unimi/dsi/fastutil/booleans/**'
     exclude 'it/unimi/dsi/fastutil/bytes/**'
