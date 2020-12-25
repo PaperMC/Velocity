@@ -63,6 +63,12 @@ public class PluginMessage extends DeferredByteBufHolder implements MinecraftPac
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
     }
+
+    if (refCnt() == 0) {
+      throw new IllegalStateException("Plugin message contents for " + this.channel
+          + " freed too many times.");
+    }
+
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
       ProtocolUtils.writeString(buf, transformLegacyToModernChannel(this.channel));
     } else {
