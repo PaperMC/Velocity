@@ -209,7 +209,7 @@ public class VelocityCommand implements SimpleCommand {
           .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
       TextComponent copyright = Component
-          .text("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
+          .text("Copyright 2018-2021 " + version.getVendor() + ". " + version.getName()
               + " is freely licensed under the terms of the MIT License.");
       source.sendMessage(Identity.nil(), velocity);
       source.sendMessage(Identity.nil(), copyright);
