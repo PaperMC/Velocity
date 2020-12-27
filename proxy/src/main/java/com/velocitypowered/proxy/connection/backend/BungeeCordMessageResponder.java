@@ -250,8 +250,8 @@ public class BungeeCordMessageResponder {
 
   private void processForwardToPlayer(ByteBufDataInput in) {
     proxy.getPlayer(in.readUTF())
-        .flatMap(Player::getCurrentServer)
-        .ifPresent(server -> sendServerResponse(player, prepareForwardMessage(in)));
+        .ifPresent(foundPlayer -> sendServerResponse((ConnectedPlayer) foundPlayer,
+            prepareForwardMessage(in)));
   }
 
   private void processForwardToServer(ByteBufDataInput in) {
