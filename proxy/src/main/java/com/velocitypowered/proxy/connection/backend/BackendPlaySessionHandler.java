@@ -37,6 +37,8 @@ import org.apache.logging.log4j.Logger;
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
+  private static final boolean BACKPRESSURE_LOG = Boolean
+      .getBoolean("velocity.log-server-backpressure");
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
@@ -290,6 +292,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void writabilityChanged() {
     Channel serverChan = serverConn.ensureConnected().getChannel();
     boolean writable = serverChan.isWritable();
+
+    if (BACKPRESSURE_LOG) {
+      if (writable) {
+        logger.info("{} is not writable, not auto-reading player connection data", this.serverConn);
+      } else {
+        logger.info("{} is writable, will auto-read player connection data", this.serverConn);
+      }
+    }
+
     playerConnection.setAutoReading(writable);
   }
 }
