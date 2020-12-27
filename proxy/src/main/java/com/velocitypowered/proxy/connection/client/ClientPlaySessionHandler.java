@@ -300,7 +300,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean writable = player.getConnection().getChannel().isWritable();
 
     if (!writable) {
-      // We might have packets queued for the server, so flush them now to free up memory.
+      // We might have packets queued from the server, so flush them now to free up memory.
       player.getConnection().flush();
     }
 
