@@ -646,7 +646,11 @@ public class VelocityConfiguration implements ProxyConfig {
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
         this.readTimeout = config.getIntOrElse("read-timeout", 30000);
-        this.proxyProtocol = config.getOrElse("proxy-protocol", false);
+        if (config.contains("haproxy-protocol")) {
+          this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
+        } else {
+          this.proxyProtocol = config.getOrElse("proxy-protocol", false);
+        }
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
