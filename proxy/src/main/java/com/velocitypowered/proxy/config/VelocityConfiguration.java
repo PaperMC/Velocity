@@ -333,6 +333,7 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.getReadTimeout();
   }
 
+  @Override
   public boolean isProxyProtocol() {
     return advanced.isProxyProtocol();
   }

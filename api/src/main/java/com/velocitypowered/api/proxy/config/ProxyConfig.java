@@ -150,4 +150,11 @@ public interface ProxyConfig {
    * @return read timeout (in milliseconds)
    */
   int getReadTimeout();
+
+  /**
+   * Get whether HAProxy compatibility is enabled.
+   *
+   * @return proxy protocol enabled
+   */
+  boolean isProxyProtocol();
 }
