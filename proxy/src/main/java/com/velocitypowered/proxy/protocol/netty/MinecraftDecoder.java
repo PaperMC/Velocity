@@ -5,7 +5,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.util.except.QuietDecoderException;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,8 +14,8 @@ import io.netty.handler.codec.CorruptedFrameException;
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
-  private static final QuietDecoderException DECODE_FAILED =
-      new QuietDecoderException("A packet did not decode successfully (invalid data). If you are a "
+  private static final QuietRuntimeException DECODE_FAILED =
+      new QuietRuntimeException("A packet did not decode successfully (invalid data). If you are a "
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;

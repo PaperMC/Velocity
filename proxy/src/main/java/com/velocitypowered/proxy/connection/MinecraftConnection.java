@@ -195,6 +195,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void write(Object msg) {
     if (channel.isActive()) {
       channel.writeAndFlush(msg, channel.voidPromise());
+    } else {
+      ReferenceCountUtil.release(msg);
     }
   }
 
@@ -205,6 +207,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void delayedWrite(Object msg) {
     if (channel.isActive()) {
       channel.write(msg, channel.voidPromise());
+    } else {
+      ReferenceCountUtil.release(msg);
     }
   }
 
