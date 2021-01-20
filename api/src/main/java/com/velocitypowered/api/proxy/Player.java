@@ -252,8 +252,10 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
-   * @param isRequired flag to set the resource pack as required in 1.17+
+   * @param isRequired Only in 1.17+ or newer: If true shows the pack as required to play,
+   *     and removes the decline option. Declining it anyway will disconnect the user.
    */
   void sendResourcePack(String url, byte[] hash, boolean isRequired);
  
 }
+

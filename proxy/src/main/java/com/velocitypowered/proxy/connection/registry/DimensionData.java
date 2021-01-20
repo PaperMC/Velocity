@@ -242,9 +242,9 @@ public final class DimensionData {
     Integer height = details.keySet().contains("height") ? details.getInt("height") : null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
       Preconditions.checkNotNull(height,
-              "DimensionData requires 'minY' to be present for this version");
-      Preconditions.checkNotNull(minY,
               "DimensionData requires 'height' to be present for this version");
+      Preconditions.checkNotNull(minY,
+              "DimensionData requires 'minY' to be present for this version");
     }
     return new DimensionData(
         UNKNOWN_DIMENSION_ID, null, isNatural, ambientLight, isShrunk,
