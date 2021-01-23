@@ -28,9 +28,6 @@ sure that you are properly adhering to the code style.
 To reduce bugs and ensure code quality, we run the following tools on all commits
 and pull requests:
 
-* [Checker Framework](https://checkerframework.org/): an enhancement to Java's type
-  system that is designed to help catch bugs. Velocity runs the _Nullness Checker_
-  and the _Optional Checker_. The build will fail if Checker Framework notices an
-  issue.
+* [Error Prone](https://errorprone.info/)
 * [Checkstyle](http://checkstyle.sourceforge.net/): ensures that your code is
   correctly formatted. The build will fail if Checkstyle detects a problem.
