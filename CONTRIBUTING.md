@@ -28,6 +28,7 @@ sure that you are properly adhering to the code style.
 To reduce bugs and ensure code quality, we run the following tools on all commits
 and pull requests:
 
-* [Error Prone](https://errorprone.info/)
+* [SpotBugs](https://spotbugs.github.io/): ensures that common errors do not
+  get into the codebase. The build will fail if SpotBugs finds an issue.
 * [Checkstyle](http://checkstyle.sourceforge.net/): ensures that your code is
   correctly formatted. The build will fail if Checkstyle detects a problem.
