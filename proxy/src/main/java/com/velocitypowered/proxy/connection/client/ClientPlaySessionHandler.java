@@ -99,12 +99,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(KeepAlive packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
-      MinecraftConnection smc = serverConnection.getConnection();
-      if (smc != null) {
-        player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-        smc.write(packet);
-        serverConnection.resetLastPingId();
+    if (serverConnection != null) {
+      Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      if (sentTime != null) {
+        MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null) {
+          player.setPing(System.currentTimeMillis() - sentTime);
+          smc.write(packet);
+        }
       }
     }
     return true;
