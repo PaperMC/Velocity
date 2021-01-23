@@ -38,6 +38,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -188,6 +189,7 @@ public class VelocityCommand implements SimpleCommand {
 
   private static class Info implements SubCommand {
 
+    private static final TextColor VELOCITY_COLOR = TextColor.fromHexString("#09add3");
     private final ProxyServer server;
 
     private Info(ProxyServer server) {
@@ -205,7 +207,7 @@ public class VelocityCommand implements SimpleCommand {
 
       TextComponent velocity = Component.text().content(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
-          .color(NamedTextColor.DARK_AQUA)
+          .color(VELOCITY_COLOR)
           .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
       TextComponent copyright = Component
