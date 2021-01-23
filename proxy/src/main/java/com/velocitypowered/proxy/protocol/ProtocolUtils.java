@@ -16,6 +16,8 @@ import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -227,11 +229,12 @@ public enum ProtocolUtils {
   /**
    * Reads a {@link net.kyori.adventure.nbt.CompoundBinaryTag} from the {@code buf}.
    * @param buf the buffer to read from
+   * @param reader the NBT reader to use
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
-  public static CompoundBinaryTag readCompoundTag(ByteBuf buf) {
+  public static CompoundBinaryTag readCompoundTag(ByteBuf buf, BinaryTagIO.Reader reader) {
     try {
-      return BinaryTagIO.readDataInput(new ByteBufInputStream(buf));
+      return reader.read((DataInput) new ByteBufInputStream(buf));
     } catch (IOException thrown) {
       throw new DecoderException(
               "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
@@ -245,7 +248,7 @@ public enum ProtocolUtils {
    */
   public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
     try {
-      BinaryTagIO.writeDataOutput(compoundTag, new ByteBufOutputStream(buf));
+      BinaryTagIO.writer().write(compoundTag, (DataOutput) new ByteBufOutputStream(buf));
     } catch (IOException e) {
       throw new EncoderException("Unable to encode NBT CompoundTag");
     }

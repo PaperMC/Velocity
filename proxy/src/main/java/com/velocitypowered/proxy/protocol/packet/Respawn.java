@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class Respawn implements MinecraftPacket {
@@ -116,7 +117,7 @@ public class Respawn implements MinecraftPacket {
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf);
+        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
             .annotateWith(dimensionIdentifier, null);
