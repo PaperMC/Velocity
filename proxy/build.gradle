@@ -76,6 +76,8 @@ dependencies {
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
 
+    implementation 'org.bstats:bstats-base:2.2.0'
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.1.2'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
@@ -126,6 +128,8 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
     exclude 'it/unimi/dsi/fastutil/shorts/**'
     exclude 'org/checkerframework/checker/**'
+
+    relocate 'org.bstats', 'com.velocitypowered.proxy.bstats'
 }
 
 artifacts {

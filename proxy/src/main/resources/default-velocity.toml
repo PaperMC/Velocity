@@ -143,19 +143,6 @@ map = "Velocity"
 # Whether plugins should be shown in query response by default or not
 show-plugins = false
 
-[metrics]
-# Whether metrics will be reported to bStats (https://bstats.org).
-# bStats collects some basic information, like how many people use Velocity and their
-# player count. We recommend keeping bStats enabled, but if you're not comfortable with
-# this, you can turn this setting off. There is no performance penalty associated with
-# having metrics enabled, and data sent to bStats can't identify your server.
-enabled = true
-
-# A unique, anonymous ID to identify this proxy with.
-id = ""
-
-log-failure = false
-
 # Legacy color codes and JSON are accepted in all messages.
 [messages]
 # Prefix when the player gets kicked from a server.
