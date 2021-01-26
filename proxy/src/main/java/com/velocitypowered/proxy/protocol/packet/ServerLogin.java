@@ -5,6 +5,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -50,6 +51,13 @@ public class ServerLogin implements MinecraftPacket {
       throw new IllegalStateException("No username found!");
     }
     ProtocolUtils.writeString(buf, username);
+  }
+
+  @Override
+  public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically
+    // legal on the protocol level.
+    return 1 + (16 * 4);
   }
 
   @Override

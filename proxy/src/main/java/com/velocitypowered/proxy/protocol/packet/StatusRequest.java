@@ -4,6 +4,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
 public class StatusRequest implements MinecraftPacket {
@@ -32,5 +33,10 @@ public class StatusRequest implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return 0;
   }
 }
