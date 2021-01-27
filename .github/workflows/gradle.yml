@@ -6,7 +6,7 @@ name: Java CI with Gradle
 on: [push, pull_request]
 
 jobs:
-  build-1.8:
+  build-8:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
