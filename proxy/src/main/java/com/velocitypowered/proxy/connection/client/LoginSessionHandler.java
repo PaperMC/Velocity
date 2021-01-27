@@ -36,6 +36,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,7 +91,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     try {
       KeyPair serverKeyPair = server.getServerKeyPair();
       byte[] decryptedVerifyToken = decryptRsa(serverKeyPair, packet.getVerifyToken());
-      if (!Arrays.equals(verify, decryptedVerifyToken)) {
+      if (!MessageDigest.isEqual(verify, decryptedVerifyToken)) {
         throw new IllegalStateException("Unable to successfully decrypt the verification token.");
       }
 

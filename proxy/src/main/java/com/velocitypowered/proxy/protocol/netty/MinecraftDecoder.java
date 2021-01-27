@@ -58,6 +58,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       ctx.fireChannelRead(buf);
     } else {
       try {
+        doLengthSanityChecks(buf, packet);
+
         try {
           packet.decode(buf, direction, registry.version);
         } catch (Exception e) {
@@ -65,7 +67,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
         }
 
         if (buf.isReadable()) {
-          throw handleNotReadEnough(packet, packetId);
+          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
@@ -74,10 +76,30 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Exception handleNotReadEnough(MinecraftPacket packet, int packetId) {
+  private void doLengthSanityChecks(ByteBuf buf, MinecraftPacket packet) throws Exception {
+    int expectedMinLen = packet.expectedMinLength(buf, direction, registry.version);
+    int expectedMaxLen = packet.expectedMaxLength(buf, direction, registry.version);
+    if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
+      throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
+    }
+    if (buf.readableBytes() < expectedMinLen) {
+      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+    }
+  }
+
+  private Exception handleOverflow(MinecraftPacket packet, int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " "
-          + getExtraConnectionDetail(packetId));
+      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+          + "big (expected " + expected + " bytes, got " + actual + " bytes)");
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private Exception handleUnderflow(MinecraftPacket packet, int expected, int actual) {
+    if (DEBUG) {
+      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+          + "small (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }

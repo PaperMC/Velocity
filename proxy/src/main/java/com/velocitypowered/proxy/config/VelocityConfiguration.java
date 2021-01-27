@@ -458,7 +458,7 @@ public class VelocityConfiguration implements ProxyConfig {
         PingPassthroughMode.DISABLED);
 
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    String motd = config.getOrElse("motd", "&3A Velocity Server");
+    String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean announceForge = config.getOrElse("announce-forge", true);
