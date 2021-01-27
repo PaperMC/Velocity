@@ -12,11 +12,13 @@ public interface MinecraftPacket {
 
   boolean handle(MinecraftSessionHandler handler);
 
-  default int expectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,ProtocolVersion version) {
+  default int expectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion version) {
     return -1;
   }
 
-  default int expectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  default int expectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion version) {
     return 0;
   }
 }
