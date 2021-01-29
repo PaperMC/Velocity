@@ -102,7 +102,7 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Reads a VarInt length-prefixed string from the {@code buf}, making sure to not go over
+   * Reads a VarInt length-prefixed UTF-8 string from the {@code buf}, making sure to not go over
    * {@code cap} size.
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
@@ -111,6 +111,24 @@ public enum ProtocolUtils {
   public static String readString(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     return readString(buf, cap, length);
+  }
+
+  /**
+   * Reads a VarInt length-prefixed ASCII string from the {@code buf}, making sure to not go over
+   * {@code cap} size. This method is specialized for select parts of the Minecraft protocol where
+   * ASCII characters are guaranteed to be used.
+   *
+   * @param buf the buffer to read from
+   * @param cap the maximum size of the string, in UTF-8 character length
+   * @return the decoded string
+   */
+  public static String readAsciiString(ByteBuf buf, int cap) {
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length string (%s)", length);
+    checkFrame(length <= cap, "Bad string size (got %s, maximum is %s)", length, cap);
+    String str = buf.toString(buf.readerIndex(), length, StandardCharsets.US_ASCII);
+    buf.skipBytes(length);
+    return str;
   }
 
   private static String readString(ByteBuf buf, int cap, int length) {
