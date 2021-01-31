@@ -338,6 +338,11 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isProxyProtocol();
   }
 
+  /**
+   * Returns the Unix domain socket address to bind on.
+   *
+   * @return the domain socket address, or {@code null} if not specified
+   */
   public @Nullable DomainSocketAddress getUnixSocket() {
     if (advanced.unixSocket == null) {
       return null;
