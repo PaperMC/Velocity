@@ -13,6 +13,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -337,6 +338,13 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isProxyProtocol();
   }
 
+  public @Nullable DomainSocketAddress getUnixSocket() {
+    if (advanced.unixSocket == null) {
+      return null;
+    }
+    return new DomainSocketAddress(advanced.unixSocket);
+  }
+
   public boolean useTcpFastOpen() {
     return advanced.tcpFastOpen;
   }
@@ -629,6 +637,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose private int connectionTimeout = 5000;
     @Expose private int readTimeout = 30000;
     @Expose private boolean proxyProtocol = false;
+    @Expose private @Nullable String unixSocket = null;
     @Expose private boolean tcpFastOpen = false;
     @Expose private boolean bungeePluginMessageChannel = true;
     @Expose private boolean showPingRequests = false;
@@ -651,6 +660,7 @@ public class VelocityConfiguration implements ProxyConfig {
         } else {
           this.proxyProtocol = config.getOrElse("proxy-protocol", false);
         }
+        this.unixSocket = config.get("unix-socket");
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
@@ -718,6 +728,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
           + ", proxyProtocol=" + proxyProtocol
+          + ", unixSocket=" + unixSocket
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel
           + ", showPingRequests=" + showPingRequests

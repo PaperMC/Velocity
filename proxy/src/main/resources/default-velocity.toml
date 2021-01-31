@@ -109,6 +109,11 @@ read-timeout = 30000
 # don't enable it.
 haproxy-protocol = false
 
+# What file-system path should the proxy be bound to? Specifying this option will disable
+# the default IP address binding. Unix domain sockets are only supported if the epoll transport
+# is available.
+#unix-socket = "/tmp/velocity.sock"
+
 # Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.
 tcp-fast-open = false
 

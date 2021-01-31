@@ -50,8 +50,10 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -216,13 +218,17 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // init console permissions after plugins are loaded
     console.setupPermissions();
 
-    final Integer port = this.options.getPort();
-    if (port != null) {
-      logger.debug("Overriding bind port to {} from command line option", port);
-      this.cm.bind(new InetSocketAddress(configuration.getBind().getHostString(), port));
-    } else {
-      this.cm.bind(configuration.getBind());
+    SocketAddress bindAddress = configuration.getUnixSocket();
+    if (bindAddress == null) {
+      final Integer port = this.options.getPort();
+      if (port != null) {
+        logger.debug("Overriding bind port to {} from command line option", port);
+        bindAddress = new InetSocketAddress(configuration.getBind().getHostString(), port);
+      } else {
+        bindAddress = configuration.getBind();
+      }
     }
+    this.cm.bind(bindAddress);
 
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());

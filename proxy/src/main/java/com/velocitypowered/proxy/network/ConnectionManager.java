@@ -16,8 +16,10 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +36,7 @@ public final class ConnectionManager {
   private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
       1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
-  private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
+  private final Map<SocketAddress, Channel> endpoints = new HashMap<>();
   private final TransportType transportType;
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
@@ -50,7 +52,7 @@ public final class ConnectionManager {
   private final AsyncHttpClient httpClient;
 
   /**
-   * Initalizes the {@code ConnectionManager}.
+   * Initializes the {@code ConnectionManager}.
    *
    * @param server a reference to the Velocity server
    */
@@ -90,15 +92,21 @@ public final class ConnectionManager {
    *
    * @param address the address to bind to
    */
-  public void bind(final InetSocketAddress address) {
+  public void bind(final SocketAddress address) {
     final ServerBootstrap bootstrap = new ServerBootstrap()
-        .channelFactory(this.transportType.serverSocketChannelFactory)
         .group(this.bossGroup, this.workerGroup)
         .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
         .childHandler(this.serverChannelInitializer.get())
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
+
+    if (address instanceof DomainSocketAddress) {
+      this.transportType.ensureServerDomainSocketSupport();
+      bootstrap.channel(this.transportType.serverDomainSocketChannelType);
+    } else {
+      bootstrap.channelFactory(this.transportType.serverSocketChannelFactory);
+    }
 
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
