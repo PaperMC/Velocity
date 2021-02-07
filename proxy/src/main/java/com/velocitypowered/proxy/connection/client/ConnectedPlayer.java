@@ -330,54 +330,66 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendPlayerListHeaderAndFooter(final Component header, final Component footer) {
     this.playerListHeader = Objects.requireNonNull(header, "header");
     this.playerListFooter = Objects.requireNonNull(footer, "footer");
-    this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
+    }
   }
 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
-        .getProtocolVersion());
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+          .getProtocolVersion());
 
-    TitlePacket titlePkt = new TitlePacket();
-    titlePkt.setAction(TitlePacket.SET_TITLE);
-    titlePkt.setComponent(serializer.serialize(title.title()));
-    connection.delayedWrite(titlePkt);
+      TitlePacket titlePkt = new TitlePacket();
+      titlePkt.setAction(TitlePacket.SET_TITLE);
+      titlePkt.setComponent(serializer.serialize(title.title()));
+      connection.delayedWrite(titlePkt);
 
-    TitlePacket subtitlePkt = new TitlePacket();
-    subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
-    subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
-    connection.delayedWrite(subtitlePkt);
+      TitlePacket subtitlePkt = new TitlePacket();
+      subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
+      subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
+      connection.delayedWrite(subtitlePkt);
 
-    TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
-    net.kyori.adventure.title.Title.Times times = title.times();
-    if (times != null) {
-      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
+      net.kyori.adventure.title.Title.Times times = title.times();
+      if (times != null) {
+        timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
+        timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
+        timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      }
+      connection.delayedWrite(timesPkt);
+
+      connection.flush();
     }
-    connection.delayedWrite(timesPkt);
-
-    connection.flush();
   }
 
   @Override
   public void clearTitle() {
-    connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    }
   }
 
   @Override
   public void resetTitle() {
-    connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    }
   }
 
   @Override
   public void hideBossBar(@NonNull BossBar bar) {
-    this.server.getBossBarManager().removeBossBar(this, bar);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+      this.server.getBossBarManager().removeBossBar(this, bar);
+    }
   }
 
   @Override
   public void showBossBar(@NonNull BossBar bar) {
-    this.server.getBossBarManager().addBossBar(this, bar);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+      this.server.getBossBarManager().addBossBar(this, bar);
+    }
   }
 
   @Override
@@ -835,10 +847,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendResourcePack(String url) {
     Preconditions.checkNotNull(url, "url");
 
-    ResourcePackRequest request = new ResourcePackRequest();
-    request.setUrl(url);
-    request.setHash("");
-    connection.write(request);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ResourcePackRequest request = new ResourcePackRequest();
+      request.setUrl(url);
+      request.setHash("");
+      connection.write(request);
+    }
   }
 
   @Override
@@ -847,10 +861,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
 
-    ResourcePackRequest request = new ResourcePackRequest();
-    request.setUrl(url);
-    request.setHash(ByteBufUtil.hexDump(hash));
-    connection.write(request);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ResourcePackRequest request = new ResourcePackRequest();
+      request.setUrl(url);
+      request.setHash(ByteBufUtil.hexDump(hash));
+      connection.write(request);
+    }
   }
 
   /**
