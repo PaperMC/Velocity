@@ -262,6 +262,11 @@ public final class ServerPing {
       return this;
     }
 
+    public Builder clearFavicon() {
+      this.favicon = null;
+      return this;
+    }
+
     /**
      * Uses the information from this builder to create a new {@link ServerPing} instance. The
      * builder can be re-used after this event has been called.
