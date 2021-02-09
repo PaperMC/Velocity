@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class MinecraftChannelIdentifier implements ChannelIdentifier {
 
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9\\-_]*");
+  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9/\\-_]*");
 
   private final String namespace;
   private final String name;
