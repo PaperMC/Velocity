@@ -118,7 +118,6 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Float*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntArray*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntAVL*'
-    exclude 'it/unimi/dsi/fastutil/objects/*Object*OpenCustom*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntRB*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Long*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Object*'
