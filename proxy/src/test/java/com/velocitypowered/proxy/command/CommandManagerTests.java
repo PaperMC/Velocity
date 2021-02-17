@@ -25,6 +25,7 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.proxy.plugin.MockEventManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -485,6 +486,54 @@ public class CommandManagerTests {
     assertTrue(calledSuggestionProvider.compareAndSet(true, false));
     assertEquals(ImmutableList.of(),
             manager.offerSuggestions(MockCommandSource.INSTANCE, "foo2 baz ").join());
+  }
+
+  @Test
+  void testSuggestionPermissions() throws ExecutionException, InterruptedException {
+    VelocityCommandManager manager = createManager();
+    RawCommand rawCommand = new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail("The Command should not be executed while testing suggestions");
+      }
+
+      @Override
+      public boolean hasPermission(Invocation invocation) {
+        return invocation.arguments().length() > 0;
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return ImmutableList.of("suggestion");
+      }
+    };
+
+    manager.register(rawCommand, "foo");
+
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "foo").get().isEmpty());
+    assertFalse(manager.offerSuggestions(MockCommandSource.INSTANCE, "foo bar").get().isEmpty());
+
+    Command oldCommand = new Command() {
+      @Override
+      public void execute(CommandSource source, String @NonNull [] args) {
+        fail("The Command should not be executed while testing suggestions");
+      }
+
+      @Override
+      public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+        return args.length > 0;
+      }
+
+      @Override
+      public List<String> suggest(CommandSource source, String @NonNull [] currentArgs) {
+        return ImmutableList.of("suggestion");
+      }
+    };
+
+    manager.register(oldCommand, "bar");
+
+    assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "bar").get().isEmpty());
+    assertFalse(manager.offerSuggestions(MockCommandSource.INSTANCE, "bar foo").get().isEmpty());
   }
 
   static class NoopSimpleCommand implements SimpleCommand {
