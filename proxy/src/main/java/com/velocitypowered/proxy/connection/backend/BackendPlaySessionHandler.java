@@ -65,10 +65,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
-    MinecraftConnection serverMc = serverConn.ensureConnected();
-    serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
-    ));
+
+    if (server.getConfiguration().isBungeePluginChannelEnabled()) {
+      MinecraftConnection serverMc = serverConn.ensureConnected();
+      serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
+          ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+      ));
+    }
   }
 
   @Override
