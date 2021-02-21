@@ -262,45 +262,34 @@ public class BungeeCordMessageResponder {
     });
   }
 
-  private ByteBuf prepareForwardMessage(ByteBufDataInput in) {
-    String channel = in.readUTF();
-    short messageLength = in.readShort();
-
-    ByteBuf buf = Unpooled.buffer();
-    ByteBufDataOutput forwarded = new ByteBufDataOutput(buf);
-    forwarded.writeUTF(channel);
-    forwarded.writeShort(messageLength);
-    buf.writeBytes(in.unwrap().readSlice(messageLength));
-    return buf;
-  }
-
   private void processForwardToPlayer(ByteBufDataInput in) {
-    proxy.getPlayer(in.readUTF())
-        .flatMap(Player::getCurrentServer)
-        .ifPresent(server -> sendServerResponse(player, prepareForwardMessage(in)));
+    Optional<Player> player = proxy.getPlayer(in.readUTF());
+    if (player.isPresent()) {
+      ByteBuf toForward = in.unwrap().copy();
+      sendServerResponse((ConnectedPlayer) player.get(), toForward);
+    }
   }
 
   private void processForwardToServer(ByteBufDataInput in) {
     String target = in.readUTF();
-    ByteBuf toForward = prepareForwardMessage(in);
+    ByteBuf toForward = in.unwrap().copy();
     if (target.equals("ALL")) {
-      ByteBuf unreleasableForward = Unpooled.unreleasableBuffer(toForward);
       try {
         for (RegisteredServer rs : proxy.getAllServers()) {
-          ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL, unreleasableForward);
+          ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
+              toForward.retainedSlice());
         }
       } finally {
         toForward.release();
       }
     } else {
-      proxy.getServer(target).ifPresent(rs -> ((VelocityRegisteredServer) rs)
-          .sendPluginMessage(LEGACY_CHANNEL, toForward));
+      Optional<RegisteredServer> server = proxy.getServer(target);
+      if (server.isPresent()) {
+        ((VelocityRegisteredServer) server.get()).sendPluginMessage(LEGACY_CHANNEL, toForward);
+      } else {
+        toForward.release();
+      }
     }
-  }
-
-  // Note: this method will always release the buffer!
-  private void sendResponseOnConnection(ByteBuf buf) {
-    sendServerResponse(this.player, buf);
   }
 
   static String getBungeeCordChannel(ProtocolVersion version) {
@@ -309,28 +298,16 @@ public class BungeeCordMessageResponder {
   }
 
   // Note: this method will always release the buffer!
+  private void sendResponseOnConnection(ByteBuf buf) {
+    sendServerResponse(this.player, buf);
+  }
+
+  // Note: this method will always release the buffer!
   private static void sendServerResponse(ConnectedPlayer player, ByteBuf buf) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
     String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
-
-    ServerboundPluginMessagePacket msg = null;
-    boolean released = false;
-
-    try {
-      VelocityServerConnection vsc = player.getConnectedServer();
-      if (vsc == null) {
-        return;
-      }
-
-      MinecraftConnection serverConn = vsc.ensureConnected();
-      msg = new ServerboundPluginMessagePacket(chan, buf);
-      serverConn.write(msg);
-      released = true;
-    } finally {
-      if (!released && msg != null) {
-        msg.release();
-      }
-    }
+    ServerboundPluginMessagePacket msg = new ServerboundPluginMessagePacket(chan, buf);
+    serverConnection.write(msg);
   }
 
   boolean process(AbstractPluginMessagePacket<?> message) {

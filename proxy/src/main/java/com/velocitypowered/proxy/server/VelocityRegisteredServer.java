@@ -125,7 +125,9 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   /**
-   * Sends a plugin message to the server through this connection.
+   * Sends a plugin message to the server through this connection. The message will be released
+   * afterwards.
+   *
    * @param identifier the channel ID to use
    * @param data the data
    * @return whether or not the message was sent
@@ -133,11 +135,12 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServerInfo().equals(serverInfo)) {
+      if (connection != null && connection.getServer() == this) {
         return connection.sendPluginMessage(identifier, data);
       }
     }
 
+    data.release();
     return false;
   }
 

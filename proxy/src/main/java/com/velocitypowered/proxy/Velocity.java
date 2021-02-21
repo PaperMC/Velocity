@@ -8,9 +8,12 @@ import org.apache.logging.log4j.Logger;
 
 public class Velocity {
 
-  private static final Logger logger = LogManager.getLogger(Velocity.class);
+  private static final Logger logger;
 
   static {
+    System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+    logger = LogManager.getLogger(Velocity.class);
+
     // By default, Netty allocates 16MiB arenas for the PooledByteBufAllocator. This is too much
     // memory for Minecraft, which imposes a maximum packet size of 2MiB! We'll use 4MiB as a more
     // sane default.

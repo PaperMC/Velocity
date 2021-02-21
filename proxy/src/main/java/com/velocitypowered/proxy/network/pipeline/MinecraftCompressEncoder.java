@@ -9,7 +9,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
 
-  private final int threshold;
+  private int threshold;
   private final VelocityCompressor compressor;
 
   public MinecraftCompressEncoder(int threshold, VelocityCompressor compressor) {
@@ -20,7 +20,7 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
   @Override
   protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
     int uncompressed = msg.readableBytes();
-    if (uncompressed <= threshold) {
+    if (uncompressed < threshold) {
       // Under the threshold, there is nothing to do.
       ProtocolUtils.writeVarInt(out, 0);
       out.writeBytes(msg);
@@ -53,5 +53,9 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
   @Override
   public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
     compressor.close();
+  }
+
+  public void setThreshold(int threshold) {
+    this.threshold = threshold;
   }
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -183,8 +184,18 @@ public class VelocityScheduler implements Scheduler {
         currentTaskThread = Thread.currentThread();
         try {
           runnable.run();
-        } catch (Exception e) {
-          Log.logger.error("Exception in task {} by plugin {}", runnable, plugin, e);
+        } catch (Throwable e) {
+          //noinspection ConstantConditions
+          if (e instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+          } else {
+            String friendlyPluginName = pluginManager.fromInstance(plugin)
+                .map(container -> container.getDescription().getName()
+                      .orElse(container.getDescription().getId()))
+                .orElse("UNKNOWN");
+            Log.logger.error("Exception in task {} by plugin {}", runnable, friendlyPluginName,
+                e);
+          }
         } finally {
           if (repeat == 0) {
             onFinish();

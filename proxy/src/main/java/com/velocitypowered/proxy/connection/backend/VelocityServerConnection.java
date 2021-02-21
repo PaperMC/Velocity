@@ -32,7 +32,9 @@ import io.netty.channel.ChannelFutureListener;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -47,8 +49,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private boolean hasCompletedJoin = false;
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
-  private long lastPingId;
-  private long lastPingSent;
+  private final Map<Long, Long> pendingPings = new HashMap<>();
   private @MonotonicNonNull DimensionRegistry activeDimensionRegistry;
 
   /**
@@ -112,7 +113,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       return getHandshakeRemoteAddress();
     }
     StringBuilder data = new StringBuilder()
-        .append(getHandshakeRemoteAddress())
+        .append(registeredServer.getServerInfo().getAddress().getHostString())
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.getRemoteAddress()).getHostString())
         .append('\0')
@@ -259,21 +260,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return gracefulDisconnect;
   }
 
-  public long getLastPingId() {
-    return lastPingId;
-  }
-
-  public long getLastPingSent() {
-    return lastPingSent;
-  }
-
-  void setLastPingId(long lastPingId) {
-    this.lastPingId = lastPingId;
-    this.lastPingSent = System.currentTimeMillis();
-  }
-
-  public void resetLastPingId() {
-    this.lastPingId = -1;
+  public Map<Long, Long> getPendingPings() {
+    return pendingPings;
   }
 
   /**

@@ -36,6 +36,11 @@ class MinecraftChannelIdentifierTest {
   }
 
   @Test
+  void createAllowsSlashes() {
+    create("velocity", "test/test2");
+  }
+
+  @Test
   void fromIdentifierThrowsOnBadValues() {
     assertAll(
         () -> assertThrows(IllegalArgumentException.class, () -> from("")),

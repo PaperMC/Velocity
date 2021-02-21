@@ -5,13 +5,17 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.network.PluginMessageUtil.constructChannelsPacket;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -102,12 +106,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerboundKeepAlivePacket packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
-      MinecraftConnection smc = serverConnection.getConnection();
-      if (smc != null) {
-        player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-        smc.write(packet);
-        serverConnection.resetLastPingId();
+    if (serverConnection != null) {
+      Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      if (sentTime != null) {
+        MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null) {
+          player.setPing(System.currentTimeMillis() - sentTime);
+          smc.write(packet);
+        }
       }
     }
     return true;
@@ -191,7 +197,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
-        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+        List<String> channels = PluginMessageUtil.getChannels(packet);
+        player.getKnownChannels().addAll(channels);
+        List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
+        for (String channel : channels) {
+          try {
+            channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
+          } catch (IllegalArgumentException e) {
+            channelIdentifiers.add(new LegacyChannelIdentifier(channel));
+          }
+        }
+        server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
+                ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -303,7 +320,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean writable = player.getConnection().getChannel().isWritable();
 
     if (!writable) {
-      // We might have packets queued for the server, so flush them now to free up memory.
+      // We might have packets queued from the server, so flush them now to free up memory.
       player.getConnection().flush();
     }
 

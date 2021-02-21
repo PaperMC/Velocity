@@ -10,6 +10,7 @@ import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class ClientboundRespawnPacket implements Packet {
@@ -102,9 +103,9 @@ public class ClientboundRespawnPacket implements Packet {
   public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
     String dimensionIdentifier = null;
     String levelName = null;
-    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
-      if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
-        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
             .annotateWith(dimensionIdentifier, null);

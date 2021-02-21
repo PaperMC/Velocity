@@ -15,8 +15,8 @@ import io.netty.handler.codec.CorruptedFrameException;
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
-  private static final QuietDecoderException DECODE_FAILED =
-      new QuietDecoderException("A packet did not decode successfully (invalid data). If you are a "
+  private static final QuietRuntimeException DECODE_FAILED =
+      new QuietRuntimeException("A packet did not decode successfully (invalid data). If you are a "
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final PacketDirection direction;
@@ -64,8 +64,16 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       ctx.fireChannelRead(buf);
     } else {
       try {
+        doLengthSanityChecks(buf, packet);
+
+        try {
+          packet.decode(buf, direction, registry.version);
+        } catch (Exception e) {
+          throw handleDecodeFailure(e, packet, packetId);
+        }
+
         if (buf.isReadable()) {
-          throw handleNotReadEnough(packet, packetId);
+          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
@@ -74,10 +82,30 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Exception handleNotReadEnough(Packet packet, int packetId) {
+  private void doLengthSanityChecks(ByteBuf buf, Packet packet) throws Exception {
+    int expectedMinLen = packet.expectedMinLength(buf, direction, registry.version);
+    int expectedMaxLen = packet.expectedMaxLength(buf, direction, registry.version);
+    if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
+      throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
+    }
+    if (buf.readableBytes() < expectedMinLen) {
+      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+    }
+  }
+
+  private Exception handleOverflow(Packet packet, int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Did not read full packet for " + packet.getClass() + " "
-          + getExtraConnectionDetail(packetId));
+      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+          + "big (expected " + expected + " bytes, got " + actual + " bytes)");
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private Exception handleUnderflow(Packet packet, int expected, int actual) {
+    if (DEBUG) {
+      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+          + "small (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }

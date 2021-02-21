@@ -21,16 +21,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
 
+  protected final ConnectedPlayer player;
   protected final MinecraftConnection connection;
   protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
-  public VelocityTabList(MinecraftConnection connection) {
-    this.connection = connection;
+  public VelocityTabList(final ConnectedPlayer player) {
+    this.player = player;
+    this.connection = player.getConnection();
   }
 
   @Override
-  public void setHeaderAndFooter(net.kyori.adventure.text.Component header,
-      net.kyori.adventure.text.Component footer) {
+  public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(

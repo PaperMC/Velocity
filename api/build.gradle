@@ -81,9 +81,18 @@ javadoc {
 
     // Disable the crazy super-strict doclint tool in Java 8
     options.addStringOption('Xdoclint:none', '-quiet')
-    
+
     // Mark sources as Java 8 source compatible
     options.source = '8'
+
+    // Remove 'undefined' from seach paths when generating javadoc for a non-modular project (JDK-8215291)
+    if (JavaVersion.current() >= JavaVersion.VERSION_1_9 && JavaVersion.current() < JavaVersion.VERSION_12) {
+        options.addBooleanOption('-no-module-directories', true)
+    }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 test {

@@ -6,7 +6,7 @@ bind = "0.0.0.0:25577"
 
 # What should be the MOTD? This gets displayed when the player adds your server to
 # their server list. Legacy color codes and JSON are accepted.
-motd = "&3A Velocity Server"
+motd = "&#09add3A Velocity Server"
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
 # on the number of players online.)
@@ -33,7 +33,7 @@ prevent-client-proxy-connections = false
 #                  Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.
 player-info-forwarding-mode = "NONE"
 
-# If you are using modern or BungeeGuard IP forwarding, configure an unique secret here.
+# If you are using modern or BungeeGuard IP forwarding, configure a unique secret here.
 forwarding-secret = ""
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
@@ -69,7 +69,7 @@ lobby = "127.0.0.1:30066"
 factions = "127.0.0.1:30067"
 minigames = "127.0.0.1:30068"
 
-# In what order we should try servers when a player logs in or is kicked from aserver.
+# In what order we should try servers when a player logs in or is kicked from a server.
 try = [
   "lobby"
 ]
@@ -105,8 +105,9 @@ connection-timeout = 5000
 # Specify a read timeout for connections here. The default is 30 seconds.
 read-timeout = 30000
 
-# Enables compatibility with HAProxy.
-proxy-protocol = false
+# Enables compatibility with HAProxy's PROXY protocol. If you don't know what this is for, then
+# don't enable it.
+haproxy-protocol = false
 
 # Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.
 tcp-fast-open = false
@@ -141,19 +142,6 @@ map = "Velocity"
 
 # Whether plugins should be shown in query response by default or not
 show-plugins = false
-
-[metrics]
-# Whether metrics will be reported to bStats (https://bstats.org).
-# bStats collects some basic information, like how many people use Velocity and their
-# player count. We recommend keeping bStats enabled, but if you're not comfortable with
-# this, you can turn this setting off. There is no performance penalty associated with
-# having metrics enabled, and data sent to bStats can't identify your server.
-enabled = true
-
-# A unique, anonymous ID to identify this proxy with.
-id = ""
-
-log-failure = false
 
 # Legacy color codes and JSON are accepted in all messages.
 [messages]

@@ -55,13 +55,13 @@ dependencies {
     implementation "io.netty:netty-handler:${nettyVersion}"
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}"
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
-    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch64"
-    implementation "io.netty:netty-resolver-dns:${nettyVersion}"
+    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64"
 
     implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-iostreams:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-jul:${log4jVersion}"
 
     implementation 'net.sf.jopt-simple:jopt-simple:5.0.4' // command-line options
     implementation 'net.minecrell:terminalconsoleappender:1.2.0'
@@ -76,7 +76,7 @@ dependencies {
     implementation 'com.spotify:completable-futures:0.3.3'
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
-
+    implementation 'org.bstats:bstats-base:2.2.0'
     implementation 'org.lanternpowered:lmbda:2.0.0-SNAPSHOT'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:2.8.8'
@@ -117,7 +117,6 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Float*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntArray*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntAVL*'
-    exclude 'it/unimi/dsi/fastutil/objects/*Object*OpenCustom*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2IntRB*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Long*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Object*'
@@ -127,12 +126,10 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
     exclude 'it/unimi/dsi/fastutil/shorts/**'
     exclude 'org/checkerframework/checker/**'
+
+    relocate 'org.bstats', 'com.velocitypowered.proxy.bstats'
 }
 
 artifacts {
     archives shadowJar
-}
-
-test {
-    useJUnitPlatform()
 }

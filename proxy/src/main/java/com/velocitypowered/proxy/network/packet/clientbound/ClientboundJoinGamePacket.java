@@ -12,6 +12,7 @@ import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
@@ -20,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientboundJoinGamePacket implements Packet {
   public static final PacketReader<ClientboundJoinGamePacket> DECODER = PacketReader.method(ClientboundJoinGamePacket::new);
 
+  private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(2 * 1024 * 1024);
   private int entityId;
   private short gamemode;
   private int dimension;
@@ -37,12 +39,134 @@ public class ClientboundJoinGamePacket implements Packet {
   private short previousGamemode; // 1.16+
   private CompoundBinaryTag biomeRegistry; // 1.16.2+
 
-  public void withDimension(int dimension) {
-    this.dimension = dimension;
+  public int getEntityId() {
+    return entityId;
+  }
+
+  public void setEntityId(int entityId) {
+    this.entityId = entityId;
+  }
+
+  public short getGamemode() {
+    return gamemode;
+  }
+
+  public void setGamemode(short gamemode) {
+    this.gamemode = gamemode;
+  }
+
+  public int getDimension() {
+    return dimension;
   }
 
   public void setDimension(int dimension) {
     this.dimension = dimension;
+  }
+
+  public long getPartialHashedSeed() {
+    return partialHashedSeed;
+  }
+
+  public short getDifficulty() {
+    return difficulty;
+  }
+
+  public void setDifficulty(short difficulty) {
+    this.difficulty = difficulty;
+  }
+
+  public int getMaxPlayers() {
+    return maxPlayers;
+  }
+
+  public void setMaxPlayers(int maxPlayers) {
+    this.maxPlayers = maxPlayers;
+  }
+
+  public @Nullable String getLevelType() {
+    return levelType;
+  }
+
+  public void setLevelType(String levelType) {
+    this.levelType = levelType;
+  }
+
+  public int getViewDistance() {
+    return viewDistance;
+  }
+
+  public void setViewDistance(int viewDistance) {
+    this.viewDistance = viewDistance;
+  }
+
+  public boolean isReducedDebugInfo() {
+    return reducedDebugInfo;
+  }
+
+  public void setReducedDebugInfo(boolean reducedDebugInfo) {
+    this.reducedDebugInfo = reducedDebugInfo;
+  }
+
+  public DimensionInfo getDimensionInfo() {
+    return dimensionInfo;
+  }
+
+  public void setDimensionInfo(DimensionInfo dimensionInfo) {
+    this.dimensionInfo = dimensionInfo;
+  }
+
+  public DimensionRegistry getDimensionRegistry() {
+    return dimensionRegistry;
+  }
+
+  public void setDimensionRegistry(DimensionRegistry dimensionRegistry) {
+    this.dimensionRegistry = dimensionRegistry;
+  }
+
+  public short getPreviousGamemode() {
+    return previousGamemode;
+  }
+
+  public void setPreviousGamemode(short previousGamemode) {
+    this.previousGamemode = previousGamemode;
+  }
+
+  public boolean getIsHardcore() {
+    return isHardcore;
+  }
+
+  public void setIsHardcore(boolean isHardcore) {
+    this.isHardcore = isHardcore;
+  }
+
+  public CompoundBinaryTag getBiomeRegistry() {
+    return biomeRegistry;
+  }
+
+  public void setBiomeRegistry(CompoundBinaryTag biomeRegistry) {
+    this.biomeRegistry = biomeRegistry;
+  }
+
+  public DimensionData getCurrentDimensionData() {
+    return currentDimensionData;
+  }
+
+  @Override
+  public String toString() {
+    return "JoinGame{"
+        + "entityId=" + entityId
+        + ", gamemode=" + gamemode
+        + ", dimension=" + dimension
+        + ", partialHashedSeed=" + partialHashedSeed
+        + ", difficulty=" + difficulty
+        + ", maxPlayers=" + maxPlayers
+        + ", levelType='" + levelType + '\''
+        + ", viewDistance=" + viewDistance
+        + ", reducedDebugInfo=" + reducedDebugInfo
+        + ", dimensionRegistry='" + dimensionRegistry + '\''
+        + ", dimensionInfo='" + dimensionInfo + '\''
+        + ", previousGamemode=" + previousGamemode
+        + '}';
   }
 
   @Override
@@ -61,7 +185,7 @@ public class ClientboundJoinGamePacket implements Packet {
     if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       this.previousGamemode = buf.readByte();
       ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
-      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf);
+      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
       ListBinaryTag dimensionRegistryContainer = null;
       if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
         dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
@@ -74,8 +198,8 @@ public class ClientboundJoinGamePacket implements Packet {
       ImmutableSet<DimensionData> readData =
           DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
-      if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
-        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
             .annotateWith(dimensionIdentifier, null);
@@ -184,66 +308,6 @@ public class ClientboundJoinGamePacket implements Packet {
       buf.writeBoolean(dimensionInfo.isDebugType());
       buf.writeBoolean(dimensionInfo.isFlat());
     }
-  }
-
-  public int getEntityId() {
-    return entityId;
-  }
-
-  public short getGamemode() {
-    return gamemode;
-  }
-
-  public int getDimension() {
-    return dimension;
-  }
-
-  public long getPartialHashedSeed() {
-    return partialHashedSeed;
-  }
-
-  public short getDifficulty() {
-    return difficulty;
-  }
-
-  public int getMaxPlayers() {
-    return maxPlayers;
-  }
-
-  public @Nullable String getLevelType() {
-    return levelType;
-  }
-
-  public int getViewDistance() {
-    return viewDistance;
-  }
-
-  public boolean isReducedDebugInfo() {
-    return reducedDebugInfo;
-  }
-
-  public DimensionInfo getDimensionInfo() {
-    return dimensionInfo;
-  }
-
-  public DimensionRegistry getDimensionRegistry() {
-    return dimensionRegistry;
-  }
-
-  public short getPreviousGamemode() {
-    return previousGamemode;
-  }
-
-  public boolean getIsHardcore() {
-    return isHardcore;
-  }
-
-  public CompoundBinaryTag getBiomeRegistry() {
-    return biomeRegistry;
-  }
-
-  public DimensionData getCurrentDimensionData() {
-    return currentDimensionData;
   }
 
   @Override
