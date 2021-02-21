@@ -314,26 +314,4 @@ public class ClientboundJoinGamePacket implements Packet {
   public boolean handle(PacketHandler handler) {
     return handler.handle(this);
   }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-      .add("entityId", this.entityId)
-      .add("gamemode", this.gamemode)
-      .add("dimension", this.dimension)
-      .add("partialHashedSeed", this.partialHashedSeed)
-      .add("difficulty", this.difficulty)
-      .add("isHardcore", this.isHardcore)
-      .add("maxPlayers", this.maxPlayers)
-      .add("levelType", this.levelType)
-      .add("viewDistance", this.viewDistance)
-      .add("reducedDebugInfo", this.reducedDebugInfo)
-      .add("showRespawnScreen", this.showRespawnScreen)
-      .add("dimensionRegistry", this.dimensionRegistry)
-      .add("dimensionInfo", this.dimensionInfo)
-      .add("currentDimensionData", this.currentDimensionData)
-      .add("previousGamemode", this.previousGamemode)
-      .add("biomeRegistry", this.biomeRegistry)
-      .toString();
-  }
 }

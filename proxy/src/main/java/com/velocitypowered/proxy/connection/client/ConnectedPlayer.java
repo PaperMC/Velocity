@@ -42,6 +42,7 @@ import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundHeaderAndFooterPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
@@ -269,16 +270,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public Component getPlayerListHeader() {
-    return this.playerListHeader;
-  }
-
-  @Override
-  public Component getPlayerListFooter() {
-    return this.playerListFooter;
-  }
-
-  @Override
   public void sendPlayerListHeader(@NonNull final Component header) {
     this.sendPlayerListHeaderAndFooter(header, this.playerListFooter);
   }
@@ -292,9 +283,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendPlayerListHeaderAndFooter(final Component header, final Component footer) {
     this.playerListHeader = Objects.requireNonNull(header, "header");
     this.playerListFooter = Objects.requireNonNull(footer, "footer");
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
-    }
+    this.tabList.setHeaderAndFooter(header, footer);
   }
 
   @Override
@@ -358,11 +347,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void setGameProfileProperties(List<GameProfile.Property> properties) {
     this.profile = profile.withProperties(properties);
-  }
-
-  @Override
-  public void clearHeaderAndFooter() {
-    tabList.clearHeaderAndFooter();
   }
 
   @Override

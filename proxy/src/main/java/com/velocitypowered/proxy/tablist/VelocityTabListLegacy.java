@@ -3,7 +3,7 @@ package com.velocitypowered.proxy.tablist;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket.Item;
 import java.util.Collections;
@@ -18,8 +18,8 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
 
-  public VelocityTabListLegacy(MinecraftConnection connection) {
-    super(connection);
+  public VelocityTabListLegacy(ConnectedPlayer player) {
+    super(player);
   }
 
   @Override

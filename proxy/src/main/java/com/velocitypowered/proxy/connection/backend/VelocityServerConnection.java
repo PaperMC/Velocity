@@ -113,7 +113,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       return getHandshakeRemoteAddress();
     }
     StringBuilder data = new StringBuilder()
-        .append(registeredServer.getServerInfo().getAddress().getHostString())
+        .append(getHandshakeRemoteAddress())
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.getRemoteAddress()).getHostString())
         .append('\0')

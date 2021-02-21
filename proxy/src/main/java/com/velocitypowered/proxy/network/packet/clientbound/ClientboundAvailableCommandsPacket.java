@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.serialization.brigadier.ArgumentPropertyRegistry;
+import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;

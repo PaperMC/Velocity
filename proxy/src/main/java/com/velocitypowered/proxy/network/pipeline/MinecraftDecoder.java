@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
