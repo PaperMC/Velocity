@@ -223,4 +223,38 @@ public class EventTest {
       threadC = Thread.currentThread();
     }
   }
+
+  @Test
+  void testResumeContinuationImmediately() throws Exception {
+    final ResumeContinuationImmediatelyListener listener = new ResumeContinuationImmediatelyListener();
+    handleMethodListener(listener);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
+    assertSyncThread(listener.threadC);
+    assertEquals(2, listener.result);
+  }
+
+  static final class ResumeContinuationImmediatelyListener {
+
+    Thread threadA;
+    Thread threadB;
+    Thread threadC;
+    int result;
+
+    @Subscribe(order = PostOrder.EARLY)
+    EventTask continuation(TestEvent event) {
+      threadA = Thread.currentThread();
+      return EventTask.withContinuation(continuation -> {
+        threadB = Thread.currentThread();
+        result++;
+        continuation.resume();
+      });
+    }
+
+    @Subscribe(order = PostOrder.LATE)
+    void afterContinuation(TestEvent event) {
+      threadC = Thread.currentThread();
+      result++;
+    }
+  }
 }
