@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command;
 
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
@@ -27,7 +28,6 @@ import com.velocitypowered.api.command.CommandSource;
  *
  * @param <I> the type of the built invocation
  */
-@FunctionalInterface
 public interface CommandInvocationFactory<I extends CommandInvocation<?>> {
 
   /**
@@ -37,4 +37,12 @@ public interface CommandInvocationFactory<I extends CommandInvocation<?>> {
    * @return the built invocation context
    */
   I create(final CommandContext<CommandSource> context);
+
+  /**
+   * Returns an invocation context for the given command parsing results.
+   *
+   * @param parse the parsed command
+   * @return the built invocation context
+   */
+  I create(final ParseResults<CommandSource> parse);
 }

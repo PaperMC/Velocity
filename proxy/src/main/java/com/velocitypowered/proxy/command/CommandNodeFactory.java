@@ -17,105 +17,189 @@
 
 package com.velocitypowered.proxy.command;
 
+import com.google.common.base.Preconditions;
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.ParsedArgument;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.proxy.util.BrigadierUtils;
+import java.util.Locale;
+import java.util.Map;
 
-@FunctionalInterface
-public interface CommandNodeFactory<T extends Command> {
+interface CommandNodeFactory<T extends Command> {
 
-  InvocableCommandNodeFactory<SimpleCommand.Invocation> SIMPLE =
-      new InvocableCommandNodeFactory<SimpleCommand.Invocation>() {
-        @Override
-        protected SimpleCommand.Invocation createInvocation(
-                final CommandContext<CommandSource> context) {
-          return VelocitySimpleCommandInvocation.FACTORY.create(context);
-        }
-      };
+  InvocableCommandNodeFactory<SimpleCommand.Invocation, String[]> SIMPLE =
+          new InvocableCommandNodeFactory<>(
+                  SimpleCommandInvocation.FACTORY, StringArrayArgumentType.INSTANCE);
 
-  InvocableCommandNodeFactory<RawCommand.Invocation> RAW =
-      new InvocableCommandNodeFactory<RawCommand.Invocation>() {
-        @Override
-        protected RawCommand.Invocation createInvocation(
-                final CommandContext<CommandSource> context) {
-          return VelocityRawCommandInvocation.FACTORY.create(context);
-        }
-      };
+  InvocableCommandNodeFactory<RawCommand.Invocation, String> RAW =
+          new InvocableCommandNodeFactory<>(
+                  RawCommandInvocation.FACTORY, StringArgumentType.greedyString());
 
-  CommandNodeFactory<Command> FALLBACK = (alias, command) ->
-      BrigadierUtils.buildRawArgumentsLiteral(alias,
-        context -> {
-          CommandSource source = context.getSource();
-          String[] args = BrigadierUtils.getSplitArguments(context);
+  LegacyCommandNodeFactory LEGACY = new LegacyCommandNodeFactory();
 
-          if (!command.hasPermission(source, args)) {
-            return BrigadierCommand.FORWARD;
-          }
-          command.execute(source, args);
-          return 1;
-        },
-        (context, builder) -> {
-          String[] args = BrigadierUtils.getSplitArguments(context);
-          if (!command.hasPermission(context.getSource(), args)) {
-              return builder.buildFuture();
-          }
-
-          return command.suggestAsync(context.getSource(), args).thenApply(values -> {
-            for (String value : values) {
-              builder.suggest(value);
-            }
-
-            return builder.build();
-          });
-        });
-
-  /**
-   * Returns a Brigadier node for the execution of the given command.
-   *
-   * @param alias the command alias
-   * @param command the command to execute
-   * @return the command node
+  /*
+    private static void checkValidForHinting(final CommandNode<?> node) {
+    if (node.getCommand() != null) {
+      throw new IllegalArgumentException("Hinting node may not contain a Command");
+    }
+    if (node.getRedirect() != null) {
+      throw new IllegalArgumentException("Hinting node may not be a redirect");
+    }
+    if (node.isFork()) {
+      throw new IllegalArgumentException("Hinting node may not fork");
+    }
+    for (CommandNode<?> child : node.getChildren()) {
+      checkValidForHinting(child);
+    }
+  }
    */
-  LiteralCommandNode<CommandSource> create(String alias, T command);
 
-  abstract class InvocableCommandNodeFactory<I extends CommandInvocation<?>>
+  String ARGS_NODE_NAME = "arguments";
+
+  static String readAlias(final CommandContext<?> context) {
+    if (!context.hasNodes()) {
+      throw new IllegalArgumentException("Context root node has no children");
+    }
+    return context.getNodes().get(0).getNode().getName();
+  }
+
+  static String readAlias(final ParseResults<?> parse) {
+    if (parse.getContext().getNodes().isEmpty()) {
+      throw new IllegalArgumentException("Parsed context root node has no children");
+    }
+    return parse.getContext().getNodes().get(0).getNode().getName();
+  }
+
+  static <V> V readArguments(final CommandContext<CommandSource> context, final Class<V> type,
+                             final V fallback) {
+    return readArguments(context.getArguments(), type, fallback);
+  }
+
+  static <V> V readArguments(final ParseResults<CommandSource> parse, final Class<V> type,
+                             final V fallback) {
+    return readArguments(parse.getContext().getArguments(), type, fallback);
+  }
+
+  @SuppressWarnings("unchecked")
+  static <V> V readArguments(final Map<String, ParsedArgument<CommandSource, ?>> arguments,
+                             final Class<V> type, final V fallback) {
+    final ParsedArgument<?, ?> argument = arguments.get(ARGS_NODE_NAME);
+    if (argument == null) {
+      return fallback;
+    }
+    final Object value = argument.getResult();
+    if (!type.isAssignableFrom(value.getClass())) {
+      throw new IllegalArgumentException("Arguments node type is " + value.getClass()
+              + ", expected " + type);
+    }
+    return (V) value;
+  }
+
+  static <V> RequiredArgumentBuilder<CommandSource, V> argumentBuilder(
+          final ArgumentType<V> type, final LiteralCommandNode<CommandSource> aliasNode) {
+    return RequiredArgumentBuilder
+            .<CommandSource, V>argument(ARGS_NODE_NAME, type)
+            .requires(aliasNode.getRequirement())
+            .requiresWithContext(aliasNode.getContextRequirement())
+            .executes(aliasNode.getCommand());
+  }
+
+  LiteralCommandNode<CommandSource> create(final T command, final String alias);
+
+  class InvocableCommandNodeFactory<I extends CommandInvocation<A>, A>
           implements CommandNodeFactory<InvocableCommand<I>> {
 
-    @Override
-    public LiteralCommandNode<CommandSource> create(
-            final String alias, final InvocableCommand<I> command) {
-      return BrigadierUtils.buildRawArgumentsLiteral(alias,
-          context -> {
-            I invocation = createInvocation(context);
-            if (!command.hasPermission(invocation)) {
-              return BrigadierCommand.FORWARD;
-            }
-            command.execute(invocation);
-            return 1;
-          },
-          (context, builder) -> {
-            I invocation = createInvocation(context);
+    private final CommandInvocationFactory<I> invocationFactory;
+    private final ArgumentType<A> argumentsType;
 
-            if (!command.hasPermission(invocation)) {
-                return builder.buildFuture();
-            }
-            return command.suggestAsync(invocation).thenApply(values -> {
-              for (String value : values) {
-                builder.suggest(value);
-              }
-
-              return builder.build();
-            });
-          });
+    public InvocableCommandNodeFactory(final CommandInvocationFactory<I> invocationFactory,
+                                       final ArgumentType<A> argumentsType) {
+      this.invocationFactory = Preconditions.checkNotNull(invocationFactory);
+      this.argumentsType = Preconditions.checkNotNull(argumentsType);
     }
 
-    protected abstract I createInvocation(final CommandContext<CommandSource> context);
+    @Override
+    public LiteralCommandNode<CommandSource> create(final InvocableCommand<I> command,
+                                                    final String alias) {
+      Preconditions.checkNotNull(command, "command");
+      final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+              .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+              .requiresWithContext(parse -> {
+                final I invocation = invocationFactory.create(parse);
+                return command.hasPermission(invocation);
+              })
+              .executes(context -> {
+                final I invocation = invocationFactory.create(context);
+                command.execute(invocation);
+                return 1;
+              })
+              .build();
+
+      final ArgumentCommandNode<CommandSource, A> argumentsNode =
+              argumentBuilder(argumentsType, node)
+                .suggests((context, builder) -> {
+                  final I invocation = invocationFactory.create(context);
+                  return command.suggestAsync(invocation).thenApply(suggestions -> {
+                    for (String value : suggestions) {
+                      builder.suggest(Preconditions.checkNotNull(value, "suggestion"));
+                    }
+                    return builder.build();
+                  });
+                })
+                .build();
+      node.addChild(argumentsNode);
+
+      // TODO Hinting
+      return node;
+    }
+  }
+
+  final class LegacyCommandNodeFactory implements CommandNodeFactory<Command> {
+
+    @Override
+    public LiteralCommandNode<CommandSource> create(final Command command, final String alias) {
+      final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+              .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+              .requiresWithContext(parse -> {
+                final String[] args = readArguments(
+                        parse, String[].class, StringArrayArgumentType.EMPTY);
+                return command.hasPermission(parse.getContext().getSource(), args);
+              })
+              .executes(context -> {
+                final String[] args = readArguments(
+                        context, String[].class, StringArrayArgumentType.EMPTY);
+                command.execute(context.getSource(), args);
+                return 1;
+              })
+              .build();
+
+      final ArgumentCommandNode<CommandSource, String[]> argumentsNode =
+              argumentBuilder(StringArrayArgumentType.INSTANCE, node)
+                .suggests((context, builder) -> {
+                  final String[] args = readArguments(
+                          context, String[].class, StringArrayArgumentType.EMPTY);
+                  return command.suggestAsync(context.getSource(), args).thenApply(suggestions -> {
+                    for (String value : suggestions) {
+                      builder.suggest(Preconditions.checkNotNull(value, "suggestion"));
+                    }
+                    return builder.build();
+                  });
+                })
+                .build();
+      node.addChild(argumentsNode);
+      // Legacy commands don't support hinting
+      return node;
+    }
   }
 }

@@ -43,7 +43,6 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
@@ -100,7 +99,7 @@ public class VelocityCommandManager implements CommandManager {
     if (command instanceof BrigadierCommand) {
       node = ((BrigadierCommand) command).getNode();
     } else if (command instanceof SimpleCommand) {
-      node = CommandNodeFactory.SIMPLE.create(primaryAlias, (SimpleCommand) command);
+      node = CommandNodeFactory.SIMPLE.create((SimpleCommand) command, primaryAlias);
     } else if (command instanceof RawCommand) {
       // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
       // have side-effect free #suggest methods. We rely on the newer RawCommand
@@ -109,13 +108,13 @@ public class VelocityCommandManager implements CommandManager {
       try {
         asRaw.suggest(null, new String[0]);
       } catch (final UnsupportedOperationException e) {
-        node = CommandNodeFactory.RAW.create(primaryAlias, asRaw);
+        node = CommandNodeFactory.RAW.create(asRaw, primaryAlias);
       } catch (final Exception ignored) {
         // The implementation probably relies on a non-null source
       }
     }
     if (node == null) {
-      node = CommandNodeFactory.FALLBACK.create(primaryAlias, command);
+      node = CommandNodeFactory.LEGACY.create(command, primaryAlias);
     }
 
     if (!(command instanceof BrigadierCommand)) {
