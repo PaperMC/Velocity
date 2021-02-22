@@ -2,7 +2,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-import static com.velocitypowered.proxy.network.Connections.HANDLER;
+import static com.velocitypowered.proxy.network.HandlerNames.HANDLER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

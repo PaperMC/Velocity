@@ -1,13 +1,13 @@
 package com.velocitypowered.proxy.connection;
 
-import static com.velocitypowered.proxy.network.Connections.CIPHER_DECODER;
-import static com.velocitypowered.proxy.network.Connections.CIPHER_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.COMPRESSION_DECODER;
-import static com.velocitypowered.proxy.network.Connections.COMPRESSION_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.CIPHER_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.CIPHER_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.COMPRESSION_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.COMPRESSION_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.FRAME_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.MINECRAFT_ENCODER;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -31,7 +31,6 @@ import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -48,7 +47,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles

@@ -1,6 +1,6 @@
 package com.velocitypowered.proxy.network;
 
-public class Connections {
+public class HandlerNames {
 
   public static final String CIPHER_DECODER = "cipher-decoder";
   public static final String CIPHER_ENCODER = "cipher-encoder";
@@ -16,7 +16,7 @@ public class Connections {
   public static final String MINECRAFT_ENCODER = "minecraft-encoder";
   public static final String READ_TIMEOUT = "read-timeout";
 
-  private Connections() {
+  private HandlerNames() {
     throw new AssertionError();
   }
 }

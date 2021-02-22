@@ -1,11 +1,11 @@
 package com.velocitypowered.proxy.server;
 
-import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
-import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.HANDLER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
-import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.HandlerNames.FRAME_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.HANDLER;
+import static com.velocitypowered.proxy.network.HandlerNames.MINECRAFT_DECODER;
+import static com.velocitypowered.proxy.network.HandlerNames.MINECRAFT_ENCODER;
+import static com.velocitypowered.proxy.network.HandlerNames.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
