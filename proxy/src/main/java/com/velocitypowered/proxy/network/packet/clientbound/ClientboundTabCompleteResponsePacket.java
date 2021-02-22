@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundTabCompleteResponsePacket implements Packet {
   public static final PacketReader<ClientboundTabCompleteResponsePacket> DECODER = PacketReader.method(ClientboundTabCompleteResponsePacket::new);
+  public static final PacketWriter<ClientboundTabCompleteResponsePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private int transactionId;
   private int start;
@@ -71,7 +73,7 @@ public class ClientboundTabCompleteResponsePacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
       ProtocolUtils.writeVarInt(buf, this.transactionId);
       ProtocolUtils.writeVarInt(buf, this.start);

@@ -4,13 +4,13 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundHandshakePacket implements Packet {
-  public static final PacketReader<ServerboundHandshakePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundHandshakePacket> DECODER = (buf, version) -> {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
     final ProtocolVersion protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
     final String hostname = ProtocolUtils.readString(buf);
@@ -18,6 +18,7 @@ public class ServerboundHandshakePacket implements Packet {
     final int nextStatus = ProtocolUtils.readVarInt(buf);
     return new ServerboundHandshakePacket(protocolVersion, hostname, port, nextStatus);
   };
+  public static final PacketWriter<ServerboundHandshakePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
@@ -35,7 +36,7 @@ public class ServerboundHandshakePacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion ignored) {
+  public void encode(ByteBuf buf, ProtocolVersion ignored) {
     ProtocolUtils.writeVarInt(buf, this.protocolVersion.getProtocol());
     ProtocolUtils.writeString(buf, this.serverAddress);
     buf.writeShort(this.port);

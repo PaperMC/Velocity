@@ -4,9 +4,9 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.Unpooled;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder implements Packet {
-  public static final PacketReader<ServerboundLoginPluginResponsePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundLoginPluginResponsePacket> DECODER = (buf, version) -> {
     final int id = ProtocolUtils.readVarInt(buf);
     final boolean success = buf.readBoolean();
     final ByteBuf data;
@@ -25,6 +25,7 @@ public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder i
     }
     return new ServerboundLoginPluginResponsePacket(id, success, data);
   };
+  public static final PacketWriter<ServerboundLoginPluginResponsePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private final int id;
   private final boolean success;
@@ -36,7 +37,7 @@ public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder i
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     buf.writeBoolean(success);
     buf.writeBytes(content());

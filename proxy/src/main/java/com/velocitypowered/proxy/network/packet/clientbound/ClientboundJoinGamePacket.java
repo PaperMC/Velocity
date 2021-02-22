@@ -1,6 +1,5 @@
 package com.velocitypowered.proxy.network.packet.clientbound;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
@@ -11,6 +10,7 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagTypes;
@@ -20,6 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundJoinGamePacket implements Packet {
   public static final PacketReader<ClientboundJoinGamePacket> DECODER = PacketReader.method(ClientboundJoinGamePacket::new);
+  public static final PacketWriter<ClientboundJoinGamePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(2 * 1024 * 1024);
   private int entityId;
@@ -243,7 +244,7 @@ public class ClientboundJoinGamePacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     buf.writeInt(entityId);
     if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
       buf.writeBoolean(isHardcore);

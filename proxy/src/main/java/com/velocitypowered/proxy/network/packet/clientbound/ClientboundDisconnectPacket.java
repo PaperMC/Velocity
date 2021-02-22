@@ -8,12 +8,14 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundDisconnectPacket implements Packet {
   public static final PacketReader<ClientboundDisconnectPacket> DECODER = PacketReader.method(ClientboundDisconnectPacket::new);
+  public static final PacketWriter<ClientboundDisconnectPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private @Nullable String reason;
 
@@ -41,7 +43,7 @@ public class ClientboundDisconnectPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (reason == null) {
       throw new IllegalStateException("No reason specified.");
     }

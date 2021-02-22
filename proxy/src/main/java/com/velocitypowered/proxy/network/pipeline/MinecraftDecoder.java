@@ -6,7 +6,6 @@ import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
-import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -56,7 +55,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     int packetId = ProtocolUtils.readVarInt(buf);
     Packet packet = null;
     try {
-      packet = this.registry.readPacket(packetId, buf, direction, registry.version);
+      packet = this.registry.readPacket(packetId, buf, registry.version);
     } catch (Exception e) {
       throw handleDecodeFailure(e, packet, packetId); // TODO: packet is always null
     }
@@ -65,14 +64,6 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       ctx.fireChannelRead(buf);
     } else {
       try {
-        doLengthSanityChecks(buf, packet);
-
-        try {
-          packet.decode(buf, direction, registry.version);
-        } catch (Exception e) {
-          throw handleDecodeFailure(e, packet, packetId);
-        }
-
         if (buf.isReadable()) {
           throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
         }

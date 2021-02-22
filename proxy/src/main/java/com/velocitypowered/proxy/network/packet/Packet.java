@@ -2,7 +2,6 @@ package com.velocitypowered.proxy.network.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
-import java.util.function.Supplier;
 
 public interface Packet {
 
@@ -11,7 +10,10 @@ public interface Packet {
     throw new UnsupportedOperationException();
   }
 
-  void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion);
+  @Deprecated
+  default void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
+    throw new UnsupportedOperationException();
+  }
 
   boolean handle(PacketHandler handler);
 

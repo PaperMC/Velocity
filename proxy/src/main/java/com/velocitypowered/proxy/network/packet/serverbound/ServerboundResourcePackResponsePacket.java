@@ -5,14 +5,14 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent.Status
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundResourcePackResponsePacket implements Packet {
-  public static final PacketReader<ServerboundResourcePackResponsePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ServerboundResourcePackResponsePacket> DECODER = (buf, version) -> {
     final String hash;
     if (version.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
       hash = ProtocolUtils.readString(buf);
@@ -22,6 +22,7 @@ public class ServerboundResourcePackResponsePacket implements Packet {
     final Status status = Status.values()[ProtocolUtils.readVarInt(buf)];
     return new ServerboundResourcePackResponsePacket(hash, status);
   };
+  public static final PacketWriter<ServerboundResourcePackResponsePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private final @Nullable String hash;
   private final Status status;
@@ -32,7 +33,7 @@ public class ServerboundResourcePackResponsePacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
       ProtocolUtils.writeString(buf, hash);
     }

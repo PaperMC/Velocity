@@ -4,18 +4,19 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
 public class ClientboundResourcePackRequestPacket implements Packet {
-  public static final PacketReader<ClientboundResourcePackRequestPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundResourcePackRequestPacket> DECODER = (buf, version) -> {
     final String url = ProtocolUtils.readString(buf);
     final String hash = ProtocolUtils.readString(buf);
     return new ClientboundResourcePackRequestPacket(url, hash);
   };
+  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private final String url;
   private final String hash;
@@ -26,7 +27,7 @@ public class ClientboundResourcePackRequestPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, url);
     ProtocolUtils.writeString(buf, hash);
   }

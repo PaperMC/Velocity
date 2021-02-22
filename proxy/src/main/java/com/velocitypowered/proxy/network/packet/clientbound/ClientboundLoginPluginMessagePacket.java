@@ -4,9 +4,9 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.Unpooled;
@@ -14,17 +14,18 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder implements Packet {
-  public static final PacketReader<ClientboundLoginPluginMessagePacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundLoginPluginMessagePacket> DECODER = (buf, version) -> {
     final int id = ProtocolUtils.readVarInt(buf);
     final String channel = ProtocolUtils.readString(buf);
     final ByteBuf data;
     if (buf.isReadable()) {
-      data = buf.readSlice(buf.readableBytes());
+      data = buf.readRetainedSlice(buf.readableBytes());
     } else {
       data = Unpooled.EMPTY_BUFFER;
     }
     return new ClientboundLoginPluginMessagePacket(id, channel, data);
   };
+  public static final PacketWriter<ClientboundLoginPluginMessagePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private final int id;
   private final @Nullable String channel;
@@ -36,7 +37,7 @@ public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder im
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, id);
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified!");

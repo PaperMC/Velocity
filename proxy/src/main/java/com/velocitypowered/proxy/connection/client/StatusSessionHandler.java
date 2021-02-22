@@ -13,6 +13,7 @@ import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusPingPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusResponsePacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyPingPacket;
@@ -177,7 +178,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerboundStatusPingPacket packet) {
-    connection.closeWith(packet);
+    connection.closeWith(new ClientboundStatusPingPacket(packet.getRandomId()));
     return true;
   }
 

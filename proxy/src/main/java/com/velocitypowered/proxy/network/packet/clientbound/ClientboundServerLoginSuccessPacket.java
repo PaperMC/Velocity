@@ -5,15 +5,15 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 import java.util.UUID;
 
 public class ClientboundServerLoginSuccessPacket implements Packet {
-  public static final PacketReader<ClientboundServerLoginSuccessPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundServerLoginSuccessPacket> DECODER = (buf, version) -> {
     final UUID uuid;
     if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       uuid = ProtocolUtils.readUuidIntArray(buf);
@@ -25,6 +25,7 @@ public class ClientboundServerLoginSuccessPacket implements Packet {
     final String username = ProtocolUtils.readString(buf, 16);
     return new ClientboundServerLoginSuccessPacket(uuid, username);
   };
+  public static final PacketWriter<ClientboundServerLoginSuccessPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private final UUID uuid;
   private final String username;
@@ -35,7 +36,7 @@ public class ClientboundServerLoginSuccessPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       ProtocolUtils.writeUuidIntArray(buf, uuid);
     } else if (version.gte(ProtocolVersion.MINECRAFT_1_7_6)) {

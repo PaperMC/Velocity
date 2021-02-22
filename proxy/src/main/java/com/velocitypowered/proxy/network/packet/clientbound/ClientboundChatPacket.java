@@ -7,12 +7,14 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundChatPacket implements Packet {
   public static final PacketReader<ClientboundChatPacket> DECODER = PacketReader.method(ClientboundChatPacket::new);
+  public static final PacketWriter<ClientboundChatPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
@@ -43,7 +45,7 @@ public class ClientboundChatPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (message == null) {
       throw new IllegalStateException("Message is not specified");
     }

@@ -9,10 +9,12 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 
 public class ClientboundEncryptionRequestPacket implements Packet {
   public static final PacketReader<ClientboundEncryptionRequestPacket> DECODER = PacketReader.method(ClientboundEncryptionRequestPacket::new);
+  public static final PacketWriter<ClientboundEncryptionRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private String serverId = "";
   private byte[] publicKey = EMPTY_BYTE_ARRAY;
@@ -48,7 +50,7 @@ public class ClientboundEncryptionRequestPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     ProtocolUtils.writeString(buf, this.serverId);
 
     if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {

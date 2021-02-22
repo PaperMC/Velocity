@@ -23,11 +23,11 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import com.velocitypowered.proxy.network.serialization.brigadier.ArgumentPropertyRegistry;
 import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -40,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundAvailableCommandsPacket implements Packet {
   public static final PacketReader<ClientboundAvailableCommandsPacket> DECODER = PacketReader.method(ClientboundAvailableCommandsPacket::new);
+  public static final PacketWriter<ClientboundAvailableCommandsPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
@@ -98,7 +99,7 @@ public class ClientboundAvailableCommandsPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     // Assign all the children an index.
     Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
     Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenCustomHashMap<>(

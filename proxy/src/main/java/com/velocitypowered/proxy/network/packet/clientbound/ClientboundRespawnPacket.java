@@ -9,12 +9,14 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class ClientboundRespawnPacket implements Packet {
   public static final PacketReader<ClientboundRespawnPacket> DECODER = PacketReader.method(ClientboundRespawnPacket::new);
+  public static final PacketWriter<ClientboundRespawnPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private int dimension;
   private long partialHashedSeed;
@@ -135,7 +137,7 @@ public class ClientboundRespawnPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
       if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
         ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());

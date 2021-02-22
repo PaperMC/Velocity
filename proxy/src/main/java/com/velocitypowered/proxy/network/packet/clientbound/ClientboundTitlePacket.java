@@ -5,9 +5,9 @@ import com.google.common.primitives.Ints;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import com.velocitypowered.proxy.util.DurationUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundTitlePacket implements Packet {
   public static final PacketReader<ClientboundTitlePacket> DECODER = PacketReader.unsupported();
+  public static final PacketWriter<ClientboundTitlePacket> ENCODER = PacketWriter.deprecatedEncode();
 
   public static ClientboundTitlePacket hide(final ProtocolVersion version) {
     return version.gte(ProtocolVersion.MINECRAFT_1_11)
@@ -92,7 +93,7 @@ public class ClientboundTitlePacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     ProtocolUtils.writeVarInt(buf, action);
     if (version.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // 1.11+ shifted the action enum by 1 to handle the action bar

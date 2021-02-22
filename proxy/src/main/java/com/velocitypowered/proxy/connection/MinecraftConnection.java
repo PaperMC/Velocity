@@ -31,6 +31,7 @@ import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -47,6 +48,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles
@@ -242,7 +244,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         });
       } else {
         knownDisconnect = true;
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
+          if (!future.isSuccess()) {
+            future.cause().printStackTrace();
+          }
+          future.channel().close();
+        });
       }
     }
   }

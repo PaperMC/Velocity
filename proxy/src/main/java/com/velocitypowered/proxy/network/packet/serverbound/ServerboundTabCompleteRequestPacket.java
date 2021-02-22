@@ -11,11 +11,13 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerboundTabCompleteRequestPacket implements Packet {
   public static final PacketReader<ServerboundTabCompleteRequestPacket> DECODER = PacketReader.method(ServerboundTabCompleteRequestPacket::new);
+  public static final PacketWriter<ServerboundTabCompleteRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
 
@@ -88,7 +90,7 @@ public class ServerboundTabCompleteRequestPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");
     }

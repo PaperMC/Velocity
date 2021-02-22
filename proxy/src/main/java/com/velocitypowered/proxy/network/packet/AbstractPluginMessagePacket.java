@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class AbstractPluginMessagePacket<S extends AbstractPluginMessagePacket<S>> extends TypedDefaultByteBufHolder<S> implements Packet {
   protected static <P extends AbstractPluginMessagePacket<P>> PacketReader<P> decoder(final Factory<P> factory) {
-    return (buf, direction, version) -> {
+    return (buf, version) -> {
       String channel = ProtocolUtils.readString(buf);
       if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
         channel = transformLegacyToModernChannel(channel);
@@ -28,29 +28,30 @@ public abstract class AbstractPluginMessagePacket<S extends AbstractPluginMessag
     };
   }
 
+  protected static <P extends AbstractPluginMessagePacket<P>> PacketWriter<P> encoder() {
+    return (buf, packet, version) -> {
+      if (packet.channel == null) {
+        throw new IllegalStateException("Channel is not specified.");
+      }
+      if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
+        ProtocolUtils.writeString(buf, transformLegacyToModernChannel(packet.channel));
+      } else {
+        ProtocolUtils.writeString(buf, packet.channel);
+      }
+      if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+        buf.writeBytes(packet.content());
+      } else {
+        ProtocolUtils.writeByteBuf17(packet.content(), buf, true); // True for Forge support
+      }
+    };
+  }
+
   protected final @Nullable String channel;
 
   protected AbstractPluginMessagePacket(String channel,
                                      @MonotonicNonNull ByteBuf backing) {
     super(backing);
     this.channel = channel;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified.");
-    }
-    if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
-      ProtocolUtils.writeString(buf, transformLegacyToModernChannel(this.channel));
-    } else {
-      ProtocolUtils.writeString(buf, this.channel);
-    }
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      buf.writeBytes(content());
-    } else {
-      ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
-    }
   }
 
   public String getChannel() {

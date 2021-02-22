@@ -1,29 +1,24 @@
 package com.velocitypowered.proxy.network.packet.clientbound;
 
 import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
-import io.netty.buffer.ByteBuf;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 
 public class ClientboundSetCompressionPacket implements Packet {
-  public static final PacketReader<ClientboundSetCompressionPacket> DECODER = (buf, direction, version) -> {
+  public static final PacketReader<ClientboundSetCompressionPacket> DECODER = (buf, version) -> {
     final int threshold = ProtocolUtils.readVarInt(buf);
     return new ClientboundSetCompressionPacket(threshold);
   };
+  public static final PacketWriter<ClientboundSetCompressionPacket> ENCODER = (buf, packet, version) ->
+      ProtocolUtils.writeVarInt(buf, packet.threshold);
 
   private final int threshold;
 
   public ClientboundSetCompressionPacket(int threshold) {
     this.threshold = threshold;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, threshold);
   }
 
   @Override

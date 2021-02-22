@@ -8,7 +8,7 @@ import java.util.function.LongFunction;
 
 public abstract class AbstractKeepAlivePacket implements Packet {
   protected static <P extends AbstractKeepAlivePacket> PacketReader<P> decoder(final LongFunction<P> factory) {
-    return (buf, direction, version) -> {
+    return (buf, version) -> {
       final long randomId;
       if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {
         randomId = buf.readLong();
@@ -21,21 +21,22 @@ public abstract class AbstractKeepAlivePacket implements Packet {
     };
   }
 
+  protected static <P extends AbstractKeepAlivePacket> PacketWriter<P> encoder() {
+    return (buf, packet, version) -> {
+      if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {
+        buf.writeLong(packet.getRandomId());
+      } else if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+        ProtocolUtils.writeVarInt(buf, (int) packet.getRandomId());
+      } else {
+        buf.writeInt((int) packet.getRandomId());
+      }
+    };
+  }
+
   private final long randomId;
 
   protected AbstractKeepAlivePacket(final long randomId) {
     this.randomId = randomId;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    if (version.gte(ProtocolVersion.MINECRAFT_1_12_2)) {
-      buf.writeLong(randomId);
-    } else if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      ProtocolUtils.writeVarInt(buf, (int) randomId);
-    } else {
-      buf.writeInt((int) randomId);
-    }
   }
 
   public long getRandomId() {

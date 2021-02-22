@@ -7,6 +7,7 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -14,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientboundBossBarPacket implements Packet {
 
   public static final PacketReader<ClientboundBossBarPacket> DECODER = PacketReader.method(ClientboundBossBarPacket::new);
+  public static final PacketWriter<ClientboundBossBarPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   public static final int ADD = 0;
   public static final int REMOVE = 1;
@@ -122,7 +124,7 @@ public class ClientboundBossBarPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (uuid == null) {
       throw new IllegalStateException("No boss bar UUID specified");
     }

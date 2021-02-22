@@ -7,10 +7,13 @@ import java.util.function.LongFunction;
 
 public abstract class AbstractStatusPingPacket implements Packet {
   protected static <P extends AbstractStatusPingPacket> PacketReader<P> decoder(final LongFunction<P> factory) {
-    return (buf, direction, version) -> {
+    return (buf, version) -> {
       final long randomId = buf.readLong();
       return factory.apply(randomId);
     };
+  }
+  protected static <P extends AbstractStatusPingPacket> PacketWriter<P> encoder() {
+    return (buf, packet, version) -> buf.writeLong(packet.getRandomId());
   }
 
   private final long randomId;
@@ -19,9 +22,8 @@ public abstract class AbstractStatusPingPacket implements Packet {
     this.randomId = randomId;
   }
 
-  @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    buf.writeLong(this.randomId);
+  public long getRandomId() {
+    return randomId;
   }
 
   @Override

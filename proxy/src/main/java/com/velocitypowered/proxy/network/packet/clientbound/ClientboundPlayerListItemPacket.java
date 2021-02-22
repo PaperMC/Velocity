@@ -10,6 +10,7 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundPlayerListItemPacket implements Packet {
   public static final PacketReader<ClientboundPlayerListItemPacket> DECODER = PacketReader.method(ClientboundPlayerListItemPacket::new);
+  public static final PacketWriter<ClientboundPlayerListItemPacket> ENCODER = PacketWriter.deprecatedEncode();
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;
@@ -96,7 +98,7 @@ public class ClientboundPlayerListItemPacket implements Packet {
   }
 
   @Override
-  public void encode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void encode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeVarInt(buf, action);
       ProtocolUtils.writeVarInt(buf, items.size());
