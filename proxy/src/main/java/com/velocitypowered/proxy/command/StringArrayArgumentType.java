@@ -14,7 +14,8 @@ public class StringArrayArgumentType implements ArgumentType<String[]> {
   public static final StringArrayArgumentType INSTANCE = new StringArrayArgumentType();
   public static final String[] EMPTY = new String[0];
 
-  private static final Splitter ARGUMENT_SPLITTER = Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
+  private static final Splitter ARGUMENT_SPLITTER =
+          Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
   private static final List<String> EXAMPLES = Arrays.asList("argument", "argument1 argument2");
 
   @Override
@@ -22,7 +23,7 @@ public class StringArrayArgumentType implements ArgumentType<String[]> {
     final String text = reader.getRemaining();
     reader.setCursor(reader.getTotalLength());
     if (text.isEmpty()) {
-      return new String[0];
+      return EMPTY;
     }
     return ARGUMENT_SPLITTER.splitToList(text).toArray(new String[0]);
   }
