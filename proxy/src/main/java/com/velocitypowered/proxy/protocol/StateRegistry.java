@@ -253,15 +253,15 @@ public enum StateRegistry {
           map(0x4F, MINECRAFT_1_14, true),
           map(0x50, MINECRAFT_1_15, true),
           map(0x4F, MINECRAFT_1_16, MINECRAFT_1_16_4, true));
-      clientbound.register(TitleSubtitlePacket.class, TitleSubtitlePacket::new, // TODO: fix
+      clientbound.register(TitleSubtitlePacket.class, TitleSubtitlePacket::new,
           map(0x57, MINECRAFT_1_17, true));
-      clientbound.register(TitleTextPacket.class, TitleTextPacket::new, // TODO: fix
+      clientbound.register(TitleTextPacket.class, TitleTextPacket::new,
           map(0x5A, MINECRAFT_1_17, true));
-      clientbound.register(TitleActionbarPacket.class, TitleActionbarPacket::new, // TODO: fix
+      clientbound.register(TitleActionbarPacket.class, TitleActionbarPacket::new,
           map(0x41, MINECRAFT_1_17, true));
-      clientbound.register(TitleTimesPacket.class, TitleTimesPacket::new, // TODO: fix
+      clientbound.register(TitleTimesPacket.class, TitleTimesPacket::new,
           map(0x59, MINECRAFT_1_17, true));
-      clientbound.register(TitleClearPacket.class, TitleClearPacket::new, // TODO: fix
+      clientbound.register(TitleClearPacket.class, TitleClearPacket::new,
           map(0x10, MINECRAFT_1_17, true));
       clientbound.register(PlayerListItem.class, PlayerListItem::new,
           map(0x38, MINECRAFT_1_7_2, false),
