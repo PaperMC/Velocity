@@ -66,7 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
@@ -262,8 +262,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (position == MessagePosition.ACTION_BAR) {
       if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
         // We can use the title packet instead.
-        TitlePacket pkt = new TitlePacket();
-        pkt.setAction(TitlePacket.SET_ACTION_BAR);
+        GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
+                        GenericTitlePacket.ActionType.SET_ACTION_BAR, this.getProtocolVersion());
         pkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(component));
         connection.write(pkt);
@@ -307,8 +307,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // Use the title packet instead.
-      TitlePacket pkt = new TitlePacket();
-      pkt.setAction(TitlePacket.SET_ACTION_BAR);
+      GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
       pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
           .serialize(message));
       connection.write(pkt);
@@ -359,17 +359,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
           .getProtocolVersion());
 
-      TitlePacket titlePkt = new TitlePacket();
-      titlePkt.setAction(TitlePacket.SET_TITLE);
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                      GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(title.title()));
       connection.delayedWrite(titlePkt);
 
-      TitlePacket subtitlePkt = new TitlePacket();
-      subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
       subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
       connection.delayedWrite(subtitlePkt);
 
-      TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
+      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
         timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
@@ -385,14 +386,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void clearTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
   }
 
   @Override
   public void resetTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+                      GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
   }
 
@@ -487,20 +490,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     ProtocolVersion protocolVersion = connection.getProtocolVersion();
     if (title.equals(Titles.reset())) {
-      connection.write(TitlePacket.resetForProtocolVersion(protocolVersion));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.RESET, protocolVersion));
     } else if (title.equals(Titles.hide())) {
-      connection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.HIDE, protocolVersion));
     } else if (title instanceof TextTitle) {
       TextTitle tt = (TextTitle) title;
 
       if (tt.isResetBeforeSend()) {
-        connection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
+        connection.delayedWrite(GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.RESET, protocolVersion));
       }
 
       Optional<net.kyori.text.Component> titleText = tt.getTitle();
       if (titleText.isPresent()) {
-        TitlePacket titlePkt = new TitlePacket();
-        titlePkt.setAction(TitlePacket.SET_TITLE);
+        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_TITLE, protocolVersion);
         titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(titleText.get()));
         connection.delayedWrite(titlePkt);
@@ -508,15 +514,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
       Optional<net.kyori.text.Component> subtitleText = tt.getSubtitle();
       if (subtitleText.isPresent()) {
-        TitlePacket titlePkt = new TitlePacket();
-        titlePkt.setAction(TitlePacket.SET_SUBTITLE);
+        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_SUBTITLE, protocolVersion);
         titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(subtitleText.get()));
         connection.delayedWrite(titlePkt);
       }
 
       if (tt.areTimesSet()) {
-        TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(protocolVersion);
+        GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_TIMES, protocolVersion);
         timesPkt.setFadeIn(tt.getFadeIn());
         timesPkt.setStay(tt.getStay());
         timesPkt.setFadeOut(tt.getFadeOut());
