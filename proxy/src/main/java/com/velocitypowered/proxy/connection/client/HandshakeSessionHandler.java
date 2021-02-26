@@ -154,9 +154,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
               }
 
               // if the socket address is changed, propagate the change
-              if (handshakeEvent.getNewSocketAddressHostname() != null) {
+              String newSocketAddress = handshakeEvent.getNewSocketAddressHostname();
+              if (newSocketAddress != null) {
                 // Using #createUnresolved is important as a reverse lookup is expensive
-                InetSocketAddress newAddress = InetSocketAddress.createUnresolved(handshakeEvent.getNewSocketAddressHostname(), handshake.getPort());
+                InetSocketAddress newAddress
+                        = InetSocketAddress.createUnresolved(newSocketAddress, handshake.getPort());
                 ic.getConnection().setRemoteAddress(newAddress);
               }
 
