@@ -19,8 +19,8 @@ public final class InitialInboundConnection implements InboundConnection,
   private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
 
   private final MinecraftConnection connection;
-  private final String cleanedAddress;
   private final Handshake handshake;
+  private String cleanedAddress;
 
   InitialInboundConnection(MinecraftConnection connection, String cleanedAddress,
       Handshake handshake) {
@@ -52,6 +52,14 @@ public final class InitialInboundConnection implements InboundConnection,
   @Override
   public String toString() {
     return "[initial connection] " + connection.getRemoteAddress().toString();
+  }
+
+  public MinecraftConnection getConnection() {
+    return connection;
+  }
+
+  public void setCleanedAddress(String cleanedAddress) {
+    this.cleanedAddress = cleanedAddress;
   }
 
   /**

@@ -280,6 +280,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return !channel.isActive();
   }
 
+  public void setRemoteAddress(SocketAddress remoteAddress) {
+    this.remoteAddress = remoteAddress;
+  }
+
   public SocketAddress getRemoteAddress() {
     return remoteAddress;
   }

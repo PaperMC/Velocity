@@ -121,8 +121,47 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
-    connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+    String originalHostname = handshake.getServerAddress();
+    server.getEventManager()
+        .fire(new ConnectionHandshakeEvent(ic, originalHostname))
+        .thenAcceptAsync(
+            handshakeEvent -> {
+              ConnectionHandshakeEvent.ConnectionHandshakeComponentResult result =
+                  handshakeEvent.getResult();
+              // maybe something already closed the connection
+              if (ic.getConnection().isClosed()) {
+                return;
+              }
+
+              // if result is denied, disconnect. If a reason is provided, disconnect with that
+              // reason, if not, disconnect without any message.
+              if (!result.isAllowed()) {
+                Optional<Component> reason = result.getReason();
+                if (!reason.isPresent()) {
+                  connection.close();
+                } else {
+                  ic.disconnect(reason.get());
+                }
+
+                return;
+              }
+
+              // if the handshake is changed, propagate the change
+              if (!handshakeEvent.getHostname().equals(originalHostname)) {
+                String cleanedHandshake = cleanVhost(handshakeEvent.getHostname());
+                handshake.setServerAddress(cleanedHandshake);
+                ic.setCleanedAddress(cleanedHandshake);
+              }
+
+              // if the socket address is changed, propagate the change
+              if (handshakeEvent.getNewSocketAddressHostname() != null) {
+                // Using #createUnresolved is important as a reverse lookup is expensive
+                InetSocketAddress newAddress = InetSocketAddress.createUnresolved(handshakeEvent.getNewSocketAddressHostname(), handshake.getPort());
+                ic.getConnection().setRemoteAddress(newAddress);
+              }
+
+              connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+            });
   }
 
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {
