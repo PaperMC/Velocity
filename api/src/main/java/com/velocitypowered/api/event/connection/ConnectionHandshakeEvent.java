@@ -3,28 +3,40 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.annotation.Nullable;
-import java.util.Optional;
-
 /**
  * This event is fired when a handshake is established between a client and the proxy.
  */
-public final class ConnectionHandshakeEvent implements ResultedEvent<ConnectionHandshakeEvent.ConnectionHandshakeComponentResult> {
+public final class ConnectionHandshakeEvent
+        implements ResultedEvent<ConnectionHandshakeEvent.ConnectionHandshakeComponentResult> {
 
   private final InboundConnection connection;
   private ConnectionHandshakeComponentResult result;
   private String newSocketAddressHostname;
   private String hostname;
 
+  /**
+   * Constructs a {@code ConnectionHandshakeEvent}.
+   *
+   * @param connection the connection
+   * @deprecated in favor of {@link #ConnectionHandshakeEvent(InboundConnection, String)}
+   */
   @Deprecated
   public ConnectionHandshakeEvent(InboundConnection connection) {
     this(connection, "127.0.0.1");
   }
 
+  /**
+   * Constructs a {@code ConnectionHandshakeEvent}.
+   *
+   * @param connection the connection
+   * @param hostname the handshake hostname
+   */
   public ConnectionHandshakeEvent(InboundConnection connection, @NonNull String hostname) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.hostname = Preconditions.checkNotNull(hostname, "serverHostname");
@@ -122,12 +134,15 @@ public final class ConnectionHandshakeEvent implements ResultedEvent<ConnectionH
   }
 
   /**
+   * Represents an "allowed/denied" result with a (nullable) reason for denial.
+   *
    * @implNote We don't use {@link com.velocitypowered.api.event.ResultedEvent.ComponentResult} as
    *     it doesn't allow for a {@code null} component result on deny.
    */
   public static final class ConnectionHandshakeComponentResult implements ResultedEvent.Result {
 
-    private static final ConnectionHandshakeComponentResult ALLOWED = new ConnectionHandshakeComponentResult(true, null);
+    private static final ConnectionHandshakeComponentResult ALLOWED
+            = new ConnectionHandshakeComponentResult(true, null);
 
     private final boolean status;
     private final @Nullable Component reason;
