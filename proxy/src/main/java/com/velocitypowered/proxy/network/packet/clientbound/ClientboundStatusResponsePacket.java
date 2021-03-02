@@ -16,7 +16,7 @@ public class ClientboundStatusResponsePacket implements Packet {
     return new ClientboundStatusResponsePacket(status);
   };
   public static final PacketWriter<ClientboundStatusResponsePacket> ENCODER = (buf, packet, version) ->
-    ProtocolUtils.writeString(buf, packet.status);
+      ProtocolUtils.writeString(buf, packet.status);
 
   private final @Nullable CharSequence status;
 

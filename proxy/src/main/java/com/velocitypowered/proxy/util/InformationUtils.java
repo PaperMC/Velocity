@@ -15,7 +15,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
-
 import io.netty.channel.unix.DomainSocketAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;

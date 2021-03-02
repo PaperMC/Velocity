@@ -1,14 +1,12 @@
 package com.velocitypowered.proxy.network.packet.serverbound;
 
 import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
-import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
 public class ServerboundServerLoginPacket implements Packet {
@@ -21,8 +19,9 @@ public class ServerboundServerLoginPacket implements Packet {
     }
     return new ServerboundServerLoginPacket(username);
   };
+
   public static final PacketWriter<ServerboundServerLoginPacket> ENCODER = (buf, packet, version) ->
-    ProtocolUtils.writeString(buf, packet.username);
+      ProtocolUtils.writeString(buf, packet.username);
 
   private final String username;
 

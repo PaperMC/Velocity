@@ -1,7 +1,6 @@
 package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;

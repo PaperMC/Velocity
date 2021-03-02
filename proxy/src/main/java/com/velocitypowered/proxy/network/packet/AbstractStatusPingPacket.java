@@ -12,6 +12,7 @@ public abstract class AbstractStatusPingPacket implements Packet {
       return factory.apply(randomId);
     };
   }
+
   protected static <P extends AbstractStatusPingPacket> PacketWriter<P> encoder() {
     return (buf, packet, version) -> buf.writeLong(packet.getRandomId());
   }

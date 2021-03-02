@@ -13,7 +13,7 @@ public class ServerboundChatPacket implements Packet {
     return new ServerboundChatPacket(message);
   };
   public static final PacketWriter<ServerboundChatPacket> ENCODER = (buf, packet, version) ->
-    ProtocolUtils.writeString(buf, packet.message);
+      ProtocolUtils.writeString(buf, packet.message);
 
   public static final int MAX_MESSAGE_LENGTH = 256;
 
