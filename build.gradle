@@ -20,7 +20,7 @@ allprojects {
 
     ext {
         // dependency versions
-        adventureVersion = '4.5.0'
+        adventureVersion = '4.6.0'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
         log4jVersion = '2.13.3'
