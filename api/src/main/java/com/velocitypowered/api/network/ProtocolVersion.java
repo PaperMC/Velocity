@@ -68,7 +68,7 @@ public enum ProtocolVersion {
    */
   public static final String SUPPORTED_VERSION_STRING = String
           .format("%s-%s", MINIMUM_VERSION.getVersionIntroducedIn(),
-                  MAXIMUM_VERSION.getVersionDiscontinuedIn());
+                  MAXIMUM_VERSION.getMostRecentSupportedVersion());
 
   /**
    * A map linking the protocol version number to its {@link ProtocolVersion} representation.
@@ -159,7 +159,7 @@ public enum ProtocolVersion {
    *
    * @return the version name
    */
-  public String getVersionDiscontinuedIn() {
+  public String getMostRecentSupportedVersion() {
     return name[name.length - 1];
   }
 
