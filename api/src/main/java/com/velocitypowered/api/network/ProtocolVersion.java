@@ -52,7 +52,7 @@ public enum ProtocolVersion {
 
   private final int protocol;
   private final int snapshotProtocol;
-  private final String[] name;
+  private final String[] names;
 
   /**
    * Represents the lowest supported version.
@@ -107,11 +107,11 @@ public enum ProtocolVersion {
     SUPPORTED_VERSIONS = Sets.immutableEnumSet(versions);
   }
 
-  ProtocolVersion(int protocol, String... name) {
-    this(protocol, -1, name);
+  ProtocolVersion(int protocol, String... names) {
+    this(protocol, -1, names);
   }
 
-  ProtocolVersion(int protocol, int snapshotProtocol, String... name) {
+  ProtocolVersion(int protocol, int snapshotProtocol, String... names) {
     if (snapshotProtocol != -1) {
       this.snapshotProtocol = (1 << SNAPSHOT_BIT) | snapshotProtocol;
     } else {
@@ -119,7 +119,7 @@ public enum ProtocolVersion {
     }
 
     this.protocol = protocol;
-    this.name = name;
+    this.names = names;
   }
 
   /**
@@ -150,7 +150,7 @@ public enum ProtocolVersion {
    * @return the version name
    */
   public String getVersionIntroducedIn() {
-    return name[0];
+    return names[0];
   }
 
   /**
@@ -160,7 +160,7 @@ public enum ProtocolVersion {
    * @return the version name
    */
   public String getMostRecentSupportedVersion() {
-    return name[name.length - 1];
+    return names[names.length - 1];
   }
 
   /**
@@ -169,7 +169,7 @@ public enum ProtocolVersion {
    * @return the version names
    */
   public List<String> getVersionsSupportedBy() {
-    return ImmutableList.copyOf(name);
+    return ImmutableList.copyOf(names);
   }
 
   /**
@@ -224,6 +224,6 @@ public enum ProtocolVersion {
 
   @Override
   public String toString() {
-    return name[name.length - 1];
+    return getVersionIntroducedIn();
   }
 }
