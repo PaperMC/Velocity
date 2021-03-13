@@ -30,6 +30,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -46,6 +47,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class to make working with the pipeline a little less painful and transparently handles
@@ -64,6 +66,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
+  private boolean disconnected = false;
 
   /**
    * Initializes a new {@link MinecraftConnection} instance.
@@ -236,12 +239,18 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           this.setAutoReading(false);
           channel.eventLoop().schedule(() -> {
             knownDisconnect = true;
-            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+            channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
+              future.channel().close();
+              this.fireDisconnected();
+            });
           }, 250, TimeUnit.MILLISECONDS);
         });
       } else {
         knownDisconnect = true;
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
+          future.channel().close();
+          this.fireDisconnected();
+        });
       }
     }
   }
@@ -261,14 +270,25 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           knownDisconnect = true;
         }
         channel.close();
+        this.fireDisconnected();
       } else {
         channel.eventLoop().execute(() -> {
           if (markKnown) {
             knownDisconnect = true;
           }
           channel.close();
+          this.fireDisconnected();
         });
       }
+    }
+  }
+
+  private void fireDisconnected() {
+    if (!disconnected) {
+      disconnected = true;
+    }
+    if (sessionHandler != null) {
+      sessionHandler.disconnected();
     }
   }
 
