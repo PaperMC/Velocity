@@ -3,8 +3,8 @@ package com.velocitypowered.proxy.console;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +52,7 @@ public final class VelocityTerminalConsole extends SimpleTerminalConsole {
   protected void runCommand(String command) {
     try {
       if (!this.server.getCommandManager().execute(consoleCommandSource, command)) {
-        consoleCommandSource.sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+        consoleCommandSource.sendMessage(Component.text("Command not found.", NamedTextColor.RED));
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);
