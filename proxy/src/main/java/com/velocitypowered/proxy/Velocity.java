@@ -77,15 +77,15 @@ public class Velocity {
 
     long startTime = System.currentTimeMillis();
 
-    VelocityPluginManager pluginManager;
-    VelocityEventManager eventManager;
-    VelocityConsoleCommandSource console;
+    VelocityPluginManager pluginManager = new VelocityPluginManager();
+    VelocityEventManager eventManager = new VelocityEventManager(pluginManager);
+    VelocityConsoleCommandSource console = new VelocityConsoleCommandSource();
     VelocityServer server = new VelocityServer(
-            (pluginManager = new VelocityPluginManager()),
-            (eventManager = new VelocityEventManager(pluginManager)),
+            pluginManager,
+            eventManager,
             new VelocityCommandManager(eventManager),
             new VelocityScheduler(pluginManager),
-            (console = new VelocityConsoleCommandSource()),
+            console,
             options);
     server.start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown(false),
