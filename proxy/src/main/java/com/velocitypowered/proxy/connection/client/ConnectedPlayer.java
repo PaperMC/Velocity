@@ -1000,8 +1000,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   VelocityServerConnection con = new VelocityServerConnection(vrs,
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
-                  return con.connect().whenCompleteAsync((result, throwable) ->
-                      this.resetIfInFlightIs(con), connection.eventLoop());
+                  return con.connect().thenApplyAsync((result) -> {
+                    this.resetIfInFlightIs(con);
+                    return result;
+                  }, connection.eventLoop());
                 }, connection.eventLoop());
           });
     }
@@ -1019,7 +1021,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (status != null && !status.isSuccessful()) {
               if (!status.isSafe()) {
                 handleConnectionException(status.getAttemptedConnection(), throwable, false);
+                return;
               }
+            }
+            if (throwable != null) {
+              logger.error("Exception during connect; status = {}", status, throwable);
             }
           }, connection.eventLoop())
           .thenApply(x -> x);
