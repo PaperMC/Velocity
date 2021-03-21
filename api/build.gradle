@@ -42,7 +42,7 @@ dependencies {
     }
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
-    api 'com.google.inject:guice:4.2.3'
+    api 'com.google.inject:guice:5.0.1'
     api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
 
