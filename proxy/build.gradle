@@ -28,6 +28,7 @@ jar {
         attributes 'Implementation-Version': version
         attributes 'Implementation-Vendor': "Velocity Contributors"
         attributes 'Multi-Release': 'true'
+        attributes 'Allow-Opens': 'java.base/java.lang'
     }
 }
 
