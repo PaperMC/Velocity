@@ -86,7 +86,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     server.getEventManager()
         .fire(new ServerConnectedEvent(player, serverConn.getServer(),
             existingConnection != null ? existingConnection.getServer() : null))
-        .whenCompleteAsync((x, error) -> {
+        .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
             // Connection is obsolete.

@@ -134,7 +134,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         // Call event and write response
         server.getEventManager()
             .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
-            .whenCompleteAsync((event, exc) -> {
+            .thenAcceptAsync((event) -> {
               // Packet header
               ByteBuf queryResponse = ctx.alloc().buffer();
               queryResponse.writeByte(QUERY_TYPE_STAT);
