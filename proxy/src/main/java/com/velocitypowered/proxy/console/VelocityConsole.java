@@ -65,6 +65,13 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
     PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
     // we can safely block here, this is before any listeners fire
     this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
+    if (this.permissionFunction == null) {
+      logger.error(
+          "A plugin permission provider {} provided an invalid permission function"
+              + " for the console. This is a bug in the plugin, not in Velocity. Falling"
+              + " back to the default permission function.", event.getProvider());
+      this.permissionFunction = ALWAYS_TRUE;
+    }
   }
 
   @Override
