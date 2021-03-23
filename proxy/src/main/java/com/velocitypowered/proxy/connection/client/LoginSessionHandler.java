@@ -237,8 +237,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 logger.error(
                     "A plugin permission provider {} provided an invalid permission function"
                         + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
-                        + " back to the default permission function.", player.getUsername(),
-                    event.getProvider());
+                        + " back to the default permission function.",
+                    event.getProvider().getClass().getName(),
+                    player.getUsername());
               } else {
                 player.setPermissionFunction(function);
               }
