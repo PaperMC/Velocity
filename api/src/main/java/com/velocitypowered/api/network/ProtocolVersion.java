@@ -7,10 +7,12 @@
 
 package com.velocitypowered.api.network;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,16 +22,19 @@ import java.util.Set;
 public enum ProtocolVersion {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
-  MINECRAFT_1_7_2(4, "1.7.2"),
-  MINECRAFT_1_7_6(5, "1.7.6"),
-  MINECRAFT_1_8(47, "1.8"),
+  MINECRAFT_1_7_2(4,
+          "1.7.2", "1.7.3", "1.7.4", "1.7.5"),
+  MINECRAFT_1_7_6(5,
+          "1.7.6", "1.7.7", "1.7.8", "1.7.9", "1.7.10"),
+  MINECRAFT_1_8(47,
+          "1.8", "1.8.1", "1.8.2", "1.8.3", "1.8.4", "1.8.5", "1.8.6", "1.8.7", "1.8.8", "1.8.9"),
   MINECRAFT_1_9(107, "1.9"),
   MINECRAFT_1_9_1(108, "1.9.1"),
   MINECRAFT_1_9_2(109, "1.9.2"),
-  MINECRAFT_1_9_4(110, "1.9.4"),
-  MINECRAFT_1_10(210, "1.10"),
+  MINECRAFT_1_9_4(110, "1.9.3", "1.9.4"),
+  MINECRAFT_1_10(210, "1.10", "1.10.1", "1.10.2"),
   MINECRAFT_1_11(315, "1.11"),
-  MINECRAFT_1_11_1(316, "1.11.1"),
+  MINECRAFT_1_11_1(316, "1.11.1", "1.11.2"),
   MINECRAFT_1_12(335, "1.12"),
   MINECRAFT_1_12_1(338, "1.12.1"),
   MINECRAFT_1_12_2(340, "1.12.2"),
@@ -48,13 +53,13 @@ public enum ProtocolVersion {
   MINECRAFT_1_16_1(736, "1.16.1"),
   MINECRAFT_1_16_2(751, "1.16.2"),
   MINECRAFT_1_16_3(753, "1.16.3"),
-  MINECRAFT_1_16_4(754, "1.16.4");
+  MINECRAFT_1_16_4(754, "1.16.4", "1.16.5");
 
   private static final int SNAPSHOT_BIT = 30;
 
   private final int protocol;
   private final int snapshotProtocol;
-  private final String name;
+  private final String[] names;
 
   /**
    * Represents the lowest supported version.
@@ -69,7 +74,8 @@ public enum ProtocolVersion {
    * The user-friendly representation of the lowest and highest supported versions.
    */
   public static final String SUPPORTED_VERSION_STRING = String
-      .format("%s-%s", MINIMUM_VERSION, MAXIMUM_VERSION);
+          .format("%s-%s", MINIMUM_VERSION.getVersionIntroducedIn(),
+                  MAXIMUM_VERSION.getMostRecentSupportedVersion());
 
   /**
    * A map linking the protocol version number to its {@link ProtocolVersion} representation.
@@ -108,11 +114,11 @@ public enum ProtocolVersion {
     SUPPORTED_VERSIONS = Sets.immutableEnumSet(versions);
   }
 
-  ProtocolVersion(int protocol, String name) {
-    this(protocol, -1, name);
+  ProtocolVersion(int protocol, String... names) {
+    this(protocol, -1, names);
   }
 
-  ProtocolVersion(int protocol, int snapshotProtocol, String name) {
+  ProtocolVersion(int protocol, int snapshotProtocol, String... names) {
     if (snapshotProtocol != -1) {
       this.snapshotProtocol = (1 << SNAPSHOT_BIT) | snapshotProtocol;
     } else {
@@ -120,7 +126,7 @@ public enum ProtocolVersion {
     }
 
     this.protocol = protocol;
-    this.name = name;
+    this.names = names;
   }
 
   /**
@@ -129,16 +135,48 @@ public enum ProtocolVersion {
    * @return the protocol version
    */
   public int getProtocol() {
-    return protocol;
+    return protocol == -1 ? snapshotProtocol : protocol;
   }
 
   /**
    * Returns the user-friendly name for this protocol.
    *
    * @return the protocol name
+   * @deprecated A protocol may be shared by multiple versions. Use @link{#getVersionIntroducedIn()}
+   *     or @link{#getVersionsSupportedBy()} to get more accurate version names.
    */
+  @Deprecated
   public String getName() {
-    return name;
+    return getVersionIntroducedIn();
+  }
+
+  /**
+   * Returns the user-friendly name of the version
+   * this protocol was introduced in.
+   *
+   * @return the version name
+   */
+  public String getVersionIntroducedIn() {
+    return names[0];
+  }
+
+  /**
+   * Returns the user-friendly name of the last
+   * version this protocol is valid for.
+   *
+   * @return the version name
+   */
+  public String getMostRecentSupportedVersion() {
+    return names[names.length - 1];
+  }
+
+  /**
+   * Returns all versions this protocol is valid for.
+   *
+   * @return the version names
+   */
+  public List<String> getVersionsSupportedBy() {
+    return ImmutableList.copyOf(names);
   }
 
   /**
@@ -193,6 +231,6 @@ public enum ProtocolVersion {
 
   @Override
   public String toString() {
-    return name;
+    return getVersionIntroducedIn();
   }
 }

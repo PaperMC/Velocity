@@ -49,7 +49,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.Collection;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +63,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   private final @Nullable VelocityServer server;
   private final ServerInfo serverInfo;
-  private final Set<ConnectedPlayer> players = ConcurrentHashMap.newKeySet();
+  private final Map<UUID, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
   public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
     this.server = server;
@@ -76,7 +77,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public Collection<Player> getPlayersConnected() {
-    return ImmutableList.copyOf(players);
+    return ImmutableList.copyOf(players.values());
   }
 
   @Override
@@ -128,11 +129,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   public void addPlayer(ConnectedPlayer player) {
-    players.add(player);
+    players.put(player.getUniqueId(), player);
   }
 
   public void removePlayer(ConnectedPlayer player) {
-    players.remove(player);
+    players.remove(player.getUniqueId(), player);
   }
 
   @Override
@@ -141,19 +142,22 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   /**
-   * Sends a plugin message to the server through this connection.
+   * Sends a plugin message to the server through this connection. The message will be released
+   * afterwards.
+   *
    * @param identifier the channel ID to use
    * @param data the data
    * @return whether or not the message was sent
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
-    for (ConnectedPlayer player : players) {
+    for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServerInfo().equals(serverInfo)) {
+      if (connection != null && connection.getServer() == this) {
         return connection.sendPluginMessage(identifier, data);
       }
     }
 
+    data.release();
     return false;
   }
 

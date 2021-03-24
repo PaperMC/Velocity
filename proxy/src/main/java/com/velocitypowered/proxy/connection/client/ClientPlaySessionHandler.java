@@ -22,14 +22,19 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
@@ -115,12 +120,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(KeepAlive packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection != null && packet.getRandomId() == serverConnection.getLastPingId()) {
-      MinecraftConnection smc = serverConnection.getConnection();
-      if (smc != null) {
-        player.setPing(System.currentTimeMillis() - serverConnection.getLastPingSent());
-        smc.write(packet);
-        serverConnection.resetLastPingId();
+    if (serverConnection != null) {
+      Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      if (sentTime != null) {
+        MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null) {
+          player.setPing(System.currentTimeMillis() - sentTime);
+          smc.write(packet);
+        }
       }
     }
     return true;
@@ -204,7 +211,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
-        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+        List<String> channels = PluginMessageUtil.getChannels(packet);
+        player.getKnownChannels().addAll(channels);
+        List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
+        for (String channel : channels) {
+          try {
+            channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
+          } catch (IllegalArgumentException e) {
+            channelIdentifiers.add(new LegacyChannelIdentifier(channel));
+          }
+        }
+        server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
+                ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -241,8 +259,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               backendConn.write(packet.retain());
             } else {
               byte[] copy = ByteBufUtil.getBytes(packet.content());
-              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id,
-                  ByteBufUtil.getBytes(packet.content()));
+              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
               server.getEventManager().fire(event).thenAcceptAsync(pme -> {
                 if (pme.getResult().isAllowed()) {
                   PluginMessage message = new PluginMessage(packet.getChannel(),
@@ -317,7 +334,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean writable = player.getConnection().getChannel().isWritable();
 
     if (!writable) {
-      // We might have packets queued for the server, so flush them now to free up memory.
+      // We might have packets queued from the server, so flush them now to free up memory.
       player.getConnection().flush();
     }
 
@@ -350,30 +367,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     } else {
       // Clear tab list to avoid duplicate entries
       player.getTabList().clearAll();
-
-      // In order to handle switching to another server, you will need to send two packets:
-      //
-      // - The join game packet from the backend server, with a different dimension
-      // - A respawn with the correct dimension
-      //
-      // Most notably, by having the client accept the join game packet, we can work around the need
-      // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
-      // improving compatibility with mods.
-
-      int sentOldDim = joinGame.getDimension();
-      if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
-        // Before Minecraft 1.16, we could not switch to the same dimension without sending an
-        // additional respawn. On older versions of Minecraft this forces the client to perform
-        // garbage collection which adds additional latency.
-        joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
+      if (player.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+        this.doSafeClientServerSwitch(joinGame);
+      } else {
+        this.doFastClientServerSwitch(joinGame);
       }
-      player.getConnection().delayedWrite(joinGame);
-
-      player.getConnection().delayedWrite(
-          new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
-              joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-              false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-              joinGame.getCurrentDimensionData()));
       destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
 
@@ -409,6 +407,55 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().flush();
     serverMc.flush();
     destination.completeJoin();
+  }
+
+  private void doFastClientServerSwitch(JoinGame joinGame) {
+    // In order to handle switching to another server, you will need to send two packets:
+    //
+    // - The join game packet from the backend server, with a different dimension
+    // - A respawn with the correct dimension
+    //
+    // Most notably, by having the client accept the join game packet, we can work around the need
+    // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
+    // improving compatibility with mods.
+    int sentOldDim = joinGame.getDimension();
+    if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
+      // Before Minecraft 1.16, we could not switch to the same dimension without sending an
+      // additional respawn. On older versions of Minecraft this forces the client to perform
+      // garbage collection which adds additional latency.
+      joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
+    }
+    player.getConnection().delayedWrite(joinGame);
+
+    player.getConnection().delayedWrite(
+        new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
+            joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
+            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
+            joinGame.getCurrentDimensionData()));
+  }
+
+  private void doSafeClientServerSwitch(JoinGame joinGame) {
+    // Some clients do not behave well with the "fast" respawn sequence. In this case we will use
+    // a "safe" respawn sequence that involves sending three packets to the client. They have the
+    // same effect but tend to work better with buggier clients (Forge 1.8 in particular).
+
+    // Send the JoinGame packet itself, unmodified.
+    player.getConnection().delayedWrite(joinGame);
+
+    // Send a respawn packet in a different dimension.
+    int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
+    player.getConnection().delayedWrite(
+        new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
+            joinGame.getGamemode(), joinGame.getLevelType(),
+            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
+            joinGame.getCurrentDimensionData()));
+
+    // Now send a respawn packet in the correct dimension.
+    player.getConnection().delayedWrite(
+        new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+            joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
+            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
+            joinGame.getCurrentDimensionData()));
   }
 
   public List<UUID> getServerBossBars() {

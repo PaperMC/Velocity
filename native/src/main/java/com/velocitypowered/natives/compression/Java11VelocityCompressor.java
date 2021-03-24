@@ -80,10 +80,10 @@ public class Java11VelocityCompressor implements VelocityCompressor {
     checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
 
     try {
-      int origIdx = source.readerIndex();
+      final int origIdx = source.readerIndex();
       INFLATE_SET_INPUT.invokeExact(inflater, source.nioBuffer());
 
-      while (!inflater.finished() && inflater.getBytesRead() < source.readableBytes()) {
+      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
         if (!destination.isWritable()) {
           ensureMaxSize(destination, uncompressedSize);
           destination.ensureWritable(ZLIB_BUFFER_SIZE);
@@ -92,16 +92,21 @@ public class Java11VelocityCompressor implements VelocityCompressor {
         ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
             destination.writableBytes());
         int produced = (int) INFLATE_CALL.invokeExact(inflater, destNioBuf);
-        source.readerIndex(origIdx + inflater.getTotalIn());
         destination.writerIndex(destination.writerIndex() + produced);
       }
 
-      inflater.reset();
+      if (!inflater.finished()) {
+        throw new DataFormatException("Received a deflate stream that was too large, wanted "
+          + uncompressedSize);
+      }
+      source.readerIndex(origIdx + inflater.getTotalIn());
     } catch (Throwable e) {
       if (e instanceof DataFormatException) {
         throw (DataFormatException) e;
       }
       throw new RuntimeException(e);
+    } finally {
+      inflater.reset();
     }
   }
 
@@ -114,7 +119,7 @@ public class Java11VelocityCompressor implements VelocityCompressor {
     checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
 
     try {
-      int origIdx = source.readerIndex();
+      final int origIdx = source.readerIndex();
       DEFLATE_SET_INPUT.invokeExact(deflater, source.nioBuffer());
       deflater.finish();
 
@@ -126,10 +131,10 @@ public class Java11VelocityCompressor implements VelocityCompressor {
         ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
             destination.writableBytes());
         int produced = (int) DEFLATE_CALL.invokeExact(deflater, destNioBuf);
-        source.readerIndex(origIdx + deflater.getTotalIn());
         destination.writerIndex(destination.writerIndex() + produced);
       }
 
+      source.readerIndex(origIdx + deflater.getTotalIn());
       deflater.reset();
     } catch (Throwable e) {
       if (e instanceof DataFormatException) {

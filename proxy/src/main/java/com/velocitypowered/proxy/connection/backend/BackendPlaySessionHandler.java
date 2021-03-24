@@ -45,6 +45,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
 import org.apache.logging.log4j.LogManager;
@@ -53,6 +54,8 @@ import org.apache.logging.log4j.Logger;
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
+  private static final boolean BACKPRESSURE_LOG = Boolean
+      .getBoolean("velocity.log-server-backpressure");
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
@@ -79,10 +82,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
-    MinecraftConnection serverMc = serverConn.ensureConnected();
-    serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-        ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
-    ));
+
+    if (server.getConfiguration().isBungeePluginChannelEnabled()) {
+      MinecraftConnection serverMc = serverConn.ensureConnected();
+      serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
+          ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+      ));
+    }
   }
 
   @Override
@@ -97,7 +103,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlive packet) {
-    serverConn.setLastPingId(packet.getRandomId());
+    serverConn.getPendingPings().put(packet.getRandomId(), System.currentTimeMillis());
     return false; // forwards on
   }
 
@@ -300,5 +306,21 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
       }
     }
+  }
+
+  @Override
+  public void writabilityChanged() {
+    Channel serverChan = serverConn.ensureConnected().getChannel();
+    boolean writable = serverChan.isWritable();
+
+    if (BACKPRESSURE_LOG) {
+      if (writable) {
+        logger.info("{} is not writable, not auto-reading player connection data", this.serverConn);
+      } else {
+        logger.info("{} is writable, will auto-read player connection data", this.serverConn);
+      }
+    }
+
+    playerConnection.setAutoReading(writable);
   }
 }

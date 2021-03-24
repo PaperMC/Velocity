@@ -17,9 +17,11 @@
 
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -28,6 +30,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Locale;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides utilities for working with Brigadier commands.
@@ -139,6 +142,25 @@ public final class BrigadierUtils {
               + command.substring(firstSpace);
     }
     return command.toLowerCase(Locale.ENGLISH);
+  }
+
+  /**
+   * Prepares the given command node prior for hinting metadata to
+   * a {@link com.velocitypowered.api.command.Command}.
+   *
+   * @param node the command node to be wrapped
+   * @param command the command to execute
+   * @return the wrapped command node
+   */
+  public static CommandNode<CommandSource> wrapForHinting(
+      final CommandNode<CommandSource> node, final @Nullable Command<CommandSource> command) {
+    Preconditions.checkNotNull(node, "node");
+    ArgumentBuilder<CommandSource, ?> builder = node.createBuilder();
+    builder.executes(command);
+    for (CommandNode<CommandSource> child : node.getChildren()) {
+      builder.then(wrapForHinting(child, command));
+    }
+    return builder.build();
   }
 
   private BrigadierUtils() {

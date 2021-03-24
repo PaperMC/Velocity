@@ -192,9 +192,12 @@ public class VelocityPluginManager implements PluginManager {
   public void addToClasspath(Object plugin, Path path) {
     checkNotNull(plugin, "instance");
     checkNotNull(path, "path");
-    checkArgument(pluginInstances.containsKey(plugin), "plugin is not loaded");
+    Optional<PluginContainer> optContainer = fromInstance(plugin);
+    checkArgument(optContainer.isPresent(), "plugin is not loaded");
+    Optional<?> optInstance = optContainer.get().getInstance();
+    checkArgument(optInstance.isPresent(), "plugin has no instance");
 
-    ClassLoader pluginClassloader = plugin.getClass().getClassLoader();
+    ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();
     if (pluginClassloader instanceof PluginClassLoader) {
       ((PluginClassLoader) pluginClassloader).addPath(path);
     } else {

@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -86,21 +87,23 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = serverConn.ensureConnected();
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
 
+    final ConnectedPlayer player = serverConn.getPlayer();
+
     if (existingConnection != null) {
       // Shut down the existing server connection.
-      serverConn.getPlayer().setConnectedServer(null);
+      player.setConnectedServer(null);
       existingConnection.disconnect();
 
       // Send keep alive to try to avoid timeouts
-      serverConn.getPlayer().sendKeepAlive();
+      player.sendKeepAlive();
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(serverConn.getPlayer(), serverConn.getServer(),
+        .fire(new ServerConnectedEvent(player, serverConn.getServer(),
             existingConnection != null ? existingConnection.getServer() : null))
-        .whenCompleteAsync((x, error) -> {
+        .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
             // Connection is obsolete.
@@ -110,17 +113,15 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Change the client to use the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
-          if (serverConn.getPlayer().getConnection().getSessionHandler()
-              instanceof ClientPlaySessionHandler) {
-            playHandler = (ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
-                .getSessionHandler();
+          if (player.getConnection().getSessionHandler() instanceof ClientPlaySessionHandler) {
+            playHandler = (ClientPlaySessionHandler) player.getConnection().getSessionHandler();
           } else {
-            playHandler = new ClientPlaySessionHandler(server, serverConn.getPlayer());
-            serverConn.getPlayer().getConnection().setSessionHandler(playHandler);
+            playHandler = new ClientPlaySessionHandler(server, player);
+            player.getConnection().setSessionHandler(playHandler);
           }
           playHandler.handleBackendJoinGame(packet, serverConn);
 
-          // Strap on the correct session handler for the server. We will have nothing more to do
+          // Set the new play session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
           smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
 
@@ -131,15 +132,15 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
-          server.getEventManager().fireAndForget(new ServerPostConnectEvent(serverConn.getPlayer(),
+          server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
               existingConnection == null ? null : existingConnection.getServer()));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop())
         .exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),
-              serverConn.getPlayer().getUsername(), exc);
-          serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+              player.getUsername(), exc);
+          player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
           resultFuture.completeExceptionally(exc);
           return null;
         });

@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -453,11 +452,6 @@ public class VelocityConfiguration implements ProxyConfig {
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
-    if (!config.contains("metrics.id") || config.<String>get("metrics.id").isEmpty()) {
-      config.set("metrics.id", UUID.randomUUID().toString());
-      mustResave = true;
-    }
-
     if (mustResave) {
       config.save();
     }
@@ -475,7 +469,7 @@ public class VelocityConfiguration implements ProxyConfig {
         PingPassthroughMode.DISABLED);
 
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    String motd = config.getOrElse("motd", "&3A Velocity Server");
+    String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean announceForge = config.getOrElse("announce-forge", true);
@@ -663,7 +657,11 @@ public class VelocityConfiguration implements ProxyConfig {
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
         this.readTimeout = config.getIntOrElse("read-timeout", 30000);
-        this.proxyProtocol = config.getOrElse("proxy-protocol", false);
+        if (config.contains("haproxy-protocol")) {
+          this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
+        } else {
+          this.proxyProtocol = config.getOrElse("proxy-protocol", false);
+        }
         this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
@@ -796,38 +794,15 @@ public class VelocityConfiguration implements ProxyConfig {
 
   public static class Metrics {
     private boolean enabled = true;
-    private String id = UUID.randomUUID().toString();
-    private boolean logFailure = false;
-
-    private boolean fromConfig;
-
-    private Metrics() {
-      this.fromConfig = false;
-    }
 
     private Metrics(CommentedConfig toml) {
       if (toml != null) {
-        this.enabled = toml.getOrElse("enabled", false);
-        this.id = toml.getOrElse("id", UUID.randomUUID().toString());
-        this.logFailure = toml.getOrElse("log-failure", false);
-        this.fromConfig = true;
+        this.enabled = toml.getOrElse("enabled", true);
       }
     }
 
     public boolean isEnabled() {
       return enabled;
-    }
-
-    public String getId() {
-      return id;
-    }
-
-    public boolean isLogFailure() {
-      return logFailure;
-    }
-
-    public boolean isFromConfig() {
-      return fromConfig;
     }
   }
 

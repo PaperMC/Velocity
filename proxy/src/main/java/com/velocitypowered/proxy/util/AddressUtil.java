@@ -24,6 +24,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 
 public final class AddressUtil {
+  private static final int DEFAULT_MINECRAFT_PORT = 25565;
+
   private AddressUtil() {
     throw new AssertionError();
   }
@@ -38,11 +40,16 @@ public final class AddressUtil {
   public static InetSocketAddress parseAddress(String ip) {
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
+    if (uri.getHost() == null) {
+      throw new IllegalStateException("Invalid hostname/IP " + ip);
+    }
+
+    int port = uri.getPort() == -1 ? DEFAULT_MINECRAFT_PORT : uri.getPort();
     try {
       InetAddress ia = InetAddresses.forUriString(uri.getHost());
-      return new InetSocketAddress(ia, uri.getPort());
+      return new InetSocketAddress(ia, port);
     } catch (IllegalArgumentException e) {
-      return InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort());
+      return InetSocketAddress.createUnresolved(uri.getHost(), port);
     }
   }
 
@@ -56,6 +63,11 @@ public final class AddressUtil {
   public static InetSocketAddress parseAndResolveAddress(String ip) {
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
-    return new InetSocketAddress(uri.getHost(), uri.getPort());
+    if (uri.getHost() == null) {
+      throw new IllegalStateException("Invalid hostname/IP " + ip);
+    }
+
+    int port = uri.getPort() == -1 ? DEFAULT_MINECRAFT_PORT : uri.getPort();
+    return new InetSocketAddress(uri.getHost(), port);
   }
 }

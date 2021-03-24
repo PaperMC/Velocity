@@ -212,6 +212,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void write(Object msg) {
     if (channel.isActive()) {
       channel.writeAndFlush(msg, channel.voidPromise());
+    } else {
+      ReferenceCountUtil.release(msg);
     }
   }
 
@@ -222,6 +224,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void delayedWrite(Object msg) {
     if (channel.isActive()) {
       channel.write(msg, channel.voidPromise());
+    } else {
+      ReferenceCountUtil.release(msg);
     }
   }
 
@@ -242,7 +246,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (channel.isActive()) {
       boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
           && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
-      if (is17) {
+      if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
@@ -395,16 +399,25 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (threshold == -1) {
       channel.pipeline().remove(COMPRESSION_DECODER);
       channel.pipeline().remove(COMPRESSION_ENCODER);
-      return;
+    } else {
+      MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
+          .get(COMPRESSION_DECODER);
+      MinecraftCompressEncoder encoder = (MinecraftCompressEncoder) channel.pipeline()
+          .get(COMPRESSION_ENCODER);
+      if (decoder != null && encoder != null) {
+        decoder.setThreshold(threshold);
+        encoder.setThreshold(threshold);
+      } else {
+        int level = server.getConfiguration().getCompressionLevel();
+        VelocityCompressor compressor = Natives.compress.get().create(level);
+
+        encoder = new MinecraftCompressEncoder(threshold, compressor);
+        decoder = new MinecraftCompressDecoder(threshold, compressor);
+
+        channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
+        channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
+      }
     }
-
-    int level = server.getConfiguration().getCompressionLevel();
-    VelocityCompressor compressor = Natives.compress.get().create(level);
-    MinecraftCompressEncoder encoder = new MinecraftCompressEncoder(threshold, compressor);
-    MinecraftCompressDecoder decoder = new MinecraftCompressDecoder(threshold, compressor);
-
-    channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
-    channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
   }
 
   /**

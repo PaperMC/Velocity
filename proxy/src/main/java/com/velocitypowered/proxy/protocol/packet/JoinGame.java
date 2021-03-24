@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
@@ -32,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
 
+  private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(2 * 1024 * 1024);
   private int entityId;
   private short gamemode;
   private int dimension;
@@ -195,7 +197,7 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       this.previousGamemode = buf.readByte();
       ImmutableSet<String> levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
-      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf);
+      CompoundBinaryTag registryContainer = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
       ListBinaryTag dimensionRegistryContainer = null;
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
         dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
@@ -209,7 +211,7 @@ public class JoinGame implements MinecraftPacket {
           DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
       this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf);
+        CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
             .annotateWith(dimensionIdentifier, null);

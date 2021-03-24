@@ -63,6 +63,10 @@ public interface CommandNodeFactory<T extends Command> {
         },
         (context, builder) -> {
           String[] args = BrigadierUtils.getSplitArguments(context);
+          if (!command.hasPermission(context.getSource(), args)) {
+              return builder.buildFuture();
+          }
+
           return command.suggestAsync(context.getSource(), args).thenApply(values -> {
             for (String value : values) {
               builder.suggest(value);
@@ -99,6 +103,9 @@ public interface CommandNodeFactory<T extends Command> {
           (context, builder) -> {
             I invocation = createInvocation(context);
 
+            if (!command.hasPermission(invocation)) {
+                return builder.buildFuture();
+            }
             return command.suggestAsync(invocation).thenApply(values -> {
               for (String value : values) {
                 builder.suggest(value);

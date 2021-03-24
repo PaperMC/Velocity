@@ -37,7 +37,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
       Boolean.getBoolean("velocity.increased-compression-cap")
           ? HARD_MAXIMUM_UNCOMPRESSED_SIZE : VANILLA_MAXIMUM_UNCOMPRESSED_SIZE;
 
-  private final int threshold;
+  private int threshold;
   private final VelocityCompressor compressor;
 
   public MinecraftCompressDecoder(int threshold, VelocityCompressor compressor) {
@@ -76,5 +76,9 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
   @Override
   public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
     compressor.close();
+  }
+
+  public void setThreshold(int threshold) {
+    this.threshold = threshold;
   }
 }

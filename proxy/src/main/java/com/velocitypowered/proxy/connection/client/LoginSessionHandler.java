@@ -34,6 +34,7 @@ import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentR
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
@@ -53,6 +54,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -107,7 +109,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     try {
       KeyPair serverKeyPair = server.getServerKeyPair();
       byte[] decryptedVerifyToken = decryptRsa(serverKeyPair, packet.getVerifyToken());
-      if (!Arrays.equals(verify, decryptedVerifyToken)) {
+      if (!MessageDigest.isEqual(verify, decryptedVerifyToken)) {
         throw new IllegalStateException("Unable to successfully decrypt the verification token.");
       }
 
@@ -247,7 +249,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
-              player.setPermissionFunction(event.createFunction(player));
+              final PermissionFunction function = event.createFunction(player);
+              if (function == null) {
+                logger.error(
+                    "A plugin permission provider {} provided an invalid permission function"
+                        + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
+                        + " back to the default permission function.",
+                    event.getProvider().getClass().getName(),
+                    player.getUsername());
+              } else {
+                player.setPermissionFunction(function);
+              }
               completeLoginProtocolPhaseAndInitialize(player);
             }
           }, mcConnection.eventLoop());

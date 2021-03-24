@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.EmptyArgumentP
 import static com.velocitypowered.proxy.protocol.packet.brigadier.FloatArgumentPropertySerializer.FLOAT;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.INTEGER;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.LongArgumentPropertySerializer.LONG;
+import static com.velocitypowered.proxy.protocol.packet.brigadier.ModArgumentPropertySerializer.MOD;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.StringArgumentPropertySerializer.STRING;
 
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -93,6 +94,10 @@ public class ArgumentPropertyRegistry {
       if (property.getResult() != null) {
         property.getSerializer().serialize(property.getResult(), buf);
       }
+    } else if (type instanceof ModArgumentProperty) {
+      ModArgumentProperty property = (ModArgumentProperty) type;
+      ProtocolUtils.writeString(buf, property.getIdentifier());
+      buf.writeBytes(property.getData());
     } else {
       ArgumentPropertySerializer serializer = byClass.get(type.getClass());
       String id = classToId.get(type.getClass());
@@ -114,6 +119,9 @@ public class ArgumentPropertyRegistry {
     register("brigadier:bool", BoolArgumentType.class,
         GenericArgumentPropertySerializer.create(BoolArgumentType::bool));
     register("brigadier:long", LongArgumentType.class, LONG);
+
+    // Crossstitch support
+    register("crossstitch:mod_argument", ModArgumentProperty.class, MOD);
 
     // Minecraft argument types with extra properties
     empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);

@@ -22,6 +22,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import java.util.ArrayList;
@@ -32,31 +33,39 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import net.kyori.text.Component;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
 
+  protected final ConnectedPlayer player;
   protected final MinecraftConnection connection;
   protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
-  public VelocityTabList(MinecraftConnection connection) {
-    this.connection = connection;
+  public VelocityTabList(final ConnectedPlayer player) {
+    this.player = player;
+    this.connection = player.getConnection();
   }
 
+  @Deprecated
+  @Override
+  public void setHeaderAndFooter(net.kyori.text.Component header,
+                                 net.kyori.text.Component footer) {
+    Preconditions.checkNotNull(header, "header");
+    Preconditions.checkNotNull(footer, "footer");
+    this.player.sendPlayerListHeaderAndFooter(
+        LegacyText3ComponentSerializer.get().deserialize(header),
+        LegacyText3ComponentSerializer.get().deserialize(footer)
+    );
+  }
+
+  @Deprecated
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
     Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooter.create(header, footer));
-  }
-
-  @Override
-  public void setHeaderAndFooter(net.kyori.adventure.text.Component header,
-      net.kyori.adventure.text.Component footer) {
-    Preconditions.checkNotNull(header, "header");
-    Preconditions.checkNotNull(footer, "footer");
-    connection.write(HeaderAndFooter.create(header, footer, connection.getProtocolVersion()));
+    this.player.sendPlayerListHeaderAndFooter(header, footer);
   }
 
   @Override

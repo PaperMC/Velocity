@@ -62,6 +62,7 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
@@ -78,6 +79,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -122,6 +124,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
+  private Component playerListHeader = Component.empty();
+  private Component playerListFooter = Component.empty();
   private final VelocityTabList tabList;
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
@@ -132,11 +136,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.tabList = new VelocityTabList(connection);
-    } else {
-      this.tabList = new VelocityTabListLegacy(connection);
-    }
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
@@ -144,6 +143,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
+
+    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.tabList = new VelocityTabList(this);
+    } else {
+      this.tabList = new VelocityTabListLegacy(this);
+    }
   }
 
   @Override
@@ -319,50 +324,89 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
-        .getProtocolVersion());
+  public Component getPlayerListHeader() {
+    return this.playerListHeader;
+  }
 
-    TitlePacket titlePkt = new TitlePacket();
-    titlePkt.setAction(TitlePacket.SET_TITLE);
-    titlePkt.setComponent(serializer.serialize(title.title()));
-    connection.delayedWrite(titlePkt);
+  @Override
+  public Component getPlayerListFooter() {
+    return this.playerListFooter;
+  }
 
-    TitlePacket subtitlePkt = new TitlePacket();
-    subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
-    subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
-    connection.delayedWrite(subtitlePkt);
+  @Override
+  public void sendPlayerListHeader(@NonNull final Component header) {
+    this.sendPlayerListHeaderAndFooter(header, this.playerListFooter);
+  }
 
-    TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
-    net.kyori.adventure.title.Title.Times times = title.times();
-    if (times != null) {
-      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+  @Override
+  public void sendPlayerListFooter(@NonNull final Component footer) {
+    this.sendPlayerListHeaderAndFooter(this.playerListHeader, footer);
+  }
+
+  @Override
+  public void sendPlayerListHeaderAndFooter(final Component header, final Component footer) {
+    this.playerListHeader = Objects.requireNonNull(header, "header");
+    this.playerListFooter = Objects.requireNonNull(footer, "footer");
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
     }
-    connection.delayedWrite(timesPkt);
+  }
 
-    connection.flush();
+  @Override
+  public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+          .getProtocolVersion());
+
+      TitlePacket titlePkt = new TitlePacket();
+      titlePkt.setAction(TitlePacket.SET_TITLE);
+      titlePkt.setComponent(serializer.serialize(title.title()));
+      connection.delayedWrite(titlePkt);
+
+      TitlePacket subtitlePkt = new TitlePacket();
+      subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
+      subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
+      connection.delayedWrite(subtitlePkt);
+
+      TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
+      net.kyori.adventure.title.Title.Times times = title.times();
+      if (times != null) {
+        timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
+        timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
+        timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      }
+      connection.delayedWrite(timesPkt);
+
+      connection.flush();
+    }
   }
 
   @Override
   public void clearTitle() {
-    connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+    }
   }
 
   @Override
   public void resetTitle() {
-    connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+    }
   }
 
   @Override
   public void hideBossBar(@NonNull BossBar bar) {
-    this.server.getBossBarManager().removeBossBar(this, bar);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+      this.server.getBossBarManager().removeBossBar(this, bar);
+    }
   }
 
   @Override
   public void showBossBar(@NonNull BossBar bar) {
-    this.server.getBossBarManager().addBossBar(this, bar);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+      this.server.getBossBarManager().addBossBar(this, bar);
+    }
   }
 
   @Override
@@ -380,6 +424,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.profile = profile.withProperties(Preconditions.checkNotNull(properties));
   }
 
+  @Deprecated
   @Override
   public void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer) {
     tabList.setHeaderAndFooter(header, footer);
@@ -553,7 +598,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getKickPrefix(server.getServerInfo().getName()))
+          .append(messages.getKickPrefix(server.getServerInfo().getName())
+              .colorIfAbsent(NamedTextColor.RED))
           .color(NamedTextColor.RED)
           .append(disconnectReason)
           .build(), safe);
@@ -561,8 +607,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getDisconnectPrefix(server.getServerInfo().getName()))
-          .color(NamedTextColor.RED)
+          .append(messages.getDisconnectPrefix(server.getServerInfo().getName())
+              .colorIfAbsent(NamedTextColor.RED))
           .append(disconnectReason)
           .build(), safe);
     }
@@ -818,10 +864,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void sendResourcePack(String url) {
     Preconditions.checkNotNull(url, "url");
 
-    ResourcePackRequest request = new ResourcePackRequest();
-    request.setUrl(url);
-    request.setHash("");
-    connection.write(request);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ResourcePackRequest request = new ResourcePackRequest();
+      request.setUrl(url);
+      request.setHash("");
+      connection.write(request);
+    }
   }
 
   @Override
@@ -830,10 +878,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Preconditions.checkNotNull(hash, "hash");
     Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
 
-    ResourcePackRequest request = new ResourcePackRequest();
-    request.setUrl(url);
-    request.setHash(ByteBufUtil.hexDump(hash));
-    connection.write(request);
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      ResourcePackRequest request = new ResourcePackRequest();
+      request.setUrl(url);
+      request.setHash(ByteBufUtil.hexDump(hash));
+      connection.write(request);
+    }
   }
 
   /**
@@ -967,8 +1017,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   VelocityServerConnection con = new VelocityServerConnection(vrs,
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
-                  return con.connect().whenCompleteAsync((result, throwable) ->
-                      this.resetIfInFlightIs(con), connection.eventLoop());
+                  return con.connect().thenApplyAsync((result) -> {
+                    this.resetIfInFlightIs(con);
+                    return result;
+                  }, connection.eventLoop());
                 }, connection.eventLoop());
           });
     }
@@ -986,7 +1038,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (status != null && !status.isSuccessful()) {
               if (!status.isSafe()) {
                 handleConnectionException(status.getAttemptedConnection(), throwable, false);
+                return;
               }
+            }
+            if (throwable != null) {
+              logger.error("Exception during connect; status = {}", status, throwable);
             }
           }, connection.eventLoop())
           .thenApply(x -> x);
