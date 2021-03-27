@@ -11,19 +11,19 @@ final class RawCommandInvocation extends AbstractCommandInvocation<String>
 
   static final Factory FACTORY = new Factory();
 
-  static class Factory implements CommandInvocationFactory<RawCommand.Invocation> {
+  private static final class Factory implements CommandInvocationFactory<RawCommand.Invocation> {
 
     @Override
     public RawCommand.Invocation create(final CommandContext<CommandSource> context) {
-      final String alias = CommandNodeFactory.readAlias(context);
-      final String args = CommandNodeFactory.readArguments(context, String.class, "");
+      final String alias = VelocityCommands.readAlias(context);
+      final String args = VelocityCommands.readArguments(context, String.class, "");
       return new RawCommandInvocation(context.getSource(), alias, args);
     }
 
     @Override
     public RawCommand.Invocation create(final ParseResults<CommandSource> parse) {
-      final String alias = CommandNodeFactory.readAlias(parse);
-      final String args = CommandNodeFactory.readArguments(parse, String.class, "");
+      final String alias = VelocityCommands.readAlias(parse);
+      final String args = VelocityCommands.readArguments(parse, String.class, "");
       return new RawCommandInvocation(parse.getContext().getSource(), alias, args);
     }
   }
@@ -44,7 +44,7 @@ final class RawCommandInvocation extends AbstractCommandInvocation<String>
   @Override
   public String toString() {
     return "RawCommandInvocation{"
-            + "alias='" + alias + '\''
+            + "alias='" + this.alias + '\''
             + '}';
   }
 }

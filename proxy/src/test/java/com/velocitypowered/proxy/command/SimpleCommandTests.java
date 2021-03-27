@@ -118,6 +118,7 @@ public class SimpleCommandTests extends CommandTestSuite {
     });
 
     // TODO Isn't this testing CommandManager instead of SimpleCommand?
+    // TODO When moved, create permission-checking tests for aliases there too
     assertSuggestions("", "hello");
     assertSuggestions("hel", "hello");
     assertSuggestions("HE", "hello");
@@ -243,5 +244,132 @@ public class SimpleCommandTests extends CommandTestSuite {
     });
 
     assertSuggestions("hello ", "people", "World", "world");
+  }
+
+  @Test
+  void testExecuteWithNoArgumentsIsNotCalledIfCantUse() {
+    final AtomicInteger callCount = new AtomicInteger();
+
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals(dummySource, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(new String[0], invocation.arguments());
+        callCount.incrementAndGet();
+        return false;
+      }
+    });
+
+    assertNotExecuted("hello");
+    assertNotExecuted("Hello"); // aliases are case-insensitive
+    assertNotExecuted(" hello"); // ignore leading whitespace
+    assertNotExecuted("  hello");
+    assertNotExecuted("hello "); // ignore trailing whitespace
+    assertNotExecuted("hello  ");
+
+    assertEquals(6, callCount.get());
+  }
+
+  @Test
+  void testExecuteWithWordArgumentIsNotCalledIfCantUse() {
+    final AtomicInteger callCount = new AtomicInteger();
+
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals(dummySource, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(new String[] { "world" }, invocation.arguments());
+        callCount.incrementAndGet();
+        return false;
+      }
+    });
+
+    assertNotExecuted("hello world");
+    assertNotExecuted("hello world "); // ignore trailing whitespace
+    assertNotExecuted("hello world  ");
+
+    assertEquals(3, callCount.get());
+  }
+
+  @Test
+  void testExecuteWithArgumentsStringIsNotCalledIfCantUse() {
+    final AtomicInteger callCount = new AtomicInteger();
+
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals(dummySource, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(new String[] { "beautiful", "world" }, invocation.arguments());
+        callCount.incrementAndGet();
+        return false;
+      }
+    });
+
+    assertNotExecuted("hello beautiful world");
+    assertNotExecuted("hello beautiful world "); // ignore trailing whitespace
+    assertNotExecuted("hello beautiful world  ");
+
+    assertEquals(3, callCount.get());
+  }
+
+  @Test
+  void testArgumentSuggestIsNotCalledIfCantUse() {
+    final AtomicInteger callCount = new AtomicInteger();
+    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
+
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        fail();
+        return null;
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals(dummySource, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(expectedArgs.get(), invocation.arguments());
+        callCount.incrementAndGet();
+        return false;
+      }
+    });
+
+    expectedArgs.set(new String[0]);
+    assertSuggestions("hello ");
+
+    expectedArgs.set(new String[] { "world" });
+    assertSuggestions("hello world");
+
+    expectedArgs.set(new String[] { "world", "" });
+    assertSuggestions("hello world ");
+
+    assertEquals(3, callCount.get());
   }
 }

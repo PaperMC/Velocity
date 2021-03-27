@@ -11,20 +11,20 @@ final class SimpleCommandInvocation extends AbstractCommandInvocation<String[]>
 
   static final Factory FACTORY = new Factory();
 
-  static class Factory implements CommandInvocationFactory<SimpleCommand.Invocation> {
+  private static final class Factory implements CommandInvocationFactory<SimpleCommand.Invocation> {
 
     @Override
     public SimpleCommand.Invocation create(final CommandContext<CommandSource> context) {
-      final String alias = CommandNodeFactory.readAlias(context);
-      final String[] args = CommandNodeFactory.readArguments(
+      final String alias = VelocityCommands.readAlias(context);
+      final String[] args = VelocityCommands.readArguments(
               context, String[].class, StringArrayArgumentType.EMPTY);
       return new SimpleCommandInvocation(context.getSource(), alias, args);
     }
 
     @Override
     public SimpleCommand.Invocation create(final ParseResults<CommandSource> parse) {
-      final String alias = CommandNodeFactory.readAlias(parse);
-      final String[] args = CommandNodeFactory.readArguments(
+      final String alias = VelocityCommands.readAlias(parse);
+      final String[] args = VelocityCommands.readArguments(
               parse, String[].class, StringArrayArgumentType.EMPTY);
       return new SimpleCommandInvocation(parse.getContext().getSource(), alias, args);
     }
@@ -46,7 +46,7 @@ final class SimpleCommandInvocation extends AbstractCommandInvocation<String[]>
   @Override
   public String toString() {
     return "SimpleCommandInvocation{"
-            + "alias='" + alias + '\''
+            + "alias='" + this.alias + '\''
             + '}';
   }
 }

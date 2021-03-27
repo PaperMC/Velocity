@@ -18,13 +18,9 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -34,8 +30,16 @@ import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import java.util.Locale;
-import java.util.Map;
 
+/**
+ * Constructs the {@link LiteralCommandNode} representation of a given {@link Command}.
+ *
+ * <p>The alias and arguments of a command invocation involving the literal node returned
+ * by {@link #create(Command, String)} can be retrieved using the utility methods in
+ * the {@link VelocityCommands} class.
+ *
+ * @param <T> the type of the command
+ */
 interface CommandNodeFactory<T extends Command> {
 
   CommandNodeFactory<SimpleCommand> SIMPLE = new InvocableCommandNodeFactory<>(
@@ -46,83 +50,30 @@ interface CommandNodeFactory<T extends Command> {
 
   LegacyCommandNodeFactory LEGACY = new LegacyCommandNodeFactory();
 
-  /*
-    private static void checkValidForHinting(final CommandNode<?> node) {
-    if (node.getCommand() != null) {
-      throw new IllegalArgumentException("Hinting node may not contain a Command");
-    }
-    if (node.getRedirect() != null) {
-      throw new IllegalArgumentException("Hinting node may not be a redirect");
-    }
-    if (node.isFork()) {
-      throw new IllegalArgumentException("Hinting node may not fork");
-    }
-    for (CommandNode<?> child : node.getChildren()) {
-      checkValidForHinting(child);
-    }
-  }
+  /**
+   * Returns a literal node representing the given command.
+   *
+   * @param command the command
+   * @param alias the case-insensitive command alias
+   * @return the built literal node
    */
-
-  static String readAlias(final CommandContext<?> context) {
-    if (!context.hasNodes()) {
-      throw new IllegalArgumentException("Context root node has no children");
-    }
-    return context.getNodes().get(0).getNode().getName();
-  }
-
-  static String readAlias(final ParseResults<?> parse) {
-    if (parse.getContext().getNodes().isEmpty()) {
-      throw new IllegalArgumentException("Parsed context root node has no children");
-    }
-    return parse.getContext().getNodes().get(0).getNode().getName();
-  }
-
-  String ARGS_NODE_NAME = "arguments";
-
-  static <V> V readArguments(final CommandContext<CommandSource> context, final Class<V> type,
-                             final V fallback) {
-    return readArguments(context.getArguments(), type, fallback);
-  }
-
-  static <V> V readArguments(final ParseResults<CommandSource> parse, final Class<V> type,
-                             final V fallback) {
-    return readArguments(parse.getContext().getArguments(), type, fallback);
-  }
-
-  @SuppressWarnings("unchecked")
-  static <V> V readArguments(final Map<String, ParsedArgument<CommandSource, ?>> arguments,
-                             final Class<V> type, final V fallback) {
-    final ParsedArgument<?, ?> argument = arguments.get(ARGS_NODE_NAME);
-    if (argument == null) {
-      return fallback;
-    }
-    final Object value = argument.getResult();
-    if (!type.isAssignableFrom(value.getClass())) {
-      throw new IllegalArgumentException("Arguments node type is " + value.getClass()
-              + ", expected " + type);
-    }
-    return (V) value;
-  }
-
-  static <V> RequiredArgumentBuilder<CommandSource, V> argumentBuilder(
-          final ArgumentType<V> type, final LiteralCommandNode<CommandSource> aliasNode) {
-    return RequiredArgumentBuilder
-            .<CommandSource, V>argument(ARGS_NODE_NAME, type)
-            .requires(aliasNode.getRequirement())
-            .requiresWithContext(aliasNode.getContextRequirement())
-            .executes(aliasNode.getCommand());
-  }
-
   LiteralCommandNode<CommandSource> create(final T command, final String alias);
 
-  class InvocableCommandNodeFactory
+  /**
+   * Constructs the {@link LiteralCommandNode} representation of an {@link InvocableCommand}.
+   *
+   * @param <T> the type of the command
+   * @param <I> the type of the command invocation
+   * @param <A> the type of the command arguments
+   */
+  final class InvocableCommandNodeFactory
           <T extends InvocableCommand<I>, I extends CommandInvocation<A>, A>
           implements CommandNodeFactory<T> {
 
     private final CommandInvocationFactory<I> invocationFactory;
     private final ArgumentType<A> argumentsType;
 
-    public InvocableCommandNodeFactory(final CommandInvocationFactory<I> invocationFactory,
+    private InvocableCommandNodeFactory(final CommandInvocationFactory<I> invocationFactory,
                                        final ArgumentType<A> argumentsType) {
       this.invocationFactory = Preconditions.checkNotNull(invocationFactory);
       this.argumentsType = Preconditions.checkNotNull(argumentsType);
@@ -145,24 +96,27 @@ interface CommandNodeFactory<T extends Command> {
               .build();
 
       final ArgumentCommandNode<CommandSource, A> argumentsNode =
-              argumentBuilder(argumentsType, node)
+              VelocityCommands.argumentBuilder(argumentsType, node)
                 .suggests((context, builder) -> {
                   final I invocation = invocationFactory.create(context);
                   return command.suggestAsync(invocation).thenApply(suggestions -> {
                     for (String value : suggestions) {
-                      builder.suggest(Preconditions.checkNotNull(value, "suggestion"));
+                      Preconditions.checkNotNull(value, "suggestion");
+                      builder.suggest(value);
                     }
                     return builder.build();
                   });
                 })
                 .build();
       node.addChild(argumentsNode);
-
-      // TODO Hinting
       return node;
     }
   }
 
+  /**
+   * Constructs the {@link LiteralCommandNode} representation of a legacy command.
+   */
+  @Deprecated
   final class LegacyCommandNodeFactory implements CommandNodeFactory<Command> {
 
     @Override
@@ -170,12 +124,12 @@ interface CommandNodeFactory<T extends Command> {
       final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
               .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
               .requiresWithContext(parse -> {
-                final String[] args = readArguments(
+                final String[] args = VelocityCommands.readArguments(
                         parse, String[].class, StringArrayArgumentType.EMPTY);
                 return command.hasPermission(parse.getContext().getSource(), args);
               })
               .executes(context -> {
-                final String[] args = readArguments(
+                final String[] args = VelocityCommands.readArguments(
                         context, String[].class, StringArrayArgumentType.EMPTY);
                 command.execute(context.getSource(), args);
                 return 1;
@@ -183,20 +137,20 @@ interface CommandNodeFactory<T extends Command> {
               .build();
 
       final ArgumentCommandNode<CommandSource, String[]> argumentsNode =
-              argumentBuilder(StringArrayArgumentType.INSTANCE, node)
+              VelocityCommands.argumentBuilder(StringArrayArgumentType.INSTANCE, node)
                 .suggests((context, builder) -> {
-                  final String[] args = readArguments(
+                  final String[] args = VelocityCommands.readArguments(
                           context, String[].class, StringArrayArgumentType.EMPTY);
                   return command.suggestAsync(context.getSource(), args).thenApply(suggestions -> {
                     for (String value : suggestions) {
-                      builder.suggest(Preconditions.checkNotNull(value, "suggestion"));
+                      Preconditions.checkNotNull(value, "suggestion");
+                      builder.suggest(value);
                     }
                     return builder.build();
                   });
                 })
                 .build();
       node.addChild(argumentsNode);
-      // Legacy commands don't support hinting
       return node;
     }
   }

@@ -9,7 +9,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public class StringArrayArgumentType implements ArgumentType<String[]> {
+/**
+ * An argument type that parses the remaining contents of a {@link StringReader},
+ * splitting the input into words and placing the results in a string array.
+ */
+public final class StringArrayArgumentType implements ArgumentType<String[]> {
 
   public static final StringArrayArgumentType INSTANCE = new StringArrayArgumentType();
   public static final String[] EMPTY = new String[0];
@@ -17,6 +21,8 @@ public class StringArrayArgumentType implements ArgumentType<String[]> {
   private static final Splitter ARGUMENT_SPLITTER =
           Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
   private static final List<String> EXAMPLES = Arrays.asList("argument", "argument1 argument2");
+
+  private StringArrayArgumentType() {}
 
   @Override
   public String[] parse(final StringReader reader) throws CommandSyntaxException {

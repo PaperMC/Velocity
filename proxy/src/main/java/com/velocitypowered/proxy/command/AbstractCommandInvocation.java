@@ -38,11 +38,11 @@ abstract class AbstractCommandInvocation<T> implements CommandInvocation<T> {
 
   @Override
   public CommandSource source() {
-    return source;
+    return this.source;
   }
 
   @Override
   public T arguments() {
-    return arguments;
+    return this.arguments;
   }
 }

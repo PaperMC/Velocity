@@ -46,9 +46,9 @@ final class VelocityCommandMeta implements CommandMeta {
     public CommandMeta.Builder aliases(final String... aliases) {
       Preconditions.checkNotNull(aliases, "aliases");
       for (int i = 0, length = aliases.length; i < length; i++) {
-        final String alias1 = aliases[i];
-        Preconditions.checkNotNull(alias1, "alias at index %s", i);
-        this.aliases.add(alias1.toLowerCase(Locale.ENGLISH));
+        final String alias = aliases[i];
+        Preconditions.checkNotNull(alias, "alias at index %s", i);
+        this.aliases.add(alias.toLowerCase(Locale.ENGLISH));
       }
       return this;
     }
@@ -56,13 +56,13 @@ final class VelocityCommandMeta implements CommandMeta {
     @Override
     public CommandMeta.Builder hint(final CommandNode<CommandSource> node) {
       Preconditions.checkNotNull(node, "node");
-      hints.add(node);
+      this.hints.add(node);
       return this;
     }
 
     @Override
     public CommandMeta build() {
-      return new VelocityCommandMeta(aliases.build(), hints.build());
+      return new VelocityCommandMeta(this.aliases.build(), this.hints.build());
     }
   }
 
@@ -77,11 +77,11 @@ final class VelocityCommandMeta implements CommandMeta {
 
   @Override
   public Collection<String> getAliases() {
-    return aliases;
+    return this.aliases;
   }
 
   @Override
   public Collection<CommandNode<CommandSource>> getHints() {
-    return hints;
+    return this.hints;
   }
 }

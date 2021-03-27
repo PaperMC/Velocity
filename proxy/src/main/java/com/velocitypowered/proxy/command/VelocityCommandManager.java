@@ -119,7 +119,7 @@ public class VelocityCommandManager implements CommandManager {
 
     if (!(command instanceof BrigadierCommand)) {
       for (CommandNode<CommandSource> hint : meta.getHints()) {
-        node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+        node.addChild(VelocityCommands.createHintingNode(node, hint));
       }
     }
 
@@ -131,7 +131,9 @@ public class VelocityCommandManager implements CommandManager {
       if (existingNode != null) {
         dispatcher.getRoot().getChildren().remove(existingNode);
       }
-      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(currentAlias, node));
+      final LiteralCommandNode<CommandSource> redirect =
+              VelocityCommands.createAliasRedirect(node, currentAlias);
+      dispatcher.getRoot().addChild(redirect);
     }
   }
 
@@ -161,11 +163,11 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
+  public boolean executeImmediately(final CommandSource source, String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> results = parse(cmdLine, source, true);
+    final ParseResults<CommandSource> results = parse(cmdLine, source, true);
     try {
       return dispatcher.execute(results) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
@@ -190,7 +192,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return callCommandEvent(source, cmdLine).thenApply(event -> {
-      CommandResult commandResult = event.getResult();
+      final CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
@@ -226,10 +228,29 @@ public class VelocityCommandManager implements CommandManager {
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
+  /**
+   * Normalizes and parses the given command input.
+   *
+   * @param cmdLine the raw command input, without the leading slash ('/')
+   * @param source the source to invoke the command for
+   * @param trim whether to remove leading and trailing whitespace from the command input
+   * @return the result of parsing the normalized command input
+   */
   private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
                                             final boolean trim) {
-    String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
-    return dispatcher.parse(normalized, source);
+    // Normalize the command input
+    String command = trim ? cmdLine.trim() : cmdLine;
+    int firstSpace = command.indexOf(' ');
+    if (firstSpace != -1) {
+      // Aliases are case-insensitive, arguments are not
+      command = command.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
+              + command.substring(firstSpace);
+    } else {
+      command = command.toLowerCase(Locale.ENGLISH);
+    }
+
+    // Parse normalized input
+    return dispatcher.parse(command, source);
   }
 
   /**
