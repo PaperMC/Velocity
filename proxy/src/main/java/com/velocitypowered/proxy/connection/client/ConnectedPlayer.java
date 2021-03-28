@@ -147,12 +147,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void setDisplayNameComponent(Component displayName) {
+  public void setDisplayName(Component displayName) {
     this.displayName = displayName;
   }
 
   @Override
-  public Component getDisplayNameComponent() {
+  public Component getDisplayName() {
     return displayName;
   }
 
