@@ -36,14 +36,14 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param displayName the display name as a {@link Component}
    */
-  void setDisplayNameComponent(Component displayName);
+  void setDisplayName(Component displayName);
 
   /**
    * Returns the player's current display name as a {@link Component}.
    *
    * @return the display name
    */
-  Component getDisplayNameComponent();
+  Component getDisplayName();
 
   /**
    * Returns the player's UUID.
