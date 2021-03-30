@@ -31,7 +31,7 @@ public final class StringArrayArgumentType implements ArgumentType<String[]> {
     if (text.isEmpty()) {
       return EMPTY;
     }
-    return ARGUMENT_SPLITTER.splitToList(text).toArray(new String[0]);
+    return ARGUMENT_SPLITTER.splitToList(text).toArray(EMPTY);
   }
 
   @Override

@@ -18,9 +18,17 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.CommandContextBuilder;
+import com.mojang.brigadier.context.ParsedArgument;
+import com.mojang.brigadier.context.ParsedCommandNode;
+import com.mojang.brigadier.context.StringRange;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -30,6 +38,7 @@ import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import java.util.Locale;
+import java.util.function.Predicate;
 
 /**
  * Constructs the {@link LiteralCommandNode} representation of a given {@link Command}.
@@ -82,34 +91,47 @@ interface CommandNodeFactory<T extends Command> {
     @Override
     public LiteralCommandNode<CommandSource> create(final T command, final String alias) {
       Preconditions.checkNotNull(command, "command");
-      final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-              .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
-              .requiresWithContext(parse -> {
-                final I invocation = invocationFactory.create(parse);
-                return command.hasPermission(invocation);
-              })
-              .executes(context -> {
-                final I invocation = invocationFactory.create(context);
-                command.execute(invocation);
-                return 1;
-              })
-              .build();
+
+      final Predicate<CommandContextBuilder<CommandSource>> permissionRequirement = context -> {
+        final I invocation = invocationFactory.create(context);
+        return command.hasPermission(invocation);
+      };
+
+      final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
+            .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .requiresWithContext((context, reader) -> {
+              if (reader.canRead() && !VelocityCommands.isForRootSuggestions(context)) {
+                // InvocableCommands do not follow a tree-like permissions checking structure.
+                // Thus, a CommandSource might be able to execute a command with arguments while
+                // not being able to execute the argumentless variant. We only check for
+                // permissions once parsing is complete.
+                return true;
+              }
+              return permissionRequirement.test(context);
+            })
+            .executes(context -> {
+              final I invocation = invocationFactory.create(context);
+              command.execute(invocation);
+              return 1;
+            })
+            .build();
 
       final ArgumentCommandNode<CommandSource, A> argumentsNode =
-              VelocityCommands.argumentBuilder(argumentsType, node)
-                .suggests((context, builder) -> {
-                  final I invocation = invocationFactory.create(context);
-                  return command.suggestAsync(invocation).thenApply(suggestions -> {
-                    for (String value : suggestions) {
-                      Preconditions.checkNotNull(value, "suggestion");
-                      builder.suggest(value);
-                    }
-                    return builder.build();
-                  });
-                })
-                .build();
-      node.addChild(argumentsNode);
-      return node;
+            VelocityCommands.argumentBuilder(argumentsType, aliasNode)
+              .requiresWithContext((context, reader) -> permissionRequirement.test(context))
+              .suggests((context, builder) -> {
+                final I invocation = invocationFactory.create(context);
+                return command.suggestAsync(invocation).thenApply(suggestions -> {
+                  for (String value : suggestions) {
+                    Preconditions.checkNotNull(value, "suggestion");
+                    builder.suggest(value);
+                  }
+                  return builder.build();
+                });
+              })
+              .build();
+      aliasNode.addChild(argumentsNode);
+      return aliasNode;
     }
   }
 
@@ -121,14 +143,26 @@ interface CommandNodeFactory<T extends Command> {
 
     @Override
     public LiteralCommandNode<CommandSource> create(final Command command, final String alias) {
-      final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
+      Preconditions.checkNotNull(command, "command");
+
+      final Predicate<CommandContextBuilder<CommandSource>> permissionRequirement = context -> {
+        final String[] arguments = VelocityCommands.readArguments(
+                context, String[].class, StringArrayArgumentType.EMPTY);
+        return command.hasPermission(context.getSource(), arguments);
+      };
+
+      final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
               .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
-              .requiresWithContext(parse -> {
-                final String[] args = VelocityCommands.readArguments(
-                        parse, String[].class, StringArrayArgumentType.EMPTY);
-                return command.hasPermission(parse.getContext().getSource(), args);
+              .requiresWithContext((context, reader) -> {
+                if (reader.canRead() && !VelocityCommands.isForRootSuggestions(context)) {
+                  // See the comment on InvocableCommandNodeFactory#create about the non-tree like
+                  // permissions checking structure.
+                  return true;
+                }
+                return permissionRequirement.test(context);
               })
               .executes(context -> {
+                // Command is shared with argumentsNode
                 final String[] args = VelocityCommands.readArguments(
                         context, String[].class, StringArrayArgumentType.EMPTY);
                 command.execute(context.getSource(), args);
@@ -137,7 +171,8 @@ interface CommandNodeFactory<T extends Command> {
               .build();
 
       final ArgumentCommandNode<CommandSource, String[]> argumentsNode =
-              VelocityCommands.argumentBuilder(StringArrayArgumentType.INSTANCE, node)
+              VelocityCommands.argumentBuilder(StringArrayArgumentType.INSTANCE, aliasNode)
+                .requiresWithContext((context, reader) -> permissionRequirement.test(context))
                 .suggests((context, builder) -> {
                   final String[] args = VelocityCommands.readArguments(
                           context, String[].class, StringArrayArgumentType.EMPTY);
@@ -150,8 +185,8 @@ interface CommandNodeFactory<T extends Command> {
                   });
                 })
                 .build();
-      node.addChild(argumentsNode);
-      return node;
+      aliasNode.addChild(argumentsNode);
+      return aliasNode;
     }
   }
 }

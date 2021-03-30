@@ -1,14 +1,17 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.ParsedCommandNode;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -29,49 +32,61 @@ import java.util.Map;
  */
 final class VelocityCommands {
 
+  private static final StringRange ALIAS_SUGGESTION_RANGE = StringRange.at(0);
   private static final String ARGS_NODE_NAME = "arguments";
 
   // Parsing
 
   /**
-   * Parses the alias used to execute the command.
+   * Returns the parsed alias, used to execute the command.
    *
-   * @param context the command context
-   * @return the case-sensitive alias
+   * @param context the context
+   * @return the command alias
    */
-  static String readAlias(final CommandContext<CommandSource> context) {
-    if (!context.hasNodes()) {
-      throw new IllegalArgumentException("Cannot read alias from childless root node");
-    }
-    return context.getNodes().get(0).getNode().getName();
+  static String readAlias(final CommandContext<?> context) {
+    return readAlias(context.getNodes());
   }
 
   /**
    * Returns the parsed alias, used to execute the command.
    *
-   * @param parse the parse results
-   * @return the case-sensitive alias
+   * @param context the context builder
+   * @return the command alias
    */
-  static String readAlias(final ParseResults<CommandSource> parse) {
-    final List<ParsedCommandNode<CommandSource>> nodes = parse.getContext().getNodes();
+  static String readAlias(final CommandContextBuilder<?> context) {
+    return readAlias(context.getNodes());
+  }
+
+  private static String readAlias(final List<? extends ParsedCommandNode<?>> nodes) {
     if (nodes.isEmpty()) {
-      throw new IllegalArgumentException("Cannot read alias from childless root node");
+      throw new IllegalArgumentException("Cannot read alias from empty node list");
     }
     return nodes.get(0).getNode().getName();
   }
 
   /**
-   * Parses the arguments after the command alias, or {@code fallback} if no arguments
-   * were provided.
+   * Returns whether the given context builder was created as a result of producing suggestions
+   * for the root node (via {@link CommandDispatcher#getCompletionSuggestions(ParseResults)}).
    *
-   * @param context the command context
+   * @param context the context builder
+   * @return {@code true} if the context builder is used for building the suggestions of
+   *         the root node
+   */
+  static boolean isForRootSuggestions(final CommandContextBuilder<?> context) {
+    return context.getNodes().size() == 1 && context.getRange().equals(ALIAS_SUGGESTION_RANGE);
+  }
+
+  /**
+   * Returns the parsed arguments that come after the command alias, or {@code fallback} if
+   * no arguments were provided.
+   *
+   * @param context the context
    * @param type the type class of the arguments
    * @param fallback the value to return if no arguments were provided
    * @param <V> the type of the arguments
-   * @return the arguments
-   * @see #argumentBuilder(ArgumentType, LiteralCommandNode) for creating arguments nodes
+   * @return the command arguments
    */
-  static <V> V readArguments(final CommandContext<CommandSource> context,
+  static <V> V readArguments(final CommandContext<?> context,
                              final Class<V> type, final V fallback) {
     return readArguments(context.getArguments(), type, fallback);
   }
@@ -80,29 +95,28 @@ final class VelocityCommands {
    * Returns the parsed arguments that come after the command alias, or {@code fallback} if
    * no arguments were provided.
    *
-   * @param parse the parse results
+   * @param context the context builder
    * @param type the type class of the arguments
    * @param fallback the value to return if no arguments were provided
    * @param <V> the type of the arguments
-   * @return the arguments
-   * @see #argumentBuilder(ArgumentType, LiteralCommandNode) for creating arguments nodes
+   * @return the command arguments
    */
-  static <V> V readArguments(final ParseResults<CommandSource> parse,
+  static <V> V readArguments(final CommandContextBuilder<?> context,
                              final Class<V> type, final V fallback) {
-    return readArguments(parse.getContext().getArguments(), type, fallback);
+    return readArguments(context.getArguments(), type, fallback);
   }
 
-  private static <V> V readArguments(final Map<String, ParsedArgument<CommandSource, ?>> arguments,
-                            final Class<V> type, final V fallback) {
-    final ParsedArgument<CommandSource, ?> argument = arguments.get(ARGS_NODE_NAME);
+  private static <V> V readArguments(final Map<String, ? extends ParsedArgument<?, ?>> arguments,
+                                     final Class<V> type, final V fallback) {
+    final ParsedArgument<?, ?> argument = arguments.get(ARGS_NODE_NAME);
     if (argument == null) {
       return fallback;
     }
-    final Object value = argument.getResult();
+    final Object result = argument.getResult();
     try {
-      return type.cast(value);
+      return type.cast(result);
     } catch (final ClassCastException e) {
-      throw new IllegalArgumentException("Parsed argument is of type " + value.getClass()
+      throw new IllegalArgumentException("Parsed argument is of type " + result.getClass()
               + ", expected " + type, e);
     }
   }
@@ -116,6 +130,7 @@ final class VelocityCommands {
    * @param alias the case-insensitive alias
    * @return a literal node with a redirect to the given target node
    */
+  // TODO Test
   static LiteralCommandNode<CommandSource> createAliasRedirect(
           final LiteralCommandNode<CommandSource> target, final String alias) {
     Preconditions.checkNotNull(target, "target");
@@ -141,8 +156,6 @@ final class VelocityCommands {
     Preconditions.checkNotNull(aliasNode, "aliasNode");
     return RequiredArgumentBuilder
             .<CommandSource, V>argument(ARGS_NODE_NAME, type)
-            .requires(aliasNode.getRequirement())
-            .requiresWithContext(aliasNode.getContextRequirement())
             .executes(aliasNode.getCommand());
   }
 
@@ -157,6 +170,7 @@ final class VelocityCommands {
    * @return the hinting command node
    * @throws IllegalArgumentException if the given hinting node is executable or has a redirect
    */
+  // TODO Test
   static CommandNode<CommandSource> createHintingNode(
           final LiteralCommandNode<CommandSource> aliasNode,
           final CommandNode<CommandSource> hint) {

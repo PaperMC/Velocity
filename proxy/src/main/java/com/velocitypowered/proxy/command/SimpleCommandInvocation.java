@@ -1,8 +1,8 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.CommandContextBuilder;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 
@@ -22,11 +22,11 @@ final class SimpleCommandInvocation extends AbstractCommandInvocation<String[]>
     }
 
     @Override
-    public SimpleCommand.Invocation create(final ParseResults<CommandSource> parse) {
-      final String alias = VelocityCommands.readAlias(parse);
-      final String[] args = VelocityCommands.readArguments(
-              parse, String[].class, StringArrayArgumentType.EMPTY);
-      return new SimpleCommandInvocation(parse.getContext().getSource(), alias, args);
+    public SimpleCommand.Invocation create(final CommandContextBuilder<CommandSource> context) {
+      final String alias = VelocityCommands.readAlias(context);
+      final String[] args = VelocityCommands
+              .readArguments(context, String[].class, StringArrayArgumentType.EMPTY);
+      return new SimpleCommandInvocation(context.getSource(), alias, args);
     }
   }
 

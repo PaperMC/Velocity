@@ -2,107 +2,69 @@ package com.velocitypowered.proxy.command;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.common.collect.Lists;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.SimpleCommand;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 public class SimpleCommandTests extends CommandTestSuite {
 
-  @Test
-  void testExecuteWithNoArguments() {
-    final AtomicInteger execCount = new AtomicInteger();
+  // Execution
 
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals(dummySource, invocation.source());
+  class HelloCommand implements SimpleCommand {
+
+    final AtomicInteger callCount = new AtomicInteger();
+
+    @Override
+    public void execute(final Invocation invocation) {
+      assertEquals(source, invocation.source());
       assertEquals("hello", invocation.alias());
       assertArrayEquals(new String[0], invocation.arguments());
-      execCount.incrementAndGet();
-    });
-
-    assertExecuted("hello");
-    assertExecuted("Hello"); // aliases are case-insensitive
-    assertExecuted("helLO");
-    assertNotExecuted("");
-    assertNotExecuted("hell");
-    assertNotExecuted("hèlló");
-
-    assertNotExecuted(" hello"); // ignore leading whitespace
-    assertNotExecuted("  hello");
-    assertExecuted("hello "); // ignore trailing whitespace
-    assertExecuted("hello   ");
-
-    assertEquals(5, execCount.get());
+      this.callCount.incrementAndGet();
+    }
   }
 
   @Test
-  void testExecuteWithWordArgument() {
-    final AtomicInteger execCount = new AtomicInteger();
-    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
-
+  void testAliasExecute() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals("hello", invocation.alias());
-      assertArrayEquals(expectedArgs.get(), invocation.arguments());
-      execCount.incrementAndGet();
-    });
+    final HelloCommand command = new HelloCommand();
+    manager.register(meta, command);
 
-    expectedArgs.set(new String[] { "world" });
-    assertExecuted("hello world");
-    assertExecuted("hello world ");
-    assertExecuted("hello world  ");
-
-    expectedArgs.set(new String[] { "World!" }); // arguments are case-sensitive
-    assertExecuted("Hello World!");
-    assertExecuted("hello World!    "); // ignore trailing whitespace
-
-    expectedArgs.set(new String[]{ "", "world" }); // parse leading whitespace
-    assertExecuted("hello  world");
-    assertExecuted("hello  world  ");
-
-    expectedArgs.set(new String[]{ "", "", "", "Mundo" });
-    assertExecuted("HELLO    Mundo");
-    assertExecuted("hello    Mundo ");
-
-    assertNotExecuted("hell world");
-    assertNotExecuted("helloworld");
-
-    assertEquals(9, execCount.get());
+    assertNotForwarded("hello");
+    assertEquals(1, command.callCount.get());
   }
 
   @Test
-  void testExecuteWithArgumentsString() {
-    final AtomicInteger execCount = new AtomicInteger();
-    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
-
+  void testAliasIsCaseInsensitive() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals("hello", invocation.alias());
-      assertArrayEquals(expectedArgs.get(), invocation.arguments());
-      execCount.incrementAndGet();
-    });
+    manager.register(meta, new HelloCommand());
 
-    expectedArgs.set(new String[]{ "beautiful", "world" });
-    assertExecuted("hello beautiful world");
-    assertExecuted("hello beautiful world  ");
-
-    expectedArgs.set(new String[]{ "beautiful", "", "", "world" });
-    assertExecuted("hello beautiful   world");
-    assertExecuted("hello beautiful   world ");
-
-    expectedArgs.set(new String[]{ "This", "", "is", "", "", "a", "sentence" });
-    assertExecuted("hello this  is   a sentence");
-
-    assertEquals(5, execCount.get());
+    assertNotForwarded("Hello");
   }
 
   @Test
-  void testAliasSuggestions() {
+  void testUnknownAliasIsForwarded() {
+    assertForwarded("");
+    assertForwarded("foo");
+  }
+
+  @Test
+  void testExecuteInputIsTrimmed() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new HelloCommand());
+
+    assertNotForwarded(" hello");
+    assertNotForwarded("  hello");
+    assertNotForwarded("hello ");
+    assertNotForwarded("hello   ");
+  }
+
+  @Test
+  void testNotExecutedWithImpermissibleAlias() {
+    final AtomicInteger callCount = new AtomicInteger();
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
@@ -111,26 +73,57 @@ public class SimpleCommandTests extends CommandTestSuite {
       }
 
       @Override
-      public List<String> suggest(final Invocation invocation) {
-        fail("Alias suggestion must not call command for suggestions");
-        return null;
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals(source, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(new String[0], invocation.arguments());
+        callCount.incrementAndGet();
+        return false;
       }
     });
 
-    // TODO Isn't this testing CommandManager instead of SimpleCommand?
-    // TODO When moved, create permission-checking tests for aliases there too
-    assertSuggestions("", "hello");
-    assertSuggestions("hel", "hello");
-    assertSuggestions("HE", "hello");
-
-    assertSuggestions("hello"); // once complete, no suggestions
-    assertSuggestions("a");
+    assertForwarded("hello");
+    assertEquals(1, callCount.get());
   }
 
-  final class WorldSuggestionCommand implements SimpleCommand {
-
+  @Test
+  void testExecuteWithArguments() {
     final AtomicInteger callCount = new AtomicInteger();
-    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
+
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, (SimpleCommand) invocation -> {
+      assertEquals("hello", invocation.alias());
+      assertArrayEquals(new String[] { "dear", "world" }, invocation.arguments());
+      callCount.incrementAndGet();
+    });
+
+    assertNotForwarded("hello dear world");
+    assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testNotExecutedAndNotForwardedWithImpermissibleArguments() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals("hello", invocation.alias());
+        assertArrayEquals(new String[] { "world" }, invocation.arguments());
+        return false;
+      }
+    });
+
+    assertNotForwarded("hello world");
+  }
+
+  // Suggestions
+
+  static class DummyCommand implements SimpleCommand {
 
     @Override
     public void execute(final Invocation invocation) {
@@ -139,97 +132,37 @@ public class SimpleCommandTests extends CommandTestSuite {
 
     @Override
     public List<String> suggest(final Invocation invocation) {
-      assertEquals(dummySource, invocation.source());
-      assertEquals("hello", invocation.alias());
-      assertArrayEquals(expectedArgs.get(), invocation.arguments());
-      return Collections.singletonList("world");
+      fail();
+      return null;
     }
   }
 
   @Test
-  void testArgumentSuggestionsAfterAlias() {
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    final WorldSuggestionCommand command = new WorldSuggestionCommand();
-    manager.register(meta, command);
+  void testAliasSuggestions() {
+    manager.register(manager.metaBuilder("foo").build(), new DummyCommand());
+    manager.register(manager.metaBuilder("bar").build(), new DummyCommand());
+    manager.register(manager.metaBuilder("baz").build(), new DummyCommand());
 
-    command.expectedArgs.set(new String[0]);
-    assertSuggestions("hello ", "world");
-    assertSuggestions("Hello ", "world");
-
-    command.expectedArgs.set(new String[] { "cyber" });
-    assertSuggestions("hello cyber", "world");
-
-    command.expectedArgs.set(new String[] { "world" });
-    assertSuggestions("hello world"); // exact match, no suggestion
-
-    command.expectedArgs.set(new String[] { "World" });
-    assertSuggestions("hello World", "world"); // case sensitive
-
-    assertEquals(5, command.callCount.get());
+    assertSuggestions("", "bar", "baz", "foo"); // in alphabetical order
   }
 
   @Test
-  void testArgumentSuggestionsWithinArguments() {
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    final WorldSuggestionCommand command = new WorldSuggestionCommand();
-    manager.register(meta, command);
+  void testPartialAliasSuggestions() {
+    manager.register(manager.metaBuilder("foo").build(), new DummyCommand());
+    manager.register(manager.metaBuilder("bar").build(), new DummyCommand());
 
-    // Unlike execute, the suggest method receives the non-trimmed command line
-    command.expectedArgs.set(new String[]{ "wonderful", "" });
-    assertSuggestions("hello wonderful ", "world");
-
-    command.expectedArgs.set(new String[]{ "dear", "", "" });
-    assertSuggestions("hello dear  ", "world");
-
-    command.expectedArgs.set(new String[]{ "dear", "world" }); // Only single-arg can match exactly
-    assertSuggestions("hello dear world", "world");
-
-    command.expectedArgs.set(new String[]{ "Dear", "wor" });
-    assertSuggestions("hello Dear wor", "world");
-
-    command.expectedArgs.set(new String[]{ "I'm", "", "", "in", "the", "", "", "" });
-    assertSuggestions("hello I'm   in the   ", "world");
+    assertSuggestions("f", "foo");
   }
 
   @Test
-  void testStringArgumentSuggestion() {
-    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
+  void testNoSuggestionsIfFullAlias() {
+    manager.register(manager.metaBuilder("hello").build(), new DummyCommand());
 
-    final CommandMeta meta = manager.metaBuilder("This").build();
-    manager.register(meta, new SimpleCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public List<String> suggest(final Invocation invocation) {
-        assertEquals("this", invocation.alias());
-        assertArrayEquals(expectedArgs.get(), invocation.arguments());
-        return Arrays.asList("is a sentence", "is another sentence");
-      }
-    });
-
-    expectedArgs.set(new String[0]);
-    assertSuggestions("This ", "is a sentence", "is another sentence");
-
-    expectedArgs.set(new String[]{ "is", "" });
-    assertSuggestions("This is ", "is a sentence", "is another sentence");
-
-    expectedArgs.set(new String[] { "is", "a" });
-    assertSuggestions("This is a", "is a sentence", "is another sentence");
-
-    // Exact match
-    expectedArgs.set(new String[]{ "is", "a", "sentence" });
-    assertSuggestions("This is a sentence", "is another sentence");
-
-    // Other exact match
-    expectedArgs.set(new String[]{ "is", "another", "sentence" });
-    assertSuggestions("This is another sentence", "is a sentence");
+    assertSuggestions("hello");
   }
 
   @Test
-  void testArgumentSuggestionsAreSortedAlphabetically() {
+  void testArgumentSuggestionAfterAlias() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
@@ -239,48 +172,53 @@ public class SimpleCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        return Arrays.asList("world", "people", "World"); // unordered intentionally
-      }
-    });
-
-    assertSuggestions("hello ", "people", "World", "world");
-  }
-
-  @Test
-  void testExecuteWithNoArgumentsIsNotCalledIfCantUse() {
-    final AtomicInteger callCount = new AtomicInteger();
-
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public boolean hasPermission(final Invocation invocation) {
-        assertEquals(dummySource, invocation.source());
         assertEquals("hello", invocation.alias());
         assertArrayEquals(new String[0], invocation.arguments());
-        callCount.incrementAndGet();
-        return false;
+        return Lists.newArrayList("world", "people");
       }
     });
 
-    assertNotExecuted("hello");
-    assertNotExecuted("Hello"); // aliases are case-insensitive
-    assertNotExecuted(" hello"); // ignore leading whitespace
-    assertNotExecuted("  hello");
-    assertNotExecuted("hello "); // ignore trailing whitespace
-    assertNotExecuted("hello  ");
-
-    assertEquals(6, callCount.get());
+    assertSuggestions("hello ", "people", "world"); // in alphabetical order
   }
 
   @Test
-  void testExecuteWithWordArgumentIsNotCalledIfCantUse() {
-    final AtomicInteger callCount = new AtomicInteger();
+  void testArgumentSuggestionsAfterPartialArguments() {
+    final CommandMeta meta = manager.metaBuilder("numbers").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
 
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return Lists.newArrayList("9");
+      }
+    });
+
+    assertSuggestions("numbers 12345678", "9");
+  }
+
+  @Test
+  void testNoSuggestionIfSameArguments() {
+    final CommandMeta meta = manager.metaBuilder("foo").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return Collections.singletonList("bar");
+      }
+    });
+
+    assertSuggestions("foo bar");
+  }
+
+  @Test
+  void testNoAliasSuggestionIfImpermissible() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
@@ -290,59 +228,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
       @Override
       public boolean hasPermission(final Invocation invocation) {
-        assertEquals(dummySource, invocation.source());
-        assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[] { "world" }, invocation.arguments());
-        callCount.incrementAndGet();
         return false;
-      }
-    });
-
-    assertNotExecuted("hello world");
-    assertNotExecuted("hello world "); // ignore trailing whitespace
-    assertNotExecuted("hello world  ");
-
-    assertEquals(3, callCount.get());
-  }
-
-  @Test
-  void testExecuteWithArgumentsStringIsNotCalledIfCantUse() {
-    final AtomicInteger callCount = new AtomicInteger();
-
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public boolean hasPermission(final Invocation invocation) {
-        assertEquals(dummySource, invocation.source());
-        assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[] { "beautiful", "world" }, invocation.arguments());
-        callCount.incrementAndGet();
-        return false;
-      }
-    });
-
-    assertNotExecuted("hello beautiful world");
-    assertNotExecuted("hello beautiful world "); // ignore trailing whitespace
-    assertNotExecuted("hello beautiful world  ");
-
-    assertEquals(3, callCount.get());
-  }
-
-  @Test
-  void testArgumentSuggestIsNotCalledIfCantUse() {
-    final AtomicInteger callCount = new AtomicInteger();
-    final AtomicReference<String[]> expectedArgs = new AtomicReference<>();
-
-    final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
       }
 
       @Override
@@ -350,26 +236,70 @@ public class SimpleCommandTests extends CommandTestSuite {
         fail();
         return null;
       }
+    });
+
+    assertSuggestions("");
+    assertSuggestions("hel");
+  }
+
+  @Test
+  void testNoFirstArgumentSuggestionIfImpermissible() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
 
       @Override
       public boolean hasPermission(final Invocation invocation) {
-        assertEquals(dummySource, invocation.source());
         assertEquals("hello", invocation.alias());
-        assertArrayEquals(expectedArgs.get(), invocation.arguments());
-        callCount.incrementAndGet();
+        assertArrayEquals(new String[0], invocation.arguments());
         return false;
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        fail();
+        return null;
       }
     });
 
-    expectedArgs.set(new String[0]);
     assertSuggestions("hello ");
+  }
 
-    expectedArgs.set(new String[] { "world" });
-    assertSuggestions("hello world");
+  @Test
+  void testNoArgumentSuggestionsIfImpermissible() {
+    final AtomicInteger callCount = new AtomicInteger();
 
-    expectedArgs.set(new String[] { "world", "" });
-    assertSuggestions("hello world ");
+    final CommandMeta meta = manager.metaBuilder("foo").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
 
-    assertEquals(3, callCount.get());
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        assertEquals("foo", invocation.alias());
+        if (callCount.getAndIncrement() == 0) {
+          assertArrayEquals(new String[] { "bar", "baz", "" }, invocation.arguments());
+        } else {
+          assertArrayEquals(new String[0], invocation.arguments());
+        }
+        return false;
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        fail();
+        return null;
+      }
+    });
+
+    assertSuggestions("foo bar baz ");
+    // The first call checks the source can use the command with the given arguments.
+    // The second verifies we can provide suggestions when no arguments are present.
+    assertEquals(2, callCount.get());
   }
 }

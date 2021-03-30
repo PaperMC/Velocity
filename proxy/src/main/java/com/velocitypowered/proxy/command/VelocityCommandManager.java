@@ -35,7 +35,6 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
-import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -167,9 +166,9 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    final ParseResults<CommandSource> results = parse(cmdLine, source, true);
+    final ParseResults<CommandSource> parse = this.parse(cmdLine, source, true);
     try {
-      return dispatcher.execute(results) != BrigadierCommand.FORWARD;
+      return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
               CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
