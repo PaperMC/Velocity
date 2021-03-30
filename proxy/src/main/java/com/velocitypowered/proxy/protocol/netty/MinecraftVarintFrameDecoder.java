@@ -34,6 +34,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       int readVarint = reader.getReadVarint();
       int bytesRead = reader.getBytesRead();
       if (readVarint < 0) {
+        in.clear();
         throw BAD_LENGTH_CACHED;
       } else if (readVarint == 0) {
         // skip over the empty packet and ignore it
@@ -46,6 +47,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         }
       }
     } else if (reader.getResult() == DecodeResult.TOO_BIG) {
+      in.clear();
       throw VARINT_BIG_CACHED;
     }
   }
