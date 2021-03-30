@@ -130,7 +130,7 @@ final class VelocityCommands {
    * @param alias the case-insensitive alias
    * @return a literal node with a redirect to the given target node
    */
-  // TODO Test
+  // TODO Test; fix: target requirements are not being checked
   static LiteralCommandNode<CommandSource> createAliasRedirect(
           final LiteralCommandNode<CommandSource> target, final String alias) {
     Preconditions.checkNotNull(target, "target");
@@ -170,7 +170,7 @@ final class VelocityCommands {
    * @return the hinting command node
    * @throws IllegalArgumentException if the given hinting node is executable or has a redirect
    */
-  // TODO Test
+  // TODO Test; ask for argumentsNode, not alias. Currently #requiresWithContext will break
   static CommandNode<CommandSource> createHintingNode(
           final LiteralCommandNode<CommandSource> aliasNode,
           final CommandNode<CommandSource> hint) {

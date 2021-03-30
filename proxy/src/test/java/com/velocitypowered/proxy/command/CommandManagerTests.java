@@ -66,6 +66,8 @@ public class CommandManagerTests {
     return new VelocityCommandManager(EVENT_MANAGER);
   }
 
+  // TODO Move execution, suggestion and permission tests to their own classes
+
   @Test
   void testConstruction() {
     VelocityCommandManager manager = createManager();
@@ -219,7 +221,7 @@ public class CommandManagerTests {
 
     manager.register("dangerous", noPermsCommand, "veryDangerous");
     assertFalse(manager.execute(MockCommandSource.INSTANCE, "dangerous"));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123"));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "verydangerous 123"));
   }
 
   @Test
@@ -265,7 +267,7 @@ public class CommandManagerTests {
     };
 
     manager.register("sendThem", noPermsCommand);
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo"));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "sendThem foo"));
   }
 
   @Test
@@ -293,8 +295,8 @@ public class CommandManagerTests {
     };
 
     manager.register("oof", noPermsCommand, "veryOof");
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "veryOOF"));
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321"));
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "veryOOF"));
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "ooF boo 54321"));
   }
 
   @Test
@@ -462,7 +464,8 @@ public class CommandManagerTests {
 
     CommandNode<CommandSource> barHint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
-            .executes(context -> fail("hints don't get executed"))
+            // TODO Assert this throws on register
+            //.executes(context -> fail("hints don't get executed"))
             .build();
     ArgumentCommandNode<CommandSource, Integer> numberArg = RequiredArgumentBuilder
             .<CommandSource, Integer>argument("number", IntegerArgumentType.integer())
