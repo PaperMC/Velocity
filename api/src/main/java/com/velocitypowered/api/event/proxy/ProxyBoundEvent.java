@@ -1,8 +1,6 @@
 package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
-import org.jetbrains.annotations.NotNull;
-
 import java.net.InetSocketAddress;
 
 /**
@@ -12,11 +10,10 @@ public final class ProxyBoundEvent {
 
   private final InetSocketAddress address;
 
-  public ProxyBoundEvent(@NotNull InetSocketAddress address) {
+  public ProxyBoundEvent(InetSocketAddress address) {
     this.address = Preconditions.checkNotNull(address, "address");
   }
 
-  @NotNull
   public InetSocketAddress getAddress() {
     return address;
   }
