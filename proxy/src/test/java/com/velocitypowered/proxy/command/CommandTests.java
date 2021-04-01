@@ -60,25 +60,27 @@ public class CommandTests extends CommandTestSuite {
 
   @Test
   void testExecuteAsyncCompletesExceptionallyIfExecuteThrows() {
+    final RuntimeException expected = new RuntimeException();
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> {
-      throw new RuntimeException("cannot execute");
+      throw expected;
     });
 
     try {
       manager.executeAsync(source, "hello").join();
     } catch (final CompletionException e) {
-      assertEquals("cannot execute", e.getCause().getCause().getMessage());
+      assertSame(expected, e.getCause().getCause());
     }
   }
 
   @Test
   void testExecuteThrowsIfHasPermissionThrows() {
+    final RuntimeException expected = new RuntimeException();
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, new RawCommand() {
       @Override
       public boolean hasPermission(final Invocation invocation) {
-        throw new RuntimeException("cannot run hasPermission");
+        throw expected;
       }
     });
 
@@ -86,7 +88,7 @@ public class CommandTests extends CommandTestSuite {
       manager.execute(source, "hello");
     });
 
-    assertEquals("cannot run hasPermission", e.getCause().getMessage());
+    assertSame(expected, e.getCause());
   }
 
   // Suggestions
@@ -158,6 +160,7 @@ public class CommandTests extends CommandTestSuite {
 
   @Test
   void testOfferSuggestionsCompletesExceptionallyIfSuggestThrows() {
+    final RuntimeException expected = new RuntimeException();
     final CommandMeta meta = manager.metaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
@@ -167,7 +170,7 @@ public class CommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        throw new UnsupportedOperationException("cannot suggest");
+        throw expected;
       }
     });
 
@@ -175,7 +178,7 @@ public class CommandTests extends CommandTestSuite {
       manager.offerSuggestions(source, "hello ").join();
       fail();
     } catch (final CompletionException e) {
-      assertEquals("cannot suggest", e.getCause().getMessage());
+      assertSame(expected, e.getCause());
     }
   }
 
