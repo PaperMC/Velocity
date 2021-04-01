@@ -203,36 +203,4 @@ public class SimpleCommandTests extends CommandTestSuite {
     assertSuggestions("foo bar baz ");
     assertEquals(1, callCount.get());
   }
-
-  /*@Test
-  void testNoHintSuggestionsIfImpermissible() {
-    final AtomicInteger callCount = new AtomicInteger();
-
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .build();
-    final CommandMeta meta = manager.metaBuilder("foo")
-            .hint(hint)
-            .build();
-    manager.register(meta, new SimpleCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public boolean hasPermission(final Invocation invocation) {
-        if (callCount.getAndIncrement() == 0) {
-          assertArrayEquals(new String[] { "ba" }, invocation.arguments());
-        } else {
-          assertArrayEquals(new String[0], invocation.arguments());
-        }
-        return false;
-      }
-    });
-
-    assertSuggestions("foo ba");
-    // Should the hint node be in the parse tree? If so, should we provide suggestions for it?
-    assertEquals(3, callCount.get());
-  }*/
 }

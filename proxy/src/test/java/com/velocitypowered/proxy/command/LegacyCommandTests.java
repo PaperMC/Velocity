@@ -215,35 +215,4 @@ public class LegacyCommandTests extends CommandTestSuite {
     assertSuggestions("foo bar baz ");
     assertEquals(1, callCount.get());
   }
-
-  /*@Test
-  void testNoHintSuggestionsIfImpermissible() {
-    final AtomicInteger callCount = new AtomicInteger();
-
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .build();
-    final CommandMeta meta = manager.metaBuilder("foo")
-            .hint(hint)
-            .build();
-    manager.register(meta, new Command() {
-      @Override
-      public void execute(final CommandSource source, final String @NonNull [] args) {
-        fail();
-      }
-
-      @Override
-      public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-        if (callCount.getAndIncrement() == 0) {
-          assertArrayEquals(new String[] { "ba" }, args);
-        } else {
-          assertArrayEquals(new String[0], args);
-        }
-        return false;
-      }
-    });
-
-    assertSuggestions("foo ba");
-    assertEquals(3, callCount.get());
-  }*/
 }

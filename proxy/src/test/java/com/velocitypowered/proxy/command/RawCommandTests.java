@@ -212,41 +212,4 @@ public class RawCommandTests extends CommandTestSuite {
     assertSuggestions("foo bar baz ");
     assertEquals(1, callCount.get());
   }
-
-  /*@Test
-  void testNoHintSuggestionsIfImpermissible() {
-    final AtomicInteger callCount = new AtomicInteger();
-
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .build();
-    final CommandMeta meta = manager.metaBuilder("foo")
-            .hint(hint)
-            .build();
-    manager.register(meta, new RawCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public boolean hasPermission(final Invocation invocation) {
-        if (callCount.getAndIncrement() == 0) {
-          assertEquals("ba", invocation.arguments());
-        } else {
-          assertEquals("", invocation.arguments());
-        }
-        return false;
-      }
-
-      @Override
-      public List<String> suggest(final Invocation invocation) {
-        fail();
-        return null;
-      }
-    });
-
-    assertSuggestions("foo ba");
-    assertEquals(3, callCount.get());
-  }*/
 }
