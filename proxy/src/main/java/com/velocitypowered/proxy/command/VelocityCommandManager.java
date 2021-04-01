@@ -25,6 +25,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
@@ -219,6 +220,7 @@ public class VelocityCommandManager implements CommandManager {
    * @param cmdLine the partially completed command
    * @return a {@link CompletableFuture} eventually completed with a {@link List},
    *         possibly empty
+   * @throws RuntimeException if a suggestion provider throws an exception
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
                                                           final String cmdLine) {
@@ -226,8 +228,13 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     final String normalizedInput = this.normalizeInput(cmdLine, false);
-    return suggestionsProvider.provideSuggestions(normalizedInput, source)
-            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+    try {
+      return suggestionsProvider.provideSuggestions(normalizedInput, source)
+              .thenApply(suggestions ->
+                    Lists.transform(suggestions.getList(), Suggestion::getText));
+    } catch (final Exception e) {
+      return CompletableFutures.exceptionallyCompletedFuture(e);
+    }
   }
 
   /**

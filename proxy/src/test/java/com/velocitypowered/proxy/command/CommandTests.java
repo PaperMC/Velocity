@@ -13,6 +13,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +56,37 @@ public class CommandTests extends CommandTestSuite {
     assertNotForwarded("  hello");
     assertNotForwarded("hello ");
     assertNotForwarded("hello   ");
+  }
+
+  @Test
+  void testExecuteAsyncCompletesExceptionallyIfExecuteThrows() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, (SimpleCommand) invocation -> {
+      throw new RuntimeException("cannot execute");
+    });
+
+    try {
+      manager.executeAsync(source, "hello").join();
+    } catch (final CompletionException e) {
+      assertEquals("cannot execute", e.getCause().getCause().getMessage());
+    }
+  }
+
+  @Test
+  void testExecuteThrowsIfHasPermissionThrows() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        throw new RuntimeException("cannot run hasPermission");
+      }
+    });
+
+    final Exception e = assertThrows(RuntimeException.class, () -> {
+      manager.execute(source, "hello");
+    });
+
+    assertEquals("cannot run hasPermission", e.getCause().getMessage());
   }
 
   // Suggestions
@@ -122,6 +154,29 @@ public class CommandTests extends CommandTestSuite {
 
     assertSuggestions("");
     assertSuggestions("hel");
+  }
+
+  @Test
+  void testOfferSuggestionsCompletesExceptionallyIfSuggestThrows() {
+    final CommandMeta meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        throw new UnsupportedOperationException("cannot suggest");
+      }
+    });
+
+    try {
+      manager.offerSuggestions(source, "hello ").join();
+      fail();
+    } catch (final CompletionException e) {
+      assertEquals("cannot suggest", e.getCause().getMessage());
+    }
   }
 
   // (Secondary) aliases
