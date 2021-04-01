@@ -17,6 +17,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Provides suggestions for a given command input.
+ *
+ * <p>Similar to {@link CommandDispatcher#getCompletionSuggestions(ParseResults)}, except it
+ * does not require to fully parse the given input and performs exactly 1 requirement predicate
+ * check per considered node.
+ *
+ * @param <S> the type of the command source
+ */
 final class SuggestionsProvider<S> {
 
   private final CommandDispatcher<S> dispatcher;
@@ -96,6 +105,7 @@ final class SuggestionsProvider<S> {
         throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().create();
       }
     } catch (final CommandSyntaxException e) {
+      // The ArgumentType is able to parse any string
       throw new AssertionError("Arguments node could not parse arguments", e);
     }
 

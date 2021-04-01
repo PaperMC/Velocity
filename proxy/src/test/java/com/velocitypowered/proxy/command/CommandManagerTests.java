@@ -52,8 +52,6 @@ public class CommandManagerTests {
     this.manager = new VelocityCommandManager(EVENT_MANAGER);
   }
 
-  // TODO Move execution, suggestion and permission tests to their own classes
-
   // Registration
 
   @Test
@@ -132,7 +130,7 @@ public class CommandManagerTests {
   void testRegisterOverridesPreviousCommand() {
     final AtomicBoolean called = new AtomicBoolean(false);
 
-    manager.register("foo", new DummyCommand());
+    manager.register("foo", new DummyCommand()); // fails on execution
     manager.register("foo", (SimpleCommand) invocation -> called.set(true));
     manager.execute(MockCommandSource.INSTANCE, "foo");
 
