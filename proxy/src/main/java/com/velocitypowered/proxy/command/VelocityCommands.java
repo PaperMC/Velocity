@@ -1,8 +1,6 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -11,7 +9,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.ParsedCommandNode;
-import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -32,8 +29,7 @@ import java.util.Map;
  */
 final class VelocityCommands {
 
-  private static final StringRange ALIAS_SUGGESTION_RANGE = StringRange.at(0);
-  private static final String ARGS_NODE_NAME = "arguments";
+  static final String ARGS_NODE_NAME = "arguments";
 
   // Parsing
 
@@ -62,18 +58,6 @@ final class VelocityCommands {
       throw new IllegalArgumentException("Cannot read alias from empty node list");
     }
     return nodes.get(0).getNode().getName();
-  }
-
-  /**
-   * Returns whether the given context builder was created as a result of producing suggestions
-   * for the root node (via {@link CommandDispatcher#getCompletionSuggestions(ParseResults)}).
-   *
-   * @param context the context builder
-   * @return {@code true} if the context builder is used for building the suggestions of
-   *         the root node
-   */
-  static boolean isForRootSuggestions(final CommandContextBuilder<?> context) {
-    return context.getNodes().size() == 1 && context.getRange().equals(ALIAS_SUGGESTION_RANGE);
   }
 
   /**
@@ -130,14 +114,22 @@ final class VelocityCommands {
    * @param alias the case-insensitive alias
    * @return a literal node with a redirect to the given target node
    */
-  // TODO Test; fix: target requirements are not being checked
   static LiteralCommandNode<CommandSource> createAliasRedirect(
           final LiteralCommandNode<CommandSource> target, final String alias) {
+    // Brigadier parses command input within different contexts. When a node with a redirect is
+    // reached, a child context builder with the redirect target set as its root node is created.
+    // Command implementations are interested in knowing the used alias, i.e. the name of the
+    // redirect origin. A child context does not know about its origin, so we cannot use
+    // the redirect system as is.
+    // We could use a redirect modifier to inject the origin node into the child context, but
+    // that would leave the context in an invalid state.
     Preconditions.checkNotNull(target, "target");
     Preconditions.checkNotNull(alias, "alias");
     return LiteralArgumentBuilder
             .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
-            .redirect(target)
+            .requires(target.getRequirement())
+            .requiresWithContext(target.getContextRequirement())
+            .executes(target.getCommand())
             .build();
   }
 
@@ -170,11 +162,19 @@ final class VelocityCommands {
    * @return the hinting command node
    * @throws IllegalArgumentException if the given hinting node is executable or has a redirect
    */
-  // TODO Test; ask for argumentsNode, not alias. Currently #requiresWithContext will break
   static CommandNode<CommandSource> createHintingNode(
           final LiteralCommandNode<CommandSource> aliasNode,
           final CommandNode<CommandSource> hint) {
     Preconditions.checkNotNull(aliasNode, "aliasNode");
+    final CommandNode<CommandSource> argumentsNode = aliasNode.getChild(ARGS_NODE_NAME);
+    if (argumentsNode == null) {
+      throw new IllegalArgumentException(aliasNode + " does not contain an arguments node");
+    }
+    return createHintingNode(argumentsNode, hint);
+  }
+
+  private static CommandNode<CommandSource> createHintingNode(
+          final CommandNode<CommandSource> argumentsNode, final CommandNode<CommandSource> hint) {
     Preconditions.checkNotNull(hint, "hint");
     if (hint.getCommand() != null) {
       throw new IllegalArgumentException("Cannot use an executable node for hinting");
@@ -183,11 +183,12 @@ final class VelocityCommands {
       throw new IllegalArgumentException("Cannot use a node with a redirect for hinting");
     }
     ArgumentBuilder<CommandSource, ?> builder = hint.createBuilder()
-            .requires(aliasNode.getRequirement())
-            .requiresWithContext(aliasNode.getContextRequirement())
-            .executes(aliasNode.getCommand());
+            // Hints are only considered for suggestions, which are handled by
+            // SuggestionsProvider. They are used to provide suggestions if the
+            // requirements of the arguments node pass.
+            .requires(source -> false);
     for (final CommandNode<CommandSource> child : hint.getChildren()) {
-      builder.then(createHintingNode(aliasNode, child));
+      builder.then(createHintingNode(argumentsNode, child));
     }
     return builder.build();
   }

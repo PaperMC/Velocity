@@ -18,17 +18,10 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
-import com.mojang.brigadier.context.ParsedArgument;
-import com.mojang.brigadier.context.ParsedCommandNode;
-import com.mojang.brigadier.context.StringRange;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
@@ -100,7 +93,7 @@ interface CommandNodeFactory<T extends Command> {
       final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
             .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
             .requiresWithContext((context, reader) -> {
-              if (reader.canRead() && !VelocityCommands.isForRootSuggestions(context)) {
+              if (reader.canRead()) {
                 // InvocableCommands do not follow a tree-like permissions checking structure.
                 // Thus, a CommandSource might be able to execute a command with arguments while
                 // not being able to execute the argumentless variant. We only check for
@@ -154,7 +147,7 @@ interface CommandNodeFactory<T extends Command> {
       final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
               .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
               .requiresWithContext((context, reader) -> {
-                if (reader.canRead() && !VelocityCommands.isForRootSuggestions(context)) {
+                if (reader.canRead()) {
                   // See the comment on InvocableCommandNodeFactory#create about the non-tree like
                   // permissions checking structure.
                   return true;

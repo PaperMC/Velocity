@@ -48,10 +48,12 @@ public class VelocityCommandManager implements CommandManager {
 
   private final CommandDispatcher<CommandSource> dispatcher;
   private final VelocityEventManager eventManager;
+  private final SuggestionsProvider<CommandSource> suggestionsProvider;
 
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = Preconditions.checkNotNull(eventManager);
     this.dispatcher = new CommandDispatcher<>();
+    this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher);
   }
 
   @Override
@@ -166,7 +168,8 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    final ParseResults<CommandSource> parse = this.parse(cmdLine, source, true);
+    final String normalizedInput = this.normalizeInput(cmdLine, true);
+    final ParseResults<CommandSource> parse = dispatcher.parse(normalizedInput, source);
     try {
       return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
@@ -222,34 +225,28 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse = parse(cmdLine, source, false);
-    return dispatcher.getCompletionSuggestions(parse)
+    final String normalizedInput = this.normalizeInput(cmdLine, false);
+    return suggestionsProvider.provideSuggestions(normalizedInput, source)
             .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
   /**
-   * Normalizes and parses the given command input.
+   * Normalizes the given command input.
    *
    * @param cmdLine the raw command input, without the leading slash ('/')
-   * @param source the source to invoke the command for
-   * @param trim whether to remove leading and trailing whitespace from the command input
-   * @return the result of parsing the normalized command input
+   * @param trim whether to remove leading and trailing whitespace from the input
+   * @return the normalized command input
    */
-  private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
-                                            final boolean trim) {
-    // Normalize the command input
-    String command = trim ? cmdLine.trim() : cmdLine;
+  private String normalizeInput(final String cmdLine, final boolean trim) {
+    final String command = trim ? cmdLine.trim() : cmdLine;
     int firstSpace = command.indexOf(' ');
     if (firstSpace != -1) {
       // Aliases are case-insensitive, arguments are not
-      command = command.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
+      return command.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
               + command.substring(firstSpace);
     } else {
-      command = command.toLowerCase(Locale.ENGLISH);
+      return command.toLowerCase(Locale.ENGLISH);
     }
-
-    // Parse normalized input
-    return dispatcher.parse(command, source);
   }
 
   /**

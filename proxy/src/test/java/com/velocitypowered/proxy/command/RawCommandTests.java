@@ -3,14 +3,17 @@ package com.velocitypowered.proxy.command;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandMeta;
-import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.RawCommand;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
-public class SimpleCommandTests extends CommandTestSuite {
+public class RawCommandTests extends CommandTestSuite {
 
   // Execution
 
@@ -19,11 +22,14 @@ public class SimpleCommandTests extends CommandTestSuite {
     final AtomicInteger callCount = new AtomicInteger();
 
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals(source, invocation.source());
-      assertEquals("hello", invocation.alias());
-      assertArrayEquals(new String[0], invocation.arguments());
-      callCount.incrementAndGet();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        assertEquals(source, invocation.source());
+        assertEquals("hello", invocation.alias());
+        assertEquals("", invocation.arguments());
+        callCount.incrementAndGet();
+      }
     });
 
     assertNotForwarded("hello");
@@ -34,7 +40,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testNotExecutedWithImpermissibleAlias() {
     final AtomicInteger callCount = new AtomicInteger();
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -44,7 +50,7 @@ public class SimpleCommandTests extends CommandTestSuite {
       public boolean hasPermission(final Invocation invocation) {
         assertEquals(source, invocation.source());
         assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[0], invocation.arguments());
+        assertEquals("", invocation.arguments());
         callCount.incrementAndGet();
         return false;
       }
@@ -59,10 +65,13 @@ public class SimpleCommandTests extends CommandTestSuite {
     final AtomicInteger callCount = new AtomicInteger();
 
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals("hello", invocation.alias());
-      assertArrayEquals(new String[] { "dear", "world" }, invocation.arguments());
-      callCount.incrementAndGet();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        assertEquals("hello", invocation.alias());
+        assertEquals("dear world", invocation.arguments());
+        callCount.incrementAndGet();
+      }
     });
 
     assertNotForwarded("hello dear world");
@@ -72,7 +81,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   @Test
   void testNotExecutedAndNotForwardedWithImpermissibleArguments() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -81,7 +90,7 @@ public class SimpleCommandTests extends CommandTestSuite {
       @Override
       public boolean hasPermission(final Invocation invocation) {
         assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[] { "world" }, invocation.arguments());
+        assertEquals("world", invocation.arguments());
         return false;
       }
     });
@@ -94,7 +103,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   @Test
   void testArgumentSuggestionAfterAlias() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -103,18 +112,19 @@ public class SimpleCommandTests extends CommandTestSuite {
       @Override
       public List<String> suggest(final Invocation invocation) {
         assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[0], invocation.arguments());
-        return ImmutableList.of("world", "people");
+        assertEquals("", invocation.arguments());
+        return ImmutableList.of("world", "People", "people");
       }
     });
 
-    assertSuggestions("hello ", "people", "world"); // in alphabetical order
+    // Alphabetical order
+    assertSuggestions("hello ", "people", "People", "world");
   }
 
   @Test
   void testArgumentSuggestionsAfterPartialArguments() {
     final CommandMeta meta = manager.metaBuilder("numbers").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -122,7 +132,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        assertArrayEquals(new String[] { "12345678" }, invocation.arguments());
+        assertEquals("12345678", invocation.arguments());
         return Collections.singletonList("9");
       }
     });
@@ -133,7 +143,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   @Test
   void testNoSuggestionIfSameArguments() {
     final CommandMeta meta = manager.metaBuilder("foo").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -151,7 +161,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   @Test
   void testNoFirstArgumentSuggestionIfImpermissible() {
     final CommandMeta meta = manager.metaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -160,13 +170,12 @@ public class SimpleCommandTests extends CommandTestSuite {
       @Override
       public boolean hasPermission(final Invocation invocation) {
         assertEquals("hello", invocation.alias());
-        assertArrayEquals(new String[0], invocation.arguments());
+        assertEquals("", invocation.arguments());
         return false;
       }
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        fail();
         return null;
       }
     });
@@ -179,7 +188,7 @@ public class SimpleCommandTests extends CommandTestSuite {
     final AtomicInteger callCount = new AtomicInteger();
 
     final CommandMeta meta = manager.metaBuilder("foo").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -188,7 +197,7 @@ public class SimpleCommandTests extends CommandTestSuite {
       @Override
       public boolean hasPermission(final Invocation invocation) {
         assertEquals("foo", invocation.alias());
-        assertArrayEquals(new String[] { "bar", "baz", "" }, invocation.arguments());
+        assertEquals("bar baz ", invocation.arguments());
         callCount.incrementAndGet();
         return false;
       }
@@ -214,7 +223,7 @@ public class SimpleCommandTests extends CommandTestSuite {
     final CommandMeta meta = manager.metaBuilder("foo")
             .hint(hint)
             .build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -223,16 +232,21 @@ public class SimpleCommandTests extends CommandTestSuite {
       @Override
       public boolean hasPermission(final Invocation invocation) {
         if (callCount.getAndIncrement() == 0) {
-          assertArrayEquals(new String[] { "ba" }, invocation.arguments());
+          assertEquals("ba", invocation.arguments());
         } else {
-          assertArrayEquals(new String[0], invocation.arguments());
+          assertEquals("", invocation.arguments());
         }
         return false;
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        fail();
+        return null;
       }
     });
 
     assertSuggestions("foo ba");
-    // Should the hint node be in the parse tree? If so, should we provide suggestions for it?
     assertEquals(3, callCount.get());
   }*/
 }
