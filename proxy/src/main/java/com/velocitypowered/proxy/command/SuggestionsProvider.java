@@ -78,7 +78,9 @@ final class SuggestionsProvider<S> {
           final CommandContext<S> builtContext = context.build(input);
           try {
             future = node.listSuggestions(builtContext, new SuggestionsBuilder(input, 0));
-          } catch (final CommandSyntaxException ignored) {}
+          } catch (final CommandSyntaxException e) {
+            throw new AssertionError("Cannot list suggestions of alias node", e);
+          }
         }
       }
       futures[i++] = future;
@@ -124,7 +126,9 @@ final class SuggestionsProvider<S> {
       try {
         future = node.listSuggestions(
                 builtContext, new SuggestionsBuilder(reader.getString(), start));
-      } catch (final CommandSyntaxException ignored) {}
+      } catch (final CommandSyntaxException ignored) {
+        // skip this node's suggestions
+      }
       futures[i++] = future;
     }
     return this.merge(reader.getString(), futures);

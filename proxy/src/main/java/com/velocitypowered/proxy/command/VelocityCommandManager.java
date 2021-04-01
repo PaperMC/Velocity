@@ -51,6 +51,11 @@ public class VelocityCommandManager implements CommandManager {
   private final VelocityEventManager eventManager;
   private final SuggestionsProvider<CommandSource> suggestionsProvider;
 
+  /**
+   * Constructs a command manager.
+   *
+   * @param eventManager the event manager
+   */
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = Preconditions.checkNotNull(eventManager);
     this.dispatcher = new CommandDispatcher<>();
