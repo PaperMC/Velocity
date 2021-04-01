@@ -220,7 +220,6 @@ public class VelocityCommandManager implements CommandManager {
    * @param cmdLine the partially completed command
    * @return a {@link CompletableFuture} eventually completed with a {@link List},
    *         possibly empty
-   * @throws RuntimeException if a suggestion provider throws an exception
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
                                                           final String cmdLine) {
