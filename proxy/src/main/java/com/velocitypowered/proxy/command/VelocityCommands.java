@@ -15,7 +15,6 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -126,7 +125,7 @@ final class VelocityCommands {
     Preconditions.checkNotNull(target, "target");
     Preconditions.checkNotNull(alias, "alias");
     return LiteralArgumentBuilder
-            .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .<CommandSource>literal(alias)
             .requires(target.getRequirement())
             .requiresWithContext(target.getContextRequirement())
             .executes(target.getCommand())
@@ -154,27 +153,17 @@ final class VelocityCommands {
   // Hinting
 
   /**
-   * Returns a node to use for hinting the command represented by the given fully-built alias node.
-   * The hinting metadata is contained in the given {@link CommandNode}.
+   * Returns a node to use for hinting the arguments of a command. Hint nodes are sent to
+   * 1.13+ clients, and the proxy uses them for providing suggestions.
    *
-   * @param aliasNode the alias node of the command to hint
+   * <p>A hint node is able to provide suggestions if and only if the requirements of
+   * the corresponding arguments node pass.
+   *
    * @param hint the node containing hinting metadata
    * @return the hinting command node
-   * @throws IllegalArgumentException if the given hinting node is executable or has a redirect
+   * @throws IllegalArgumentException if the hinting node is executable or has a redirect
    */
-  static CommandNode<CommandSource> createHintingNode(
-          final LiteralCommandNode<CommandSource> aliasNode,
-          final CommandNode<CommandSource> hint) {
-    Preconditions.checkNotNull(aliasNode, "aliasNode");
-    final CommandNode<CommandSource> argumentsNode = aliasNode.getChild(ARGS_NODE_NAME);
-    if (argumentsNode == null) {
-      throw new IllegalArgumentException(aliasNode + " does not contain an arguments node");
-    }
-    return createHintingNode(argumentsNode, hint);
-  }
-
-  private static CommandNode<CommandSource> createHintingNode(
-          final CommandNode<CommandSource> argumentsNode, final CommandNode<CommandSource> hint) {
+  static CommandNode<CommandSource> createHintingNode(final CommandNode<CommandSource> hint) {
     Preconditions.checkNotNull(hint, "hint");
     if (hint.getCommand() != null) {
       throw new IllegalArgumentException("Cannot use an executable node for hinting");
@@ -183,12 +172,10 @@ final class VelocityCommands {
       throw new IllegalArgumentException("Cannot use a node with a redirect for hinting");
     }
     ArgumentBuilder<CommandSource, ?> builder = hint.createBuilder()
-            // Hints are only considered for suggestions, which are handled by
-            // SuggestionsProvider. They are used to provide suggestions if the
-            // requirements of the arguments node pass.
+            // Requirement checking is performed by SuggestionsProvider
             .requires(source -> false);
     for (final CommandNode<CommandSource> child : hint.getChildren()) {
-      builder.then(createHintingNode(argumentsNode, child));
+      builder.then(createHintingNode(child));
     }
     return builder.build();
   }

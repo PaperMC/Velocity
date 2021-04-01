@@ -91,7 +91,7 @@ interface CommandNodeFactory<T extends Command> {
       };
 
       final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
-            .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+            .<CommandSource>literal(alias)
             .requiresWithContext((context, reader) -> {
               if (reader.canRead()) {
                 // InvocableCommands do not follow a tree-like permissions checking structure.
@@ -145,7 +145,7 @@ interface CommandNodeFactory<T extends Command> {
       };
 
       final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
-              .<CommandSource>literal(alias.toLowerCase(Locale.ENGLISH))
+              .<CommandSource>literal(alias)
               .requiresWithContext((context, reader) -> {
                 if (reader.canRead()) {
                   // See the comment on InvocableCommandNodeFactory#create about the non-tree like

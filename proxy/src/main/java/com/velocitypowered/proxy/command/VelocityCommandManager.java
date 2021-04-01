@@ -97,11 +97,11 @@ public class VelocityCommandManager implements CommandManager {
     Iterator<String> aliasIterator = meta.getAliases().iterator();
     String primaryAlias = aliasIterator.next();
 
-    LiteralCommandNode<CommandSource> node = null;
+    LiteralCommandNode<CommandSource> aliasNode = null;
     if (command instanceof BrigadierCommand) {
-      node = ((BrigadierCommand) command).getNode();
+      aliasNode = ((BrigadierCommand) command).getNode();
     } else if (command instanceof SimpleCommand) {
-      node = CommandNodeFactory.SIMPLE.create((SimpleCommand) command, primaryAlias);
+      aliasNode = CommandNodeFactory.SIMPLE.create((SimpleCommand) command, primaryAlias);
     } else if (command instanceof RawCommand) {
       // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
       // have side-effect free #suggest methods. We rely on the newer RawCommand
@@ -110,33 +110,34 @@ public class VelocityCommandManager implements CommandManager {
       try {
         asRaw.suggest(null, new String[0]);
       } catch (final UnsupportedOperationException e) {
-        node = CommandNodeFactory.RAW.create(asRaw, primaryAlias);
+        aliasNode = CommandNodeFactory.RAW.create(asRaw, primaryAlias);
       } catch (final Exception ignored) {
         // The implementation probably relies on a non-null source
       }
     }
-    if (node == null) {
-      node = CommandNodeFactory.LEGACY.create(command, primaryAlias);
+    if (aliasNode == null) {
+      aliasNode = CommandNodeFactory.LEGACY.create(command, primaryAlias);
     }
 
     if (!(command instanceof BrigadierCommand)) {
       for (CommandNode<CommandSource> hint : meta.getHints()) {
-        node.addChild(VelocityCommands.createHintingNode(node, hint));
+        aliasNode.addChild(VelocityCommands.createHintingNode(hint));
       }
     }
 
-    dispatcher.getRoot().addChild(node);
+    this.registerAlias(aliasNode);
     while (aliasIterator.hasNext()) {
       String currentAlias = aliasIterator.next();
-      CommandNode<CommandSource> existingNode = dispatcher.getRoot()
-          .getChild(currentAlias.toLowerCase(Locale.ENGLISH));
-      if (existingNode != null) {
-        dispatcher.getRoot().getChildren().remove(existingNode);
-      }
       final LiteralCommandNode<CommandSource> redirect =
-              VelocityCommands.createAliasRedirect(node, currentAlias);
-      dispatcher.getRoot().addChild(redirect);
+              VelocityCommands.createAliasRedirect(aliasNode, currentAlias);
+      this.registerAlias(redirect);
     }
+  }
+
+  private void registerAlias(final LiteralCommandNode<CommandSource> literal) {
+    // Registration overrides previous aliased command
+    this.unregister(literal.getName());
+    dispatcher.getRoot().addChild(literal);
   }
 
   @Override
