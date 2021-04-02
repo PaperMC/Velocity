@@ -4,7 +4,7 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.proxy.ProxyBoundEvent;
+import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
@@ -113,7 +113,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(new ProxyBoundEvent(address));
+            server.getEventManager().fireAndForget(new ListenerBoundEvent(address));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
           }
