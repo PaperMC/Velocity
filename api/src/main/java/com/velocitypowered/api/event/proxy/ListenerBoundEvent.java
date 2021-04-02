@@ -34,9 +34,9 @@ public final class ListenerBoundEvent {
 
   @Override
   public String toString() {
-    return "ListenerBoundEvent{" +
-        "address=" + address +
-        ", listenerType=" + listenerType +
-        '}';
+    return "ListenerBoundEvent{"
+        + "address=" + address
+        + ", listenerType=" + listenerType
+        + '}';
   }
 }

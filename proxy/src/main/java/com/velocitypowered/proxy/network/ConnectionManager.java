@@ -132,7 +132,8 @@ public final class ConnectionManager {
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(new ListenerBoundEvent(address, ListenerType.MINECRAFT));
+            server.getEventManager().fireAndForget(
+                new ListenerBoundEvent(address, ListenerType.MINECRAFT));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
           }
@@ -160,7 +161,8 @@ public final class ConnectionManager {
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(new ListenerBoundEvent(address, ListenerType.GS4));
+            server.getEventManager().fireAndForget(
+                new ListenerBoundEvent(address, ListenerType.GS4));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
           }

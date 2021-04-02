@@ -34,9 +34,9 @@ public final class ListenerCloseEvent {
 
   @Override
   public String toString() {
-    return "ListenerCloseEvent{" +
-        "address=" + address +
-        ", listenerType=" + listenerType +
-        '}';
+    return "ListenerCloseEvent{"
+        + "address=" + address
+        + ", listenerType=" + listenerType
+        + '}';
   }
 }
