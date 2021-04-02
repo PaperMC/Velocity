@@ -5,8 +5,13 @@ plugins {
     id 'checkstyle'
 }
 
+apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
+
+license {
+    header = project.rootProject.file('HEADER.txt')
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
