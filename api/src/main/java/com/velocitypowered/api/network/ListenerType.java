@@ -12,7 +12,7 @@ package com.velocitypowered.api.network;
  */
 public enum ListenerType {
   MINECRAFT("Minecraft"),
-  GS4("GS4");
+  QUERY("Query");
 
   final String name;
 

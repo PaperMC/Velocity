@@ -157,12 +157,12 @@ public final class ConnectionManager {
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
-            this.endpoints.put(address, new Endpoint(channel, ListenerType.GS4));
+            this.endpoints.put(address, new Endpoint(channel, ListenerType.QUERY));
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
             server.getEventManager().fireAndForget(
-                new ListenerBoundEvent(address, ListenerType.GS4));
+                new ListenerBoundEvent(address, ListenerType.QUERY));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
           }
