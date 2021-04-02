@@ -5,6 +5,7 @@ import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
+import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
@@ -113,7 +114,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(new ListenerBoundEvent(address));
+            server.getEventManager().fireAndForget(new ListenerBoundEvent(address, false));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
           }
@@ -139,6 +140,9 @@ public final class ConnectionManager {
           if (future.isSuccess()) {
             this.endpoints.put(address, channel);
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
+
+            // Fire the proxy bound event after the socket is bound
+            server.getEventManager().fireAndForget(new ListenerBoundEvent(address, true));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
           }
@@ -172,6 +176,10 @@ public final class ConnectionManager {
    * @param oldBind the endpoint to close
    */
   public void close(InetSocketAddress oldBind) {
+    // Fire proxy close event to notify plugins of socket close. We block since plugins
+    // should have a chance to be notified before the server stops accepting connections.
+    server.getEventManager().fire(new ListenerCloseEvent(oldBind)).join();
+
     Channel serverChannel = endpoints.remove(oldBind);
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
     LOGGER.info("Closing endpoint {}", serverChannel.localAddress());
@@ -182,10 +190,17 @@ public final class ConnectionManager {
    * Closes all endpoints.
    */
   public void shutdown() {
-    for (final Channel endpoint : this.endpoints.values()) {
+    for (final Map.Entry<InetSocketAddress, Channel> endpoint : this.endpoints.entrySet()) {
+      final InetSocketAddress address = endpoint.getKey();
+      final Channel channel = endpoint.getValue();
+
+      // Fire proxy close event to notify plugins of socket close. We block since plugins
+      // should have a chance to be notified before the server stops accepting connections.
+      server.getEventManager().fire(new ListenerCloseEvent(address)).join();
+
       try {
-        LOGGER.info("Closing endpoint {}", endpoint.localAddress());
-        endpoint.close().sync();
+        LOGGER.info("Closing endpoint {}", address);
+        channel.close().sync();
       } catch (final InterruptedException e) {
         LOGGER.info("Interrupted whilst closing endpoint", e);
         Thread.currentThread().interrupt();

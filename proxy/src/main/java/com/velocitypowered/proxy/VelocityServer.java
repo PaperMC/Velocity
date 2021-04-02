@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.proxy.ProxyCloseEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -402,10 +401,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     Runnable shutdownProcess = () -> {
       logger.info("Shutting down the proxy...");
-
-      // Fire proxy close event to notify plugins of socket close. We block since plugins
-      // should have a chance to be notified before the server stops accepting connections.
-      eventManager.fire(new ProxyCloseEvent()).join();
 
       // Shutdown the connection manager, this should be
       // done first to refuse new connections

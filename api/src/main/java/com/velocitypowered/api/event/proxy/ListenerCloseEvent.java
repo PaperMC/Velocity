@@ -4,28 +4,22 @@ import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
 
 /**
- * This event is fired by the proxy after a listener starts accepting connections.
+ * This event is fired by the proxy before the proxy stops accepting connections.
  */
-public final class ListenerBoundEvent {
+public final class ListenerCloseEvent {
 
   private final InetSocketAddress address;
-  private final boolean isQuery;
 
-  public ListenerBoundEvent(InetSocketAddress address, boolean isQuery) {
+  public ListenerCloseEvent(InetSocketAddress address) {
     this.address = Preconditions.checkNotNull(address, "address");
-    this.isQuery = isQuery;
   }
 
   public InetSocketAddress getAddress() {
     return address;
   }
 
-  public boolean isQuery() {
-    return isQuery;
-  }
-
   @Override
   public String toString() {
-    return "ListenerBoundEvent";
+    return "ListenerCloseEvent";
   }
 }
