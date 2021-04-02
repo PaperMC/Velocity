@@ -21,6 +21,9 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
+import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
+import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
@@ -51,7 +54,7 @@ public final class ConnectionManager {
   private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
       1 << 21);
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
-  private final Map<InetSocketAddress, Channel> endpoints = new HashMap<>();
+  private final Map<InetSocketAddress, Endpoint> endpoints = new HashMap<>();
   private final TransportType transportType;
   private final EventLoopGroup bossGroup;
   private final EventLoopGroup workerGroup;
@@ -125,8 +128,12 @@ public final class ConnectionManager {
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
-            this.endpoints.put(address, channel);
+            this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
             LOGGER.info("Listening on {}", channel.localAddress());
+
+            // Fire the proxy bound event after the socket is bound
+            server.getEventManager().fireAndForget(
+                new ListenerBoundEvent(address, ListenerType.MINECRAFT));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
           }
@@ -150,8 +157,12 @@ public final class ConnectionManager {
         .addListener((ChannelFutureListener) future -> {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
-            this.endpoints.put(address, channel);
+            this.endpoints.put(address, new Endpoint(channel, ListenerType.QUERY));
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
+
+            // Fire the proxy bound event after the socket is bound
+            server.getEventManager().fireAndForget(
+                new ListenerBoundEvent(address, ListenerType.QUERY));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
           }
@@ -185,7 +196,14 @@ public final class ConnectionManager {
    * @param oldBind the endpoint to close
    */
   public void close(InetSocketAddress oldBind) {
-    Channel serverChannel = endpoints.remove(oldBind);
+    Endpoint endpoint = endpoints.remove(oldBind);
+
+    // Fire proxy close event to notify plugins of socket close. We block since plugins
+    // should have a chance to be notified before the server stops accepting connections.
+    server.getEventManager().fire(new ListenerCloseEvent(oldBind, endpoint.getType())).join();
+
+    Channel serverChannel = endpoint.getChannel();
+
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
     LOGGER.info("Closing endpoint {}", serverChannel.localAddress());
     serverChannel.close().syncUninterruptibly();
@@ -195,10 +213,17 @@ public final class ConnectionManager {
    * Closes all endpoints.
    */
   public void shutdown() {
-    for (final Channel endpoint : this.endpoints.values()) {
+    for (final Map.Entry<InetSocketAddress, Endpoint> entry : this.endpoints.entrySet()) {
+      final InetSocketAddress address = entry.getKey();
+      final Endpoint endpoint = entry.getValue();
+
+      // Fire proxy close event to notify plugins of socket close. We block since plugins
+      // should have a chance to be notified before the server stops accepting connections.
+      server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
+
       try {
-        LOGGER.info("Closing endpoint {}", endpoint.localAddress());
-        endpoint.close().sync();
+        LOGGER.info("Closing endpoint {}", address);
+        endpoint.getChannel().close().sync();
       } catch (final InterruptedException e) {
         LOGGER.info("Interrupted whilst closing endpoint", e);
         Thread.currentThread().interrupt();
