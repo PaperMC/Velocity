@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ListenerType;
 import java.net.InetSocketAddress;
 
 /**
@@ -16,17 +17,26 @@ import java.net.InetSocketAddress;
 public final class ListenerCloseEvent {
 
   private final InetSocketAddress address;
+  private final ListenerType listenerType;
 
-  public ListenerCloseEvent(InetSocketAddress address) {
+  public ListenerCloseEvent(InetSocketAddress address, ListenerType listenerType) {
     this.address = Preconditions.checkNotNull(address, "address");
+    this.listenerType = Preconditions.checkNotNull(listenerType, "listenerType");
   }
 
   public InetSocketAddress getAddress() {
     return address;
   }
 
+  public ListenerType getListenerType() {
+    return listenerType;
+  }
+
   @Override
   public String toString() {
-    return "ListenerCloseEvent";
+    return "ListenerCloseEvent{" +
+        "address=" + address +
+        ", listenerType=" + listenerType +
+        '}';
   }
 }

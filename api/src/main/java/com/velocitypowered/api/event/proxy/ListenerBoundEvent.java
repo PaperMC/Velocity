@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ListenerType;
 import java.net.InetSocketAddress;
 
 /**
@@ -16,23 +17,26 @@ import java.net.InetSocketAddress;
 public final class ListenerBoundEvent {
 
   private final InetSocketAddress address;
-  private final boolean isQuery;
+  private final ListenerType listenerType;
 
-  public ListenerBoundEvent(InetSocketAddress address, boolean isQuery) {
+  public ListenerBoundEvent(InetSocketAddress address, ListenerType listenerType) {
     this.address = Preconditions.checkNotNull(address, "address");
-    this.isQuery = isQuery;
+    this.listenerType = Preconditions.checkNotNull(listenerType, "listenerType");
   }
 
   public InetSocketAddress getAddress() {
     return address;
   }
 
-  public boolean isQuery() {
-    return isQuery;
+  public ListenerType getListenerType() {
+    return listenerType;
   }
 
   @Override
   public String toString() {
-    return "ListenerBoundEvent";
+    return "ListenerBoundEvent{" +
+        "address=" + address +
+        ", listenerType=" + listenerType +
+        '}';
   }
 }
