@@ -108,10 +108,12 @@ interface CommandNodeFactory<T extends Command> {
             })
             .build();
 
-      final ArgumentCommandNode<CommandSource, A> argumentsNode =
-            VelocityCommands.argumentBuilder(argumentsType, aliasNode)
-              .requiresWithContext((context, reader) -> permissionRequirement.test(context))
-              .suggests((context, builder) -> {
+      final ArgumentCommandNode<CommandSource, String> argumentsNode = VelocityCommands
+            .newArgumentsNode(
+              aliasNode,
+              argumentsType,
+              (context, reader) -> permissionRequirement.test(context),
+              (context, builder) -> {
                 final I invocation = invocationFactory.create(context);
                 return command.suggestAsync(invocation).thenApply(suggestions -> {
                   for (String value : suggestions) {
@@ -120,9 +122,9 @@ interface CommandNodeFactory<T extends Command> {
                   }
                   return builder.build();
                 });
-              })
-              .build();
+              });
       aliasNode.addChild(argumentsNode);
+
       return aliasNode;
     }
   }
@@ -144,40 +146,42 @@ interface CommandNodeFactory<T extends Command> {
       };
 
       final LiteralCommandNode<CommandSource> aliasNode = LiteralArgumentBuilder
-              .<CommandSource>literal(alias)
-              .requiresWithContext((context, reader) -> {
-                if (reader.canRead()) {
-                  // See the comment on InvocableCommandNodeFactory#create about the non-tree like
-                  // permissions checking structure.
-                  return true;
-                }
-                return permissionRequirement.test(context);
-              })
-              .executes(context -> {
-                // Command is shared with argumentsNode
+            .<CommandSource>literal(alias)
+            .requiresWithContext((context, reader) -> {
+              if (reader.canRead()) {
+                // See the comment on InvocableCommandNodeFactory#create about the non-tree like
+                // permissions checking structure.
+                return true;
+              }
+              return permissionRequirement.test(context);
+            })
+            .executes(context -> {
+              // Command is shared with argumentsNode
+              final String[] args = VelocityCommands.readArguments(
+                      context, String[].class, StringArrayArgumentType.EMPTY);
+              command.execute(context.getSource(), args);
+              return 1;
+            })
+            .build();
+
+      final ArgumentCommandNode<CommandSource, String> argumentsNode = VelocityCommands
+            .newArgumentsNode(
+              aliasNode,
+              StringArrayArgumentType.INSTANCE,
+              (context, reader) -> permissionRequirement.test(context),
+              (context, builder) -> {
                 final String[] args = VelocityCommands.readArguments(
                         context, String[].class, StringArrayArgumentType.EMPTY);
-                command.execute(context.getSource(), args);
-                return 1;
-              })
-              .build();
-
-      final ArgumentCommandNode<CommandSource, String[]> argumentsNode =
-              VelocityCommands.argumentBuilder(StringArrayArgumentType.INSTANCE, aliasNode)
-                .requiresWithContext((context, reader) -> permissionRequirement.test(context))
-                .suggests((context, builder) -> {
-                  final String[] args = VelocityCommands.readArguments(
-                          context, String[].class, StringArrayArgumentType.EMPTY);
-                  return command.suggestAsync(context.getSource(), args).thenApply(suggestions -> {
-                    for (String value : suggestions) {
-                      Preconditions.checkNotNull(value, "suggestion");
-                      builder.suggest(value);
-                    }
-                    return builder.build();
-                  });
-                })
-                .build();
+                return command.suggestAsync(context.getSource(), args).thenApply(suggestions -> {
+                  for (String value : suggestions) {
+                    Preconditions.checkNotNull(value, "suggestion");
+                    builder.suggest(value);
+                  }
+                  return builder.build();
+                });
+              });
       aliasNode.addChild(argumentsNode);
+
       return aliasNode;
     }
   }

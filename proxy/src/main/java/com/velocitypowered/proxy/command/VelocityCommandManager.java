@@ -126,7 +126,7 @@ public class VelocityCommandManager implements CommandManager {
 
     if (!(command instanceof BrigadierCommand)) {
       for (CommandNode<CommandSource> hint : meta.getHints()) {
-        aliasNode.addChild(VelocityCommands.createHintingNode(hint));
+        aliasNode.addChild(VelocityCommands.newHintingNode(hint));
       }
     }
 
@@ -134,7 +134,7 @@ public class VelocityCommandManager implements CommandManager {
     while (aliasIterator.hasNext()) {
       String currentAlias = aliasIterator.next();
       final LiteralCommandNode<CommandSource> redirect =
-              VelocityCommands.createAliasRedirect(aliasNode, currentAlias);
+              VelocityCommands.newAliasRedirect(aliasNode, currentAlias);
       this.registerAlias(redirect);
     }
   }
