@@ -309,7 +309,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
-                .thenRun(() -> connectToInitialServer(player));
+                .thenCompose((ignored) -> connectToInitialServer(player))
+                .exceptionally((ex) -> {
+                  logger.error("Exception while connecting {} to initial server", player, ex);
+                  return null;
+                });
           }
         }, mcConnection.eventLoop())
         .exceptionally((ex) -> {
@@ -318,12 +322,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         });
   }
 
-  private void connectToInitialServer(ConnectedPlayer player) {
+  private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
     Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEvent(player,
         initialFromConfig.orElse(null));
 
-    server.getEventManager().fire(event)
+    return server.getEventManager().fire(event)
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
@@ -332,11 +336,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();
-        }, mcConnection.eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while connecting {} to initial server", player, ex);
-          return null;
-        });
+        }, mcConnection.eventLoop());
   }
 
   @Override
