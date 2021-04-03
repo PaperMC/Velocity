@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.ImmutableStringReader;
+import com.mojang.brigadier.RedirectModifier;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -54,7 +55,7 @@ import java.util.function.Predicate;
  * <p>A <i>fully-built</i> alias node is a node returned by
  * {@link CommandNodeFactory#create(Command, String)}.
  */
-final class VelocityCommands {
+public final class VelocityCommands {
 
   static final String ARGS_NODE_NAME = "arguments";
 
@@ -67,6 +68,11 @@ final class VelocityCommands {
    * @return the command alias
    */
   static String readAlias(final CommandContext<?> context) {
+    if (context.getParent() != null) {
+      // This is the child context of an alias redirect. Command implementations are interested
+      // in knowing the used alias, i.e. the name of the first node in the root context.
+      return readAlias(context.getParent());
+    }
     return readAlias(context.getNodes());
   }
 
@@ -77,6 +83,10 @@ final class VelocityCommands {
    * @return the command alias
    */
   static String readAlias(final CommandContextBuilder<?> context) {
+    if (context.getParent() != null) {
+      return readAlias(context.getParent());
+    }
+
     return readAlias(context.getNodes());
   }
 
@@ -143,20 +153,13 @@ final class VelocityCommands {
    */
   static LiteralCommandNode<CommandSource> newAliasRedirect(
           final LiteralCommandNode<CommandSource> target, final String alias) {
-    // Brigadier parses command input within different contexts. When a node with a redirect is
-    // reached, a child context builder with the redirect target set as its root node is created.
-    // Command implementations are interested in knowing the used alias, i.e. the name of the
-    // redirect origin. A child context does not know about its origin, so we cannot use
-    // the redirect system as is.
-    // We could use a redirect modifier to inject the origin node into the child context, but
-    // that would leave the context in an invalid state.
     Preconditions.checkNotNull(target, "target");
     Preconditions.checkNotNull(alias, "alias");
     return LiteralArgumentBuilder
             .<CommandSource>literal(alias)
             .requires(target.getRequirement())
             .requiresWithContext(target.getContextRequirement())
-            .executes(target.getCommand())
+            .redirect(target)
             .build();
   }
 
@@ -172,10 +175,22 @@ final class VelocityCommands {
    */
   static <V> ArgumentCommandNode<CommandSource, String> newArgumentsNode(
           final LiteralCommandNode<CommandSource> aliasNode, final ArgumentType<V> type,
-          final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader> contextRequirement,
-          final SuggestionProvider<CommandSource> customSuggestions) {
+          final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader>
+                  contextRequirement, final SuggestionProvider<CommandSource> customSuggestions) {
     return new ArgumentsCommandNode<>(type, aliasNode.getCommand(), source -> true,
             contextRequirement, customSuggestions);
+  }
+
+  /**
+   * Returns whether the given node is an arguments node.
+   *
+   * @param node the node to check
+   * @return {@code true} if the node is an arguments node
+   * @see #newArgumentsNode(LiteralCommandNode, ArgumentType, BiPredicate, SuggestionProvider) to
+   *      create an arguments node
+   */
+  public static boolean isArgumentsNode(final CommandNode<?> node) {
+    return node instanceof ArgumentsCommandNode;
   }
 
   // The Vanilla client doesn't know how to serialize the ArgumentTypes used by the invocation
@@ -190,8 +205,8 @@ final class VelocityCommands {
             final ArgumentType<T> parsingType,
             final com.mojang.brigadier.Command<CommandSource> command,
             final Predicate<CommandSource> requirement,
-            final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader> contextRequirement,
-            final SuggestionProvider<CommandSource> customSuggestions) {
+            final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader>
+                    contextRequirement, final SuggestionProvider<CommandSource> customSuggestions) {
       super(ARGS_NODE_NAME, StringArgumentType.greedyString(), command, requirement,
               contextRequirement, null, null, false,
               Preconditions.checkNotNull(customSuggestions, "customSuggestions"));
@@ -236,12 +251,14 @@ final class VelocityCommands {
 
     @Override
     public boolean equals(final Object o) {
-      if (this == o) return true;
-      if (!(o instanceof ArgumentsCommandNode)) return false;
-      if (!super.equals(o)) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
 
       final ArgumentsCommandNode<?> that = (ArgumentsCommandNode<?>) o;
-
       return parsingType.equals(that.parsingType);
     }
 

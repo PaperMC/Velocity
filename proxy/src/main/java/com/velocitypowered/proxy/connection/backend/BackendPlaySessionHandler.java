@@ -20,7 +20,11 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.context.CommandContextBuilder;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
@@ -29,6 +33,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.command.VelocityCommands;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -197,16 +202,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.getConfiguration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      RootCommandNode<CommandSource> dispatcherRootNode =
-          (RootCommandNode<CommandSource>)
-              filterNode(server.getCommandManager().getDispatcher().getRoot());
+      RootCommandNode<CommandSource> dispatcherRootNode = this.filterProxyNodes();
       assert dispatcherRootNode != null : "Filtering root node returned null.";
       Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
-        CommandNode<CommandSource> existingServerChild = rootNode.getChild(node.getName());
-        if (existingServerChild != null) {
-          rootNode.getChildren().remove(existingServerChild);
-        }
+        rootNode.removeChildByName(node.getName());
         rootNode.addChild(node);
       }
     }
@@ -221,41 +221,69 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
+  // We don't know the real range as there's no contents
+  private static final StringRange FILTERING_RANGE = StringRange.at(0);
+  private static final StringReader FILTERING_READER = new StringReader("");
+
+  private RootCommandNode<CommandSource> filterProxyNodes() {
+    final CommandDispatcher<CommandSource> dispatcher = server.getCommandManager().getDispatcher();
+    final CommandContextBuilder<CommandSource> context = new CommandContextBuilder<>(
+            dispatcher, serverConn.getPlayer(), dispatcher.getRoot(), 0);
+    return (RootCommandNode<CommandSource>) filterNode(dispatcher.getRoot(), context);
+  }
+
   /**
-   * Creates a deep copy of the provided command node, but removes any node that are not accessible
-   * by the player (respecting the requirement of the node).
+   * Creates a deep copy of the provided command node, but removes any node that is not accessible
+   * by the source (respecting both requirements of the node).
    *
-   * @param source source node
-   * @return filtered node
+   * @param source the node to filter
+   * @param parentContext the context builder for the parent node
+   * @return the filtered node
    */
-  private CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
+  private CommandNode<CommandSource> filterNode(
+          final CommandNode<CommandSource> source,
+          final CommandContextBuilder<CommandSource> parentContext) {
+    if (VelocityCommands.isArgumentsNode(source)) {
+      return source;
+    }
+
+    CommandContextBuilder<CommandSource> context;
     CommandNode<CommandSource> dest;
     if (source instanceof RootCommandNode) {
       dest = new RootCommandNode<>();
+      context = parentContext;
     } else {
-      if (source.getRequirement() != null) {
-        try {
-          if (!source.getRequirement().test(serverConn.getPlayer())) {
-            return null;
-          }
-        } catch (Throwable e) {
-          // swallow everything because plugins
-          logger.error(
-              "Requirement test for command node " + source + " encountered an exception", e);
+      try {
+        if (!source.canUse(serverConn.getPlayer())) {
+          return null;
         }
+
+        context = parentContext.copy();
+        context.withNode(source, FILTERING_RANGE);
+        if (!source.canUse(context, FILTERING_READER)) {
+          logger.info("Cannot use " + source + ", context: " + context);
+          return null;
+        }
+      } catch (final Throwable e) {
+        // swallow everything because plugins
+        logger.error(
+                "Requirement test for command node " + source + " encountered an exception", e);
+        return null;
       }
 
-      ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
-      destChildBuilder.requires((commandSource) -> true);
-      if (destChildBuilder.getRedirect() != null) {
-        destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
+      final ArgumentBuilder<CommandSource, ?> destBuilder = source.createBuilder()
+              .requires(source1 -> true)
+              .requiresWithContext((context1, reader) -> true);
+      if (destBuilder.getRedirect() != null) {
+        final CommandContextBuilder<CommandSource> targetContext = new CommandContextBuilder<>(
+                context.getDispatcher(), context.getSource(), source.getRedirect(), 0);
+        destBuilder.redirect(filterNode(destBuilder.getRedirect(), targetContext));
       }
-
-      dest = destChildBuilder.build();
+      dest = destBuilder.build();
     }
 
     for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
-      CommandNode<CommandSource> destChild = filterNode(sourceChild);
+      CommandNode<CommandSource> destChild = filterNode(sourceChild, context);
       if (destChild == null) {
         continue;
       }

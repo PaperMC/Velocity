@@ -109,7 +109,7 @@ final class SuggestionsProvider<S> {
           final StringReader reader, final CommandContextBuilder<S> context,
           final CommandNode<S> aliasNode) {
     final CommandNode<S> argumentsNode = aliasNode.getChild(VelocityCommands.ARGS_NODE_NAME);
-    if (argumentsNode == null) {
+    if (!VelocityCommands.isArgumentsNode(argumentsNode)) {
       // This is a BrigadierCommand
       reader.setCursor(0);
       return this.provideDefaultSuggestions(reader, context.getSource());

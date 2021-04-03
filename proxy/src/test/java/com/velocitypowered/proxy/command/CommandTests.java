@@ -210,6 +210,8 @@ public class CommandTests extends CommandTestSuite {
 
   @Test
   void testExecutedWithAlias() {
+    final AtomicInteger callCount = new AtomicInteger();
+
     final CommandMeta meta = manager.metaBuilder("foo")
             .aliases("bar")
             .build();
@@ -218,23 +220,29 @@ public class CommandTests extends CommandTestSuite {
       public void execute(final Invocation invocation) {
         assertEquals("bar", invocation.alias());
         assertEquals("", invocation.arguments());
+        callCount.incrementAndGet();
       }
     });
 
     assertNotForwarded("bar");
+    assertEquals(1, callCount.get());
   }
 
   @Test
   void testExecutedWithAliasAndArguments() {
+    final AtomicInteger callCount = new AtomicInteger();
+
     final CommandMeta meta = manager.metaBuilder("foo")
             .aliases("bar")
             .build();
     manager.register(meta, (SimpleCommand) invocation -> {
       assertEquals("bar", invocation.alias());
       assertArrayEquals(new String[] { "baz" }, invocation.arguments());
+      callCount.incrementAndGet();
     });
 
     assertNotForwarded("bar baz");
+    assertEquals(1, callCount.get());
   }
 
   @Test
@@ -289,6 +297,26 @@ public class CommandTests extends CommandTestSuite {
     manager.register(meta, new DummyCommand());
 
     assertSuggestions("", "bar", "baz", "foo");
+  }
+
+  @Test
+  void voidTestOnlyPermissibleAliasesAreSuggested() {
+    final CommandMeta meta = manager.metaBuilder("hello")
+            .aliases("greetings", "howdy", "bonjour")
+            .build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        return invocation.alias().equals("greetings") || invocation.alias().equals("howdy");
+      }
+    });
+
+    assertSuggestions("", "greetings", "howdy");
   }
 
   // Hinting
