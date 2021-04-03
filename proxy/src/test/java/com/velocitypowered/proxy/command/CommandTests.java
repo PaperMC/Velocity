@@ -317,6 +317,8 @@ public class CommandTests extends CommandTestSuite {
 
   @Test
   void testExecuteViaLiteralChildOfHint() {
+    final AtomicInteger callCount = new AtomicInteger();
+
     final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .then(LiteralArgumentBuilder.literal("baz"))
@@ -325,15 +327,18 @@ public class CommandTests extends CommandTestSuite {
             .hint(hint)
             .build();
     manager.register(meta, (SimpleCommand) invocation -> {
-      assertEquals(new String[] { "bar", "baz" }, invocation.arguments());
+      assertArrayEquals(new String[] { "bar", "baz" }, invocation.arguments());
+      callCount.incrementAndGet();
     });
 
     assertNotForwarded("foo bar baz");
+    assertEquals(1, callCount.get());
   }
 
   @Test
   void testExecuteViaArgumentChildOfHint() {
     // Hints should be wrapped recursively
+    final AtomicInteger callCount = new AtomicInteger();
     final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .then(LiteralArgumentBuilder
@@ -348,14 +353,18 @@ public class CommandTests extends CommandTestSuite {
       @Override
       public void execute(final Invocation invocation) {
         assertEquals("bar baz 123", invocation.arguments());
+        callCount.incrementAndGet();
       }
     });
 
     assertNotForwarded("foo bar baz 123");
+    assertEquals(1, callCount.get());
   }
 
   @Test
   void testNotExecutedViaHintWithImpermissibleArguments() {
+    final AtomicInteger callCount = new AtomicInteger();
+
     final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .build();
@@ -371,11 +380,13 @@ public class CommandTests extends CommandTestSuite {
       @Override
       public boolean hasPermission(final Invocation invocation) {
         assertEquals("bar", invocation.arguments());
+        callCount.incrementAndGet();
         return false;
       }
     });
 
     assertNotForwarded("foo bar");
+    assertEquals(1, callCount.get());
   }
 
   @Test
