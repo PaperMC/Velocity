@@ -153,8 +153,9 @@ final class SuggestionsProvider<S> {
           final CommandNode<S> aliasNode, final StringReader reader,
           final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
-    final CommandNode<S> targetAliasNode = aliasNode.getRedirect() == null ?
-            aliasNode : aliasNode.getRedirect();
+    final CommandNode<S> targetAliasNode = aliasNode.getRedirect() == null
+            ? aliasNode
+            : aliasNode.getRedirect();
     final CommandNode<S> argumentsNode = targetAliasNode.getChild(VelocityCommands.ARGS_NODE_NAME);
     if (!VelocityCommands.isArgumentsNode(argumentsNode)) {
       // This is a BrigadierCommand, fallback to regular suggestions
