@@ -261,13 +261,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         context = parentContext.copy();
         context.withNode(source, FILTERING_RANGE);
         if (!source.canUse(context, FILTERING_READER)) {
-          logger.info("Cannot use " + source + ", context: " + context);
           return null;
         }
       } catch (final Throwable e) {
         // swallow everything because plugins
         logger.error(
-                "Requirement test for command node " + source + " encountered an exception", e);
+            "Requirement test for command node " + source + " encountered an exception", e);
         return null;
       }
 
@@ -275,9 +274,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
               .requires(source1 -> true)
               .requiresWithContext((context1, reader) -> true);
       if (destBuilder.getRedirect() != null) {
+        if (source.getName().equals("lpv")) {
+          logger.info("Filtering redirect " + destBuilder.getRedirect());
+        }
         final CommandContextBuilder<CommandSource> targetContext = new CommandContextBuilder<>(
                 context.getDispatcher(), context.getSource(), source.getRedirect(), 0);
         destBuilder.redirect(filterNode(destBuilder.getRedirect(), targetContext));
+        if (source.getName().equals("lpv")) {
+          logger.info("Redirect result: " + destBuilder.getRedirect());
+        }
       }
       dest = destBuilder.build();
     }

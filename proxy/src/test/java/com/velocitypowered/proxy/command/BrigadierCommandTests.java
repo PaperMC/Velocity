@@ -24,7 +24,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -159,38 +158,40 @@ public class BrigadierCommandTests extends CommandTestSuite {
     assertSuggestions("hello bar", "baz", "foo");
   }
 
+  // The following 2 tests ensure we strictly follow Brigadier's behavior, even if
+  // it doesn't make much sense.
+
   @Test
-  void testNoSuggestionIfImpermissible() {
+  void testSuggestionEvenIfImpermissible() {
     final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
             .<CommandSource>literal("parent")
             .then(LiteralArgumentBuilder
                     .<CommandSource>literal("child")
-                    .requiresWithContext((context, reader) -> {
-                      assertEquals(StringRange.between(0, 7), context.getRange());
-                      assertEquals(2, context.getNodes().size());
-                      assertEquals(7, reader.getCursor());
-                      return false;
-                    })
+                    .requiresWithContext((context, reader) -> fail())
             )
             .build();
     manager.register(new BrigadierCommand(node));
 
-    assertSuggestions("parent ");
-    assertSuggestions("parent chi");
+    assertSuggestions("parent ", "child");
+    assertSuggestions("parent chi", "child");
   }
 
   @Test
   void testNoSuggestionIfImpermissible_parse() {
+    final AtomicInteger callCount = new AtomicInteger();
+
     final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
             .<CommandSource>literal("parent")
             .then(LiteralArgumentBuilder
                     .<CommandSource>literal("child")
                     .requiresWithContext((context, reader) -> {
-                      // Called twice with different ranges
-                      // The first checks the child node can be considered during parsing.
-                      // The second checks if we can provide suggestions to the source when
-                      // the parent node of the suggestion context is the "parent" literal.
+                      // CommandDispatcher#parseNodes checks the child node can be added to
+                      // the context object. CommandDispatcher#getCompletionSuggestions then
+                      // considers a suggestion context with "parent" as the parent, and
+                      // considers the suggestions of relevant children, which includes
+                      // "child".
                       assertEquals(2, context.getNodes().size());
+                      callCount.incrementAndGet();
                       return false;
                     })
             )
@@ -198,5 +199,6 @@ public class BrigadierCommandTests extends CommandTestSuite {
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("parent child");
+    assertEquals(1, callCount.get());
   }
 }

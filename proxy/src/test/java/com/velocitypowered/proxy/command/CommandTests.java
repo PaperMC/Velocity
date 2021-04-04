@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
@@ -33,6 +34,7 @@ import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,8 +125,7 @@ public class CommandTests extends CommandTestSuite {
 
     @Override
     public List<String> suggest(final Invocation invocation) {
-      fail();
-      return null;
+      return fail();
     }
   }
 
@@ -170,8 +171,7 @@ public class CommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        fail();
-        return null;
+        return fail();
       }
     });
 
@@ -204,9 +204,8 @@ public class CommandTests extends CommandTestSuite {
   }
 
   // (Secondary) aliases
-  // For now, these work as regular literals, but it is possible that they will use Brigadier
-  // redirects in the future. The following tests check for inconsistencies between the primary
-  // alias node and a secondary alias literal.
+  // The following tests check for inconsistencies between the primary alias node and
+  // a secondary alias literal.
 
   @Test
   void testExecutedWithAlias() {
@@ -300,7 +299,7 @@ public class CommandTests extends CommandTestSuite {
   }
 
   @Test
-  void voidTestOnlyPermissibleAliasesAreSuggested() {
+  void testOnlyPermissibleAliasesAreSuggested() {
     final CommandMeta meta = manager.metaBuilder("hello")
             .aliases("greetings", "howdy", "bonjour")
             .build();
@@ -317,6 +316,26 @@ public class CommandTests extends CommandTestSuite {
     });
 
     assertSuggestions("", "greetings", "howdy");
+  }
+
+  @Test
+  void testArgumentSuggestionsViaAlias() {
+    final CommandMeta meta = manager.metaBuilder("foo")
+            .aliases("bar")
+            .build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return Collections.singletonList("baz");
+      }
+    });
+
+    assertSuggestions("bar ", "baz");
   }
 
   // Hinting
@@ -449,7 +468,7 @@ public class CommandTests extends CommandTestSuite {
   void testNoHintSuggestionsIfImpermissible_empty() {
     final AtomicInteger callCount = new AtomicInteger();
 
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .build();
     final CommandMeta meta = manager.metaBuilder("foo")
@@ -477,7 +496,7 @@ public class CommandTests extends CommandTestSuite {
   void testNoHintSuggestionsIfImpermissible_partialLiteral() {
     final AtomicInteger callCount = new AtomicInteger();
 
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .build();
     final CommandMeta meta = manager.metaBuilder("foo")
@@ -505,7 +524,7 @@ public class CommandTests extends CommandTestSuite {
   void testNoHintSuggestionsIfImpermissible_parsedHint() {
     final AtomicInteger callCount = new AtomicInteger();
 
-    final LiteralCommandNode<CommandSource> hint = LiteralArgumentBuilder
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
             .<CommandSource>literal("bar")
             .build();
     final CommandMeta meta = manager.metaBuilder("foo")
@@ -527,5 +546,70 @@ public class CommandTests extends CommandTestSuite {
 
     assertSuggestions("foo bar");
     assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testHintSuggestionViaAlias() {
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
+            .<CommandSource>literal("world")
+            .build();
+    final CommandMeta meta = manager.metaBuilder("greetings")
+            .aliases("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+    });
+
+    assertSuggestions("hello ", "world");
+  }
+
+  @Test
+  void testLiteralChildOfHintSuggestionViaAlias() {
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
+            .<CommandSource>literal("bar")
+            .then(LiteralArgumentBuilder.literal("baz"))
+            .build();
+    final CommandMeta meta = manager.metaBuilder("alias")
+            .aliases("foo")
+            .hint(hint)
+            .build();
+    manager.register(meta, (SimpleCommand) invocation -> {
+      fail();
+    });
+
+    assertSuggestions("foo bar ", "baz");
+  }
+
+  @Test
+  void testArgumentChildOfHintSuggestionViaAlias() {
+    final CommandNode<CommandSource> hint = LiteralArgumentBuilder
+            .<CommandSource>literal("bar")
+            .then(LiteralArgumentBuilder
+                    .<CommandSource>literal("baz")
+                    .then(RequiredArgumentBuilder
+                            .<CommandSource, String>argument("word", StringArgumentType.word())
+                            .suggests((context, builder) -> {
+                              builder.suggest("qux");
+                              return builder.buildFuture();
+                            })
+                    )
+            )
+            .build();
+    final CommandMeta meta = manager.metaBuilder("alias")
+            .aliases("foo")
+            .hint(hint)
+            .build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+    });
+
+    assertSuggestions("foo bar baz ", "qux");
   }
 }

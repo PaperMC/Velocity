@@ -193,8 +193,7 @@ public class LegacyCommandTests extends CommandTestSuite {
       @Override
       public List<String> suggest(final CommandSource source,
                                   final String @NonNull [] currentArgs) {
-        fail();
-        return null;
+        return fail();
       }
     });
 
@@ -222,8 +221,7 @@ public class LegacyCommandTests extends CommandTestSuite {
       @Override
       public List<String> suggest(final CommandSource source,
                                   final String @NonNull [] currentArgs) {
-        fail();
-        return null;
+        return fail();
       }
     });
 

@@ -191,7 +191,7 @@ public class RawCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        return null;
+        return fail();
       }
     });
 
@@ -219,8 +219,7 @@ public class RawCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        fail();
-        return null;
+        return fail();
       }
     });
 
