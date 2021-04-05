@@ -25,6 +25,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.mojang.brigadier.tree.RootCommandNode;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
@@ -50,6 +51,7 @@ public class VelocityCommandManager implements CommandManager {
   private final CommandDispatcher<CommandSource> dispatcher;
   private final VelocityEventManager eventManager;
   private final SuggestionsProvider<CommandSource> suggestionsProvider;
+  private final ClientCommandNodeInjector<CommandSource> injector;
 
   /**
    * Constructs a command manager.
@@ -60,6 +62,7 @@ public class VelocityCommandManager implements CommandManager {
     this.eventManager = Preconditions.checkNotNull(eventManager);
     this.dispatcher = new CommandDispatcher<>();
     this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher);
+    this.injector = new ClientCommandNodeInjector<>(this.dispatcher);
   }
 
   @Override
@@ -148,6 +151,8 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
+    // If the removed node is a primary alias all other nodes will still work
+    // as redirects preserve the literal in the graph.
     dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
   }
 
@@ -275,5 +280,9 @@ public class VelocityCommandManager implements CommandManager {
 
   public CommandDispatcher<CommandSource> getDispatcher() {
     return dispatcher;
+  }
+
+  public ClientCommandNodeInjector<CommandSource> getInjector() {
+    return injector;
   }
 }

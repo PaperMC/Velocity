@@ -55,7 +55,7 @@ import java.util.function.Predicate;
  * <p>A <i>fully-built</i> alias node is a node returned by
  * {@link CommandNodeFactory#create(Command, String)}.
  */
-public final class VelocityCommands {
+final class VelocityCommands {
 
   static final String ARGS_NODE_NAME = "arguments";
 

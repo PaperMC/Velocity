@@ -29,7 +29,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
@@ -112,6 +111,20 @@ public class CommandTests extends CommandTestSuite {
     });
 
     assertSame(expected, e.getCause());
+  }
+
+  @Test
+  void testExecuteAfterPrimaryAliasIsUnregistered() {
+    final AtomicInteger callCount = new AtomicInteger();
+
+    final CommandMeta meta = manager.metaBuilder("foo").aliases("bar").build();
+    manager.register(meta, (SimpleCommand) invocation -> {
+      callCount.incrementAndGet();
+    });
+    manager.unregister("foo");
+
+    assertNotForwarded("bar");
+    assertEquals(1, callCount.get());
   }
 
   // Suggestions
