@@ -21,8 +21,8 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
-import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
+import com.velocitypowered.api.event.lifecycle.network.ListenerBoundEvent;
+import com.velocitypowered.api.event.lifecycle.network.ListenerClosedEvent;
 import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
@@ -198,12 +198,12 @@ public final class ConnectionManager {
    *
    * @param oldBind the endpoint to close
    */
-  public void close(InetSocketAddress oldBind) {
+  public void close(SocketAddress oldBind) {
     Endpoint endpoint = endpoints.remove(oldBind);
 
     // Fire proxy close event to notify plugins of socket close. We block since plugins
     // should have a chance to be notified before the server stops accepting connections.
-    server.getEventManager().fire(new ListenerCloseEvent(oldBind, endpoint.getType())).join();
+    server.getEventManager().fire(new ListenerClosedEvent(oldBind, endpoint.getType())).join();
 
     Channel serverChannel = endpoint.getChannel();
 
@@ -216,13 +216,13 @@ public final class ConnectionManager {
    * Closes all endpoints.
    */
   public void shutdown() {
-    for (final Map.Entry<InetSocketAddress, Endpoint> entry : this.endpoints.entrySet()) {
-      final InetSocketAddress address = entry.getKey();
+    for (final Map.Entry<SocketAddress, Endpoint> entry : this.endpoints.entrySet()) {
+      final SocketAddress address = entry.getKey();
       final Endpoint endpoint = entry.getValue();
 
       // Fire proxy close event to notify plugins of socket close. We block since plugins
       // should have a chance to be notified before the server stops accepting connections.
-      server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
+      server.getEventManager().fire(new ListenerClosedEvent(address, endpoint.getType())).join();
 
       try {
         LOGGER.info("Closing endpoint {}", address);

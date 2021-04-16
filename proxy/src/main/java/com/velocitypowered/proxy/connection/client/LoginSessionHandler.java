@@ -34,6 +34,7 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.PostLoginEvent;
 import com.velocitypowered.api.event.player.PreLoginEvent;
 import com.velocitypowered.api.event.player.PreLoginEvent.PreLoginComponentResult;
+import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
