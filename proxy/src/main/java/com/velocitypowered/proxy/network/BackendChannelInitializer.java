@@ -48,10 +48,10 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
   @Override
   protected void initChannel(Channel ch) throws Exception {
     ch.pipeline()
+        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
-        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,
             new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
