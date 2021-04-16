@@ -5,8 +5,13 @@ plugins {
     id 'checkstyle'
 }
 
+apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
+
+license {
+    header = project.rootProject.file('HEADER.txt')
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -32,6 +37,7 @@ jar {
         attributes 'Implementation-Version': version
         attributes 'Implementation-Vendor': "Velocity Contributors"
         attributes 'Multi-Release': 'true'
+        attributes 'Add-Opens': 'java.base/java.lang'
     }
 }
 

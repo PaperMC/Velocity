@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.server;
 
 import static com.velocitypowered.proxy.network.HandlerNames.FRAME_DECODER;
@@ -85,10 +102,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
+                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
                     new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
-                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
                     new MinecraftDecoder(PacketDirection.CLIENTBOUND))

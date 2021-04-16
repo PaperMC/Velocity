@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.client;
 
 import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
@@ -231,7 +248,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
-              player.setPermissionFunction(event.createFunction(player));
+              final PermissionFunction function = event.createFunction(player);
+              if (function == null) {
+                logger.error(
+                    "A plugin permission provider {} provided an invalid permission function"
+                        + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
+                        + " back to the default permission function.",
+                    event.getProvider().getClass().getName(),
+                    player.getUsername());
+              } else {
+                player.setPermissionFunction(function);
+              }
               completeLoginProtocolPhaseAndInitialize(player);
             }
           }, mcConnection.eventLoop());
@@ -278,7 +305,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
-                .thenRun(() -> connectToInitialServer(player));
+                .thenCompose((ignored) -> connectToInitialServer(player))
+                .exceptionally((ex) -> {
+                  logger.error("Exception while connecting {} to initial server", player, ex);
+                  return null;
+                });
           }
         }, mcConnection.eventLoop())
         .exceptionally((ex) -> {
@@ -287,12 +318,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         });
   }
 
-  private void connectToInitialServer(ConnectedPlayer player) {
+  private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
     Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEvent(player,
         initialFromConfig.orElse(null));
 
-    server.getEventManager().fire(event)
+    return server.getEventManager().fire(event)
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
@@ -301,11 +332,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();
-        }, mcConnection.eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while connecting {} to initial server", player, ex);
-          return null;
-        });
+        }, mcConnection.eventLoop());
   }
 
   @Override

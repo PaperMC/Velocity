@@ -4,12 +4,17 @@ plugins {
     id 'maven-publish'
 }
 
+apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+license {
+    header = project.rootProject.file('HEADER.txt')
 }
 
 dependencies {
