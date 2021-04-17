@@ -276,12 +276,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
               });
             } catch (IOException e) {
               logger.error("Encountered an I/O error whilst loading translations", e);
-              System.exit(1);
             }
           });
     } catch (IOException e) {
       logger.error("Encountered an I/O error whilst loading translations", e);
-      System.exit(1);
       return;
     }
     GlobalTranslator.get().addSource(translationRegistry);

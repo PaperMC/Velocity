@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -40,6 +41,7 @@ public class FileSystemUtils {
    * @param path The path to scan within the resource path
    * @param consumer The consumer to visit the resolved path
    */
+  @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
   public static boolean visitResources(Class<?> target, Path path, Consumer<Path> consumer)
       throws IOException {
     final File file = new File(target
