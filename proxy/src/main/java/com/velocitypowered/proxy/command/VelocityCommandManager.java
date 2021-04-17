@@ -56,13 +56,13 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final String alias) {
+  public CommandMeta.Builder createMetaBuilder(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
     return new VelocityCommandMeta.Builder(alias);
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final BrigadierCommand command) {
+  public CommandMeta.Builder createMetaBuilder(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
     return new VelocityCommandMeta.Builder(command.getNode().getName());
   }
@@ -70,7 +70,7 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void register(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
-    register(metaBuilder(command).build(), command);
+    register(createMetaBuilder(command).build(), command);
   }
 
   @Override

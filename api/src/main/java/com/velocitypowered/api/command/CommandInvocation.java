@@ -8,7 +8,7 @@
 package com.velocitypowered.api.command;
 
 /**
- * Provides information related to the possible execution of a {@link Command}.
+ * Provides information related to the (possible) execution of a {@link Command}.
  *
  * @param <T> the type of the arguments
  */

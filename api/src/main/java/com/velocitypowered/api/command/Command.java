@@ -13,19 +13,16 @@ import com.velocitypowered.api.proxy.connection.Player;
  * Represents a command that can be executed by a {@link CommandSource}
  * such as a {@link Player} or the console.
  *
- * <p>Velocity 1.1.0 introduces specialized command subinterfaces to separate
- * command parsing concerns. These include, in order of preference:
+ * <p><strong>You should not subclass <code>Command</code></strong>. Use one of the following
+ * subinterfaces:</p>
  *
  * <ul>
- * <li>{@link BrigadierCommand}, which supports parameterized arguments and
- * specialized execution, tab complete suggestions and permission-checking logic.
+ * <li>{@link BrigadierCommand} wraps a Brigadier literal command node. It supports parameterized
+ * arguments and specialized execution, tab complete suggestions and permission-checking logic.
  *
- * <li>{@link SimpleCommand}, modelled after the convention popularized by
- * Bukkit and BungeeCord. Older classes directly implementing {@link Command}
- * are suggested to migrate to this interface.
+ * <li>{@link SimpleCommand} is modelled after the convention popularized by Bukkit and BungeeCord.
  *
- * <li>{@link RawCommand}, useful for bolting on external command frameworks
- * to Velocity.
+ * <li>{@link RawCommand} is useful for bolting on external command frameworks onto Velocity.
  *
  * </ul>
  */

@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.jupiter.api.Test;
 
 public class CommandManagerTests {
@@ -91,7 +90,7 @@ public class CommandManagerTests {
             .<CommandSource>literal("bar")
             .build();
     BrigadierCommand aliasesCommand = new BrigadierCommand(barNode);
-    CommandMeta meta = manager.metaBuilder(aliasesCommand)
+    CommandMeta meta = manager.createMetaBuilder(aliasesCommand)
             .aliases("baZ")
             .build();
 
@@ -412,7 +411,7 @@ public class CommandManagerTests {
     CommandNode<CommandSource> bazHint = LiteralArgumentBuilder
             .<CommandSource>literal("baz")
             .build();
-    CommandMeta meta = manager.metaBuilder("foo")
+    CommandMeta meta = manager.createMetaBuilder("foo")
             .aliases("foo2")
             .hint(barHint)
             .hint(bazHint)
