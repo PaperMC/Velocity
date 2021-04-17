@@ -55,6 +55,10 @@ public class VelocityTabList implements TabList {
     Preconditions.checkNotNull(footer, "footer");
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(
         connection.getProtocolVersion());
+
+    Component translatedHeader = player.translateMessage(header);
+    Component translatedFooter = player.translateMessage(footer);
+
     connection.write(new ClientboundHeaderAndFooterPacket(
         serializer.serialize(header),
         serializer.serialize(footer)

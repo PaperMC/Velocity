@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.util.bossbar;
 
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
@@ -101,7 +102,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
   public void addBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getOrCreateHandler(bar);
     if (holder.subscribers.add(player)) {
-      player.getConnection().write(holder.createAddPacket(player.protocolVersion()));
+      player.getConnection().write(holder.createAddPacket(player));
     }
   }
 
@@ -124,14 +125,16 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket pre116Packet = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_15_2);
-    ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
+      Component translated = player.translateMessage(newName);
+
       if (player.protocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
+        ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
+            translated, ProtocolVersion.MINECRAFT_1_16);
         player.getConnection().write(rgbPacket);
       } else {
+        ClientboundBossBarPacket pre116Packet = holder.createTitleUpdate(
+            translated, ProtocolVersion.MINECRAFT_1_15_2);
         player.getConnection().write(pre116Packet);
       }
     }
@@ -207,11 +210,12 @@ public class AdventureBossBarManager implements BossBar.Listener {
       return ClientboundBossBarPacket.createRemovePacket(this.id);
     }
 
-    ClientboundBossBarPacket createAddPacket(ProtocolVersion version) {
+    ClientboundBossBarPacket createAddPacket(ConnectedPlayer player) {
       ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
       packet.setAction(ClientboundBossBarPacket.ADD);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(bar.name()));
+      packet.setName(ProtocolUtils.getJsonChatSerializer(player.protocolVersion())
+          .serialize(player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setPercent(bar.progress());

@@ -80,6 +80,7 @@ import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -95,6 +96,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.Title.Times;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -252,14 +256,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connection.getProtocolVersion();
   }
 
+  public Component translateMessage(Component message) {
+    Locale locale = this.settings == null ? Locale.getDefault() : this.settings.getLocale();
+    return GlobalTranslator.render(message, locale);
+  }
+
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
       @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
+    Component translated = translateMessage(message);
+
     connection.write(new ClientboundChatPacket(
-        ProtocolUtils.getJsonChatSerializer(this.protocolVersion()).serialize(message),
+        ProtocolUtils.getJsonChatSerializer(this.protocolVersion()).serialize(translated),
         type == MessageType.CHAT
             ? ClientboundChatPacket.CHAT_TYPE
             : ClientboundChatPacket.SYSTEM_TYPE,
@@ -269,18 +280,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
+    Component translated = translateMessage(message);
+
     ProtocolVersion playerVersion = protocolVersion();
     if (playerVersion.gte(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
       connection.write(new ClientboundTitlePacket(
           ClientboundTitlePacket.SET_ACTION_BAR,
-          ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(message)
+          ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(translated)
       ));
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
-      object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(message));
+      object.addProperty("text", LegacyComponentSerializer.legacySection()
+          .serialize(translated));
       connection.write(new ClientboundChatPacket(
           object.toString(),
           ClientboundChatPacket.GAME_INFO_TYPE,
@@ -307,22 +321,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
+  public void showTitle(@NonNull Title title) {
     if (this.protocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
           .protocolVersion());
 
       connection.delayedWrite(new ClientboundTitlePacket(
           ClientboundTitlePacket.SET_TITLE,
-          serializer.serialize(title.title())
+          serializer.serialize(translateMessage(title.title()))
       ));
 
       connection.delayedWrite(new ClientboundTitlePacket(
           ClientboundTitlePacket.SET_SUBTITLE,
-          serializer.serialize(title.subtitle())
+          serializer.serialize(translateMessage(title.subtitle()))
       ));
 
-      net.kyori.adventure.title.Title.Times times = title.times();
+      Times times = title.times();
       if (times != null) {
         connection.delayedWrite(ClientboundTitlePacket.times(this.protocolVersion(), times));
       }
@@ -389,9 +403,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * @param duringLogin whether the disconnect happened during login
    */
   public void disconnect0(Component reason, boolean duringLogin) {
+    Component translated = this.translateMessage(reason);
+
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, this.protocolVersion()));
+        LegacyComponentSerializer.legacySection().serialize(translated));
+    connection.closeWith(ClientboundDisconnectPacket.create(translated, this.protocolVersion()));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
