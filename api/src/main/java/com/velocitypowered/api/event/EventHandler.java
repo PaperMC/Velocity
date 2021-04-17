@@ -8,8 +8,9 @@
 package com.velocitypowered.api.event;
 
 /**
- * Represents an interface to perform direct dispatch of an event. This makes integration easier to
- * achieve with platforms such as RxJava.
+ * Allows a listener to receive direct dispatches of events. This interface can be used directly
+ * by a listener (using {@link EventManager#register(Object, Class, short, EventHandler)} or
+ * similar), or pass events through to an external system to be handled.
  */
 @FunctionalInterface
 public interface EventHandler<E> {
