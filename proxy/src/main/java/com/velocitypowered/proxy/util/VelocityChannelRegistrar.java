@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
-import com.velocitypowered.api.proxy.messages.MinecraftPluginChannelId;
+import com.velocitypowered.api.proxy.messages.KeyedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.util.Collection;
@@ -38,12 +38,12 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   public void register(PluginChannelId... identifiers) {
     for (PluginChannelId identifier : identifiers) {
       Preconditions.checkArgument(identifier instanceof PairedPluginChannelId
-          || identifier instanceof MinecraftPluginChannelId, "identifier is unknown");
+          || identifier instanceof KeyedPluginChannelId, "identifier is unknown");
     }
 
     for (PluginChannelId identifier : identifiers) {
-      if (identifier instanceof MinecraftPluginChannelId) {
-        MinecraftPluginChannelId modern = (MinecraftPluginChannelId) identifier;
+      if (identifier instanceof KeyedPluginChannelId) {
+        KeyedPluginChannelId modern = (KeyedPluginChannelId) identifier;
         byLegacyId.put(modern.key().asString(), identifier);
         byKey.put(modern.key().asString(), identifier);
       } else {
@@ -58,13 +58,13 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   public void unregister(PluginChannelId... identifiers) {
     for (PluginChannelId identifier : identifiers) {
       Preconditions.checkArgument(identifier instanceof PairedPluginChannelId
-              || identifier instanceof MinecraftPluginChannelId,
+              || identifier instanceof KeyedPluginChannelId,
           "identifier is unknown");
     }
 
     for (PluginChannelId identifier : identifiers) {
-      if (identifier instanceof MinecraftPluginChannelId) {
-        MinecraftPluginChannelId modern = (MinecraftPluginChannelId) identifier;
+      if (identifier instanceof KeyedPluginChannelId) {
+        KeyedPluginChannelId modern = (KeyedPluginChannelId) identifier;
         byKey.remove(modern.key().asString(), identifier);
       } else {
         PairedPluginChannelId paired = (PairedPluginChannelId) identifier;

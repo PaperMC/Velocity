@@ -8,20 +8,16 @@
 package com.velocitypowered.api.proxy.messages;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import java.util.Objects;
-import java.util.regex.Pattern;
 import net.kyori.adventure.key.Key;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Represents a Minecraft 1.13+ channel identifier.
+ * Represents a modern namespaced channel identifier.
  */
-public final class MinecraftPluginChannelId implements PluginChannelId {
+public final class KeyedPluginChannelId implements PluginChannelId {
 
   private final Key key;
 
-  MinecraftPluginChannelId(Key key) {
+  KeyedPluginChannelId(Key key) {
     this.key = Preconditions.checkNotNull(key, "key");
   }
 
@@ -38,7 +34,7 @@ public final class MinecraftPluginChannelId implements PluginChannelId {
       return false;
     }
 
-    MinecraftPluginChannelId that = (MinecraftPluginChannelId) o;
+    KeyedPluginChannelId that = (KeyedPluginChannelId) o;
 
     return key.equals(that.key);
   }

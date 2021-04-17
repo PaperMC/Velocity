@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.proxy.messages.MinecraftPluginChannelId;
+import com.velocitypowered.api.proxy.messages.KeyedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import net.kyori.adventure.key.Key;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 class VelocityChannelRegistrarTest {
 
-  private static final MinecraftPluginChannelId MODERN = PluginChannelId.wrap(
+  private static final KeyedPluginChannelId MODERN = PluginChannelId.wrap(
       Key.key("velocity", "moderntest"));
   private static final PairedPluginChannelId SIMPLE_LEGACY =
       PluginChannelId.withLegacy("VelocityTest", Key.key("velocity", "test"));

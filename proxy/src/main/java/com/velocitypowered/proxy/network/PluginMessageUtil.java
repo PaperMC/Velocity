@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.messages.MinecraftPluginChannelId;
+import com.velocitypowered.api.proxy.messages.KeyedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.util.ProxyVersion;
@@ -178,8 +178,8 @@ public final class PluginMessageUtil {
   }
 
   public static String channelIdForVersion(PluginChannelId id, ProtocolVersion version) {
-    if (id instanceof MinecraftPluginChannelId) {
-      return ((MinecraftPluginChannelId) id).key().asString();
+    if (id instanceof KeyedPluginChannelId) {
+      return ((KeyedPluginChannelId) id).key().asString();
     } else if (id instanceof PairedPluginChannelId) {
       if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
         return ((PairedPluginChannelId) id).modernChannelKey().asString();

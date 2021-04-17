@@ -12,9 +12,8 @@ import com.google.common.base.Strings;
 import net.kyori.adventure.key.Key;
 
 /**
- * Reperesents a legacy channel identifier (for Minecraft 1.12 and below). For modern 1.13 plugin
- * messages, please see {@link MinecraftPluginChannelId}. This class is immutable and safe for
- * multi-threaded use.
+ * Reperesents a legacy channel identifier (for Minecraft 1.12 and below) paired with a namespaced
+ * key for 1.13 and above. This class is immutable and safe for multi-threaded use.
  */
 public final class PairedPluginChannelId implements PluginChannelId {
 

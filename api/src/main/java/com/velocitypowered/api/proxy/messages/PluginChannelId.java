@@ -22,8 +22,8 @@ public interface PluginChannelId {
    * @param key the key instance to wrap
    * @return a wrapped plugin channel ID
    */
-  static MinecraftPluginChannelId wrap(Key key) {
-    return new MinecraftPluginChannelId(key);
+  static KeyedPluginChannelId wrap(Key key) {
+    return new KeyedPluginChannelId(key);
   }
 
   /**
