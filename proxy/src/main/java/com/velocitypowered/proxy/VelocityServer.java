@@ -54,6 +54,7 @@ import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
+import com.velocitypowered.proxy.util.FileSystemUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
@@ -246,9 +247,43 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private void registerTranslations() {
     final TranslationRegistry translationRegistry = TranslationRegistry
         .create(Key.key("velocity", "translations"));
-    translationRegistry.registerAll(Locale.US,
-        ResourceBundle.getBundle("com/velocitypowered/proxy/messages", Locale.US,
-            UTF8ResourceBundleControl.get()), false);
+    try {
+      FileSystemUtils.visitResources(VelocityServer.class,
+          Paths.get("com", "velocitypowered", "proxy", "l10n"), path -> {
+            logger.info("Loading localizations...");
+
+            try {
+              Files.walk(path).forEach(file -> {
+                if (!Files.isRegularFile(file)) {
+                  return;
+                }
+
+                String filename = com.google.common.io.Files
+                    .getNameWithoutExtension(file.getFileName().toString());
+                String localeName = filename.replace("messages_", "")
+                    .replace("messages", "")
+                    .replace('_', '-');
+                Locale locale;
+                if (localeName.isEmpty()) {
+                  locale = Locale.US;
+                } else {
+                  locale = Locale.forLanguageTag(localeName);
+                }
+
+                translationRegistry.registerAll(locale,
+                    ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
+                        locale, UTF8ResourceBundleControl.get()), false);
+              });
+            } catch (IOException e) {
+              logger.error("Encountered an I/O error whilst loading translations", e);
+              System.exit(1);
+            }
+          });
+    } catch (IOException e) {
+      logger.error("Encountered an I/O error whilst loading translations", e);
+      System.exit(1);
+      return;
+    }
     GlobalTranslator.get().addSource(translationRegistry);
   }
 

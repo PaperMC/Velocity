@@ -226,8 +226,8 @@ public class VelocityCommand implements SimpleCommand {
           .translatable("velocity.command.version-copyright",
               Component.text(version.getVendor()),
               Component.text(version.getName()));
-      source.sendMessage(Identity.nil(), velocity);
-      source.sendMessage(Identity.nil(), copyright);
+      source.sendMessage(velocity);
+      source.sendMessage(copyright);
 
       if (version.getName().equals("Velocity")) {
         TextComponent embellishment = Component.text()
