@@ -168,9 +168,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.username(), e);
-            player.sendMessage(Identity.nil(),
-                Component.text("An error occurred while running this command.",
-                    NamedTextColor.RED));
+            player.sendMessage(Component.translatable("velocity.command.generic-error",
+                NamedTextColor.RED));
             return null;
           });
     } else {
@@ -335,7 +334,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(server.configuration().getMessages().getGenericConnectionError());
+    player.disconnect(Component.translatable("velocity.error.player-connection-error",
+        NamedTextColor.RED));
   }
 
   @Override

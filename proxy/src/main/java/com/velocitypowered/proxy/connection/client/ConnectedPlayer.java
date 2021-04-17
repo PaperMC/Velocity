@@ -446,18 +446,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         wrapped = cause;
       }
     }
-    String userMessage;
+
+    Component friendlyError;
     if (connectedServer != null && connectedServer.serverInfo().equals(server.serverInfo())) {
-      userMessage = "Your connection to " + server.serverInfo().name() + " encountered an "
-          + "error.";
+      friendlyError = Component.translatable("velocity.error.connected-server-error",
+          Component.text(server.serverInfo().name()));
     } else {
       logger.error("{}: unable to connect to server {}", this, server.serverInfo().name(),
           wrapped);
-      userMessage = "Unable to connect to " + server.serverInfo().name() + ". Try again "
-          + "later.";
+      friendlyError = Component.translatable("velocity.error.connecting-server-error",
+          Component.text(server.serverInfo().name()));
     }
-    handleConnectionException(server, null, Component.text(userMessage,
-        NamedTextColor.RED), safe);
+    handleConnectionException(server, null, friendlyError.color(NamedTextColor.RED), safe);
   }
 
   /**
@@ -473,26 +473,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return;
     }
 
-    VelocityConfiguration.Messages messages = this.server.configuration().getMessages();
     Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.serverInfo().equals(server.serverInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.serverInfo().name(),
           plainTextReason);
-      handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getKickPrefix(server.serverInfo().name())
-              .colorIfAbsent(NamedTextColor.RED))
-          .color(NamedTextColor.RED)
-          .append(disconnectReason)
-          .build(), safe);
+      handleConnectionException(server, disconnectReason,
+          Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
+              Component.text(server.serverInfo().name()),
+              disconnectReason), safe);
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.serverInfo().name(), plainTextReason);
-      handleConnectionException(server, disconnectReason, Component.text()
-          .append(messages.getDisconnectPrefix(server.serverInfo().name())
-              .colorIfAbsent(NamedTextColor.RED))
-          .append(disconnectReason)
-          .build(), safe);
+      handleConnectionException(server, disconnectReason,
+          Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
+              Component.text(server.serverInfo().name()),
+              disconnectReason), safe);
     }
   }
 
@@ -576,8 +572,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           protocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      sendMessage(Identity.nil(), server.configuration().getMessages()
-                          .getMovedToNewServerPrefix().append(friendlyReason));
+                      sendMessage(Component.translatable("velocity.error.moved-to-new-server",
+                          NamedTextColor.RED,
+                          Component.text(originalEvent.server().serverInfo().name()),
+                          friendlyReason));
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)

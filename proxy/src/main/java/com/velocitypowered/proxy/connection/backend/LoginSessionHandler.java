@@ -50,8 +50,8 @@ import net.kyori.adventure.text.TextComponent;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
-  private static final TextComponent MODERN_IP_FORWARDING_FAILURE = Component
-      .text("Your server did not send a forwarding request to the proxy. Is it set up correctly?");
+  private static final Component MODERN_IP_FORWARDING_FAILURE = Component
+      .translatable("velocity.error.modern-forwarding-failed");
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;

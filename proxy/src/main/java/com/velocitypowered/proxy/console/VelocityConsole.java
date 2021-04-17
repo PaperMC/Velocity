@@ -26,9 +26,12 @@ import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
+import java.util.Locale;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -52,8 +55,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    logger.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
-        .serialize(message));
+    Component translated = GlobalTranslator.render(message, Locale.getDefault());
+    logger.info(LegacyComponentSerializer.legacySection().serialize(translated));
   }
 
   @Override
@@ -114,7 +117,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   protected void runCommand(String command) {
     try {
       if (!this.server.commandManager().execute(this, command).join()) {
-        sendMessage(Component.text("Command not found.", NamedTextColor.RED));
+        sendMessage(Component.translatable("velocity.command.command-does-not-exist",
+            NamedTextColor.RED));
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);

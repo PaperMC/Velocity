@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -53,8 +54,7 @@ public class ServerCommand implements SimpleCommand {
     final String[] args = invocation.arguments();
 
     if (!(source instanceof Player)) {
-      source.sendMessage(Identity.nil(), Component.text("Only players may run this command.",
-          NamedTextColor.RED));
+      source.sendMessage(Identity.nil(), CommandMessages.PLAYERS_ONLY);
       return;
     }
 
@@ -64,8 +64,8 @@ public class ServerCommand implements SimpleCommand {
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.server(serverName);
       if (!toConnect.isPresent()) {
-        player.sendMessage(Identity.nil(),
-            Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+        player.sendMessage(Identity.nil(), CommandMessages.SERVER_DOES_NOT_EXIST
+            .args(Component.text(serverName)));
         return;
       }
 
@@ -78,19 +78,23 @@ public class ServerCommand implements SimpleCommand {
   private void outputServerInformation(Player executor) {
     String currentServer = executor.connectedServer().map(ServerConnection::serverInfo)
         .map(ServerInfo::name).orElse("<unknown>");
-    executor.sendMessage(Identity.nil(), Component.text(
-        "You are currently connected to " + currentServer + ".", NamedTextColor.YELLOW));
+    executor.sendMessage(Identity.nil(), Component.translatable(
+        "velocity.command.server-current-server",
+        NamedTextColor.YELLOW,
+        Component.text(currentServer)));
 
     List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     if (servers.size() > MAX_SERVERS_TO_LIST) {
-      executor.sendMessage(Identity.nil(), Component.text(
-          "Too many servers to list. Tab-complete to show all servers.", NamedTextColor.RED));
+      executor.sendMessage(Identity.nil(), Component.translatable(
+          "velocity.command.server-too-many", NamedTextColor.RED));
       return;
     }
 
     // Assemble the list of servers as components
-    TextComponent.Builder serverListBuilder = Component.text().content("Available servers: ")
-        .color(NamedTextColor.YELLOW);
+    TextComponent.Builder serverListBuilder = Component.text()
+        .append(Component.translatable("velocity.command.server-available",
+            NamedTextColor.YELLOW))
+        .append(Component.space());
     for (int i = 0; i < servers.size(); i++) {
       RegisteredServer rs = servers.get(i);
       serverListBuilder.append(formatServerComponent(currentServer, rs));
@@ -106,17 +110,31 @@ public class ServerCommand implements SimpleCommand {
     ServerInfo serverInfo = server.serverInfo();
     TextComponent serverTextComponent = Component.text(serverInfo.name());
 
-    String playersText = server.connectedPlayers().size() + " player(s) online";
+    int connectedPlayers = server.connectedPlayers().size();
+    TranslatableComponent playersTextComponent;
+    if (connectedPlayers == 1) {
+      playersTextComponent = Component.translatable("velocity.command.server-tooltip-player-online");
+    } else {
+      playersTextComponent = Component.translatable("velocity.command.server-tooltip-players-online");
+    }
+    playersTextComponent = playersTextComponent.args(Component.text(connectedPlayers));
+
     if (serverInfo.name().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
-              showText(Component.text("Currently connected to this server\n" + playersText))
+              showText(
+                  Component.translatable("velocity.command.server-tooltip-current-server")
+                    .append(Component.newline())
+                    .append(playersTextComponent))
           );
     } else {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
           .clickEvent(ClickEvent.runCommand("/server " + serverInfo.name()))
           .hoverEvent(
-              showText(Component.text("Click to connect to this server\n" + playersText))
+              showText(
+                  Component.translatable("velocity.command.server-tooltip-offer-connect-server")
+                      .append(Component.newline())
+                      .append(playersTextComponent))
           );
     }
     return serverTextComponent;

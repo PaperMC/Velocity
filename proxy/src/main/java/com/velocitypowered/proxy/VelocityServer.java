@@ -78,6 +78,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,7 +91,11 @@ import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.translation.TranslationRegistry;
+import net.kyori.adventure.util.UTF8ResourceBundleControl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -193,6 +198,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Booting up {} {}...", version().getName(), version().getVersion());
     console.setupStreams();
 
+    registerTranslations();
+
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
     cm.logChannelInformation();
@@ -234,6 +241,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+  }
+
+  private void registerTranslations() {
+    final TranslationRegistry translationRegistry = TranslationRegistry
+        .create(Key.key("velocity", "translations"));
+    translationRegistry.registerAll(Locale.US,
+        ResourceBundle.getBundle("com/velocitypowered/proxy/messages", Locale.US,
+            UTF8ResourceBundleControl.get()), false);
+    GlobalTranslator.get().addSource(translationRegistry);
   }
 
   @SuppressFBWarnings("DM_EXIT")

@@ -78,11 +78,7 @@ public class GlistCommand {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
     source.sendMessage(Identity.nil(),
-        Component.text().content("To view all players on servers, use ")
-            .color(NamedTextColor.YELLOW)
-            .append(Component.text("/glist all", NamedTextColor.DARK_AQUA))
-            .append(Component.text(".", NamedTextColor.YELLOW))
-            .build());
+        Component.translatable("velocity.command.glist-view-all", NamedTextColor.YELLOW));
     return 1;
   }
 
@@ -98,7 +94,7 @@ public class GlistCommand {
       Optional<RegisteredServer> registeredServer = server.server(serverName);
       if (!registeredServer.isPresent()) {
         source.sendMessage(Identity.nil(),
-            Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+            CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);
@@ -107,10 +103,19 @@ public class GlistCommand {
   }
 
   private void sendTotalProxyCount(CommandSource target) {
+    int online = server.countConnectedPlayers();
     target.sendMessage(Identity.nil(), Component.text()
-        .content("There are ").color(NamedTextColor.YELLOW)
-        .append(Component.text(server.connectedPlayers().size(), NamedTextColor.GREEN))
-        .append(Component.text(" player(s) online.", NamedTextColor.YELLOW))
+        .append(Component.text(Integer.toString(online), NamedTextColor.GREEN))
+        .append(Component.space())
+        .append(Component.translatable(
+            online == 1
+                ? "velocity.command.glist-player-singular"
+                : "velocity.command.glist-player-plural",
+            NamedTextColor.YELLOW
+        ))
+        .append(Component.space())
+        .append(Component.translatable("velocity.command.glist-total-suffix",
+            NamedTextColor.YELLOW))
         .build());
   }
 

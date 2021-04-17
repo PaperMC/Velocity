@@ -15,23 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection.util;
+package com.velocitypowered.proxy.command.builtin;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-public class ConnectionMessages {
+public class CommandMessages {
 
-  public static final TranslatableComponent ALREADY_CONNECTED = Component
-      .translatable("velocity.error.already-connected", NamedTextColor.RED);
-  public static final TranslatableComponent IN_PROGRESS = Component
-      .translatable("velocity.error.already-connecting", NamedTextColor.RED);
-  public static final TranslatableComponent INTERNAL_SERVER_CONNECTION_ERROR = Component
-      .translatable("velocity.error.internal-server-connection-error", NamedTextColor.RED);
-
-  private ConnectionMessages() {
-    throw new AssertionError();
-  }
+  public static final TranslatableComponent PLAYERS_ONLY = Component.translatable(
+      "velocity.command.players-only", NamedTextColor.RED);
+  public static final TranslatableComponent SERVER_DOES_NOT_EXIST = Component.translatable(
+      "velocity.command.server-does-not-exist", NamedTextColor.RED);
 }

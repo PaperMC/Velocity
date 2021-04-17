@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +48,7 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -180,17 +180,15 @@ public class VelocityCommand implements SimpleCommand {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(Identity.nil(), Component.text(
-              "Configuration reloaded.", NamedTextColor.GREEN));
+          source.sendMessage(Component.translatable("velocity.command.reload-success",
+              NamedTextColor.GREEN));
         } else {
-          source.sendMessage(Identity.nil(), Component.text(
-              "Unable to reload your configuration. Check the console for more details.",
+          source.sendMessage(Component.translatable("velocity.command.reload-failure",
               NamedTextColor.RED));
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
-        source.sendMessage(Identity.nil(), Component.text(
-            "Unable to reload your configuration. Check the console for more details.",
+        source.sendMessage(Component.translatable("velocity.command.reload-failure",
             NamedTextColor.RED));
       }
     }
@@ -219,33 +217,35 @@ public class VelocityCommand implements SimpleCommand {
 
       ProxyVersion version = server.version();
 
-      TextComponent velocity = Component.text().content(version.getName() + " ")
+      Component velocity = Component.text().content(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
           .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
           .build();
-      TextComponent copyright = Component
-          .text("Copyright 2018-2020 " + version.getVendor() + ". " + version.getName()
-              + " is licensed under the terms of the GNU General Public License v3.");
+      Component copyright = Component
+          .translatable("velocity.command.version-copyright",
+              Component.text(version.getVendor()),
+              Component.text(version.getName()));
       source.sendMessage(Identity.nil(), velocity);
       source.sendMessage(Identity.nil(), copyright);
 
       if (version.getName().equals("Velocity")) {
-        TextComponent velocityWebsite = Component.text()
-            .content("Visit the ")
-            .append(Component.text().content("Velocity website")
+        TextComponent embellishment = Component.text()
+            .append(Component.text().content("velocitypowered.com")
                 .color(NamedTextColor.GREEN)
+                .decoration(TextDecoration.UNDERLINED, true)
                 .clickEvent(
                     ClickEvent.openUrl("https://www.velocitypowered.com"))
                 .build())
-            .append(Component.text(" or the "))
-            .append(Component.text().content("Velocity GitHub")
+            .append(Component.text(" - "))
+            .append(Component.text().content("GitHub")
                 .color(NamedTextColor.GREEN)
+                .decoration(TextDecoration.UNDERLINED, true)
                 .clickEvent(ClickEvent.openUrl(
                     "https://github.com/VelocityPowered/Velocity"))
                 .build())
             .build();
-        source.sendMessage(Identity.nil(), velocityWebsite);
+        source.sendMessage(Identity.nil(), embellishment);
       }
     }
 
@@ -274,12 +274,13 @@ public class VelocityCommand implements SimpleCommand {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(Identity.nil(), Component.text(
-            "No plugins installed.", NamedTextColor.YELLOW));
+        source.sendMessage(Component.translatable("velocity.command.no-plugins",
+            NamedTextColor.YELLOW));
         return;
       }
 
-      TextComponent.Builder output = Component.text().content("Plugins: ")
+      TranslatableComponent.Builder output = Component.translatable()
+          .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW);
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
@@ -300,15 +301,21 @@ public class VelocityCommand implements SimpleCommand {
 
       description.url().ifPresent(url -> {
         hoverText.append(Component.newline());
-        hoverText.append(Component.text("Website: " + url));
+        hoverText.append(Component.translatable(
+            "velocity.command.plugin-tooltip-website",
+            Component.text(url)));
       });
       if (!description.authors().isEmpty()) {
         hoverText.append(Component.newline());
         if (description.authors().size() == 1) {
-          hoverText.append(Component.text("Author: " + description.authors().get(0)));
+          hoverText.append(Component.translatable("velocity.command.plugin-tooltip-author",
+              Component.text(description.authors().get(0))));
         } else {
-          hoverText.append(Component.text("Authors: " + Joiner.on(", ")
-              .join(description.authors())));
+          hoverText.append(
+              Component.translatable("velocity.command.plugin-tooltip-author",
+                Component.text(String.join(", ", description.authors()))
+              )
+          );
         }
       }
       description.description().ifPresent(pdesc -> {
@@ -352,8 +359,8 @@ public class VelocityCommand implements SimpleCommand {
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
               server.configuration().getAttemptConnectionOrder());
-      for (int i = 0; i < attemptedConnectionOrder.size(); i++) {
-        connectOrder.add(attemptedConnectionOrder.get(i));
+      for (String s : attemptedConnectionOrder) {
+        connectOrder.add(s);
       }
 
       JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.configuration());
@@ -446,7 +453,7 @@ public class VelocityCommand implements SimpleCommand {
           e.getCause().printStackTrace();
         } catch (JsonParseException e) {
           source.sendMessage(Component.text()
-                  .content("An error occurred on the Velocity-servers and the dump could not "
+                  .content("An error occurred on the Velocity servers and the dump could not "
                           + "be completed. Please contact the Velocity staff about this problem. "
                           + "If you do, provide the details about this error from the Velocity "
                           + "console or server log.")
