@@ -108,7 +108,7 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
   }
 
   @Override
-  public String getId() {
+  public String id() {
     return namespace + ":" + name;
   }
 }

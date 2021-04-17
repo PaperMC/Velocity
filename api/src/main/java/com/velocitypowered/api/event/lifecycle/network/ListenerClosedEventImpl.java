@@ -25,12 +25,12 @@ public final class ListenerClosedEventImpl implements ListenerClosedEvent {
   }
 
   @Override
-  public SocketAddress getAddress() {
+  public SocketAddress address() {
     return address;
   }
 
   @Override
-  public ListenerType getListenerType() {
+  public ListenerType type() {
     return listenerType;
   }
 

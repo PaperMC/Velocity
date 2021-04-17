@@ -101,7 +101,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
   public void addBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getOrCreateHandler(bar);
     if (holder.subscribers.add(player)) {
-      player.getConnection().write(holder.createAddPacket(player.getProtocolVersion()));
+      player.getConnection().write(holder.createAddPacket(player.protocolVersion()));
     }
   }
 
@@ -129,7 +129,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
         newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
-      if (player.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
+      if (player.protocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
         player.getConnection().write(rgbPacket);
       } else {
         player.getConnection().write(pre116Packet);

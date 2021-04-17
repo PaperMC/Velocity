@@ -53,35 +53,35 @@ public enum InformationUtils {
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
     List<PluginContainer> allPlugins = ImmutableList.copyOf(
-            proxy.getPluginManager().getPlugins());
+            proxy.pluginManager().getPlugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {
-      PluginDescription desc = plugin.getDescription();
+      PluginDescription desc = plugin.description();
       JsonObject current = new JsonObject();
-      current.addProperty("id", desc.getId());
-      if (desc.getName().isPresent()) {
-        current.addProperty("name", desc.getName().get());
+      current.addProperty("id", desc.id());
+      if (desc.name().isPresent()) {
+        current.addProperty("name", desc.name().get());
       }
-      if (desc.getVersion().isPresent()) {
-        current.addProperty("version", desc.getVersion().get());
+      if (desc.version().isPresent()) {
+        current.addProperty("version", desc.version().get());
       }
-      if (!desc.getAuthors().isEmpty()) {
+      if (!desc.authors().isEmpty()) {
         JsonArray authorsArray = new JsonArray();
-        for (String author : desc.getAuthors()) {
+        for (String author : desc.authors()) {
           authorsArray.add(author);
         }
         current.add("authors", authorsArray);
       }
-      if (desc.getDescription().isPresent()) {
-        current.addProperty("description", desc.getDescription().get());
+      if (desc.description().isPresent()) {
+        current.addProperty("description", desc.description().get());
       }
-      if (desc.getUrl().isPresent()) {
-        current.addProperty("url", desc.getUrl().get());
+      if (desc.url().isPresent()) {
+        current.addProperty("url", desc.url().get());
       }
-      if (!desc.getDependencies().isEmpty()) {
+      if (!desc.dependencies().isEmpty()) {
         JsonArray dependencies = new JsonArray();
-        for (PluginDependency dependency : desc.getDependencies()) {
+        for (PluginDependency dependency : desc.dependencies()) {
           dependencies.add(dependency.getId());
         }
         current.add("dependencies", dependencies);
@@ -185,8 +185,8 @@ public enum InformationUtils {
    */
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
-    info.addProperty("currentPlayers", server.getPlayersConnected().size());
-    SocketAddress address = server.getServerInfo().getAddress();
+    info.addProperty("currentPlayers", server.connectedPlayers().size());
+    SocketAddress address = server.serverInfo().address();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress iaddr = (InetSocketAddress) address;
       if (iaddr.isUnresolved()) {

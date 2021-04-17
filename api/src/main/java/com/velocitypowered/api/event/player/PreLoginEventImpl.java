@@ -34,17 +34,17 @@ public final class PreLoginEventImpl implements PreLoginEvent {
   }
 
   @Override
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 
   @Override
-  public String getUsername() {
+  public String username() {
     return username;
   }
 
   @Override
-  public PreLoginComponentResult getResult() {
+  public PreLoginComponentResult result() {
     return result;
   }
 

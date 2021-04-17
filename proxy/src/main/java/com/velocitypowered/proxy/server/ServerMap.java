@@ -62,13 +62,13 @@ public class ServerMap {
    */
   public RegisteredServer register(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
-    String lowerName = serverInfo.getName().toLowerCase(Locale.US);
+    String lowerName = serverInfo.name().toLowerCase(Locale.US);
     VelocityRegisteredServer rs = new VelocityRegisteredServer(server, serverInfo);
 
     RegisteredServer existing = servers.putIfAbsent(lowerName, rs);
-    if (existing != null && !existing.getServerInfo().equals(serverInfo)) {
+    if (existing != null && !existing.serverInfo().equals(serverInfo)) {
       throw new IllegalArgumentException(
-          "Server with name " + serverInfo.getName() + " already registered");
+          "Server with name " + serverInfo.name() + " already registered");
     } else if (existing == null) {
       return rs;
     } else {
@@ -83,15 +83,15 @@ public class ServerMap {
    */
   public void unregister(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
-    String lowerName = serverInfo.getName().toLowerCase(Locale.US);
+    String lowerName = serverInfo.name().toLowerCase(Locale.US);
     RegisteredServer rs = servers.get(lowerName);
     if (rs == null) {
       throw new IllegalArgumentException(
-          "Server with name " + serverInfo.getName() + " is not registered!");
+          "Server with name " + serverInfo.name() + " is not registered!");
     }
-    Preconditions.checkArgument(rs.getServerInfo().equals(serverInfo),
-        "Trying to remove server %s with differing information", serverInfo.getName());
+    Preconditions.checkArgument(rs.serverInfo().equals(serverInfo),
+        "Trying to remove server %s with differing information", serverInfo.name());
     Preconditions.checkState(servers.remove(lowerName, rs),
-        "Server with name %s replaced whilst unregistering", serverInfo.getName());
+        "Server with name %s replaced whilst unregistering", serverInfo.name());
   }
 }

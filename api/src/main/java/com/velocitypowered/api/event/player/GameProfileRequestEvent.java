@@ -17,11 +17,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface GameProfileRequestEvent {
 
-  InboundConnection getConnection();
+  InboundConnection connection();
 
-  String getUsername();
+  String username();
 
-  GameProfile getOriginalProfile();
+  GameProfile initialProfile();
 
   boolean isOnlineMode();
 
@@ -32,7 +32,7 @@ public interface GameProfileRequestEvent {
    *
    * @return the user's {@link GameProfile}
    */
-  GameProfile getGameProfile();
+  GameProfile gameProfile();
 
   /**
    * Sets the game profile to use for this connection.

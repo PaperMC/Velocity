@@ -29,7 +29,7 @@ import io.netty.buffer.ByteBuf;
 public class ServerboundHandshakePacket implements Packet {
   public static final PacketReader<ServerboundHandshakePacket> DECODER = (buf, version) -> {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
-    final ProtocolVersion protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
+    final ProtocolVersion protocolVersion = ProtocolVersion.byMinecraftProtocolVersion(realProtocolVersion);
     final String hostname = ProtocolUtils.readString(buf);
     final int port = buf.readUnsignedShort();
     final int nextStatus = ProtocolUtils.readVarInt(buf);
@@ -54,7 +54,7 @@ public class ServerboundHandshakePacket implements Packet {
 
   @Override
   public void encode(ByteBuf buf, ProtocolVersion ignored) {
-    ProtocolUtils.writeVarInt(buf, this.protocolVersion.getProtocol());
+    ProtocolUtils.writeVarInt(buf, this.protocolVersion.protocol());
     ProtocolUtils.writeString(buf, this.serverAddress);
     buf.writeShort(this.port);
     ProtocolUtils.writeVarInt(buf, this.nextStatus);

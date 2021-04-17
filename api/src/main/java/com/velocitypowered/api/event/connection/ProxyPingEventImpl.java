@@ -25,12 +25,12 @@ public final class ProxyPingEventImpl implements ProxyPingEvent {
   }
 
   @Override
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 
   @Override
-  public ServerPing getPing() {
+  public ServerPing ping() {
     return ping;
   }
 

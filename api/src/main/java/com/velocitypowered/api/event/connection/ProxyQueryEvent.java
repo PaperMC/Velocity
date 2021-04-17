@@ -20,21 +20,21 @@ public interface ProxyQueryEvent {
    *
    * @return query type
    */
-  QueryType getQueryType();
+  QueryType type();
 
   /**
    * Get the address of the client that sent this query.
    *
    * @return querier address
    */
-  InetAddress getQuerierAddress();
+  InetAddress queryingAddress();
 
   /**
    * Returns the current query response.
    *
    * @return the current query response
    */
-  QueryResponse getResponse();
+  QueryResponse response();
 
   /**
    * Sets a new query response.

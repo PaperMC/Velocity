@@ -15,7 +15,7 @@ import java.net.SocketAddress;
  */
 public interface ListenerBoundEvent {
 
-  SocketAddress getAddress();
+  SocketAddress address();
 
-  ListenerType getListenerType();
+  ListenerType type();
 }

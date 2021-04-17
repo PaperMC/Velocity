@@ -20,14 +20,14 @@ public interface PlayerResourcePackStatusEvent {
    *
    * @return the player
    */
-  Player getPlayer();
+  Player player();
 
   /**
    * Returns the new status for the resource pack.
    *
    * @return the new status
    */
-  Status getStatus();
+  Status status();
 
   /**
    * Represents the possible statuses for the resource pack.

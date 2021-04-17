@@ -26,22 +26,16 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
    *
    * @return the player connecting to the server
    */
-  Player getPlayer();
-
-  @Override
-  ServerResult getResult();
-
-  @Override
-  void setResult(ServerResult result);
+  Player player();
 
   /**
    * Returns the server that the player originally tried to connect to. To get the server the player
    * will connect to, see the {@link ServerResult} of this event. To get the server the player is
-   * currently on when this event is fired, use {@link Player#getCurrentServer()}.
+   * currently on when this event is fired, use {@link Player#connectedServer()}.
    *
    * @return the server that the player originally tried to connect to
    */
-  RegisteredServer getOriginalServer();
+  RegisteredServer originalTarget();
 
   /**
    * Represents the result of the {@link ServerPreConnectEvent}.
@@ -50,25 +44,25 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
 
     private static final ServerResult DENIED = new ServerResult(null);
 
-    private final @Nullable RegisteredServer server;
+    private final @Nullable RegisteredServer target;
 
-    private ServerResult(@Nullable RegisteredServer server) {
-      this.server = server;
+    private ServerResult(@Nullable RegisteredServer target) {
+      this.target = target;
     }
 
     @Override
     public boolean isAllowed() {
-      return server != null;
+      return target != null;
     }
 
-    public Optional<RegisteredServer> getServer() {
-      return Optional.ofNullable(server);
+    public Optional<RegisteredServer> target() {
+      return Optional.ofNullable(target);
     }
 
     @Override
     public String toString() {
-      if (server != null) {
-        return "allowed: connect to " + server.getServerInfo().getName();
+      if (target != null) {
+        return "allowed: connect to " + target.serverInfo().name();
       }
       return "denied";
     }
@@ -87,12 +81,12 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
     /**
      * Allows the player to connect to the specified server.
      *
-     * @param server the new server to connect to
+     * @param target the new server to connect to
      * @return a result to allow the player to connect to the specified server
      */
-    public static ServerResult allowed(RegisteredServer server) {
-      Preconditions.checkNotNull(server, "server");
-      return new ServerResult(server);
+    public static ServerResult allowed(RegisteredServer target) {
+      Preconditions.checkNotNull(target, "server");
+      return new ServerResult(target);
     }
   }
 }

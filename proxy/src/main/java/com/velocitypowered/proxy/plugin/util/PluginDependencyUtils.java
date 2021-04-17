@@ -47,7 +47,7 @@ public class PluginDependencyUtils {
    */
   public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
     List<PluginDescription> sortedCandidates = new ArrayList<>(candidates);
-    sortedCandidates.sort(Comparator.comparing(PluginDescription::getId));
+    sortedCandidates.sort(Comparator.comparing(PluginDescription::id));
 
     // Create a graph and populate it with plugin dependencies. Specifically, each graph has plugin
     // nodes, and edges that represent the dependencies that plugin relies on. Non-existent plugins
@@ -57,12 +57,12 @@ public class PluginDependencyUtils {
         .expectedNodeCount(sortedCandidates.size())
         .build();
     Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(sortedCandidates,
-        PluginDescription::getId);
+        PluginDescription::id);
 
     for (PluginDescription description : sortedCandidates) {
       graph.addNode(description);
 
-      for (PluginDependency dependency : description.getDependencies()) {
+      for (PluginDependency dependency : description.dependencies()) {
         PluginDescription in = candidateMap.get(dependency.getId());
 
         if (in != null) {
@@ -93,7 +93,7 @@ public class PluginDependencyUtils {
       currentIteration.addLast(node);
       StringBuilder loopGraph = new StringBuilder();
       for (PluginDescription description : currentIteration) {
-        loopGraph.append(description.getId());
+        loopGraph.append(description.id());
         loopGraph.append(" -> ");
       }
       loopGraph.setLength(loopGraph.length() - 4);

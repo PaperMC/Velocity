@@ -39,7 +39,7 @@ public class TabCompleteEventImpl implements TabCompleteEvent {
    * @return the requesting player
    */
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
@@ -48,7 +48,7 @@ public class TabCompleteEventImpl implements TabCompleteEvent {
    * @return the partial message
    */
   @Override
-  public String getPartialMessage() {
+  public String partialMessage() {
     return partialMessage;
   }
 
@@ -57,7 +57,7 @@ public class TabCompleteEventImpl implements TabCompleteEvent {
    * @return the suggestions
    */
   @Override
-  public List<String> getSuggestions() {
+  public List<String> suggestions() {
     return suggestions;
   }
 

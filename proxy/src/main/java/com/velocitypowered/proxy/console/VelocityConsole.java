@@ -57,8 +57,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public @NonNull Tristate getPermissionValue(@NonNull String permission) {
-    return this.permissionFunction.getPermissionValue(permission);
+  public @NonNull Tristate evaluatePermission(@NonNull String permission) {
+    return this.permissionFunction.evaluatePermission(permission);
   }
 
   /**
@@ -75,13 +75,13 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   public void setupPermissions() {
     PermissionsSetupEvent event = new PermissionsSetupEventImpl(this, s -> ALWAYS_TRUE);
     // we can safely block here, this is before any listeners fire
-    this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
+    this.permissionFunction = this.server.eventManager().fire(event).join().createFunction(this);
     if (this.permissionFunction == null) {
       logger.error(
           "A plugin permission provider {} provided an invalid permission function"
               + " for the console. This is a bug in the plugin, not in Velocity. Falling"
               + " back to the default permission function.",
-          event.getProvider().getClass().getName());
+          event.provider().getClass().getName());
       this.permissionFunction = ALWAYS_TRUE;
     }
   }
@@ -92,7 +92,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
         .appName("Velocity")
         .completer((reader, parsedLine, list) -> {
           try {
-            List<String> offers = this.server.getCommandManager()
+            List<String> offers = this.server.commandManager()
                 .offerSuggestions(this, parsedLine.line())
                 .join(); // Console doesn't get harmed much by this...
             for (String offer : offers) {
@@ -113,7 +113,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command).join()) {
+      if (!this.server.commandManager().execute(this, command).join()) {
         sendMessage(Component.text("Command not found.", NamedTextColor.RED));
       }
     } catch (Exception e) {

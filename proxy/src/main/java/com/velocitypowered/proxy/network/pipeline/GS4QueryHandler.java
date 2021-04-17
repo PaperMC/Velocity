@@ -84,18 +84,18 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainComponentSerializer.plain().serialize(server.getConfiguration().getMotd()))
+        .hostname(PlainComponentSerializer.plain().serialize(server.configuration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
-        .map(server.getConfiguration().getQueryMap())
-        .currentPlayers(server.getPlayerCount())
-        .maxPlayers(server.getConfiguration().getShowMaxPlayers())
-        .proxyPort(((InetSocketAddress) server.getConfiguration().getBind()).getPort())
-        .proxyHost(((InetSocketAddress) server.getConfiguration().getBind()).getHostString())
-        .players(server.getAllPlayers().stream().map(Player::getUsername)
+        .map(server.configuration().getQueryMap())
+        .onlinePlayers(server.countConnectedPlayers())
+        .maxPlayers(server.configuration().getShowMaxPlayers())
+        .proxyPort(((InetSocketAddress) server.configuration().getBind()).getPort())
+        .proxyHost(((InetSocketAddress) server.configuration().getBind()).getHostString())
+        .players(server.connectedPlayers().stream().map(Player::username)
             .collect(Collectors.toList()))
         .proxyVersion("Velocity")
         .plugins(
-            server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
+            server.configuration().shouldQueryShowPlugins() ? getRealPluginInformation()
                 : Collections.emptyList())
         .build();
   }
@@ -150,7 +150,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         boolean isBasic = !queryMessage.isReadable();
 
         // Call event and write response
-        server.getEventManager()
+        server.eventManager()
             .fire(new ProxyQueryEventImpl(isBasic ? BASIC : FULL, senderAddress, response))
             .whenCompleteAsync((event, exc) -> {
               // Packet header
@@ -160,22 +160,22 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
               // Start writing the response
               ResponseWriter responseWriter = new ResponseWriter(queryResponse, isBasic);
-              responseWriter.write("hostname", event.getResponse().getHostname());
+              responseWriter.write("hostname", event.response().hostname());
               responseWriter.write("gametype", "SMP");
 
               responseWriter.write("game_id", "MINECRAFT");
-              responseWriter.write("version", event.getResponse().getGameVersion());
-              responseWriter.writePlugins(event.getResponse().getProxyVersion(),
-                  event.getResponse().getPlugins());
+              responseWriter.write("version", event.response().gameVersion());
+              responseWriter.writePlugins(event.response().proxyVersion(),
+                  event.response().plugins());
 
-              responseWriter.write("map", event.getResponse().getMap());
-              responseWriter.write("numplayers", event.getResponse().getCurrentPlayers());
-              responseWriter.write("maxplayers", event.getResponse().getMaxPlayers());
-              responseWriter.write("hostport", event.getResponse().getProxyPort());
-              responseWriter.write("hostip", event.getResponse().getProxyHost());
+              responseWriter.write("map", event.response().mapName());
+              responseWriter.write("numplayers", event.response().onlinePlayers());
+              responseWriter.write("maxplayers", event.response().maxPlayers());
+              responseWriter.write("hostport", event.response().proxyPort());
+              responseWriter.write("hostip", event.response().proxyHost());
 
               if (!responseWriter.isBasic) {
-                responseWriter.writePlayers(event.getResponse().getPlayers());
+                responseWriter.writePlayers(event.response().players());
               }
 
               // Send the response
@@ -201,10 +201,10 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private List<QueryResponse.PluginInformation> getRealPluginInformation() {
     List<QueryResponse.PluginInformation> result = new ArrayList<>();
-    for (PluginContainer plugin : server.getPluginManager().getPlugins()) {
-      PluginDescription description = plugin.getDescription();
-      result.add(QueryResponse.PluginInformation.of(description.getName()
-          .orElse(description.getId()), description.getVersion().orElse(null)));
+    for (PluginContainer plugin : server.pluginManager().getPlugins()) {
+      PluginDescription description = plugin.description();
+      result.add(QueryResponse.PluginInformation.of(description.name()
+          .orElse(description.id()), description.version().orElse(null)));
     }
     return result;
   }

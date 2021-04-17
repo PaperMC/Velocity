@@ -22,15 +22,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface PreLoginEvent extends ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
 
-  InboundConnection getConnection();
+  InboundConnection connection();
 
-  String getUsername();
-
-  @Override
-  PreLoginComponentResult getResult();
-
-  @Override
-  void setResult(@NonNull PreLoginComponentResult result);
+  String username();
 
   /**
    * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason
@@ -59,7 +53,7 @@ public interface PreLoginEvent extends ResultedEvent<PreLoginEvent.PreLoginCompo
       return result != Result.DISALLOWED;
     }
 
-    public Optional<Component> getReason() {
+    public Optional<Component> denialReason() {
       return Optional.ofNullable(reason);
     }
 

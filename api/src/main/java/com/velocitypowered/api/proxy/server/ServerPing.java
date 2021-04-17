@@ -56,23 +56,23 @@ public final class ServerPing {
     this.modinfo = modinfo;
   }
 
-  public Version getVersion() {
+  public Version version() {
     return version;
   }
 
-  public Optional<Players> getPlayers() {
+  public Optional<Players> players() {
     return Optional.ofNullable(players);
   }
 
-  public Component getDescription() {
+  public Component description() {
     return description;
   }
 
-  public Optional<Favicon> getFavicon() {
+  public Optional<Favicon> favicon() {
     return Optional.ofNullable(favicon);
   }
 
-  public Optional<ModInfo> getModinfo() {
+  public Optional<ModInfo> modInfo() {
     return Optional.ofNullable(modinfo);
   }
 
@@ -122,7 +122,7 @@ public final class ServerPing {
     if (players != null) {
       builder.onlinePlayers = players.online;
       builder.maximumPlayers = players.max;
-      builder.samplePlayers.addAll(players.getSample());
+      builder.samplePlayers.addAll(players.sample());
     } else {
       builder.nullOutPlayers = true;
     }
@@ -319,11 +319,11 @@ public final class ServerPing {
       this.name = Preconditions.checkNotNull(name, "name");
     }
 
-    public int getProtocol() {
+    public int protocol() {
       return protocol;
     }
 
-    public String getName() {
+    public String name() {
       return name;
     }
 
@@ -371,15 +371,15 @@ public final class ServerPing {
       this.sample = ImmutableList.copyOf(sample);
     }
 
-    public int getOnline() {
+    public int online() {
       return online;
     }
 
-    public int getMax() {
+    public int maximum() {
       return max;
     }
 
-    public List<SamplePlayer> getSample() {
+    public List<SamplePlayer> sample() {
       return sample == null ? ImmutableList.of() : sample;
     }
 
@@ -421,11 +421,11 @@ public final class ServerPing {
       this.id = id;
     }
 
-    public String getName() {
+    public String name() {
       return name;
     }
 
-    public UUID getId() {
+    public UUID id() {
       return id;
     }
 

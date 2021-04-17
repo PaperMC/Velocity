@@ -30,7 +30,7 @@ public final class QueryResponse {
   private final String hostname;
   private final String gameVersion;
   private final String map;
-  private final int currentPlayers;
+  private final int onlinePlayers;
   private final int maxPlayers;
   private final String proxyHost;
   private final int proxyPort;
@@ -39,13 +39,13 @@ public final class QueryResponse {
   private final ImmutableCollection<PluginInformation> plugins;
 
   @VisibleForTesting
-  QueryResponse(String hostname, String gameVersion, String map, int currentPlayers,
+  QueryResponse(String hostname, String gameVersion, String map, int onlinePlayers,
       int maxPlayers, String proxyHost, int proxyPort, ImmutableCollection<String> players,
       String proxyVersion, ImmutableCollection<PluginInformation> plugins) {
     this.hostname = hostname;
     this.gameVersion = gameVersion;
     this.map = map;
-    this.currentPlayers = currentPlayers;
+    this.onlinePlayers = onlinePlayers;
     this.maxPlayers = maxPlayers;
     this.proxyHost = proxyHost;
     this.proxyPort = proxyPort;
@@ -60,7 +60,7 @@ public final class QueryResponse {
    *
    * @return hostname
    */
-  public String getHostname() {
+  public String hostname() {
     return hostname;
   }
 
@@ -70,7 +70,7 @@ public final class QueryResponse {
    *
    * @return game version
    */
-  public String getGameVersion() {
+  public String gameVersion() {
     return gameVersion;
   }
 
@@ -80,7 +80,7 @@ public final class QueryResponse {
    *
    * @return map name
    */
-  public String getMap() {
+  public String mapName() {
     return map;
   }
 
@@ -89,8 +89,8 @@ public final class QueryResponse {
    *
    * @return online player count
    */
-  public int getCurrentPlayers() {
-    return currentPlayers;
+  public int onlinePlayers() {
+    return onlinePlayers;
   }
 
   /**
@@ -98,7 +98,7 @@ public final class QueryResponse {
    *
    * @return max player count
    */
-  public int getMaxPlayers() {
+  public int maxPlayers() {
     return maxPlayers;
   }
 
@@ -107,7 +107,7 @@ public final class QueryResponse {
    *
    * @return proxy hostname
    */
-  public String getProxyHost() {
+  public String proxyHost() {
     return proxyHost;
   }
 
@@ -116,7 +116,7 @@ public final class QueryResponse {
    *
    * @return proxy port
    */
-  public int getProxyPort() {
+  public int proxyPort() {
     return proxyPort;
   }
 
@@ -125,7 +125,7 @@ public final class QueryResponse {
    *
    * @return collection of players
    */
-  public Collection<String> getPlayers() {
+  public Collection<String> players() {
     return players;
   }
 
@@ -134,7 +134,7 @@ public final class QueryResponse {
    *
    * @return server software
    */
-  public String getProxyVersion() {
+  public String proxyVersion() {
     return proxyVersion;
   }
 
@@ -143,10 +143,9 @@ public final class QueryResponse {
    *
    * @return collection of plugins
    */
-  public Collection<PluginInformation> getPlugins() {
+  public Collection<PluginInformation> plugins() {
     return plugins;
   }
-
 
   /**
    * Creates a new {@link Builder} instance from data represented by this response, so that you
@@ -158,16 +157,16 @@ public final class QueryResponse {
    */
   public Builder toBuilder() {
     return QueryResponse.builder()
-        .hostname(getHostname())
-        .gameVersion(getGameVersion())
-        .map(getMap())
-        .currentPlayers(getCurrentPlayers())
-        .maxPlayers(getMaxPlayers())
-        .proxyHost(getProxyHost())
-        .proxyPort(getProxyPort())
-        .players(getPlayers())
-        .proxyVersion(getProxyVersion())
-        .plugins(getPlugins());
+        .hostname(hostname())
+        .gameVersion(gameVersion())
+        .map(mapName())
+        .onlinePlayers(onlinePlayers())
+        .maxPlayers(maxPlayers())
+        .proxyHost(proxyHost())
+        .proxyPort(proxyPort())
+        .players(players())
+        .proxyVersion(proxyVersion())
+        .plugins(plugins());
   }
 
   /**
@@ -188,7 +187,7 @@ public final class QueryResponse {
       return false;
     }
     QueryResponse response = (QueryResponse) o;
-    return currentPlayers == response.currentPlayers
+    return onlinePlayers == response.onlinePlayers
         && maxPlayers == response.maxPlayers
         && proxyPort == response.proxyPort
         && hostname.equals(response.hostname)
@@ -202,9 +201,8 @@ public final class QueryResponse {
 
   @Override
   public int hashCode() {
-    return Objects
-        .hash(hostname, gameVersion, map, currentPlayers, maxPlayers, proxyHost, proxyPort, players,
-            proxyVersion, plugins);
+    return Objects.hash(hostname, gameVersion, map, onlinePlayers, maxPlayers, proxyHost,
+        proxyPort, players, proxyVersion, plugins);
   }
 
   @Override
@@ -213,7 +211,7 @@ public final class QueryResponse {
         + "hostname='" + hostname + '\''
         + ", gameVersion='" + gameVersion + '\''
         + ", map='" + map + '\''
-        + ", currentPlayers=" + currentPlayers
+        + ", onlinePlayers=" + onlinePlayers
         + ", maxPlayers=" + maxPlayers
         + ", proxyHost='" + proxyHost + '\''
         + ", proxyPort=" + proxyPort
@@ -233,7 +231,7 @@ public final class QueryResponse {
     private @MonotonicNonNull String proxyHost;
     private @MonotonicNonNull String proxyVersion;
 
-    private int currentPlayers;
+    private int onlinePlayers;
     private int maxPlayers;
     private int proxyPort;
 
@@ -275,12 +273,12 @@ public final class QueryResponse {
 
     /**
      * Sets the players that are currently claimed to be online.
-     * @param currentPlayers a non-negative number representing all players online
+     * @param players a non-negative number representing all players online
      * @return this builder, for chaining
      */
-    public Builder currentPlayers(int currentPlayers) {
-      Preconditions.checkArgument(currentPlayers >= 0, "currentPlayers cannot be negative");
-      this.currentPlayers = currentPlayers;
+    public Builder onlinePlayers(int players) {
+      Preconditions.checkArgument(players >= 0, "currentPlayers cannot be negative");
+      this.onlinePlayers = players;
       return this;
     }
 
@@ -338,7 +336,7 @@ public final class QueryResponse {
     }
 
     /**
-     * Removes all players from the builder. This does not affect {@link #getCurrentPlayers()}.
+     * Removes all players from the builder. This does not affect {@link #onlinePlayers()}.
      * @return this builder, for chaining
      */
     public Builder clearPlayers() {
@@ -397,7 +395,7 @@ public final class QueryResponse {
           Preconditions.checkNotNull(hostname, "hostname"),
           Preconditions.checkNotNull(gameVersion, "gameVersion"),
           Preconditions.checkNotNull(map, "map"),
-          currentPlayers,
+          onlinePlayers,
           maxPlayers,
           Preconditions.checkNotNull(proxyHost, "proxyHost"),
           proxyPort,

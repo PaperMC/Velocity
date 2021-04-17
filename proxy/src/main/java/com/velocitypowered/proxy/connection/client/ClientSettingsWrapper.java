@@ -17,15 +17,15 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.SkinParts;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ClientSettingsWrapper implements PlayerSettings {
+public class ClientSettingsWrapper implements ClientSettings {
 
-  static final PlayerSettings DEFAULT = new ClientSettingsWrapper(
+  static final ClientSettings DEFAULT = new ClientSettingsWrapper(
       new ServerboundClientSettingsPacket("en_US", (byte) 10, 0, true, (short) 127, 1));
 
   private final ServerboundClientSettingsPacket settings;

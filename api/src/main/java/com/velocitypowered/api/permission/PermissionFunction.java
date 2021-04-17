@@ -29,10 +29,10 @@ public interface PermissionFunction {
   PermissionFunction ALWAYS_UNDEFINED = p -> Tristate.UNDEFINED;
 
   /**
-   * Gets the subjects setting for a particular permission.
+   * Evaluates whether or not the player has a permission.
    *
    * @param permission the permission
    * @return the value the permission is set to
    */
-  Tristate getPermissionValue(String permission);
+  Tristate evaluatePermission(String permission);
 }

@@ -25,7 +25,7 @@ public class MockCommandSource implements CommandSource {
   public static final CommandSource INSTANCE = new MockCommandSource();
 
   @Override
-  public Tristate getPermissionValue(final String permission) {
+  public Tristate evaluatePermission(final String permission) {
     return Tristate.UNDEFINED;
   }
 }

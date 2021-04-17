@@ -414,7 +414,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
       } else {
-        int level = server.getConfiguration().getCompressionLevel();
+        int level = server.configuration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
 
         encoder = new MinecraftCompressEncoder(threshold, compressor);

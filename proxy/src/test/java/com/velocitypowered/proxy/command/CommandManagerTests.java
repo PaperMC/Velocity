@@ -94,8 +94,8 @@ public class CommandManagerTests {
             .aliases("baZ")
             .build();
 
-    assertEquals(ImmutableSet.of("bar", "baz"), meta.getAliases());
-    assertTrue(meta.getHints().isEmpty());
+    assertEquals(ImmutableSet.of("bar", "baz"), meta.aliases());
+    assertTrue(meta.hints().isEmpty());
     manager.register(meta, aliasesCommand);
     assertTrue(manager.hasCommand("bAr"));
     assertTrue(manager.hasCommand("Baz"));

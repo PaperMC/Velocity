@@ -37,17 +37,17 @@ public final class ServerConnectedEventImpl implements ServerConnectedEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public RegisteredServer getServer() {
+  public RegisteredServer target() {
     return server;
   }
 
   @Override
-  public Optional<RegisteredServer> getPreviousServer() {
+  public Optional<RegisteredServer> previousServer() {
     return Optional.ofNullable(previousServer);
   }
 

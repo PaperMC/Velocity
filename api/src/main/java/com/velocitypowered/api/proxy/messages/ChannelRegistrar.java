@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.proxy.messages;
 
+import com.velocitypowered.api.event.connection.PluginMessageEventImpl;
+
 /**
  * Represents an interface to register and unregister {@link ChannelIdentifier}s for the proxy to
  * listen on.
@@ -15,7 +17,7 @@ public interface ChannelRegistrar {
 
   /**
    * Registers the specified message identifiers to listen on so you can intercept plugin messages
-   * on the channel using {@link com.velocitypowered.api.event.connection.PluginMessageEvent}.
+   * on the channel using {@link PluginMessageEventImpl}.
    *
    * @param identifiers the channel identifiers to register
    */

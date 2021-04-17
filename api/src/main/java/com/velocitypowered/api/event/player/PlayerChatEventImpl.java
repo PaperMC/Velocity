@@ -31,17 +31,17 @@ public final class PlayerChatEventImpl implements PlayerChatEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public String getMessage() {
+  public String sentMessage() {
     return message;
   }
 
   @Override
-  public ChatResult getResult() {
+  public ChatResult result() {
     return result;
   }
 

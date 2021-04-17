@@ -75,8 +75,8 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * The user-friendly representation of the lowest and highest supported versions.
    */
   public static final String SUPPORTED_VERSION_STRING = String
-          .format("%s-%s", MINIMUM_VERSION.getVersionIntroducedIn(),
-                  MAXIMUM_VERSION.getMostRecentSupportedVersion());
+          .format("%s-%s", MINIMUM_VERSION.versionIntroducedIn(),
+                  MAXIMUM_VERSION.mostRecentSupportedVersion());
 
   /**
    * A map linking the protocol version number to its {@link ProtocolVersion} representation.
@@ -135,20 +135,8 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    *
    * @return the protocol version
    */
-  public int getProtocol() {
+  public int protocol() {
     return protocol == -1 ? snapshotProtocol : protocol;
-  }
-
-  /**
-   * Returns the user-friendly name for this protocol.
-   *
-   * @return the protocol name
-   * @deprecated A protocol may be shared by multiple versions. Use @link{#getVersionIntroducedIn()}
-   *     or @link{#getVersionsSupportedBy()} to get more accurate version names.
-   */
-  @Deprecated
-  public String getName() {
-    return getVersionIntroducedIn();
   }
 
   /**
@@ -157,7 +145,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    *
    * @return the version name
    */
-  public String getVersionIntroducedIn() {
+  public String versionIntroducedIn() {
     return names[0];
   }
 
@@ -167,7 +155,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    *
    * @return the version name
    */
-  public String getMostRecentSupportedVersion() {
+  public String mostRecentSupportedVersion() {
     return names[names.length - 1];
   }
 
@@ -176,7 +164,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    *
    * @return the version names
    */
-  public List<String> getVersionsSupportedBy() {
+  public List<String> supportedVersions() {
     return ImmutableList.copyOf(names);
   }
 
@@ -186,7 +174,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * @param protocol the protocol as an int
    * @return the protocol version
    */
-  public static ProtocolVersion getProtocolVersion(int protocol) {
+  public static ProtocolVersion byMinecraftProtocolVersion(int protocol) {
     return ID_TO_PROTOCOL_CONSTANT.getOrDefault(protocol, UNKNOWN);
   }
 
@@ -232,6 +220,6 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
 
   @Override
   public String toString() {
-    return getVersionIntroducedIn();
+    return versionIntroducedIn();
   }
 }

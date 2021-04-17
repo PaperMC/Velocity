@@ -123,7 +123,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
-      if (server.getConfiguration().shouldPreventClientProxyConnections()) {
+      if (server.configuration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
@@ -151,7 +151,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 GameProfile.class), true);
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
-            inbound.disconnect(server.getConfiguration().getMessages().getOnlineModeOnly());
+            inbound.disconnect(server.configuration().getMessages().getOnlineModeOnly());
           } else {
             // Something else went wrong
             logger.error(
@@ -180,23 +180,23 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
     PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername());
-    server.getEventManager().fire(event)
+    server.eventManager().fire(event)
         .thenRunAsync(() -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
             return;
           }
 
-          PreLoginComponentResult result = event.getResult();
-          Optional<Component> disconnectReason = result.getReason();
+          PreLoginComponentResult result = event.result();
+          Optional<Component> disconnectReason = result.denialReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
             mcConnection.closeWith(ClientboundDisconnectPacket.create(disconnectReason.get(),
-                inbound.getProtocolVersion()));
+                inbound.protocolVersion()));
             return;
           }
 
-          if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result
+          if (!result.isForceOfflineMode() && (server.configuration().isOnlineMode() || result
               .isOnlineModeAllowed())) {
             // Request encryption.
             ClientboundEncryptionRequestPacket request = generateEncryptionRequest();
@@ -225,29 +225,29 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private void initializePlayer(GameProfile profile, boolean onlineMode) {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
-        server.getConfiguration().getPlayerInfoForwardingMode());
+        server.configuration().getPlayerInfoForwardingMode());
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEventImpl(inbound, profile,
         onlineMode);
     final GameProfile finalProfile = profile;
 
-    server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
+    server.eventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
       if (mcConnection.isClosed()) {
         // The player disconnected after we authenticated them.
         return CompletableFuture.completedFuture(null);
       }
 
       // Initiate a regular connection and move over to it.
-      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
+      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.gameProfile(),
+          mcConnection, inbound.connectedHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
-        player.disconnect0(server.getConfiguration().getMessages().getAlreadyConnected(), true);
+        player.disconnect0(server.configuration().getMessages().getAlreadyConnected(), true);
         return CompletableFuture.completedFuture(null);
       }
 
       logger.info("{} has connected", player);
 
-      return server.getEventManager()
+      return server.eventManager()
           .fire(new PermissionsSetupEventImpl(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
@@ -258,8 +258,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                     "A plugin permission provider {} provided an invalid permission function"
                         + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
                         + " back to the default permission function.",
-                    event.getProvider().getClass().getName(),
-                    player.getUsername());
+                    event.provider().getClass().getName(),
+                    player.username());
               } else {
                 player.setPermissionFunction(function);
               }
@@ -273,42 +273,42 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
-    int threshold = server.getConfiguration().getCompressionThreshold();
+    int threshold = server.configuration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().gte(MINECRAFT_1_8)) {
       mcConnection.write(new ClientboundSetCompressionPacket(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
-    VelocityConfiguration configuration = server.getConfiguration();
-    UUID playerUniqueId = player.getUniqueId();
+    VelocityConfiguration configuration = server.configuration();
+    UUID playerUniqueId = player.id();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
-      playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
+      playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.username());
     }
-    mcConnection.write(new ClientboundServerLoginSuccessPacket(playerUniqueId, player.getUsername()));
+    mcConnection.write(new ClientboundServerLoginSuccessPacket(playerUniqueId, player.username()));
 
     mcConnection.setAssociation(player);
     mcConnection.setState(StateRegistry.PLAY);
 
-    server.getEventManager().fire(new LoginEventImpl(player))
+    server.eventManager().fire(new LoginEventImpl(player))
         .thenAcceptAsync(event -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
-            server.getEventManager().fireAndForget(new DisconnectEventImpl(player,
+            server.eventManager().fireAndForget(new DisconnectEventImpl(player,
                 LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
             return;
           }
 
-          Optional<Component> reason = event.getResult().getReason();
+          Optional<Component> reason = event.result().reason();
           if (reason.isPresent()) {
             player.disconnect0(reason.get(), true);
           } else {
             if (!server.registerConnection(player)) {
-              player.disconnect0(server.getConfiguration().getMessages()
+              player.disconnect0(server.configuration().getMessages()
                       .getAlreadyConnected(), true);
               return;
             }
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
-            server.getEventManager().fire(new PostLoginEventImpl(player))
+            server.eventManager().fire(new PostLoginEventImpl(player))
                 .thenCompose((ignored) -> connectToInitialServer(player))
                 .exceptionally((ex) -> {
                   logger.error("Exception while connecting {} to initial server", player, ex);
@@ -327,11 +327,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEventImpl(player,
         initialFromConfig.orElse(null));
 
-    return server.getEventManager().fire(event)
+    return server.eventManager().fire(event)
         .thenRunAsync(() -> {
-          Optional<RegisteredServer> toTry = event.getInitialServer();
+          Optional<RegisteredServer> toTry = event.initialServer();
           if (!toTry.isPresent()) {
-            player.disconnect0(server.getConfiguration().getMessages()
+            player.disconnect0(server.configuration().getMessages()
                     .getNoAvailableServers(), true);
             return;
           }

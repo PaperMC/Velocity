@@ -27,12 +27,12 @@ public final class PlayerChannelRegisterEventImpl implements PlayerChannelRegist
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public List<ChannelIdentifier> getChannels() {
+  public List<ChannelIdentifier> channels() {
     return channels;
   }
 

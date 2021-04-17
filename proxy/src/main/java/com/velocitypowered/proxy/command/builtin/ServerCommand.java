@@ -62,7 +62,7 @@ public class ServerCommand implements SimpleCommand {
     if (args.length == 1) {
       // Trying to connect to a server.
       String serverName = args[0];
-      Optional<RegisteredServer> toConnect = server.getServer(serverName);
+      Optional<RegisteredServer> toConnect = server.server(serverName);
       if (!toConnect.isPresent()) {
         player.sendMessage(Identity.nil(),
             Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
@@ -76,8 +76,8 @@ public class ServerCommand implements SimpleCommand {
   }
 
   private void outputServerInformation(Player executor) {
-    String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
-        .map(ServerInfo::getName).orElse("<unknown>");
+    String currentServer = executor.connectedServer().map(ServerConnection::serverInfo)
+        .map(ServerInfo::name).orElse("<unknown>");
     executor.sendMessage(Identity.nil(), Component.text(
         "You are currently connected to " + currentServer + ".", NamedTextColor.YELLOW));
 
@@ -103,18 +103,18 @@ public class ServerCommand implements SimpleCommand {
   }
 
   private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {
-    ServerInfo serverInfo = server.getServerInfo();
-    TextComponent serverTextComponent = Component.text(serverInfo.getName());
+    ServerInfo serverInfo = server.serverInfo();
+    TextComponent serverTextComponent = Component.text(serverInfo.name());
 
-    String playersText = server.getPlayersConnected().size() + " player(s) online";
-    if (serverInfo.getName().equals(currentPlayerServer)) {
+    String playersText = server.connectedPlayers().size() + " player(s) online";
+    if (serverInfo.name().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
               showText(Component.text("Currently connected to this server\n" + playersText))
           );
     } else {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
-          .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
+          .clickEvent(ClickEvent.runCommand("/server " + serverInfo.name()))
           .hoverEvent(
               showText(Component.text("Click to connect to this server\n" + playersText))
           );
@@ -125,8 +125,8 @@ public class ServerCommand implements SimpleCommand {
   @Override
   public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
-    Stream<String> possibilities = server.getAllServers().stream()
-            .map(rs -> rs.getServerInfo().getName());
+    Stream<String> possibilities = server.registeredServers().stream()
+            .map(rs -> rs.serverInfo().name());
 
     if (currentArgs.length == 0) {
       return possibilities.collect(Collectors.toList());
@@ -141,6 +141,6 @@ public class ServerCommand implements SimpleCommand {
 
   @Override
   public boolean hasPermission(final SimpleCommand.Invocation invocation) {
-    return invocation.source().getPermissionValue("velocity.command.server") != Tristate.FALSE;
+    return invocation.source().evaluatePermission("velocity.command.server") != Tristate.FALSE;
   }
 }

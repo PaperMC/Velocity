@@ -43,17 +43,17 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public TabList getTabList() {
+  public TabList parent() {
     return tabList;
   }
 
   @Override
-  public GameProfile getProfile() {
+  public GameProfile gameProfile() {
     return profile;
   }
 
   @Override
-  public Optional<Component> getDisplayName() {
+  public Optional<Component> displayName() {
     return Optional.ofNullable(displayName);
   }
 
@@ -69,12 +69,12 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public int getLatency() {
+  public int ping() {
     return latency;
   }
 
   @Override
-  public TabListEntry setLatency(int latency) {
+  public TabListEntry setPing(int latency) {
     this.latency = latency;
     tabList.updateEntry(ClientboundPlayerListItemPacket.UPDATE_LATENCY, this);
     return this;
@@ -85,7 +85,7 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public int getGameMode() {
+  public int gameMode() {
     return gameMode;
   }
 

@@ -67,37 +67,37 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public String getId() {
+  public String id() {
     return id;
   }
 
   @Override
-  public Optional<String> getName() {
+  public Optional<String> name() {
     return Optional.ofNullable(name);
   }
 
   @Override
-  public Optional<String> getVersion() {
+  public Optional<String> version() {
     return Optional.ofNullable(version);
   }
 
   @Override
-  public Optional<String> getDescription() {
+  public Optional<String> description() {
     return Optional.ofNullable(description);
   }
 
   @Override
-  public Optional<String> getUrl() {
+  public Optional<String> url() {
     return Optional.ofNullable(url);
   }
 
   @Override
-  public List<String> getAuthors() {
+  public List<String> authors() {
     return authors;
   }
 
   @Override
-  public Collection<PluginDependency> getDependencies() {
+  public Collection<PluginDependency> dependencies() {
     return dependencies.values();
   }
 
@@ -107,7 +107,7 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public Optional<Path> getSource() {
+  public Optional<Path> file() {
     return Optional.ofNullable(source);
   }
 

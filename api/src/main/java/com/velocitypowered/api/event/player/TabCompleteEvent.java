@@ -21,19 +21,19 @@ public interface TabCompleteEvent {
    *
    * @return the requesting player
    */
-  Player getPlayer();
+  Player player();
 
   /**
    * Returns the message being partially completed.
    *
    * @return the partial message
    */
-  String getPartialMessage();
+  String partialMessage();
 
   /**
    * Returns all the suggestions provided to the user, as a mutable list.
    *
    * @return the suggestions
    */
-  List<String> getSuggestions();
+  List<String> suggestions();
 }

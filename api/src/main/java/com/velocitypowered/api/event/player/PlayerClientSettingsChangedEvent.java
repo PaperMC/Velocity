@@ -8,11 +8,11 @@
 package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ClientSettings;
 
-public interface PlayerSettingsChangedEvent {
+public interface PlayerClientSettingsChangedEvent {
 
-  Player getPlayer();
+  Player player();
 
-  PlayerSettings getPlayerSettings();
+  ClientSettings settings();
 }

@@ -197,7 +197,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
+      return source.evaluatePermission("velocity.command.reload") == Tristate.TRUE;
     }
   }
 
@@ -217,7 +217,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      ProxyVersion version = server.getVersion();
+      ProxyVersion version = server.version();
 
       TextComponent velocity = Component.text().content(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
@@ -251,7 +251,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
+      return source.evaluatePermission("velocity.command.info") != Tristate.FALSE;
     }
   }
 
@@ -270,7 +270,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().getPlugins());
+      List<PluginContainer> plugins = ImmutableList.copyOf(server.pluginManager().getPlugins());
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
@@ -283,7 +283,7 @@ public class VelocityCommand implements SimpleCommand {
           .color(NamedTextColor.YELLOW);
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        output.append(componentForPlugin(plugin.getDescription()));
+        output.append(componentForPlugin(plugin.description()));
         if (i + 1 < pluginCount) {
           output.append(Component.text(", "));
         }
@@ -293,37 +293,37 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
-      String pluginInfo = description.getName().orElse(description.getId())
-          + description.getVersion().map(v -> " " + v).orElse("");
+      String pluginInfo = description.name().orElse(description.id())
+          + description.version().map(v -> " " + v).orElse("");
 
       TextComponent.Builder hoverText = Component.text().content(pluginInfo);
 
-      description.getUrl().ifPresent(url -> {
+      description.url().ifPresent(url -> {
         hoverText.append(Component.newline());
         hoverText.append(Component.text("Website: " + url));
       });
-      if (!description.getAuthors().isEmpty()) {
+      if (!description.authors().isEmpty()) {
         hoverText.append(Component.newline());
-        if (description.getAuthors().size() == 1) {
-          hoverText.append(Component.text("Author: " + description.getAuthors().get(0)));
+        if (description.authors().size() == 1) {
+          hoverText.append(Component.text("Author: " + description.authors().get(0)));
         } else {
           hoverText.append(Component.text("Authors: " + Joiner.on(", ")
-              .join(description.getAuthors())));
+              .join(description.authors())));
         }
       }
-      description.getDescription().ifPresent(pdesc -> {
+      description.description().ifPresent(pdesc -> {
         hoverText.append(Component.newline());
         hoverText.append(Component.newline());
         hoverText.append(Component.text(pdesc));
       });
 
-      return Component.text(description.getId(), NamedTextColor.GRAY)
+      return Component.text(description.id(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return source.evaluatePermission("velocity.command.plugins") == Tristate.TRUE;
     }
   }
 
@@ -343,27 +343,27 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
+      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.registeredServers());
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
-        servers.add(iter.getServerInfo().getName(),
+        servers.add(iter.serverInfo().name(),
                 InformationUtils.collectServerInfo(iter));
       }
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
-              server.getConfiguration().getAttemptConnectionOrder());
+              server.configuration().getAttemptConnectionOrder());
       for (int i = 0; i < attemptedConnectionOrder.size(); i++) {
         connectOrder.add(attemptedConnectionOrder.get(i));
       }
 
-      JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.getConfiguration());
+      JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.configuration());
       proxyConfig.add("servers", servers);
       proxyConfig.add("connectOrder", connectOrder);
       proxyConfig.add("forcedHosts",
-              InformationUtils.collectForcedHosts(server.getConfiguration()));
+              InformationUtils.collectForcedHosts(server.configuration()));
 
       JsonObject dump = new JsonObject();
-      dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
+      dump.add("versionInfo", InformationUtils.collectProxyInfo(server.version()));
       dump.add("platform", InformationUtils.collectEnvironmentInfo());
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
@@ -374,8 +374,8 @@ public class VelocityCommand implements SimpleCommand {
       BoundRequestBuilder request =
               httpClient.preparePost("https://dump.velocitypowered.com/documents");
       request.setHeader("Content-Type", "text/plain");
-      request.addHeader("User-Agent", server.getVersion().getName() + "/"
-              + server.getVersion().getVersion());
+      request.addHeader("User-Agent", server.version().getName() + "/"
+              + server.version().getVersion());
       request.setBody(
               InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
 
@@ -459,7 +459,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return source.evaluatePermission("velocity.command.plugins") == Tristate.TRUE;
     }
   }
 }

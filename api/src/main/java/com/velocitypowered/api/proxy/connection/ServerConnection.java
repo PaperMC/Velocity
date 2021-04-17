@@ -22,19 +22,19 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    *
    * @return the server this connection is connected to
    */
-  RegisteredServer getServer();
+  RegisteredServer target();
 
   /**
    * Returns the server info for this connection.
    *
    * @return the server info for this connection
    */
-  ServerInfo getServerInfo();
+  ServerInfo serverInfo();
 
   /**
    * Returns the player that this connection is associated with.
    *
    * @return the player for this connection
    */
-  Player getPlayer();
+  Player player();
 }

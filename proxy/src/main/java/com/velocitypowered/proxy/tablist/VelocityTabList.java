@@ -69,16 +69,16 @@ public class VelocityTabList implements TabList {
   @Override
   public void addEntry(TabListEntry entry) {
     Preconditions.checkNotNull(entry, "entry");
-    Preconditions.checkArgument(entry.getTabList().equals(this),
+    Preconditions.checkArgument(entry.parent().equals(this),
         "The provided entry was not created by this tab list");
-    Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
+    Preconditions.checkArgument(!entries.containsKey(entry.gameProfile().getId()),
         "this TabList already contains an entry with the same uuid");
     Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
         "Not a Velocity tab list entry");
 
     connection.write(new ClientboundPlayerListItemPacket(ClientboundPlayerListItemPacket.ADD_PLAYER,
         Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(entry))));
-    entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
+    entries.put(entry.gameProfile().getId(), (VelocityTabListEntry) entry);
   }
 
   @Override
@@ -122,7 +122,7 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
-  public Collection<TabListEntry> getEntries() {
+  public Collection<TabListEntry> entries() {
     return Collections.unmodifiableCollection(this.entries.values());
   }
 
@@ -198,7 +198,7 @@ public class VelocityTabList implements TabList {
   }
 
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
+    if (entries.containsKey(entry.gameProfile().getId())) {
       connection.write(new ClientboundPlayerListItemPacket(action,
           Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(entry))));
     }

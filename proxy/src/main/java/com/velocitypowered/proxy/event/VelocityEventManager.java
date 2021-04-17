@@ -595,7 +595,7 @@ public class VelocityEventManager implements EventManager {
   private static void logHandlerException(
       final HandlerRegistration registration, final Throwable t) {
     logger.error("Couldn't pass {} to {}", registration.eventType.getSimpleName(),
-        registration.plugin.getDescription().getId(), t);
+        registration.plugin.description().id(), t);
   }
 
   public boolean shutdown() throws InterruptedException {

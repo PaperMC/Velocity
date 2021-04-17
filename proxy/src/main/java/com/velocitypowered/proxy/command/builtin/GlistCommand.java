@@ -56,14 +56,14 @@ public class GlistCommand {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
             .requires(source ->
-                    source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
+                    source.evaluatePermission("velocity.command.glist") == Tristate.TRUE)
             .executes(this::totalCount)
             .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
             .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
             .suggests((context, builder) -> {
-              for (RegisteredServer server : server.getAllServers()) {
-                builder.suggest(server.getServerInfo().getName());
+              for (RegisteredServer server : server.registeredServers()) {
+                builder.suggest(server.serverInfo().name());
               }
               builder.suggest("all");
               return builder.buildFuture();
@@ -71,7 +71,7 @@ public class GlistCommand {
             .executes(this::serverCount)
             .build();
     totalNode.addChild(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(totalNode));
+    server.commandManager().register(new BrigadierCommand(totalNode));
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {
@@ -95,7 +95,7 @@ public class GlistCommand {
       }
       sendTotalProxyCount(source);
     } else {
-      Optional<RegisteredServer> registeredServer = server.getServer(serverName);
+      Optional<RegisteredServer> registeredServer = server.server(serverName);
       if (!registeredServer.isPresent()) {
         source.sendMessage(Identity.nil(),
             Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
@@ -109,19 +109,19 @@ public class GlistCommand {
   private void sendTotalProxyCount(CommandSource target) {
     target.sendMessage(Identity.nil(), Component.text()
         .content("There are ").color(NamedTextColor.YELLOW)
-        .append(Component.text(server.getAllPlayers().size(), NamedTextColor.GREEN))
+        .append(Component.text(server.connectedPlayers().size(), NamedTextColor.GREEN))
         .append(Component.text(" player(s) online.", NamedTextColor.YELLOW))
         .build());
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+    List<Player> onServer = ImmutableList.copyOf(server.connectedPlayers());
     if (onServer.isEmpty() && fromAll) {
       return;
     }
 
     TextComponent.Builder builder = Component.text()
-        .append(Component.text("[" + server.getServerInfo().getName() + "] ",
+        .append(Component.text("[" + server.serverInfo().name() + "] ",
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
@@ -129,7 +129,7 @@ public class GlistCommand {
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);
-      builder.append(Component.text(player.getUsername()));
+      builder.append(Component.text(player.username()));
 
       if (i + 1 < onServer.size()) {
         builder.append(Component.text(", "));

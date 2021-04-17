@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -207,8 +206,8 @@ public class VelocityScheduler implements Scheduler {
             Thread.currentThread().interrupt();
           } else {
             String friendlyPluginName = pluginManager.fromInstance(plugin)
-                .map(container -> container.getDescription().getName()
-                      .orElse(container.getDescription().getId()))
+                .map(container -> container.description().name()
+                      .orElse(container.description().id()))
                 .orElse("UNKNOWN");
             Log.logger.error("Exception in task {} by plugin {}", runnable, friendlyPluginName,
                 e);

@@ -39,17 +39,17 @@ public final class GameProfileRequestEventImpl implements GameProfileRequestEven
   }
 
   @Override
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 
   @Override
-  public String getUsername() {
+  public String username() {
     return username;
   }
 
   @Override
-  public GameProfile getOriginalProfile() {
+  public GameProfile initialProfile() {
     return originalProfile;
   }
 
@@ -66,7 +66,7 @@ public final class GameProfileRequestEventImpl implements GameProfileRequestEven
    * @return the user's {@link GameProfile}
    */
   @Override
-  public GameProfile getGameProfile() {
+  public GameProfile gameProfile() {
     return gameProfile == null ? originalProfile : gameProfile;
   }
 

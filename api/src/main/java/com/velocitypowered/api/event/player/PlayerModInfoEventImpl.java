@@ -23,12 +23,12 @@ public final class PlayerModInfoEventImpl implements PlayerModInfoEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public ModInfo getModInfo() {
+  public ModInfo modInfo() {
     return modInfo;
   }
 

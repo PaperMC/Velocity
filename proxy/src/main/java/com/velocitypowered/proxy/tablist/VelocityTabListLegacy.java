@@ -50,13 +50,13 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void addEntry(TabListEntry entry) {
     super.addEntry(entry);
-    nameMapping.put(entry.getProfile().getName(), entry.getProfile().getId());
+    nameMapping.put(entry.gameProfile().getName(), entry.gameProfile().getId());
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
     Optional<TabListEntry> entry = super.removeEntry(uuid);
-    entry.map(TabListEntry::getProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
+    entry.map(TabListEntry::gameProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
     return entry;
   }
 
@@ -108,7 +108,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   @Override
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
+    if (entries.containsKey(entry.gameProfile().getId())) {
       switch (action) {
         case ClientboundPlayerListItemPacket.UPDATE_LATENCY:
         case ClientboundPlayerListItemPacket.UPDATE_DISPLAY_NAME: // Add here because we

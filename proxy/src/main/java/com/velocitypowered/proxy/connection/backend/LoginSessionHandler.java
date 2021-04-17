@@ -73,12 +73,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientboundLoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
         .getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          cleanRemoteAddress(serverConn.getPlayer().getRemoteAddress()),
-          serverConn.getPlayer().getGameProfile());
+          cleanRemoteAddress(serverConn.player().remoteAddress()),
+          serverConn.player().gameProfile());
       ServerboundLoginPluginResponsePacket response = new ServerboundLoginPluginResponsePacket(
           packet.getId(), true, forwardingData);
       mc.write(response);
@@ -93,7 +93,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundDisconnectPacket packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.target()));
     serverConn.disconnect();
     return true;
   }
@@ -106,10 +106,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+          serverConn.target()));
       serverConn.disconnect();
       return true;
     }
@@ -133,7 +133,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
               + "This is usually because the remote server does not have BungeeCord IP forwarding "

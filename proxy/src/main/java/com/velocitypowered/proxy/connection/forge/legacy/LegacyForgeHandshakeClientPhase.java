@@ -93,7 +93,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
         AbstractPluginMessagePacket<?> message,
         MinecraftConnection backendConn) {
       // Read the mod list if we haven't already.
-      if (!player.getModInfo().isPresent()) {
+      if (!player.modInfo().isPresent()) {
         List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(message);
         if (!mods.isEmpty()) {
           player.setModInfo(new ModInfo("FML", mods));

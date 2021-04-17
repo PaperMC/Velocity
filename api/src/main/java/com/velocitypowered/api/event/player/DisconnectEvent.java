@@ -9,11 +9,15 @@ package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
 
+/**
+ * This event is fired when a player disconnects from the proxy. Operations on the provided player,
+ * aside from basic data retrieval operations, may behave in undefined ways.
+ */
 public interface DisconnectEvent {
 
-  Player getPlayer();
+  Player player();
 
-  LoginStatus getLoginStatus();
+  LoginStatus loginStatus();
 
   public enum LoginStatus {
 

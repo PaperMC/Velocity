@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 
 /**
  * Provides an interface to a Minecraft server proxy.
@@ -35,7 +36,7 @@ public interface ProxyServer extends Audience {
    *
    * @param reason message to kick online players with
    */
-  void shutdown(net.kyori.adventure.text.Component reason);
+  void shutdown(Component reason);
 
   /**
    * Shuts down the proxy, kicking players with the default reason.
@@ -65,14 +66,14 @@ public interface ProxyServer extends Audience {
    *
    * @return the players online on this proxy
    */
-  Collection<Player> getAllPlayers();
+  Collection<Player> connectedPlayers();
 
   /**
    * Returns the number of players currently connected to this proxy.
    *
    * @return the players on this proxy
    */
-  int getPlayerCount();
+  int countConnectedPlayers();
 
   /**
    * Retrieves a registered {@link RegisteredServer} instance by its name. The search is
@@ -81,14 +82,14 @@ public interface ProxyServer extends Audience {
    * @param name the name of the server
    * @return the registered server, which may be empty
    */
-  Optional<RegisteredServer> getServer(String name);
+  Optional<RegisteredServer> server(String name);
 
   /**
    * Retrieves all {@link RegisteredServer}s registered with this proxy.
    *
    * @return the servers registered with this proxy
    */
-  Collection<RegisteredServer> getAllServers();
+  Collection<RegisteredServer> registeredServers();
 
   /**
    * Matches all {@link Player}s whose names start with the provided partial name.
@@ -129,62 +130,54 @@ public interface ProxyServer extends Audience {
    *
    * @return the console command invoker
    */
-  ConsoleCommandSource getConsoleCommandSource();
+  ConsoleCommandSource consoleCommandSource();
 
   /**
    * Gets the {@link PluginManager} instance.
    *
    * @return the plugin manager instance
    */
-  PluginManager getPluginManager();
+  PluginManager pluginManager();
 
   /**
    * Gets the {@link EventManager} instance.
    *
    * @return the event manager instance
    */
-  EventManager getEventManager();
+  EventManager eventManager();
 
   /**
    * Gets the {@link CommandManager} instance.
    *
    * @return the command manager
    */
-  CommandManager getCommandManager();
+  CommandManager commandManager();
 
   /**
    * Gets the {@link Scheduler} instance.
    *
    * @return the scheduler instance
    */
-  Scheduler getScheduler();
+  Scheduler scheduler();
 
   /**
    * Gets the {@link ChannelRegistrar} instance.
    *
    * @return the channel registrar
    */
-  ChannelRegistrar getChannelRegistrar();
-
-  /**
-   * Gets the address that this proxy is bound to. This does not necessarily indicate the external
-   * IP address of the proxy.
-   *
-   * @return the address the proxy is bound to
-   */
-  SocketAddress getBoundAddress();
+  ChannelRegistrar channelRegistrar();
 
   /**
    * Gets the {@link ProxyConfig} instance.
    *
    * @return the proxy config
    */
-  ProxyConfig getConfiguration();
+  ProxyConfig configuration();
 
   /**
    * Returns the version of the proxy.
    *
    * @return the proxy version
    */
-  ProxyVersion getVersion();
+  ProxyVersion version();
 }

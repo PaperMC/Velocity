@@ -31,7 +31,7 @@ public final class CommandExecuteEventImpl implements CommandExecuteEvent {
   }
 
   @Override
-  public CommandSource getCommandSource() {
+  public CommandSource source() {
     return commandSource;
   }
 
@@ -40,12 +40,12 @@ public final class CommandExecuteEventImpl implements CommandExecuteEvent {
    * @return the original command being executed
    */
   @Override
-  public String getCommand() {
+  public String rawCommand() {
     return command;
   }
 
   @Override
-  public CommandResult getResult() {
+  public CommandResult result() {
     return result;
   }
 

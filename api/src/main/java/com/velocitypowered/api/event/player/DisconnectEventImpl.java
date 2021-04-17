@@ -25,12 +25,12 @@ public final class DisconnectEventImpl implements DisconnectEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public LoginStatus getLoginStatus() {
+  public LoginStatus loginStatus() {
     return loginStatus;
   }
 

@@ -17,9 +17,9 @@ import java.util.Optional;
  */
 public interface PlayerChooseInitialServerEvent {
 
-  Player getPlayer();
+  Player player();
 
-  Optional<RegisteredServer> getInitialServer();
+  Optional<RegisteredServer> initialServer();
 
   /**
    * Sets the new initial server.

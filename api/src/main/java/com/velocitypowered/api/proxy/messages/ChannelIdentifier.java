@@ -17,5 +17,5 @@ public interface ChannelIdentifier {
    *
    * @return the textual representation of the identifier
    */
-  String getId();
+  String id();
 }

@@ -19,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface PermissionsSetupEvent {
 
-  PermissionSubject getSubject();
+  PermissionSubject subject();
 
   /**
    * Uses the provider function to obtain a {@link PermissionFunction} for the subject.
@@ -29,7 +29,7 @@ public interface PermissionsSetupEvent {
    */
   PermissionFunction createFunction(PermissionSubject subject);
 
-  PermissionProvider getProvider();
+  PermissionProvider provider();
 
   /**
    * Sets the {@link PermissionFunction} that should be used for the subject.

@@ -47,9 +47,9 @@ class VelocityPluginModule implements Module {
   public void configure(Binder binder) {
     binder.bind(description.getMainClass()).in(Scopes.SINGLETON);
 
-    binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.getId()));
+    binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.id()));
     binder.bind(Path.class).annotatedWith(DataDirectory.class)
-        .toInstance(basePluginPath.resolve(description.getId()));
+        .toInstance(basePluginPath.resolve(description.id()));
     binder.bind(PluginDescription.class).toInstance(description);
     binder.bind(PluginContainer.class).toInstance(pluginContainer);
   }

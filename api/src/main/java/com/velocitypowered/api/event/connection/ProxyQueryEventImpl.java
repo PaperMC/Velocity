@@ -39,7 +39,7 @@ public final class ProxyQueryEventImpl implements ProxyQueryEvent {
    * @return query type
    */
   @Override
-  public QueryType getQueryType() {
+  public QueryType type() {
     return queryType;
   }
 
@@ -49,7 +49,7 @@ public final class ProxyQueryEventImpl implements ProxyQueryEvent {
    * @return querier address
    */
   @Override
-  public InetAddress getQuerierAddress() {
+  public InetAddress queryingAddress() {
     return querierAddress;
   }
 
@@ -59,7 +59,7 @@ public final class ProxyQueryEventImpl implements ProxyQueryEvent {
    * @return the current query response
    */
   @Override
-  public QueryResponse getResponse() {
+  public QueryResponse response() {
     return response;
   }
 

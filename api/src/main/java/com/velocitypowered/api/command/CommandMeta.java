@@ -21,7 +21,7 @@ public interface CommandMeta {
    *
    * @return the command aliases
    */
-  Collection<String> getAliases();
+  Collection<String> aliases();
 
   /**
    * Returns a collection containing command nodes that provide additional
@@ -30,7 +30,7 @@ public interface CommandMeta {
    *
    * @return the hinting command nodes
    */
-  Collection<CommandNode<CommandSource>> getHints();
+  Collection<CommandNode<CommandSource>> hints();
 
   /**
    * Provides a fluent interface to create {@link CommandMeta}s.

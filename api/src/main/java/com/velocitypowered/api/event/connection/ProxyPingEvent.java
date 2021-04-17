@@ -15,9 +15,9 @@ import com.velocitypowered.api.proxy.server.ServerPing;
  */
 public interface ProxyPingEvent {
 
-  InboundConnection getConnection();
+  InboundConnection connection();
 
-  ServerPing getPing();
+  ServerPing ping();
 
   void setPing(ServerPing ping);
 }

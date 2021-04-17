@@ -78,7 +78,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    Iterator<String> aliasIterator = meta.getAliases().iterator();
+    Iterator<String> aliasIterator = meta.aliases().iterator();
     String primaryAlias = aliasIterator.next();
 
     LiteralCommandNode<CommandSource> node = null;
@@ -94,7 +94,7 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     if (!(command instanceof BrigadierCommand)) {
-      for (CommandNode<CommandSource> hint : meta.getHints()) {
+      for (CommandNode<CommandSource> hint : meta.hints()) {
         node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
       }
     }
@@ -160,11 +160,11 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
-      CommandResult commandResult = event.getResult();
+      CommandResult commandResult = event.result();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-      return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
+      return executeImmediately0(source, commandResult.modifiedCommand().orElse(event.rawCommand()));
     }, eventManager.getAsyncExecutor());
   }
 

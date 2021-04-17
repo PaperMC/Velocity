@@ -50,7 +50,7 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
     ch.pipeline()
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(READ_TIMEOUT,
-            new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+            new ReadTimeoutHandler(server.configuration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,

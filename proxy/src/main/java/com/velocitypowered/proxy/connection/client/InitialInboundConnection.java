@@ -47,12 +47,12 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
+  public InetSocketAddress remoteAddress() {
     return (InetSocketAddress) connection.getRemoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> getVirtualHost() {
+  public Optional<InetSocketAddress> connectedHost() {
     return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
   }
 
@@ -62,7 +62,7 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public ProtocolVersion getProtocolVersion() {
+  public ProtocolVersion protocolVersion() {
     return connection.getProtocolVersion();
   }
 
@@ -78,7 +78,7 @@ public final class InitialInboundConnection implements InboundConnection,
   public void disconnect(Component reason) {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, protocolVersion()));
   }
 
   /**
@@ -86,6 +86,6 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnectQuietly(Component reason) {
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
+    connection.closeWith(ClientboundDisconnectPacket.create(reason, protocolVersion()));
   }
 }

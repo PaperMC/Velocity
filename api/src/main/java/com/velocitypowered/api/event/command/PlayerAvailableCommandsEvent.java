@@ -16,7 +16,7 @@ import com.velocitypowered.api.proxy.connection.Player;
  */
 public interface PlayerAvailableCommandsEvent {
 
-  Player getPlayer();
+  Player player();
 
-  RootCommandNode<?> getRootNode();
+  RootCommandNode<?> rootNode();
 }

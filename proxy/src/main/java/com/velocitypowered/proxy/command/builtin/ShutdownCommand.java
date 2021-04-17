@@ -41,6 +41,6 @@ public class ShutdownCommand implements RawCommand {
 
   @Override
   public boolean hasPermission(final Invocation invocation) {
-    return invocation.source() == server.getConsoleCommandSource();
+    return invocation.source() == server.consoleCommandSource();
   }
 }

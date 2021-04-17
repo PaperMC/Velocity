@@ -16,11 +16,6 @@ import com.velocitypowered.api.proxy.connection.Player;
  */
 public interface LoginEvent extends ResultedEvent<ResultedEvent.ComponentResult> {
 
-  Player getPlayer();
+  Player player();
 
-  @Override
-  ComponentResult getResult();
-
-  @Override
-  void setResult(ComponentResult result);
 }

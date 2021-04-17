@@ -15,5 +15,5 @@ import com.velocitypowered.api.proxy.connection.Player;
  */
 public interface PostLoginEvent {
 
-  Player getPlayer();
+  Player player();
 }

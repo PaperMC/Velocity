@@ -25,12 +25,12 @@ public final class LoginEventImpl implements LoginEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public ComponentResult getResult() {
+  public ComponentResult result() {
     return result;
   }
 

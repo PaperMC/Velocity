@@ -71,12 +71,12 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public ServerInfo getServerInfo() {
+  public ServerInfo serverInfo() {
     return serverInfo;
   }
 
   @Override
-  public Collection<Player> getPlayersConnected() {
+  public Collection<Player> connectedPlayers() {
     return ImmutableList.copyOf(players.values());
   }
 
@@ -97,14 +97,14 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop, serverInfo.getAddress())
+    server.createBootstrap(loop, serverInfo.address())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                    new ReadTimeoutHandler(server.configuration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
@@ -115,7 +115,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }
         })
-        .connect(serverInfo.getAddress())
+        .connect(serverInfo.address())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
@@ -129,11 +129,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   public void addPlayer(ConnectedPlayer player) {
-    players.put(player.getUniqueId(), player);
+    players.put(player.id(), player);
   }
 
   public void removePlayer(ConnectedPlayer player) {
-    players.remove(player.getUniqueId(), player);
+    players.remove(player.id(), player);
   }
 
   @Override
@@ -152,7 +152,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
+      if (connection != null && connection.target() == this) {
         return connection.sendPluginMessage(identifier, data);
       }
     }
@@ -168,6 +168,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return this.getPlayersConnected();
+    return this.connectedPlayers();
   }
 }

@@ -87,7 +87,7 @@ public final class ConnectionManager {
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .setUserAgent(server.version().getName() + "/" + server.version().getVersion())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) {
@@ -122,7 +122,7 @@ public final class ConnectionManager {
     if (address instanceof InetSocketAddress) {
       bootstrap.childOption(ChannelOption.TCP_NODELAY, true)
           .childOption(ChannelOption.IP_TOS, 0x18);
-      if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+      if (transportType == TransportType.EPOLL && server.configuration().useTcpFastOpen()) {
         bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
       }
     }
@@ -135,7 +135,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(
+            server.eventManager().fireAndForget(
                 new ListenerBoundEventImpl(address, ListenerType.MINECRAFT));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
@@ -164,7 +164,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(
+            server.eventManager().fireAndForget(
                 new ListenerBoundEventImpl(address, ListenerType.QUERY));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
@@ -184,10 +184,10 @@ public final class ConnectionManager {
         .channelFactory(this.transportType.getClientChannelFactory(target))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            this.server.getConfiguration().getConnectTimeout())
+            this.server.configuration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+    if (transportType == TransportType.EPOLL && server.configuration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
@@ -203,7 +203,7 @@ public final class ConnectionManager {
 
     // Fire proxy close event to notify plugins of socket close. We block since plugins
     // should have a chance to be notified before the server stops accepting connections.
-    server.getEventManager().fire(new ListenerClosedEventImpl(oldBind, endpoint.getType())).join();
+    server.eventManager().fire(new ListenerClosedEventImpl(oldBind, endpoint.getType())).join();
 
     Channel serverChannel = endpoint.getChannel();
 
@@ -222,7 +222,7 @@ public final class ConnectionManager {
 
       // Fire proxy close event to notify plugins of socket close. We block since plugins
       // should have a chance to be notified before the server stops accepting connections.
-      server.getEventManager().fire(new ListenerClosedEventImpl(address, endpoint.getType())).join();
+      server.eventManager().fire(new ListenerClosedEventImpl(address, endpoint.getType())).join();
 
       try {
         LOGGER.info("Closing endpoint {}", address);

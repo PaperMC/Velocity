@@ -16,15 +16,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface PlayerChatEvent extends ResultedEvent<PlayerChatEvent.ChatResult> {
 
-  Player getPlayer();
+  Player player();
 
-  String getMessage();
-
-  @Override
-  ChatResult getResult();
-
-  @Override
-  void setResult(ChatResult result);
+  String sentMessage();
 
   /**
    * Represents the result of the {@link PlayerChatEvent}.
@@ -42,7 +36,7 @@ public interface PlayerChatEvent extends ResultedEvent<PlayerChatEvent.ChatResul
       this.message = message;
     }
 
-    public Optional<String> getMessage() {
+    public Optional<String> modifiedMessage() {
       return Optional.ofNullable(message);
     }
 
@@ -80,7 +74,7 @@ public interface PlayerChatEvent extends ResultedEvent<PlayerChatEvent.ChatResul
      * @param message the message to use instead
      * @return a result with a new message
      */
-    public static ChatResult message(@NonNull String message) {
+    public static ChatResult replaceMessage(@NonNull String message) {
       Preconditions.checkNotNull(message, "message");
       return new ChatResult(true, message);
     }

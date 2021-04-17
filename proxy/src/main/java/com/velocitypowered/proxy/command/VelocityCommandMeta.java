@@ -76,12 +76,12 @@ final class VelocityCommandMeta implements CommandMeta {
   }
 
   @Override
-  public Collection<String> getAliases() {
+  public Collection<String> aliases() {
     return aliases;
   }
 
   @Override
-  public Collection<CommandNode<CommandSource>> getHints() {
+  public Collection<CommandNode<CommandSource>> hints() {
     return hints;
   }
 }

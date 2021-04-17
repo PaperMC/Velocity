@@ -21,7 +21,8 @@ public final class ConnectionHandshakeEventImpl implements ConnectionHandshakeEv
     this.connection = Preconditions.checkNotNull(connection, "connection");
   }
 
-  public InboundConnection getConnection() {
+  @Override
+  public InboundConnection connection() {
     return connection;
   }
 

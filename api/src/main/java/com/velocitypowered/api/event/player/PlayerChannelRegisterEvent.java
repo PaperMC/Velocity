@@ -17,7 +17,7 @@ import java.util.List;
  */
 public interface PlayerChannelRegisterEvent {
 
-  Player getPlayer();
+  Player player();
 
-  List<ChannelIdentifier> getChannels();
+  List<ChannelIdentifier> channels();
 }

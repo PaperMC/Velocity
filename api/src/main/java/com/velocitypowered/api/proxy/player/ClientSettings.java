@@ -12,7 +12,7 @@ import java.util.Locale;
 /**
  * Represents the client settings for the player.
  */
-public interface PlayerSettings {
+public interface ClientSettings {
 
   /**
    * Returns the locale of the Minecraft client.

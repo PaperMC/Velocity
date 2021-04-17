@@ -30,7 +30,7 @@ public final class PermissionsSetupEventImpl implements PermissionsSetupEvent {
   }
 
   @Override
-  public PermissionSubject getSubject() {
+  public PermissionSubject subject() {
     return this.subject;
   }
 
@@ -46,7 +46,7 @@ public final class PermissionsSetupEventImpl implements PermissionsSetupEvent {
   }
 
   @Override
-  public PermissionProvider getProvider() {
+  public PermissionProvider provider() {
     return this.provider;
   }
 

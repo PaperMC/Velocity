@@ -30,7 +30,7 @@ public class PlayerResourcePackStatusEventImpl implements PlayerResourcePackStat
    * @return the player
    */
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
@@ -40,7 +40,7 @@ public class PlayerResourcePackStatusEventImpl implements PlayerResourcePackStat
    * @return the new status
    */
   @Override
-  public Status getStatus() {
+  public Status status() {
     return status;
   }
 

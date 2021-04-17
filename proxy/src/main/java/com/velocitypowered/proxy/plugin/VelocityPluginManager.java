@@ -43,7 +43,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -67,8 +66,8 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   private void registerPlugin(PluginContainer plugin) {
-    plugins.put(plugin.getDescription().getId(), plugin);
-    Optional<?> instance = plugin.getInstance();
+    plugins.put(plugin.description().id(), plugin);
+    Optional<?> instance = plugin.instance();
     instance.ifPresent(o -> pluginInstances.put(o, plugin));
   }
 
@@ -110,9 +109,9 @@ public class VelocityPluginManager implements PluginManager {
     pluginLoad:
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
-      for (PluginDependency dependency : candidate.getDependencies()) {
+      for (PluginDependency dependency : candidate.dependencies()) {
         if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
-          logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
+          logger.error("Can't load plugin {} due to missing dependency {}", candidate.id(),
               dependency.getId());
           continue pluginLoad;
         }
@@ -122,9 +121,9 @@ public class VelocityPluginManager implements PluginManager {
         PluginDescription realPlugin = loader.loadPlugin(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
-        loadedPluginsById.add(realPlugin.getId());
+        loadedPluginsById.add(realPlugin.id());
       } catch (Exception e) {
-        logger.error("Can't create module for plugin {}", candidate.getId(), e);
+        logger.error("Can't create module for plugin {}", candidate.id(), e);
       }
     }
 
@@ -133,12 +132,12 @@ public class VelocityPluginManager implements PluginManager {
       @Override
       protected void configure() {
         bind(ProxyServer.class).toInstance(server);
-        bind(PluginManager.class).toInstance(server.getPluginManager());
-        bind(EventManager.class).toInstance(server.getEventManager());
-        bind(CommandManager.class).toInstance(server.getCommandManager());
+        bind(PluginManager.class).toInstance(server.pluginManager());
+        bind(EventManager.class).toInstance(server.eventManager());
+        bind(CommandManager.class).toInstance(server.commandManager());
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
-            .annotatedWith(Names.named(container.getDescription().getId()))
+            .annotatedWith(Names.named(container.description().id()))
               .toInstance(container);
         }
       }
@@ -146,17 +145,17 @@ public class VelocityPluginManager implements PluginManager {
 
     for (Map.Entry<PluginContainer, Module> plugin : pluginContainers.entrySet()) {
       PluginContainer container = plugin.getKey();
-      PluginDescription description = container.getDescription();
+      PluginDescription description = container.description();
 
       try {
         loader.createPlugin(container, plugin.getValue(), commonModule);
       } catch (Exception e) {
-        logger.error("Can't create plugin {}", description.getId(), e);
+        logger.error("Can't create plugin {}", description.id(), e);
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
+      logger.info("Loaded plugin {} {} by {}", description.id(), description.version()
+          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.authors()));
       registerPlugin(container);
     }
   }
@@ -194,7 +193,7 @@ public class VelocityPluginManager implements PluginManager {
     checkNotNull(path, "path");
     Optional<PluginContainer> optContainer = fromInstance(plugin);
     checkArgument(optContainer.isPresent(), "plugin is not loaded");
-    Optional<?> optInstance = optContainer.get().getInstance();
+    Optional<?> optInstance = optContainer.get().instance();
     checkArgument(optInstance.isPresent(), "plugin has no instance");
 
     ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();

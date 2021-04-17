@@ -24,16 +24,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface KickedFromServerEvent extends
     ResultedEvent<KickedFromServerEvent.ServerKickResult> {
 
-  Player getPlayer();
+  Player player();
 
-  RegisteredServer getServer();
+  RegisteredServer server();
 
   /**
    * Gets the reason the server kicked the player from the server.
    *
    * @return the server kicked the player from the server
    */
-  Optional<Component> getServerKickReason();
+  Optional<Component> serverKickReason();
 
   /**
    * Returns whether or not the player got kicked while connecting to another server.
@@ -54,10 +54,10 @@ public interface KickedFromServerEvent extends
    */
   final class DisconnectPlayer implements ServerKickResult {
 
-    private final Component component;
+    private final Component message;
 
-    private DisconnectPlayer(Component component) {
-      this.component = Preconditions.checkNotNull(component, "component");
+    private DisconnectPlayer(Component message) {
+      this.message = Preconditions.checkNotNull(message, "message");
     }
 
     @Override
@@ -65,8 +65,8 @@ public interface KickedFromServerEvent extends
       return true;
     }
 
-    public Component getReason() {
-      return component;
+    public Component message() {
+      return message;
     }
 
     /**
@@ -104,7 +104,7 @@ public interface KickedFromServerEvent extends
       return server;
     }
 
-    public Component getMessage() {
+    public Component message() {
       return message;
     }
 
@@ -142,7 +142,7 @@ public interface KickedFromServerEvent extends
       return false;
     }
 
-    public Component getMessage() {
+    public Component message() {
       return message;
     }
 

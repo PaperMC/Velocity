@@ -36,12 +36,12 @@ public final class ServerPreConnectEventImpl implements ServerPreConnectEvent {
    * @return the player connecting to the server
    */
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public ServerResult getResult() {
+  public ServerResult result() {
     return result;
   }
 
@@ -53,11 +53,11 @@ public final class ServerPreConnectEventImpl implements ServerPreConnectEvent {
   /**
    * Returns the server that the player originally tried to connect to. To get the server the
    * player will connect to, see the {@link ServerResult} of this event. To get the server the
-   * player is currently on when this event is fired, use {@link Player#getCurrentServer()}.
+   * player is currently on when this event is fired, use {@link Player#connectedServer()}.
    * @return the server that the player originally tried to connect to
    */
   @Override
-  public RegisteredServer getOriginalServer() {
+  public RegisteredServer originalTarget() {
     return originalServer;
   }
 

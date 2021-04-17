@@ -31,12 +31,12 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   @Override
-  public PluginDescription getDescription() {
+  public PluginDescription description() {
     return this.description;
   }
 
   @Override
-  public Optional<?> getInstance() {
+  public Optional<?> instance() {
     return Optional.ofNullable(instance);
   }
 

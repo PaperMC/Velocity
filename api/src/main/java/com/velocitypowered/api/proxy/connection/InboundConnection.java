@@ -22,14 +22,14 @@ public interface InboundConnection {
    *
    * @return the player's remote address
    */
-  SocketAddress getRemoteAddress();
+  SocketAddress remoteAddress();
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.
    *
    * @return the hostname from the client
    */
-  Optional<InetSocketAddress> getVirtualHost();
+  Optional<InetSocketAddress> connectedHost();
 
   /**
    * Determine whether or not the player remains online.
@@ -43,5 +43,5 @@ public interface InboundConnection {
    *
    * @return the protocol version the connection uses
    */
-  ProtocolVersion getProtocolVersion();
+  ProtocolVersion protocolVersion();
 }

@@ -34,7 +34,7 @@ public interface PluginDescription {
    * @return the plugin ID
    * @see Plugin#id()
    */
-  String getId();
+  String id();
 
   /**
    * Gets the name of the {@link Plugin} within this container.
@@ -42,7 +42,7 @@ public interface PluginDescription {
    * @return an {@link Optional} with the plugin name, may be empty
    * @see Plugin#name()
    */
-  default Optional<String> getName() {
+  default Optional<String> name() {
     return Optional.empty();
   }
 
@@ -52,7 +52,7 @@ public interface PluginDescription {
    * @return an {@link Optional} with the plugin version, may be empty
    * @see Plugin#version()
    */
-  default Optional<String> getVersion() {
+  default Optional<String> version() {
     return Optional.empty();
   }
 
@@ -62,7 +62,7 @@ public interface PluginDescription {
    * @return an {@link Optional} with the plugin description, may be empty
    * @see Plugin#description()
    */
-  default Optional<String> getDescription() {
+  default Optional<String> description() {
     return Optional.empty();
   }
 
@@ -72,7 +72,7 @@ public interface PluginDescription {
    * @return an {@link Optional} with the plugin url, may be empty
    * @see Plugin#url()
    */
-  default Optional<String> getUrl() {
+  default Optional<String> url() {
     return Optional.empty();
   }
 
@@ -82,7 +82,7 @@ public interface PluginDescription {
    * @return the plugin authors, may be empty
    * @see Plugin#authors()
    */
-  default List<String> getAuthors() {
+  default List<String> authors() {
     return ImmutableList.of();
   }
 
@@ -92,7 +92,7 @@ public interface PluginDescription {
    * @return the plugin dependencies, can be empty
    * @see Plugin#dependencies()
    */
-  default Collection<PluginDependency> getDependencies() {
+  default Collection<PluginDependency> dependencies() {
     return ImmutableSet.of();
   }
 
@@ -101,11 +101,11 @@ public interface PluginDescription {
   }
 
   /**
-   * Returns the source the plugin was loaded from.
+   * Returns the file path the plugin was loaded from.
    *
-   * @return the source the plugin was loaded from or {@link Optional#empty()} if unknown
+   * @return the path the plugin was loaded from or {@link Optional#empty()} if unknown
    */
-  default Optional<Path> getSource() {
+  default Optional<Path> file() {
     return Optional.empty();
   }
 }

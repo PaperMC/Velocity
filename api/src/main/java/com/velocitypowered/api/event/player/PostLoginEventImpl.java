@@ -23,7 +23,7 @@ public final class PostLoginEventImpl implements PostLoginEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 

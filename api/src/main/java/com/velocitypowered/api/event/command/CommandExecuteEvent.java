@@ -20,13 +20,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface CommandExecuteEvent extends ResultedEvent<CommandResult> {
 
-  CommandSource getCommandSource();
+  CommandSource source();
 
   /**
    * Gets the original command being executed without the first slash.
    * @return the original command being executed
    */
-  String getCommand();
+  String rawCommand();
 
   final class CommandResult implements ResultedEvent.Result {
 
@@ -44,7 +44,7 @@ public interface CommandExecuteEvent extends ResultedEvent<CommandResult> {
       this.command = command;
     }
 
-    public Optional<String> getCommand() {
+    public Optional<String> modifiedCommand() {
       return Optional.ofNullable(command);
     }
 

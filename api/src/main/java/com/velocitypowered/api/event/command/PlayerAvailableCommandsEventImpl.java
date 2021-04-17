@@ -35,12 +35,12 @@ public class PlayerAvailableCommandsEventImpl implements PlayerAvailableCommands
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public RootCommandNode<?> getRootNode() {
+  public RootCommandNode<?> rootNode() {
     return rootNode;
   }
 }

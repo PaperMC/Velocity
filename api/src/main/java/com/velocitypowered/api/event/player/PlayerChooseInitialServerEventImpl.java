@@ -33,12 +33,12 @@ public class PlayerChooseInitialServerEventImpl implements PlayerChooseInitialSe
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public Optional<RegisteredServer> getInitialServer() {
+  public Optional<RegisteredServer> initialServer() {
     return Optional.ofNullable(initialServer);
   }
 

@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired after the player has connected to a server. The server the player is now connected to is
- * available in {@link Player#getCurrentServer()}.
+ * available in {@link Player#connectedServer()}.
  */
 public class ServerPostConnectEventImpl implements ServerPostConnectEvent {
 
@@ -28,12 +28,12 @@ public class ServerPostConnectEventImpl implements ServerPostConnectEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public @Nullable RegisteredServer getPreviousServer() {
+  public @Nullable RegisteredServer previousServer() {
     return previousServer;
   }
 

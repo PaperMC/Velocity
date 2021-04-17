@@ -83,12 +83,12 @@ public class FakePluginManager implements PluginManager {
     }
 
     @Override
-    public @NonNull PluginDescription getDescription() {
+    public @NonNull PluginDescription description() {
       return () -> id;
     }
 
     @Override
-    public Optional<?> getInstance() {
+    public Optional<?> instance() {
       return Optional.of(instance);
     }
   }

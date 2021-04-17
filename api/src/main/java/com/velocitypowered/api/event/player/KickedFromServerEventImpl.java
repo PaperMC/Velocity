@@ -48,7 +48,7 @@ public final class KickedFromServerEventImpl implements KickedFromServerEvent {
   }
 
   @Override
-  public ServerKickResult getResult() {
+  public ServerKickResult result() {
     return result;
   }
 
@@ -58,12 +58,12 @@ public final class KickedFromServerEventImpl implements KickedFromServerEvent {
   }
 
   @Override
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public RegisteredServer getServer() {
+  public RegisteredServer server() {
     return server;
   }
 
@@ -72,7 +72,7 @@ public final class KickedFromServerEventImpl implements KickedFromServerEvent {
    * @return the server kicked the player from the server
    */
   @Override
-  public Optional<Component> getServerKickReason() {
+  public Optional<Component> serverKickReason() {
     return Optional.ofNullable(originalReason);
   }
 

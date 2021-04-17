@@ -16,7 +16,7 @@ import com.velocitypowered.api.util.ModInfo;
  */
 public interface PlayerModInfoEvent {
 
-  Player getPlayer();
+  Player player();
 
-  ModInfo getModInfo();
+  ModInfo modInfo();
 }

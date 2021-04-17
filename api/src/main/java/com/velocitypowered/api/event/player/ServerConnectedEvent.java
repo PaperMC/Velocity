@@ -17,9 +17,9 @@ import java.util.Optional;
  */
 public interface ServerConnectedEvent {
 
-  Player getPlayer();
+  Player player();
 
-  RegisteredServer getServer();
+  RegisteredServer target();
 
-  Optional<RegisteredServer> getPreviousServer();
+  Optional<RegisteredServer> previousServer();
 }

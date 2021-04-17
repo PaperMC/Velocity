@@ -7,9 +7,12 @@
 
 package com.velocitypowered.api.event.connection;
 
+import com.velocitypowered.api.proxy.connection.InboundConnection;
+
 /**
  * This event is fired when a handshake is established between a client and the proxy.
  */
 public interface ConnectionHandshakeEvent {
 
+  InboundConnection connection();
 }

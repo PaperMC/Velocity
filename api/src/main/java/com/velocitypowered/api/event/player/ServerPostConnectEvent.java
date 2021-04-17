@@ -13,11 +13,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired after the player has connected to a server. The server the player is now connected to is
- * available in {@link Player#getCurrentServer()}.
+ * available in {@link Player#connectedServer()}.
  */
 public interface ServerPostConnectEvent {
 
-  Player getPlayer();
+  Player player();
 
-  @Nullable RegisteredServer getPreviousServer();
+  @Nullable RegisteredServer previousServer();
 }
