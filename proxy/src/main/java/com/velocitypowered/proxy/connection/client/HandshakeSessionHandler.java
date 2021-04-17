@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
+import com.velocitypowered.api.event.connection.ConnectionHandshakeEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
@@ -136,7 +136,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(ic));
+    server.getEventManager().fireAndForget(new ConnectionHandshakeEventImpl(ic));
     connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
   }
 

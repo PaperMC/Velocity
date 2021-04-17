@@ -23,9 +23,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.lifecycle.ProxyInitializeEvent;
-import com.velocitypowered.api.event.lifecycle.ProxyReloadEvent;
-import com.velocitypowered.api.event.lifecycle.ProxyShutdownEvent;
+import com.velocitypowered.api.event.lifecycle.ProxyInitializeEventImpl;
+import com.velocitypowered.api.event.lifecycle.ProxyReloadEventImpl;
+import com.velocitypowered.api.event.lifecycle.ProxyShutdownEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -214,7 +214,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
     // to fully initialize before we accept any connections to the server.
-    eventManager.fire(new ProxyInitializeEvent()).join();
+    eventManager.fire(new ProxyInitializeEventImpl()).join();
 
     // init console permissions after plugins are loaded
     console.setupPermissions();
@@ -390,7 +390,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
     this.configuration = newConfiguration;
-    eventManager.fireAndForget(new ProxyReloadEvent());
+    eventManager.fireAndForget(new ProxyReloadEventImpl());
     return true;
   }
 
@@ -441,7 +441,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         }
 
         try {
-          eventManager.fire(new ProxyShutdownEvent()).get(10, TimeUnit.SECONDS);
+          eventManager.fire(new ProxyShutdownEventImpl()).get(10, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
           timedOut = true;
         } catch (ExecutionException e) {

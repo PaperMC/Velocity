@@ -21,6 +21,7 @@ import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
 
 import com.velocitypowered.api.command.ConsoleCommandSource;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
+import com.velocitypowered.api.event.permission.PermissionsSetupEventImpl;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.proxy.VelocityServer;
@@ -72,7 +73,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
    * Sets up permissions for the console.
    */
   public void setupPermissions() {
-    PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
+    PermissionsSetupEvent event = new PermissionsSetupEventImpl(this, s -> ALWAYS_TRUE);
     // we can safely block here, this is before any listeners fire
     this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
     if (this.permissionFunction == null) {

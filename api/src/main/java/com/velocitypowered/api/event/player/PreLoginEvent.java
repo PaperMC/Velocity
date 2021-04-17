@@ -20,55 +20,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * authenticates the player with Mojang or before the player's proxy connection is fully established
  * (for offline mode).
  */
-public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
+public interface PreLoginEvent extends ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
 
-  private final InboundConnection connection;
-  private final String username;
-  private PreLoginComponentResult result;
+  InboundConnection getConnection();
 
-  /**
-   * Creates a new instance.
-   * @param connection the connection logging into the proxy
-   * @param username the player's username
-   */
-  public PreLoginEvent(InboundConnection connection, String username) {
-    this.connection = Preconditions.checkNotNull(connection, "connection");
-    this.username = Preconditions.checkNotNull(username, "username");
-    this.result = PreLoginComponentResult.allowed();
-  }
-
-  public InboundConnection getConnection() {
-    return connection;
-  }
-
-  public String getUsername() {
-    return username;
-  }
+  String getUsername();
 
   @Override
-  public PreLoginComponentResult getResult() {
-    return result;
-  }
+  PreLoginComponentResult getResult();
 
   @Override
-  public void setResult(@NonNull PreLoginComponentResult result) {
-    this.result = Preconditions.checkNotNull(result, "result");
-  }
-
-  @Override
-  public String toString() {
-    return "PreLoginEvent{"
-        + "connection=" + connection
-        + ", username='" + username + '\''
-        + ", result=" + result
-        + '}';
-  }
+  void setResult(@NonNull PreLoginComponentResult result);
 
   /**
    * Represents an "allowed/allowed with forced online\offline mode/denied" result with a reason
    * allowed for denial.
    */
-  public static final class PreLoginComponentResult implements ResultedEvent.Result {
+  final class PreLoginComponentResult implements Result {
 
     private static final PreLoginComponentResult ALLOWED = new PreLoginComponentResult(
         Result.ALLOWED, null);

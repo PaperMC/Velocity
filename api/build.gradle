@@ -100,10 +100,6 @@ test {
     useJUnitPlatform()
 }
 
-test {
-    useJUnitPlatform()
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {

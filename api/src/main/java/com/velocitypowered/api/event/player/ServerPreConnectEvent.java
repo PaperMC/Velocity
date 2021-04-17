@@ -19,65 +19,34 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired before the player connects to a server.
  */
-public final class ServerPreConnectEvent implements
-    ResultedEvent<ServerPreConnectEvent.ServerResult> {
-
-  private final Player player;
-  private final RegisteredServer originalServer;
-  private ServerResult result;
-
-  /**
-   * Creates the ServerPreConnectEvent.
-   * @param player the player who is connecting to a server
-   * @param originalServer the server the player was trying to connect to
-   */
-  public ServerPreConnectEvent(Player player, RegisteredServer originalServer) {
-    this.player = Preconditions.checkNotNull(player, "player");
-    this.originalServer = Preconditions.checkNotNull(originalServer, "originalServer");
-    this.result = ServerResult.allowed(originalServer);
-  }
+public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEvent.ServerResult> {
 
   /**
    * Returns the player connecting to the server.
+   *
    * @return the player connecting to the server
    */
-  public Player getPlayer() {
-    return player;
-  }
+  Player getPlayer();
 
   @Override
-  public ServerResult getResult() {
-    return result;
-  }
+  ServerResult getResult();
 
   @Override
-  public void setResult(ServerResult result) {
-    this.result = Preconditions.checkNotNull(result, "result");
-  }
+  void setResult(ServerResult result);
 
   /**
-   * Returns the server that the player originally tried to connect to. To get the server the
-   * player will connect to, see the {@link ServerResult} of this event. To get the server the
-   * player is currently on when this event is fired, use {@link Player#getCurrentServer()}.
+   * Returns the server that the player originally tried to connect to. To get the server the player
+   * will connect to, see the {@link ServerResult} of this event. To get the server the player is
+   * currently on when this event is fired, use {@link Player#getCurrentServer()}.
+   *
    * @return the server that the player originally tried to connect to
    */
-  public RegisteredServer getOriginalServer() {
-    return originalServer;
-  }
-
-  @Override
-  public String toString() {
-    return "ServerPreConnectEvent{"
-        + "player=" + player
-        + ", originalServer=" + originalServer
-        + ", result=" + result
-        + '}';
-  }
+  RegisteredServer getOriginalServer();
 
   /**
    * Represents the result of the {@link ServerPreConnectEvent}.
    */
-  public static class ServerResult implements ResultedEvent.Result {
+  class ServerResult implements Result {
 
     private static final ServerResult DENIED = new ServerResult(null);
 
@@ -106,8 +75,9 @@ public final class ServerPreConnectEvent implements
 
     /**
      * Returns a result that will prevent players from connecting to another server. If this result
-     * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status
-     * {@link Status#CONNECTION_CANCELLED}.
+     * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status {@link
+     * Status#CONNECTION_CANCELLED}.
+     *
      * @return a result to deny conneections
      */
     public static ServerResult denied() {
@@ -116,6 +86,7 @@ public final class ServerPreConnectEvent implements
 
     /**
      * Allows the player to connect to the specified server.
+     *
      * @param server the new server to connect to
      * @return a result to allow the player to connect to the specified server
      */

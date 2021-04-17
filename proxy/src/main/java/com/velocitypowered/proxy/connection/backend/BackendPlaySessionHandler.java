@@ -24,7 +24,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEventImpl;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -214,7 +214,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     server.getEventManager().fire(
-        new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
+        new PlayerAvailableCommandsEventImpl(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling available commands for {}", playerConnection, ex);

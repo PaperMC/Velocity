@@ -7,81 +7,46 @@
 
 package com.velocitypowered.api.event.connection;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import java.net.InetAddress;
 
 /**
  * This event is fired if proxy is getting queried over GS4 Query protocol.
  */
-public final class ProxyQueryEvent {
-
-  private final QueryType queryType;
-  private final InetAddress querierAddress;
-  private QueryResponse response;
-
-  /**
-   * Creates a new event.
-   *
-   * @param queryType the type of query
-   * @param querierAddress the remote address for the query
-   * @param response the current query response
-   */
-  public ProxyQueryEvent(QueryType queryType, InetAddress querierAddress, QueryResponse response) {
-    this.queryType = Preconditions.checkNotNull(queryType, "queryType");
-    this.querierAddress = Preconditions.checkNotNull(querierAddress, "querierAddress");
-    this.response = Preconditions.checkNotNull(response, "response");
-  }
+public interface ProxyQueryEvent {
 
   /**
    * Returns the kind of query the remote client is performing.
    *
    * @return query type
    */
-  public QueryType getQueryType() {
-    return queryType;
-  }
+  QueryType getQueryType();
 
   /**
    * Get the address of the client that sent this query.
    *
    * @return querier address
    */
-  public InetAddress getQuerierAddress() {
-    return querierAddress;
-  }
+  InetAddress getQuerierAddress();
 
   /**
    * Returns the current query response.
    *
    * @return the current query response
    */
-  public QueryResponse getResponse() {
-    return response;
-  }
+  QueryResponse getResponse();
 
   /**
    * Sets a new query response.
    *
    * @param response the new non-null query response
    */
-  public void setResponse(QueryResponse response) {
-    this.response = Preconditions.checkNotNull(response, "response");
-  }
-
-  @Override
-  public String toString() {
-    return "ProxyQueryEvent{"
-        + "queryType=" + queryType
-        + ", querierAddress=" + querierAddress
-        + ", response=" + response
-        + '}';
-  }
+  void setResponse(QueryResponse response);
 
   /**
    * Represents the type of query the client is asking for.
    */
-  public enum QueryType {
+  enum QueryType {
     /**
      * Basic query asks only a subset of information, such as hostname, game type (hardcoded to
      * <pre>MINECRAFT</pre>), map, current players, max players, proxy port and proxy hostname.

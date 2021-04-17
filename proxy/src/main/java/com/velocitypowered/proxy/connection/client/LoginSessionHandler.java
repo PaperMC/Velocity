@@ -25,15 +25,17 @@ import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
-import com.velocitypowered.api.event.player.DisconnectEvent;
+import com.velocitypowered.api.event.permission.PermissionsSetupEventImpl;
 import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
+import com.velocitypowered.api.event.player.DisconnectEventImpl;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
-import com.velocitypowered.api.event.player.LoginEvent;
+import com.velocitypowered.api.event.player.LoginEventImpl;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
-import com.velocitypowered.api.event.player.PostLoginEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEventImpl;
+import com.velocitypowered.api.event.player.PostLoginEventImpl;
 import com.velocitypowered.api.event.player.PreLoginEvent;
 import com.velocitypowered.api.event.player.PreLoginEvent.PreLoginComponentResult;
+import com.velocitypowered.api.event.player.PreLoginEventImpl;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -176,7 +178,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
-    PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
+    PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername());
     server.getEventManager().fire(event)
         .thenRunAsync(() -> {
           if (mcConnection.isClosed()) {
@@ -245,7 +247,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       logger.info("{} has connected", player);
 
       return server.getEventManager()
-          .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+          .fire(new PermissionsSetupEventImpl(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
@@ -285,11 +287,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     mcConnection.setAssociation(player);
     mcConnection.setState(StateRegistry.PLAY);
 
-    server.getEventManager().fire(new LoginEvent(player))
+    server.getEventManager().fire(new LoginEventImpl(player))
         .thenAcceptAsync(event -> {
           if (mcConnection.isClosed()) {
             // The player was disconnected
-            server.getEventManager().fireAndForget(new DisconnectEvent(player,
+            server.getEventManager().fireAndForget(new DisconnectEventImpl(player,
                 LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
             return;
           }
@@ -305,7 +307,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             }
 
             mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
-            server.getEventManager().fire(new PostLoginEvent(player))
+            server.getEventManager().fire(new PostLoginEventImpl(player))
                 .thenCompose((ignored) -> connectToInitialServer(player))
                 .exceptionally((ex) -> {
                   logger.error("Exception while connecting {} to initial server", player, ex);
@@ -321,7 +323,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
     Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
-    PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEvent(player,
+    PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEventImpl(player,
         initialFromConfig.orElse(null));
 
     return server.getEventManager().fire(event)

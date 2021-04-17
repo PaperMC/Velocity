@@ -23,7 +23,7 @@ import static com.velocitypowered.api.event.connection.ProxyQueryEvent.QueryType
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.event.connection.ProxyQueryEvent;
+import com.velocitypowered.api.event.connection.ProxyQueryEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -151,7 +151,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
         // Call event and write response
         server.getEventManager()
-            .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
+            .fire(new ProxyQueryEventImpl(isBasic ? BASIC : FULL, senderAddress, response))
             .whenCompleteAsync((event, exc) -> {
               // Packet header
               ByteBuf queryResponse = ctx.alloc().buffer();

@@ -25,10 +25,11 @@ import static com.velocitypowered.proxy.network.PluginMessageUtil.constructChann
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
+import com.velocitypowered.api.event.player.PlayerChannelRegisterEventImpl;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
-import com.velocitypowered.api.event.player.TabCompleteEvent;
+import com.velocitypowered.api.event.player.PlayerChatEventImpl;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEventImpl;
+import com.velocitypowered.api.event.player.TabCompleteEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -173,10 +174,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return null;
           });
     } else {
-      PlayerChatEvent event = new PlayerChatEvent(player, msg);
+      PlayerChatEvent event = new PlayerChatEventImpl(player, msg);
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
-            PlayerChatEvent.ChatResult chatResult = pme.getResult();
+            PlayerChatEventImpl.ChatResult chatResult = pme.getResult();
             if (chatResult.isAllowed()) {
               Optional<String> eventMsg = pme.getResult().getMessage();
               if (eventMsg.isPresent()) {
@@ -224,7 +225,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             channelIdentifiers.add(new LegacyChannelIdentifier(channel));
           }
         }
-        server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
+        server.getEventManager().fireAndForget(new PlayerChannelRegisterEventImpl(player,
                 ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
@@ -286,7 +287,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerboundResourcePackResponsePacket packet) {
-    server.getEventManager().fireAndForget(new PlayerResourcePackStatusEvent(player,
+    server.getEventManager().fireAndForget(new PlayerResourcePackStatusEventImpl(player,
         packet.getStatus()));
     return false;
   }
@@ -576,7 +577,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+    server.getEventManager().fire(new TabCompleteEventImpl(player, request.getCommand(), offers))
         .thenAcceptAsync(e -> {
           response.getOffers().clear();
           for (String s : e.getSuggestions()) {

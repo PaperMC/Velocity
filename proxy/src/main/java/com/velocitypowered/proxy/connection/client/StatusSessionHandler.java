@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
-import com.velocitypowered.api.event.connection.ProxyPingEvent;
+import com.velocitypowered.api.event.connection.ProxyPingEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -182,7 +182,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
     this.pingReceived = true;
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEventImpl(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
             LegacyDisconnectPacket.fromServerPing(event.getPing(), packet.getVersion())),
             connection.eventLoop())
@@ -207,7 +207,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     this.pingReceived = true;
 
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEventImpl(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();

@@ -25,14 +25,17 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.player.DisconnectEvent;
 import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
+import com.velocitypowered.api.event.player.DisconnectEventImpl;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResult;
-import com.velocitypowered.api.event.player.PlayerModInfoEvent;
-import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
+import com.velocitypowered.api.event.player.KickedFromServerEventImpl;
+import com.velocitypowered.api.event.player.PlayerModInfoEventImpl;
+import com.velocitypowered.api.event.player.PlayerSettingsChangedEventImpl;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.event.player.ServerPreConnectEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
@@ -59,7 +62,6 @@ import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundHeaderAndFooterPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
@@ -212,7 +214,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   void setPlayerSettings(ServerboundClientSettingsPacket settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;
-    server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
+    server.getEventManager().fireAndForget(new PlayerSettingsChangedEventImpl(this, cs));
   }
 
   @Override
@@ -222,7 +224,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   public void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
-    server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
+    server.getEventManager().fireAndForget(new PlayerModInfoEventImpl(this, modInfo));
   }
 
   @Override
@@ -505,7 +507,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       }
       result = Notify.create(friendlyReason);
     }
-    KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
+    KickedFromServerEvent originalEvent = new KickedFromServerEventImpl(this, rs, kickReason,
         !kickedFromCurrent, result);
     handleKickEvent(originalEvent, friendlyReason, kickedFromCurrent);
   }
@@ -669,7 +671,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Optional<Player> connectedPlayer = server.getPlayer(this.getUniqueId());
     server.unregisterConnection(this);
 
-    DisconnectEvent.LoginStatus status;
+    DisconnectEventImpl.LoginStatus status;
     if (connectedPlayer.isPresent()) {
       if (!connectedPlayer.get().getCurrentServer().isPresent()) {
         status = LoginStatus.PRE_SERVER_JOIN;
@@ -682,7 +684,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           LoginStatus.CANCELLED_BY_USER;
     }
 
-    DisconnectEvent event = new DisconnectEvent(this, status);
+    DisconnectEvent event = new DisconnectEventImpl(this, status);
     server.getEventManager().fire(event).whenComplete((val, ex) -> {
       if (ex == null) {
         this.teardownFuture.complete(null);
@@ -852,7 +854,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               return completedFuture(plainResult(initialCheck.get(), toConnect));
             }
 
-            ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this,
+            ServerPreConnectEvent event = new ServerPreConnectEventImpl(ConnectedPlayer.this,
                 toConnect);
             return server.getEventManager().fire(event)
                 .thenComposeAsync(newEvent -> {

@@ -21,8 +21,8 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.event.lifecycle.network.ListenerBoundEvent;
-import com.velocitypowered.api.event.lifecycle.network.ListenerClosedEvent;
+import com.velocitypowered.api.event.lifecycle.network.ListenerBoundEventImpl;
+import com.velocitypowered.api.event.lifecycle.network.ListenerClosedEventImpl;
 import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
@@ -136,7 +136,7 @@ public final class ConnectionManager {
 
             // Fire the proxy bound event after the socket is bound
             server.getEventManager().fireAndForget(
-                new ListenerBoundEvent(address, ListenerType.MINECRAFT));
+                new ListenerBoundEventImpl(address, ListenerType.MINECRAFT));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
           }
@@ -165,7 +165,7 @@ public final class ConnectionManager {
 
             // Fire the proxy bound event after the socket is bound
             server.getEventManager().fireAndForget(
-                new ListenerBoundEvent(address, ListenerType.QUERY));
+                new ListenerBoundEventImpl(address, ListenerType.QUERY));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
           }
@@ -203,7 +203,7 @@ public final class ConnectionManager {
 
     // Fire proxy close event to notify plugins of socket close. We block since plugins
     // should have a chance to be notified before the server stops accepting connections.
-    server.getEventManager().fire(new ListenerClosedEvent(oldBind, endpoint.getType())).join();
+    server.getEventManager().fire(new ListenerClosedEventImpl(oldBind, endpoint.getType())).join();
 
     Channel serverChannel = endpoint.getChannel();
 
@@ -222,7 +222,7 @@ public final class ConnectionManager {
 
       // Fire proxy close event to notify plugins of socket close. We block since plugins
       // should have a chance to be notified before the server stops accepting connections.
-      server.getEventManager().fire(new ListenerClosedEvent(address, endpoint.getType())).join();
+      server.getEventManager().fire(new ListenerClosedEventImpl(address, endpoint.getType())).join();
 
       try {
         LOGGER.info("Closing endpoint {}", address);

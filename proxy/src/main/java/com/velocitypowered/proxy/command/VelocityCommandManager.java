@@ -34,6 +34,7 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Iterator;
@@ -117,7 +118,7 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   /**
-   * Fires a {@link CommandExecuteEvent}.
+   * Fires a {@link CommandExecuteEventImpl}.
    *
    * @param source the source to execute the command for
    * @param cmdLine the command to execute
@@ -127,7 +128,7 @@ public class VelocityCommandManager implements CommandManager {
                                                                  final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
-    return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
+    return eventManager.fire(new CommandExecuteEventImpl(source, cmdLine));
   }
 
   private boolean executeImmediately0(final CommandSource source, final String cmdLine) {

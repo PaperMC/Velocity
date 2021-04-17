@@ -7,7 +7,7 @@
 
 package com.velocitypowered.api.command;
 
-import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -81,7 +81,7 @@ public interface CommandManager {
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}
-   * without firing a {@link CommandExecuteEvent}.
+   * without firing a {@link CommandExecuteEventImpl}.
    *
    * @param source the source to execute the command for
    * @param cmdLine the command to run

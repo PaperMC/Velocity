@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEventImpl;
+import com.velocitypowered.api.event.player.ServerPostConnectEventImpl;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -101,7 +101,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(player, serverConn.getServer(),
+        .fire(new ServerConnectedEventImpl(player, serverConn.getServer(),
             existingConnection != null ? existingConnection.getServer() : null))
         .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
@@ -132,7 +132,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // We're done! :)
-          server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
+          server.getEventManager().fireAndForget(new ServerPostConnectEventImpl(player,
               existingConnection == null ? null : existingConnection.getServer()));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop())

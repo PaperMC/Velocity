@@ -10,10 +10,6 @@ package com.velocitypowered.api.event.lifecycle;
 /**
  * This event is fired when the proxy is reloaded by the user using {@code /velocity reload}.
  */
-public class ProxyReloadEvent {
+public interface ProxyReloadEvent {
 
-  @Override
-  public String toString() {
-    return "ProxyReloadEvent";
-  }
 }

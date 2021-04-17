@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.event.permission;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.PermissionSubject;
@@ -18,20 +17,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <p>This event is only called once per subject, on initialisation.</p>
  */
-public final class PermissionsSetupEvent {
+public interface PermissionsSetupEvent {
 
-  private final PermissionSubject subject;
-  private final PermissionProvider defaultProvider;
-  private PermissionProvider provider;
-
-  public PermissionsSetupEvent(PermissionSubject subject, PermissionProvider provider) {
-    this.subject = Preconditions.checkNotNull(subject, "subject");
-    this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
-  }
-
-  public PermissionSubject getSubject() {
-    return this.subject;
-  }
+  PermissionSubject getSubject();
 
   /**
    * Uses the provider function to obtain a {@link PermissionFunction} for the subject.
@@ -39,13 +27,9 @@ public final class PermissionsSetupEvent {
    * @param subject the subject
    * @return the obtained permission function
    */
-  public PermissionFunction createFunction(PermissionSubject subject) {
-    return this.provider.createFunction(subject);
-  }
+  PermissionFunction createFunction(PermissionSubject subject);
 
-  public PermissionProvider getProvider() {
-    return this.provider;
-  }
+  PermissionProvider getProvider();
 
   /**
    * Sets the {@link PermissionFunction} that should be used for the subject.
@@ -55,16 +39,5 @@ public final class PermissionsSetupEvent {
    *
    * @param provider the provider
    */
-  public void setProvider(@Nullable PermissionProvider provider) {
-    this.provider = provider == null ? this.defaultProvider : provider;
-  }
-
-  @Override
-  public String toString() {
-    return "PermissionsSetupEvent{"
-        + "subject=" + subject
-        + ", defaultProvider=" + defaultProvider
-        + ", provider=" + provider
-        + '}';
-  }
+  void setProvider(@Nullable PermissionProvider provider);
 }
