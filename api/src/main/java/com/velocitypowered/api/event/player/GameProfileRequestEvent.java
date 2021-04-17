@@ -7,53 +7,23 @@
 
 package com.velocitypowered.api.event.player;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired after the {@link PreLoginEventImpl} in
- * order to set up the game profile for the user. This can be used to configure a custom profile for
- * a user, i.e. skin replacement.
+ * This event is fired after the {@link PreLoginEventImpl} in order to set up the game profile for
+ * the user. This can be used to configure a custom profile for a user, i.e. skin replacement.
  */
-public final class GameProfileRequestEvent {
+public interface GameProfileRequestEvent {
 
-  private final String username;
-  private final InboundConnection connection;
-  private final GameProfile originalProfile;
-  private final boolean onlineMode;
-  private @Nullable GameProfile gameProfile;
+  InboundConnection getConnection();
 
-  /**
-   * Creates a new instance.
-   * @param connection the connection connecting to the proxy
-   * @param originalProfile the original {@link GameProfile} for the user
-   * @param onlineMode whether or not the user connected in online or offline mode
-   */
-  public GameProfileRequestEvent(InboundConnection connection, GameProfile originalProfile,
-      boolean onlineMode) {
-    this.connection = Preconditions.checkNotNull(connection, "connection");
-    this.originalProfile = Preconditions.checkNotNull(originalProfile, "originalProfile");
-    this.username = originalProfile.getName();
-    this.onlineMode = onlineMode;
-  }
+  String getUsername();
 
-  public InboundConnection getConnection() {
-    return connection;
-  }
+  GameProfile getOriginalProfile();
 
-  public String getUsername() {
-    return username;
-  }
-
-  public GameProfile getOriginalProfile() {
-    return originalProfile;
-  }
-
-  public boolean isOnlineMode() {
-    return onlineMode;
-  }
+  boolean isOnlineMode();
 
   /**
    * Returns the game profile that will be used to initialize the connection with. Should no profile
@@ -62,26 +32,12 @@ public final class GameProfileRequestEvent {
    *
    * @return the user's {@link GameProfile}
    */
-  public GameProfile getGameProfile() {
-    return gameProfile == null ? originalProfile : gameProfile;
-  }
+  GameProfile getGameProfile();
 
   /**
    * Sets the game profile to use for this connection.
    *
    * @param gameProfile the profile for this connection, {@code null} uses the original profile
    */
-  public void setGameProfile(@Nullable GameProfile gameProfile) {
-    this.gameProfile = gameProfile;
-  }
-
-  @Override
-  public String toString() {
-    return "GameProfileRequestEvent{"
-        + "username=" + username
-        + ", gameProfile=" + gameProfile
-        + "}";
-  }
-
-
+  void setGameProfile(@Nullable GameProfile gameProfile);
 }

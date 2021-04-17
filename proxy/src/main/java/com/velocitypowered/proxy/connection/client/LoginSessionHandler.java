@@ -29,6 +29,7 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEventImpl;
 import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.player.DisconnectEventImpl;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
+import com.velocitypowered.api.event.player.GameProfileRequestEventImpl;
 import com.velocitypowered.api.event.player.LoginEventImpl;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEventImpl;
@@ -225,7 +226,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.getConfiguration().getPlayerInfoForwardingMode());
-    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
+    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEventImpl(inbound, profile,
         onlineMode);
     final GameProfile finalProfile = profile;
 
