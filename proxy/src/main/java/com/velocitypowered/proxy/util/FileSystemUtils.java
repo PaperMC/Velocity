@@ -48,8 +48,7 @@ public class FileSystemUtils {
         .getProtectionDomain().getCodeSource().getLocation().getPath());
 
     if (file.isFile()) { // jar
-      URI uri = file.toURI();
-      try (FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+      try (FileSystem fileSystem = FileSystems.newFileSystem(file.toPath(), null)) {
         Path toVisit = fileSystem.getPath(path.toString());
         if (Files.exists(toVisit)) {
           consumer.accept(toVisit);
