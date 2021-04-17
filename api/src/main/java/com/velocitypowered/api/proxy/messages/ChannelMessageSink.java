@@ -19,5 +19,5 @@ public interface ChannelMessageSink {
    * @param data the data to send
    * @return whether or not the message could be sent
    */
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(PluginChannelId identifier, byte[] data);
 }

@@ -277,7 +277,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     // Register the plugin main classes so that we can fire the proxy initialize event
-    for (PluginContainer plugin : pluginManager.getPlugins()) {
+    for (PluginContainer plugin : pluginManager.plugins()) {
       Optional<?> instance = plugin.instance();
       if (instance.isPresent()) {
         try {
@@ -289,7 +289,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     }
 
-    logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
+    logger.info("Loaded {} plugins", pluginManager.plugins().size());
   }
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {

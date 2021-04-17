@@ -39,7 +39,7 @@ public class MockPluginManager implements PluginManager {
   }
 
   @Override
-  public Collection<PluginContainer> getPlugins() {
+  public Collection<PluginContainer> plugins() {
     return ImmutableList.of();
   }
 

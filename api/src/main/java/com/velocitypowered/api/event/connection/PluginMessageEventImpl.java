@@ -12,9 +12,9 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 
@@ -26,7 +26,7 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
 
   private final ChannelMessageSource source;
   private final ChannelMessageSink target;
-  private final ChannelIdentifier identifier;
+  private final PluginChannelId identifier;
   private final byte[] data;
   private ForwardResult result;
 
@@ -39,7 +39,7 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
    * @param data the payload of the plugin message
    */
   public PluginMessageEventImpl(ChannelMessageSource source, ChannelMessageSink target,
-      ChannelIdentifier identifier, byte[] data) {
+      PluginChannelId identifier, byte[] data) {
     this.source = Preconditions.checkNotNull(source, "source");
     this.target = Preconditions.checkNotNull(target, "target");
     this.identifier = Preconditions.checkNotNull(identifier, "identifier");
@@ -68,7 +68,7 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
   }
 
   @Override
-  public ChannelIdentifier channel() {
+  public PluginChannelId channel() {
     return identifier;
   }
 

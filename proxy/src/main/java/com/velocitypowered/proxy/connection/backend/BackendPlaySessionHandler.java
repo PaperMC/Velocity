@@ -28,7 +28,7 @@ import com.velocitypowered.api.event.command.PlayerAvailableCommandsEventImpl;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -160,7 +160,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    ChannelIdentifier id = server.channelRegistrar().getFromId(packet.getChannel());
+    PluginChannelId id = server.channelRegistrar().getFromId(packet.getChannel());
     if (id == null) {
       return false;
     }

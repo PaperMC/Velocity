@@ -19,8 +19,8 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
@@ -40,6 +40,7 @@ import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -50,10 +51,8 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
     + "nothing.")
 public class BungeeCordMessageResponder {
 
-  private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier
-      .create("bungeecord", "main");
-  private static final LegacyChannelIdentifier LEGACY_CHANNEL =
-      new LegacyChannelIdentifier("BungeeCord");
+  private static final PairedPluginChannelId CHANNEL = PluginChannelId
+      .withLegacy("BungeeCord", Key.key("bungeecord", "main"));
 
   private final VelocityServer proxy;
   private final ConnectedPlayer player;
@@ -64,8 +63,8 @@ public class BungeeCordMessageResponder {
   }
 
   public static boolean isBungeeCordMessage(AbstractPluginMessagePacket<?> message) {
-    return MODERN_CHANNEL.id().equals(message.getChannel()) || LEGACY_CHANNEL.id()
-        .equals(message.getChannel());
+    return CHANNEL.modernChannelKey().asString().equals(message.getChannel())
+        || CHANNEL.legacyChannel().equals(message.getChannel());
   }
 
   private void processConnect(ByteBufDataInput in) {
@@ -293,7 +292,7 @@ public class BungeeCordMessageResponder {
     if (target.equals("ALL")) {
       try {
         for (RegisteredServer rs : proxy.registeredServers()) {
-          ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
+          ((VelocityRegisteredServer) rs).sendPluginMessage(CHANNEL,
               toForward.retainedSlice());
         }
       } finally {
@@ -302,7 +301,7 @@ public class BungeeCordMessageResponder {
     } else {
       Optional<RegisteredServer> server = proxy.server(target);
       if (server.isPresent()) {
-        ((VelocityRegisteredServer) server.get()).sendPluginMessage(LEGACY_CHANNEL, toForward);
+        ((VelocityRegisteredServer) server.get()).sendPluginMessage(CHANNEL, toForward);
       } else {
         toForward.release();
       }
@@ -310,8 +309,8 @@ public class BungeeCordMessageResponder {
   }
 
   static String getBungeeCordChannel(ProtocolVersion version) {
-    return version.gte(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL.id()
-        : LEGACY_CHANNEL.id();
+    return version.gte(ProtocolVersion.MINECRAFT_1_13) ? CHANNEL.modernChannelKey().asString()
+        : CHANNEL.legacyChannel();
   }
 
   // Note: this method will always release the buffer!

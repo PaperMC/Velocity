@@ -22,6 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.messages.MinecraftPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import io.netty.buffer.ByteBuf;
@@ -172,6 +175,19 @@ public final class PluginMessageUtil {
     } catch (Exception e) {
       return ProtocolUtils.readStringWithoutLength(content.slice());
     }
+  }
+
+  public static String channelIdForVersion(PluginChannelId id, ProtocolVersion version) {
+    if (id instanceof MinecraftPluginChannelId) {
+      return ((MinecraftPluginChannelId) id).key().asString();
+    } else if (id instanceof PairedPluginChannelId) {
+      if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
+        return ((PairedPluginChannelId) id).modernChannelKey().asString();
+      } else {
+        return ((PairedPluginChannelId) id).legacyChannel();
+      }
+    }
+    throw new IllegalArgumentException("Unknown channel ID " + id.getClass().getName());
   }
 
   private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");

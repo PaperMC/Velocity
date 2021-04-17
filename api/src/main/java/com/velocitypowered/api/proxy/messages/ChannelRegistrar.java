@@ -10,7 +10,7 @@ package com.velocitypowered.api.proxy.messages;
 import com.velocitypowered.api.event.connection.PluginMessageEventImpl;
 
 /**
- * Represents an interface to register and unregister {@link ChannelIdentifier}s for the proxy to
+ * Represents an interface to register and unregister {@link PluginChannelId}s for the proxy to
  * listen on.
  */
 public interface ChannelRegistrar {
@@ -21,12 +21,12 @@ public interface ChannelRegistrar {
    *
    * @param identifiers the channel identifiers to register
    */
-  void register(ChannelIdentifier... identifiers);
+  void register(PluginChannelId... identifiers);
 
   /**
    * Removes the intent to listen for the specified channel.
    *
    * @param identifiers the identifiers to unregister
    */
-  void unregister(ChannelIdentifier... identifiers);
+  void unregister(PluginChannelId... identifiers);
 }

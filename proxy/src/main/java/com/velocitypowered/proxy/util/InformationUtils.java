@@ -52,8 +52,7 @@ public enum InformationUtils {
    * @return {@link JsonArray} containing zero or more {@link JsonObject}
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
-    List<PluginContainer> allPlugins = ImmutableList.copyOf(
-            proxy.pluginManager().getPlugins());
+    List<PluginContainer> allPlugins = ImmutableList.copyOf(proxy.pluginManager().plugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {
@@ -190,7 +189,7 @@ public enum InformationUtils {
     if (address instanceof InetSocketAddress) {
       InetSocketAddress iaddr = (InetSocketAddress) address;
       if (iaddr.isUnresolved()) {
-        // Greetings form Netty 4aa10db9
+        // Greetings from Netty 4aa10db9
         info.addProperty("host", iaddr.getHostString());
       } else {
         info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));

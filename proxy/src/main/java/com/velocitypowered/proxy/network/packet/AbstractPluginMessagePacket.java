@@ -32,9 +32,6 @@ public abstract class AbstractPluginMessagePacket<S extends AbstractPluginMessag
   protected static <P extends AbstractPluginMessagePacket<P>> PacketReader<P> decoder(final Factory<P> factory) {
     return (buf, version) -> {
       String channel = ProtocolUtils.readString(buf);
-      if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
-        channel = transformLegacyToModernChannel(channel);
-      }
       final ByteBuf data;
       if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
         data = buf.readRetainedSlice(buf.readableBytes());

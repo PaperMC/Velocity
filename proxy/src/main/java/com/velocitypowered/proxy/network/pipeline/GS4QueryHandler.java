@@ -201,7 +201,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private List<QueryResponse.PluginInformation> getRealPluginInformation() {
     List<QueryResponse.PluginInformation> result = new ArrayList<>();
-    for (PluginContainer plugin : server.pluginManager().getPlugins()) {
+    for (PluginContainer plugin : server.pluginManager().plugins()) {
       PluginDescription description = plugin.description();
       result.add(QueryResponse.PluginInformation.of(description.name()
           .orElse(description.id()), description.version().orElse(null)));

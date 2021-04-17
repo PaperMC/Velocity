@@ -270,7 +270,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      List<PluginContainer> plugins = ImmutableList.copyOf(server.pluginManager().getPlugins());
+      List<PluginContainer> plugins = ImmutableList.copyOf(server.pluginManager().plugins());
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {

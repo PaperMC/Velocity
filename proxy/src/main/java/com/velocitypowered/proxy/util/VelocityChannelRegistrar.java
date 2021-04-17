@@ -18,55 +18,58 @@
 package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import com.velocitypowered.proxy.network.PluginMessageUtil;
+import com.velocitypowered.api.proxy.messages.MinecraftPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityChannelRegistrar implements ChannelRegistrar {
 
-  private final Map<String, ChannelIdentifier> identifierMap = new ConcurrentHashMap<>();
+  private final Map<String, PluginChannelId> byLegacyId = new ConcurrentHashMap<>();
+  private final Map<String, PluginChannelId> byKey = new ConcurrentHashMap<>();
 
   @Override
-  public void register(ChannelIdentifier... identifiers) {
-    for (ChannelIdentifier identifier : identifiers) {
-      Preconditions.checkArgument(identifier instanceof LegacyChannelIdentifier
-          || identifier instanceof MinecraftChannelIdentifier, "identifier is unknown");
+  public void register(PluginChannelId... identifiers) {
+    for (PluginChannelId identifier : identifiers) {
+      Preconditions.checkArgument(identifier instanceof PairedPluginChannelId
+          || identifier instanceof MinecraftPluginChannelId, "identifier is unknown");
     }
 
-    for (ChannelIdentifier identifier : identifiers) {
-      if (identifier instanceof MinecraftChannelIdentifier) {
-        identifierMap.put(identifier.id(), identifier);
+    for (PluginChannelId identifier : identifiers) {
+      if (identifier instanceof MinecraftPluginChannelId) {
+        MinecraftPluginChannelId modern = (MinecraftPluginChannelId) identifier;
+        byLegacyId.put(modern.key().asString(), identifier);
+        byKey.put(modern.key().asString(), identifier);
       } else {
-        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
-        identifierMap.put(identifier.id(), identifier);
-        identifierMap.put(rewritten, identifier);
+        PairedPluginChannelId paired = (PairedPluginChannelId) identifier;
+        byLegacyId.put(paired.legacyChannel(), identifier);
+        byKey.put(paired.modernChannelKey().asString(), identifier);
       }
     }
   }
 
   @Override
-  public void unregister(ChannelIdentifier... identifiers) {
-    for (ChannelIdentifier identifier : identifiers) {
-      Preconditions.checkArgument(identifier instanceof LegacyChannelIdentifier
-              || identifier instanceof MinecraftChannelIdentifier,
+  public void unregister(PluginChannelId... identifiers) {
+    for (PluginChannelId identifier : identifiers) {
+      Preconditions.checkArgument(identifier instanceof PairedPluginChannelId
+              || identifier instanceof MinecraftPluginChannelId,
           "identifier is unknown");
     }
 
-    for (ChannelIdentifier identifier : identifiers) {
-      if (identifier instanceof MinecraftChannelIdentifier) {
-        identifierMap.remove(identifier.id());
+    for (PluginChannelId identifier : identifiers) {
+      if (identifier instanceof MinecraftPluginChannelId) {
+        MinecraftPluginChannelId modern = (MinecraftPluginChannelId) identifier;
+        byKey.remove(modern.key().asString(), identifier);
       } else {
-        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
-        identifierMap.remove(identifier.id());
-        identifierMap.remove(rewritten);
+        PairedPluginChannelId paired = (PairedPluginChannelId) identifier;
+        byLegacyId.remove(paired.legacyChannel(), identifier);
+        byKey.remove(paired.modernChannelKey().asString(), identifier);
       }
     }
   }
@@ -77,11 +80,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    * @return all legacy channel IDs
    */
   public Collection<String> getLegacyChannelIds() {
-    Collection<String> ids = new HashSet<>();
-    for (ChannelIdentifier value : identifierMap.values()) {
-      ids.add(value.id());
-    }
-    return ids;
+    return ImmutableSet.copyOf(this.byLegacyId.keySet());
   }
 
   /**
@@ -90,19 +89,14 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    * @return the channel IDs for Minecraft 1.13 and above
    */
   public Collection<String> getModernChannelIds() {
-    Collection<String> ids = new HashSet<>();
-    for (ChannelIdentifier value : identifierMap.values()) {
-      if (value instanceof MinecraftChannelIdentifier) {
-        ids.add(value.id());
-      } else {
-        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.id()));
-      }
-    }
-    return ids;
+    return ImmutableSet.copyOf(this.byKey.keySet());
   }
 
-  public @Nullable ChannelIdentifier getFromId(String id) {
-    return identifierMap.get(id);
+  public @Nullable PluginChannelId getFromId(String id) {
+    if (id.indexOf(':') >= 0) {
+      return byKey.get(id);
+    }
+    return byLegacyId.get(id);
   }
 
   /**

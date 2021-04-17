@@ -9,7 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.util.List;
 
 /**
@@ -19,9 +19,9 @@ import java.util.List;
 public final class PlayerChannelRegisterEventImpl implements PlayerChannelRegisterEvent {
 
   private final Player player;
-  private final List<ChannelIdentifier> channels;
+  private final List<PluginChannelId> channels;
 
-  public PlayerChannelRegisterEventImpl(Player player, List<ChannelIdentifier> channels) {
+  public PlayerChannelRegisterEventImpl(Player player, List<PluginChannelId> channels) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.channels = Preconditions.checkNotNull(channels, "channels");
   }
@@ -32,7 +32,7 @@ public final class PlayerChannelRegisterEventImpl implements PlayerChannelRegist
   }
 
   @Override
-  public List<ChannelIdentifier> channels() {
+  public List<PluginChannelId> channels() {
     return channels;
   }
 

@@ -11,9 +11,9 @@ import com.google.common.io.ByteArrayDataInput;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.io.ByteArrayInputStream;
 
 /**
@@ -26,7 +26,7 @@ public interface PluginMessageEvent extends ResultedEvent<PluginMessageEvent.For
 
   ChannelMessageSink sink();
 
-  ChannelIdentifier channel();
+  PluginChannelId channel();
 
   byte[] rawMessage();
 

@@ -138,13 +138,12 @@ public class AdventureBossBarManager implements BossBar.Listener {
   }
 
   @Override
-  public void bossBarPercentChanged(@NonNull BossBar bar, float oldPercent, float newPercent) {
+  public void bossBarProgressChanged(@NonNull BossBar bar, float oldProgress, float newProgress) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket packet = holder
-        .createPercentUpdate(newPercent);
+    ClientboundBossBarPacket packet = holder.createPercentUpdate(newProgress);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -170,8 +169,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket packet = holder
-        .createOverlayUpdate(newOverlay);
+    ClientboundBossBarPacket packet = holder.createOverlayUpdate(newOverlay);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }

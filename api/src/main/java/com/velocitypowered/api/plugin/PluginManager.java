@@ -39,7 +39,7 @@ public interface PluginManager {
    *
    * @return the plugins
    */
-  Collection<PluginContainer> getPlugins();
+  Collection<PluginContainer> plugins();
 
   /**
    * Checks if a plugin is loaded based on its ID.

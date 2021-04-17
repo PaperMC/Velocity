@@ -32,9 +32,7 @@ import com.velocitypowered.api.event.player.PlayerChatEventImpl;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEventImpl;
 import com.velocitypowered.api.event.player.TabCompleteEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -72,6 +70,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -218,16 +217,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         player.getKnownChannels().addAll(channels);
-        List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
-        for (String channel : channels) {
-          try {
-            channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
-          } catch (IllegalArgumentException e) {
-            channelIdentifiers.add(new LegacyChannelIdentifier(channel));
+
+        List<PluginChannelId> pluginChannelIds = new ArrayList<>();
+        if (player.protocolVersion().gte(MINECRAFT_1_13)) {
+          for (String channel : channels) {
+            pluginChannelIds.add(PluginChannelId.wrap(Key.key(channel)));
+          }
+        } else {
+          for (String channel : channels) {
+            pluginChannelIds.add(PluginChannelId.withLegacy(channel,
+                Key.key(PluginMessageUtil.transformLegacyToModernChannel(channel))));
           }
         }
+
         server.eventManager().fireAndForget(new PlayerChannelRegisterEventImpl(player,
-                ImmutableList.copyOf(channelIdentifiers)));
+                ImmutableList.copyOf(pluginChannelIds)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -259,7 +263,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             // appropriately.
             loginPluginMessages.add(packet.retain());
           } else {
-            ChannelIdentifier id = server.channelRegistrar().getFromId(packet.getChannel());
+            PluginChannelId id = server.channelRegistrar().getFromId(packet.getChannel());
             if (id == null) {
               backendConn.write(packet.retain());
             } else {

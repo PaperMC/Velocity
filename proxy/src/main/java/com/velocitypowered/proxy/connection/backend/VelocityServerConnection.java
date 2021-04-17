@@ -20,12 +20,13 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.HandlerNames.HANDLER;
+import static com.velocitypowered.proxy.network.PluginMessageUtil.channelIdForVersion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.GameProfile.Property;
@@ -236,7 +237,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, byte[] data) {
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
   }
 
@@ -246,13 +247,14 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * @param data the data
    * @return whether or not the message was sent
    */
-  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, ByteBuf data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
 
     MinecraftConnection mc = ensureConnected();
 
-    ServerboundPluginMessagePacket message = new ServerboundPluginMessagePacket(identifier.id(), data);
+    ServerboundPluginMessagePacket message = new ServerboundPluginMessagePacket(
+        channelIdForVersion(identifier, mc.getProtocolVersion()), data);
     mc.write(message);
     return true;
   }

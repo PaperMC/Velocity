@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -137,7 +137,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, byte[] data) {
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
   }
 
@@ -149,7 +149,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @param data the data
    * @return whether or not the message was sent
    */
-  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection connection = player.getConnectedServer();
       if (connection != null && connection.target() == this) {

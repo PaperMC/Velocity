@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
 import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
+import static com.velocitypowered.proxy.network.PluginMessageUtil.channelIdForVersion;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
@@ -42,7 +43,7 @@ import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -709,10 +710,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, byte[] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    ClientboundPluginMessagePacket message = new ClientboundPluginMessagePacket(identifier.id(),
+    ClientboundPluginMessagePacket message = new ClientboundPluginMessagePacket(
+        channelIdForVersion(identifier, connection.getProtocolVersion()),
         Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;

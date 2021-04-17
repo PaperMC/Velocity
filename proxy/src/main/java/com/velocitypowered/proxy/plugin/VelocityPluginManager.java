@@ -178,7 +178,7 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   @Override
-  public Collection<PluginContainer> getPlugins() {
+  public Collection<PluginContainer> plugins() {
     return Collections.unmodifiableCollection(plugins.values());
   }
 

@@ -58,7 +58,7 @@ public class FakePluginManager implements PluginManager {
   }
 
   @Override
-  public @NonNull Collection<PluginContainer> getPlugins() {
+  public @NonNull Collection<PluginContainer> plugins() {
     return ImmutableList.of(PC_A, PC_B);
   }
 
