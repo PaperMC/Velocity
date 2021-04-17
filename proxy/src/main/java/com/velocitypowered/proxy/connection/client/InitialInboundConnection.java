@@ -24,9 +24,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,9 +78,11 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnect(Component reason) {
+    Component translated = GlobalTranslator.render(reason, Locale.getDefault());
+
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, protocolVersion()));
+        LegacyComponentSerializer.legacySection().serialize(translated));
+    connection.closeWith(ClientboundDisconnectPacket.create(translated, protocolVersion()));
   }
 
   /**
@@ -86,6 +90,7 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnectQuietly(Component reason) {
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, protocolVersion()));
+    Component translated = GlobalTranslator.render(reason, Locale.getDefault());
+    connection.closeWith(ClientboundDisconnectPacket.create(translated, protocolVersion()));
   }
 }

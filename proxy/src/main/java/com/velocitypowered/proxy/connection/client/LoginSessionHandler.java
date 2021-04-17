@@ -47,7 +47,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.network.StateRegistry;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
@@ -59,12 +58,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
@@ -191,8 +192,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Optional<Component> disconnectReason = result.denialReason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
-            mcConnection.closeWith(ClientboundDisconnectPacket.create(disconnectReason.get(),
-                inbound.protocolVersion()));
+            Component disconnectReasonTranslated = GlobalTranslator.render(disconnectReason.get(),
+                Locale.getDefault());
+            inbound.disconnect(disconnectReasonTranslated);
             return;
           }
 
