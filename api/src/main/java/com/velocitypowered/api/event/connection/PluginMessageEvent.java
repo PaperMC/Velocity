@@ -22,17 +22,17 @@ import java.io.ByteArrayInputStream;
  */
 public interface PluginMessageEvent extends ResultedEvent<PluginMessageEvent.ForwardResult> {
 
-  ChannelMessageSource getSource();
+  ChannelMessageSource source();
 
-  ChannelMessageSink getTarget();
+  ChannelMessageSink sink();
 
-  ChannelIdentifier getIdentifier();
+  ChannelIdentifier channel();
 
-  byte[] getData();
+  byte[] rawMessage();
 
-  ByteArrayInputStream dataAsInputStream();
+  ByteArrayInputStream messageAsInputStream();
 
-  ByteArrayDataInput dataAsDataStream();
+  ByteArrayDataInput messageAsDataInput();
 
   /**
    * A result determining whether or not to forward this message on.

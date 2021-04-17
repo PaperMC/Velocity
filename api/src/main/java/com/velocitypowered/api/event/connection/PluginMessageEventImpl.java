@@ -58,32 +58,32 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
   }
 
   @Override
-  public ChannelMessageSource getSource() {
+  public ChannelMessageSource source() {
     return source;
   }
 
   @Override
-  public ChannelMessageSink getTarget() {
+  public ChannelMessageSink sink() {
     return target;
   }
 
   @Override
-  public ChannelIdentifier getIdentifier() {
+  public ChannelIdentifier channel() {
     return identifier;
   }
 
   @Override
-  public byte[] getData() {
+  public byte[] rawMessage() {
     return Arrays.copyOf(data, data.length);
   }
 
   @Override
-  public ByteArrayInputStream dataAsInputStream() {
+  public ByteArrayInputStream messageAsInputStream() {
     return new ByteArrayInputStream(data);
   }
 
   @Override
-  public ByteArrayDataInput dataAsDataStream() {
+  public ByteArrayDataInput messageAsDataInput() {
     return ByteStreams.newDataInput(data);
   }
 
