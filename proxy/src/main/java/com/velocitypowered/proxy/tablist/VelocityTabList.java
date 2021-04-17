@@ -60,8 +60,8 @@ public class VelocityTabList implements TabList {
     Component translatedFooter = player.translateMessage(footer);
 
     connection.write(new ClientboundHeaderAndFooterPacket(
-        serializer.serialize(header),
-        serializer.serialize(footer)
+        serializer.serialize(translatedHeader),
+        serializer.serialize(translatedFooter)
     ));
   }
 
