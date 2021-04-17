@@ -28,7 +28,7 @@ public interface PluginChannelId {
 
   /**
    * Wraps the specified Minecraft key so it can be used as a {@link PluginChannelId},
-   * with the specified {@code legacyChannel} for clients onnected using Minecraft 1.12.2
+   * with the specified {@code legacyChannel} for clients connected using Minecraft 1.12.2
    * or earlier.
    *
    * @param legacyChannel the legacy channel name
