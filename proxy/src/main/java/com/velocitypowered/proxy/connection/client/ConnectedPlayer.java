@@ -79,6 +79,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -736,7 +737,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
-      String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("");
+      String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
+          .orElse("")
+          .toLowerCase(Locale.ROOT);
       serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
     }
