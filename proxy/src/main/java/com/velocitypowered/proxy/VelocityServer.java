@@ -330,7 +330,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Optional<?> instance = plugin.instance();
       if (instance.isPresent()) {
         try {
-          eventManager.register(instance.get(), instance.get());
+          eventManager.registerInternally(plugin, instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
               plugin.description().name().orElse(plugin.description().id()), e);
