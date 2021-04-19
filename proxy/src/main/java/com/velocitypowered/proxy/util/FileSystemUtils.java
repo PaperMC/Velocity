@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.util;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,7 +27,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class FileSystemUtils {
@@ -38,18 +40,27 @@ public class FileSystemUtils {
    * path of the given {@link Class}.
    *
    * @param target The target class of the resource path to scan
-   * @param path The path to scan within the resource path
    * @param consumer The consumer to visit the resolved path
+   * @param firstPathComponent First path component
+   * @param remainingPathComponents Remaining path components
    */
   @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
-  public static boolean visitResources(Class<?> target, Path path, Consumer<Path> consumer)
+  public static boolean visitResources(Class<?> target, Consumer<Path> consumer,
+      String firstPathComponent, String... remainingPathComponents)
       throws IOException {
-    final File file = new File(target
-        .getProtectionDomain().getCodeSource().getLocation().getPath());
+    final URL knownResource = FileSystemUtils.class.getClassLoader()
+        .getResource("default-velocity.toml");
+    if (knownResource == null) {
+      throw new IllegalStateException(
+          "default-velocity.toml does not exist, don't know where we are");
+    }
+    if (knownResource.getProtocol().equals("jar")) {
+      // Running from a JAR
+      String jarPathRaw = knownResource.toString().split("!")[0];
+      URI path = URI.create(jarPathRaw + "!/");
 
-    if (file.isFile()) { // jar
-      try (FileSystem fileSystem = FileSystems.newFileSystem(file.toPath(), null)) {
-        Path toVisit = fileSystem.getPath(path.toString());
+      try (FileSystem fileSystem = FileSystems.newFileSystem(path, Map.of("create", "true"))) {
+        Path toVisit = fileSystem.getPath(firstPathComponent, remainingPathComponents);
         if (Files.exists(toVisit)) {
           consumer.accept(toVisit);
           return true;
@@ -57,9 +68,14 @@ public class FileSystemUtils {
         return false;
       }
     } else {
+      // Running from the file system
       URI uri;
+      List<String> componentList = new ArrayList<>();
+      componentList.add(firstPathComponent);
+      componentList.addAll(Arrays.asList(remainingPathComponents));
+
       try {
-        URL url = target.getClassLoader().getResource(path.toString());
+        URL url = target.getClassLoader().getResource(String.join("/", componentList));
         if (url == null) {
           return false;
         }
