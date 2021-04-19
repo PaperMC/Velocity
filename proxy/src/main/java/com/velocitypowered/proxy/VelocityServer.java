@@ -250,7 +250,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     translationRegistry.defaultLocale(Locale.US);
     try {
       FileSystemUtils.visitResources(VelocityServer.class,
-          Paths.get("com", "velocitypowered", "proxy", "l10n"), path -> {
+          "com/velocitypowered/proxy/l10n", path -> {
             logger.info("Loading localizations...");
 
             try {

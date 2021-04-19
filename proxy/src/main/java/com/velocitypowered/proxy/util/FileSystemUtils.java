@@ -42,14 +42,14 @@ public class FileSystemUtils {
    * @param consumer The consumer to visit the resolved path
    */
   @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
-  public static boolean visitResources(Class<?> target, Path path, Consumer<Path> consumer)
+  public static boolean visitResources(Class<?> target, String path, Consumer<Path> consumer)
       throws IOException {
     final File file = new File(target
         .getProtectionDomain().getCodeSource().getLocation().getPath());
 
     if (file.isFile()) { // jar
       try (FileSystem fileSystem = FileSystems.newFileSystem(file.toPath(), (ClassLoader) null)) {
-        Path toVisit = fileSystem.getPath(path.toString());
+        Path toVisit = fileSystem.getPath(path);
         if (Files.exists(toVisit)) {
           consumer.accept(toVisit);
           return true;
@@ -59,7 +59,7 @@ public class FileSystemUtils {
     } else {
       URI uri;
       try {
-        URL url = target.getClassLoader().getResource(path.toString());
+        URL url = target.getClassLoader().getResource(path);
         if (url == null) {
           return false;
         }
