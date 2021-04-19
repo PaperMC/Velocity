@@ -247,6 +247,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private void registerTranslations() {
     final TranslationRegistry translationRegistry = TranslationRegistry
         .create(Key.key("velocity", "translations"));
+    translationRegistry.defaultLocale(Locale.US);
     try {
       FileSystemUtils.visitResources(VelocityServer.class,
           Paths.get("com", "velocitypowered", "proxy", "l10n"), path -> {
