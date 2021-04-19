@@ -249,36 +249,35 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         .create(Key.key("velocity", "translations"));
     translationRegistry.defaultLocale(Locale.US);
     try {
-      FileSystemUtils.visitResources(VelocityServer.class,
-          "com/velocitypowered/proxy/l10n", path -> {
-            logger.info("Loading localizations...");
+      FileSystemUtils.visitResources(VelocityServer.class, path -> {
+        logger.info("Loading localizations...");
 
-            try {
-              Files.walk(path).forEach(file -> {
-                if (!Files.isRegularFile(file)) {
-                  return;
-                }
-
-                String filename = com.google.common.io.Files
-                    .getNameWithoutExtension(file.getFileName().toString());
-                String localeName = filename.replace("messages_", "")
-                    .replace("messages", "")
-                    .replace('_', '-');
-                Locale locale;
-                if (localeName.isEmpty()) {
-                  locale = Locale.US;
-                } else {
-                  locale = Locale.forLanguageTag(localeName);
-                }
-
-                translationRegistry.registerAll(locale,
-                    ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
-                        locale, UTF8ResourceBundleControl.get()), false);
-              });
-            } catch (IOException e) {
-              logger.error("Encountered an I/O error whilst loading translations", e);
+        try {
+          Files.walk(path).forEach(file -> {
+            if (!Files.isRegularFile(file)) {
+              return;
             }
+
+            String filename = com.google.common.io.Files
+                .getNameWithoutExtension(file.getFileName().toString());
+            String localeName = filename.replace("messages_", "")
+                .replace("messages", "")
+                .replace('_', '-');
+            Locale locale;
+            if (localeName.isEmpty()) {
+              locale = Locale.US;
+            } else {
+              locale = Locale.forLanguageTag(localeName);
+            }
+
+            translationRegistry.registerAll(locale,
+                ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
+                    locale, UTF8ResourceBundleControl.get()), false);
           });
+        } catch (IOException e) {
+          logger.error("Encountered an I/O error whilst loading translations", e);
+        }
+      }, "com", "velocitypowered", "proxy", "l10n");
     } catch (IOException e) {
       logger.error("Encountered an I/O error whilst loading translations", e);
       return;
