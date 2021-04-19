@@ -215,8 +215,8 @@ public class AdventureBossBarManager implements BossBar.Listener {
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.ADD);
       packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(bar.name()));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
-      packet.setOverlay(bar.overlay().ordinal());
-      packet.setPercent(bar.percent());
+      packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
+      packet.setPercent(bar.progress());
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
@@ -234,8 +234,9 @@ public class AdventureBossBarManager implements BossBar.Listener {
       com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_NAME);
+      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_STYLE);
       packet.setColor(COLORS_TO_PROTOCOL.get(color));
+      packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
@@ -268,7 +269,8 @@ public class AdventureBossBarManager implements BossBar.Listener {
       com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_PROPERTIES);
+      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_STYLE);
+      packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(overlay));
       return packet;
     }
