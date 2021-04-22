@@ -319,7 +319,23 @@ public class VelocityEventManager implements EventManager {
     if (plugin == listener) {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
+    registerInternally(pluginContainer, listener);
+  }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public <E> void register(final Object plugin, final Class<E> eventClass,
+                           final short order, final EventHandler<E> handler) {
+    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    requireNonNull(eventClass, "eventClass");
+    requireNonNull(handler, "handler");
+
+    final HandlerRegistration registration = new HandlerRegistration(pluginContainer, order,
+        eventClass, handler, (EventHandler<Object>) handler, AsyncType.SOMETIMES);
+    register(Collections.singletonList(registration));
+  }
+
+  public void registerInternally(final PluginContainer pluginContainer, final Object listener) {
     final Class<?> targetClass = listener.getClass();
     final Map<String, MethodHandlerInfo> collected = new HashMap<>();
     collectMethods(targetClass, collected);
@@ -340,19 +356,6 @@ public class VelocityEventManager implements EventManager {
     }
 
     register(registrations);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <E> void register(final Object plugin, final Class<E> eventClass,
-      final short order, final EventHandler<E> handler) {
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
-    requireNonNull(eventClass, "eventClass");
-    requireNonNull(handler, "handler");
-
-    final HandlerRegistration registration = new HandlerRegistration(pluginContainer, order,
-        eventClass, handler, (EventHandler<Object>) handler, AsyncType.SOMETIMES);
-    register(Collections.singletonList(registration));
   }
 
   @Override
