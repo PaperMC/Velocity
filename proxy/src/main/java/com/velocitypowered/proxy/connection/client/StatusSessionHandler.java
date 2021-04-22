@@ -42,6 +42,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -168,6 +169,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
       String virtualHostStr = inbound.connectedHost().map(InetSocketAddress::getHostString)
+          .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
       List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(
           virtualHostStr, server.configuration().getAttemptConnectionOrder());
