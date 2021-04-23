@@ -168,7 +168,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     if (passthrough == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      String virtualHostStr = inbound.connectedHost().map(InetSocketAddress::getHostString)
+      String virtualHostStr = inbound.connectedHostname().map(InetSocketAddress::getHostString)
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
       List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(

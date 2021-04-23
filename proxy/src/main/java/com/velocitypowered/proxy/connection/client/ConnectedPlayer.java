@@ -50,7 +50,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -238,7 +237,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public Optional<InetSocketAddress> connectedHost() {
+  public Optional<InetSocketAddress> connectedHostname() {
     return Optional.ofNullable(virtualHost);
   }
 
@@ -616,7 +615,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
-      String virtualHostStr = connectedHost().map(InetSocketAddress::getHostString)
+      String virtualHostStr = connectedHostname().map(InetSocketAddress::getHostString)
           .orElse("")
           .toLowerCase(Locale.ROOT);
       serversToTry = server.configuration().getForcedHosts().getOrDefault(virtualHostStr,

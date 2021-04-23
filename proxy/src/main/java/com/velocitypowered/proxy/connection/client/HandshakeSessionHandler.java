@@ -213,7 +213,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public Optional<InetSocketAddress> connectedHost() {
+    public Optional<InetSocketAddress> connectedHostname() {
       return Optional.ofNullable(ping.getVhost());
     }
 

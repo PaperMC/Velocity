@@ -118,8 +118,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return result;
   }
 
-  private String getHandshakeRemoteAddress() {
-    return proxyPlayer.connectedHost().map(InetSocketAddress::getHostString).orElse("");
+  private String playerConnectedHostname() {
+    return proxyPlayer.connectedHostname().map(InetSocketAddress::getHostString).orElse("");
   }
 
   private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
@@ -128,10 +128,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
     SocketAddress playerRemoteAddress = proxyPlayer.remoteAddress();
     if (!(playerRemoteAddress instanceof InetSocketAddress)) {
-      return getHandshakeRemoteAddress();
+      return playerConnectedHostname();
     }
     StringBuilder data = new StringBuilder()
-        .append(getHandshakeRemoteAddress())
+        .append(playerConnectedHostname())
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.remoteAddress()).getHostString())
         .append('\0')
@@ -162,30 +162,31 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket();
-    handshake.setNextStatus(StateRegistry.LOGIN_ID);
-    handshake.setProtocolVersion(protocolVersion);
-    if (forwardingMode == PlayerInfoForwarding.LEGACY) {
-      handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
-      byte[] secret = server.configuration().getForwardingSecret();
-      handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
-    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(getHandshakeRemoteAddress() + HANDSHAKE_HOSTNAME_TOKEN);
-    } else {
-      handshake.setServerAddress(getHandshakeRemoteAddress());
-    }
-
+    String address = getHandshakeAddressField(forwardingMode);
     SocketAddress destinationAddr = registeredServer.serverInfo().address();
-    if (destinationAddr instanceof InetSocketAddress) {
-      handshake.setPort(((InetSocketAddress) destinationAddr).getPort());
-    }
+    int port = destinationAddr instanceof InetSocketAddress
+        ? ((InetSocketAddress) destinationAddr).getPort() : 0;
+    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket(protocolVersion,
+        address, port, StateRegistry.LOGIN_ID);
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
     mc.delayedWrite(new ServerboundServerLoginPacket(proxyPlayer.username()));
     mc.flush();
+  }
+
+  private String getHandshakeAddressField(PlayerInfoForwarding forwardingMode) {
+    if (forwardingMode == PlayerInfoForwarding.LEGACY) {
+      return createLegacyForwardingAddress();
+    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
+      byte[] secret = server.configuration().getForwardingSecret();
+      return createBungeeGuardForwardingAddress(secret);
+    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+      return playerConnectedHostname() + HANDSHAKE_HOSTNAME_TOKEN;
+    } else {
+      return playerConnectedHostname();
+    }
   }
 
   public @Nullable MinecraftConnection getConnection() {
