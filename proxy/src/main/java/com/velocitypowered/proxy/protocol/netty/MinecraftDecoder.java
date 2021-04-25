@@ -62,7 +62,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-    if (!ctx.channel().isActive()) {
+    if (!ctx.channel().isActive() || !buf.isReadable()) {
       buf.release();
       return;
     }
