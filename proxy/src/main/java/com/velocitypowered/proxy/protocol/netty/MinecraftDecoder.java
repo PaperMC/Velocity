@@ -64,8 +64,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-    if (!ctx.channel().isActive() || buf.readableBytes() == 0 && ctx.pipeline().get(MinecraftConnection.class) != null
-            && ctx.pipeline().get(MinecraftConnection.class).getAssociation() instanceof VelocityServerConnection) {
+    if (!ctx.channel().isActive() || (buf.readableBytes() == 0 && ctx.pipeline().get(MinecraftConnection.class) != null
+            && ctx.pipeline().get(MinecraftConnection.class).getAssociation() instanceof VelocityServerConnection)) {
       buf.release();
       return;
     }
