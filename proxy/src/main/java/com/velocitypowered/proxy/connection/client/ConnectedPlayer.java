@@ -17,10 +17,6 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
-import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -59,14 +55,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Chat;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
@@ -75,17 +64,6 @@ import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
@@ -100,6 +78,16 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
+import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
@@ -593,7 +581,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     VelocityConfiguration.Messages messages = this.server.getConfiguration().getMessages();
-    Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
+    Component disconnectReason = LegacyComponentSerializer
+        .legacy('&')
+        .deserialize(LegacyComponentSerializer
+            .legacy('&')
+            .serialize(GsonComponentSerializer
+                .gson()
+                .deserialize(disconnect.getReason())));
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
