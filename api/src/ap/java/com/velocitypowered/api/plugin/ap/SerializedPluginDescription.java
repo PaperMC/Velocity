@@ -60,6 +60,24 @@ public final class SerializedPluginDescription {
             .collect(Collectors.toList()), dependencies, qualifiedName);
   }
 
+  static SerializedPluginDescription from(
+          Plugin plugin,
+          String qualifiedName,
+          String name,
+          String version,
+          String description,
+          String url) {
+    List<Dependency> dependencies = new ArrayList<>();
+    for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
+      dependencies.add(new Dependency(dependency.id(), dependency.optional()));
+    }
+    return new SerializedPluginDescription(
+            plugin.id(), name, version, description, url,
+            Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty())
+                    .collect(Collectors.toList()), dependencies, qualifiedName
+    );
+  }
+
   public String getId() {
     return id;
   }

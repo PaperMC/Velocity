@@ -12,12 +12,14 @@ import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -28,6 +30,7 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
+@SupportedOptions({"velocity.name", "velocity.version", "velocity.description", "velocity.url"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
   private ProcessingEnvironment environment;
@@ -82,8 +85,15 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
       }
 
       // All good, generate the velocity-plugin.json.
-      SerializedPluginDescription description = SerializedPluginDescription
-          .from(plugin, qualifiedName.toString());
+      Map<String, String> options = environment.getOptions();
+      SerializedPluginDescription description = SerializedPluginDescription.from(
+              plugin,
+              qualifiedName.toString(),
+              getOrElse(options, "velocity.name", plugin.name()),
+              getOrElse(options, "velocity.version", plugin.version()),
+              getOrElse(options, "velocity.description", plugin.description()),
+              getOrElse(options, "velocity.url", plugin.url())
+      );
       try {
         FileObject object = environment.getFiler()
             .createResource(StandardLocation.CLASS_OUTPUT, "", "velocity-plugin.json");
@@ -98,5 +108,9 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
     }
 
     return false;
+  }
+
+  private String getOrElse(Map<String, String> map, String key, String defaultValue) {
+    return map.get(key) == null ? defaultValue : map.get(key);
   }
 }
