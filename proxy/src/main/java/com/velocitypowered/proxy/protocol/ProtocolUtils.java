@@ -61,17 +61,17 @@ public enum ProtocolUtils {
 
   private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
-      new QuietDecoderException("Bad varint decoded");
-  private static final int[] VAR_INT_BYTE_LENGTHS = new int[33];
+      new QuietDecoderException("Bad VarInt decoded");
+  private static final int[] VARINT_BYTE_LENGTHS = new int[33];
 
   static {
     // Inspired by https://richardstartin.github.io/posts/dont-use-protobuf-for-telemetry
     // This has been slightly modified in that we reduce the length to 32-bit only, since Velocity
     // doesn't look at any part of the Minecraft protocol that requires us to look at VarLongs.
     for (int i = 0; i <= 32; ++i) {
-      VAR_INT_BYTE_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
+      VARINT_BYTE_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
     }
-    VAR_INT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
+    VARINT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
   }
 
   /**
@@ -82,7 +82,7 @@ public enum ProtocolUtils {
   public static int readVarInt(ByteBuf buf) {
     int read = readVarIntSafely(buf);
     if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad varint decoded")
+      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
           : BAD_VARINT_CACHED;
     }
     return read;
@@ -108,8 +108,8 @@ public enum ProtocolUtils {
     return Integer.MIN_VALUE;
   }
 
-  public static int varintBytes(int value) {
-    return VAR_INT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
+  public static int varIntBytes(int value) {
+    return VARINT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
   }
 
   /**
@@ -118,7 +118,7 @@ public enum ProtocolUtils {
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
-    int length = varintBytes(value);
+    int length = varIntBytes(value);
     for (int i = 0; i < length; ++i) {
       buf.writeByte(((byte) ((value & 0x7F) | 0x80)));
       value >>>= 7;
