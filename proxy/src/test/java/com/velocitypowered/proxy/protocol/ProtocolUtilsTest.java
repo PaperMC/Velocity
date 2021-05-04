@@ -17,8 +17,13 @@
 
 package com.velocitypowered.proxy.protocol;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 public class ProtocolUtilsTest {
@@ -41,6 +46,95 @@ public class ProtocolUtilsTest {
       int number = (1 << i) - 1;
       assertEquals(conventionalWrittenBytes(number), ProtocolUtils.varIntBytes(number),
           "mismatch with " + i + "-bit number");
+    }
+  }
+
+  @Test
+  void testPositiveOld() {
+    ByteBuf buf = Unpooled.buffer(5);
+    for (int i = 0; i >= 0; i += 127) {
+      writeReadTestOld(buf, i);
+    }
+  }
+
+  @Test
+  void testNegativeOld() {
+    ByteBuf buf = Unpooled.buffer(5);
+    for (int i = 0; i <= 0; i -= 127) {
+      writeReadTestOld(buf, i);
+    }
+  }
+
+  private void writeReadTestOld(ByteBuf buf, int test) {
+    buf.clear();
+    writeVarIntOld(buf, test);
+    assertEquals(test, ProtocolUtils.readVarIntSafely(buf));
+  }
+
+  @Test
+  void testBytesWrittenAtBitBoundaries() {
+    ByteBuf varintNew = Unpooled.buffer(5);
+    ByteBuf varintOld = Unpooled.buffer(5);
+
+    long bytesNew = 0;
+    long bytesOld = 0;
+    for (int bit = 0; bit <= 31; bit++) {
+      int i = (1 << bit) - 1;
+
+      writeVarIntOld(varintOld, i);
+      ProtocolUtils.writeVarInt(varintNew, i);
+      assertArrayEquals(varintOld.array(), varintNew.array(),
+          "Encoding of " + i + " was invalid");
+
+      assertEquals(i, oldReadVarIntSafely(varintNew));
+      assertEquals(i, ProtocolUtils.readVarIntSafely(varintOld));
+
+      varintNew.clear();
+      varintOld.clear();
+    }
+    assertEquals(bytesNew, bytesOld, "byte sizes differ");
+  }
+
+  @Test
+  void testBytesWritten() {
+    ByteBuf varintNew = Unpooled.buffer(5);
+    ByteBuf varintOld = Unpooled.buffer(5);
+
+    long bytesNew = 0;
+    long bytesOld = 0;
+    for (int i = 0; i <= 1_000_000; i++) {
+      ProtocolUtils.writeVarInt(varintNew, i);
+      writeVarIntOld(varintOld, i);
+      bytesNew += varintNew.readableBytes();
+      bytesOld += varintOld.readableBytes();
+      varintNew.clear();
+      varintOld.clear();
+    }
+    assertEquals(bytesNew, bytesOld, "byte sizes differ");
+  }
+
+  private static int oldReadVarIntSafely(ByteBuf buf) {
+    int i = 0;
+    int maxRead = Math.min(5, buf.readableBytes());
+    for (int j = 0; j < maxRead; j++) {
+      int k = buf.readByte();
+      i |= (k & 0x7F) << j * 7;
+      if ((k & 0x80) != 128) {
+        return i;
+      }
+    }
+    return Integer.MIN_VALUE;
+  }
+
+  private void writeVarIntOld(ByteBuf buf, int value) {
+    while (true) {
+      if ((value & 0xFFFFFF80) == 0) {
+        buf.writeByte(value);
+        return;
+      }
+
+      buf.writeByte(value & 0x7F | 0x80);
+      value >>>= 7;
     }
   }
 
