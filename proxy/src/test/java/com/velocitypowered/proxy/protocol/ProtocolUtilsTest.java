@@ -83,7 +83,7 @@ public class ProtocolUtilsTest {
 
       writeVarIntOld(varintOld, i);
       ProtocolUtils.writeVarInt(varintNew, i);
-      assertArrayEquals(varintOld.array(), varintNew.array(),
+      assertArrayEquals(ByteBufUtil.getBytes(varintOld), ByteBufUtil.getBytes(varintNew),
           "Encoding of " + i + " was invalid");
 
       assertEquals(i, oldReadVarIntSafely(varintNew));
