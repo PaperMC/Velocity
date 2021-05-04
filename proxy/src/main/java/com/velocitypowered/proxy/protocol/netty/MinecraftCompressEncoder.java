@@ -39,7 +39,7 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
     int uncompressed = msg.readableBytes();
     if (uncompressed < threshold) {
       // Under the threshold, there is nothing to do.
-      ProtocolUtils.writeVarInt(out, 0);
+      out.writeByte(0);
       out.writeBytes(msg);
     } else {
       ProtocolUtils.writeVarInt(out, uncompressed);
