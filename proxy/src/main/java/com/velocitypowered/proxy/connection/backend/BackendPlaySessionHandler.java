@@ -56,12 +56,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private static final boolean BACKPRESSURE_LOG = Boolean
       .getBoolean("velocity.log-server-backpressure");
+  private static final int MAXIMUM_PACKETS_TO_FLUSH = Integer
+      .getInteger("velocity.max-packets-per-flush", 8192);
+
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
+  private int packetsFlushed;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
@@ -271,16 +275,25 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       ((PluginMessage) packet).retain();
     }
     playerConnection.delayedWrite(packet);
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
     playerConnection.delayedWrite(buf.retain());
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void readCompleted() {
     playerConnection.flush();
+    packetsFlushed = 0;
   }
 
   @Override
