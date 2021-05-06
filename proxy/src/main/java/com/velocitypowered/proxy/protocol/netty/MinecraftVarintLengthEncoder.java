@@ -24,29 +24,43 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.util.concurrent.FastThreadLocal;
 
 @ChannelHandler.Sharable
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
-  private static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
+  public static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
+  private static final ThreadLocal<Boolean> SKIP = ThreadLocal.withInitial(() -> false);
 
   private MinecraftVarintLengthEncoder() {
   }
 
   @Override
   protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-    ProtocolUtils.writeVarInt(out, msg.readableBytes());
-    out.writeBytes(msg);
+    if (SKIP.get()) {
+      SKIP.set(false);
+    } else {
+      ProtocolUtils.writeVarInt(out, msg.readableBytes());
+      out.writeBytes(msg);
+    }
   }
 
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
-        + msg.readableBytes();
-    return IS_JAVA_CIPHER
-        ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
-        : ctx.alloc().directBuffer(anticipatedRequiredCapacity);
+    if (SKIP.get()) {
+      return msg.retain();
+    } else {
+      int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
+          + msg.readableBytes();
+      return IS_JAVA_CIPHER
+          ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
+          : ctx.alloc().directBuffer(anticipatedRequiredCapacity);
+    }
+  }
+
+  public void skipNextPacket() {
+    SKIP.set(true);
   }
 }
