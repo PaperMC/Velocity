@@ -229,13 +229,13 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   void sendResourcePack(String url, byte[] hash);
 
   /**
-   * @inheritDoc
-   *
    * <strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
    * with a mod that is installed on the player's client. To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
    * {@link #getCurrentServer()}.
+   *
+   * @inheritDoc
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
