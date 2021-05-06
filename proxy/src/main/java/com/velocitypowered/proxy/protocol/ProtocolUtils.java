@@ -120,14 +120,13 @@ public enum ProtocolUtils {
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
-    int bytes = varIntBytes(value);
     // Optimization: focus on 1-3 byte VarInts as they are the most common
-    if (bytes == 1) {
-      buf.writeByte(value & 0x7f);
-    } else if (bytes == 2) {
+    if ((value & (0xFFFFFFFF << 7)) == 0) {
+      buf.writeByte(value);
+    } else if ((value & (0xFFFFFFFF << 14)) == 0) {
       int w = (value & 0x7F | 0x80) << 8 | (value >>> 7);
       buf.writeShort(w);
-    } else if (bytes == 3) {
+    } else if ((value & (0xFFFFFFFF << 21)) == 0) {
       int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
       buf.writeMedium(w);
     } else {
