@@ -23,13 +23,14 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import java.util.zip.DataFormatException;
 
-public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
+public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   private int threshold;
   private final VelocityCompressor compressor;
 
-  public MinecraftCompressEncoder(int threshold, VelocityCompressor compressor) {
+  public MinecraftCompressorAndLengthEncoder(int threshold, VelocityCompressor compressor) {
     this.threshold = threshold;
     this.compressor = compressor;
   }
@@ -39,16 +40,31 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
     int uncompressed = msg.readableBytes();
     if (uncompressed < threshold) {
       // Under the threshold, there is nothing to do.
+      ProtocolUtils.writeVarInt(out, uncompressed + 1);
       ProtocolUtils.writeVarInt(out, 0);
       out.writeBytes(msg);
     } else {
-      ProtocolUtils.writeVarInt(out, uncompressed);
+      handleCompressed(ctx, msg, out);
+    }
+  }
+
+  private void handleCompressed(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out)
+      throws DataFormatException {
+    int uncompressed = msg.readableBytes();
+    ByteBuf tmpBuf = MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, uncompressed - 1);
+    try {
+      ProtocolUtils.writeVarInt(tmpBuf, uncompressed);
       ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
       try {
-        compressor.deflate(compatibleIn, out);
+        compressor.deflate(compatibleIn, tmpBuf);
       } finally {
         compatibleIn.release();
       }
+
+      ProtocolUtils.writeVarInt(out, tmpBuf.readableBytes());
+      out.writeBytes(tmpBuf);
+    } finally {
+      tmpBuf.release();
     }
   }
 
