@@ -20,27 +20,25 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.util.ByteBufSkipList;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import io.netty.util.concurrent.FastThreadLocal;
 
 @ChannelHandler.Sharable
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
   public static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
-  private static final ThreadLocal<Boolean> SKIP = ThreadLocal.withInitial(() -> false);
+  private final ByteBufSkipList byteBufSkipList = new ByteBufSkipList();
 
   private MinecraftVarintLengthEncoder() {
   }
 
   @Override
   protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-    if (SKIP.get()) {
-      SKIP.set(false);
-    } else {
+    if (!byteBufSkipList.remove(msg)) {
       ProtocolUtils.writeVarInt(out, msg.readableBytes());
       out.writeBytes(msg);
     }
@@ -49,7 +47,7 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    if (SKIP.get()) {
+    if (byteBufSkipList.shouldSkip(msg)) {
       return msg.retain();
     } else {
       int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
@@ -60,7 +58,7 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
     }
   }
 
-  public void skipNextPacket() {
-    SKIP.set(true);
+  public void skipNextBuffer(ByteBuf buf) {
+    byteBufSkipList.add(buf);
   }
 }

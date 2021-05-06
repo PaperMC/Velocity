@@ -44,7 +44,7 @@ public class MinecraftCompressEncoder extends MessageToByteEncoder<ByteBuf> {
       ProtocolUtils.writeVarInt(out,msg.readableBytes() + 1);
       ProtocolUtils.writeVarInt(out, 0);
       out.writeBytes(msg);
-      MinecraftVarintLengthEncoder.INSTANCE.skipNextPacket();
+      MinecraftVarintLengthEncoder.INSTANCE.skipNextBuffer(out);
     } else {
       ProtocolUtils.writeVarInt(out, uncompressed);
       ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
