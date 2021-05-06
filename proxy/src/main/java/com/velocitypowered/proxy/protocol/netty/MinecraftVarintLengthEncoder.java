@@ -43,7 +43,8 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    int anticipatedRequiredCapacity = 5 + msg.readableBytes();
+    int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
+        + msg.readableBytes();
     return IS_JAVA_CIPHER
         ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
         : ctx.alloc().directBuffer(anticipatedRequiredCapacity);

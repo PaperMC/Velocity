@@ -120,15 +120,32 @@ public enum ProtocolUtils {
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
-    // Inspired by https://richardstartin.github.io/posts/dont-use-protobuf-for-telemetry
-    // This has been slightly modified in that we reduce the length to 32-bit only, since Velocity
-    // doesn't look at any part of the Minecraft protocol that requires us to look at VarLongs.
-    int continuationBytes = (31 - Integer.numberOfLeadingZeros(value)) / 7;
-    for (int i = 0; i < continuationBytes; ++i) {
-      buf.writeByte(((byte) ((value & 0x7F) | 0x80)));
+    int bytes = varIntBytes(value);
+    // Optimization: focus on 1-3 byte VarInts as they are the most common
+    if (bytes == 1) {
+      buf.writeByte(value & 0x7f);
+    } else if (bytes == 2) {
+      int w = (value & 0x7F | 0x80) << 8 | (value >>> 7);
+      buf.writeShort(w);
+    } else if (bytes == 3) {
+      int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
+      buf.writeMedium(w);
+    } else {
+      // 4 and 5 byte VarInts aren't common so split those cases off
+      writeVarIntUncommon(buf, value);
+    }
+  }
+
+  private static void writeVarIntUncommon(ByteBuf buf, int value) {
+    while (true) {
+      if ((value & 0xFFFFFF80) == 0) {
+        buf.writeByte(value);
+        return;
+      }
+
+      buf.writeByte(value & 0x7F | 0x80);
       value >>>= 7;
     }
-    buf.writeByte((byte) value);
   }
 
   public static String readString(ByteBuf buf) {
