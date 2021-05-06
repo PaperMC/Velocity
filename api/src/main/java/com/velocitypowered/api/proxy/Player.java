@@ -9,6 +9,7 @@ package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
@@ -226,4 +227,16 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * @param hash the SHA-1 hash value for the resource pack
    */
   void sendResourcePack(String url, byte[] hash);
+
+  /**
+   * @inheritDoc
+   *
+   * <strong>Note that this method does not send a plugin message to the server the player
+   * is connected to.</strong> You should only use this method if you are trying to communicate
+   * with a mod that is installed on the player's client. To send a plugin message to the server
+   * from the player, you should use the equivalent method on the instance returned by
+   * {@link #getCurrentServer()}.
+   */
+  @Override
+  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
 }
