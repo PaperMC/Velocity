@@ -18,27 +18,27 @@
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.tree.CommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.mojang.brigadier.tree.RootCommandNode;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.LegacyCommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -50,8 +50,10 @@ public class VelocityCommandManager implements CommandManager {
 
   private final CommandDispatcher<CommandSource> dispatcher;
   private final VelocityEventManager eventManager;
-  private final SuggestionsProvider<CommandSource> suggestionsProvider;
-  private final ClientCommandNodeInjector<CommandSource> injector;
+
+  private final SuggestionProvider<CommandSource> suggestionsProvider;
+  private final CommandTreeInjector<CommandSource> injector;
+  private final List<CommandRegistrar<?>> registrars;
 
   /**
    * Constructs a command manager.
@@ -61,8 +63,13 @@ public class VelocityCommandManager implements CommandManager {
   public VelocityCommandManager(final VelocityEventManager eventManager) {
     this.eventManager = Preconditions.checkNotNull(eventManager);
     this.dispatcher = new CommandDispatcher<>();
-    this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher);
-    this.injector = new ClientCommandNodeInjector<>(this.dispatcher);
+    this.suggestionsProvider = new SuggestionProvider<>(this.dispatcher);
+    this.injector = new CommandTreeInjector<>(this.dispatcher);
+    this.registrars = ImmutableList.of(
+            new BrigadierCommandRegistrar(this.dispatcher),
+            new SimpleCommandRegistrar(this.dispatcher),
+            new RawCommandRegistrar(this.dispatcher),
+            new LegacyCommandRegistrar(this.dispatcher));
   }
 
   @Override
@@ -102,57 +109,35 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    Iterator<String> aliasIterator = meta.getAliases().iterator();
-    String primaryAlias = aliasIterator.next();
-
-    LiteralCommandNode<CommandSource> aliasNode = null;
-    if (command instanceof BrigadierCommand) {
-      aliasNode = ((BrigadierCommand) command).getNode();
-    } else if (command instanceof SimpleCommand) {
-      aliasNode = CommandNodeFactory.SIMPLE.create((SimpleCommand) command, primaryAlias);
-    } else if (command instanceof RawCommand) {
-      // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
-      // have side-effect free #suggest methods. We rely on the newer RawCommand
-      // throwing UOE.
-      RawCommand asRaw = (RawCommand) command;
-      try {
-        asRaw.suggest(null, new String[0]);
-      } catch (final UnsupportedOperationException e) {
-        aliasNode = CommandNodeFactory.RAW.create(asRaw, primaryAlias);
-      } catch (final Exception ignored) {
-        // The implementation probably relies on a non-null source
+    for (final CommandRegistrar<?> registrar : this.registrars) {
+      if (this.tryRegister(registrar, command, meta)) {
+        return;
       }
     }
-    if (aliasNode == null) {
-      aliasNode = CommandNodeFactory.LEGACY.create(command, primaryAlias);
-    }
-
-    if (!(command instanceof BrigadierCommand)) {
-      for (CommandNode<CommandSource> hint : meta.getHints()) {
-        aliasNode.addChild(VelocityCommands.newHintingNode(hint));
-      }
-    }
-
-    this.registerAlias(aliasNode);
-    while (aliasIterator.hasNext()) {
-      String currentAlias = aliasIterator.next();
-      final LiteralCommandNode<CommandSource> redirect =
-              VelocityCommands.newAliasRedirect(aliasNode, currentAlias);
-      this.registerAlias(redirect);
-    }
+    // TODO(velocity-2): throw IAE here (command doesn't implement any supported superinterface)
+    // For now the legacy registrar is a catch-all and we shouldn't reach this.
+    throw new AssertionError("Got unregistrable command " + command);
   }
 
-  private void registerAlias(final LiteralCommandNode<CommandSource> literal) {
-    // Registration overrides previous aliased command
-    this.unregister(literal.getName());
-    dispatcher.getRoot().addChild(literal);
+  private <T extends Command> boolean tryRegister(final CommandRegistrar<T> registrar,
+                                                  final Command command, final CommandMeta meta) {
+    final Class<T> superClass = registrar.registrableSuperInterface();
+    if (!superClass.isInstance(command)) {
+      return false;
+    }
+    try {
+      registrar.register(superClass.cast(command), meta);
+      return true;
+    } catch (final IllegalArgumentException ignored) {
+      return false;
+    }
   }
 
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    // If the removed node is a primary alias all other nodes will still work
-    // as redirects preserve the literal in the graph.
+    // The literals of secondary aliases will preserve the children of
+    // the removed literal in the graph.
     dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
   }
 
@@ -176,7 +161,7 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public boolean executeImmediately(final CommandSource source, String cmdLine) {
+  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -256,11 +241,11 @@ public class VelocityCommandManager implements CommandManager {
    */
   private String normalizeInput(final String cmdLine, final boolean trim) {
     final String command = trim ? cmdLine.trim() : cmdLine;
-    int firstSpace = command.indexOf(' ');
-    if (firstSpace != -1) {
+    int firstSep = command.indexOf(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
+    if (firstSep != -1) {
       // Aliases are case-insensitive, arguments are not
-      return command.substring(0, firstSpace).toLowerCase(Locale.ENGLISH)
-              + command.substring(firstSpace);
+      return command.substring(0, firstSep).toLowerCase(Locale.ENGLISH)
+              + command.substring(firstSep);
     } else {
       return command.toLowerCase(Locale.ENGLISH);
     }
@@ -282,7 +267,7 @@ public class VelocityCommandManager implements CommandManager {
     return dispatcher;
   }
 
-  public ClientCommandNodeInjector<CommandSource> getInjector() {
+  public CommandTreeInjector<CommandSource> getInjector() {
     return injector;
   }
 }

@@ -28,6 +28,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.command.ClientCommandNodeInjector;
+import com.velocitypowered.proxy.command.CommandTreeInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -195,8 +196,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.getConfiguration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      final ClientCommandNodeInjector<CommandSource> injector =
-              server.getCommandManager().getInjector();
+      final CommandTreeInjector<CommandSource> injector = server.getCommandManager().getInjector();
       injector.inject(serverConn.getPlayer(), rootNode);
     }
 

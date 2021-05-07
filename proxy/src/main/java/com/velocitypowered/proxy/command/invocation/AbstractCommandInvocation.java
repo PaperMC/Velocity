@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.invocation;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandInvocation;

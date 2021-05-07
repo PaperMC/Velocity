@@ -40,11 +40,13 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
+import com.velocitypowered.proxy.command.brigadier.GreedyArgumentCommandNode;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides parsing methods common to most {@link Command} implementations.
@@ -53,11 +55,11 @@ import java.util.function.Predicate;
  * in this class.
  *
  * <p>A <i>fully-built</i> alias node is a node returned by
- * {@link CommandNodeFactory#create(Command, String)}.
+ * @link CommandNodeFactory#create(Command, String)}.
  */
-final class VelocityCommands {
+public final class VelocityCommands {
 
-  static final String ARGS_NODE_NAME = "arguments";
+  public static final String ARGS_NODE_NAME = "arguments";
 
   // Parsing
 
@@ -67,7 +69,7 @@ final class VelocityCommands {
    * @param context the context
    * @return the command alias
    */
-  static String readAlias(final CommandContext<?> context) {
+  public static String readAlias(final CommandContext<?> context) {
     if (context.getParent() != null) {
       // This is the child context of an alias redirect. Command implementations are interested
       // in knowing the used alias, i.e. the name of the first node in the root context.
@@ -82,11 +84,10 @@ final class VelocityCommands {
    * @param context the context builder
    * @return the command alias
    */
-  static String readAlias(final CommandContextBuilder<?> context) {
+  public static String readAlias(final CommandContextBuilder<?> context) {
     if (context.getParent() != null) {
       return readAlias(context.getParent());
     }
-
     return readAlias(context.getNodes());
   }
 
@@ -107,7 +108,7 @@ final class VelocityCommands {
    * @param <V> the type of the arguments
    * @return the command arguments
    */
-  static <V> V readArguments(final CommandContext<?> context,
+  public static <V> V readArguments(final CommandContext<?> context,
                              final Class<V> type, final V fallback) {
     return readArguments(context.getArguments(), type, fallback);
   }
@@ -122,7 +123,7 @@ final class VelocityCommands {
    * @param <V> the type of the arguments
    * @return the command arguments
    */
-  static <V> V readArguments(final CommandContextBuilder<?> context,
+  public static <V> V readArguments(final CommandContextBuilder<?> context,
                              final Class<V> type, final V fallback) {
     return readArguments(context.getArguments(), type, fallback);
   }
@@ -142,9 +143,18 @@ final class VelocityCommands {
     }
   }
 
+  static <S> @Nullable GreedyArgumentCommandNode<S, ?> getArgumentsNode(
+          final LiteralCommandNode<S> alias) {
+    final CommandNode<S> node = alias.getChild(ARGS_NODE_NAME);
+    if (node instanceof GreedyArgumentCommandNode) {
+      return (GreedyArgumentCommandNode<S, ?>) node;
+    }
+    return null;
+  }
+
   // Creation
 
-  /**
+  /*/**
    * Returns a node with the given alias that forwards its execution to the specified
    * fully-built primary alias node.
    *
@@ -152,6 +162,7 @@ final class VelocityCommands {
    * @param alias the case-insensitive alias
    * @return a literal node with a redirect to the given target node
    */
+  /*@Deprecated
   static LiteralCommandNode<CommandSource> newAliasRedirect(
           final LiteralCommandNode<CommandSource> target, final String alias) {
     Preconditions.checkNotNull(target, "target");
@@ -175,29 +186,29 @@ final class VelocityCommands {
    * @param <V> the type of the arguments
    * @return the arguments node
    */
+  /*@Deprecated
   static <V> ArgumentCommandNode<CommandSource, String> newArgumentsNode(
           final LiteralCommandNode<CommandSource> aliasNode, final ArgumentType<V> type,
           final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader>
                   contextRequirement, final SuggestionProvider<CommandSource> customSuggestions) {
     return new ArgumentsCommandNode<>(type, aliasNode.getCommand(), source -> true,
             contextRequirement, customSuggestions);
-  }
+  }*/
 
   /**
    * Returns whether the given node is an arguments node.
    *
    * @param node the node to check
-   * @return {@code true} if the node is an arguments node
-   * @see #newArgumentsNode(LiteralCommandNode, ArgumentType, BiPredicate, SuggestionProvider) to
-   *      create an arguments node
+   * @return true if the node is an arguments node; false otherwise
    */
   public static boolean isArgumentsNode(final CommandNode<?> node) {
-    return node instanceof ArgumentsCommandNode;
+    return node instanceof GreedyArgumentCommandNode && node.getName().equals(ARGS_NODE_NAME);
   }
 
-  // The vanilla client doesn't know how to serialize the ArgumentTypes used by the invocation
+  /*// The vanilla client doesn't know how to serialize the ArgumentTypes used by the invocation
   // factories. The data sent to the client look like it comes from a StringArgumentType, but
   // is generated by the given parsingType.
+  @Deprecated
   private static final class ArgumentsCommandNode<T>
           extends ArgumentCommandNode<CommandSource, String> {
 
@@ -270,37 +281,7 @@ final class VelocityCommands {
       result = 31 * result + parsingType.hashCode();
       return result;
     }
-  }
-
-  // Hinting
-
-  /**
-   * Returns a node to use for hinting the arguments of a command. Hint nodes are sent to
-   * 1.13+ clients, and the proxy uses them for providing suggestions.
-   *
-   * <p>A hint node is able to provide suggestions if and only if the requirements of
-   * the corresponding arguments node pass.
-   *
-   * @param hint the node containing hinting metadata
-   * @return the hinting command node
-   * @throws IllegalArgumentException if the hinting node is executable or has a redirect
-   */
-  static CommandNode<CommandSource> newHintingNode(final CommandNode<CommandSource> hint) {
-    Preconditions.checkNotNull(hint, "hint");
-    if (hint.getCommand() != null) {
-      throw new IllegalArgumentException("Cannot use an executable node for hinting");
-    }
-    if (hint.getRedirect() != null) {
-      throw new IllegalArgumentException("Cannot use a node with a redirect for hinting");
-    }
-    ArgumentBuilder<CommandSource, ?> builder = hint.createBuilder()
-            // Requirement checking is performed by SuggestionsProvider
-            .requires(source -> false);
-    for (final CommandNode<CommandSource> child : hint.getChildren()) {
-      builder.then(newHintingNode(child));
-    }
-    return builder.build();
-  }
+  }*/
 
   private VelocityCommands() {
     throw new AssertionError();

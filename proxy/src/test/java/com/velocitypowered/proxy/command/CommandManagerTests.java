@@ -146,12 +146,9 @@ public class CommandManagerTests {
             .<CommandSource>literal("bar")
             .executes(context -> fail())
             .build();
-    final CommandMeta meta = manager.metaBuilder("foo")
-            .hint(hintNode)
-            .build();
 
     assertThrows(IllegalArgumentException.class, () -> {
-      manager.register(meta, new DummyCommand());
+      manager.metaBuilder("foo").hint(hintNode);
     });
   }
 
@@ -164,10 +161,9 @@ public class CommandManagerTests {
             .<CommandSource>literal("bar")
             .redirect(targetNode)
             .build();
-    final CommandMeta meta = manager.metaBuilder("foo").hint(hintNode).build();
 
     assertThrows(IllegalArgumentException.class, () -> {
-      manager.register(meta, new DummyCommand());
+      manager.metaBuilder("foo").hint(hintNode);
     });
   }
 

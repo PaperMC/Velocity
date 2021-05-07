@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.invocation;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
@@ -31,7 +31,7 @@ import com.velocitypowered.api.command.CommandSource;
 public interface CommandInvocationFactory<I extends CommandInvocation<?>> {
 
   /**
-   * Returns an invocation context for the given Brigadier context.
+   * Returns an invocation context for the given context object.
    *
    * @param context the command context
    * @return the built invocation context

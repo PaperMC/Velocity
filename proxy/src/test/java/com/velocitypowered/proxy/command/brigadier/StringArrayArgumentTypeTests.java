@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.brigadier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +27,13 @@ import org.junit.jupiter.api.Test;
 public class StringArrayArgumentTypeTests {
 
   private static final StringArrayArgumentType TYPE = StringArrayArgumentType.INSTANCE;
+
+  @Test
+  void testEmptyString() throws CommandSyntaxException {
+    final StringReader reader = new StringReader("");
+    assertArrayEquals(new String[0], TYPE.parse(reader));
+    assertFalse(reader.canRead());
+  }
 
   @Test
   void testParseWord() throws CommandSyntaxException {

@@ -15,18 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.invocation;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.proxy.command.VelocityCommands;
 
-final class RawCommandInvocation extends AbstractCommandInvocation<String>
+public final class RawCommandInvocation extends AbstractCommandInvocation<String>
         implements RawCommand.Invocation {
 
-  static final Factory FACTORY = new Factory();
+  public static final Factory FACTORY = new Factory();
 
   private static final class Factory implements CommandInvocationFactory<RawCommand.Invocation> {
 
@@ -55,13 +56,15 @@ final class RawCommandInvocation extends AbstractCommandInvocation<String>
 
   @Override
   public String alias() {
-    return alias;
+    return this.alias;
   }
 
   @Override
   public String toString() {
     return "RawCommandInvocation{"
-            + "alias='" + this.alias + '\''
+            + "source='" + this.source() + '\''
+            + ", alias='" + this.alias + '\''
+            + ", arguments='" + this.arguments() + '\''
             + '}';
   }
 }
