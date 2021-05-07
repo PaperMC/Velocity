@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
@@ -39,8 +38,8 @@ import jdk.internal.jline.internal.Nullable;
  */
 public final class CommandTreeInjector<S> {
 
-  private static final StringRange INJECT_RANGE = StringRange.at(0);
-  private static final StringReader INJECT_READER = new StringReader("");
+  private static final StringRange ALIAS_RANGE = StringRange.at(0);
+  private static final StringReader ALIAS_READER = new StringReader("");
 
   private final CommandDispatcher<S> dispatcher;
 
@@ -68,8 +67,8 @@ public final class CommandTreeInjector<S> {
       }
 
       final CommandContextBuilder<S> context = rootContext.copy();
-      context.withNode(node, INJECT_RANGE);
-      if (!node.canUse(context, INJECT_READER)) {
+      context.withNode(node, ALIAS_RANGE);
+      if (!node.canUse(context, ALIAS_READER)) {
         continue;
       }
 

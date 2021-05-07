@@ -17,35 +17,17 @@
 
 package com.velocitypowered.proxy.command;
 
-import com.google.common.base.Preconditions;
-import com.mojang.brigadier.ImmutableStringReader;
-import com.mojang.brigadier.RedirectModifier;
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.ParsedCommandNode;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.proxy.command.brigadier.GreedyArgumentCommandNode;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -53,9 +35,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * In particular, {@link InvocableCommand}s and legacy commands use the same logic for
  * creating and parsing the alias and arguments {@link CommandNode}s, which is contained
  * in this class.
- *
- * <p>A <i>fully-built</i> alias node is a node returned by
- * @link CommandNodeFactory#create(Command, String)}.
  */
 public final class VelocityCommands {
 
@@ -70,11 +49,6 @@ public final class VelocityCommands {
    * @return the command alias
    */
   public static String readAlias(final CommandContext<?> context) {
-    if (context.getParent() != null) {
-      // This is the child context of an alias redirect. Command implementations are interested
-      // in knowing the used alias, i.e. the name of the first node in the root context.
-      return readAlias(context.getParent());
-    }
     return readAlias(context.getNodes());
   }
 
@@ -85,9 +59,6 @@ public final class VelocityCommands {
    * @return the command alias
    */
   public static String readAlias(final CommandContextBuilder<?> context) {
-    if (context.getParent() != null) {
-      return readAlias(context.getParent());
-    }
     return readAlias(context.getNodes());
   }
 
@@ -143,6 +114,14 @@ public final class VelocityCommands {
     }
   }
 
+  /**
+   * Returns the arguments node for the command represented by the given alias node,
+   * if present; otherwise returns {@code null}.
+   *
+   * @param alias the alias node
+   * @param <S> the type of the command source
+   * @return the arguments node, or {@code null} if not present
+   */
   static <S> @Nullable GreedyArgumentCommandNode<S, ?> getArgumentsNode(
           final LiteralCommandNode<S> alias) {
     final CommandNode<S> node = alias.getChild(ARGS_NODE_NAME);
@@ -151,49 +130,6 @@ public final class VelocityCommands {
     }
     return null;
   }
-
-  // Creation
-
-  /*/**
-   * Returns a node with the given alias that forwards its execution to the specified
-   * fully-built primary alias node.
-   *
-   * @param target the target alias node
-   * @param alias the case-insensitive alias
-   * @return a literal node with a redirect to the given target node
-   */
-  /*@Deprecated
-  static LiteralCommandNode<CommandSource> newAliasRedirect(
-          final LiteralCommandNode<CommandSource> target, final String alias) {
-    Preconditions.checkNotNull(target, "target");
-    Preconditions.checkNotNull(alias, "alias");
-    return LiteralArgumentBuilder
-            .<CommandSource>literal(alias)
-            .requires(target.getRequirement())
-            .requiresWithContext(target.getContextRequirement())
-            .redirect(target)
-            .build();
-  }
-
-  /**
-   * Returns an arguments node for the command represented by the given fully-built
-   * primary alias node.
-   *
-   * @param aliasNode the command alias node
-   * @param type the type of the arguments
-   * @param contextRequirement the arguments node context requirement
-   * @param customSuggestions the suggestion provider for the arguments node
-   * @param <V> the type of the arguments
-   * @return the arguments node
-   */
-  /*@Deprecated
-  static <V> ArgumentCommandNode<CommandSource, String> newArgumentsNode(
-          final LiteralCommandNode<CommandSource> aliasNode, final ArgumentType<V> type,
-          final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader>
-                  contextRequirement, final SuggestionProvider<CommandSource> customSuggestions) {
-    return new ArgumentsCommandNode<>(type, aliasNode.getCommand(), source -> true,
-            contextRequirement, customSuggestions);
-  }*/
 
   /**
    * Returns whether the given node is an arguments node.
@@ -204,84 +140,6 @@ public final class VelocityCommands {
   public static boolean isArgumentsNode(final CommandNode<?> node) {
     return node instanceof GreedyArgumentCommandNode && node.getName().equals(ARGS_NODE_NAME);
   }
-
-  /*// The vanilla client doesn't know how to serialize the ArgumentTypes used by the invocation
-  // factories. The data sent to the client look like it comes from a StringArgumentType, but
-  // is generated by the given parsingType.
-  @Deprecated
-  private static final class ArgumentsCommandNode<T>
-          extends ArgumentCommandNode<CommandSource, String> {
-
-    private final ArgumentType<T> parsingType;
-
-    ArgumentsCommandNode(
-            final ArgumentType<T> parsingType,
-            final com.mojang.brigadier.Command<CommandSource> command,
-            final Predicate<CommandSource> requirement,
-            final BiPredicate<CommandContextBuilder<CommandSource>, ImmutableStringReader>
-                    contextRequirement, final SuggestionProvider<CommandSource> customSuggestions) {
-      super(ARGS_NODE_NAME, StringArgumentType.greedyString(), command, requirement,
-              contextRequirement, null, null, false,
-              Preconditions.checkNotNull(customSuggestions, "customSuggestions"));
-      this.parsingType = Preconditions.checkNotNull(parsingType, "parsingType");
-    }
-
-    @Override
-    public void parse(final StringReader reader,
-                      final CommandContextBuilder<CommandSource> contextBuilder)
-            throws CommandSyntaxException {
-      // Same as overridden method, except this uses the parsingType
-      final int start = reader.getCursor();
-      final T result = this.parsingType.parse(reader);
-      final ParsedArgument<CommandSource, T> parsed =
-              new ParsedArgument<>(start, reader.getCursor(), result);
-
-      contextBuilder.withArgument(getName(), parsed);
-      contextBuilder.withNode(this, parsed.getRange());
-    }
-
-    @Override
-    public CompletableFuture<Suggestions> listSuggestions(
-            final CommandContext<CommandSource> context, final SuggestionsBuilder builder)
-            throws CommandSyntaxException {
-      return getCustomSuggestions().getSuggestions(context, builder);
-    }
-
-    @Override
-    public boolean isValidInput(final String input) {
-      return true; // all strings are valid arguments
-    }
-
-    @Override
-    public RequiredArgumentBuilder<CommandSource, String> createBuilder() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addChild(final CommandNode<CommandSource> node) {
-      throw new UnsupportedOperationException("Cannot add children to arguments node");
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      final ArgumentsCommandNode<?> that = (ArgumentsCommandNode<?>) o;
-      return parsingType.equals(that.parsingType);
-    }
-
-    @Override
-    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + parsingType.hashCode();
-      return result;
-    }
-  }*/
 
   private VelocityCommands() {
     throw new AssertionError();
