@@ -29,7 +29,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
-  private static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
+  public static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
 
   private MinecraftVarintLengthEncoder() {
   }
