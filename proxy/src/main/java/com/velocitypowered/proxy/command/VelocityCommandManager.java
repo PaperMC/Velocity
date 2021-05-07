@@ -263,10 +263,6 @@ public class VelocityCommandManager implements CommandManager {
     return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
   }
 
-  public CommandDispatcher<CommandSource> getDispatcher() {
-    return dispatcher;
-  }
-
   public CommandTreeInjector<CommandSource> getInjector() {
     return injector;
   }
