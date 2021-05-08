@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
+import static com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder.IS_JAVA_CIPHER;
+
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -50,36 +52,37 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
 
   private void handleCompressed(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out)
       throws DataFormatException {
+    ProtocolUtils.writeVarIntAs3Bytes(out, 0); //Dummy packet length
     int uncompressed = msg.readableBytes();
-    ByteBuf tmpBuf = MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, uncompressed - 1);
+    ProtocolUtils.writeVarInt(out, uncompressed);
+    ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
     try {
-      ProtocolUtils.writeVarInt(tmpBuf, uncompressed);
-      ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
-      try {
-        compressor.deflate(compatibleIn, tmpBuf);
-      } finally {
-        compatibleIn.release();
-      }
-
-      ProtocolUtils.writeVarInt(out, tmpBuf.readableBytes());
-      out.writeBytes(tmpBuf);
+      compressor.deflate(compatibleIn, out);
     } finally {
-      tmpBuf.release();
+      compatibleIn.release();
     }
+
+    int writerIndex = out.writerIndex();
+    int packetLength = out.readableBytes() - 3;
+    out.writerIndex(0);
+    ProtocolUtils.writeVarIntAs3Bytes(out, packetLength); //Rewrite packet length
+    out.writerIndex(writerIndex);
   }
 
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    // We allocate bytes to be compressed plus 1 byte. This covers two cases:
-    //
-    // - Compression
-    //    According to https://github.com/ebiggers/libdeflate/blob/master/libdeflate.h#L103,
-    //    if the data compresses well (and we do not have some pathological case) then the maximum
-    //    size the compressed size will ever be is the input size minus one.
-    // - Uncompressed
-    //    This is fairly obvious - we will then have one more than the uncompressed size.
-    int initialBufferSize = msg.readableBytes() + 1;
+    int uncompressed = msg.readableBytes();
+    if (uncompressed < threshold) {
+      int finalBufferSize = uncompressed + 1;
+      finalBufferSize += ProtocolUtils.varIntBytes(finalBufferSize);
+      return IS_JAVA_CIPHER
+          ? ctx.alloc().heapBuffer(finalBufferSize)
+          : ctx.alloc().directBuffer(finalBufferSize);
+    }
+
+    // (maximum data length after compression) + packet length varint + uncompressed data varint
+    int initialBufferSize = (uncompressed - 1) + 3 + ProtocolUtils.varIntBytes(uncompressed);
     return MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, initialBufferSize);
   }
 

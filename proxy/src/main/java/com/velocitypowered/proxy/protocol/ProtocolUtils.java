@@ -147,6 +147,16 @@ public enum ProtocolUtils {
     }
   }
 
+  /**
+   * Writes all integers as 3 bytes Minecraft-style VarInt to the specified {@code buf}.
+   * @param buf the buffer to read from
+   * @param value the integer to write
+   */
+  public static void writeVarIntAs3Bytes(ByteBuf buf, int value) {
+    int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
+    buf.writeMedium(w);
+  }
+
   public static String readString(ByteBuf buf) {
     return readString(buf, DEFAULT_MAX_STRING_SIZE);
   }
