@@ -29,6 +29,9 @@ import java.util.zip.DataFormatException;
 
 public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
+  private static final boolean MUST_USE_SAFE_AND_SLOW_COMPRESSION_HANDLING =
+      Boolean.getBoolean("velocity.increased-compression-cap");
+
   private int threshold;
   private final VelocityCompressor compressor;
 
@@ -46,27 +49,60 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
       ProtocolUtils.writeVarInt(out, 0);
       out.writeBytes(msg);
     } else {
-      handleCompressed(ctx, msg, out);
+      if (MUST_USE_SAFE_AND_SLOW_COMPRESSION_HANDLING) {
+        handleCompressedSafe(ctx, msg, out);
+      } else {
+        handleCompressedFast(ctx, msg, out);
+      }
     }
   }
 
-  private void handleCompressed(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out)
+  private void handleCompressedFast(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out)
       throws DataFormatException {
-    ProtocolUtils.writeVarIntAs3Bytes(out, 0); //Dummy packet length
     int uncompressed = msg.readableBytes();
+
+    ProtocolUtils.writeVarIntAs3Bytes(out, 0); // Dummy packet length
     ProtocolUtils.writeVarInt(out, uncompressed);
     ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
+
+    int startCompressed = out.writerIndex();
     try {
       compressor.deflate(compatibleIn, out);
     } finally {
       compatibleIn.release();
     }
+    int compressedLength = out.writerIndex() - startCompressed;
+    if (compressedLength >= 1 << 21) {
+      throw new DataFormatException("The server sent a very large (over 2MiB compressed) packet. "
+          + "Please restart Velocity with the JVM flag -Dvelocity.increased-compression-cap=true "
+          + "to fix this issue.");
+    }
 
     int writerIndex = out.writerIndex();
     int packetLength = out.readableBytes() - 3;
     out.writerIndex(0);
-    ProtocolUtils.writeVarIntAs3Bytes(out, packetLength); //Rewrite packet length
+    ProtocolUtils.writeVarIntAs3Bytes(out, packetLength); // Rewrite packet length
     out.writerIndex(writerIndex);
+  }
+
+  private void handleCompressedSafe(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out)
+      throws DataFormatException {
+    int uncompressed = msg.readableBytes();
+    ByteBuf tmpBuf = MoreByteBufUtils.preferredBuffer(ctx.alloc(), compressor, uncompressed - 1);
+    try {
+      ProtocolUtils.writeVarInt(tmpBuf, uncompressed);
+      ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
+      try {
+        compressor.deflate(compatibleIn, tmpBuf);
+      } finally {
+        compatibleIn.release();
+      }
+
+      ProtocolUtils.writeVarInt(out, tmpBuf.readableBytes());
+      out.writeBytes(tmpBuf);
+    } finally {
+      tmpBuf.release();
+    }
   }
 
   @Override
