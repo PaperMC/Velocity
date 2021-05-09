@@ -33,7 +33,10 @@ public class ClientboundResourcePackRequestPacket implements Packet {
     final String hash = ProtocolUtils.readString(buf);
     return new ClientboundResourcePackRequestPacket(url, hash);
   };
-  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeString(out, packet.url);
+    ProtocolUtils.writeString(out, packet.hash);
+  };
 
   private final String url;
   private final String hash;
@@ -41,12 +44,6 @@ public class ClientboundResourcePackRequestPacket implements Packet {
   public ClientboundResourcePackRequestPacket(final String url, final String hash) {
     this.url = Objects.requireNonNull(url, "url");
     this.hash = Objects.requireNonNull(hash, "hash");
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, url);
-    ProtocolUtils.writeString(buf, hash);
   }
 
   @Override

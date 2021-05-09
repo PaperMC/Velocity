@@ -54,7 +54,7 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public Optional<InetSocketAddress> connectedHost() {
+  public Optional<InetSocketAddress> connectedHostname() {
     return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
   }
 
