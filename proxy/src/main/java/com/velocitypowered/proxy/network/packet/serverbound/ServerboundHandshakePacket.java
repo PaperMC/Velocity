@@ -35,29 +35,23 @@ public class ServerboundHandshakePacket implements Packet {
     final int nextStatus = ProtocolUtils.readVarInt(buf);
     return new ServerboundHandshakePacket(protocolVersion, hostname, port, nextStatus);
   };
-  public static final PacketWriter<ServerboundHandshakePacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ServerboundHandshakePacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeVarInt(out, packet.protocolVersion.protocol());
+    ProtocolUtils.writeString(out, packet.serverAddress);
+    out.writeShort(packet.port);
+    ProtocolUtils.writeVarInt(out, packet.nextStatus);
+  };
 
-  private ProtocolVersion protocolVersion;
-  private String serverAddress = "";
-  private int port;
-  private int nextStatus;
-
-  public ServerboundHandshakePacket() {
-  }
+  private final ProtocolVersion protocolVersion;
+  private final String serverAddress;
+  private final int port;
+  private final int nextStatus;
 
   public ServerboundHandshakePacket(final ProtocolVersion protocolVersion, final String hostname, final int port, final int nextStatus) {
     this.protocolVersion = protocolVersion;
     this.serverAddress = hostname;
     this.port = port;
     this.nextStatus = nextStatus;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion ignored) {
-    ProtocolUtils.writeVarInt(buf, this.protocolVersion.protocol());
-    ProtocolUtils.writeString(buf, this.serverAddress);
-    buf.writeShort(this.port);
-    ProtocolUtils.writeVarInt(buf, this.nextStatus);
   }
 
   @Override
@@ -69,36 +63,16 @@ public class ServerboundHandshakePacket implements Packet {
     return protocolVersion;
   }
 
-  @Deprecated
-  public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.protocolVersion = protocolVersion;
-  }
-
   public String getServerAddress() {
     return serverAddress;
-  }
-
-  @Deprecated
-  public void setServerAddress(String serverAddress) {
-    this.serverAddress = serverAddress;
   }
 
   public int getPort() {
     return port;
   }
 
-  @Deprecated
-  public void setPort(int port) {
-    this.port = port;
-  }
-
   public int getNextStatus() {
     return nextStatus;
-  }
-
-  @Deprecated
-  public void setNextStatus(int nextStatus) {
-    this.nextStatus = nextStatus;
   }
 
   @Override

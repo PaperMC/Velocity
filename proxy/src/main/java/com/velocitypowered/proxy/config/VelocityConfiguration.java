@@ -42,6 +42,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -578,9 +579,11 @@ public class VelocityConfiguration implements ProxyConfig {
         Map<String, List<String>> forcedHosts = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
-            forcedHosts.put(entry.getKey(), ImmutableList.of(entry.getValue()));
+            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
+                ImmutableList.of(entry.getValue()));
           } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(entry.getKey(), ImmutableList.copyOf((List<String>) entry.getValue()));
+            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
+                ImmutableList.copyOf((List<String>) entry.getValue()));
           } else {
             throw new IllegalStateException(
                 "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");

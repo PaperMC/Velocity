@@ -42,7 +42,16 @@ public class ClientboundServerLoginSuccessPacket implements Packet {
     final String username = ProtocolUtils.readString(buf, 16);
     return new ClientboundServerLoginSuccessPacket(uuid, username);
   };
-  public static final PacketWriter<ClientboundServerLoginSuccessPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ClientboundServerLoginSuccessPacket> ENCODER = (out, packet, version) -> {
+    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
+      ProtocolUtils.writeUuidIntArray(out, packet.uuid);
+    } else if (version.gte(ProtocolVersion.MINECRAFT_1_7_6)) {
+      ProtocolUtils.writeString(out, packet.uuid.toString());
+    } else {
+      ProtocolUtils.writeString(out, UuidUtils.toUndashed(packet.uuid));
+    }
+    ProtocolUtils.writeString(out, packet.username);
+  };
 
   private final UUID uuid;
   private final String username;
@@ -50,18 +59,6 @@ public class ClientboundServerLoginSuccessPacket implements Packet {
   public ClientboundServerLoginSuccessPacket(final UUID uuid, final String username) {
     this.uuid = Objects.requireNonNull(uuid, "uuid");
     this.username = Objects.requireNonNull(username, "username");
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
-      ProtocolUtils.writeUuidIntArray(buf, uuid);
-    } else if (version.gte(ProtocolVersion.MINECRAFT_1_7_6)) {
-      ProtocolUtils.writeString(buf, uuid.toString());
-    } else {
-      ProtocolUtils.writeString(buf, UuidUtils.toUndashed(uuid));
-    }
-    ProtocolUtils.writeString(buf, username);
   }
 
   @Override

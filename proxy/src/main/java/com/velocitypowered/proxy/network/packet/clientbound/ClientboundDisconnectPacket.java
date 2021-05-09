@@ -31,13 +31,13 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundDisconnectPacket implements Packet {
-  public static final PacketReader<ClientboundDisconnectPacket> DECODER = PacketReader.method(ClientboundDisconnectPacket::new);
-  public static final PacketWriter<ClientboundDisconnectPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketReader<ClientboundDisconnectPacket> DECODER = (buf, version) ->
+      new ClientboundDisconnectPacket(ProtocolUtils.readString(buf));
+  public static final PacketWriter<ClientboundDisconnectPacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeString(out, packet.reason);
+  };
 
-  private @Nullable String reason;
-
-  public ClientboundDisconnectPacket() {
-  }
+  private final String reason;
 
   public ClientboundDisconnectPacket(String reason) {
     this.reason = Preconditions.checkNotNull(reason, "reason");
@@ -48,23 +48,6 @@ public class ClientboundDisconnectPacket implements Packet {
       throw new IllegalStateException("No reason specified");
     }
     return reason;
-  }
-
-  public void setReason(@Nullable String reason) {
-    this.reason = reason;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    reason = ProtocolUtils.readString(buf);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    if (reason == null) {
-      throw new IllegalStateException("No reason specified.");
-    }
-    ProtocolUtils.writeString(buf, reason);
   }
 
   @Override
