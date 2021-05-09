@@ -61,7 +61,7 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
       throws DataFormatException {
     int uncompressed = msg.readableBytes();
 
-    ProtocolUtils.writeVarIntAs3Bytes(out, 0); // Dummy packet length
+    ProtocolUtils.write21BitVarInt(out, 0); // Dummy packet length
     ProtocolUtils.writeVarInt(out, uncompressed);
     ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
 
@@ -81,7 +81,7 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
     int writerIndex = out.writerIndex();
     int packetLength = out.readableBytes() - 3;
     out.writerIndex(0);
-    ProtocolUtils.writeVarIntAs3Bytes(out, packetLength); // Rewrite packet length
+    ProtocolUtils.write21BitVarInt(out, packetLength); // Rewrite packet length
     out.writerIndex(writerIndex);
   }
 

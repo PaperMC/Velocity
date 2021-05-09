@@ -81,7 +81,7 @@ public class ProtocolUtilsTest {
 
   private void writeReadTest3Bytes(ByteBuf buf, int test) {
     buf.clear();
-    ProtocolUtils.writeVarIntAs3Bytes(buf, test);
+    ProtocolUtils.write21BitVarInt(buf, test);
     assertEquals(test, ProtocolUtils.readVarInt(buf));
   }
 
