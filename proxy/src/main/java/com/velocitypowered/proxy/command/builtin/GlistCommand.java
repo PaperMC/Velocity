@@ -37,6 +37,7 @@ import java.util.Optional;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class GlistCommand {
@@ -104,19 +105,11 @@ public class GlistCommand {
 
   private void sendTotalProxyCount(CommandSource target) {
     int online = server.countConnectedPlayers();
-    target.sendMessage(Identity.nil(), Component.text()
-        .append(Component.text(Integer.toString(online), NamedTextColor.GREEN))
-        .append(Component.space())
-        .append(Component.translatable(
-            online == 1
-                ? "velocity.command.glist-player-singular"
-                : "velocity.command.glist-player-plural",
-            NamedTextColor.YELLOW
-        ))
-        .append(Component.space())
-        .append(Component.translatable("velocity.command.glist-total-suffix",
-            NamedTextColor.YELLOW))
-        .build());
+    TranslatableComponent msg = online == 1
+        ? Component.translatable("velocity.command.glist-player-singular")
+        : Component.translatable("velocity.command.glist-player-plural");
+    target.sendMessage(msg.color(NamedTextColor.YELLOW)
+        .args(Component.text(Integer.toString(online), NamedTextColor.GREEN)));
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {

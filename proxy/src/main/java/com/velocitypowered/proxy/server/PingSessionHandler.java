@@ -50,20 +50,25 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket();
-    handshake.setNextStatus(StateRegistry.STATUS_ID);
-
     SocketAddress address = server.serverInfo().address();
+    String hostname;
+    int port;
     if (address instanceof InetSocketAddress) {
       InetSocketAddress socketAddr = (InetSocketAddress) address;
-      handshake.setServerAddress(socketAddr.getHostString());
-      handshake.setPort(socketAddr.getPort());
+      hostname = socketAddr.getHostString();
+      port = socketAddr.getPort();
     } else {
       // Just fake it
-      handshake.setServerAddress("127.0.0.1");
+      hostname = "127.0.0.1";
+      port = 25565;
     }
-    handshake.setProtocolVersion(version);
-    connection.delayedWrite(handshake);
+
+    connection.delayedWrite(new ServerboundHandshakePacket(
+        version,
+        hostname,
+        port,
+        StateRegistry.STATUS_ID
+    ));
 
     connection.setState(StateRegistry.STATUS);
     connection.delayedWrite(ServerboundStatusRequestPacket.INSTANCE);
