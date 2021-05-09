@@ -148,7 +148,7 @@ public enum ProtocolUtils {
       buf.writeInt(w);
     } else {
       int w = (value & 0x7F | 0x80) << 24 | ((value >>> 7) & 0x7F | 0x80) << 16
-          | ((value >>> 14) & 0x7F | 0x80) | ((value >>> 21) & 0x7F | 0x80);
+          | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
       buf.writeInt(w);
       buf.writeByte(value >>> 28);
     }
