@@ -72,6 +72,20 @@ public class ProtocolUtilsTest {
   }
 
   @Test
+  void test3Bytes() {
+    ByteBuf buf = Unpooled.buffer(5);
+    for (int i = 0; i < 2097152; i += 31) {
+      writeReadTest3Bytes(buf, i);
+    }
+  }
+
+  private void writeReadTest3Bytes(ByteBuf buf, int test) {
+    buf.clear();
+    ProtocolUtils.write21BitVarInt(buf, test);
+    assertEquals(test, ProtocolUtils.readVarInt(buf));
+  }
+
+  @Test
   void testBytesWrittenAtBitBoundaries() {
     ByteBuf varintNew = Unpooled.buffer(5);
     ByteBuf varintOld = Unpooled.buffer(5);
