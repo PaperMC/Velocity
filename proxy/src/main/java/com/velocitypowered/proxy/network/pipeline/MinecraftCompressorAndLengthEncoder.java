@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.netty;
+package com.velocitypowered.proxy.network.pipeline;
 
-import static com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder.IS_JAVA_CIPHER;
+import static com.velocitypowered.proxy.network.pipeline.MinecraftVarintLengthEncoder.IS_JAVA_CIPHER;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.MoreByteBufUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.network.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

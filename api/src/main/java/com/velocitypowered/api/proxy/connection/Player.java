@@ -9,9 +9,9 @@ package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.TabList;
@@ -145,10 +145,10 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * is connected to.</strong> You should only use this method if you are trying to communicate
    * with a mod that is installed on the player's client. To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
-   * {@link #getCurrentServer()}.
+   * {@link #connectedServer()}.
    *
    * @inheritDoc
    */
   @Override
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(PluginChannelId identifier, byte[] data);
 }
