@@ -29,7 +29,7 @@ public interface InboundConnection {
    *
    * @return the hostname from the client
    */
-  Optional<InetSocketAddress> connectedHost();
+  Optional<InetSocketAddress> connectedHostname();
 
   /**
    * Determine whether or not the player remains online.
