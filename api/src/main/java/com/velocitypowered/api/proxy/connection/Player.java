@@ -8,7 +8,8 @@
 package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEventImpl;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.ClientSettings;
@@ -123,7 +124,7 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * Sends the specified resource pack from {@code url} to the user. If at all possible, send the
    * resource pack using {@link #sendResourcePack(String, byte[])}. To monitor the status of the
-   * sent resource pack, subscribe to {@link PlayerResourcePackStatusEventImpl}.
+   * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
    */
@@ -132,10 +133,22 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
    * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEventImpl}.
+   * {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
    */
   void sendResourcePack(String url, byte[] hash);
+
+  /**
+   * <strong>Note that this method does not send a plugin message to the server the player
+   * is connected to.</strong> You should only use this method if you are trying to communicate
+   * with a mod that is installed on the player's client. To send a plugin message to the server
+   * from the player, you should use the equivalent method on the instance returned by
+   * {@link #getCurrentServer()}.
+   *
+   * @inheritDoc
+   */
+  @Override
+  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
 }
