@@ -1,0 +1,4 @@
+files:
+  - source: proxy/src/main/resources/com/velocitypowered
+    translation: >-
+      proxy/src/main/resources/com/velocitypowered/l10n/messages_%locale_with_underscore%.properties
