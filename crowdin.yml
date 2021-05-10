@@ -2,4 +2,4 @@ files:
   - source: >-
       proxy/src/main/resources/com/velocitypowered/proxy/l10n/messages.properties
     translation: >-
-      proxy/src/main/resources/com/velocitypowered/proxy/l10n/messages_%locale_with_underscore%.properties
+      /proxy/src/main/resources/com/velocitypowered/proxy/l10n/messages_%locale_with_underscore%.properties
