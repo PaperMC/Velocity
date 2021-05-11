@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.server;
 
 import static com.velocitypowered.proxy.network.HandlerNames.FRAME_DECODER;
@@ -11,7 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -54,12 +71,12 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public ServerInfo getServerInfo() {
+  public ServerInfo serverInfo() {
     return serverInfo;
   }
 
   @Override
-  public Collection<Player> getPlayersConnected() {
+  public Collection<Player> connectedPlayers() {
     return ImmutableList.copyOf(players.values());
   }
 
@@ -80,15 +97,15 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop, serverInfo.getAddress())
+    server.createBootstrap(loop, serverInfo.address())
         .handler(new ChannelInitializer<Channel>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
-                .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
-                        TimeUnit.MILLISECONDS))
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+                .addLast(READ_TIMEOUT,
+                    new ReadTimeoutHandler(server.configuration().getReadTimeout(),
+                        TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
                     new MinecraftDecoder(PacketDirection.CLIENTBOUND))
@@ -98,7 +115,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }
         })
-        .connect(serverInfo.getAddress())
+        .connect(serverInfo.address())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
@@ -112,15 +129,15 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   public void addPlayer(ConnectedPlayer player) {
-    players.put(player.getUniqueId(), player);
+    players.put(player.id(), player);
   }
 
   public void removePlayer(ConnectedPlayer player) {
-    players.remove(player.getUniqueId(), player);
+    players.remove(player.id(), player);
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, byte[] data) {
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
   }
 
@@ -132,10 +149,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @param data the data
    * @return whether or not the message was sent
    */
-  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
+  public boolean sendPluginMessage(PluginChannelId identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
+      if (connection != null && connection.target() == this) {
         return connection.sendPluginMessage(identifier, data);
       }
     }
@@ -151,6 +168,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return this.getPlayersConnected();
+    return this.connectedPlayers();
   }
 }

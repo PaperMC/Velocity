@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.util.GameProfile;
@@ -33,8 +50,8 @@ import net.kyori.adventure.text.TextComponent;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
-  private static final TextComponent MODERN_IP_FORWARDING_FAILURE = Component
-      .text("Your server did not send a forwarding request to the proxy. Is it set up correctly?");
+  private static final Component MODERN_IP_FORWARDING_FAILURE = Component
+      .translatable("velocity.error.modern-forwarding-failed");
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -56,12 +73,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientboundLoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && packet
         .getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          cleanRemoteAddress(serverConn.getPlayer().getRemoteAddress()),
-          serverConn.getPlayer().getGameProfile());
+          cleanRemoteAddress(serverConn.player().remoteAddress()),
+          serverConn.player().gameProfile());
       ServerboundLoginPluginResponsePacket response = new ServerboundLoginPluginResponsePacket(
           packet.getId(), true, forwardingData);
       mc.write(response);
@@ -76,7 +93,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundDisconnectPacket packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.target()));
     serverConn.disconnect();
     return true;
   }
@@ -89,10 +106,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+          serverConn.target()));
       serverConn.disconnect();
       return true;
     }
@@ -116,7 +133,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
               + "This is usually because the remote server does not have BungeeCord IP forwarding "

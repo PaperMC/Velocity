@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id 'java'
     id "com.github.spotbugs" version "4.2.4" apply false
+    id 'org.cadixdev.licenser' version '0.5.1' apply false
 }
 
 allprojects {
@@ -20,14 +21,14 @@ allprojects {
 
     ext {
         // dependency versions
-        adventureVersion = '4.5.0'
+        adventureVersion = '4.7.0'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
         log4jVersion = '2.13.3'
         nettyVersion = '4.1.59.Final'
         guavaVersion = '30.0-jre'
         checkerFrameworkVersion = '3.6.1'
-        configurateVersion = '4.0.0-SNAPSHOT'
+        configurateVersion = '4.0.0'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->

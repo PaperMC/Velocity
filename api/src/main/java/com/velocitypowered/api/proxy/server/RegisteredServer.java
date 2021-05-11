@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.server;
 
 import com.velocitypowered.api.proxy.connection.Player;
@@ -18,14 +25,14 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
    *
    * @return the server info
    */
-  ServerInfo getServerInfo();
+  ServerInfo serverInfo();
 
   /**
    * Returns a list of all the players currently connected to this server on this proxy.
    *
    * @return the players on this proxy
    */
-  Collection<Player> getPlayersConnected();
+  Collection<Player> connectedPlayers();
 
   /**
    * Attempts to ping the remote server and return the server list ping result.

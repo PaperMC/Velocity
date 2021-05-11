@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.util.GameProfile;
@@ -15,7 +22,7 @@ public interface TabListEntry {
    *
    * @return parent {@link TabList}
    */
-  TabList getTabList();
+  TabList parent();
 
   /**
    * Returns the {@link GameProfile} of the entry, which uniquely identifies the entry with the
@@ -24,7 +31,7 @@ public interface TabListEntry {
    *
    * @return {@link GameProfile} of the entry
    */
-  GameProfile getProfile();
+  GameProfile gameProfile();
 
   /**
    * Returns {@link Optional} text {@link Component}, which if present is the text
@@ -34,7 +41,7 @@ public interface TabListEntry {
    * @return {@link Optional} text {@link Component} of name displayed in the tab
    *         list
    */
-  Optional<Component> getDisplayName();
+  Optional<Component> displayName();
 
   /**
    * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}. If
@@ -61,16 +68,16 @@ public interface TabListEntry {
    *
    * @return latency set for {@code this} entry
    */
-  int getLatency();
+  int ping();
 
   /**
    * Sets the latency for {@code this} entry to the specified value.
    *
    * @param latency to changed to
    * @return {@code this}, for chaining
-   * @see #getLatency()
+   * @see #ping()
    */
-  TabListEntry setLatency(int latency);
+  TabListEntry setPing(int latency);
 
   /**
    * Gets the game mode {@code this} entry has been set to.
@@ -85,14 +92,14 @@ public interface TabListEntry {
    *
    * @return the game mode
    */
-  int getGameMode();
+  int gameMode();
 
   /**
    * Sets the game mode for {@code this} entry to the specified value.
    *
    * @param gameMode to change to
    * @return {@code this}, for chaining
-   * @see #getGameMode()
+   * @see #gameMode()
    */
   TabListEntry setGameMode(int gameMode);
 
@@ -138,7 +145,7 @@ public interface TabListEntry {
      *
      * @param profile to set
      * @return {@code this}, for chaining
-     * @see TabListEntry#getProfile()
+     * @see TabListEntry#gameProfile()
      */
     public Builder profile(GameProfile profile) {
       this.profile = profile;
@@ -150,7 +157,7 @@ public interface TabListEntry {
      *
      * @param displayName to set
      * @return {@code this}, for chaining
-     * @see TabListEntry#getDisplayName()
+     * @see TabListEntry#displayName()
      */
     public Builder displayName(@Nullable Component displayName) {
       this.displayName = displayName;
@@ -162,7 +169,7 @@ public interface TabListEntry {
      *
      * @param latency to set
      * @return {@code this}, for chaining
-     * @see TabListEntry#getLatency()
+     * @see TabListEntry#ping()
      */
     public Builder latency(int latency) {
       this.latency = latency;
@@ -174,7 +181,7 @@ public interface TabListEntry {
      *
      * @param gameMode to set
      * @return {@code this}, for chaining
-     * @see TabListEntry#getGameMode()
+     * @see TabListEntry#gameMode()
      */
     public Builder gameMode(int gameMode) {
       this.gameMode = gameMode;

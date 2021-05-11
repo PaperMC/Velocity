@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
@@ -15,19 +22,19 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    *
    * @return the server this connection is connected to
    */
-  RegisteredServer getServer();
+  RegisteredServer target();
 
   /**
    * Returns the server info for this connection.
    *
    * @return the server info for this connection
    */
-  ServerInfo getServerInfo();
+  ServerInfo serverInfo();
 
   /**
    * Returns the player that this connection is associated with.
    *
    * @return the player for this connection
    */
-  Player getPlayer();
+  Player player();
 }

@@ -1,7 +1,13 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
@@ -16,14 +22,14 @@ public interface InboundConnection {
    *
    * @return the player's remote address
    */
-  SocketAddress getRemoteAddress();
+  SocketAddress remoteAddress();
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.
    *
    * @return the hostname from the client
    */
-  Optional<InetSocketAddress> getVirtualHost();
+  Optional<InetSocketAddress> connectedHostname();
 
   /**
    * Determine whether or not the player remains online.
@@ -37,5 +43,5 @@ public interface InboundConnection {
    *
    * @return the protocol version the connection uses
    */
-  ProtocolVersion getProtocolVersion();
+  ProtocolVersion protocolVersion();
 }

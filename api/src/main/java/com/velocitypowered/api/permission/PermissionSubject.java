@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.permission;
 
 /**
@@ -12,7 +19,7 @@ public interface PermissionSubject {
    * @return whether or not the subject has the permission
    */
   default boolean hasPermission(String permission) {
-    return getPermissionValue(permission).asBoolean();
+    return evaluatePermission(permission).asBoolean();
   }
 
   /**
@@ -21,5 +28,5 @@ public interface PermissionSubject {
    * @param permission the permission
    * @return the value the permission is set to
    */
-  Tristate getPermissionValue(String permission);
+  Tristate evaluatePermission(String permission);
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
@@ -16,7 +23,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
    *
    * @return the result of this event
    */
-  R getResult();
+  R result();
 
   /**
    * Sets the result of this event. The result must be non-null.
@@ -92,7 +99,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status;
     }
 
-    public Optional<Component> getReason() {
+    public Optional<Component> reason() {
       return Optional.ofNullable(reason);
     }
 

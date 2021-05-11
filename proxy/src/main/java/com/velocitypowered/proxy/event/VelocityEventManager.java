@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.event;
 
 import static java.util.Objects.requireNonNull;
@@ -302,7 +319,23 @@ public class VelocityEventManager implements EventManager {
     if (plugin == listener) {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
+    registerInternally(pluginContainer, listener);
+  }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public <E> void register(final Object plugin, final Class<E> eventClass,
+                           final short order, final EventHandler<E> handler) {
+    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    requireNonNull(eventClass, "eventClass");
+    requireNonNull(handler, "handler");
+
+    final HandlerRegistration registration = new HandlerRegistration(pluginContainer, order,
+        eventClass, handler, (EventHandler<Object>) handler, AsyncType.SOMETIMES);
+    register(Collections.singletonList(registration));
+  }
+
+  public void registerInternally(final PluginContainer pluginContainer, final Object listener) {
     final Class<?> targetClass = listener.getClass();
     final Map<String, MethodHandlerInfo> collected = new HashMap<>();
     collectMethods(targetClass, collected);
@@ -323,19 +356,6 @@ public class VelocityEventManager implements EventManager {
     }
 
     register(registrations);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <E> void register(final Object plugin, final Class<E> eventClass,
-      final short order, final EventHandler<E> handler) {
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
-    requireNonNull(eventClass, "eventClass");
-    requireNonNull(handler, "handler");
-
-    final HandlerRegistration registration = new HandlerRegistration(pluginContainer, order,
-        eventClass, handler, (EventHandler<Object>) handler, AsyncType.SOMETIMES);
-    register(Collections.singletonList(registration));
   }
 
   @Override
@@ -578,7 +598,7 @@ public class VelocityEventManager implements EventManager {
   private static void logHandlerException(
       final HandlerRegistration registration, final Throwable t) {
     logger.error("Couldn't pass {} to {}", registration.eventType.getSimpleName(),
-        registration.plugin.getDescription().getId(), t);
+        registration.plugin.description().id(), t);
   }
 
   public boolean shutdown() throws InterruptedException {

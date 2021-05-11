@@ -1,7 +1,13 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -26,11 +32,11 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     this.address = Preconditions.checkNotNull(address, "address");
   }
 
-  public final String getName() {
+  public final String name() {
     return name;
   }
 
-  public final SocketAddress getAddress() {
+  public final SocketAddress address() {
     return address;
   }
 
@@ -62,6 +68,6 @@ public final class ServerInfo implements Comparable<ServerInfo> {
 
   @Override
   public int compareTo(ServerInfo o) {
-    return this.name.compareTo(o.getName());
+    return this.name.compareTo(o.name());
   }
 }

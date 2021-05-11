@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.tablist;
 
 import com.velocitypowered.api.proxy.player.TabList;
@@ -26,17 +43,17 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public TabList getTabList() {
+  public TabList parent() {
     return tabList;
   }
 
   @Override
-  public GameProfile getProfile() {
+  public GameProfile gameProfile() {
     return profile;
   }
 
   @Override
-  public Optional<Component> getDisplayName() {
+  public Optional<Component> displayName() {
     return Optional.ofNullable(displayName);
   }
 
@@ -52,12 +69,12 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public int getLatency() {
+  public int ping() {
     return latency;
   }
 
   @Override
-  public TabListEntry setLatency(int latency) {
+  public TabListEntry setPing(int latency) {
     this.latency = latency;
     tabList.updateEntry(ClientboundPlayerListItemPacket.UPDATE_LATENCY, this);
     return this;
@@ -68,7 +85,7 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public int getGameMode() {
+  public int gameMode() {
     return gameMode;
   }
 

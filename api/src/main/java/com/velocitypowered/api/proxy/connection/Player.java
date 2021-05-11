@@ -1,11 +1,19 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.connection;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
+import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -27,49 +35,49 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @return the username
    */
-  String getUsername();
+  String username();
 
   /**
    * Returns the player's UUID.
    *
    * @return the UUID
    */
-  UUID getUniqueId();
+  UUID id();
 
   /**
    * Returns the server that the player is currently connected to.
    *
    * @return an {@link Optional} the server that the player is connected to, which may be empty
    */
-  Optional<ServerConnection> getCurrentServer();
+  Optional<ServerConnection> connectedServer();
 
   /**
    * Returns the player's client settings.
    *
    * @return the settings
    */
-  PlayerSettings getPlayerSettings();
+  ClientSettings clientSettings();
 
   /**
    * Returns the player's mod info if they have a modded client.
    *
    * @return an {@link Optional} the mod info. which may be empty
    */
-  Optional<ModInfo> getModInfo();
+  Optional<ModInfo> modInfo();
 
   /**
    * Returns the current player's ping.
    *
    * @return the player's ping or -1 if ping information is currently unknown
    */
-  long getPing();
+  long ping();
 
   /**
    * Returns the player's connection status.
    *
    * @return true if the player is authenticated with Mojang servers
    */
-  boolean isOnlineMode();
+  boolean onlineMode();
 
   /**
    * Creates a new connection request so that the player can connect to another server.
@@ -89,14 +97,14 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * Returns the player's game profile.
    */
-  GameProfile getGameProfile();
+  GameProfile gameProfile();
 
   /**
    * Returns the player's tab list.
    *
    * @return this player's tab list
    */
-  TabList getTabList();
+  TabList tabList();
 
   /**
    * Disconnects the player with the specified reason. Once this method is called, further calls to
@@ -131,4 +139,16 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * @param hash the SHA-1 hash value for the resource pack
    */
   void sendResourcePack(String url, byte[] hash);
+
+  /**
+   * <strong>Note that this method does not send a plugin message to the server the player
+   * is connected to.</strong> You should only use this method if you are trying to communicate
+   * with a mod that is installed on the player's client. To send a plugin message to the server
+   * from the player, you should use the equivalent method on the instance returned by
+   * {@link #connectedServer()}.
+   *
+   * @inheritDoc
+   */
+  @Override
+  boolean sendPluginMessage(PluginChannelId identifier, byte[] data);
 }

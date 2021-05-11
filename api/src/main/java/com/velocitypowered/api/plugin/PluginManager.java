@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.plugin;
 
 import java.nio.file.Path;
@@ -32,7 +39,7 @@ public interface PluginManager {
    *
    * @return the plugins
    */
-  Collection<PluginContainer> getPlugins();
+  Collection<PluginContainer> plugins();
 
   /**
    * Checks if a plugin is loaded based on its ID.

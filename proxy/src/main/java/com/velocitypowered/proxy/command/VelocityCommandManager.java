@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
@@ -17,6 +34,7 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Iterator;
@@ -38,13 +56,13 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final String alias) {
+  public CommandMeta.Builder createMetaBuilder(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
     return new VelocityCommandMeta.Builder(alias);
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final BrigadierCommand command) {
+  public CommandMeta.Builder createMetaBuilder(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
     return new VelocityCommandMeta.Builder(command.getNode().getName());
   }
@@ -52,7 +70,7 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void register(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
-    register(metaBuilder(command).build(), command);
+    register(createMetaBuilder(command).build(), command);
   }
 
   @Override
@@ -60,7 +78,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    Iterator<String> aliasIterator = meta.getAliases().iterator();
+    Iterator<String> aliasIterator = meta.aliases().iterator();
     String primaryAlias = aliasIterator.next();
 
     LiteralCommandNode<CommandSource> node = null;
@@ -76,7 +94,7 @@ public class VelocityCommandManager implements CommandManager {
     }
 
     if (!(command instanceof BrigadierCommand)) {
-      for (CommandNode<CommandSource> hint : meta.getHints()) {
+      for (CommandNode<CommandSource> hint : meta.hints()) {
         node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
       }
     }
@@ -100,7 +118,7 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   /**
-   * Fires a {@link CommandExecuteEvent}.
+   * Fires a {@link CommandExecuteEventImpl}.
    *
    * @param source the source to execute the command for
    * @param cmdLine the command to execute
@@ -110,7 +128,7 @@ public class VelocityCommandManager implements CommandManager {
                                                                  final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
-    return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
+    return eventManager.fire(new CommandExecuteEventImpl(source, cmdLine));
   }
 
   private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
@@ -142,11 +160,11 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
-      CommandResult commandResult = event.getResult();
+      CommandResult commandResult = event.result();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-      return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
+      return executeImmediately0(source, commandResult.modifiedCommand().orElse(event.rawCommand()));
     }, eventManager.getAsyncExecutor());
   }
 

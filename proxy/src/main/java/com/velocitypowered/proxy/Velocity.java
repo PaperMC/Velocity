@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy;
 
 import io.netty.util.ResourceLeakDetector;
@@ -67,7 +84,7 @@ public class Velocity {
 
     double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
     logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
-    server.getConsoleCommandSource().start();
+    server.consoleCommandSource().start();
 
     // If we don't have a console available (because SimpleTerminalConsole returned), then we still
     // need to wait, otherwise the JVM will reap us as no non-daemon threads will be active once the

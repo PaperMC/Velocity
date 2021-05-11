@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
@@ -6,7 +13,6 @@ import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -15,84 +21,43 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Velocity will notify the user (if they are already connected to a server) or disconnect them
  * (if they are not on a server and no other servers are available).
  */
-public final class KickedFromServerEvent implements
+public interface KickedFromServerEvent extends
     ResultedEvent<KickedFromServerEvent.ServerKickResult> {
 
-  private final Player player;
-  private final RegisteredServer server;
-  private final @Nullable Component originalReason;
-  private final boolean duringServerConnect;
-  private ServerKickResult result;
+  Player player();
 
-  /**
-   * Creates a {@code KickedFromServerEvent} instance.
-   * @param player the player affected
-   * @param server the server the player disconnected from
-   * @param originalReason the reason for being kicked, optional
-   * @param duringServerConnect whether or not the player was kicked during the connection process
-   * @param result the initial result
-   */
-  public KickedFromServerEvent(Player player, RegisteredServer server,
-      net.kyori.adventure.text.@Nullable Component originalReason,
-      boolean duringServerConnect, ServerKickResult result) {
-    this.player = Preconditions.checkNotNull(player, "player");
-    this.server = Preconditions.checkNotNull(server, "server");
-    this.originalReason = originalReason;
-    this.duringServerConnect = duringServerConnect;
-    this.result = Preconditions.checkNotNull(result, "result");
-  }
-
-  @Override
-  public ServerKickResult getResult() {
-    return result;
-  }
-
-  @Override
-  public void setResult(@NonNull ServerKickResult result) {
-    this.result = Preconditions.checkNotNull(result, "result");
-  }
-
-  public Player getPlayer() {
-    return player;
-  }
-
-  public RegisteredServer getServer() {
-    return server;
-  }
+  RegisteredServer server();
 
   /**
    * Gets the reason the server kicked the player from the server.
+   *
    * @return the server kicked the player from the server
    */
-  public Optional<Component> getServerKickReason() {
-    return Optional.ofNullable(originalReason);
-  }
+  Optional<Component> serverKickReason();
 
   /**
    * Returns whether or not the player got kicked while connecting to another server.
    *
    * @return whether or not the player got kicked
    */
-  public boolean kickedDuringServerConnect() {
-    return duringServerConnect;
-  }
+  boolean kickedDuringServerConnect();
 
   /**
    * Represents the base interface for {@link KickedFromServerEvent} results.
    */
-  public interface ServerKickResult extends ResultedEvent.Result {
+  public interface ServerKickResult extends Result {
 
   }
 
   /**
    * Tells the proxy to disconnect the player with the specified reason.
    */
-  public static final class DisconnectPlayer implements ServerKickResult {
+  final class DisconnectPlayer implements ServerKickResult {
 
-    private final Component component;
+    private final Component message;
 
-    private DisconnectPlayer(Component component) {
-      this.component = Preconditions.checkNotNull(component, "component");
+    private DisconnectPlayer(Component message) {
+      this.message = Preconditions.checkNotNull(message, "message");
     }
 
     @Override
@@ -100,8 +65,8 @@ public final class KickedFromServerEvent implements
       return true;
     }
 
-    public Component getReason() {
-      return component;
+    public Component message() {
+      return message;
     }
 
     /**
@@ -119,13 +84,13 @@ public final class KickedFromServerEvent implements
    * Tells the proxy to redirect the player to another server. No messages will be sent from the
    * proxy when this result is used.
    */
-  public static final class RedirectPlayer implements ServerKickResult {
+  final class RedirectPlayer implements ServerKickResult {
 
     private final Component message;
     private final RegisteredServer server;
 
     private RedirectPlayer(RegisteredServer server,
-        net.kyori.adventure.text.@Nullable Component message) {
+        @Nullable Component message) {
       this.server = Preconditions.checkNotNull(server, "server");
       this.message = message;
     }
@@ -139,7 +104,7 @@ public final class KickedFromServerEvent implements
       return server;
     }
 
-    public Component getMessage() {
+    public Component message() {
       return message;
     }
 
@@ -164,7 +129,7 @@ public final class KickedFromServerEvent implements
    * result to use if the player was  trying to connect to a different server, otherwise it is
    * treated like a {@link DisconnectPlayer} result.
    */
-  public static final class Notify implements ServerKickResult {
+  final class Notify implements ServerKickResult {
 
     private final Component message;
 
@@ -177,7 +142,7 @@ public final class KickedFromServerEvent implements
       return false;
     }
 
-    public Component getMessage() {
+    public Component message() {
       return message;
     }
 

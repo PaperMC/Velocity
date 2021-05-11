@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.server;
 
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -33,20 +50,25 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket();
-    handshake.setNextStatus(StateRegistry.STATUS_ID);
-
-    SocketAddress address = server.getServerInfo().getAddress();
+    SocketAddress address = server.serverInfo().address();
+    String hostname;
+    int port;
     if (address instanceof InetSocketAddress) {
       InetSocketAddress socketAddr = (InetSocketAddress) address;
-      handshake.setServerAddress(socketAddr.getHostString());
-      handshake.setPort(socketAddr.getPort());
+      hostname = socketAddr.getHostString();
+      port = socketAddr.getPort();
     } else {
       // Just fake it
-      handshake.setServerAddress("127.0.0.1");
+      hostname = "127.0.0.1";
+      port = 25565;
     }
-    handshake.setProtocolVersion(version);
-    connection.delayedWrite(handshake);
+
+    connection.delayedWrite(new ServerboundHandshakePacket(
+        version,
+        hostname,
+        port,
+        StateRegistry.STATUS_ID
+    ));
 
     connection.setState(StateRegistry.STATUS);
     connection.delayedWrite(ServerboundStatusRequestPacket.INSTANCE);

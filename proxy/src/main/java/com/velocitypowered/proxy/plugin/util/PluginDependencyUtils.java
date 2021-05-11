@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.plugin.util;
 
 import com.google.common.collect.Maps;
@@ -30,7 +47,7 @@ public class PluginDependencyUtils {
    */
   public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
     List<PluginDescription> sortedCandidates = new ArrayList<>(candidates);
-    sortedCandidates.sort(Comparator.comparing(PluginDescription::getId));
+    sortedCandidates.sort(Comparator.comparing(PluginDescription::id));
 
     // Create a graph and populate it with plugin dependencies. Specifically, each graph has plugin
     // nodes, and edges that represent the dependencies that plugin relies on. Non-existent plugins
@@ -40,12 +57,12 @@ public class PluginDependencyUtils {
         .expectedNodeCount(sortedCandidates.size())
         .build();
     Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(sortedCandidates,
-        PluginDescription::getId);
+        PluginDescription::id);
 
     for (PluginDescription description : sortedCandidates) {
       graph.addNode(description);
 
-      for (PluginDependency dependency : description.getDependencies()) {
+      for (PluginDependency dependency : description.dependencies()) {
         PluginDescription in = candidateMap.get(dependency.getId());
 
         if (in != null) {
@@ -76,7 +93,7 @@ public class PluginDependencyUtils {
       currentIteration.addLast(node);
       StringBuilder loopGraph = new StringBuilder();
       for (PluginDescription description : currentIteration) {
-        loopGraph.append(description.getId());
+        loopGraph.append(description.id());
         loopGraph.append(" -> ");
       }
       loopGraph.setLength(loopGraph.length() - 4);

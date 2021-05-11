@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.command.builtin;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
@@ -20,6 +37,7 @@ import java.util.Optional;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class GlistCommand {
@@ -39,14 +57,14 @@ public class GlistCommand {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("glist")
             .requires(source ->
-                    source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
+                    source.evaluatePermission("velocity.command.glist") == Tristate.TRUE)
             .executes(this::totalCount)
             .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
             .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
             .suggests((context, builder) -> {
-              for (RegisteredServer server : server.getAllServers()) {
-                builder.suggest(server.getServerInfo().getName());
+              for (RegisteredServer server : server.registeredServers()) {
+                builder.suggest(server.serverInfo().name());
               }
               builder.suggest("all");
               return builder.buildFuture();
@@ -54,18 +72,14 @@ public class GlistCommand {
             .executes(this::serverCount)
             .build();
     totalNode.addChild(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(totalNode));
+    server.commandManager().register(new BrigadierCommand(totalNode));
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
     source.sendMessage(Identity.nil(),
-        Component.text().content("To view all players on servers, use ")
-            .color(NamedTextColor.YELLOW)
-            .append(Component.text("/glist all", NamedTextColor.DARK_AQUA))
-            .append(Component.text(".", NamedTextColor.YELLOW))
-            .build());
+        Component.translatable("velocity.command.glist-view-all", NamedTextColor.YELLOW));
     return 1;
   }
 
@@ -78,10 +92,10 @@ public class GlistCommand {
       }
       sendTotalProxyCount(source);
     } else {
-      Optional<RegisteredServer> registeredServer = server.getServer(serverName);
+      Optional<RegisteredServer> registeredServer = server.server(serverName);
       if (!registeredServer.isPresent()) {
         source.sendMessage(Identity.nil(),
-            Component.text("Server " + serverName + " doesn't exist.", NamedTextColor.RED));
+            CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);
@@ -90,21 +104,22 @@ public class GlistCommand {
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    target.sendMessage(Identity.nil(), Component.text()
-        .content("There are ").color(NamedTextColor.YELLOW)
-        .append(Component.text(server.getAllPlayers().size(), NamedTextColor.GREEN))
-        .append(Component.text(" player(s) online.", NamedTextColor.YELLOW))
-        .build());
+    int online = server.countConnectedPlayers();
+    TranslatableComponent msg = online == 1
+        ? Component.translatable("velocity.command.glist-player-singular")
+        : Component.translatable("velocity.command.glist-player-plural");
+    target.sendMessage(msg.color(NamedTextColor.YELLOW)
+        .args(Component.text(Integer.toString(online), NamedTextColor.GREEN)));
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+    List<Player> onServer = ImmutableList.copyOf(server.connectedPlayers());
     if (onServer.isEmpty() && fromAll) {
       return;
     }
 
     TextComponent.Builder builder = Component.text()
-        .append(Component.text("[" + server.getServerInfo().getName() + "] ",
+        .append(Component.text("[" + server.serverInfo().name() + "] ",
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
@@ -112,7 +127,7 @@ public class GlistCommand {
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);
-      builder.append(Component.text(player.getUsername()));
+      builder.append(Component.text(player.username()));
 
       if (i + 1 < onServer.size()) {
         builder.append(Component.text(", "));

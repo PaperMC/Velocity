@@ -4,6 +4,7 @@ plugins {
     id 'checkstyle'
 }
 
+apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -11,6 +12,10 @@ apply plugin: 'com.github.johnrengelman.shadow'
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+}
+
+license {
+    header = project.file('HEADER.txt')
 }
 
 sourceSets {
@@ -30,7 +35,7 @@ dependencies {
     api("net.kyori:coffee:1.0.0-SNAPSHOT")
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
-    api 'com.google.inject:guice:4.2.3'
+    api 'com.google.inject:guice:5.0.1'
     api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
 
@@ -71,13 +76,13 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.source = '8'
-//    options.links(
-//            'https://www.slf4j.org/apidocs/',
-//            'https://guava.dev/releases/30.0-jre/api/docs/',
-//            'https://google.github.io/guice/api-docs/4.2/javadoc/',
-//            'https://docs.oracle.com/javase/8/docs/api/',
-//            'https://jd.adventure.kyori.net/api/4.0.0/'
-//    )
+    options.links(
+            'http://www.slf4j.org/apidocs/',
+            'https://google.github.io/guava/releases/30.0-jre/api/docs/',
+            'https://google.github.io/guice/api-docs/4.2/javadoc/',
+            'https://docs.oracle.com/javase/8/docs/api/',
+            'https://jd.adventure.kyori.net/api/4.7.0/'
+    )
 
     // Disable the crazy super-strict doclint tool in Java 8
     options.addStringOption('Xdoclint:none', '-quiet')
@@ -89,10 +94,6 @@ javadoc {
     if (JavaVersion.current() >= JavaVersion.VERSION_1_9 && JavaVersion.current() < JavaVersion.VERSION_12) {
         options.addBooleanOption('-no-module-directories', true)
     }
-}
-
-test {
-    useJUnitPlatform()
 }
 
 test {

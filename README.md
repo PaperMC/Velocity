@@ -6,8 +6,7 @@
 A Minecraft server proxy with unparalleled server support, scalability,
 and flexibility.
 
-Velocity is licensed under the MIT license for ultimate permissiveness
-and expanding the pool of potential contributors and users.
+Velocity is licensed under the GPLv3 license.
 
 ## Goals
 

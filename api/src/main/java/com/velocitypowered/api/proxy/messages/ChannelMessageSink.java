@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.messages;
 
 /**
@@ -12,5 +19,5 @@ public interface ChannelMessageSink {
    * @param data the data to send
    * @return whether or not the message could be sent
    */
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(PluginChannelId identifier, byte[] data);
 }

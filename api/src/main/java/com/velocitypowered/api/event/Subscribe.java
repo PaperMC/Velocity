@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.event;
 
 import java.lang.annotation.ElementType;
@@ -20,11 +27,12 @@ public @interface Subscribe {
   short order() default PostOrder.NORMAL;
 
   /**
-   * Whether the handler is required to be called asynchronously.
+   * Whether the handler must be called asynchronously.
    *
    * <p>If this method returns {@code true}, the method is guaranteed to be executed
-   * asynchronously from the current thread. Otherwise, the handler may be executed on the
-   * current thread or asynchronously.</p>
+   * asynchronously. Otherwise, the handler may be executed on the current thread or
+   * asynchronously. <strong>This still means you must consider thread-safety in your
+   * event listeners</strong> as the "current thread" can and will be different each time.</p>
    *
    * <p>If any method handler targeting an event type is marked with {@code true}, then every
    * handler targeting that event type will be executed asynchronously.</p>

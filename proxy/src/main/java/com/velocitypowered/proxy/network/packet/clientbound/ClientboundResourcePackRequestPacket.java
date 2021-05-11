@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.network.packet.clientbound;
 
 import com.google.common.base.MoreObjects;
@@ -16,7 +33,10 @@ public class ClientboundResourcePackRequestPacket implements Packet {
     final String hash = ProtocolUtils.readString(buf);
     return new ClientboundResourcePackRequestPacket(url, hash);
   };
-  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeString(out, packet.url);
+    ProtocolUtils.writeString(out, packet.hash);
+  };
 
   private final String url;
   private final String hash;
@@ -24,12 +44,6 @@ public class ClientboundResourcePackRequestPacket implements Packet {
   public ClientboundResourcePackRequestPacket(final String url, final String hash) {
     this.url = Objects.requireNonNull(url, "url");
     this.hash = Objects.requireNonNull(hash, "hash");
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, url);
-    ProtocolUtils.writeString(buf, hash);
   }
 
   @Override

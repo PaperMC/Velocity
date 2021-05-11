@@ -1,5 +1,13 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.scheduler;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.common.value.qual.IntRange;
 
@@ -32,6 +40,16 @@ public interface Scheduler {
     TaskBuilder delay(@IntRange(from = 0) long time, TimeUnit unit);
 
     /**
+     * Specifies that the task should delay its execution by the specified amount of time.
+     *
+     * @param duration the duration of the delay
+     * @return this builder, for chaining
+     */
+    default TaskBuilder delay(Duration duration) {
+      return delay(duration.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
      * Specifies that the task should continue running after waiting for the specified amount, until
      * it is cancelled.
      *
@@ -40,6 +58,17 @@ public interface Scheduler {
      * @return this builder, for chaining
      */
     TaskBuilder repeat(@IntRange(from = 0) long time, TimeUnit unit);
+
+    /**
+     * Specifies that the task should continue running after waiting for the specified amount, until
+     * it is cancelled.
+     *
+     * @param duration the duration of the delay
+     * @return this builder, for chaining
+     */
+    default TaskBuilder repeat(Duration duration) {
+      return repeat(duration.toMillis(), TimeUnit.MILLISECONDS);
+    }
 
     /**
      * Clears the delay on this task.

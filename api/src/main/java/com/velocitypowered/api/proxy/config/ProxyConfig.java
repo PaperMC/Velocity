@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.config;
 
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -73,7 +80,7 @@ public interface ProxyConfig {
   /**
    * Get a Map of all servers registered in <code>velocity.toml</code>. This method does
    * <strong>not</strong> return all the servers currently in memory, although in most cases it
-   * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.
+   * does. For a view of all registered servers, see {@link ProxyServer#registeredServers()}.
    *
    * @return registered servers map
    */

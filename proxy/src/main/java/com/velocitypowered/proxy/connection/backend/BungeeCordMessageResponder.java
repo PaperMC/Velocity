@@ -1,9 +1,26 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
@@ -23,6 +40,7 @@ import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -33,10 +51,8 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
     + "nothing.")
 public class BungeeCordMessageResponder {
 
-  private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier
-      .create("bungeecord", "main");
-  private static final LegacyChannelIdentifier LEGACY_CHANNEL =
-      new LegacyChannelIdentifier("BungeeCord");
+  private static final PairedPluginChannelId CHANNEL = PluginChannelId
+      .withLegacy("BungeeCord", Key.key("bungeecord", "main"));
 
   private final VelocityServer proxy;
   private final ConnectedPlayer player;
@@ -47,13 +63,13 @@ public class BungeeCordMessageResponder {
   }
 
   public static boolean isBungeeCordMessage(AbstractPluginMessagePacket<?> message) {
-    return MODERN_CHANNEL.getId().equals(message.getChannel()) || LEGACY_CHANNEL.getId()
-        .equals(message.getChannel());
+    return CHANNEL.modernChannelKey().asString().equals(message.getChannel())
+        || CHANNEL.legacyChannel().equals(message.getChannel());
   }
 
   private void processConnect(ByteBufDataInput in) {
     String serverName = in.readUTF();
-    proxy.getServer(serverName).ifPresent(server -> player.createConnectionRequest(server)
+    proxy.server(serverName).ifPresent(server -> player.createConnectionRequest(server)
         .fireAndForget());
   }
 
@@ -62,7 +78,7 @@ public class BungeeCordMessageResponder {
     String serverName = in.readUTF();
 
     Optional<Player> referencedPlayer = proxy.getPlayer(playerName);
-    Optional<RegisteredServer> referencedServer = proxy.getServer(serverName);
+    Optional<RegisteredServer> referencedServer = proxy.server(serverName);
     if (referencedPlayer.isPresent() && referencedServer.isPresent()) {
       referencedPlayer.get().createConnectionRequest(referencedServer.get()).fireAndForget();
     }
@@ -73,7 +89,7 @@ public class BungeeCordMessageResponder {
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
     out.writeUTF("IP");
 
-    SocketAddress address = player.getRemoteAddress();
+    SocketAddress address = player.remoteAddress();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress serverInetAddr = (InetSocketAddress) address;
       out.writeUTF(serverInetAddr.getHostString());
@@ -93,12 +109,12 @@ public class BungeeCordMessageResponder {
     if (target.equals("ALL")) {
       out.writeUTF("PlayerCount");
       out.writeUTF("ALL");
-      out.writeInt(proxy.getPlayerCount());
+      out.writeInt(proxy.countConnectedPlayers());
     } else {
-      proxy.getServer(target).ifPresent(rs -> {
-        int playersOnServer = rs.getPlayersConnected().size();
+      proxy.server(target).ifPresent(rs -> {
+        int playersOnServer = rs.connectedPlayers().size();
         out.writeUTF("PlayerCount");
-        out.writeUTF(rs.getServerInfo().getName());
+        out.writeUTF(rs.serverInfo().name());
         out.writeInt(playersOnServer);
       });
     }
@@ -120,18 +136,18 @@ public class BungeeCordMessageResponder {
       out.writeUTF("ALL");
 
       StringJoiner joiner = new StringJoiner(", ");
-      for (Player online : proxy.getAllPlayers()) {
-        joiner.add(online.getUsername());
+      for (Player online : proxy.connectedPlayers()) {
+        joiner.add(online.username());
       }
       out.writeUTF(joiner.toString());
     } else {
-      proxy.getServer(target).ifPresent(info -> {
+      proxy.server(target).ifPresent(info -> {
         out.writeUTF("PlayerList");
-        out.writeUTF(info.getServerInfo().getName());
+        out.writeUTF(info.serverInfo().name());
 
         StringJoiner joiner = new StringJoiner(", ");
-        for (Player online : info.getPlayersConnected()) {
-          joiner.add(online.getUsername());
+        for (Player online : info.connectedPlayers()) {
+          joiner.add(online.username());
         }
         out.writeUTF(joiner.toString());
       });
@@ -146,8 +162,8 @@ public class BungeeCordMessageResponder {
 
   private void processGetServers() {
     StringJoiner joiner = new StringJoiner(", ");
-    for (RegisteredServer server : proxy.getAllServers()) {
-      joiner.add(server.getServerInfo().getName());
+    for (RegisteredServer server : proxy.registeredServers()) {
+      joiner.add(server.serverInfo().name());
     }
 
     ByteBuf buf = Unpooled.buffer();
@@ -185,7 +201,7 @@ public class BungeeCordMessageResponder {
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
     out.writeUTF("GetServer");
-    out.writeUTF(player.ensureAndGetCurrentServer().getServerInfo().getName());
+    out.writeUTF(player.ensureAndGetCurrentServer().serverInfo().name());
 
     sendResponseOnConnection(buf);
   }
@@ -195,7 +211,7 @@ public class BungeeCordMessageResponder {
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
     out.writeUTF("UUID");
-    out.writeUTF(UuidUtils.toUndashed(player.getUniqueId()));
+    out.writeUTF(UuidUtils.toUndashed(player.id()));
 
     sendResponseOnConnection(buf);
   }
@@ -206,8 +222,8 @@ public class BungeeCordMessageResponder {
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
       out.writeUTF("UUIDOther");
-      out.writeUTF(player.getUsername());
-      out.writeUTF(UuidUtils.toUndashed(player.getUniqueId()));
+      out.writeUTF(player.username());
+      out.writeUTF(UuidUtils.toUndashed(player.id()));
 
       sendResponseOnConnection(buf);
     });
@@ -219,8 +235,8 @@ public class BungeeCordMessageResponder {
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
       out.writeUTF("IPOther");
-      out.writeUTF(player.getUsername());
-      SocketAddress address = player.getRemoteAddress();
+      out.writeUTF(player.username());
+      SocketAddress address = player.remoteAddress();
       if (address instanceof InetSocketAddress) {
         InetSocketAddress serverInetAddr = (InetSocketAddress) address;
         out.writeUTF(serverInetAddr.getHostString());
@@ -235,13 +251,13 @@ public class BungeeCordMessageResponder {
   }
 
   private void processServerIp(ByteBufDataInput in) {
-    proxy.getServer(in.readUTF()).ifPresent(info -> {
+    proxy.server(in.readUTF()).ifPresent(info -> {
       ByteBuf buf = Unpooled.buffer();
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
       out.writeUTF("ServerIP");
-      out.writeUTF(info.getServerInfo().getName());
-      SocketAddress address = info.getServerInfo().getAddress();
+      out.writeUTF(info.serverInfo().name());
+      SocketAddress address = info.serverInfo().address();
       if (address instanceof InetSocketAddress) {
         InetSocketAddress serverInetAddr = (InetSocketAddress) address;
         out.writeUTF(serverInetAddr.getHostString());
@@ -275,17 +291,17 @@ public class BungeeCordMessageResponder {
     ByteBuf toForward = in.unwrap().copy();
     if (target.equals("ALL")) {
       try {
-        for (RegisteredServer rs : proxy.getAllServers()) {
-          ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
+        for (RegisteredServer rs : proxy.registeredServers()) {
+          ((VelocityRegisteredServer) rs).sendPluginMessage(CHANNEL,
               toForward.retainedSlice());
         }
       } finally {
         toForward.release();
       }
     } else {
-      Optional<RegisteredServer> server = proxy.getServer(target);
+      Optional<RegisteredServer> server = proxy.server(target);
       if (server.isPresent()) {
-        ((VelocityRegisteredServer) server.get()).sendPluginMessage(LEGACY_CHANNEL, toForward);
+        ((VelocityRegisteredServer) server.get()).sendPluginMessage(CHANNEL, toForward);
       } else {
         toForward.release();
       }
@@ -293,8 +309,8 @@ public class BungeeCordMessageResponder {
   }
 
   static String getBungeeCordChannel(ProtocolVersion version) {
-    return version.gte(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL.getId()
-        : LEGACY_CHANNEL.getId();
+    return version.gte(ProtocolVersion.MINECRAFT_1_13) ? CHANNEL.modernChannelKey().asString()
+        : CHANNEL.legacyChannel();
   }
 
   // Note: this method will always release the buffer!
@@ -311,7 +327,7 @@ public class BungeeCordMessageResponder {
   }
 
   boolean process(AbstractPluginMessagePacket<?> message) {
-    if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
+    if (!proxy.configuration().isBungeePluginChannelEnabled()) {
       return false;
     }
 

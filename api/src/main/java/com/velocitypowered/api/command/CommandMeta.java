@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.command;
 
 import com.mojang.brigadier.tree.CommandNode;
@@ -14,7 +21,7 @@ public interface CommandMeta {
    *
    * @return the command aliases
    */
-  Collection<String> getAliases();
+  Collection<String> aliases();
 
   /**
    * Returns a collection containing command nodes that provide additional
@@ -23,7 +30,7 @@ public interface CommandMeta {
    *
    * @return the hinting command nodes
    */
-  Collection<CommandNode<CommandSource>> getHints();
+  Collection<CommandNode<CommandSource>> hints();
 
   /**
    * Provides a fluent interface to create {@link CommandMeta}s.

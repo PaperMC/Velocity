@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
@@ -17,7 +24,7 @@ public interface ConnectionRequestBuilder {
    *
    * @return the server this request will connect to
    */
-  RegisteredServer getServer();
+  RegisteredServer target();
 
   /**
    * Initiates the connection to the remote server and emits a result on the {@link
@@ -54,7 +61,7 @@ public interface ConnectionRequestBuilder {
      * @return whether or not the request succeeded
      */
     default boolean isSuccessful() {
-      return getStatus() == Status.SUCCESS;
+      return status() == Status.SUCCESS;
     }
 
     /**
@@ -62,21 +69,21 @@ public interface ConnectionRequestBuilder {
      *
      * @return the status for this result
      */
-    Status getStatus();
+    Status status();
 
     /**
      * Returns an (optional) textual reason for the failure to connect to the server.
      *
      * @return the reason why the user could not connect to the server
      */
-    Optional<Component> getReason();
+    Optional<Component> failureReason();
 
     /**
      * Returns the server we actually tried to connect to.
      *
      * @return the server we actually tried to connect to
      */
-    RegisteredServer getAttemptedConnection();
+    RegisteredServer finalTarget();
   }
 
   /**

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.command;
 
 /**
@@ -11,12 +18,5 @@ public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
    * Contains the invocation data for a raw command.
    */
   interface Invocation extends CommandInvocation<String> {
-
-    /**
-     * Returns the used alias to execute the command.
-     *
-     * @return the used command alias
-     */
-    String alias();
   }
 }

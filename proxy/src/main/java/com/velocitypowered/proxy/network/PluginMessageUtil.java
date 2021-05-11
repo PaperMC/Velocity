@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.network;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -5,6 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.messages.KeyedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PairedPluginChannelId;
+import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import io.netty.buffer.ByteBuf;
@@ -155,6 +175,19 @@ public final class PluginMessageUtil {
     } catch (Exception e) {
       return ProtocolUtils.readStringWithoutLength(content.slice());
     }
+  }
+
+  public static String channelIdForVersion(PluginChannelId id, ProtocolVersion version) {
+    if (id instanceof KeyedPluginChannelId) {
+      return ((KeyedPluginChannelId) id).key().asString();
+    } else if (id instanceof PairedPluginChannelId) {
+      if (version.gte(ProtocolVersion.MINECRAFT_1_13)) {
+        return ((PairedPluginChannelId) id).modernChannelKey().asString();
+      } else {
+        return ((PairedPluginChannelId) id).legacyChannel();
+      }
+    }
+    throw new IllegalArgumentException("Unknown channel ID " + id.getClass().getName());
   }
 
   private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");

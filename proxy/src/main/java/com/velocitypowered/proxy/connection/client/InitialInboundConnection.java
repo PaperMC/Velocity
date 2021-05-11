@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -7,9 +24,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,12 +49,12 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
+  public InetSocketAddress remoteAddress() {
     return (InetSocketAddress) connection.getRemoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> getVirtualHost() {
+  public Optional<InetSocketAddress> connectedHostname() {
     return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
   }
 
@@ -45,7 +64,7 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public ProtocolVersion getProtocolVersion() {
+  public ProtocolVersion protocolVersion() {
     return connection.getProtocolVersion();
   }
 
@@ -59,9 +78,11 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnect(Component reason) {
+    Component translated = GlobalTranslator.render(reason, Locale.getDefault());
+
     logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(reason));
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
+        LegacyComponentSerializer.legacySection().serialize(translated));
+    connection.closeWith(ClientboundDisconnectPacket.create(translated, protocolVersion()));
   }
 
   /**
@@ -69,6 +90,7 @@ public final class InitialInboundConnection implements InboundConnection,
    * @param reason the reason for disconnecting
    */
   public void disconnectQuietly(Component reason) {
-    connection.closeWith(ClientboundDisconnectPacket.create(reason, getProtocolVersion()));
+    Component translated = GlobalTranslator.render(reason, Locale.getDefault());
+    connection.closeWith(ClientboundDisconnectPacket.create(translated, protocolVersion()));
   }
 }

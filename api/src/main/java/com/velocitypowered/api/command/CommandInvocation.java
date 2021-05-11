@@ -1,7 +1,14 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.command;
 
 /**
- * Provides information related to the possible execution of a {@link Command}.
+ * Provides information related to the (possible) execution of a {@link Command}.
  *
  * @param <T> the type of the arguments
  */

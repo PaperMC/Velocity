@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.network.packet.legacy;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +45,7 @@ public class LegacyDisconnectPacket implements LegacyPacket {
    */
   public static LegacyDisconnectPacket fromServerPing(ServerPing response,
                                                       LegacyMinecraftPingVersion version) {
-    Players players = response.getPlayers().orElse(FAKE_PLAYERS);
+    Players players = response.players().orElse(FAKE_PLAYERS);
 
     switch (version) {
       case MINECRAFT_1_3:
@@ -37,20 +54,20 @@ public class LegacyDisconnectPacket implements LegacyPacket {
         // MOTD.
         return new LegacyDisconnectPacket(String.join(LEGACY_COLOR_CODE,
             cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
-                response.getDescription()))),
-            Integer.toString(players.getOnline()),
-            Integer.toString(players.getMax())));
+                response.description()))),
+            Integer.toString(players.online()),
+            Integer.toString(players.maximum())));
       case MINECRAFT_1_4:
       case MINECRAFT_1_6:
         // Minecraft 1.4-1.6 provide support for more fields, and additionally support color codes.
         return new LegacyDisconnectPacket(String.join("\0",
             LEGACY_COLOR_CODE + "1",
-            Integer.toString(response.getVersion().getProtocol()),
-            response.getVersion().getName(),
+            Integer.toString(response.version().protocol()),
+            response.version().name(),
             getFirstLine(LegacyComponentSerializer.legacySection().serialize(response
-                .getDescription())),
-            Integer.toString(players.getOnline()),
-            Integer.toString(players.getMax())
+                .description())),
+            Integer.toString(players.online()),
+            Integer.toString(players.maximum())
         ));
       default:
         throw new IllegalArgumentException("Unknown version " + version);

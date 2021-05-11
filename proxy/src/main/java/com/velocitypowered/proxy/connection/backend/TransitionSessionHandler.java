@@ -1,10 +1,27 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEventImpl;
+import com.velocitypowered.api.event.player.ServerPostConnectEventImpl;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -68,9 +85,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientboundJoinGamePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+    VelocityServerConnection existingConnection = serverConn.player().getConnectedServer();
 
-    final ConnectedPlayer player = serverConn.getPlayer();
+    final ConnectedPlayer player = serverConn.player();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -83,10 +100,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
-    server.getEventManager()
-        .fire(new ServerConnectedEvent(player, serverConn.getServer(),
-            existingConnection != null ? existingConnection.getServer() : null))
-        .whenCompleteAsync((x, error) -> {
+    server.eventManager()
+        .fire(new ServerConnectedEventImpl(player, serverConn.target(),
+            existingConnection != null ? existingConnection.target() : null))
+        .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
             // Connection is obsolete.
@@ -112,17 +129,17 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           smc.setAutoReading(true);
 
           // Now set the connected server.
-          serverConn.getPlayer().setConnectedServer(serverConn);
+          serverConn.player().setConnectedServer(serverConn);
 
           // We're done! :)
-          server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
-              existingConnection == null ? null : existingConnection.getServer()));
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
+          server.eventManager().fireAndForget(new ServerPostConnectEventImpl(player,
+              existingConnection == null ? null : existingConnection.target()));
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.target()));
         }, smc.eventLoop())
         .exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
-              serverConn.getServerInfo().getName(),
-              player.getUsername(), exc);
+              serverConn.serverInfo().name(),
+              player.username(), exc);
           player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
           resultFuture.completeExceptionally(exc);
           return null;
@@ -141,9 +158,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
         && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getServer()));
+          serverConn.target()));
     } else {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.target()));
     }
 
     return true;
@@ -151,35 +168,35 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundPluginMessagePacket packet) {
-    if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
+    if (!serverConn.player().canForwardPluginMessage(serverConn.ensureConnected()
         .getProtocolVersion(), packet)) {
       return true;
     }
 
     if (PluginMessageUtil.isRegister(packet)) {
-      serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+      serverConn.player().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
     } else if (PluginMessageUtil.isUnregister(packet)) {
-      serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
+      serverConn.player().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
     }
 
     // We always need to handle plugin messages, for Forge compatibility.
-    if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
+    if (serverConn.getPhase().handle(serverConn, serverConn.player(), packet)) {
       // Handled, but check the server connection phase.
       if (serverConn.getPhase() == HELLO) {
-        VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+        VelocityServerConnection existingConnection = serverConn.player().getConnectedServer();
         if (existingConnection != null && existingConnection.getPhase() != IN_TRANSITION) {
           // Indicate that this connection is "in transition"
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
           // Tell the player that we're leaving and we just aren't coming back.
           existingConnection.getPhase().onDepartForNewServer(existingConnection,
-              serverConn.getPlayer());
+              serverConn.player());
         }
       }
       return true;
     }
 
-    serverConn.getPlayer().getConnection().write(packet.retain());
+    serverConn.player().getConnection().write(packet.retain());
     return true;
   }
 

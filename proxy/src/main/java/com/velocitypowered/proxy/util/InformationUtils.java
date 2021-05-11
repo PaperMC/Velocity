@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.util;
 
 import com.google.common.collect.ImmutableList;
@@ -15,7 +32,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
-
 import io.netty.channel.unix.DomainSocketAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -36,36 +52,35 @@ public enum InformationUtils {
    * @return {@link JsonArray} containing zero or more {@link JsonObject}
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
-    List<PluginContainer> allPlugins = ImmutableList.copyOf(
-            proxy.getPluginManager().getPlugins());
+    List<PluginContainer> allPlugins = ImmutableList.copyOf(proxy.pluginManager().plugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {
-      PluginDescription desc = plugin.getDescription();
+      PluginDescription desc = plugin.description();
       JsonObject current = new JsonObject();
-      current.addProperty("id", desc.getId());
-      if (desc.getName().isPresent()) {
-        current.addProperty("name", desc.getName().get());
+      current.addProperty("id", desc.id());
+      if (desc.name().isPresent()) {
+        current.addProperty("name", desc.name().get());
       }
-      if (desc.getVersion().isPresent()) {
-        current.addProperty("version", desc.getVersion().get());
+      if (desc.version().isPresent()) {
+        current.addProperty("version", desc.version().get());
       }
-      if (!desc.getAuthors().isEmpty()) {
+      if (!desc.authors().isEmpty()) {
         JsonArray authorsArray = new JsonArray();
-        for (String author : desc.getAuthors()) {
+        for (String author : desc.authors()) {
           authorsArray.add(author);
         }
         current.add("authors", authorsArray);
       }
-      if (desc.getDescription().isPresent()) {
-        current.addProperty("description", desc.getDescription().get());
+      if (desc.description().isPresent()) {
+        current.addProperty("description", desc.description().get());
       }
-      if (desc.getUrl().isPresent()) {
-        current.addProperty("url", desc.getUrl().get());
+      if (desc.url().isPresent()) {
+        current.addProperty("url", desc.url().get());
       }
-      if (!desc.getDependencies().isEmpty()) {
+      if (!desc.dependencies().isEmpty()) {
         JsonArray dependencies = new JsonArray();
-        for (PluginDependency dependency : desc.getDependencies()) {
+        for (PluginDependency dependency : desc.dependencies()) {
           dependencies.add(dependency.getId());
         }
         current.add("dependencies", dependencies);
@@ -169,12 +184,12 @@ public enum InformationUtils {
    */
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
-    info.addProperty("currentPlayers", server.getPlayersConnected().size());
-    SocketAddress address = server.getServerInfo().getAddress();
+    info.addProperty("currentPlayers", server.connectedPlayers().size());
+    SocketAddress address = server.serverInfo().address();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress iaddr = (InetSocketAddress) address;
       if (iaddr.isUnresolved()) {
-        // Greetings form Netty 4aa10db9
+        // Greetings from Netty 4aa10db9
         info.addProperty("host", iaddr.getHostString());
       } else {
         info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));

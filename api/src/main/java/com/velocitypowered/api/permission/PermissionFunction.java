@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.permission;
 
 /**
@@ -22,10 +29,10 @@ public interface PermissionFunction {
   PermissionFunction ALWAYS_UNDEFINED = p -> Tristate.UNDEFINED;
 
   /**
-   * Gets the subjects setting for a particular permission.
+   * Evaluates whether or not the player has a permission.
    *
    * @param permission the permission
    * @return the value the permission is set to
    */
-  Tristate getPermissionValue(String permission);
+  Tristate evaluatePermission(String permission);
 }

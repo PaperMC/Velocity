@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.network.packet;
 
 import com.google.common.base.MoreObjects;
@@ -12,6 +29,7 @@ public abstract class AbstractStatusPingPacket implements Packet {
       return factory.apply(randomId);
     };
   }
+
   protected static <P extends AbstractStatusPingPacket> PacketWriter<P> encoder() {
     return (buf, packet, version) -> buf.writeLong(packet.getRandomId());
   }

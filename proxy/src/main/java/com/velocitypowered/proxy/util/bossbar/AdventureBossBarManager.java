@@ -1,7 +1,25 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.util.bossbar;
 
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
@@ -84,7 +102,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
   public void addBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getOrCreateHandler(bar);
     if (holder.subscribers.add(player)) {
-      player.getConnection().write(holder.createAddPacket(player.getProtocolVersion()));
+      player.getConnection().write(holder.createAddPacket(player));
     }
   }
 
@@ -107,27 +125,28 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket pre116Packet = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_15_2);
-    ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
-      if (player.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
+      Component translated = player.translateMessage(newName);
+
+      if (player.protocolVersion().gte(ProtocolVersion.MINECRAFT_1_16)) {
+        ClientboundBossBarPacket rgbPacket = holder.createTitleUpdate(
+            translated, ProtocolVersion.MINECRAFT_1_16);
         player.getConnection().write(rgbPacket);
       } else {
+        ClientboundBossBarPacket pre116Packet = holder.createTitleUpdate(
+            translated, ProtocolVersion.MINECRAFT_1_15_2);
         player.getConnection().write(pre116Packet);
       }
     }
   }
 
   @Override
-  public void bossBarPercentChanged(@NonNull BossBar bar, float oldPercent, float newPercent) {
+  public void bossBarProgressChanged(@NonNull BossBar bar, float oldProgress, float newProgress) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket packet = holder
-        .createPercentUpdate(newPercent);
+    ClientboundBossBarPacket packet = holder.createPercentUpdate(newProgress);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -153,8 +172,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    ClientboundBossBarPacket packet = holder
-        .createOverlayUpdate(newOverlay);
+    ClientboundBossBarPacket packet = holder.createOverlayUpdate(newOverlay);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -192,14 +210,15 @@ public class AdventureBossBarManager implements BossBar.Listener {
       return ClientboundBossBarPacket.createRemovePacket(this.id);
     }
 
-    ClientboundBossBarPacket createAddPacket(ProtocolVersion version) {
+    ClientboundBossBarPacket createAddPacket(ConnectedPlayer player) {
       ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
       packet.setAction(ClientboundBossBarPacket.ADD);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(bar.name()));
+      packet.setName(ProtocolUtils.getJsonChatSerializer(player.protocolVersion())
+          .serialize(player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
-      packet.setOverlay(bar.overlay().ordinal());
-      packet.setPercent(bar.percent());
+      packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
+      packet.setPercent(bar.progress());
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
@@ -215,8 +234,9 @@ public class AdventureBossBarManager implements BossBar.Listener {
     ClientboundBossBarPacket createColorUpdate(Color color) {
       ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(ClientboundBossBarPacket.UPDATE_NAME);
+      packet.setAction(ClientboundBossBarPacket.UPDATE_STYLE);
       packet.setColor(COLORS_TO_PROTOCOL.get(color));
+      packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
@@ -247,6 +267,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
       ClientboundBossBarPacket packet = new ClientboundBossBarPacket();
       packet.setUuid(this.id);
       packet.setAction(ClientboundBossBarPacket.UPDATE_PROPERTIES);
+      packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(overlay));
       return packet;
     }

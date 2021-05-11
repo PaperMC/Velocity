@@ -1,8 +1,25 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
-import com.velocitypowered.api.event.connection.ProxyPingEvent;
+import com.velocitypowered.api.event.connection.ProxyPingEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -25,6 +42,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -50,18 +68,18 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    if (server.getConfiguration().isShowPingRequests()) {
+    if (server.configuration().isShowPingRequests()) {
       logger.info("{} is pinging the server with version {}", this.inbound,
           this.connection.getProtocolVersion());
     }
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     return new ServerPing(
-        new ServerPing.Version(version.getProtocol(),
+        new ServerPing.Version(version.protocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
-        new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
+        new ServerPing.Players(server.countConnectedPlayers(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
@@ -74,7 +92,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     ServerPing fallback = constructLocalPing(pingingVersion);
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
-      Optional<RegisteredServer> rs = server.getServer(s);
+      Optional<RegisteredServer> rs = server.server(s);
       if (!rs.isPresent()) {
         continue;
       }
@@ -106,7 +124,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             if (response == fallback) {
               continue;
             }
-            Optional<ModInfo> modInfo = response.getModinfo();
+            Optional<ModInfo> modInfo = response.modInfo();
             if (modInfo.isPresent()) {
               return fallback.asBuilder().mods(modInfo.get()).build();
             }
@@ -121,16 +139,16 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
               continue;
             }
 
-            if (response.getDescription() == null) {
+            if (response.description() == null) {
               continue;
             }
 
             return new ServerPing(
-                fallback.getVersion(),
-                fallback.getPlayers().orElse(null),
-                response.getDescription(),
-                fallback.getFavicon().orElse(null),
-                response.getModinfo().orElse(null)
+                fallback.version(),
+                fallback.players().orElse(null),
+                response.description(),
+                fallback.favicon().orElse(null),
+                response.modInfo().orElse(null)
             );
           }
           return fallback;
@@ -142,7 +160,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   private CompletableFuture<ServerPing> getInitialPing() {
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthrough = configuration.getPingPassthrough();
@@ -150,10 +168,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     if (passthrough == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      String virtualHostStr = inbound.getVirtualHost().map(InetSocketAddress::getHostString)
+      String virtualHostStr = inbound.connectedHostname().map(InetSocketAddress::getHostString)
+          .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
-      List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+      List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(
+          virtualHostStr, server.configuration().getAttemptConnectionOrder());
       return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);
     }
   }
@@ -165,9 +184,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
     this.pingReceived = true;
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> server.eventManager().fire(new ProxyPingEventImpl(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
-            LegacyDisconnectPacket.fromServerPing(event.getPing(), packet.getVersion())),
+            LegacyDisconnectPacket.fromServerPing(event.ping(), packet.getVersion())),
             connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);
@@ -190,12 +209,12 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     this.pingReceived = true;
 
     getInitialPing()
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
+        .thenCompose(ping -> server.eventManager().fire(new ProxyPingEventImpl(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
               StringBuilder json = new StringBuilder();
               VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
-                  .toJson(event.getPing(), json);
+                  .toJson(event.ping(), json);
               connection.write(new ClientboundStatusResponsePacket(json));
             },
             connection.eventLoop())

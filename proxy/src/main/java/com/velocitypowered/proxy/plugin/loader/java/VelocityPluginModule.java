@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.plugin.loader.java;
 
 import com.google.inject.Binder;
@@ -30,9 +47,9 @@ class VelocityPluginModule implements Module {
   public void configure(Binder binder) {
     binder.bind(description.getMainClass()).in(Scopes.SINGLETON);
 
-    binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.getId()));
+    binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.id()));
     binder.bind(Path.class).annotatedWith(DataDirectory.class)
-        .toInstance(basePluginPath.resolve(description.getId()));
+        .toInstance(basePluginPath.resolve(description.id()));
     binder.bind(PluginDescription.class).toInstance(description);
     binder.bind(PluginContainer.class).toInstance(pluginContainer);
   }

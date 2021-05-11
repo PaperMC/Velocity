@@ -1,7 +1,7 @@
 checkstyle {
     def configDirectory = new File(project.rootDir, ["config", "checkstyle"].join(File.separator))
 
-    toolVersion '8.14'
+    toolVersion '8.39'
     configFile new File(configDirectory, "checkstyle.xml")
     configProperties = [configDirectory: configDirectory.getAbsolutePath()]
     

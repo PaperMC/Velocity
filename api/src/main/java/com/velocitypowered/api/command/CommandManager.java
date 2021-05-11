@@ -1,6 +1,13 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.command;
 
-import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -15,7 +22,7 @@ public interface CommandManager {
    * @param alias the first command alias
    * @return a {@link CommandMeta} builder
    */
-  CommandMeta.Builder metaBuilder(String alias);
+  CommandMeta.Builder createMetaBuilder(String alias);
 
   /**
    * Returns a builder to create a {@link CommandMeta} for
@@ -24,7 +31,7 @@ public interface CommandManager {
    * @param command the command
    * @return a {@link CommandMeta} builder
    */
-  CommandMeta.Builder metaBuilder(BrigadierCommand command);
+  CommandMeta.Builder createMetaBuilder(BrigadierCommand command);
 
   /**
    * Registers the specified command with the specified aliases.
@@ -35,7 +42,7 @@ public interface CommandManager {
    * @throws IllegalArgumentException if one of the given aliases is already registered
    */
   default void register(String alias, Command command, String... otherAliases) {
-    register(metaBuilder(alias).aliases(otherAliases).build(), command);
+    register(createMetaBuilder(alias).aliases(otherAliases).build(), command);
   }
 
   /**
@@ -74,7 +81,7 @@ public interface CommandManager {
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}
-   * without firing a {@link CommandExecuteEvent}.
+   * without firing a {@link CommandExecuteEventImpl}.
    *
    * @param source the source to execute the command for
    * @param cmdLine the command to run

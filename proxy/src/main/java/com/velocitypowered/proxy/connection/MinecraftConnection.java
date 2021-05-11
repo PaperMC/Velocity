@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.connection;
 
 import static com.velocitypowered.proxy.network.HandlerNames.CIPHER_DECODER;
@@ -25,7 +42,7 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompre
 import com.velocitypowered.proxy.network.pipeline.MinecraftCipherDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCipherEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCompressDecoder;
-import com.velocitypowered.proxy.network.pipeline.MinecraftCompressEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCompressorAndLengthEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -391,18 +408,19 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     } else {
       MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
           .get(COMPRESSION_DECODER);
-      MinecraftCompressEncoder encoder = (MinecraftCompressEncoder) channel.pipeline()
-          .get(COMPRESSION_ENCODER);
+      MinecraftCompressorAndLengthEncoder encoder =
+          (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
       if (decoder != null && encoder != null) {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
       } else {
-        int level = server.getConfiguration().getCompressionLevel();
+        int level = server.configuration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
 
-        encoder = new MinecraftCompressEncoder(threshold, compressor);
+        encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);
         decoder = new MinecraftCompressDecoder(threshold, compressor);
 
+        channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
       }

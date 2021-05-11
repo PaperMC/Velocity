@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
@@ -11,12 +28,10 @@ import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -27,10 +42,10 @@ import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -57,25 +72,23 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private final Advanced advanced;
   @Expose private final Query query;
   private final Metrics metrics;
-  private final Messages messages;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics, Messages messages) {
+      Query query, Metrics metrics) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
-    this.messages = messages;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics, Messages messages) {
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -91,7 +104,6 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
-    this.messages = messages;
   }
 
   /**
@@ -358,10 +370,6 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogCommandExecutions();
   }
 
-  public Messages getMessages() {
-    return messages;
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -435,7 +443,6 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedConfig advancedConfig = config.get("advanced");
     CommentedConfig queryConfig = config.get("query");
     CommentedConfig metricsConfig = config.get("metrics");
-    CommentedConfig messagesConfig = config.get("messages");
     PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -455,8 +462,8 @@ public class VelocityConfiguration implements ProxyConfig {
         motd,
         maxPlayers,
         onlineMode,
-        announceForge,
         preventClientProxyConnections,
+        announceForge,
         forwardingMode,
         forwardingSecret,
         kickExisting,
@@ -465,8 +472,7 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig),
-        new Messages(messagesConfig, defaultConfig.get("messages"))
+        new Metrics(metricsConfig)
     );
   }
 
@@ -573,9 +579,11 @@ public class VelocityConfiguration implements ProxyConfig {
         Map<String, List<String>> forcedHosts = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
-            forcedHosts.put(entry.getKey(), ImmutableList.of(entry.getValue()));
+            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
+                ImmutableList.of(entry.getValue()));
           } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(entry.getKey(), ImmutableList.copyOf((List<String>) entry.getValue()));
+            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
+                ImmutableList.copyOf((List<String>) entry.getValue()));
           } else {
             throw new IllegalStateException(
                 "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
@@ -776,75 +784,6 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isEnabled() {
       return enabled;
-    }
-  }
-
-  public static class Messages {
-
-    private final CommentedConfig toml;
-    private final CommentedConfig defaultToml;
-
-    private final String kickPrefix;
-    private final String disconnectPrefix;
-    private final String onlineModeOnly;
-    private final String noAvailableServers;
-    private final String alreadyConnected;
-    private final String movedToNewServerPrefix;
-    private final String genericConnectionError;
-
-    private Messages(CommentedConfig toml, CommentedConfig defaultToml) {
-      this.toml = toml;
-      this.defaultToml = defaultToml;
-      this.kickPrefix = getString("kick-prefix");
-      this.disconnectPrefix = getString("disconnect-prefix");
-      this.onlineModeOnly = getString("online-mode-only");
-      this.noAvailableServers = getString("no-available-servers");
-      this.alreadyConnected = getString("already-connected");
-      this.movedToNewServerPrefix = getString("moved-to-new-server-prefix");
-      this.genericConnectionError = getString("generic-connection-error");
-    }
-
-    private String getString(String path) {
-      String def = defaultToml.getOrElse(path, "");
-      if (toml == null) {
-        return def;
-      }
-      return toml.getOrElse(path, def);
-    }
-
-    public Component getKickPrefix(String server) {
-      return deserialize(String.format(kickPrefix, server));
-    }
-
-    public Component getDisconnectPrefix(String server) {
-      return deserialize(String.format(disconnectPrefix, server));
-    }
-
-    public Component getOnlineModeOnly() {
-      return deserialize(onlineModeOnly);
-    }
-
-    public Component getNoAvailableServers() {
-      return deserialize(noAvailableServers);
-    }
-
-    public Component getAlreadyConnected() {
-      return deserialize(alreadyConnected);
-    }
-
-    public Component getMovedToNewServerPrefix() {
-      return deserialize(movedToNewServerPrefix);
-    }
-
-    public Component getGenericConnectionError() {
-      return deserialize(genericConnectionError);
-    }
-
-    private Component deserialize(String str) {
-      if (str.startsWith("{")) {
-        return GsonComponentSerializer.gson().deserialize(str);
-      }
-      return LegacyComponentSerializer.legacyAmpersand().deserialize(str);
     }
   }
 }

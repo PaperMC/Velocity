@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.plugin.loader;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -50,37 +67,37 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public String getId() {
+  public String id() {
     return id;
   }
 
   @Override
-  public Optional<String> getName() {
+  public Optional<String> name() {
     return Optional.ofNullable(name);
   }
 
   @Override
-  public Optional<String> getVersion() {
+  public Optional<String> version() {
     return Optional.ofNullable(version);
   }
 
   @Override
-  public Optional<String> getDescription() {
+  public Optional<String> description() {
     return Optional.ofNullable(description);
   }
 
   @Override
-  public Optional<String> getUrl() {
+  public Optional<String> url() {
     return Optional.ofNullable(url);
   }
 
   @Override
-  public List<String> getAuthors() {
+  public List<String> authors() {
     return authors;
   }
 
   @Override
-  public Collection<PluginDependency> getDependencies() {
+  public Collection<PluginDependency> dependencies() {
     return dependencies.values();
   }
 
@@ -90,7 +107,7 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public Optional<Path> getSource() {
+  public Optional<Path> file() {
     return Optional.ofNullable(source);
   }
 

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.collect.ImmutableList;
@@ -33,13 +50,13 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void addEntry(TabListEntry entry) {
     super.addEntry(entry);
-    nameMapping.put(entry.getProfile().getName(), entry.getProfile().getId());
+    nameMapping.put(entry.gameProfile().getName(), entry.gameProfile().getId());
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
     Optional<TabListEntry> entry = super.removeEntry(uuid);
-    entry.map(TabListEntry::getProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
+    entry.map(TabListEntry::gameProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
     return entry;
   }
 
@@ -91,7 +108,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   @Override
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
+    if (entries.containsKey(entry.gameProfile().getId())) {
       switch (action) {
         case ClientboundPlayerListItemPacket.UPDATE_LATENCY:
         case ClientboundPlayerListItemPacket.UPDATE_DISPLAY_NAME: // Add here because we

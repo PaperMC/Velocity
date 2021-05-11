@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
@@ -56,7 +63,7 @@ public interface TabList {
    *
    * @return immutable {@link Collection} of tab list entries
    */
-  Collection<TabListEntry> getEntries();
+  Collection<TabListEntry> entries();
 
   /**
    * Builds a tab list entry.
