@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
@@ -121,6 +122,23 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     public static ComponentResult denied(Component reason) {
       Preconditions.checkNotNull(reason, "reason");
       return new ComponentResult(false, reason);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ComponentResult that = (ComponentResult) o;
+      return status == that.status && Objects.equals(reason, that.reason);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(status, reason);
     }
   }
 }

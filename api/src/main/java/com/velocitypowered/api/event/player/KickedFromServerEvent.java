@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import java.util.Objects;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -105,6 +106,23 @@ public interface KickedFromServerEvent extends
     public static DisconnectPlayer create(Component reason) {
       return new DisconnectPlayer(reason);
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      DisconnectPlayer that = (DisconnectPlayer) o;
+      return Objects.equals(message, that.message);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message);
+    }
   }
 
   /**
@@ -149,6 +167,24 @@ public interface KickedFromServerEvent extends
     public static ServerKickResult create(RegisteredServer server) {
       return new RedirectPlayer(server, null);
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      RedirectPlayer that = (RedirectPlayer) o;
+      return Objects.equals(message, that.message) && Objects
+          .equals(server, that.server);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message, server);
+    }
   }
 
   /**
@@ -181,6 +217,23 @@ public interface KickedFromServerEvent extends
      */
     public static Notify create(Component message) {
       return new Notify(message);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Notify notify = (Notify) o;
+      return Objects.equals(message, notify.message);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message);
     }
   }
 }

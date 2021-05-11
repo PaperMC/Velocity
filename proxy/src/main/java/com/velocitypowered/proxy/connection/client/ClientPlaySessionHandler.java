@@ -175,14 +175,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       PlayerChatEvent event = new PlayerChatEventImpl(player, msg);
       server.eventManager().fire(event)
           .thenAcceptAsync(pme -> {
-            PlayerChatEventImpl.ChatResult chatResult = pme.result();
-            if (chatResult.isAllowed()) {
-              Optional<String> eventMsg = pme.result().modifiedMessage();
-              if (eventMsg.isPresent()) {
-                smc.write(new ServerboundChatPacket(eventMsg.get()));
-              } else {
-                smc.write(packet);
-              }
+            if (pme.result().isAllowed()) {
+              smc.write(new ServerboundChatPacket(pme.currentMessage()));
             }
           }, smc.eventLoop())
           .exceptionally((ex) -> {

@@ -7,76 +7,37 @@
 
 package com.velocitypowered.api.event.player;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.ResultedEvent.GenericResult;
 import com.velocitypowered.api.proxy.connection.Player;
-import java.util.Optional;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface PlayerChatEvent extends ResultedEvent<PlayerChatEvent.ChatResult> {
-
-  Player player();
-
-  String sentMessage();
+public interface PlayerChatEvent extends ResultedEvent<GenericResult> {
 
   /**
-   * Represents the result of the {@link PlayerChatEvent}.
+   * Returns the player sending the message.
+   *
+   * @return the player sending the message
    */
-  final class ChatResult implements Result {
+  Player player();
 
-    private static final ChatResult ALLOWED = new ChatResult(true, null);
-    private static final ChatResult DENIED = new ChatResult(false, null);
+  /**
+   * Returns the message the player originally sent.
+   *
+   * @return the message the player originally sent
+   */
+  String originalMessage();
 
-    private @Nullable String message;
-    private final boolean status;
+  /**
+   * Returns the message currently being sent, which may be modified by plugins.
+   *
+   * @return the message currently being sent
+   */
+  String currentMessage();
 
-    private ChatResult(boolean status, @Nullable String message) {
-      this.status = status;
-      this.message = message;
-    }
-
-    public Optional<String> modifiedMessage() {
-      return Optional.ofNullable(message);
-    }
-
-    @Override
-    public boolean isAllowed() {
-      return status;
-    }
-
-    @Override
-    public String toString() {
-      return status ? "allowed" : "denied";
-    }
-
-    /**
-     * Allows the message to be sent, without modification.
-     *
-     * @return the allowed result
-     */
-    public static ChatResult allowed() {
-      return ALLOWED;
-    }
-
-    /**
-     * Prevents the message from being sent.
-     *
-     * @return the denied result
-     */
-    public static ChatResult denied() {
-      return DENIED;
-    }
-
-    /**
-     * Allows the message to be sent, but silently replaced with another.
-     *
-     * @param message the message to use instead
-     * @return a result with a new message
-     */
-    public static ChatResult replaceMessage(@NonNull String message) {
-      Preconditions.checkNotNull(message, "message");
-      return new ChatResult(true, message);
-    }
-  }
+  /**
+   * Sets a new message to send, if the message is allowed to be sent.
+   *
+   * @param currentMessage the message to send instead of the current (or original) message
+   */
+  void setCurrentMessage(String currentMessage);
 }

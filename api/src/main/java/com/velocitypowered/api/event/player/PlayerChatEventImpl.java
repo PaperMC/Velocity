@@ -16,8 +16,9 @@ import com.velocitypowered.api.proxy.connection.Player;
 public final class PlayerChatEventImpl implements PlayerChatEvent {
 
   private final Player player;
-  private final String message;
-  private ChatResult result;
+  private final String originalMessage;
+  private String currentMessage;
+  private GenericResult result;
 
   /**
    * Constructs a PlayerChatEvent.
@@ -26,8 +27,9 @@ public final class PlayerChatEventImpl implements PlayerChatEvent {
    */
   public PlayerChatEventImpl(Player player, String message) {
     this.player = Preconditions.checkNotNull(player, "player");
-    this.message = Preconditions.checkNotNull(message, "message");
-    this.result = ChatResult.allowed();
+    this.originalMessage = Preconditions.checkNotNull(message, "message");
+    this.result = GenericResult.allowed();
+    this.currentMessage = message;
   }
 
   @Override
@@ -36,17 +38,27 @@ public final class PlayerChatEventImpl implements PlayerChatEvent {
   }
 
   @Override
-  public String sentMessage() {
-    return message;
+  public String originalMessage() {
+    return originalMessage;
   }
 
   @Override
-  public ChatResult result() {
+  public String currentMessage() {
+    return currentMessage;
+  }
+
+  @Override
+  public void setCurrentMessage(String currentMessage) {
+    this.currentMessage = Preconditions.checkNotNull(currentMessage, "currentMessage");
+  }
+
+  @Override
+  public GenericResult result() {
     return result;
   }
 
   @Override
-  public void setResult(ChatResult result) {
+  public void setResult(GenericResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
@@ -54,7 +66,7 @@ public final class PlayerChatEventImpl implements PlayerChatEvent {
   public String toString() {
     return "PlayerChatEvent{"
         + "player=" + player
-        + ", message=" + message
+        + ", message=" + originalMessage
         + ", result=" + result
         + '}';
   }

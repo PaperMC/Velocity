@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import java.util.Objects;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -91,6 +92,23 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
     public static ServerResult allowed(RegisteredServer target) {
       Preconditions.checkNotNull(target, "server");
       return new ServerResult(target);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ServerResult that = (ServerResult) o;
+      return Objects.equals(target, that.target);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(target);
     }
   }
 }
