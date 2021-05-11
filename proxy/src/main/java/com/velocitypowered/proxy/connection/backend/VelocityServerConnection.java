@@ -38,11 +38,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -167,11 +167,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     int port = destinationAddr instanceof InetSocketAddress
         ? ((InetSocketAddress) destinationAddr).getPort() : 0;
     ServerboundHandshakePacket handshake = new ServerboundHandshakePacket(protocolVersion,
-        address, port, StateRegistry.LOGIN_ID);
+        address, port, ServerboundHandshakePacket.LOGIN_ID);
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
-    mc.setState(StateRegistry.LOGIN);
+    mc.setState(ProtocolStates.LOGIN);
     mc.delayedWrite(new ServerboundServerLoginPacket(proxyPlayer.username()));
     mc.flush();
   }
