@@ -20,17 +20,20 @@ public final class PreLoginEventImpl implements PreLoginEvent {
 
   private final InboundConnection connection;
   private final String username;
-  private PreLoginComponentResult result;
+  private ComponentResult result;
+  private boolean onlineMode;
 
   /**
    * Creates a new instance.
    * @param connection the connection logging into the proxy
    * @param username the player's username
+   * @param onlineMode whether or not the connection is online mode
    */
-  public PreLoginEventImpl(InboundConnection connection, String username) {
+  public PreLoginEventImpl(InboundConnection connection, String username, boolean onlineMode) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
-    this.result = PreLoginComponentResult.allowed();
+    this.onlineMode = onlineMode;
+    this.result = ComponentResult.allowed();
   }
 
   @Override
@@ -44,12 +47,22 @@ public final class PreLoginEventImpl implements PreLoginEvent {
   }
 
   @Override
-  public PreLoginComponentResult result() {
+  public boolean onlineMode() {
+    return this.onlineMode;
+  }
+
+  @Override
+  public void setOnlineMode(boolean onlineMode) {
+    this.onlineMode = onlineMode;
+  }
+
+  @Override
+  public ComponentResult result() {
     return result;
   }
 
   @Override
-  public void setResult(@NonNull PreLoginComponentResult result) {
+  public void setResult(@NonNull ComponentResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 

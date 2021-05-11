@@ -28,7 +28,7 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
   private final ChannelMessageSink target;
   private final PluginChannelId identifier;
   private final byte[] data;
-  private ForwardResult result;
+  private GenericResult result;
 
   /**
    * Creates a new instance.
@@ -44,16 +44,16 @@ public final class PluginMessageEventImpl implements PluginMessageEvent {
     this.target = Preconditions.checkNotNull(target, "target");
     this.identifier = Preconditions.checkNotNull(identifier, "identifier");
     this.data = Preconditions.checkNotNull(data, "data");
-    this.result = ForwardResult.forward();
+    this.result = GenericResult.allowed();
   }
 
   @Override
-  public ForwardResult result() {
+  public GenericResult result() {
     return result;
   }
 
   @Override
-  public void setResult(ForwardResult result) {
+  public void setResult(GenericResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 

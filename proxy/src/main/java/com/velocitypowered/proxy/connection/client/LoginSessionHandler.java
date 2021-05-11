@@ -25,6 +25,7 @@ import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEventImpl;
 import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.player.DisconnectEventImpl;
@@ -35,7 +36,6 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEventImpl;
 import com.velocitypowered.api.event.player.PostLoginEventImpl;
 import com.velocitypowered.api.event.player.PreLoginEvent;
-import com.velocitypowered.api.event.player.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.player.PreLoginEventImpl;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -180,7 +180,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
-    PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername());
+    PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername(),
+        server.configuration().isOnlineMode());
     server.eventManager().fire(event)
         .thenRunAsync(() -> {
           if (mcConnection.isClosed()) {
@@ -188,16 +189,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          PreLoginComponentResult result = event.result();
-          Optional<Component> disconnectReason = result.denialReason();
+          ComponentResult result = event.result();
+          Optional<Component> disconnectReason = result.reason();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
             inbound.disconnect(disconnectReason.get());
             return;
           }
 
-          if (!result.isForceOfflineMode() && (server.configuration().isOnlineMode() || result
-              .isOnlineModeAllowed())) {
+          if (event.onlineMode()) {
             // Request encryption.
             ClientboundEncryptionRequestPacket request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);

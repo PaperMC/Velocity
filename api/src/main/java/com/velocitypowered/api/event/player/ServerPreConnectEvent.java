@@ -37,6 +37,10 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
    */
   RegisteredServer originalTarget();
 
+  default void reject() {
+    setResult(ServerResult.DENIED);
+  }
+
   /**
    * Represents the result of the {@link ServerPreConnectEvent}.
    */

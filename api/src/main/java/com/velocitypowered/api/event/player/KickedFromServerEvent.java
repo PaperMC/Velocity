@@ -43,6 +43,33 @@ public interface KickedFromServerEvent extends
   boolean kickedDuringServerConnect();
 
   /**
+   * Handles the event by disconnecting the player with the specified {@code reason}.
+   *
+   * @param reason the reason for disconnecting the player
+   */
+  default void handleByDisconnecting(Component reason) {
+    setResult(DisconnectPlayer.create(reason));
+  }
+
+  /**
+   * Handles the event by falling back on the specified server.
+   *
+   * @param server the server to fall back to
+   */
+  default void handleByConnectingToServer(RegisteredServer server) {
+    setResult(RedirectPlayer.create(server));
+  }
+
+  /**
+   * Handles the event by giving the player the specified {@code reason}.
+   *
+   * @param reason the reason for being kicked
+   */
+  default void handleByNotifying(Component reason) {
+    setResult(Notify.create(reason));
+  }
+
+  /**
    * Represents the base interface for {@link KickedFromServerEvent} results.
    */
   public interface ServerKickResult extends Result {
