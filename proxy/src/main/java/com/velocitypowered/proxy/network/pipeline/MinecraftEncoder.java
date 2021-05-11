@@ -19,10 +19,11 @@ package com.velocitypowered.proxy.network.pipeline;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.registry.packet.PacketRegistryMap;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -30,8 +31,9 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class MinecraftEncoder extends MessageToByteEncoder<Packet> {
 
   private final PacketDirection direction;
-  private StateRegistry state;
-  private StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private ProtocolRegistry state;
+  private PacketRegistryMap registry;
+  private ProtocolVersion version;
 
   /**
    * Creates a new {@code MinecraftEncoder} encoding packets for the specified {@code direction}.
@@ -40,22 +42,23 @@ public class MinecraftEncoder extends MessageToByteEncoder<Packet> {
    */
   public MinecraftEncoder(PacketDirection direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = StateRegistry.HANDSHAKE
-        .getProtocolRegistry(direction, ProtocolVersion.MINIMUM_VERSION);
-    this.state = StateRegistry.HANDSHAKE;
+    this.state = ProtocolStates.HANDSHAKE;
+    this.version = ProtocolVersion.MINIMUM_VERSION;
+    this.registry = this.state.lookup(direction, ProtocolVersion.MINIMUM_VERSION);
   }
 
   @Override
   protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) {
-    this.registry.writePacket(msg, out, registry.version);
+    this.registry.writePacket(msg, out, this.version);
   }
 
   public void setProtocolVersion(final ProtocolVersion protocolVersion) {
-    this.registry = state.getProtocolRegistry(direction, protocolVersion);
+    this.version = protocolVersion;
+    this.registry = this.state.lookup(direction, protocolVersion);
   }
 
-  public void setState(StateRegistry state) {
+  public void setState(ProtocolRegistry state) {
     this.state = state;
-    this.setProtocolVersion(registry.version);
+    this.setProtocolVersion(version);
   }
 }

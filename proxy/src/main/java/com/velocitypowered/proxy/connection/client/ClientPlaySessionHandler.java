@@ -41,7 +41,6 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
@@ -57,6 +56,7 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlive
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -69,7 +69,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -210,7 +209,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
-      if (backendConn.getState() != StateRegistry.PLAY) {
+      if (backendConn.getState() != ProtocolStates.PLAY) {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {

@@ -46,12 +46,12 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundEncryptionResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -287,7 +287,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     mcConnection.write(new ClientboundServerLoginSuccessPacket(playerUniqueId, player.username()));
 
     mcConnection.setAssociation(player);
-    mcConnection.setState(StateRegistry.PLAY);
+    mcConnection.setState(ProtocolStates.PLAY);
 
     server.eventManager().fire(new LoginEventImpl(player))
         .thenAcceptAsync(event -> {

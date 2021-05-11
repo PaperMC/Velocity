@@ -41,6 +41,8 @@ public class ServerboundHandshakePacket implements Packet {
     out.writeShort(packet.port);
     ProtocolUtils.writeVarInt(out, packet.nextStatus);
   };
+  public static final int STATUS_ID = 1;
+  public static final int LOGIN_ID = 2;
 
   private final ProtocolVersion protocolVersion;
   private final String serverAddress;

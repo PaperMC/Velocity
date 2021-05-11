@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCipherDecoder;
@@ -45,6 +44,8 @@ import com.velocitypowered.proxy.network.pipeline.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCompressorAndLengthEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -75,7 +76,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private final Channel channel;
   private SocketAddress remoteAddress;
-  private StateRegistry state;
+  private ProtocolRegistry state;
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
@@ -92,7 +93,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
-    this.state = StateRegistry.HANDSHAKE;
+    this.state = ProtocolStates.HANDSHAKE;
   }
 
   @Override
@@ -247,7 +248,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (channel.isActive()) {
       boolean is17 = this.getProtocolVersion().lt(ProtocolVersion.MINECRAFT_1_8)
           && this.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_7_2);
-      if (is17 && this.getState() != StateRegistry.STATUS) {
+      if (is17 && this.getState() != ProtocolStates.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
@@ -307,7 +308,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return remoteAddress;
   }
 
-  public StateRegistry getState() {
+  public ProtocolRegistry getState() {
     return state;
   }
 
@@ -341,7 +342,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Changes the state of the Minecraft connection.
    * @param state the new state
    */
-  public void setState(StateRegistry state) {
+  public void setState(ProtocolRegistry state) {
     ensureInEventLoop();
 
     this.state = state;

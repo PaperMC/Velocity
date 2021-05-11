@@ -23,10 +23,10 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -67,10 +67,10 @@ public class PingSessionHandler implements MinecraftSessionHandler {
         version,
         hostname,
         port,
-        StateRegistry.STATUS_ID
+        ServerboundHandshakePacket.STATUS_ID
     ));
 
-    connection.setState(StateRegistry.STATUS);
+    connection.setState(ProtocolStates.STATUS);
     connection.delayedWrite(ServerboundStatusRequestPacket.INSTANCE);
 
     connection.flush();

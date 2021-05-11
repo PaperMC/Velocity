@@ -29,12 +29,13 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyHandshakePacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyPingPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -81,7 +82,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerboundHandshakePacket handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+    ProtocolRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
       connection.close(true);
@@ -90,28 +91,25 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
-      switch (nextState) {
-        case STATUS:
-          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
-          break;
-        case LOGIN:
-          this.handleLogin(handshake, ic);
-          break;
-        default:
-          // If you get this, it's a bug in Velocity.
-          throw new AssertionError("getStateForProtocol provided invalid state!");
+      if (nextState == ProtocolStates.STATUS) {
+        connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+      } else if (nextState == ProtocolStates.LOGIN) {
+        this.handleLogin(handshake, ic);
+      } else {
+        // If you get this, it's a bug in Velocity.
+        throw new AssertionError("getStateForProtocol provided invalid state!");
       }
     }
 
     return true;
   }
 
-  private static @Nullable StateRegistry getStateForProtocol(int status) {
+  private static @Nullable ProtocolRegistry getStateForProtocol(int status) {
     switch (status) {
-      case StateRegistry.STATUS_ID:
-        return StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID:
-        return StateRegistry.LOGIN;
+      case ServerboundHandshakePacket.STATUS_ID:
+        return ProtocolStates.STATUS;
+      case ServerboundHandshakePacket.LOGIN_ID:
+        return ProtocolStates.LOGIN;
       default:
         return null;
     }

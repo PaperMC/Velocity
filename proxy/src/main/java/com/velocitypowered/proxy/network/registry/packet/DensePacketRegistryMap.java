@@ -1,6 +1,24 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.network.registry.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -19,6 +37,7 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
   private final PacketReader<?>[] readersById;
   private final PacketWriter[] writersByClass;
   private final Class<?>[] classesById;
+  private final int[] idsByKey;
 
   public DensePacketRegistryMap(Int2ObjectMap<PacketMapping<?>> mappings) {
     int size = mappings.keySet().stream().mapToInt(x -> x).max().orElse(0) + 1;
@@ -26,17 +45,19 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
     this.readersById = new PacketReader[size];
     this.writersByClass = new PacketWriter[size * 2];
     this.classesById = new Class[size * 2];
+    this.idsByKey = new int[size * 2];
 
     for (PacketMapping<?> value : mappings.values()) {
       this.readersById[value.id] = value.reader;
-      this.place(value.packetClass, value.writer);
+      this.place(value.id, value.packetClass, value.writer);
     }
   }
 
-  private void place(Class<?> key, PacketWriter<?> value) {
+  private void place(int packetId, Class<?> key, PacketWriter<?> value) {
     int bucket = findEmpty(key);
     this.writersByClass[bucket] = value;
     this.classesById[bucket] = key;
+    this.idsByKey[bucket] = packetId;
   }
 
   private int findEmpty(Class<?> key) {
@@ -86,9 +107,10 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
   @Override
   public <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version) {
-    int id = this.index(packet.getClass());
-    if (id != -1) {
-      this.writersByClass[id].write(buf, packet, version);
+    int bucket = this.index(packet.getClass());
+    if (bucket != -1) {
+      ProtocolUtils.writeVarInt(buf, this.idsByKey[bucket]);
+      this.writersByClass[bucket].write(buf, packet, version);
     } else {
       throw new IllegalArgumentException(String.format(
           "Unable to find id for packet of type %s in protocol %s",

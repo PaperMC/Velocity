@@ -58,7 +58,6 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
@@ -68,6 +67,7 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourceP
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -769,7 +769,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
+    if (connection.getState() == ProtocolStates.PLAY) {
       connection.write(new ClientboundKeepAlivePacket(ThreadLocalRandom.current().nextLong()));
     }
   }

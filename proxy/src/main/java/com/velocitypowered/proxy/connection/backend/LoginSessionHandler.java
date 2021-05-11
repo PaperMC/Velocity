@@ -27,13 +27,13 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -46,7 +46,6 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -119,7 +118,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
-    smc.setState(StateRegistry.PLAY);
+    smc.setState(ProtocolStates.PLAY);
 
     // Switch to the transition handler.
     smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.network;
+package com.velocitypowered.proxy.network.registry.state;
 
 import static com.google.common.collect.Iterables.getLast;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_12;
@@ -33,6 +33,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINIMUM_VERSION;
 import static com.velocitypowered.api.network.ProtocolVersion.SUPPORTED_VERSIONS;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketReader;
@@ -41,88 +42,44 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundAvailable
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundHeaderAndFooterPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusPingPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusResponsePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTabCompleteResponsePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundEncryptionResponsePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlivePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusPingPacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
+import com.velocitypowered.proxy.network.registry.packet.PacketRegistryMap;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public enum StateRegistry {
+class PlayPacketRegistry implements ProtocolRegistry {
 
-  HANDSHAKE(true) {
-    {
-      serverbound.register(
-          ServerboundHandshakePacket.class,
-          ServerboundHandshakePacket.DECODER,
-          ServerboundHandshakePacket.ENCODER,
-          map(0x00, MINECRAFT_1_7_2, false)
-      );
-    }
-  },
-  STATUS(true) {
-    {
-      serverbound.register(
-          ServerboundStatusRequestPacket.class,
-          ServerboundStatusRequestPacket.DECODER,
-          ServerboundStatusRequestPacket.ENCODER,
-          map(0x00, MINECRAFT_1_7_2, false)
-      );
-      serverbound.register(
-          ServerboundStatusPingPacket.class,
-          ServerboundStatusPingPacket.DECODER,
-          ServerboundStatusPingPacket.ENCODER,
-          map(0x01, MINECRAFT_1_7_2, false)
-      );
+  static final ProtocolRegistry PLAY = new PlayPacketRegistry();
 
-      clientbound.register(
-          ClientboundStatusResponsePacket.class,
-          ClientboundStatusResponsePacket.DECODER,
-          ClientboundStatusResponsePacket.ENCODER,
-          map(0x00, MINECRAFT_1_7_2, false)
-      );
-      clientbound.register(
-          ClientboundStatusPingPacket.class,
-          ClientboundStatusPingPacket.DECODER,
-          ClientboundStatusPingPacket.ENCODER,
-          map(0x01, MINECRAFT_1_7_2, false)
-      );
-    }
-  },
-  PLAY(false) {
+  private PlayPacketRegistry() {
+    this.clientbound = new PacketRegistry(PacketDirection.CLIENTBOUND);
+    this.serverbound = new PacketRegistry(PacketDirection.SERVERBOUND);
+
     {
       serverbound.register(
           ServerboundTabCompleteRequestPacket.class,
@@ -346,73 +303,16 @@ public enum StateRegistry {
           map(0x32, MINECRAFT_1_16_2, false)
       );
     }
-  },
-  LOGIN(true) {
-    {
-      serverbound.register(
-          ServerboundServerLoginPacket.class,
-          ServerboundServerLoginPacket.DECODER,
-          ServerboundServerLoginPacket.ENCODER,
-          map(0x00, MINECRAFT_1_7_2, false)
-      );
-      serverbound.register(
-          ServerboundEncryptionResponsePacket.class,
-          ServerboundEncryptionResponsePacket.DECODER,
-          ServerboundEncryptionResponsePacket.ENCODER,
-          map(0x01, MINECRAFT_1_7_2, false)
-      );
-      serverbound.register(
-          ServerboundLoginPluginResponsePacket.class,
-          ServerboundLoginPluginResponsePacket.DECODER,
-          ServerboundLoginPluginResponsePacket.ENCODER,
-          map(0x02, MINECRAFT_1_13, false)
-      );
 
-      clientbound.register(
-          ClientboundDisconnectPacket.class,
-          ClientboundDisconnectPacket.DECODER,
-          ClientboundDisconnectPacket.ENCODER,
-          map(0x00, MINECRAFT_1_7_2, false)
-      );
-      clientbound.register(
-          ClientboundEncryptionRequestPacket.class,
-          ClientboundEncryptionRequestPacket.DECODER,
-          ClientboundEncryptionRequestPacket.ENCODER,
-          map(0x01, MINECRAFT_1_7_2, false)
-      );
-      clientbound.register(
-          ClientboundServerLoginSuccessPacket.class,
-          ClientboundServerLoginSuccessPacket.DECODER,
-          ClientboundServerLoginSuccessPacket.ENCODER,
-          map(0x02, MINECRAFT_1_7_2, false)
-      );
-      clientbound.register(
-          ClientboundSetCompressionPacket.class,
-          ClientboundSetCompressionPacket.DECODER,
-          ClientboundSetCompressionPacket.ENCODER,
-          map(0x03, MINECRAFT_1_8, false)
-      );
-      clientbound.register(
-          ClientboundLoginPluginMessagePacket.class,
-          ClientboundLoginPluginMessagePacket.DECODER,
-          ClientboundLoginPluginMessagePacket.ENCODER,
-          map(0x04, MINECRAFT_1_13, false)
-      );
-    }
-  };
+    serverbound.compact();
+    clientbound.compact();
+  }
 
-  public static final int STATUS_ID = 1;
-  public static final int LOGIN_ID = 2;
   public final PacketRegistry clientbound;
   public final PacketRegistry serverbound;
 
-  StateRegistry(boolean useMinimumIfVersionNotFound) {
-    this.clientbound = new PacketRegistry(PacketDirection.CLIENTBOUND, useMinimumIfVersionNotFound);
-    this.serverbound = new PacketRegistry(PacketDirection.SERVERBOUND, useMinimumIfVersionNotFound);
-  }
-
-  public PacketRegistry.ProtocolRegistry getProtocolRegistry(PacketDirection direction,
-                                                             ProtocolVersion version) {
+  public PacketRegistryMap lookup(PacketDirection direction,
+      ProtocolVersion version) {
     return (direction == PacketDirection.SERVERBOUND ? this.serverbound : this.clientbound)
       .getProtocolRegistry(version);
   }
@@ -421,15 +321,9 @@ public enum StateRegistry {
 
     private final PacketDirection direction;
     private final Map<ProtocolVersion, ProtocolRegistry> versions;
-    private final boolean useMinimumIfVersionNotFound;
 
     PacketRegistry(PacketDirection direction) {
-      this(direction, true);
-    }
-
-    PacketRegistry(PacketDirection direction, boolean useMinimumIfVersionNotFound) {
       this.direction = direction;
-      this.useMinimumIfVersionNotFound = useMinimumIfVersionNotFound;
 
       Map<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap<>(ProtocolVersion.class);
       for (ProtocolVersion version : ProtocolVersion.values()) {
@@ -438,15 +332,12 @@ public enum StateRegistry {
         }
       }
 
-      this.versions = Collections.unmodifiableMap(mutableVersions);
+      this.versions = mutableVersions;
     }
 
     ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {
       ProtocolRegistry registry = versions.get(version);
       if (registry == null) {
-        if (useMinimumIfVersionNotFound) {
-          return getProtocolRegistry(MINIMUM_VERSION);
-        }
         throw new IllegalArgumentException("Could not find data for protocol version " + version);
       }
       return registry;
@@ -499,9 +390,26 @@ public enum StateRegistry {
       }
     }
 
-    public class ProtocolRegistry {
+    public void compact() {
+      ProtocolRegistry last = this.versions.get(MINIMUM_VERSION);
+      for (Entry<ProtocolVersion, ProtocolRegistry> entry : this.versions
+          .entrySet()) {
+        if (entry.getValue() == last) {
+          continue;
+        }
 
-      public final ProtocolVersion version;
+        if (entry.getValue().packetClassToId.equals(last.packetClassToId)
+            && entry.getValue().packetClassToWriter.equals(last.packetClassToWriter)) {
+          entry.setValue(last);
+        } else {
+          last = entry.getValue();
+        }
+      }
+    }
+
+    public class ProtocolRegistry implements PacketRegistryMap {
+
+      private final ProtocolVersion version;
       final IntObjectMap<PacketReader<? extends Packet>> packetIdToReader =
           new IntObjectHashMap<>(16, 0.5f);
       final Object2IntMap<Class<? extends Packet>> packetClassToId =
@@ -519,7 +427,6 @@ public enum StateRegistry {
        *
        * @param id the packet ID
        * @param buf the bytebuf
-       * @param version the protocol version
        * @return the packet instance, or {@code null} if the ID is not registered
        */
       public @Nullable Packet readPacket(final int id, ByteBuf buf, ProtocolVersion version) {
@@ -535,7 +442,6 @@ public enum StateRegistry {
        *
        * @param packet the packet
        * @param buf the bytebuf
-       * @param version the protocol version
        */
       public <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version) {
         final int id = this.packetClassToId.getInt(packet.getClass());
