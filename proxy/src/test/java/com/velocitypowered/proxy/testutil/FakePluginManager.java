@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class FakePluginManager implements PluginManager {
 
@@ -35,25 +36,25 @@ public class FakePluginManager implements PluginManager {
   private static final PluginContainer PC_B = new FakePluginContainer("b", PLUGIN_B);
 
   @Override
-  public @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance) {
+  public @Nullable PluginContainer fromInstance(@NonNull Object instance) {
     if (instance == PLUGIN_A) {
-      return Optional.of(PC_A);
+      return PC_A;
     } else if (instance == PLUGIN_B) {
-      return Optional.of(PC_B);
+      return PC_B;
     } else {
-      return Optional.empty();
+      return null;
     }
   }
 
   @Override
-  public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
+  public @Nullable PluginContainer getPlugin(@NonNull String id) {
     switch (id) {
       case "a":
-        return Optional.of(PC_A);
+        return PC_A;
       case "b":
-        return Optional.of(PC_B);
+        return PC_B;
       default:
-        return Optional.empty();
+        return null;
     }
   }
 

@@ -14,7 +14,6 @@ import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -60,8 +59,8 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
       return target != null;
     }
 
-    public Optional<RegisteredServer> target() {
-      return Optional.ofNullable(target);
+    public @Nullable RegisteredServer target() {
+      return target;
     }
 
     @Override

@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.util.bossbar;
 
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;

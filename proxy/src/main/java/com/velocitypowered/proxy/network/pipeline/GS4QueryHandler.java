@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
@@ -203,8 +202,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     List<QueryResponse.PluginInformation> result = new ArrayList<>();
     for (PluginContainer plugin : server.pluginManager().plugins()) {
       PluginDescription description = plugin.description();
-      result.add(QueryResponse.PluginInformation.of(description.name()
-          .orElse(description.id()), description.version().orElse(null)));
+      result.add(QueryResponse.PluginInformation.of(description.name(),
+          description.version()));
     }
     return result;
   }
@@ -272,8 +271,10 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       while (iterator.hasNext()) {
         QueryResponse.PluginInformation info = iterator.next();
         pluginsString.append(info.getName());
-        Optional<String> version = info.getVersion();
-        version.ifPresent(s -> pluginsString.append(' ').append(s));
+        String version = info.getVersion();
+        if (version != null) {
+          pluginsString.append(' ').append(version);
+        }
         if (iterator.hasNext()) {
           pluginsString.append(';').append(' ');
         }

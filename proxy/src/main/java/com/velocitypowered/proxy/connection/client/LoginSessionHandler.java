@@ -59,7 +59,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -194,10 +193,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           }
 
           ComponentResult result = event.result();
-          Optional<Component> disconnectReason = result.reason();
-          if (disconnectReason.isPresent()) {
+          Component disconnectReason = result.reason();
+          if (disconnectReason != null) {
             // The component is guaranteed to be provided if the connection was denied.
-            inbound.disconnect(disconnectReason.get());
+            inbound.disconnect(disconnectReason);
             return;
           }
 
@@ -242,7 +241,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.gameProfile(),
-          mcConnection, inbound.connectedHostname().orElse(null), onlineMode);
+          mcConnection, inbound.connectedHostname(), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
@@ -302,9 +301,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          Optional<Component> reason = event.result().reason();
-          if (reason.isPresent()) {
-            player.disconnect0(reason.get(), true);
+          Component denialReason = event.result().reason();
+          if (denialReason != null) {
+            player.disconnect0(denialReason, true);
           } else {
             if (!server.registerConnection(player)) {
               player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
@@ -328,19 +327,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
-    Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
+    RegisteredServer initialFromConfig = player.getNextServerToTry();
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEventImpl(player,
-        initialFromConfig.orElse(null));
+        initialFromConfig);
 
     return server.eventManager().fire(event)
         .thenRunAsync(() -> {
-          Optional<RegisteredServer> toTry = event.initialServer();
-          if (!toTry.isPresent()) {
+          RegisteredServer toTry = event.initialServer();
+          if (toTry == null) {
             player.disconnect0(Component.translatable("velocity.error.no-available-servers",
                 NamedTextColor.RED), true);
             return;
           }
-          player.createConnectionRequest(toTry.get()).fireAndForget();
+          player.createConnectionRequest(toTry).fireAndForget();
         }, mcConnection.eventLoop());
   }
 

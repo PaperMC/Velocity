@@ -22,6 +22,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.network.PluginMessageUtil.constructChannelsPacket;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -65,7 +66,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -598,7 +598,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
-    String commandToRun = result.modifiedCommand().orElse(originalCommand);
+    String commandToRun = MoreObjects.firstNonNull(result.modifiedCommand(), originalCommand);
     if (result.isForwardToServer()) {
       return CompletableFuture.runAsync(() -> smc.write(new ServerboundChatPacket("/"
           + commandToRun)), smc.eventLoop());

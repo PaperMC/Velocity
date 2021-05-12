@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.network;
 
+import static com.velocitypowered.proxy.network.HandlerNames.FLOW_HANDLER;
 import static com.velocitypowered.proxy.network.HandlerNames.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.HandlerNames.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.HandlerNames.LEGACY_PING_DECODER;
@@ -29,6 +30,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.pipeline.AutoReadHolderHandler;
 import com.velocitypowered.proxy.network.pipeline.LegacyPingDecoder;
 import com.velocitypowered.proxy.network.pipeline.LegacyPingEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
@@ -61,7 +63,8 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(PacketDirection.SERVERBOUND))
-        .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(PacketDirection.CLIENTBOUND));
+        .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(PacketDirection.CLIENTBOUND))
+        .addLast(FLOW_HANDLER, new AutoReadHolderHandler());
 
     final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
     connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));

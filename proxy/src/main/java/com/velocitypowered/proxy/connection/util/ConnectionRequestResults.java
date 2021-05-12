@@ -21,7 +21,6 @@ import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -89,8 +88,8 @@ public class ConnectionRequestResults {
     }
 
     @Override
-    public Optional<Component> failureReason() {
-      return Optional.ofNullable(component);
+    public @Nullable Component failureReason() {
+      return component;
     }
 
     @Override

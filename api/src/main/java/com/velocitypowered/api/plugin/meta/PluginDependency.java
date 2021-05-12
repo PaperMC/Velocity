@@ -12,7 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
 
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -43,17 +42,17 @@ public final class PluginDependency {
    *
    * @return the plugin ID
    */
-  public String getId() {
+  public String id() {
     return id;
   }
 
   /**
    * Returns the version this {@link PluginDependency} should match.
    *
-   * @return an {@link Optional} with the plugin version, may be empty
+   * @return a String with the plugin version, may be {@code null}
    */
-  public Optional<String> getVersion() {
-    return Optional.ofNullable(version);
+  public @Nullable String version() {
+    return version;
   }
 
   /**
@@ -61,7 +60,7 @@ public final class PluginDependency {
    *
    * @return true if dependency is optional
    */
-  public boolean isOptional() {
+  public boolean optional() {
     return optional;
   }
 

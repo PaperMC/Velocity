@@ -119,7 +119,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   private String playerConnectedHostname() {
-    return proxyPlayer.connectedHostname().map(InetSocketAddress::getHostString).orElse("");
+    InetSocketAddress vhost = proxyPlayer.connectedHostname();
+    return vhost == null ? "" : vhost.getHostString();
   }
 
   private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
@@ -135,10 +136,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.remoteAddress()).getHostString())
         .append('\0')
-        .append(proxyPlayer.gameProfile().getUndashedId())
+        .append(proxyPlayer.gameProfile().undashedId())
         .append('\0');
     GENERAL_GSON
-        .toJson(propertiesTransform.apply(proxyPlayer.gameProfile().getProperties()), data);
+        .toJson(propertiesTransform.apply(proxyPlayer.gameProfile().properties()), data);
     return data.toString();
   }
 
@@ -233,7 +234,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public String toString() {
-    return "[server connection] " + proxyPlayer.gameProfile().getName() + " -> "
+    return "[server connection] " + proxyPlayer.gameProfile().name() + " -> "
         + registeredServer.serverInfo().name();
   }
 

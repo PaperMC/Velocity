@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -295,17 +294,17 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
-      String pluginInfo = description.name().orElse(description.id())
-          + description.version().map(v -> " " + v).orElse("");
+      String pluginInfo = description.name();
 
       TextComponent.Builder hoverText = Component.text().content(pluginInfo);
 
-      description.url().ifPresent(url -> {
+      String pluginUrl = description.url();
+      if (pluginUrl != null) {
         hoverText.append(Component.newline());
         hoverText.append(Component.translatable(
             "velocity.command.plugin-tooltip-website",
-            Component.text(url)));
-      });
+            Component.text(pluginUrl)));
+      }
       if (!description.authors().isEmpty()) {
         hoverText.append(Component.newline());
         if (description.authors().size() == 1) {
@@ -319,11 +318,13 @@ public class VelocityCommand implements SimpleCommand {
           );
         }
       }
-      description.description().ifPresent(pdesc -> {
+
+      String humanDescription = description.description();
+      if (humanDescription != null) {
         hoverText.append(Component.newline());
         hoverText.append(Component.newline());
-        hoverText.append(Component.text(pdesc));
-      });
+        hoverText.append(Component.text(humanDescription));
+      }
 
       return Component.text(description.id(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));

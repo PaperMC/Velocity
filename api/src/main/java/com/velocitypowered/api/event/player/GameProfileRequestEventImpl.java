@@ -34,7 +34,7 @@ public final class GameProfileRequestEventImpl implements GameProfileRequestEven
       boolean onlineMode) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.originalProfile = Preconditions.checkNotNull(originalProfile, "originalProfile");
-    this.username = originalProfile.getName();
+    this.username = originalProfile.name();
     this.onlineMode = onlineMode;
   }
 

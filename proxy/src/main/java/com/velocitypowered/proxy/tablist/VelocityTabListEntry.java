@@ -21,7 +21,6 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -53,8 +52,8 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public Optional<Component> displayName() {
-    return Optional.ofNullable(displayName);
+  public @Nullable Component displayName() {
+    return displayName;
   }
 
   @Override

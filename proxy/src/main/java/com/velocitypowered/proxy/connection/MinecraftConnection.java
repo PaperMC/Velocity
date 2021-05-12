@@ -179,7 +179,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
               || sessionHandler instanceof HandshakeSessionHandler
               || sessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
-          boolean willLog = !isQuietDecoderException && !frontlineHandler;
+          boolean willLog = MinecraftDecoder.DEBUG
+              || (!isQuietDecoderException && !frontlineHandler);
           if (willLog) {
             logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
           } else {

@@ -9,9 +9,9 @@ package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides a fluent interface to send a connection request to another server on the proxy. A
@@ -76,7 +76,7 @@ public interface ConnectionRequestBuilder {
      *
      * @return the reason why the user could not connect to the server
      */
-    Optional<Component> failureReason();
+    @Nullable Component failureReason();
 
     /**
      * Returns the server we actually tried to connect to.

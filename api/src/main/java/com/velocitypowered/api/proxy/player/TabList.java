@@ -10,7 +10,6 @@ package com.velocitypowered.api.proxy.player;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -45,10 +44,9 @@ public interface TabList {
    * the specified {@link UUID}.
    *
    * @param uuid of the entry
-   * @return {@link Optional} containing the removed {@link TabListEntry} if present, otherwise
-   * {@link Optional#empty()}
+   * @return the removed {@link TabListEntry} if present, otherwise {@code null}
    */
-  Optional<TabListEntry> removeEntry(UUID uuid);
+  @Nullable TabListEntry removeEntry(UUID uuid);
 
   /**
    * Determines if the specified entry exists in the tab list.

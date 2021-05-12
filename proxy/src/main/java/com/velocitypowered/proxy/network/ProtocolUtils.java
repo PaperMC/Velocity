@@ -355,9 +355,9 @@ public enum ProtocolUtils {
   public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
     writeVarInt(buf, properties.size());
     for (GameProfile.Property property : properties) {
-      writeString(buf, property.getName());
-      writeString(buf, property.getValue());
-      String signature = property.getSignature();
+      writeString(buf, property.name());
+      writeString(buf, property.value());
+      String signature = property.signature();
       if (signature != null && !signature.isEmpty()) {
         buf.writeBoolean(true);
         writeString(buf, signature);

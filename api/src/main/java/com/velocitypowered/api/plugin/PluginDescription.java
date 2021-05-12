@@ -13,8 +13,8 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents metadata for a specific version of a plugin.
@@ -39,41 +39,41 @@ public interface PluginDescription {
   /**
    * Gets the name of the {@link Plugin} within this container.
    *
-   * @return an {@link Optional} with the plugin name, may be empty
+   * @return a String with the plugin name or the plugin ID
    * @see Plugin#name()
    */
-  default Optional<String> name() {
-    return Optional.empty();
+  default String name() {
+    return id();
   }
 
   /**
    * Gets the version of the {@link Plugin} within this container.
    *
-   * @return an {@link Optional} with the plugin version, may be empty
+   * @return a String with the plugin version, may be null
    * @see Plugin#version()
    */
-  default Optional<String> version() {
-    return Optional.empty();
+  default @Nullable String version() {
+    return null;
   }
 
   /**
    * Gets the description of the {@link Plugin} within this container.
    *
-   * @return an {@link Optional} with the plugin description, may be empty
+   * @return a String with the plugin description, may be null
    * @see Plugin#description()
    */
-  default Optional<String> description() {
-    return Optional.empty();
+  default @Nullable String description() {
+    return null;
   }
 
   /**
    * Gets the url or website of the {@link Plugin} within this container.
    *
-   * @return an {@link Optional} with the plugin url, may be empty
+   * @return an String with the plugin url, may be null
    * @see Plugin#url()
    */
-  default Optional<String> url() {
-    return Optional.empty();
+  default @Nullable String url() {
+    return null;
   }
 
   /**
@@ -96,16 +96,16 @@ public interface PluginDescription {
     return ImmutableSet.of();
   }
 
-  default Optional<PluginDependency> getDependency(String id) {
-    return Optional.empty();
+  default @Nullable PluginDependency getDependency(String id) {
+    return null;
   }
 
   /**
    * Returns the file path the plugin was loaded from.
    *
-   * @return the path the plugin was loaded from or {@link Optional#empty()} if unknown
+   * @return the path the plugin was loaded from or {@code null} if unknown
    */
-  default Optional<Path> file() {
-    return Optional.empty();
+  default @Nullable Path file() {
+    return null;
   }
 }

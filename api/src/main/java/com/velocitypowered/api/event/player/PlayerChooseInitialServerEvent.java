@@ -9,7 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a player has finished connecting to the proxy and we need to choose the first server
@@ -19,7 +19,7 @@ public interface PlayerChooseInitialServerEvent {
 
   Player player();
 
-  Optional<RegisteredServer> initialServer();
+  @Nullable RegisteredServer initialServer();
 
   /**
    * Sets the new initial server.

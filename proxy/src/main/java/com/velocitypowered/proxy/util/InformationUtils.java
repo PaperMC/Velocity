@@ -59,11 +59,11 @@ public enum InformationUtils {
       PluginDescription desc = plugin.description();
       JsonObject current = new JsonObject();
       current.addProperty("id", desc.id());
-      if (desc.name().isPresent()) {
-        current.addProperty("name", desc.name().get());
-      }
-      if (desc.version().isPresent()) {
-        current.addProperty("version", desc.version().get());
+      current.addProperty("name", desc.name());
+
+      String version = desc.version();
+      if (version != null) {
+        current.addProperty("version", version);
       }
       if (!desc.authors().isEmpty()) {
         JsonArray authorsArray = new JsonArray();
@@ -72,16 +72,19 @@ public enum InformationUtils {
         }
         current.add("authors", authorsArray);
       }
-      if (desc.description().isPresent()) {
-        current.addProperty("description", desc.description().get());
+
+      String humanDesc = desc.description();
+      if (humanDesc != null) {
+        current.addProperty("description", humanDesc);
       }
-      if (desc.url().isPresent()) {
-        current.addProperty("url", desc.url().get());
+      String url = desc.url();
+      if (url != null) {
+        current.addProperty("url", url);
       }
       if (!desc.dependencies().isEmpty()) {
         JsonArray dependencies = new JsonArray();
         for (PluginDependency dependency : desc.dependencies()) {
-          dependencies.add(dependency.getId());
+          dependencies.add(dependency.id());
         }
         current.add("dependencies", dependencies);
       }

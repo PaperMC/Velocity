@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityPluginDescription implements PluginDescription {
@@ -62,7 +61,7 @@ public class VelocityPluginDescription implements PluginDescription {
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
     this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
-    this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.getId());
+    this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.id());
     this.source = source;
   }
 
@@ -72,23 +71,23 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public Optional<String> name() {
-    return Optional.ofNullable(name);
+  public String name() {
+    return name == null ? id : name;
   }
 
   @Override
-  public Optional<String> version() {
-    return Optional.ofNullable(version);
+  public @Nullable String version() {
+    return version;
   }
 
   @Override
-  public Optional<String> description() {
-    return Optional.ofNullable(description);
+  public @Nullable String description() {
+    return description;
   }
 
   @Override
-  public Optional<String> url() {
-    return Optional.ofNullable(url);
+  public @Nullable String url() {
+    return url;
   }
 
   @Override
@@ -102,13 +101,13 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public Optional<PluginDependency> getDependency(String id) {
-    return Optional.ofNullable(dependencies.get(id));
+  public @Nullable PluginDependency getDependency(String id) {
+    return dependencies.get(id);
   }
 
   @Override
-  public Optional<Path> file() {
-    return Optional.ofNullable(source);
+  public @Nullable Path file() {
+    return source;
   }
 
   @Override

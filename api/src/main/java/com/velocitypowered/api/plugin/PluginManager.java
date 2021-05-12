@@ -7,9 +7,11 @@
 
 package com.velocitypowered.api.plugin;
 
+import static java.util.Objects.requireNonNull;
+
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Manages plugins loaded on the proxy. This manager can retrieve {@link PluginContainer}s from
@@ -24,7 +26,7 @@ public interface PluginManager {
    * @param instance the instance
    * @return the container
    */
-  Optional<PluginContainer> fromInstance(Object instance);
+  @Nullable PluginContainer fromInstance(Object instance);
 
   /**
    * Retrieves a {@link PluginContainer} based on its ID.
@@ -32,7 +34,7 @@ public interface PluginManager {
    * @param id the plugin ID
    * @return the plugin, if available
    */
-  Optional<PluginContainer> getPlugin(String id);
+  @Nullable PluginContainer getPlugin(String id);
 
   /**
    * Gets a {@link Collection} of all {@link PluginContainer}s.
@@ -57,4 +59,13 @@ public interface PluginManager {
    * @throws UnsupportedOperationException if the operation is not applicable to this plugin
    */
   void addToClasspath(Object plugin, Path path);
+
+  default PluginContainer ensurePluginContainer(Object plugin) {
+    requireNonNull(plugin, "plugin");
+    PluginContainer container = fromInstance(plugin);
+    if (container == null) {
+      throw new IllegalArgumentException("Specified plugin is not loaded");
+    }
+    return container;
+  }
 }

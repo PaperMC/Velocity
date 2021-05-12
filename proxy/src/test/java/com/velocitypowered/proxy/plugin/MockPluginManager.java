@@ -22,20 +22,20 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class MockPluginManager implements PluginManager {
 
   public static final PluginManager INSTANCE = new MockPluginManager();
 
   @Override
-  public Optional<PluginContainer> fromInstance(final Object instance) {
-    return Optional.empty();
+  public @Nullable PluginContainer fromInstance(final Object instance) {
+    return null;
   }
 
   @Override
-  public Optional<PluginContainer> getPlugin(final String id) {
-    return Optional.empty();
+  public @Nullable PluginContainer getPlugin(final String id) {
+    return null;
   }
 
   @Override

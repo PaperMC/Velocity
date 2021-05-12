@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerLis
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
@@ -50,13 +49,15 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void addEntry(TabListEntry entry) {
     super.addEntry(entry);
-    nameMapping.put(entry.gameProfile().getName(), entry.gameProfile().getId());
+    nameMapping.put(entry.gameProfile().name(), entry.gameProfile().uuid());
   }
 
   @Override
-  public Optional<TabListEntry> removeEntry(UUID uuid) {
-    Optional<TabListEntry> entry = super.removeEntry(uuid);
-    entry.map(TabListEntry::gameProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
+  public @Nullable TabListEntry removeEntry(UUID uuid) {
+    TabListEntry entry = super.removeEntry(uuid);
+    if (entry != null) {
+      nameMapping.remove(entry.gameProfile().name());
+    }
     return entry;
   }
 
@@ -108,7 +109,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   @Override
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.gameProfile().getId())) {
+    if (entries.containsKey(entry.gameProfile().uuid())) {
       switch (action) {
         case ClientboundPlayerListItemPacket.UPDATE_LATENCY:
         case ClientboundPlayerListItemPacket.UPDATE_DISPLAY_NAME: // Add here because we

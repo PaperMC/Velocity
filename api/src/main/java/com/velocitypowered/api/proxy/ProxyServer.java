@@ -19,12 +19,11 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.util.ProxyVersion;
-import java.net.SocketAddress;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Provides an interface to a Minecraft server proxy.
@@ -48,17 +47,17 @@ public interface ProxyServer extends Audience {
    * is case-insensitive.
    *
    * @param username the username to search for
-   * @return an {@link Optional} with the player, which may be empty
+   * @return the player instance, if connected, else {@code null}
    */
-  Optional<Player> getPlayer(String username);
+  @Nullable Player player(String username);
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft UUID.
    *
    * @param uuid the UUID
-   * @return an {@link Optional} with the player, which may be empty
+   * @return the player instance, if connected, else {@code null}
    */
-  Optional<Player> getPlayer(UUID uuid);
+  @Nullable Player player(UUID uuid);
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot
@@ -82,7 +81,7 @@ public interface ProxyServer extends Audience {
    * @param name the name of the server
    * @return the registered server, which may be empty
    */
-  Optional<RegisteredServer> server(String name);
+  @Nullable RegisteredServer server(String name);
 
   /**
    * Retrieves all {@link RegisteredServer}s registered with this proxy.

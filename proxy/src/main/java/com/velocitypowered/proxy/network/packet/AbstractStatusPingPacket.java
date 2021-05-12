@@ -18,8 +18,6 @@
 package com.velocitypowered.proxy.network.packet;
 
 import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.network.ProtocolVersion;
-import io.netty.buffer.ByteBuf;
 import java.util.function.LongFunction;
 
 public abstract class AbstractStatusPingPacket implements Packet {

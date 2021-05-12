@@ -10,7 +10,6 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -47,8 +46,8 @@ public final class ServerConnectedEventImpl implements ServerConnectedEvent {
   }
 
   @Override
-  public Optional<RegisteredServer> previousServer() {
-    return Optional.ofNullable(previousServer);
+  public @Nullable RegisteredServer previousServer() {
+    return previousServer;
   }
 
   @Override

@@ -18,13 +18,11 @@
 package com.velocitypowered.proxy.network.packet.clientbound;
 
 import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
-import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
 public class ClientboundResourcePackRequestPacket implements Packet {

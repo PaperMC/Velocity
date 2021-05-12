@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -44,10 +43,10 @@ public class ServerMap {
    * @param name the name to look up
    * @return the server, if it exists
    */
-  public Optional<RegisteredServer> getServer(String name) {
+  public @Nullable RegisteredServer getServer(String name) {
     Preconditions.checkNotNull(name, "server");
     String lowerName = name.toLowerCase(Locale.US);
-    return Optional.ofNullable(servers.get(lowerName));
+    return servers.get(lowerName);
   }
 
   public Collection<RegisteredServer> getAllServers() {

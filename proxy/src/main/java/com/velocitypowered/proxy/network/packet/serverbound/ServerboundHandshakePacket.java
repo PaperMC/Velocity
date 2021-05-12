@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
-import io.netty.buffer.ByteBuf;
 
 public class ServerboundHandshakePacket implements Packet {
   public static final PacketReader<ServerboundHandshakePacket> DECODER = (buf, version) -> {
