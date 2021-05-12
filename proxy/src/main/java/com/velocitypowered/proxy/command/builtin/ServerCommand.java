@@ -62,21 +62,22 @@ public class ServerCommand implements SimpleCommand {
     if (args.length == 1) {
       // Trying to connect to a server.
       String serverName = args[0];
-      Optional<RegisteredServer> toConnect = server.server(serverName);
-      if (!toConnect.isPresent()) {
+      RegisteredServer toConnect = server.server(serverName);
+      if (toConnect == null) {
         player.sendMessage(Identity.nil(), CommandMessages.SERVER_DOES_NOT_EXIST
             .args(Component.text(serverName)));
         return;
       }
 
-      player.createConnectionRequest(toConnect.get()).fireAndForget();
+      player.createConnectionRequest(toConnect).fireAndForget();
     } else {
       outputServerInformation(player);
     }
   }
 
   private void outputServerInformation(Player executor) {
-    String currentServer = executor.connectedServer().map(ServerConnection::serverInfo)
+    String currentServer = Optional.ofNullable(executor.connectedServer())
+        .map(ServerConnection::serverInfo)
         .map(ServerInfo::name).orElse("<unknown>");
     executor.sendMessage(Identity.nil(), Component.translatable(
         "velocity.command.server-current-server",

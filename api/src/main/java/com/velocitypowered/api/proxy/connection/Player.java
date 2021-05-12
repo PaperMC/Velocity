@@ -19,10 +19,10 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents a player who is connected to the proxy.
@@ -47,9 +47,10 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * Returns the server that the player is currently connected to.
    *
-   * @return an {@link Optional} the server that the player is connected to, which may be empty
+   * @return the server that the player is connected to, which could be {@code null} if no
+   *         connection was made yet (or the player is switching servers)
    */
-  Optional<ServerConnection> connectedServer();
+  @Nullable ServerConnection connectedServer();
 
   /**
    * Returns the player's client settings.
@@ -61,9 +62,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * Returns the player's mod info if they have a modded client.
    *
-   * @return an {@link Optional} the mod info. which may be empty
+   * @return an the mod info. which may be {@code null} if no info is available
    */
-  Optional<ModInfo> modInfo();
+  @Nullable ModInfo modInfo();
 
   /**
    * Returns the current player's ping.

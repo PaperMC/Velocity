@@ -26,4 +26,6 @@ public interface PacketRegistryMap {
   @Nullable Packet readPacket(final int id, ByteBuf buf, ProtocolVersion version);
 
   <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version);
+
+  @Nullable Class<? extends Packet> lookupPacket(final int id);
 }

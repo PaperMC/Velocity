@@ -290,12 +290,6 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  private PluginContainer ensurePlugin(final Object plugin) {
-    requireNonNull(plugin, "plugin");
-    return pluginManager.fromInstance(plugin)
-        .orElseThrow(() -> new IllegalArgumentException("Specified plugin is not loaded"));
-  }
-
   private void register(final List<HandlerRegistration> registrations) {
     lock.writeLock().lock();
     try {
@@ -315,7 +309,7 @@ public class VelocityEventManager implements EventManager {
   @Override
   public void register(final Object plugin, final Object listener) {
     requireNonNull(listener, "listener");
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     if (plugin == listener) {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
@@ -326,7 +320,7 @@ public class VelocityEventManager implements EventManager {
   @SuppressWarnings("unchecked")
   public <E> void register(final Object plugin, final Class<E> eventClass,
                            final short order, final EventHandler<E> handler) {
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(eventClass, "eventClass");
     requireNonNull(handler, "handler");
 
@@ -360,13 +354,13 @@ public class VelocityEventManager implements EventManager {
 
   @Override
   public void unregisterListeners(final Object plugin) {
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     unregisterIf(registration -> registration.plugin == pluginContainer);
   }
 
   @Override
   public void unregisterListener(final Object plugin, final Object handler) {
-    final PluginContainer pluginContainer = ensurePlugin(plugin);
+    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(handler, "handler");
     unregisterIf(registration ->
         registration.plugin == pluginContainer && registration.handler == handler);

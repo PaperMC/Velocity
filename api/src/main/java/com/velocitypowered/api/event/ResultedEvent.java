@@ -9,7 +9,6 @@ package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
 import java.util.Objects;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -85,34 +84,30 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
    */
   final class ComponentResult implements Result {
 
-    private static final ComponentResult ALLOWED = new ComponentResult(true, null);
+    private static final ComponentResult ALLOWED = new ComponentResult(null);
 
-    private final boolean status;
     private final @Nullable Component reason;
 
-    protected ComponentResult(boolean status, @Nullable Component reason) {
-      this.status = status;
+    protected ComponentResult(@Nullable Component reason) {
       this.reason = reason;
     }
 
     @Override
     public boolean isAllowed() {
-      return status;
+      return reason == null;
     }
 
-    public Optional<Component> reason() {
-      return Optional.ofNullable(reason);
+    public @Nullable Component reason() {
+      return reason;
     }
 
     @Override
     public String toString() {
-      if (status) {
+      if (reason == null) {
         return "allowed";
-      }
-      if (reason != null) {
+      } else {
         return "denied: " + PlainComponentSerializer.plain().serialize(reason);
       }
-      return "denied";
     }
 
     public static ComponentResult allowed() {
@@ -121,7 +116,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
 
     public static ComponentResult denied(Component reason) {
       Preconditions.checkNotNull(reason, "reason");
-      return new ComponentResult(false, reason);
+      return new ComponentResult(reason);
     }
 
     @Override
@@ -133,12 +128,12 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         return false;
       }
       ComponentResult that = (ComponentResult) o;
-      return status == that.status && Objects.equals(reason, that.reason);
+      return Objects.equals(reason, that.reason);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(status, reason);
+      return Objects.hash(reason);
     }
   }
 }

@@ -12,7 +12,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -45,8 +44,8 @@ public interface CommandExecuteEvent extends ResultedEvent<CommandResult> {
       this.command = command;
     }
 
-    public Optional<String> modifiedCommand() {
-      return Optional.ofNullable(command);
+    public @Nullable String modifiedCommand() {
+      return command;
     }
 
     public boolean isForwardToServer() {

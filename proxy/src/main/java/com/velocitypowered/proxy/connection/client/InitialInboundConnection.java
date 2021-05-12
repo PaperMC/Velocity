@@ -27,8 +27,6 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshake
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -58,8 +56,8 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public Optional<InetSocketAddress> connectedHostname() {
-    return Optional.of(InetSocketAddress.createUnresolved(cleanedHostname, handshake.getPort()));
+  public @Nullable InetSocketAddress connectedHostname() {
+    return InetSocketAddress.createUnresolved(cleanedHostname, handshake.getPort());
   }
 
   @Override

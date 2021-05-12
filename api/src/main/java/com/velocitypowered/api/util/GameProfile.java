@@ -11,11 +11,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.UUID;
+import net.kyori.adventure.identity.Identified;
+import net.kyori.adventure.identity.Identity;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a Mojang game profile. This class is immutable.
  */
-public final class GameProfile {
+public final class GameProfile implements Identified, Identity {
 
   private final UUID id;
   private final String undashedId;
@@ -55,7 +59,7 @@ public final class GameProfile {
    * Returns the undashed, Mojang-style UUID.
    * @return the undashed UUID
    */
-  public String getUndashedId() {
+  public String undashedId() {
     return undashedId;
   }
 
@@ -63,7 +67,8 @@ public final class GameProfile {
    * Returns the UUID associated with this game profile.
    * @return the UUID
    */
-  public UUID getId() {
+  @Override
+  public @NotNull UUID uuid() {
     return id;
   }
 
@@ -71,7 +76,7 @@ public final class GameProfile {
    * Returns the username associated with this profile.
    * @return the username
    */
-  public String getName() {
+  public String name() {
     return name;
   }
 
@@ -79,7 +84,7 @@ public final class GameProfile {
    * Returns an immutable list of profile properties associated with this profile.
    * @return the properties associated with this profile
    */
-  public List<Property> getProperties() {
+  public List<Property> properties() {
     return properties;
   }
 
@@ -89,7 +94,7 @@ public final class GameProfile {
    * @param id the new unique id
    * @return the new {@code GameProfile}
    */
-  public GameProfile withId(UUID id) {
+  public GameProfile withUuid(UUID id) {
     return new GameProfile(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
         this.name, this.properties);
   }
@@ -172,6 +177,11 @@ public final class GameProfile {
         + '}';
   }
 
+  @Override
+  public @NonNull Identity identity() {
+    return this;
+  }
+
   /**
    * Represents a Mojang profile property. Just like {@link GameProfile}, this class is immutable.
    */
@@ -193,15 +203,15 @@ public final class GameProfile {
       this.signature = Preconditions.checkNotNull(signature, "signature");
     }
 
-    public String getName() {
+    public String name() {
       return name;
     }
 
-    public String getValue() {
+    public String value() {
       return value;
     }
 
-    public String getSignature() {
+    public String signature() {
       return signature;
     }
 

@@ -78,7 +78,10 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    URL pluginJarUrl = source.file().get().toUri().toURL();
+    Path jarFilePath = source.file();
+    assert jarFilePath != null;
+
+    URL pluginJarUrl = jarFilePath.toUri().toURL();
     PluginClassLoader loader = AccessController.doPrivileged(
         (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
     loader.addToClassloaders();
@@ -97,9 +100,9 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
-    Optional<Path> source = javaDescription.file();
+    Path source = javaDescription.file();
 
-    if (!source.isPresent()) {
+    if (source == null) {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
@@ -184,13 +187,13 @@ public class JavaPluginLoader implements PluginLoader {
       Class mainClass) {
     return new JavaVelocityPluginDescription(
         description.id(),
-        description.name().orElse(null),
-        description.version().orElse(null),
-        description.description().orElse(null),
-        description.url().orElse(null),
+        description.name(),
+        description.version(),
+        description.description(),
+        description.url(),
         description.authors(),
         description.dependencies(),
-        description.file().orElse(null),
+        description.file(),
         mainClass
     );
   }

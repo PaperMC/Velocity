@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
@@ -52,6 +53,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityPluginManager implements PluginManager {
 
@@ -110,9 +112,9 @@ public class VelocityPluginManager implements PluginManager {
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
       for (PluginDependency dependency : candidate.dependencies()) {
-        if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
+        if (!dependency.optional() && !loadedPluginsById.contains(dependency.id())) {
           logger.error("Can't load plugin {} due to missing dependency {}", candidate.id(),
-              dependency.getId());
+              dependency.id());
           continue pluginLoad;
         }
       }
@@ -154,27 +156,27 @@ public class VelocityPluginManager implements PluginManager {
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", description.id(), description.version()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.authors()));
+      logger.info("Loaded plugin {} {} by {}", description.id(), MoreObjects.firstNonNull(
+          description.version(), "<UNKNOWN>"), Joiner.on(", ").join(description.authors()));
       registerPlugin(container);
     }
   }
 
   @Override
-  public Optional<PluginContainer> fromInstance(Object instance) {
+  public @Nullable PluginContainer fromInstance(Object instance) {
     checkNotNull(instance, "instance");
 
     if (instance instanceof PluginContainer) {
-      return Optional.of((PluginContainer) instance);
+      return (PluginContainer) instance;
     }
 
-    return Optional.ofNullable(pluginInstances.get(instance));
+    return pluginInstances.get(instance);
   }
 
   @Override
-  public Optional<PluginContainer> getPlugin(String id) {
+  public @Nullable PluginContainer getPlugin(String id) {
     checkNotNull(id, "id");
-    return Optional.ofNullable(plugins.get(id));
+    return plugins.get(id);
   }
 
   @Override
@@ -191,9 +193,12 @@ public class VelocityPluginManager implements PluginManager {
   public void addToClasspath(Object plugin, Path path) {
     checkNotNull(plugin, "instance");
     checkNotNull(path, "path");
-    Optional<PluginContainer> optContainer = fromInstance(plugin);
-    checkArgument(optContainer.isPresent(), "plugin is not loaded");
-    Optional<?> optInstance = optContainer.get().instance();
+    PluginContainer optContainer = fromInstance(plugin);
+    if (optContainer == null) {
+      throw new IllegalArgumentException("plugin is not loaded");
+    }
+
+    Optional<?> optInstance = optContainer.instance();
     checkArgument(optInstance.isPresent(), "plugin has no instance");
 
     ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();

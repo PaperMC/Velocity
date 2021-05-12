@@ -27,6 +27,7 @@ import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -80,5 +81,15 @@ public class RegularPacketRegistryMap implements PacketRegistryMap {
     assert writer != null;
     ProtocolUtils.writeVarInt(buf, packetId);
     writer.write(buf, packet, version);
+  }
+
+  @Override
+  public @Nullable Class<? extends Packet> lookupPacket(int id) {
+    for (Entry<Class<?>> entry : this.classesById.object2IntEntrySet()) {
+      if (entry.getIntValue() == id) {
+        return (Class<? extends Packet>) entry.getKey();
+      }
+    }
+    return null;
   }
 }

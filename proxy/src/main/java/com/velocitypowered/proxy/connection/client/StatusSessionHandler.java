@@ -43,7 +43,6 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,7 +81,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         new ServerPing.Players(server.countConnectedPlayers(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),
-        configuration.getFavicon().orElse(null),
+        configuration.getFavicon(),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
     );
   }
@@ -92,11 +91,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     ServerPing fallback = constructLocalPing(pingingVersion);
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
-      Optional<RegisteredServer> rs = server.server(s);
-      if (!rs.isPresent()) {
+      RegisteredServer rs = server.server(s);
+      if (rs == null) {
         continue;
       }
-      VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
+      VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
       pings.add(vrs.ping(connection.eventLoop(), pingingVersion));
     }
     if (pings.isEmpty()) {
@@ -124,9 +123,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             if (response == fallback) {
               continue;
             }
-            Optional<ModInfo> modInfo = response.modInfo();
-            if (modInfo.isPresent()) {
-              return fallback.asBuilder().mods(modInfo.get()).build();
+            ModInfo modInfo = response.modInfo();
+            if (modInfo != null) {
+              return fallback.asBuilder().mods(modInfo).build();
             }
           }
           return fallback;
@@ -145,10 +144,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
             return new ServerPing(
                 fallback.version(),
-                fallback.players().orElse(null),
+                fallback.players(),
                 response.description(),
-                fallback.favicon().orElse(null),
-                response.modInfo().orElse(null)
+                fallback.favicon(),
+                response.modInfo()
             );
           }
           return fallback;
@@ -168,9 +167,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     if (passthrough == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      String virtualHostStr = inbound.connectedHostname().map(InetSocketAddress::getHostString)
-          .map(str -> str.toLowerCase(Locale.ROOT))
-          .orElse("");
+      InetSocketAddress vhost = inbound.connectedHostname();
+      String virtualHostStr = vhost == null ? "" : vhost.getHostString().toLowerCase(Locale.ROOT);
       List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(
           virtualHostStr, server.configuration().getAttemptConnectionOrder());
       return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);

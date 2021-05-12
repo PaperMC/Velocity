@@ -25,7 +25,6 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.server.ServerMap;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class ServerMapTest {
@@ -39,9 +38,9 @@ class ServerMapTest {
     ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
     RegisteredServer connection = map.register(info);
 
-    assertEquals(Optional.of(connection), map.getServer("TestServer"));
-    assertEquals(Optional.of(connection), map.getServer("testserver"));
-    assertEquals(Optional.of(connection), map.getServer("TESTSERVER"));
+    assertEquals(connection, map.getServer("TestServer"));
+    assertEquals(connection, map.getServer("testserver"));
+    assertEquals(connection, map.getServer("TESTSERVER"));
   }
 
   @Test

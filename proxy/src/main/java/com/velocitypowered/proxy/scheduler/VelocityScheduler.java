@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -66,7 +67,7 @@ public class VelocityScheduler implements Scheduler {
   public TaskBuilder buildTask(Object plugin, Runnable runnable) {
     checkNotNull(plugin, "plugin");
     checkNotNull(runnable, "runnable");
-    checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
+    checkArgument(pluginManager.fromInstance(plugin) != null, "plugin is not registered");
     return new TaskBuilderImpl(plugin, runnable);
   }
 
@@ -205,12 +206,10 @@ public class VelocityScheduler implements Scheduler {
           if (e instanceof InterruptedException) {
             Thread.currentThread().interrupt();
           } else {
-            String friendlyPluginName = pluginManager.fromInstance(plugin)
-                .map(container -> container.description().name()
-                      .orElse(container.description().id()))
-                .orElse("UNKNOWN");
-            Log.logger.error("Exception in task {} by plugin {}", runnable, friendlyPluginName,
-                e);
+            PluginDescription description = pluginManager.ensurePluginContainer(plugin)
+                .description();
+            Log.logger.error("Exception in task {} by plugin {}", runnable,
+                description.name(), e);
           }
         } finally {
           if (repeat == 0) {

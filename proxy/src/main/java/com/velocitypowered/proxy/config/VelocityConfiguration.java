@@ -44,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -315,8 +314,8 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public Optional<Favicon> getFavicon() {
-    return Optional.ofNullable(favicon);
+  public @Nullable Favicon getFavicon() {
+    return favicon;
   }
 
   @Override

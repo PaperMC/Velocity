@@ -36,7 +36,7 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
   private final PacketReader<?>[] readersById;
   private final PacketWriter[] writersByClass;
-  private final Class<?>[] classesById;
+  private final Class<?>[] classesByKey;
   private final int[] idsByKey;
 
   public DensePacketRegistryMap(Int2ObjectMap<PacketMapping<?>> mappings) {
@@ -44,7 +44,7 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
     this.readersById = new PacketReader[size];
     this.writersByClass = new PacketWriter[size * 2];
-    this.classesById = new Class[size * 2];
+    this.classesByKey = new Class[size * 2];
     this.idsByKey = new int[size * 2];
 
     for (PacketMapping<?> value : mappings.values()) {
@@ -56,41 +56,41 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
   private void place(int packetId, Class<?> key, PacketWriter<?> value) {
     int bucket = findEmpty(key);
     this.writersByClass[bucket] = value;
-    this.classesById[bucket] = key;
+    this.classesByKey[bucket] = key;
     this.idsByKey[bucket] = packetId;
   }
 
   private int findEmpty(Class<?> key) {
-    int start = key.hashCode() % this.classesById.length;
+    int start = key.hashCode() % this.classesByKey.length;
     int index = start;
 
     for (;;) {
-      if (this.classesById[index] == null || this.classesById[index].equals(key)) {
+      if (this.classesByKey[index] == null || this.classesByKey[index].equals(key)) {
         // It's available, so no chance that this value exists anywhere in the map.
         return index;
       }
 
-      if ((index = (index + 1) % this.classesById.length) == start) {
+      if ((index = (index + 1) % this.classesByKey.length) == start) {
         return -1;
       }
     }
   }
 
   private int index(Class<?> key) {
-    int start = key.hashCode() % this.classesById.length;
+    int start = key.hashCode() % this.classesByKey.length;
     int index = start;
 
     for (;;) {
-      if (this.classesById[index] == null) {
+      if (this.classesByKey[index] == null) {
         // It's available, so no chance that this value exists anywhere in the map.
         return -1;
       }
-      if (key.equals(this.classesById[index])) {
+      if (key.equals(this.classesByKey[index])) {
         return index;
       }
 
       // Conflict, keep probing ...
-      if ((index = (index + 1) % this.classesById.length) == start) {
+      if ((index = (index + 1) % this.classesByKey.length) == start) {
         return -1;
       }
     }
@@ -118,5 +118,15 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
       ));
     }
 
+  }
+
+  @Override
+  public @Nullable Class<? extends Packet> lookupPacket(int id) {
+    for (int bucket = 0; bucket < this.idsByKey.length; bucket++) {
+      if (this.idsByKey[bucket] == id) {
+        return (Class<? extends Packet>) this.classesByKey[bucket];
+      }
+    }
+    return null;
   }
 }

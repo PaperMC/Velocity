@@ -462,6 +462,17 @@ class PlayPacketRegistry implements ProtocolRegistry {
         //noinspection unchecked
         encoder.write(buf, packet, version);
       }
+
+      @Override
+      public @Nullable Class<? extends Packet> lookupPacket(int id) {
+        for (Object2IntMap.Entry<Class<? extends Packet>> entry : this.packetClassToId
+            .object2IntEntrySet()) {
+          if (entry.getIntValue() == id) {
+            return entry.getKey();
+          }
+        }
+        return null;
+      }
     }
   }
 

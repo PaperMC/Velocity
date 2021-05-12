@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
@@ -164,7 +165,8 @@ public class VelocityCommandManager implements CommandManager {
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-      return executeImmediately0(source, commandResult.modifiedCommand().orElse(event.rawCommand()));
+      return executeImmediately0(source,
+          MoreObjects.firstNonNull(commandResult.modifiedCommand(), event.rawCommand()));
     }, eventManager.getAsyncExecutor());
   }
 

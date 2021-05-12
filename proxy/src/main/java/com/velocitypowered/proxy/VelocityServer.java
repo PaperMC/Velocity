@@ -333,7 +333,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           eventManager.registerInternally(plugin, instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
-              plugin.description().name().orElse(plugin.description().id()), e);
+              MoreObjects.firstNonNull(plugin.description().name(), plugin.description().id()), e);
         }
       }
     }
@@ -373,18 +373,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
           new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
-      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
-      if (!rs.isPresent()) {
+      RegisteredServer rs = servers.getServer(entry.getKey());
+      if (rs == null) {
         servers.register(newInfo);
-      } else if (!rs.get().serverInfo().equals(newInfo)) {
-        for (Player player : rs.get().connectedPlayers()) {
+      } else if (!rs.serverInfo().equals(newInfo)) {
+        for (Player player : rs.connectedPlayers()) {
           if (!(player instanceof ConnectedPlayer)) {
             throw new IllegalStateException("ConnectedPlayer not found for player " + player
-                + " in server " + rs.get().serverInfo().name());
+                + " in server " + rs.serverInfo().name());
           }
           evacuate.add((ConnectedPlayer) player);
         }
-        servers.unregister(rs.get().serverInfo());
+        servers.unregister(rs.serverInfo());
         servers.register(newInfo);
       }
     }
@@ -393,9 +393,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (!evacuate.isEmpty()) {
       CountDownLatch latch = new CountDownLatch(evacuate.size());
       for (ConnectedPlayer player : evacuate) {
-        Optional<RegisteredServer> next = player.getNextServerToTry();
-        if (next.isPresent()) {
-          player.createConnectionRequest(next.get()).connectWithIndication()
+        RegisteredServer next = player.getNextServerToTry();
+        if (next != null) {
+          player.createConnectionRequest(next).connectWithIndication()
               .whenComplete((success, ex) -> {
                 if (ex != null || success == null || !success) {
                   player.disconnect(Component.text("Your server has been changed, but we could "
@@ -613,15 +613,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public Optional<Player> getPlayer(String username) {
+  public @Nullable Player player(String username) {
     Preconditions.checkNotNull(username, "username");
-    return Optional.ofNullable(connectionsByName.get(username.toLowerCase(Locale.US)));
+    return connectionsByName.get(username.toLowerCase(Locale.US));
   }
 
   @Override
-  public Optional<Player> getPlayer(UUID uuid) {
+  public @Nullable Player player(UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
-    return Optional.ofNullable(connectionsByUuid.get(uuid));
+    return connectionsByUuid.get(uuid);
   }
 
   @Override
@@ -653,7 +653,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public Optional<RegisteredServer> server(String name) {
+  public @Nullable RegisteredServer server(String name) {
     return servers.getServer(name);
   }
 

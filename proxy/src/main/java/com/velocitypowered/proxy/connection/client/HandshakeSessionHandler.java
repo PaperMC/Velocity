@@ -40,7 +40,6 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Objects;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -88,11 +87,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
       connection.close(true);
     } else {
-      connection.setState(nextState);
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
       if (nextState == ProtocolStates.STATUS) {
+        connection.setState(nextState);
         connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
       } else if (nextState == ProtocolStates.LOGIN) {
         this.handleLogin(handshake, ic);
@@ -134,12 +133,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     connection.setAutoReading(false);
+    connection.setState(ProtocolStates.LOGIN);
     server.eventManager().fire(new ConnectionHandshakeEventImpl(ic, handshake.getServerAddress()))
         .thenAcceptAsync(event -> {
-          connection.setAutoReading(true);
+          if (connection.isClosed()) {
+            return;
+          }
 
           if (!event.result().isAllowed()) {
-            ic.disconnectQuietly(event.result().reason().get());
+            ic.disconnectQuietly(event.result().reason());
           } else {
             // if the handshake is changed, propagate the change
             if (!event.currentHostname().equals(event.originalHostname())) {
@@ -161,6 +163,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             }
 
             connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+            connection.setAutoReading(true);
           }
         }, connection.eventLoop());
   }
@@ -234,8 +237,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public Optional<InetSocketAddress> connectedHostname() {
-      return Optional.ofNullable(ping.getVhost());
+    public @Nullable InetSocketAddress connectedHostname() {
+      return ping.getVhost();
     }
 
     @Override

@@ -205,12 +205,12 @@ public class ClientboundPlayerListItemPacket implements Packet {
     }
 
     public static Item from(TabListEntry entry) {
-      return new Item(entry.gameProfile().getId())
-          .setName(entry.gameProfile().getName())
-          .setProperties(entry.gameProfile().getProperties())
+      return new Item(entry.gameProfile().uuid())
+          .setName(entry.gameProfile().name())
+          .setProperties(entry.gameProfile().properties())
           .setLatency(entry.ping())
           .setGameMode(entry.gameMode())
-          .setDisplayName(entry.displayName().orElse(null));
+          .setDisplayName(entry.displayName());
     }
 
     public @Nullable UUID getUuid() {

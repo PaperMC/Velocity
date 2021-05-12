@@ -8,7 +8,6 @@
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.util.GameProfile;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -34,18 +33,17 @@ public interface TabListEntry {
   GameProfile gameProfile();
 
   /**
-   * Returns {@link Optional} text {@link Component}, which if present is the text
+   * Returns an optional text {@link Component}, which if present is the text
    * displayed for {@code this} entry in the {@link TabList}, otherwise
-   * {@link GameProfile#getName()} is shown.
+   * {@link GameProfile#name()} is shown.
    *
-   * @return {@link Optional} text {@link Component} of name displayed in the tab
-   *         list
+   * @return text {@link Component} of name displayed in the tab list
    */
-  Optional<Component> displayName();
+  @Nullable Component displayName();
 
   /**
    * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}. If
-   * {@code null}, {@link GameProfile#getName()} will be shown.
+   * {@code null}, {@link GameProfile#name()} will be shown.
    *
    * @param displayName to show in the {@link TabList} for {@code this} entry
    * @return {@code this}, for chaining

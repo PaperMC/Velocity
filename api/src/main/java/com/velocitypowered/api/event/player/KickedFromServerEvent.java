@@ -12,7 +12,6 @@ import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -34,7 +33,7 @@ public interface KickedFromServerEvent extends
    *
    * @return the server kicked the player from the server
    */
-  Optional<Component> serverKickReason();
+  @Nullable Component serverKickReason();
 
   /**
    * Returns whether or not the player got kicked while connecting to another server.

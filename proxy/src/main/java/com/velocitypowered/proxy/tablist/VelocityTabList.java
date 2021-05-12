@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
@@ -75,18 +74,18 @@ public class VelocityTabList implements TabList {
     Preconditions.checkNotNull(entry, "entry");
     Preconditions.checkArgument(entry.parent().equals(this),
         "The provided entry was not created by this tab list");
-    Preconditions.checkArgument(!entries.containsKey(entry.gameProfile().getId()),
+    Preconditions.checkArgument(!entries.containsKey(entry.gameProfile().uuid()),
         "this TabList already contains an entry with the same uuid");
     Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
         "Not a Velocity tab list entry");
 
     connection.write(new ClientboundPlayerListItemPacket(ClientboundPlayerListItemPacket.ADD_PLAYER,
         Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(entry))));
-    entries.put(entry.gameProfile().getId(), (VelocityTabListEntry) entry);
+    entries.put(entry.gameProfile().uuid(), (VelocityTabListEntry) entry);
   }
 
   @Override
-  public Optional<TabListEntry> removeEntry(UUID uuid) {
+  public @Nullable TabListEntry removeEntry(UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
 
     TabListEntry entry = entries.remove(uuid);
@@ -97,7 +96,7 @@ public class VelocityTabList implements TabList {
       ));
     }
 
-    return Optional.ofNullable(entry);
+    return entry;
   }
 
   @Override
@@ -202,7 +201,7 @@ public class VelocityTabList implements TabList {
   }
 
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.gameProfile().getId())) {
+    if (entries.containsKey(entry.gameProfile().uuid())) {
       connection.write(new ClientboundPlayerListItemPacket(action,
           Collections.singletonList(ClientboundPlayerListItemPacket.Item.from(entry))));
     }

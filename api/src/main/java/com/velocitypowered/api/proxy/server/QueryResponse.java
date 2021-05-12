@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -423,8 +422,8 @@ public final class QueryResponse {
       return name;
     }
 
-    public Optional<String> getVersion() {
-      return Optional.ofNullable(version);
+    public @Nullable String getVersion() {
+      return version;
     }
 
     public static PluginInformation of(String name, @Nullable String version) {

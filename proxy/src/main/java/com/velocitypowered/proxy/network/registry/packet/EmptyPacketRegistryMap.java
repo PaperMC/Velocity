@@ -42,4 +42,9 @@ public class EmptyPacketRegistryMap implements PacketRegistryMap {
         packet.getClass().getName(), version
     ));
   }
+
+  @Override
+  public @Nullable Class<? extends Packet> lookupPacket(int id) {
+    return null;
+  }
 }

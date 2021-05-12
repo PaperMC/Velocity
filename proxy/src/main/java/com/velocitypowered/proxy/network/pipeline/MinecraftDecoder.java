@@ -73,11 +73,11 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
-    Packet packet = null;
+    Packet packet;
     try {
       packet = this.registry.readPacket(packetId, buf, this.version);
     } catch (Exception e) {
-      throw handleDecodeFailure(e, packet, packetId); // TODO: packet is always null
+      throw handleDecodeFailure(e, packetId);
     }
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
@@ -85,7 +85,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     } else {
       try {
         if (buf.isReadable()) {
-          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
+          throw handleOverflow(packetId, buf.readerIndex(), buf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
@@ -94,39 +94,43 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private void doLengthSanityChecks(ByteBuf buf, Packet packet) throws Exception {
+  // TODO: Reimplement this
+  private void doLengthSanityChecks(ByteBuf buf, int packetId, Packet packet) throws Exception {
     int expectedMinLen = packet.expectedMinLength(buf, direction, version);
     int expectedMaxLen = packet.expectedMaxLength(buf, direction, version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleOverflow(packetId, expectedMaxLen, buf.readableBytes());
     }
     if (buf.readableBytes() < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleUnderflow(packetId, expectedMaxLen, buf.readableBytes());
     }
   }
 
-  private Exception handleOverflow(Packet packet, int expected, int actual) {
+  private Exception handleOverflow(int packetId, int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
+      return new CorruptedFrameException("Packet sent for " + packetClass + " was too "
           + "big (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleUnderflow(Packet packet, int expected, int actual) {
+  private Exception handleUnderflow(int packetId, int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
+      return new CorruptedFrameException("Packet sent for " + packetClass + " was too "
           + "small (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleDecodeFailure(Exception cause, Packet packet, int packetId) {
+  private Exception handleDecodeFailure(Exception cause, int packetId) {
     if (DEBUG) {
+      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
       return new CorruptedFrameException(
-          "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
+          "Error decoding " + packetClass + " " + getExtraConnectionDetail(packetId), cause);
     } else {
       return DECODE_FAILED;
     }
