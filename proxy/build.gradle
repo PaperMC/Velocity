@@ -75,7 +75,7 @@ dependencies {
     runtimeOnly 'com.lmax:disruptor:3.4.2' // Async loggers
 
     implementation 'it.unimi.dsi:fastutil:8.4.1'
-    implementation 'net.kyori:adventure-nbt:4.0.0-SNAPSHOT'
+    implementation "net.kyori:adventure-nbt:${adventureVersion}"
 
     implementation 'org.asynchttpclient:async-http-client:2.12.1'
 

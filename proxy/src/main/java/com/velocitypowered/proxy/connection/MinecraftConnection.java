@@ -75,7 +75,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
   private final Channel channel;
-  private SocketAddress remoteAddress;
+  private @Nullable SocketAddress remoteAddress;
   private ProtocolRegistry state;
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
@@ -304,8 +304,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return !channel.isActive();
   }
 
-  public SocketAddress getRemoteAddress() {
+  public @Nullable SocketAddress getRemoteAddress() {
     return remoteAddress;
+  }
+
+  public void setRemoteAddress(@Nullable SocketAddress address) {
+    ensureOpen();
+    ensureInEventLoop();
+    this.remoteAddress = address;
   }
 
   public ProtocolRegistry getState() {
