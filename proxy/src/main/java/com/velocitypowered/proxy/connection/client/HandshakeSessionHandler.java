@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Objects;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -121,12 +122,6 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-    if (!server.getIpAttemptLimiter().attempt(address)) {
-      ic.disconnectQuietly(Component.translatable("velocity.error.logging-in-too-fast"));
-      return;
-    }
-
     connection.setType(getHandshakeConnectionType(handshake));
 
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
@@ -138,8 +133,36 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    server.eventManager().fireAndForget(new ConnectionHandshakeEventImpl(ic));
-    connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+    connection.setAutoReading(false);
+    server.eventManager().fire(new ConnectionHandshakeEventImpl(ic, handshake.getServerAddress()))
+        .thenAcceptAsync(event -> {
+          connection.setAutoReading(true);
+
+          if (!event.result().isAllowed()) {
+            ic.disconnectQuietly(event.result().reason().get());
+          } else {
+            // if the handshake is changed, propagate the change
+            if (!event.currentHostname().equals(event.originalHostname())) {
+              ic.setCleanedHostname(cleanVhost(event.currentHostname()));
+            }
+
+            if (!Objects.equals(event.currentRemoteHostAddress(), ic.remoteAddress())) {
+              ic.setRemoteAddress(event.currentRemoteHostAddress());
+            }
+
+            if (connection.getRemoteAddress() instanceof InetSocketAddress) {
+              InetAddress address = ((InetSocketAddress) connection.getRemoteAddress())
+                  .getAddress();
+              if (!server.getIpAttemptLimiter().attempt(address)) {
+                ic.disconnectQuietly(
+                    Component.translatable("velocity.error.logging-in-too-fast"));
+                return;
+              }
+            }
+
+            connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+          }
+        }, connection.eventLoop());
   }
 
   private ConnectionType getHandshakeConnectionType(ServerboundHandshakePacket handshake) {

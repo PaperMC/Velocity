@@ -54,6 +54,7 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLog
 import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -119,12 +120,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
-      String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
       if (server.configuration().shouldPreventClientProxyConnections()) {
-        url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
+        SocketAddress playerRemoteAddress = mcConnection.getRemoteAddress();
+        if (playerRemoteAddress instanceof InetSocketAddress) {
+          url += "&ip=" + urlFormParameterEscaper().escape(
+              ((InetSocketAddress) playerRemoteAddress).getHostString());
+        }
       }
 
       ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
@@ -156,8 +160,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           } else {
             // Something else went wrong
             logger.error(
-                "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                profileResponse.getStatusCode(), login.getUsername(), playerIp);
+                "Got an unexpected error code {} whilst contacting Mojang to log in {}",
+                profileResponse.getStatusCode(), login.getUsername());
             mcConnection.close(true);
           }
         } catch (ExecutionException e) {
