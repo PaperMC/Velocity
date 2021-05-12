@@ -182,13 +182,15 @@ public final class ConnectionManager {
   public Bootstrap createWorker(@Nullable EventLoopGroup group, SocketAddress target) {
     Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.getClientChannelFactory(target))
-        .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.configuration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.configuration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (target instanceof InetSocketAddress) {
+      bootstrap.option(ChannelOption.TCP_NODELAY, true);
+      if (transportType == TransportType.EPOLL && server.configuration().useTcpFastOpen()) {
+        bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+      }
     }
     return bootstrap;
   }
