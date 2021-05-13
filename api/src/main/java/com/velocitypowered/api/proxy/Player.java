@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -25,6 +26,7 @@ import java.util.UUID;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents a player who is connected to the proxy.
@@ -215,7 +217,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
+   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
    */
+  @Deprecated
   void sendResourcePack(String url);
 
   /**
@@ -225,10 +229,37 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
+   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
    */
-  default void sendResourcePack(String url, byte[] hash) {
-    sendResourcePack(url, hash, false);
-  }
+  @Deprecated
+  void sendResourcePack(String url, byte[] hash);
+
+  /**
+   * Queues and sends a new Resource-pack offer to the player.
+   * To monitor the status of the sent resource pack, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
+   *
+   * @param packInfo the resource-pack in question
+   */
+  void sendResourcePackOffer(ResourcePackInfo packInfo);
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the currently applied
+   * resource-pack or null if none.
+   *
+   * @return the applied resource pack
+   */
+  @Nullable
+  ResourcePackInfo getAppliedResourcePack();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the currently accepted
+   * and currently downloading resource-pack or null if none.
+   *
+   * @return the pending resource pack
+   */
+  @Nullable
+  ResourcePackInfo getPendingResourcePack();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
@@ -241,21 +272,4 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
-
-  /**
-   * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
-   * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   * In 1.17 and newer you can additionally specify
-   * whether the resource pack is required or not. Setting this for an older client will have
-   * no effect.
-   *
-   * @param url the URL for the resource pack
-   * @param hash the SHA-1 hash value for the resource pack
-   * @param isRequired Only in 1.17+ or newer: If true shows the pack as required to play,
-   *     and removes the decline option. Declining it anyway will disconnect the user.
-   */
-  void sendResourcePack(String url, byte[] hash, boolean isRequired);
- 
 }
-

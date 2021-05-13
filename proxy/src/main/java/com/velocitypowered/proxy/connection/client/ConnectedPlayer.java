@@ -31,6 +31,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResult;
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -42,6 +43,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
@@ -55,6 +57,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -76,12 +79,14 @@ import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -133,6 +138,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
+  private @MonotonicNonNull Boolean previousResourceResponse;
+  private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
+  private @Nullable ResourcePackInfo pendingResourcePack;
+  private @Nullable ResourcePackInfo appliedResourcePack;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -871,31 +880,133 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
+  @Deprecated
   public void sendResourcePack(String url) {
-    Preconditions.checkNotNull(url, "url");
+    sendResourcePackOffer(new VelocityResourcePackInfo.BuilderImpl(url).build());
+  }
 
+  @Override
+  @Deprecated
+  public void sendResourcePack(String url, byte[] hash) {
+    sendResourcePackOffer(new VelocityResourcePackInfo.BuilderImpl(url).setHash(hash).build());
+  }
+
+  @Override
+  public void sendResourcePackOffer(ResourcePackInfo packInfo) {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      Preconditions.checkNotNull(packInfo, "packInfo");
+      queueResourcePack(packInfo);
+    }
+  }
+
+  /**
+   * Queues a resource-pack for sending to the player and sends it
+   * immediately if the queue is empty.
+   */
+  public void queueResourcePack(ResourcePackInfo info) {
+    outstandingResourcePacks.add(info);
+    if (outstandingResourcePacks.size() == 1) {
+      tickResourcePackQueue();
+    }
+  }
+
+  private void tickResourcePackQueue() {
+    ResourcePackInfo queued = outstandingResourcePacks.peek();
+
+    if (queued != null) {
+      // Check if the player declined a resource pack once already
+      if (previousResourceResponse != null && !previousResourceResponse) {
+        // If that happened we can flush the queue right away.
+        // Unless its 1.17+ and forced it will come back denied anyway
+        while (!outstandingResourcePacks.isEmpty()) {
+          queued = outstandingResourcePacks.peek();
+          if (queued.getShouldForce() && getProtocolVersion()
+                  .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+            break;
+          }
+          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED, new byte[0]);
+          queued = null;
+        }
+        if (queued == null) {
+          // Exit as the queue was cleared
+          return;
+        }
+      }
+
       ResourcePackRequest request = new ResourcePackRequest();
-      request.setUrl(url);
-      request.setHash("");
-      request.setRequired(false);
+      request.setUrl(queued.getUrl());
+      if (queued.getHash() != null) {
+        request.setHash(ByteBufUtil.hexDump(queued.getHash()));
+      } else {
+        request.setHash("");
+      }
+      request.setRequired(queued.getShouldForce());
+      request.setPrompt(queued.getPrompt());
+
       connection.write(request);
     }
   }
 
   @Override
-  public void sendResourcePack(String url, byte[] hash, boolean isRequired) {
-    Preconditions.checkNotNull(url, "url");
-    Preconditions.checkNotNull(hash, "hash");
-    Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
+  public @Nullable ResourcePackInfo getAppliedResourcePack() {
+    return appliedResourcePack;
+  }
 
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      ResourcePackRequest request = new ResourcePackRequest();
-      request.setUrl(url);
-      request.setHash(ByteBufUtil.hexDump(hash));
-      request.setRequired(isRequired);
-      connection.write(request);
+  @Override
+  public @Nullable ResourcePackInfo getPendingResourcePack() {
+    return pendingResourcePack;
+  }
+
+  /**
+   * Processes a client response to a sent resource-pack.
+   */
+  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status,
+                                        @Nullable byte[] hash) {
+
+    final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
+    final ResourcePackInfo queued = peek
+            ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
+
+    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
+            .thenAcceptAsync(event -> {
+              if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
+                      && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
+                      && (!event.isOverwriteKick() || event.getPlayer()
+                              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
+              ) {
+                event.getPlayer().disconnect(Component
+                        .translatable("multiplayer.requiredTexturePrompt.disconnect"));
+              }
+            });
+
+
+    switch (status) {
+      case ACCEPTED:
+        previousResourceResponse = true;
+        pendingResourcePack = queued;
+        break;
+      case DECLINED:
+        previousResourceResponse = false;
+        break;
+      case SUCCESSFUL:
+        appliedResourcePack = queued;
+        pendingResourcePack = null;
+        break;
+      case FAILED_DOWNLOAD:
+        pendingResourcePack = null;
+        break;
+      default:
+        break;
     }
+
+    if (!peek) {
+      CompletableFuture.supplyAsync(() -> {
+        tickResourcePackQueue();
+        return true;
+      });
+    }
+
+    return queued != null && queued.getOrigin() == ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
   }
 
   /**

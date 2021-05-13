@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
@@ -28,10 +29,12 @@ import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
@@ -40,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -126,6 +130,21 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       playerSessionHandler.getServerBossBars().remove(packet.getUuid());
     }
     return false; // forward
+  }
+
+  @Override
+  public boolean handle(ResourcePackRequest packet) {
+    ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
+        Preconditions.checkNotNull(packet.getUrl()))
+        .setPrompt(packet.getPrompt())
+        .setShouldForce(packet.isRequired());
+    // Why SpotBugs decides that this is unsafe I have no idea;
+    if (packet.getHash() != null && !Preconditions.checkNotNull(packet.getHash()).isEmpty()) {
+      builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
+    }
+
+    serverConn.getPlayer().queueResourcePack(builder.build());
+    return true;
   }
 
   @Override

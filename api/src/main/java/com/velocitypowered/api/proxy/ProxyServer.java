@@ -13,6 +13,7 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -217,4 +218,24 @@ public interface ProxyServer extends Audience {
   @NonNull
   BossBar createBossBar(net.kyori.text.Component title, @NonNull BossBarColor color,
       @NonNull BossBarOverlay overlay, float progress);
+
+  /**
+   * Creates a builder to build a {@link ResourcePackInfo} instance for use with
+   * {@link com.velocitypowered.api.proxy.Player#sendResourcePackOffer(ResourcePackInfo)}.
+   *
+   * <p>Note: The resource-pack location should always:
+   * - Use HTTPS with a valid certificate.
+   * - Be in a crawler-accessible location. Having it behind Cloudflare or Cloudfront
+   *   may cause issues in downloading.
+   * - Be in location with appropriate bandwidth so the download does not time out or fail.</p>
+   *
+   * <p>Do also make sure that the resource pack is in the correct format for the version
+   * of the client. It is also highly recommended to always provide the resource-pack SHA-1 hash
+   * of the resource pack with {@link ResourcePackInfo.Builder#setHash(byte[])}
+   * whenever possible to save bandwidth.</p>
+   *
+   * @param url The url where the resource pack can be found
+   * @return a ResourcePackInfo builder
+   */
+  ResourcePackInfo.Builder createResourcePackBuilder(String url);
 }
