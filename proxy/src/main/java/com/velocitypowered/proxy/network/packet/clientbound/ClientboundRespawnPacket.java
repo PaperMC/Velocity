@@ -33,7 +33,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO: This class is in dire need of a refactor. Suppressing the warning is only done as an
 //       implicit acknowledgement that this code is very bad.
-@SuppressWarnings("WarnAway")
+@SuppressWarnings("NullAway")
 public class ClientboundRespawnPacket implements Packet {
   public static final PacketReader<ClientboundRespawnPacket> DECODER = PacketReader.method(ClientboundRespawnPacket::new);
   public static final PacketWriter<ClientboundRespawnPacket> ENCODER = PacketWriter.deprecatedEncode();
