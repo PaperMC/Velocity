@@ -49,7 +49,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,8 +68,10 @@ public class VelocityPluginManager implements PluginManager {
 
   private void registerPlugin(PluginContainer plugin) {
     plugins.put(plugin.description().id(), plugin);
-    Optional<?> instance = plugin.instance();
-    instance.ifPresent(o -> pluginInstances.put(o, plugin));
+    Object instance = plugin.instance();
+    if (instance != null) {
+      pluginInstances.put(instance, plugin);
+    }
   }
 
   /**
@@ -198,10 +199,7 @@ public class VelocityPluginManager implements PluginManager {
       throw new IllegalArgumentException("plugin is not loaded");
     }
 
-    Optional<?> optInstance = optContainer.instance();
-    checkArgument(optInstance.isPresent(), "plugin has no instance");
-
-    ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();
+    ClassLoader pluginClassloader = plugin.getClass().getClassLoader();
     if (pluginClassloader instanceof PluginClassLoader) {
       ((PluginClassLoader) pluginClassloader).addPath(path);
     } else {

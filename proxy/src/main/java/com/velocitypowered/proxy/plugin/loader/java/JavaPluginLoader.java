@@ -41,10 +41,10 @@ import java.nio.file.Path;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JavaPluginLoader implements PluginLoader {
 
@@ -56,18 +56,16 @@ public class JavaPluginLoader implements PluginLoader {
 
   @Override
   public PluginDescription loadPluginDescription(Path source) throws Exception {
-    Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
-
-    if (serialized.isEmpty()) {
+    SerializedPluginDescription serialized = getSerializedPluginInfo(source);
+    if (serialized == null) {
       throw new InvalidPluginException("Did not find a valid velocity-plugin.json.");
     }
 
-    SerializedPluginDescription pd = serialized.get();
-    if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
-      throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
+    if (!SerializedPluginDescription.ID_PATTERN.matcher(serialized.getId()).matches()) {
+      throw new InvalidPluginException("Plugin ID '" + serialized.getId() + "' is invalid.");
     }
 
-    return createCandidateDescription(pd, source);
+    return createCandidateDescription(serialized, source);
   }
 
   @Override
@@ -131,7 +129,7 @@ public class JavaPluginLoader implements PluginLoader {
     ((VelocityPluginContainer) container).setInstance(instance);
   }
 
-  private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
+  private @Nullable SerializedPluginDescription getSerializedPluginInfo(Path source)
       throws Exception {
     boolean foundBungeeBukkitPluginFile = false;
     try (JarInputStream in = new JarInputStream(
@@ -140,8 +138,8 @@ public class JavaPluginLoader implements PluginLoader {
       while ((entry = in.getNextJarEntry()) != null) {
         if (entry.getName().equals("velocity-plugin.json")) {
           try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
-                SerializedPluginDescription.class));
+            return VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
+                SerializedPluginDescription.class);
           }
         }
 
@@ -156,7 +154,7 @@ public class JavaPluginLoader implements PluginLoader {
             + "plugins.");
       }
 
-      return Optional.empty();
+      return null;
     }
   }
 

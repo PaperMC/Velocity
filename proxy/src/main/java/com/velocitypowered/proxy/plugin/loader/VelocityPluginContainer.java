@@ -19,8 +19,8 @@ package com.velocitypowered.proxy.plugin.loader;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityPluginContainer implements PluginContainer {
 
@@ -37,8 +37,8 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   @Override
-  public Optional<?> instance() {
-    return Optional.ofNullable(instance);
+  public @Nullable Object instance() {
+    return instance;
   }
 
   public void setInstance(Object instance) {

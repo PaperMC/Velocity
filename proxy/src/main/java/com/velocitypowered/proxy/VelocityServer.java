@@ -78,7 +78,6 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -327,10 +326,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     // Register the plugin main classes so that we can fire the proxy initialize event
     for (PluginContainer plugin : pluginManager.plugins()) {
-      Optional<?> instance = plugin.instance();
-      if (instance.isPresent()) {
+      Object instance = plugin.instance();
+      if (instance != null) {
         try {
-          eventManager.registerInternally(plugin, instance.get());
+          eventManager.registerInternally(plugin, instance);
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
               MoreObjects.firstNonNull(plugin.description().name(), plugin.description().id()), e);

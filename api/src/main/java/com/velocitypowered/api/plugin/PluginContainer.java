@@ -7,7 +7,7 @@
 
 package com.velocitypowered.api.plugin;
 
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A wrapper around a plugin loaded by the proxy.
@@ -26,7 +26,7 @@ public interface PluginContainer {
    *
    * @return the instance if available
    */
-  default Optional<?> instance() {
-    return Optional.empty();
+  default @Nullable Object instance() {
+    return null;
   }
 }
