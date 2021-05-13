@@ -51,12 +51,12 @@ public final class InitialInboundConnection implements InboundConnection,
   }
 
   @Override
-  public SocketAddress remoteAddress() {
+  public @Nullable SocketAddress remoteAddress() {
     return connection.getRemoteAddress();
   }
 
   @Override
-  public @Nullable InetSocketAddress connectedHostname() {
+  public InetSocketAddress connectedHostname() {
     return InetSocketAddress.createUnresolved(cleanedHostname, handshake.getPort());
   }
 

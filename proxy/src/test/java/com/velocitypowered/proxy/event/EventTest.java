@@ -25,6 +25,7 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -70,7 +71,7 @@ public class EventTest {
 
   static final class AlwaysSyncListener {
 
-    Thread thread;
+    @MonotonicNonNull Thread thread;
     int result;
 
     @Subscribe
@@ -92,9 +93,9 @@ public class EventTest {
 
   static final class AlwaysAsyncListener {
 
-    Thread threadA;
-    Thread threadB;
-    Thread threadC;
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
     int result;
 
     @Subscribe(async = true)
@@ -129,10 +130,10 @@ public class EventTest {
 
   static final class SometimesAsyncListener {
 
-    Thread threadA;
-    Thread threadB;
-    Thread threadC;
-    Thread threadD;
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
+    @MonotonicNonNull Thread threadD;
     int result;
 
     @Subscribe(order = PostOrder.EARLY)
@@ -169,9 +170,9 @@ public class EventTest {
 
   static final class ContinuationListener {
 
-    Thread threadA;
-    Thread threadB;
-    Thread threadC;
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
 
     final AtomicInteger value = new AtomicInteger();
 
@@ -211,9 +212,9 @@ public class EventTest {
 
   static final class AsyncContinuationListener {
 
-    Thread threadA;
-    Thread threadB;
-    Thread threadC;
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
 
     final AtomicInteger value = new AtomicInteger();
 
@@ -253,9 +254,9 @@ public class EventTest {
 
   static final class ResumeContinuationImmediatelyListener {
 
-    Thread threadA;
-    Thread threadB;
-    Thread threadC;
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
     int result;
 
     @Subscribe(order = PostOrder.EARLY)

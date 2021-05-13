@@ -22,7 +22,7 @@ public interface InboundConnection {
    *
    * @return the player's remote address
    */
-  SocketAddress remoteAddress();
+  @Nullable SocketAddress remoteAddress();
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.

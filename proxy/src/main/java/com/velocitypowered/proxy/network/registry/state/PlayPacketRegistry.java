@@ -311,6 +311,7 @@ class PlayPacketRegistry implements ProtocolRegistry {
   public final PacketRegistry clientbound;
   public final PacketRegistry serverbound;
 
+  @Override
   public PacketRegistryMap lookup(PacketDirection direction,
       ProtocolVersion version) {
     return (direction == PacketDirection.SERVERBOUND ? this.serverbound : this.clientbound)
@@ -319,24 +320,21 @@ class PlayPacketRegistry implements ProtocolRegistry {
 
   public static class PacketRegistry {
 
-    private final PacketDirection direction;
-    private final Map<ProtocolVersion, ProtocolRegistry> versions;
+    private final Map<ProtocolVersion, InternalRegistryMap> versions;
 
     PacketRegistry(PacketDirection direction) {
-      this.direction = direction;
-
-      Map<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap<>(ProtocolVersion.class);
+      Map<ProtocolVersion, InternalRegistryMap> mutableVersions = new EnumMap<>(ProtocolVersion.class);
       for (ProtocolVersion version : ProtocolVersion.values()) {
         if (!version.isLegacy() && !version.isUnknown()) {
-          mutableVersions.put(version, new ProtocolRegistry(version));
+          mutableVersions.put(version, new InternalRegistryMap(version, direction));
         }
       }
 
       this.versions = mutableVersions;
     }
 
-    ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {
-      ProtocolRegistry registry = versions.get(version);
+    InternalRegistryMap getProtocolRegistry(final ProtocolVersion version) {
+      InternalRegistryMap registry = versions.get(version);
       if (registry == null) {
         throw new IllegalArgumentException("Could not find data for protocol version " + version);
       }
@@ -364,7 +362,7 @@ class PlayPacketRegistry implements ProtocolRegistry {
           if (protocol == to && next != current) {
             break;
           }
-          ProtocolRegistry registry = this.versions.get(protocol);
+          InternalRegistryMap registry = this.versions.get(protocol);
           if (registry == null) {
             throw new IllegalArgumentException("Unknown protocol version "
                 + current.protocolVersion);
@@ -391,8 +389,12 @@ class PlayPacketRegistry implements ProtocolRegistry {
     }
 
     public void compact() {
-      ProtocolRegistry last = this.versions.get(MINIMUM_VERSION);
-      for (Entry<ProtocolVersion, ProtocolRegistry> entry : this.versions
+      InternalRegistryMap last = this.versions.get(MINIMUM_VERSION);
+      if (last == null) {
+        return;
+      }
+
+      for (Map.Entry<ProtocolVersion, InternalRegistryMap> entry : this.versions
           .entrySet()) {
         if (entry.getValue() == last) {
           continue;
@@ -406,73 +408,79 @@ class PlayPacketRegistry implements ProtocolRegistry {
         }
       }
     }
+  }
 
-    public class ProtocolRegistry implements PacketRegistryMap {
+  public static class InternalRegistryMap implements PacketRegistryMap {
 
-      private final ProtocolVersion version;
-      final IntObjectMap<PacketReader<? extends Packet>> packetIdToReader =
-          new IntObjectHashMap<>(16, 0.5f);
-      final Object2IntMap<Class<? extends Packet>> packetClassToId =
-          new Object2IntOpenHashMap<>(16, 0.5f);
-      final Map<Class<? extends Packet>, PacketWriter<? extends Packet>> packetClassToWriter =
-          new HashMap<>(16, 0.5f);
+    private final ProtocolVersion version;
+    final IntObjectMap<PacketReader<? extends Packet>> packetIdToReader =
+        new IntObjectHashMap<>(16, 0.5f);
+    final Object2IntMap<Class<? extends Packet>> packetClassToId =
+        new Object2IntOpenHashMap<>(16, 0.5f);
+    final Map<Class<? extends Packet>, PacketWriter<? extends Packet>> packetClassToWriter =
+        new HashMap<>(16, 0.5f);
+    private final PacketDirection direction;
 
-      ProtocolRegistry(final ProtocolVersion version) {
-        this.version = version;
-        this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
-      }
+    InternalRegistryMap(final ProtocolVersion version,
+        PacketDirection direction) {
+      this.version = version;
+      this.direction = direction;
+      this.packetClassToId.defaultReturnValue(Integer.MIN_VALUE);
+    }
 
-      /**
-       * Attempts to create a packet from the specified {@code id}.
-       *
-       * @param id the packet ID
-       * @param buf the bytebuf
-       * @return the packet instance, or {@code null} if the ID is not registered
-       */
-      public @Nullable Packet readPacket(final int id, ByteBuf buf, ProtocolVersion version) {
-        final PacketReader<? extends Packet> decoder = this.packetIdToReader.get(id);
-        if (decoder == null) {
-          return null;
-        }
-        return decoder.read(buf, version);
-      }
-
-      /**
-       * Attempts to serialize the specified {@code packet}.
-       *
-       * @param packet the packet
-       * @param buf the bytebuf
-       */
-      public <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version) {
-        final int id = this.packetClassToId.getInt(packet.getClass());
-        if (id == Integer.MIN_VALUE) {
-          throw new IllegalArgumentException(String.format(
-              "Unable to find id for packet of type %s in %s protocol %s",
-              packet.getClass().getName(), PacketRegistry.this.direction, this.version
-          ));
-        }
-
-        @SuppressWarnings("rawtypes")
-        // Safe because all registering actions are type-safe.
-        final PacketWriter encoder = this.packetClassToWriter.get(packet.getClass());
-
-        assert encoder != null : "Couldn't look up encoder - shouldn't happen!";
-
-        ProtocolUtils.writeVarInt(buf, id);
-        //noinspection unchecked
-        encoder.write(buf, packet, version);
-      }
-
-      @Override
-      public @Nullable Class<? extends Packet> lookupPacket(int id) {
-        for (Object2IntMap.Entry<Class<? extends Packet>> entry : this.packetClassToId
-            .object2IntEntrySet()) {
-          if (entry.getIntValue() == id) {
-            return entry.getKey();
-          }
-        }
+    /**
+     * Attempts to create a packet from the specified {@code id}.
+     *
+     * @param id the packet ID
+     * @param buf the bytebuf
+     * @return the packet instance, or {@code null} if the ID is not registered
+     */
+    @Override
+    public @Nullable Packet readPacket(final int id, ByteBuf buf, ProtocolVersion version) {
+      final PacketReader<? extends Packet> decoder = this.packetIdToReader.get(id);
+      if (decoder == null) {
         return null;
       }
+      return decoder.read(buf, version);
+    }
+
+    /**
+     * Attempts to serialize the specified {@code packet}.
+     *
+     * @param packet the packet
+     * @param buf the bytebuf
+     */
+    @Override
+    public <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version) {
+      final int id = this.packetClassToId.getInt(packet.getClass());
+      if (id == Integer.MIN_VALUE) {
+        throw new IllegalArgumentException(String.format(
+            "Unable to find id for packet of type %s in %s protocol %s",
+            packet.getClass().getName(), this.direction, this.version
+        ));
+      }
+
+      @SuppressWarnings("rawtypes")
+      // Safe because all registering actions are type-safe.
+      final PacketWriter encoder = this.packetClassToWriter.get(packet.getClass());
+      if (encoder == null) {
+        throw new IllegalStateException("Couldn't look up encoder - shouldn't happen!");
+      }
+
+      ProtocolUtils.writeVarInt(buf, id);
+      //noinspection unchecked
+      encoder.write(buf, packet, version);
+    }
+
+    @Override
+    public @Nullable Class<? extends Packet> lookupPacket(int id) {
+      for (Object2IntMap.Entry<Class<? extends Packet>> entry : this.packetClassToId
+          .object2IntEntrySet()) {
+        if (entry.getIntValue() == id) {
+          return entry.getKey();
+        }
+      }
+      return null;
     }
   }
 

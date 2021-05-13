@@ -130,7 +130,7 @@ public interface KickedFromServerEvent extends
    */
   final class RedirectPlayer implements ServerKickResult {
 
-    private final Component message;
+    private final @Nullable Component message;
     private final RegisteredServer server;
 
     private RedirectPlayer(RegisteredServer server,
@@ -148,7 +148,7 @@ public interface KickedFromServerEvent extends
       return server;
     }
 
-    public Component message() {
+    public @Nullable Component message() {
       return message;
     }
 

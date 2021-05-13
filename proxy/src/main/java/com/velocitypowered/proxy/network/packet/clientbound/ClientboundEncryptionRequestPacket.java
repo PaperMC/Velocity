@@ -23,7 +23,6 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -54,7 +53,7 @@ public class ClientboundEncryptionRequestPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     this.serverId = ProtocolUtils.readString(buf, 20);
 
     if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {

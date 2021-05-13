@@ -144,7 +144,9 @@ public class VelocityTabList implements TabList {
     // Packets are already forwarded on, so no need to do that here
     for (ClientboundPlayerListItemPacket.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
-      assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
+      if (uuid == null) {
+        throw new IllegalStateException("1.7 tab list entry given to modern tab list handler!");
+      }
 
       if (packet.getAction() != ClientboundPlayerListItemPacket.ADD_PLAYER
           && !entries.containsKey(uuid)) {
@@ -160,7 +162,7 @@ public class VelocityTabList implements TabList {
           if (name == null || properties == null) {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
-          entries.put(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
+          entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, name, properties))
               .displayName(item.getDisplayName())

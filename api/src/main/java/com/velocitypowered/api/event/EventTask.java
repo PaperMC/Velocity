@@ -174,6 +174,9 @@ public abstract class EventTask {
    * @param future The task to wait for
    * @return The event task
    */
+  // The Error Prone annotation here is spurious. The Future is handled via the CompletableFuture
+  // API, which does NOT use the traditional blocking model.
+  @SuppressWarnings("FutureReturnValueIgnored")
   public static EventTask.WithContinuation resumeWhenComplete(
       final CompletableFuture<?> future) {
     requireNonNull(future, "future");

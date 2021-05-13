@@ -7,6 +7,7 @@ plugins {
 
 apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/errorprone.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 license {
@@ -50,9 +51,8 @@ tasks.withType(Checkstyle) {
 }
 
 dependencies {
-    // Note: we depend on the API twice, first the main sourceset, and then the annotation processor.
     implementation project(':velocity-api')
-    implementation project(':velocity-api').sourceSets.ap.output
+    implementation project(':velocity-annotation-processor')
     implementation project(':velocity-native')
 
     implementation "io.netty:netty-codec:${nettyVersion}"

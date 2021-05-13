@@ -98,7 +98,7 @@ public interface ServerPreConnectEvent extends ResultedEvent<ServerPreConnectEve
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(o instanceof ServerResult)) {
         return false;
       }
       ServerResult that = (ServerResult) o;

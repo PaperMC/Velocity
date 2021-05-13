@@ -148,7 +148,7 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * from the player, you should use the equivalent method on the instance returned by
    * {@link #connectedServer()}.
    *
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   boolean sendPluginMessage(PluginChannelId identifier, byte[] data);

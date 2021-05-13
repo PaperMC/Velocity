@@ -25,7 +25,6 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -88,7 +87,7 @@ public class ServerboundTabCompleteRequestPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(MINECRAFT_1_13)) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
       this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);

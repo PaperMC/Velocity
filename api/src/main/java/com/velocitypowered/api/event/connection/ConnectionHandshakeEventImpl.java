@@ -22,7 +22,7 @@ public final class ConnectionHandshakeEventImpl implements ConnectionHandshakeEv
   private final String originalHostname;
   private String currentHostname;
   private ComponentResult result;
-  private SocketAddress currentRemoteAddress;
+  private @Nullable SocketAddress currentRemoteAddress;
 
   public ConnectionHandshakeEventImpl(InboundConnection connection,
       String originalHostname) {
@@ -59,7 +59,7 @@ public final class ConnectionHandshakeEventImpl implements ConnectionHandshakeEv
   }
 
   @Override
-  public void setCurrentRemoteHostAddress(SocketAddress address) {
+  public void setCurrentRemoteHostAddress(@Nullable SocketAddress address) {
     currentRemoteAddress = address;
   }
 

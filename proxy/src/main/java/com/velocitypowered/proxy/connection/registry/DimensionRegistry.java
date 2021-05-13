@@ -118,4 +118,9 @@ public final class DimensionRegistry {
     }
     return mappings.build();
   }
+
+  @Override
+  public String toString() {
+    return levelNames.toString();
+  }
 }

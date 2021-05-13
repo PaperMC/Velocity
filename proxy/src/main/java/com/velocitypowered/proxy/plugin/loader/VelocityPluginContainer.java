@@ -20,11 +20,12 @@ package com.velocitypowered.proxy.plugin.loader;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class VelocityPluginContainer implements PluginContainer {
 
   private final PluginDescription description;
-  private Object instance;
+  private @MonotonicNonNull Object instance;
 
   public VelocityPluginContainer(PluginDescription description) {
     this.description = description;
@@ -41,6 +42,10 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   public void setInstance(Object instance) {
-    this.instance = instance;
+    if (this.instance == null) {
+      this.instance = instance;
+    } else {
+      throw new IllegalStateException("Plugin instance already set");
+    }
   }
 }

@@ -46,7 +46,7 @@ public interface PacketReader<P extends Packet> {
   static <P extends Packet> PacketReader<P> method(final Supplier<P> factory) {
     return (buf, version) -> {
       final P packet = factory.get();
-      packet.decode(buf, null, version);
+      packet.decode(buf, version);
       return packet;
     };
   }

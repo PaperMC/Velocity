@@ -60,7 +60,7 @@ public class VelocityPluginManager implements PluginManager {
   private static final Logger logger = LogManager.getLogger(VelocityPluginManager.class);
 
   private final Map<String, PluginContainer> plugins = new LinkedHashMap<>();
-  private final Map<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
+  private final IdentityHashMap<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
   private final VelocityServer server;
 
   public VelocityPluginManager(VelocityServer server) {

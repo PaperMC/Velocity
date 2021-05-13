@@ -38,6 +38,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 
 public class GlistCommand {
 
@@ -122,7 +123,7 @@ public class GlistCommand {
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
-        .resetStyle();
+        .style(Style.empty());
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);

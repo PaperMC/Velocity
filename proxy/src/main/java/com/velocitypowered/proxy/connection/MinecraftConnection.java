@@ -94,6 +94,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
     this.state = ProtocolStates.HANDSHAKE;
+    this.protocolVersion = ProtocolVersion.UNKNOWN;
   }
 
   @Override

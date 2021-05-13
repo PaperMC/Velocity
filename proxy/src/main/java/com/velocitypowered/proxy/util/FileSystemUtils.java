@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URI;
@@ -56,7 +58,7 @@ public class FileSystemUtils {
     }
     if (knownResource.getProtocol().equals("jar")) {
       // Running from a JAR
-      String jarPathRaw = knownResource.toString().split("!")[0];
+      String jarPathRaw = Iterables.get(Splitter.on('!').split(knownResource.toString()), 0);
       URI path = URI.create(jarPathRaw + "!/");
 
       try (FileSystem fileSystem = FileSystems.newFileSystem(path, Map.of("create", "true"))) {

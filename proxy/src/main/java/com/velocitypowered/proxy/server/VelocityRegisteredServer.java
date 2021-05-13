@@ -61,12 +61,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityRegisteredServer implements RegisteredServer, ForwardingAudience {
 
-  private final @Nullable VelocityServer server;
+  private final @Nullable VelocityServer instance;
   private final ServerInfo serverInfo;
   private final Map<UUID, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
-  public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
-    this.server = server;
+  public VelocityRegisteredServer(@Nullable VelocityServer instance, ServerInfo serverInfo) {
+    this.instance = instance;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
   }
 
@@ -93,18 +93,19 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @return the server list ping response
    */
   public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, ProtocolVersion version) {
-    if (server == null) {
+    VelocityServer instance = this.instance;
+    if (instance == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop, serverInfo.address())
-        .handler(new ChannelInitializer<Channel>() {
+    instance.createBootstrap(loop, serverInfo.address())
+        .handler(new ChannelInitializer<>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.configuration().getReadTimeout(),
+                    new ReadTimeoutHandler(instance.configuration().getReadTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
@@ -112,7 +113,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
                 .addLast(MINECRAFT_ENCODER,
                     new MinecraftEncoder(PacketDirection.SERVERBOUND));
 
-            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
+            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, instance));
           }
         })
         .connect(serverInfo.address())

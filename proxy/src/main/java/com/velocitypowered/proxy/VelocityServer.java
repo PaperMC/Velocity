@@ -90,6 +90,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
@@ -193,8 +194,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     cm.getBossGroup().terminationFuture().syncUninterruptibly();
   }
 
-  @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
-      "console", "cm", "configuration"})
+  @EnsuresNonNull({"serverKeyPair", "eventManager", "console", "cm", "configuration"})
   void start() {
     logger.info("Booting up {} {}...", version().getName(), version().getVersion());
     console.setupStreams();
@@ -252,8 +252,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       FileSystemUtils.visitResources(VelocityServer.class, path -> {
         logger.info("Loading localizations...");
 
-        try {
-          Files.walk(path).forEach(file -> {
+        try (Stream<Path> stream = Files.walk(path)) {
+          stream.forEach(file -> {
             if (!Files.isRegularFile(file)) {
               return;
             }
@@ -396,12 +396,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         RegisteredServer next = player.getNextServerToTry();
         if (next != null) {
           player.createConnectionRequest(next).connectWithIndication()
-              .whenComplete((success, ex) -> {
-                if (ex != null || success == null || !success) {
+              .thenAccept((success) -> {
+                if (success == null || !success) {
                   player.disconnect(Component.text("Your server has been changed, but we could "
                       + "not move you to any fallback servers."));
                 }
                 latch.countDown();
+              })
+              .exceptionally(throwable -> {
+                player.disconnect(Component.text("Your server has been changed, but we could "
+                    + "not move you to any fallback servers."));
+                latch.countDown();
+                return null;
               });
         } else {
           latch.countDown();
@@ -426,8 +432,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
-        || newConfiguration.getQueryPort() != configuration.getQueryPort()
-        && oldBind instanceof InetSocketAddress)) {
+        || ((newConfiguration.getQueryPort() != configuration.getQueryPort())
+        && (oldBind instanceof InetSocketAddress)))) {
       this.cm.close(new InetSocketAddress(
           ((InetSocketAddress) oldBind).getHostString(), configuration.getQueryPort()));
     }
@@ -444,7 +450,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   * Shuts down the proxy, kicking players with the specified {@code reason}.
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    * @param reason message to kick online players with

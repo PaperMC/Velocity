@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -32,6 +33,7 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Method;
@@ -67,8 +69,8 @@ public class VelocityEventManager implements EventManager {
   private static final MethodHandles.Lookup methodHandlesLookup = MethodHandles.lookup();
   private static final LambdaType<UntargetedEventHandler> untargetedHandlerType =
       LambdaType.of(UntargetedEventHandler.class);
-  private static final LambdaType<UntargetedEventHandler.Void> untargetedVoidHandlerType =
-      LambdaType.of(UntargetedEventHandler.Void.class);
+  private static final LambdaType<VoidHandler> untargetedVoidHandlerType =
+      LambdaType.of(VoidHandler.class);
 
   private static final Comparator<HandlerRegistration> handlerComparator =
       Comparator.comparingInt(o -> o.order);
@@ -77,7 +79,7 @@ public class VelocityEventManager implements EventManager {
   private final PluginManager pluginManager;
 
   private final Multimap<Class<?>, HandlerRegistration> handlersByType = HashMultimap.create();
-  private final LoadingCache<Class<?>, @Nullable HandlersCache> handlersCache =
+  private final LoadingCache<Class<?>, HandlersCache> handlersCache =
       Caffeine.newBuilder().build(this::bakeHandlers);
 
   private final LoadingCache<Method, UntargetedEventHandler> untargetedMethodHandlers =
@@ -341,9 +343,12 @@ public class VelocityEventManager implements EventManager {
             info.method.getName(), info.method.getDeclaringClass().getName(), info.errors);
         continue;
       }
-      final UntargetedEventHandler untargetedHandler =
-          untargetedMethodHandlers.get(info.method);
+      final UntargetedEventHandler untargetedHandler = untargetedMethodHandlers.get(info.method);
       assert untargetedHandler != null;
+      if (info.eventType == null) {
+        throw new VerifyException("Event type is not present and there are no errors");
+      }
+
       final EventHandler<Object> handler = event -> untargetedHandler.execute(listener, event);
       registrations.add(new HandlerRegistration(pluginContainer, info.order,
           info.eventType, listener, handler, info.asyncType));
@@ -456,7 +461,12 @@ public class VelocityEventManager implements EventManager {
     private final boolean currentlyAsync;
     private final E event;
 
+    // This field is modified via a VarHandle, so this field is used and cannot be final.
+    @SuppressWarnings({"UnusedVariable", "FieldMayBeFinal"})
     private volatile int state = TASK_STATE_DEFAULT;
+
+    // This field is modified via a VarHandle, so this field is used and cannot be final.
+    @SuppressWarnings({"UnusedVariable", "FieldMayBeFinal"})
     private volatile boolean resumed = false;
 
     private ContinuationTask(

@@ -88,7 +88,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
 
     private final @Nullable Component reason;
 
-    protected ComponentResult(@Nullable Component reason) {
+    private ComponentResult(@Nullable Component reason) {
       this.reason = reason;
     }
 

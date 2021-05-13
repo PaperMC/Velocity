@@ -64,7 +64,9 @@ public interface EventManager {
    *
    * @param event the event to fire
    */
+  @SuppressWarnings("FutureReturnValueIgnored")
   default void fireAndForget(Object event) {
+    // Calling fire(Object) and not handling it is intentional.
     fire(event);
   }
 

@@ -60,7 +60,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
 
   private final int protocol;
   private final int snapshotProtocol;
-  private final String[] names;
+  private final ImmutableList<String> names;
 
   /**
    * Represents the lowest supported version.
@@ -127,7 +127,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
     }
 
     this.protocol = protocol;
-    this.names = names;
+    this.names = ImmutableList.copyOf(names);
   }
 
   /**
@@ -146,7 +146,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * @return the version name
    */
   public String versionIntroducedIn() {
-    return names[0];
+    return names.get(0);
   }
 
   /**
@@ -156,7 +156,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * @return the version name
    */
   public String mostRecentSupportedVersion() {
-    return names[names.length - 1];
+    return names.get(names.size() - 1);
   }
 
   /**

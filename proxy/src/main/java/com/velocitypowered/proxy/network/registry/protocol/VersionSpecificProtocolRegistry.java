@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.network.registry.protocol;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.registry.packet.EmptyPacketRegistryMap;
 import com.velocitypowered.proxy.network.registry.packet.PacketRegistryMap;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -49,9 +50,9 @@ public class VersionSpecificProtocolRegistry implements ProtocolRegistry {
   @Override
   public PacketRegistryMap lookup(PacketDirection direction, ProtocolVersion version) {
     if (direction == PacketDirection.SERVERBOUND) {
-      return this.serverboundByVersion.get(version);
+      return this.serverboundByVersion.getOrDefault(version, EmptyPacketRegistryMap.INSTANCE);
     } else if (direction == PacketDirection.CLIENTBOUND) {
-      return this.clientboundByVersion.get(version);
+      return this.clientboundByVersion.getOrDefault(version, EmptyPacketRegistryMap.INSTANCE);
     } else {
       throw new NullPointerException("direction");
     }

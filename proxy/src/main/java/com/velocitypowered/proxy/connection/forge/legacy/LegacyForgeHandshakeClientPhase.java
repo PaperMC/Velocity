@@ -191,7 +191,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
    *                          {@link #nextPhase()}. A null indicates there is no
    *                          further phase to transition to.
    */
-  LegacyForgeHandshakeClientPhase(Integer packetToAdvanceOn) {
+  LegacyForgeHandshakeClientPhase(@Nullable Integer packetToAdvanceOn) {
     this.packetToAdvanceOn = packetToAdvanceOn;
   }
 

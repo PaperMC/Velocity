@@ -1,0 +1,17 @@
+dependencies {
+    annotationProcessor("com.uber.nullaway:nullaway:0.9.1")
+    testAnnotationProcessor("com.uber.nullaway:nullaway:0.9.1")
+    errorprone("com.google.errorprone:error_prone_core:2.6.0")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        allErrorsAsWarnings = true
+        error("NullAway")
+
+        option("NullAway:AnnotatedPackages", "com.velocitypowered")
+        option("NullAway:ExcludedClasses",
+                "com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket," +
+                "com.velocitypowered.proxy.network.packet.clientbound.ClientboundRespawnPacket")
+    }
+}

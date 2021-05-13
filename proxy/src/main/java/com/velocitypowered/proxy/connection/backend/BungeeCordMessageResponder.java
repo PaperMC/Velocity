@@ -85,21 +85,12 @@ public class BungeeCordMessageResponder {
     }
   }
 
-  private void processIp(ByteBufDataInput in) {
+  private void processIp() {
     ByteBuf buf = Unpooled.buffer();
     ByteBufDataOutput out = new ByteBufDataOutput(buf);
     out.writeUTF("IP");
 
-    SocketAddress address = player.remoteAddress();
-    if (address instanceof InetSocketAddress) {
-      InetSocketAddress serverInetAddr = (InetSocketAddress) address;
-      out.writeUTF(serverInetAddr.getHostString());
-      out.writeInt(serverInetAddr.getPort());
-    } else {
-      out.writeUTF("unix://" + ((DomainSocketAddress) address).path());
-      out.writeInt(0);
-    }
-    sendResponseOnConnection(buf);
+    sendIpOutput(player, buf, out);
   }
 
   private void processPlayerCount(ByteBufDataInput in) {
@@ -243,18 +234,22 @@ public class BungeeCordMessageResponder {
 
       out.writeUTF("IPOther");
       out.writeUTF(player.username());
-      SocketAddress address = player.remoteAddress();
-      if (address instanceof InetSocketAddress) {
-        InetSocketAddress serverInetAddr = (InetSocketAddress) address;
-        out.writeUTF(serverInetAddr.getHostString());
-        out.writeInt(serverInetAddr.getPort());
-      } else {
-        out.writeUTF("unix://" + ((DomainSocketAddress) address).path());
-        out.writeInt(0);
-      }
-
-      sendResponseOnConnection(buf);
+      sendIpOutput(player, buf, out);
     }
+  }
+
+  private void sendIpOutput(Player player, ByteBuf buf, ByteBufDataOutput out) {
+    SocketAddress address = player.remoteAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress serverInetAddr = (InetSocketAddress) address;
+      out.writeUTF(serverInetAddr.getHostString());
+      out.writeInt(serverInetAddr.getPort());
+    } else {
+      out.writeUTF("127.0.0.1");
+      out.writeInt(0);
+    }
+
+    sendResponseOnConnection(buf);
   }
 
   private void processServerIp(ByteBufDataInput in) {
@@ -360,7 +355,7 @@ public class BungeeCordMessageResponder {
         this.processConnectOther(in);
         break;
       case "IP":
-        this.processIp(in);
+        this.processIp();
         break;
       case "PlayerCount":
         this.processPlayerCount(in);

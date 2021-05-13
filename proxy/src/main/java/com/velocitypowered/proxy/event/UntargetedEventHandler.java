@@ -18,15 +18,16 @@
 package com.velocitypowered.proxy.event;
 
 import com.velocitypowered.api.event.EventTask;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface UntargetedEventHandler {
 
-  EventTask execute(Object targetInstance, Object event);
+  @Nullable EventTask execute(Object targetInstance, Object event);
 
-  interface Void extends UntargetedEventHandler {
+  interface VoidHandler extends UntargetedEventHandler {
 
     @Override
-    default EventTask execute(final Object targetInstance, final Object event) {
+    default @Nullable EventTask execute(final Object targetInstance, final Object event) {
       executeVoid(targetInstance, event);
       return null;
     }

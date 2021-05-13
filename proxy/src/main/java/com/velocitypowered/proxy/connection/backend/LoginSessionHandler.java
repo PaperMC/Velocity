@@ -46,6 +46,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -147,7 +148,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
   }
 
-  private static String cleanRemoteAddress(SocketAddress address) {
+  private static String cleanRemoteAddress(@Nullable SocketAddress address) {
     if (address instanceof InetSocketAddress) {
       String addressString = ((InetSocketAddress) address).getAddress().getHostAddress();
       int ipv6ScopeIdx = addressString.indexOf('%');

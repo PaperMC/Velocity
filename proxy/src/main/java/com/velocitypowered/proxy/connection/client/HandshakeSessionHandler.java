@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -140,8 +141,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          if (!event.result().isAllowed()) {
-            ic.disconnectQuietly(event.result().reason());
+          @Nullable Component disconnectReason = event.result().reason();
+          if (disconnectReason != null) {
+            ic.disconnectQuietly(disconnectReason);
           } else {
             // if the handshake is changed, propagate the change
             if (!event.currentHostname().equals(event.originalHostname())) {
@@ -232,8 +234,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public InetSocketAddress remoteAddress() {
-      return (InetSocketAddress) connection.getRemoteAddress();
+    public @Nullable SocketAddress remoteAddress() {
+      return connection.getRemoteAddress();
     }
 
     @Override

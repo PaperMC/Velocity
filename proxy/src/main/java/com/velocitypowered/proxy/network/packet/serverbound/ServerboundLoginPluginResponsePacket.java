@@ -87,12 +87,12 @@ public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder i
     if (this == other) {
       return true;
     }
-    if (other == null || this.getClass() != other.getClass()) {
+    if (!(other instanceof ServerboundLoginPluginResponsePacket)) {
       return false;
     }
     final ServerboundLoginPluginResponsePacket that = (ServerboundLoginPluginResponsePacket) other;
     return this.id == that.id
-      && Objects.equals(this.success, that.success)
+      && this.success == that.success
       && super.equals(other);
   }
 

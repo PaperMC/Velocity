@@ -23,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class DimensionInfo {
 
   private final String registryIdentifier;
-  private final String levelName;
+  private final @Nullable String levelName;
   private final boolean isFlat;
   private final boolean isDebugType;
 
@@ -59,5 +59,15 @@ public final class DimensionInfo {
 
   public String getRegistryIdentifier() {
     return registryIdentifier;
+  }
+
+  @Override
+  public String toString() {
+    return "DimensionInfo{"
+        + "registryIdentifier='" + registryIdentifier + '\''
+        + ", levelName='" + levelName + '\''
+        + ", isFlat=" + isFlat
+        + ", isDebugType=" + isDebugType
+        + '}';
   }
 }

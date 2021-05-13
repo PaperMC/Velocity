@@ -39,7 +39,7 @@ public class VelocityPluginDescription implements PluginDescription {
   private final @Nullable String url;
   private final List<String> authors;
   private final Map<String, PluginDependency> dependencies;
-  private final Path source;
+  private final @Nullable Path source;
 
   /**
    * Creates a new plugin description.
@@ -54,7 +54,8 @@ public class VelocityPluginDescription implements PluginDescription {
    */
   public VelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
       @Nullable String description, @Nullable String url,
-      @Nullable List<String> authors, Collection<PluginDependency> dependencies, Path source) {
+      @Nullable List<String> authors, Collection<PluginDependency> dependencies,
+      @Nullable Path source) {
     this.id = checkNotNull(id, "id");
     this.name = Strings.emptyToNull(name);
     this.version = Strings.emptyToNull(version);

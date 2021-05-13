@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -154,19 +155,19 @@ public enum InformationUtils {
               || v6.isSiteLocalAddress()) {
         return address.getHostAddress();
       } else {
-        String[] bits = v6.getHostAddress().split(":");
+        List<String> bits = Splitter.on(':').splitToList(v6.getHostAddress());
         String ret = "";
         boolean flag = false;
-        for (int iter = 0; iter < bits.length; iter++) {
+        for (int iter = 0; iter < bits.size(); iter++) {
           if (flag) {
             ret += ":X";
             continue;
           }
-          if (!bits[iter].equals("0")) {
+          if (!bits.get(iter).equals("0")) {
             if (iter == 0) {
-              ret = bits[iter];
+              ret = bits.get(iter);
             } else {
-              ret = "::" + bits[iter];
+              ret = "::" + bits.get(iter);
             }
             flag = true;
           }

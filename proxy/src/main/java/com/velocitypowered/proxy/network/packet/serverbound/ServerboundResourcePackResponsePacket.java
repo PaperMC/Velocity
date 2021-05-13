@@ -52,7 +52,7 @@ public class ServerboundResourcePackResponsePacket implements Packet {
   @Override
   public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.lte(ProtocolVersion.MINECRAFT_1_9_4)) {
-      ProtocolUtils.writeString(buf, hash);
+      ProtocolUtils.writeString(buf, hash == null ? "" : hash);
     }
     ProtocolUtils.writeVarInt(buf, status.ordinal());
   }

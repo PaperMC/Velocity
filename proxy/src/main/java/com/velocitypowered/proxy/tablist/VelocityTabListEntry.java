@@ -28,12 +28,12 @@ public class VelocityTabListEntry implements TabListEntry {
 
   private final VelocityTabList tabList;
   private final GameProfile profile;
-  private net.kyori.adventure.text.Component displayName;
+  private @Nullable Component displayName;
   private int latency;
   private int gameMode;
 
   VelocityTabListEntry(VelocityTabList tabList, GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
+      @Nullable Component displayName, int latency, int gameMode) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -57,13 +57,13 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public TabListEntry setDisplayName(net.kyori.adventure.text.@Nullable Component displayName) {
+  public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
     tabList.updateEntry(ClientboundPlayerListItemPacket.UPDATE_DISPLAY_NAME, this);
     return this;
   }
 
-  void setDisplayNameInternal(net.kyori.adventure.text.@Nullable Component displayName) {
+  void setDisplayNameInternal(@Nullable Component displayName) {
     this.displayName = displayName;
   }
 

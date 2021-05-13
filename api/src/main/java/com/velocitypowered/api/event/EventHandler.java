@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.event;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Allows a listener to receive direct dispatches of events. This interface can be used directly
  * by a listener (using {@link EventManager#register(Object, Class, short, EventHandler)} or
@@ -15,5 +17,5 @@ package com.velocitypowered.api.event;
 @FunctionalInterface
 public interface EventHandler<E> {
 
-  EventTask execute(E event);
+  @Nullable EventTask execute(E event);
 }

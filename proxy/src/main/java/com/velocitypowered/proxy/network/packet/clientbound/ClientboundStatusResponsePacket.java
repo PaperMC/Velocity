@@ -35,18 +35,10 @@ public class ClientboundStatusResponsePacket implements Packet {
   public static final PacketWriter<ClientboundStatusResponsePacket> ENCODER = (buf, packet, version) ->
       ProtocolUtils.writeString(buf, packet.status);
 
-  private final @Nullable CharSequence status;
+  private final CharSequence status;
 
   public ClientboundStatusResponsePacket(CharSequence status) {
     this.status = status;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    if (status == null) {
-      throw new IllegalStateException("Status is not specified");
-    }
-    ProtocolUtils.writeString(buf, status);
   }
 
   @Override

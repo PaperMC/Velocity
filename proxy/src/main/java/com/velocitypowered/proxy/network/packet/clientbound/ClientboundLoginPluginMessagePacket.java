@@ -84,7 +84,7 @@ public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder im
     if (this == other) {
       return true;
     }
-    if (other == null || this.getClass() != other.getClass()) {
+    if (!(other instanceof ClientboundLoginPluginMessagePacket)) {
       return false;
     }
     final ClientboundLoginPluginMessagePacket that = (ClientboundLoginPluginMessagePacket) other;

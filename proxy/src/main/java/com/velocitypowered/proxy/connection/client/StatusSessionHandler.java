@@ -228,9 +228,4 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     // what even is going on?
     connection.close(true);
   }
-
-  private enum State {
-    AWAITING_REQUEST,
-    RECEIVED_REQUEST
-  }
 }

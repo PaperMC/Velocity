@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
-    id 'checkstyle'
     id 'maven-publish'
+    id 'checkstyle'
 }
 
 apply plugin: 'org.cadixdev.licenser'
@@ -19,12 +19,7 @@ license {
 }
 
 dependencies {
-    implementation "com.google.guava:guava:${guavaVersion}"
-    implementation "io.netty:netty-handler:${nettyVersion}"
-    implementation "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    implementation project(':velocity-api')
 }
 
 test {

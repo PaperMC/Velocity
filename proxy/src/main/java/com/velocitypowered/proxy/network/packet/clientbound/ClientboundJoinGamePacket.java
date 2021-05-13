@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -35,6 +34,9 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+// TODO: This class is in dire need of a refactor. Suppressing the warning is only done as an
+//       implicit acknowledgement that this code is very bad.
+@SuppressWarnings("WarnAway")
 public class ClientboundJoinGamePacket implements Packet {
   public static final PacketReader<ClientboundJoinGamePacket> DECODER = PacketReader.method(ClientboundJoinGamePacket::new);
   public static final PacketWriter<ClientboundJoinGamePacket> ENCODER = PacketWriter.deprecatedEncode();
@@ -188,7 +190,7 @@ public class ClientboundJoinGamePacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     this.entityId = buf.readInt();
     if (version.gte(ProtocolVersion.MINECRAFT_1_16_2)) {
       this.isHardcore = buf.readBoolean();
@@ -196,7 +198,7 @@ public class ClientboundJoinGamePacket implements Packet {
     } else {
       this.gamemode = buf.readByte();
       this.isHardcore = (this.gamemode & 0x08) != 0;
-      this.gamemode &= ~0x08;
+      this.gamemode &= (short) (this.gamemode & ~0x08);
     }
     String dimensionIdentifier = null;
     String levelName = null;

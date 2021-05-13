@@ -592,16 +592,8 @@ public class VelocityConfiguration implements ProxyConfig {
       }
     }
 
-    private ForcedHosts(Map<String, List<String>> forcedHosts) {
-      this.forcedHosts = forcedHosts;
-    }
-
     private Map<String, List<String>> getForcedHosts() {
       return forcedHosts;
-    }
-
-    private void setForcedHosts(Map<String, List<String>> forcedHosts) {
-      this.forcedHosts = forcedHosts;
     }
 
     @Override

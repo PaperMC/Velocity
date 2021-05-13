@@ -20,10 +20,10 @@ package com.velocitypowered.proxy.plugin.loader.java;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.velocitypowered.annotationprocessor.SerializedPluginDescription;
 import com.velocitypowered.api.plugin.InvalidPluginException;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-import com.velocitypowered.api.plugin.ap.SerializedPluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
@@ -48,11 +48,9 @@ import java.util.jar.JarInputStream;
 
 public class JavaPluginLoader implements PluginLoader {
 
-  private final ProxyServer server;
   private final Path baseDirectory;
 
   public JavaPluginLoader(ProxyServer server, Path baseDirectory) {
-    this.server = server;
     this.baseDirectory = baseDirectory;
   }
 
@@ -60,7 +58,7 @@ public class JavaPluginLoader implements PluginLoader {
   public PluginDescription loadPluginDescription(Path source) throws Exception {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
-    if (!serialized.isPresent()) {
+    if (serialized.isEmpty()) {
       throw new InvalidPluginException("Did not find a valid velocity-plugin.json.");
     }
 
@@ -79,7 +77,9 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     Path jarFilePath = source.file();
-    assert jarFilePath != null;
+    if (jarFilePath == null) {
+      throw new IllegalStateException("JAR path not provided.");
+    }
 
     URL pluginJarUrl = jarFilePath.toUri().toURL();
     PluginClassLoader loader = AccessController.doPrivileged(
@@ -106,7 +106,7 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
-    return new VelocityPluginModule(server, javaDescription, container, baseDirectory);
+    return new VelocityPluginModule(javaDescription, container, baseDirectory);
   }
 
   @Override

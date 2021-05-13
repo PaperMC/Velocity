@@ -35,13 +35,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
 
   private final ExecutorService resolveExecutor;
   private final InetNameResolver delegate;
   private final Cache<String, List<InetAddress>> cache;
-  private AddressResolverGroup<InetSocketAddress> resolverGroup;
+  private @MonotonicNonNull AddressResolverGroup<InetSocketAddress> resolverGroup;
 
   /**
    * Creates a new instance of {@code SeparatePoolInetNameResolver}.

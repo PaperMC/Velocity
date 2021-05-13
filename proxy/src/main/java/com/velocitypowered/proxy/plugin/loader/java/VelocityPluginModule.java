@@ -30,14 +30,12 @@ import org.slf4j.LoggerFactory;
 
 class VelocityPluginModule implements Module {
 
-  private final ProxyServer server;
   private final JavaVelocityPluginDescription description;
   private final PluginContainer pluginContainer;
   private final Path basePluginPath;
 
-  VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-                       PluginContainer pluginContainer, Path basePluginPath) {
-    this.server = server;
+  VelocityPluginModule(JavaVelocityPluginDescription description,
+      PluginContainer pluginContainer, Path basePluginPath) {
     this.description = description;
     this.pluginContainer = pluginContainer;
     this.basePluginPath = basePluginPath;

@@ -231,7 +231,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public SocketAddress remoteAddress() {
+  public @Nullable SocketAddress remoteAddress() {
     return connection.getRemoteAddress();
   }
 
@@ -272,7 +272,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         type == MessageType.CHAT
             ? ClientboundChatPacket.CHAT_TYPE
             : ClientboundChatPacket.SYSTEM_TYPE,
-        identity.uuid()
+        identity
     ));
   }
 
@@ -296,7 +296,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connection.write(new ClientboundChatPacket(
           object.toString(),
           ClientboundChatPacket.GAME_INFO_TYPE,
-          Identity.nil().uuid()
+          Identity.nil()
       ));
     }
   }
@@ -564,8 +564,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case CONNECTION_IN_PROGRESS:
                     // Fatal case
                     case CONNECTION_CANCELLED:
-                      disconnect(status.failureReason() != null ? status.failureReason()
-                          : res.message());
+                      Component disconnectReason = status.failureReason();
+                      if (disconnectReason == null) {
+                        disconnectReason = res.message();
+                        if (disconnectReason == null) {
+                          disconnectReason = ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR;
+                        }
+                      }
+                      disconnect(disconnectReason);
                       break;
                     case SERVER_DISCONNECTED:
                       Component reason = status.failureReason() != null ? status.failureReason()
@@ -595,7 +601,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             // In case someone gets creative, assume we want to disconnect the player.
             disconnect(friendlyReason);
           }
-        }, connection.eventLoop());
+        }, connection.eventLoop())
+        .exceptionally(throwable -> {
+          logger.error("Unable to handle server disconnection for {}", this, throwable);
+          disconnect(friendlyReason);
+          return null;
+        });
   }
 
   /**
@@ -689,7 +700,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Player connectedPlayer = server.player(this.id());
     server.unregisterConnection(this);
 
-    DisconnectEventImpl.LoginStatus status;
+    LoginStatus status;
     if (connectedPlayer != null) {
       if (connectedPlayer.connectedServer() != null) {
         status = LoginStatus.PRE_SERVER_JOIN;

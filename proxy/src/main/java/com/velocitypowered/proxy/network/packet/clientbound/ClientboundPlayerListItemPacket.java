@@ -18,13 +18,13 @@
 package com.velocitypowered.proxy.network.packet.clientbound;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -65,7 +65,7 @@ public class ClientboundPlayerListItemPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
@@ -121,7 +121,9 @@ public class ClientboundPlayerListItemPacket implements Packet {
       ProtocolUtils.writeVarInt(buf, items.size());
       for (Item item : items) {
         UUID uuid = item.getUuid();
-        assert uuid != null : "UUID-less entry serialization attempt - 1.7 component!";
+        if (uuid == null) {
+          throw new VerifyException("UUID-less entry serialization attempt - 1.7 component!");
+        }
 
         ProtocolUtils.writeUuid(buf, uuid);
         switch (action) {
@@ -189,7 +191,7 @@ public class ClientboundPlayerListItemPacket implements Packet {
 
   public static class Item {
 
-    private final UUID uuid;
+    private final @Nullable UUID uuid;
     private String name = "";
     private List<GameProfile.Property> properties = ImmutableList.of();
     private int gameMode;
@@ -200,7 +202,7 @@ public class ClientboundPlayerListItemPacket implements Packet {
       uuid = null;
     }
 
-    public Item(UUID uuid) {
+    public Item(@Nullable UUID uuid) {
       this.uuid = uuid;
     }
 

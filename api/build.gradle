@@ -7,6 +7,7 @@ plugins {
 apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
+apply from: '../gradle/errorprone.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 java {
@@ -16,12 +17,6 @@ java {
 
 license {
     header = project.file('HEADER.txt')
-}
-
-sourceSets {
-    ap {
-        compileClasspath += main.compileClasspath + main.output
-    }
 }
 
 dependencies {
@@ -55,20 +50,10 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource
-    from sourceSets.ap.output
-}
-
-jar {
-    from sourceSets.ap.output
-}
-
-shadowJar {
-    from sourceSets.ap.output
 }
 
 artifacts {
     archives javadocJar
-    archives shadowJar
     archives sourcesJar
 }
 

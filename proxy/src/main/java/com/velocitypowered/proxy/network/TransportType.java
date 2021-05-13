@@ -42,6 +42,7 @@ import io.netty.channel.unix.ServerDomainSocketChannel;
 import java.net.SocketAddress;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
@@ -61,16 +62,16 @@ enum TransportType {
   final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
-  final ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory;
-  final ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory;
+  final @Nullable ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory;
+  final @Nullable ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
 
   TransportType(final String name,
       final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
       final ChannelFactory<? extends SocketChannel> socketChannelFactory,
       final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-      final ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory,
-      final ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory,
+      @Nullable final ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory,
+      @Nullable final ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory,
       final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
     this.name = name;
     this.serverSocketChannelFactory = serverSocketChannelFactory;
