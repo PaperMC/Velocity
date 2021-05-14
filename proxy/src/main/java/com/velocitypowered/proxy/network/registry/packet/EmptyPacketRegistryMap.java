@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.network.registry.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.packet.Packet;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -31,7 +32,8 @@ public class EmptyPacketRegistryMap implements PacketRegistryMap {
   }
 
   @Override
-  public @Nullable Packet readPacket(int id, ByteBuf buf, ProtocolVersion version) {
+  public @Nullable PacketReader<? extends Packet> lookupReader(final int id,
+      ProtocolVersion version) {
     return null;
   }
 

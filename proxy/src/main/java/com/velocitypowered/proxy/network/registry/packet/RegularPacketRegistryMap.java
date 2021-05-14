@@ -58,12 +58,8 @@ public class RegularPacketRegistryMap implements PacketRegistryMap {
   }
 
   @Override
-  public @Nullable Packet readPacket(int id, ByteBuf buf, ProtocolVersion version) {
-    PacketReader<?> reader = this.readersById.get(id);
-    if (reader == null) {
-      return null;
-    }
-    return reader.read(buf, version);
+  public @Nullable PacketReader<?> lookupReader(int id, ProtocolVersion version) {
+    return this.readersById.get(id);
   }
 
   @Override

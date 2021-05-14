@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.registry.packet.PacketRegistryMap;
 import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
 import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
@@ -75,17 +76,18 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     int packetId = ProtocolUtils.readVarInt(buf);
     Packet packet;
     try {
-      packet = this.registry.readPacket(packetId, buf, this.version);
+      packet = this.readPacket(packetId, buf);
     } catch (Exception e) {
       throw handleDecodeFailure(e, packetId);
     }
+
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
     } else {
       try {
         if (buf.isReadable()) {
-          throw handleOverflow(packetId, buf.readerIndex(), buf.writerIndex());
+          throw handleOverflow(buf.readerIndex(), buf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
@@ -94,33 +96,37 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  // TODO: Reimplement this
-  private void doLengthSanityChecks(ByteBuf buf, int packetId, Packet packet) throws Exception {
-    int expectedMinLen = packet.expectedMinLength(buf, direction, version);
-    int expectedMaxLen = packet.expectedMaxLength(buf, direction, version);
+  private Packet readPacket(int packetId, ByteBuf buf) throws Exception {
+    PacketReader<? extends Packet> reader = this.registry.lookupReader(packetId, this.version);
+    if (reader == null) {
+      return null;
+    }
+
+    int expectedMinLen = reader.expectedMinLength(buf, version);
+    int expectedMaxLen = reader.expectedMaxLength(buf, version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
-      throw handleOverflow(packetId, expectedMaxLen, buf.readableBytes());
+      throw handleOverflow(expectedMaxLen, buf.readableBytes());
     }
     if (buf.readableBytes() < expectedMinLen) {
-      throw handleUnderflow(packetId, expectedMaxLen, buf.readableBytes());
+      throw handleUnderflow(expectedMaxLen, buf.readableBytes());
     }
+
+    return reader.read(buf, version);
   }
 
-  private Exception handleOverflow(int packetId, int expected, int actual) {
+  private Exception handleOverflow(int expected, int actual) {
     if (DEBUG) {
-      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
-      return new CorruptedFrameException("Packet sent for " + packetClass + " was too "
-          + "big (expected " + expected + " bytes, got " + actual + " bytes)");
+      return new CorruptedFrameException("Packet sent was too big (expected "
+          + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleUnderflow(int packetId, int expected, int actual) {
+  private Exception handleUnderflow(int expected, int actual) {
     if (DEBUG) {
-      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
-      return new CorruptedFrameException("Packet sent for " + packetClass + " was too "
-          + "small (expected " + expected + " bytes, got " + actual + " bytes)");
+      return new CorruptedFrameException("Packet was too small (expected " + expected
+          + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }

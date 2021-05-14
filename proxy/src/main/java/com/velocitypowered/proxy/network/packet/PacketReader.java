@@ -24,11 +24,11 @@ import java.util.function.Supplier;
 public interface PacketReader<P extends Packet> {
   P read(final ByteBuf buf, final ProtocolVersion version);
 
-  default int expectedMinLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  default int expectedMinLength(ByteBuf buf, ProtocolVersion version) {
     return 0;
   }
 
-  default int expectedMaxLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  default int expectedMaxLength(ByteBuf buf, ProtocolVersion version) {
     return -1;
   }
 

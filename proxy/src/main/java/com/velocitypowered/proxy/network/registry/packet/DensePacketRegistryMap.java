@@ -97,12 +97,13 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
   }
 
   @Override
-  public @Nullable Packet readPacket(int id, ByteBuf buf, ProtocolVersion version) {
+  public @Nullable PacketReader<? extends Packet> lookupReader(final int id,
+      ProtocolVersion version) {
     if (id < 0 || id >= this.readersById.length) {
       return null;
     }
 
-    return this.readersById[id].read(buf, version);
+    return this.readersById[id];
   }
 
   @Override

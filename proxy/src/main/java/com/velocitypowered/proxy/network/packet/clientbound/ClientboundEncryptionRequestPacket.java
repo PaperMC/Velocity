@@ -60,8 +60,8 @@ public class ClientboundEncryptionRequestPacket implements Packet {
       publicKey = ProtocolUtils.readByteArray(buf, 256);
       verifyToken = ProtocolUtils.readByteArray(buf, 16);
     } else {
-      publicKey = ProtocolUtils.readByteArray17(buf);
-      verifyToken = ProtocolUtils.readByteArray17(buf);
+      publicKey = ProtocolUtils.readByteArray17(buf, 256);
+      verifyToken = ProtocolUtils.readByteArray17(buf, 16);
     }
   }
 

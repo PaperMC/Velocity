@@ -18,13 +18,28 @@
 package com.velocitypowered.proxy.network.packet;
 
 import com.google.common.base.MoreObjects;
+import com.velocitypowered.api.network.ProtocolVersion;
+import io.netty.buffer.ByteBuf;
 import java.util.function.LongFunction;
 
 public abstract class AbstractStatusPingPacket implements Packet {
   protected static <P extends AbstractStatusPingPacket> PacketReader<P> decoder(final LongFunction<P> factory) {
-    return (buf, version) -> {
-      final long randomId = buf.readLong();
-      return factory.apply(randomId);
+    return new PacketReader<P>() {
+      @Override
+      public P read(ByteBuf buf, ProtocolVersion version) {
+        final long randomId = buf.readLong();
+        return factory.apply(randomId);
+      }
+
+      @Override
+      public int expectedMaxLength(ByteBuf buf, ProtocolVersion version) {
+        return 8;
+      }
+
+      @Override
+      public int expectedMinLength(ByteBuf buf, ProtocolVersion version) {
+        return 8;
+      }
     };
   }
 

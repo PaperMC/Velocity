@@ -432,16 +432,12 @@ class PlayPacketRegistry implements ProtocolRegistry {
      * Attempts to create a packet from the specified {@code id}.
      *
      * @param id the packet ID
-     * @param buf the bytebuf
      * @return the packet instance, or {@code null} if the ID is not registered
      */
     @Override
-    public @Nullable Packet readPacket(final int id, ByteBuf buf, ProtocolVersion version) {
-      final PacketReader<? extends Packet> decoder = this.packetIdToReader.get(id);
-      if (decoder == null) {
-        return null;
-      }
-      return decoder.read(buf, version);
+    public @Nullable PacketReader<? extends Packet> lookupReader(final int id,
+        ProtocolVersion version) {
+      return this.packetIdToReader.get(id);
     }
 
     /**

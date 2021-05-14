@@ -33,13 +33,4 @@ public interface Packet {
   }
 
   boolean handle(PacketHandler handler);
-
-  // TODO: Move this into decoder
-  default int expectedMinLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    return 0;
-  }
-
-  default int expectedMaxLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    return -1;
-  }
 }

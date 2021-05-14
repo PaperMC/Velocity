@@ -18,23 +18,35 @@
 package com.velocitypowered.proxy.network.packet.serverbound;
 
 import com.google.common.base.MoreObjects;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
+import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
 public class ServerboundServerLoginPacket implements Packet {
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
 
-  public static final PacketReader<ServerboundServerLoginPacket> DECODER = (buf, version) -> {
-    final String username = ProtocolUtils.readString(buf, 16);
-    if (username.isEmpty()) {
-      throw EMPTY_USERNAME;
+  public static final PacketReader<ServerboundServerLoginPacket> DECODER = new PacketReader<>() {
+    @Override
+    public ServerboundServerLoginPacket read(ByteBuf buf, ProtocolVersion version) {
+      final String username = ProtocolUtils.readString(buf, 16);
+      if (username.isEmpty()) {
+        throw EMPTY_USERNAME;
+      }
+      return new ServerboundServerLoginPacket(username);
     }
-    return new ServerboundServerLoginPacket(username);
+
+    @Override
+    public int expectedMaxLength(ByteBuf buf, ProtocolVersion version) {
+      // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically
+      // legal on the protocol level.
+      return 1 + (16 * 4);
+    }
   };
 
   public static final PacketWriter<ServerboundServerLoginPacket> ENCODER = (buf, packet, version) ->
