@@ -7,13 +7,14 @@
 
 package com.velocitypowered.api.event.connection;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
 
 /**
  * This event is fired when a server list ping request is sent by a remote client.
  */
-public interface ProxyPingEvent {
+public interface ProxyPingEvent extends Event {
 
   InboundConnection connection();
 

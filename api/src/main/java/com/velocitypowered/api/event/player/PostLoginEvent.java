@@ -7,13 +7,14 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * This event is fired once the player has been fully initialized and is about to connect to their
  * first server.
  */
-public interface PostLoginEvent {
+public interface PostLoginEvent extends Event {
 
   Player player();
 }

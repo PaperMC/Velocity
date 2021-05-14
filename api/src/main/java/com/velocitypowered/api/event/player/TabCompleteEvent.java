@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 import java.util.List;
 
@@ -14,7 +15,7 @@ import java.util.List;
  * This event is fired after a tab complete response is sent by the remote server, for clients on
  * 1.12.2 and below. You have the opportunity to modify the response sent to the remote player.
  */
-public interface TabCompleteEvent {
+public interface TabCompleteEvent extends Event {
 
   /**
    * Returns the player requesting the tab completion.

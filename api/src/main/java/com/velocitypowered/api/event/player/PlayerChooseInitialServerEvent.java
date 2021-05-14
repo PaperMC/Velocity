@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Fired when a player has finished connecting to the proxy and we need to choose the first server
  * to connect to.
  */
-public interface PlayerChooseInitialServerEvent {
+public interface PlayerChooseInitialServerEvent extends Event {
 
   Player player();
 

@@ -16,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Indicates an event that has a result attached to it.
  */
-public interface ResultedEvent<R extends ResultedEvent.Result> {
+public interface ResultedEvent<R extends ResultedEvent.Result> extends Event {
 
   /**
    * Returns the result associated with this event.

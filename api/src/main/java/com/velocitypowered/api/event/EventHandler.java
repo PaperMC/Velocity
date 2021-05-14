@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * similar), or pass events through to an external system to be handled.
  */
 @FunctionalInterface
-public interface EventHandler<E> {
+public interface EventHandler<E extends Event> {
 
   @Nullable EventTask execute(E event);
 }
