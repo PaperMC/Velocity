@@ -31,6 +31,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
@@ -96,7 +97,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Packet readPacket(int packetId, ByteBuf buf) throws Exception {
+  private @Nullable Packet readPacket(int packetId, ByteBuf buf) throws Exception {
     PacketReader<? extends Packet> reader = this.registry.lookupReader(packetId, this.version);
     if (reader == null) {
       return null;

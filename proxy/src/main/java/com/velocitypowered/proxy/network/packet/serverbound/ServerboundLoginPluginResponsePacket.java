@@ -42,7 +42,12 @@ public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder i
     }
     return new ServerboundLoginPluginResponsePacket(id, success, data);
   };
-  public static final PacketWriter<ServerboundLoginPluginResponsePacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ServerboundLoginPluginResponsePacket> ENCODER =
+      (out, packet, version) -> {
+        ProtocolUtils.writeVarInt(out, packet.id);
+        out.writeBoolean(packet.success);
+        out.writeBytes(packet.content());
+      };
 
   private final int id;
   private final boolean success;
@@ -51,13 +56,6 @@ public class ServerboundLoginPluginResponsePacket extends DefaultByteBufHolder i
     super(buf);
     this.id = id;
     this.success = success;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, id);
-    buf.writeBoolean(success);
-    buf.writeBytes(content());
   }
 
   @Override
