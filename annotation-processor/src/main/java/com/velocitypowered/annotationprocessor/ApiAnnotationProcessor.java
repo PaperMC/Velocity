@@ -88,7 +88,8 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "method must not be abstract", method);
         }
-        if (method.getEnclosingElement().getKind().isInterface()) {
+        Element enclosing = method.getEnclosingElement();
+        if (enclosing != null && enclosing.getKind().isInterface()) {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "interfaces cannot declare listeners", method);
         }
@@ -97,7 +98,8 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
           msg.printMessage(Kind.ERROR, "method must return void or EventTask", method);
         }
         final List<? extends VariableElement> parameters = method.getParameters();
-        if (parameters.isEmpty() || !this.isTypeSubclass(parameters.get(0), SUBSCRIBE_ANNOTATION_CLASS)) {
+        if (parameters.isEmpty()
+            || !this.isTypeSubclass(parameters.get(0), SUBSCRIBE_ANNOTATION_CLASS)) {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "method must have an Event as its first parameter", method);
         }
@@ -116,9 +118,9 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
         if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
           if (!warnedAboutMultiplePlugins) {
             processingEnv.getMessager()
-                .printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support "
-                    + "multiple plugins. We are using " + pluginClassFound
-                    + " for your plugin's main class.");
+                .printMessage(Diagnostic.Kind.WARNING,
+                    "Velocity does not yet currently support multiple plugins. "
+                        + "We are using " + pluginClassFound + " for your plugin's main class.");
             warnedAboutMultiplePlugins = true;
           }
           return false;
@@ -126,10 +128,10 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
 
         Plugin plugin = element.getAnnotation(Plugin.class);
         if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
-          processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
-              + qualifiedName
-              + ". IDs must start alphabetically, have alphanumeric characters, and can "
-              + "contain dashes or underscores.");
+          processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+              "Invalid ID for plugin " + qualifiedName + ". "
+                  + "IDs must start alphabetically, have alphanumeric characters, and can "
+                  + "contain dashes or underscores.");
           return false;
         }
 
