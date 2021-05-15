@@ -18,6 +18,7 @@
 package com.velocitypowered.annotationprocessor;
 
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENTTASK_CLASS;
+import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENT_INTERFACE;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.PLUGIN_ANNOTATION_CLASS;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.SUBSCRIBE_ANNOTATION_CLASS;
 
@@ -33,7 +34,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -99,7 +99,7 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
         }
         final List<? extends VariableElement> parameters = method.getParameters();
         if (parameters.isEmpty()
-            || !this.isTypeSubclass(parameters.get(0), SUBSCRIBE_ANNOTATION_CLASS)) {
+            || !this.isTypeSubclass(parameters.get(0), EVENT_INTERFACE)) {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "method must have an Event as its first parameter", method);
         }
