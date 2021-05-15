@@ -144,6 +144,8 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
           try (Writer writer = new BufferedWriter(object.openWriter())) {
             new Gson().toJson(description, writer);
           }
+          processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+              "Wrote velocity-plugin.json to " + object.toUri());
           pluginClassFound = qualifiedName.toString();
         } catch (IOException e) {
           processingEnv.getMessager()
