@@ -104,7 +104,9 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
               "method must have an Event as its first parameter", method);
         }
       }
-    } else if (ProcessorUtils.contains(annotations, Plugin.class)) {
+    }
+
+    if (ProcessorUtils.contains(annotations, Plugin.class)) {
       for (Element element : roundEnv.getElementsAnnotatedWith(Plugin.class)) {
         if (element.getKind() != ElementKind.CLASS) {
           processingEnv.getMessager()
@@ -145,7 +147,7 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
             new Gson().toJson(description, writer);
           }
           processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-              "Wrote velocity-plugin.json to " + object.toUri());
+              "Wrote velocity-plugin.json to " + object.toUri().toString());
           pluginClassFound = qualifiedName.toString();
         } catch (IOException e) {
           processingEnv.getMessager()
