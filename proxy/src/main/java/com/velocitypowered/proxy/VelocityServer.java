@@ -26,6 +26,7 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.lifecycle.ProxyInitializeEventImpl;
 import com.velocitypowered.api.event.lifecycle.ProxyReloadEventImpl;
 import com.velocitypowered.api.event.lifecycle.ProxyShutdownEventImpl;
+import com.velocitypowered.api.network.NetworkEndpoint;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -185,6 +186,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
+  public Collection<NetworkEndpoint> endpoints() {
+    return this.cm.endpoints();
+  }
+
+  @Override
   public VelocityCommandManager commandManager() {
     return commandManager;
   }
@@ -195,7 +201,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @EnsuresNonNull({"serverKeyPair", "eventManager", "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", version().getName(), version().getVersion());
+    logger.info("Booting up {} {}...", version().name(), version().version());
     console.setupStreams();
 
     registerTranslations();

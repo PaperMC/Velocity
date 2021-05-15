@@ -11,6 +11,7 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.ConsoleCommandSource;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.network.NetworkEndpoint;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.connection.Player;
@@ -179,4 +180,12 @@ public interface ProxyServer extends Audience {
    * @return the proxy version
    */
   ProxyVersion version();
+
+  /**
+   * Returns all the endpoints the proxy is listening on. This collection is immutable.
+   *
+   * @return all the endpoints the proxy is listening on
+   */
+  Collection<NetworkEndpoint> endpoints();
+
 }

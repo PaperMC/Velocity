@@ -217,19 +217,19 @@ public class VelocityCommand implements SimpleCommand {
 
       ProxyVersion version = server.version();
 
-      Component velocity = Component.text().content(version.getName() + " ")
+      Component velocity = Component.text().content(version.name() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
-          .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
+          .append(Component.text(version.version()).decoration(TextDecoration.BOLD, false))
           .build();
       Component copyright = Component
           .translatable("velocity.command.version-copyright",
-              Component.text(version.getVendor()),
-              Component.text(version.getName()));
+              Component.text(version.vendor()),
+              Component.text(version.name()));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
-      if (version.getName().equals("Velocity")) {
+      if (version.name().equals("Velocity")) {
         TextComponent embellishment = Component.text()
             .append(Component.text().content("velocitypowered.com")
                 .color(NamedTextColor.GREEN)
@@ -383,8 +383,8 @@ public class VelocityCommand implements SimpleCommand {
       BoundRequestBuilder request =
               httpClient.preparePost("https://dump.velocitypowered.com/documents");
       request.setHeader("Content-Type", "text/plain");
-      request.addHeader("User-Agent", server.version().getName() + "/"
-              + server.version().getVersion());
+      request.addHeader("User-Agent", server.version().name() + "/"
+              + server.version().version());
       request.setBody(
               InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
 

@@ -30,7 +30,7 @@ class JavaVelocityPluginDescription extends VelocityPluginDescription {
 
   private final Class<?> mainClass;
 
-  JavaVelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
+  JavaVelocityPluginDescription(String id, @Nullable String name, String version,
       @Nullable String description, @Nullable String url,
       @Nullable List<String> authors, Collection<PluginDependency> dependencies,
       @Nullable Path source, Class<?> mainClass) {

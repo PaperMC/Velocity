@@ -25,10 +25,14 @@ test {
 
 jar {
     manifest {
-        def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"
+        def buildNumber = System.getenv("BUILD_NUMBER")
         def version
         if (project.version.endsWith("-SNAPSHOT")) {
-            version = "${project.version} (git-${project.ext.getCurrentShortRevision()}-b${buildNumber})"
+            if (buildNumber != null) {
+                version = "${project.version}+g${project.ext.getCurrentShortRevision()}-b${buildNumber}"
+            } else {
+                version = "${project.version}+g${project.ext.getCurrentShortRevision()}"
+            }
         } else {
             version = "${project.version}"
         }
@@ -86,6 +90,7 @@ dependencies {
     implementation 'org.lanternpowered:lmbda:2.0.0-SNAPSHOT'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:2.8.8'
+    implementation 'com.vdurmont:semver4j:3.1.0'
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.1.2'
 

@@ -25,6 +25,9 @@ import com.google.common.base.MoreObjects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
+import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.Semver.SemverType;
+import com.vdurmont.semver4j.SemverException;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
@@ -36,6 +39,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
+import com.velocitypowered.proxy.plugin.util.ProxyPluginContainer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -44,6 +48,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -64,6 +69,9 @@ public class VelocityPluginManager implements PluginManager {
 
   public VelocityPluginManager(VelocityServer server) {
     this.server = checkNotNull(server, "server");
+
+    // Register ourselves as a plugin
+    this.registerPlugin(ProxyPluginContainer.VELOCITY);
   }
 
   private void registerPlugin(PluginContainer plugin) {
@@ -106,17 +114,48 @@ public class VelocityPluginManager implements PluginManager {
 
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
-    Set<String> loadedPluginsById = new HashSet<>();
+    Map<String, PluginContainer> loadedPluginsById = new HashMap<>(this.plugins);
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
     // Now load the plugins
     pluginLoad:
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
       for (PluginDependency dependency : candidate.dependencies()) {
-        if (!dependency.optional() && !loadedPluginsById.contains(dependency.id())) {
-          logger.error("Can't load plugin {} due to missing dependency {}", candidate.id(),
-              dependency.id());
-          continue pluginLoad;
+        final PluginContainer dependencyContainer = loadedPluginsById.get(dependency.id());
+        if (dependencyContainer == null) {
+          if (dependency.optional()) {
+            logger.warn("Plugin {} has an optional dependency {} that is not available",
+                candidate.id(), dependency.id());
+          } else {
+            logger.error("Can't load plugin {} due to missing dependency {}",
+                candidate.id(), dependency.id());
+            continue pluginLoad;
+          }
+        } else {
+          String requiredRange = dependency.version();
+          if (!requiredRange.isEmpty()) {
+            try {
+              Semver dependencyCandidateVersion = new Semver(
+                  dependencyContainer.description().version(), SemverType.NPM);
+              if (!dependencyCandidateVersion.satisfies(requiredRange)) {
+                if (dependency.optional()) {
+                  logger.error(
+                      "Can't load plugin {} due to incompatible dependency {} {} (you have {})",
+                      candidate.id(), dependency.id(), requiredRange,
+                      dependencyContainer.description().version());
+                  continue pluginLoad;
+                } else {
+                  logger.warn(
+                      "Plugin {} has an optional dependency on {} {}, but you have {}",
+                      candidate.id(), dependency.id(), requiredRange,
+                      dependencyContainer.description().version());
+                }
+              }
+            } catch (SemverException exception) {
+              logger.warn("Can't check dependency of {} for the proper version of {},"
+                      + " assuming they are compatible", candidate.id(), dependency.id());
+            }
+          }
         }
       }
 
@@ -124,7 +163,7 @@ public class VelocityPluginManager implements PluginManager {
         PluginDescription realPlugin = loader.loadPlugin(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
-        loadedPluginsById.add(realPlugin.id());
+        loadedPluginsById.put(candidate.id(), container);
       } catch (Exception e) {
         logger.error("Can't create module for plugin {}", candidate.id(), e);
       }

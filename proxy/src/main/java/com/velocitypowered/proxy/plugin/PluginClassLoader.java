@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.plugin;
 
+import com.velocitypowered.api.plugin.PluginDescription;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,8 +34,11 @@ public class PluginClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  public PluginClassLoader(URL[] urls) {
+  private final PluginDescription description;
+
+  public PluginClassLoader(URL[] urls, PluginDescription description) {
     super(urls);
+    this.description = description;
   }
 
   public void addToClassloaders() {
@@ -81,5 +85,10 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     throw new ClassNotFoundException(name);
+  }
+
+  @Override
+  public String toString() {
+    return "plugin " + this.description.name();
   }
 }

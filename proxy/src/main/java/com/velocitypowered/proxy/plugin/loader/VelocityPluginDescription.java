@@ -34,7 +34,7 @@ public class VelocityPluginDescription implements PluginDescription {
 
   private final String id;
   private final @Nullable String name;
-  private final @Nullable String version;
+  private final String version;
   private final @Nullable String description;
   private final @Nullable String url;
   private final List<String> authors;
@@ -52,13 +52,13 @@ public class VelocityPluginDescription implements PluginDescription {
    * @param dependencies the dependencies for this plugin
    * @param source the original source for the plugin
    */
-  public VelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
+  public VelocityPluginDescription(String id, @Nullable String name, String version,
       @Nullable String description, @Nullable String url,
       @Nullable List<String> authors, Collection<PluginDependency> dependencies,
       @Nullable Path source) {
     this.id = checkNotNull(id, "id");
     this.name = Strings.emptyToNull(name);
-    this.version = Strings.emptyToNull(version);
+    this.version = checkNotNull(version, "version");
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
     this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
@@ -77,7 +77,7 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
-  public @Nullable String version() {
+  public String version() {
     return version;
   }
 

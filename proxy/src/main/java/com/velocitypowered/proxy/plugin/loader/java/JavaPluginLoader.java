@@ -81,7 +81,8 @@ public class JavaPluginLoader implements PluginLoader {
 
     URL pluginJarUrl = jarFilePath.toUri().toURL();
     PluginClassLoader loader = AccessController.doPrivileged(
-        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
+        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl},
+            source));
     loader.addToClassloaders();
 
     JavaVelocityPluginDescriptionCandidate candidate =
@@ -200,7 +201,7 @@ public class JavaPluginLoader implements PluginLoader {
       SerializedPluginDescription.Dependency dependency) {
     return new PluginDependency(
         dependency.getId(),
-        null, // TODO Implement version matching in dependency annotation
+        dependency.getVersion(),
         dependency.isOptional()
     );
   }

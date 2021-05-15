@@ -19,12 +19,14 @@ package com.velocitypowered.proxy.network;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ListenerType;
+import com.velocitypowered.api.network.NetworkEndpoint;
 import io.netty.channel.Channel;
+import java.net.SocketAddress;
 
 /**
  * Represents a listener endpoint.
  */
-public final class Endpoint {
+public final class Endpoint implements NetworkEndpoint {
   private final Channel channel;
   private final ListenerType type;
 
@@ -37,7 +39,13 @@ public final class Endpoint {
     return channel;
   }
 
-  public ListenerType getType() {
+  @Override
+  public ListenerType type() {
     return type;
+  }
+
+  @Override
+  public SocketAddress address() {
+    return this.channel.localAddress();
   }
 }

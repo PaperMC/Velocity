@@ -20,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class PluginDependency {
 
   private final String id;
-  private final @Nullable String version;
+  private final String version;
 
   private final boolean optional;
 
@@ -30,10 +30,10 @@ public final class PluginDependency {
    * @param version an optional version
    * @param optional whether or not this dependency is optional
    */
-  public PluginDependency(String id, @Nullable String version, boolean optional) {
+  public PluginDependency(String id, String version, boolean optional) {
     this.id = checkNotNull(id, "id");
     checkArgument(!id.isEmpty(), "id cannot be empty");
-    this.version = emptyToNull(version);
+    this.version = checkNotNull(version, "version");
     this.optional = optional;
   }
 
@@ -47,11 +47,11 @@ public final class PluginDependency {
   }
 
   /**
-   * Returns the version this {@link PluginDependency} should match.
+   * Returns the version this {@link PluginDependency} should match in NPM SemVer range format.
    *
-   * @return a String with the plugin version, may be {@code null}
+   * @return a String with the plugin version, may be empty if no version requirement is present
    */
-  public @Nullable String version() {
+  public String version() {
     return version;
   }
 

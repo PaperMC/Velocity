@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.lifecycle.network.ListenerBoundEventImpl;
 import com.velocitypowered.api.event.lifecycle.network.ListenerClosedEventImpl;
 import com.velocitypowered.api.network.ListenerType;
+import com.velocitypowered.api.network.NetworkEndpoint;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.pipeline.GS4QueryHandler;
@@ -39,7 +40,9 @@ import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,7 +90,7 @@ public final class ConnectionManager {
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.version().getName() + "/" + server.version().getVersion())
+        .setUserAgent(server.version().name() + "/" + server.version().version())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) {
@@ -205,7 +208,7 @@ public final class ConnectionManager {
 
     // Fire proxy close event to notify plugins of socket close. We block since plugins
     // should have a chance to be notified before the server stops accepting connections.
-    server.eventManager().fire(new ListenerClosedEventImpl(oldBind, endpoint.getType())).join();
+    server.eventManager().fire(new ListenerClosedEventImpl(oldBind, endpoint.type())).join();
 
     Channel serverChannel = endpoint.getChannel();
 
@@ -224,7 +227,7 @@ public final class ConnectionManager {
 
       // Fire proxy close event to notify plugins of socket close. We block since plugins
       // should have a chance to be notified before the server stops accepting connections.
-      server.eventManager().fire(new ListenerClosedEventImpl(address, endpoint.getType())).join();
+      server.eventManager().fire(new ListenerClosedEventImpl(address, endpoint.type())).join();
 
       try {
         LOGGER.info("Closing endpoint {}", address);
@@ -252,5 +255,9 @@ public final class ConnectionManager {
 
   public ChannelInitializerHolder<Channel> getBackendChannelInitializer() {
     return this.backendChannelInitializer;
+  }
+
+  public Collection<NetworkEndpoint> endpoints() {
+    return List.copyOf(this.endpoints.values());
   }
 }

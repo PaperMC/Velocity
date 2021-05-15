@@ -25,6 +25,7 @@ import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -75,9 +76,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
     VelocityConfiguration configuration = server.configuration();
+    ProxyVersion proxyVersion = server.version();
     return new ServerPing(
         new ServerPing.Version(version.protocol(),
-            "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
+            proxyVersion.name() + " " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.countConnectedPlayers(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),

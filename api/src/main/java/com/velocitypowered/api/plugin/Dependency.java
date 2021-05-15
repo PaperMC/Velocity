@@ -27,6 +27,15 @@ public @interface Dependency {
   String id();
 
   /**
+   * The required version of the dependency. This should be in an NPM-compatible versioning format,
+   * which you can figure from <a href="https://semver.npmjs.com/">npm's SemVer checker</a>. If
+   * not specified, this assumes any version is acceptable.
+   *
+   * @return the version requirement
+   */
+  String version() default "*";
+
+  /**
    * Whether or not the dependency is not required to enable this plugin. By default this is
    * {@code false}, meaning that the dependency is required to enable this plugin.
    *

@@ -52,8 +52,8 @@ public interface PluginDescription {
    * @return a String with the plugin version, may be null
    * @see Plugin#version()
    */
-  default @Nullable String version() {
-    return null;
+  default String version() {
+    return "";
   }
 
   /**

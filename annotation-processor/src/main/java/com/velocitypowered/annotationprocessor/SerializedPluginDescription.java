@@ -36,7 +36,7 @@ public final class SerializedPluginDescription {
   // @Nullable is used here to make GSON skip these in the serialized file
   private final String id;
   private final @Nullable String name;
-  private final @Nullable String version;
+  private final String version;
   private final @Nullable String description;
   private final @Nullable String url;
   private final @Nullable List<String> authors;
@@ -44,13 +44,12 @@ public final class SerializedPluginDescription {
   private final String main;
 
   private SerializedPluginDescription(String id, String name, String version, String description,
-      String url,
-      List<String> authors, List<Dependency> dependencies, String main) {
+      String url, List<String> authors, List<Dependency> dependencies, String main) {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkArgument(ID_PATTERN.matcher(id).matches(), "id is not valid");
     this.id = id;
     this.name = Strings.emptyToNull(name);
-    this.version = Strings.emptyToNull(version);
+    this.version = Preconditions.checkNotNull(version, "version");
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
     this.authors = authors == null || authors.isEmpty() ? ImmutableList.of() : authors;
@@ -62,7 +61,8 @@ public final class SerializedPluginDescription {
   static SerializedPluginDescription from(Plugin plugin, String qualifiedName) {
     List<Dependency> dependencies = new ArrayList<>();
     for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
-      dependencies.add(new Dependency(dependency.id(), dependency.optional()));
+      dependencies.add(new Dependency(dependency.id(), dependency.version(),
+          dependency.optional()));
     }
     return new SerializedPluginDescription(plugin.id(), plugin.name(), plugin.version(),
         plugin.description(), plugin.url(),
@@ -78,7 +78,7 @@ public final class SerializedPluginDescription {
     return name;
   }
 
-  public @Nullable String getVersion() {
+  public String getVersion() {
     return version;
   }
 
@@ -143,15 +143,21 @@ public final class SerializedPluginDescription {
   public static final class Dependency {
 
     private final String id;
+    private final String version;
     private final boolean optional;
 
-    public Dependency(String id, boolean optional) {
+    public Dependency(String id, String version, boolean optional) {
       this.id = id;
+      this.version = version;
       this.optional = optional;
     }
 
     public String getId() {
       return id;
+    }
+
+    public String getVersion() {
+      return version;
     }
 
     public boolean isOptional() {
@@ -167,19 +173,19 @@ public final class SerializedPluginDescription {
         return false;
       }
       Dependency that = (Dependency) o;
-      return optional == that.optional
-          && Objects.equals(id, that.id);
+      return optional == that.optional && id.equals(that.id) && version.equals(that.version);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(id, optional);
+      return Objects.hash(id, version, optional);
     }
 
     @Override
     public String toString() {
       return "Dependency{"
           + "id='" + id + '\''
+          + ", version='" + version + '\''
           + ", optional=" + optional
           + '}';
     }
