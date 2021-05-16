@@ -8,7 +8,6 @@ apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 apply from: '../gradle/errorprone.gradle'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
