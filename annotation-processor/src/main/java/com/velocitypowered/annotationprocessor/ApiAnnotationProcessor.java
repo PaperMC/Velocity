@@ -28,6 +28,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -55,9 +56,6 @@ import javax.tools.StandardLocation;
 
 @SupportedAnnotationTypes({PLUGIN_ANNOTATION_CLASS, SUBSCRIBE_ANNOTATION_CLASS})
 public class ApiAnnotationProcessor extends AbstractProcessor {
-
-  private @Nullable String pluginClassFound;
-  private boolean warnedAboutMultiplePlugins;
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
@@ -107,6 +105,7 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
     }
 
     if (ProcessorUtils.contains(annotations, Plugin.class)) {
+      List<SerializedPluginDescription> found = new ArrayList<>();
       for (Element element : roundEnv.getElementsAnnotatedWith(Plugin.class)) {
         if (element.getKind() != ElementKind.CLASS) {
           processingEnv.getMessager()
@@ -117,17 +116,6 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
 
         Name qualifiedName = ((TypeElement) element).getQualifiedName();
 
-        if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
-          if (!warnedAboutMultiplePlugins) {
-            processingEnv.getMessager()
-                .printMessage(Diagnostic.Kind.WARNING,
-                    "Velocity does not yet currently support multiple plugins. "
-                        + "We are using " + pluginClassFound + " for your plugin's main class.");
-            warnedAboutMultiplePlugins = true;
-          }
-          return false;
-        }
-
         Plugin plugin = element.getAnnotation(Plugin.class);
         if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
           processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
@@ -137,22 +125,23 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
           return false;
         }
 
-        // All good, generate the velocity-plugin.json.
+        // All good, generate the velocity-plugin-info.json.
         SerializedPluginDescription description = SerializedPluginDescription
             .from(plugin, qualifiedName.toString());
-        try {
-          FileObject object = processingEnv.getFiler()
-              .createResource(StandardLocation.CLASS_OUTPUT, "", "velocity-plugin.json");
-          try (Writer writer = new BufferedWriter(object.openWriter())) {
-            new Gson().toJson(description, writer);
-          }
-          processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-              "Wrote velocity-plugin.json to " + object.toUri().toString());
-          pluginClassFound = qualifiedName.toString();
-        } catch (IOException e) {
-          processingEnv.getMessager()
-              .printMessage(Diagnostic.Kind.ERROR, "Unable to generate plugin file");
+        found.add(description);
+      }
+
+      try {
+        FileObject object = processingEnv.getFiler()
+            .createResource(StandardLocation.CLASS_OUTPUT, "", "velocity-plugin-info.json");
+        try (Writer writer = new BufferedWriter(object.openWriter())) {
+          new Gson().toJson(found, writer);
         }
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+            "Wrote velocity-plugin-info.json to " + object.toUri().toString());
+      } catch (IOException e) {
+        processingEnv.getMessager()
+            .printMessage(Diagnostic.Kind.ERROR, "Unable to generate plugin file");
       }
     }
 

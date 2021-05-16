@@ -49,12 +49,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,7 +98,7 @@ public class VelocityPluginManager implements PluginManager {
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadPluginDescription(path));
+          found.addAll(loader.loadPluginCandidates(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
         }
@@ -160,7 +158,7 @@ public class VelocityPluginManager implements PluginManager {
       }
 
       try {
-        PluginDescription realPlugin = loader.loadPlugin(candidate);
+        PluginDescription realPlugin = loader.materializePlugin(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
         loadedPluginsById.put(candidate.id(), container);

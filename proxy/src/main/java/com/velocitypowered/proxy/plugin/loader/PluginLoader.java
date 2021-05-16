@@ -21,15 +21,16 @@ import com.google.inject.Module;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * This interface is used for loading plugins.
  */
 public interface PluginLoader {
 
-  PluginDescription loadPluginDescription(Path source) throws Exception;
+  Collection<PluginDescription> loadPluginCandidates(Path source) throws Exception;
 
-  PluginDescription loadPlugin(PluginDescription source) throws Exception;
+  PluginDescription materializePlugin(PluginDescription source) throws Exception;
 
   /**
    * Creates a {@link Module} for the provided {@link PluginContainer}
