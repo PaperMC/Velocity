@@ -24,11 +24,11 @@ allprojects {
         adventureVersion = '4.7.0'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
-        log4jVersion = '2.13.3'
-        nettyVersion = '4.1.59.Final'
-        guavaVersion = '30.0-jre'
+        log4jVersion = '2.14.1'
+        nettyVersion = '4.1.63.Final'
+        guavaVersion = '30.1.1-jre'
         checkerFrameworkVersion = '3.6.1'
-        configurateVersion = '4.0.0'
+        configurateVersion = '4.1.1'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
