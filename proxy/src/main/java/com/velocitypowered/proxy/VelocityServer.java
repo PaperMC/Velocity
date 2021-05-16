@@ -343,7 +343,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     }
 
-    logger.info("Loaded {} plugins", pluginManager.plugins().size());
+    logger.info("Loaded {} plugin(s)", pluginManager.plugins().size() - 1);
   }
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {

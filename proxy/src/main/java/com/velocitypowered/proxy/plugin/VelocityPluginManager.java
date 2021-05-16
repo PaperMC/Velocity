@@ -136,7 +136,7 @@ public class VelocityPluginManager implements PluginManager {
               Semver dependencyCandidateVersion = new Semver(
                   dependencyContainer.description().version(), SemverType.NPM);
               if (!dependencyCandidateVersion.satisfies(requiredRange)) {
-                if (dependency.optional()) {
+                if (!dependency.optional()) {
                   logger.error(
                       "Can't load plugin {} due to incompatible dependency {} {} (you have {})",
                       candidate.id(), dependency.id(), requiredRange,

@@ -92,7 +92,7 @@ public class JavaPluginLoader implements PluginLoader {
     PluginClassLoader loader = this.classLoaders.computeIfAbsent(pluginJarUri, (uri) -> {
       PluginClassLoader classLoader = AccessController.doPrivileged(
           (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl},
-              source));
+              JavaPluginLoader.class.getClassLoader(), source));
       classLoader.addToClassloaders();
       return classLoader;
     });
