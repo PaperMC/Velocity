@@ -18,7 +18,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 public final class BrigadierCommand implements Command {
 
   /**
-   * Return code used by a {@link com.mojang.brigadier.Command} to indicate
+   * The return code used by a {@link com.mojang.brigadier.Command} to indicate
    * the command execution should be forwarded to the backend server.
    */
   public static final int FORWARD = 0xF6287429;
