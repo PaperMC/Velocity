@@ -32,8 +32,7 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  default <E extends Event> void register(Object plugin, Class<E> eventClass,
-      EventHandler<E> handler) {
+  default <E> void register(Object plugin, Class<E> eventClass, EventHandler<E> handler) {
     register(plugin, eventClass, PostOrder.NORMAL, handler);
   }
 
@@ -47,8 +46,7 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  <E extends Event> void register(Object plugin, Class<E> eventClass, short postOrder,
-      EventHandler<E> handler);
+  <E> void register(Object plugin, Class<E> eventClass, short postOrder, EventHandler<E> handler);
 
   /**
    * Fires the specified event to the event bus asynchronously. This allows Velocity to continue
@@ -93,5 +91,5 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  <E extends Event> void unregister(Object plugin, EventHandler<E> handler);
+  <E> void unregister(Object plugin, EventHandler<E> handler);
 }
