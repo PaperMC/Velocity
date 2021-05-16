@@ -24,8 +24,8 @@ public interface CommandMeta {
   Collection<String> aliases();
 
   /**
-   * Returns a collection containing command nodes that provide additional
-   * argument metadata and tab-complete suggestions.
+   * Returns an immutable collection containing command nodes that provide
+   * additional argument metadata and tab-complete suggestions.
    * Note some {@link Command} implementations may not support hinting.
    *
    * @return the hinting command nodes
@@ -51,6 +51,8 @@ public interface CommandMeta {
      *
      * @param node the command node
      * @return this builder, for chaining
+     * @throws IllegalArgumentException if the node is executable, i.e. has a non-null
+     *         {@link com.mojang.brigadier.Command}, or has a redirect.
      */
     Builder hint(CommandNode<CommandSource> node);
 
