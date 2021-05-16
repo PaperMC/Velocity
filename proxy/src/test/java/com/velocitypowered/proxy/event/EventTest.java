@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
@@ -42,7 +41,7 @@ public class EventTest {
     eventManager.shutdown();
   }
 
-  static final class TestEvent implements Event {
+  static final class TestEvent {
   }
 
   static void assertAsyncThread(final Thread thread) {

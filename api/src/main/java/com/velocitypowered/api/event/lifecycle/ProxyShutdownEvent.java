@@ -7,12 +7,10 @@
 
 package com.velocitypowered.api.event.lifecycle;
 
-import com.velocitypowered.api.event.Event;
-
 /**
  * This event is fired by the proxy after the proxy has stopped accepting connections but before the
  * proxy process exits.
  */
-public interface ProxyShutdownEvent extends Event {
+public interface ProxyShutdownEvent {
 
 }

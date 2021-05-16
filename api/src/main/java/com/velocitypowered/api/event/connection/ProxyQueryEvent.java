@@ -7,14 +7,13 @@
 
 package com.velocitypowered.api.event.connection;
 
-import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import java.net.InetAddress;
 
 /**
  * This event is fired if proxy is getting queried over GS4 Query protocol.
  */
-public interface ProxyQueryEvent extends Event {
+public interface ProxyQueryEvent {
 
   /**
    * Returns the kind of query the remote client is performing.

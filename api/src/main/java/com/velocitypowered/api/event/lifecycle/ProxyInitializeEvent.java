@@ -7,12 +7,10 @@
 
 package com.velocitypowered.api.event.lifecycle;
 
-import com.velocitypowered.api.event.Event;
-
 /**
  * This event is fired by the proxy after plugins have been loaded but before the proxy starts
  * accepting connections.
  */
-public interface ProxyInitializeEvent extends Event {
+public interface ProxyInitializeEvent {
 
 }

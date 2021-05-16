@@ -27,7 +27,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.event.Continuation;
-import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.EventTask;
@@ -108,7 +107,7 @@ public class VelocityEventManager implements EventManager {
     final PluginContainer plugin;
     final short order;
     final Class<?> eventType;
-    final EventHandler<Event> handler;
+    final EventHandler<?> handler;
     final AsyncType asyncType;
 
     /**
@@ -118,7 +117,7 @@ public class VelocityEventManager implements EventManager {
     final Object instance;
 
     public HandlerRegistration(final PluginContainer plugin, final short order,
-        final Class<?> eventType, final Object instance, final EventHandler<Event> handler,
+        final Class<?> eventType, final Object instance, final EventHandler<?> handler,
         final AsyncType asyncType) {
       this.plugin = plugin;
       this.order = order;
@@ -320,15 +319,14 @@ public class VelocityEventManager implements EventManager {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <E extends Event> void register(final Object plugin, final Class<E> eventClass,
+  public <E> void register(final Object plugin, final Class<E> eventClass,
                            final short order, final EventHandler<E> handler) {
     final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(eventClass, "eventClass");
     requireNonNull(handler, "handler");
 
     final HandlerRegistration registration = new HandlerRegistration(pluginContainer, order,
-        eventClass, handler, (EventHandler<Event>) handler, AsyncType.SOMETIMES);
+        eventClass, handler, handler, AsyncType.SOMETIMES);
     register(Collections.singletonList(registration));
   }
 
@@ -350,7 +348,7 @@ public class VelocityEventManager implements EventManager {
         throw new VerifyException("Event type is not present and there are no errors");
       }
 
-      final EventHandler<Event> handler = event -> untargetedHandler.execute(listener, event);
+      final EventHandler<?> handler = event -> untargetedHandler.execute(listener, event);
       registrations.add(new HandlerRegistration(pluginContainer, info.order,
           info.eventType, listener, handler, info.asyncType));
     }
@@ -373,7 +371,7 @@ public class VelocityEventManager implements EventManager {
   }
 
   @Override
-  public <E extends Event> void unregister(final Object plugin, final EventHandler<E> handler) {
+  public <E> void unregister(final Object plugin, final EventHandler<E> handler) {
     unregisterListener(plugin, handler);
   }
 
@@ -401,7 +399,7 @@ public class VelocityEventManager implements EventManager {
   }
 
   @Override
-  public void fireAndForget(final Event event) {
+  public void fireAndForget(final Object event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
     if (handlersCache == null) {
@@ -412,7 +410,7 @@ public class VelocityEventManager implements EventManager {
   }
 
   @Override
-  public <E extends Event> CompletableFuture<E> fire(final E event) {
+  public <E> CompletableFuture<E> fire(final E event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
     if (handlersCache == null) {
@@ -424,7 +422,7 @@ public class VelocityEventManager implements EventManager {
     return future;
   }
 
-  private <E extends Event> void fire(final @Nullable CompletableFuture<E> future,
+  private <E> void fire(final @Nullable CompletableFuture<E> future,
       final E event, final HandlersCache handlersCache) {
     if (handlersCache.asyncType == AsyncType.ALWAYS) {
       // We already know that the event needs to be handled async, so
@@ -453,7 +451,7 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  final class ContinuationTask<E extends Event> implements Continuation, Runnable {
+  final class ContinuationTask<E> implements Continuation, Runnable {
 
     private final EventTask.WithContinuation task;
     private final int index;
@@ -546,12 +544,14 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  private <E extends Event> void fire(final @Nullable CompletableFuture<E> future, final E event,
+  private <E> void fire(final @Nullable CompletableFuture<E> future, final E event,
       final int offset, final boolean currentlyAsync, final HandlerRegistration[] registrations) {
     for (int i = offset; i < registrations.length; i++) {
       final HandlerRegistration registration = registrations[i];
       try {
-        final EventTask eventTask = registration.handler.execute(event);
+        @SuppressWarnings("unchecked")
+        EventHandler<E> handler = (EventHandler<E>) registration.handler;
+        final EventTask eventTask = handler.execute(event);
         if (eventTask == null) {
           continue;
         }

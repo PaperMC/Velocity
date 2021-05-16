@@ -18,7 +18,6 @@
 package com.velocitypowered.annotationprocessor;
 
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENTTASK_CLASS;
-import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENT_INTERFACE;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.PLUGIN_ANNOTATION_CLASS;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.SUBSCRIBE_ANNOTATION_CLASS;
 
@@ -96,8 +95,7 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
           msg.printMessage(Kind.ERROR, "method must return void or EventTask", method);
         }
         final List<? extends VariableElement> parameters = method.getParameters();
-        if (parameters.isEmpty()
-            || !this.isTypeSubclass(parameters.get(0), EVENT_INTERFACE)) {
+        if (parameters.isEmpty()) {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "method must have an Event as its first parameter", method);
         }

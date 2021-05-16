@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.event.player;
 
-import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Fired after the player has connected to a server. The server the player is now connected to is
  * available in {@link Player#connectedServer()}.
  */
-public interface ServerPostConnectEvent extends Event {
+public interface ServerPostConnectEvent {
 
   Player player();
 

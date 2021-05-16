@@ -32,8 +32,7 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  default <E extends Event> void register(Object plugin, Class<E> eventClass,
-      EventHandler<E> handler) {
+  default <E> void register(Object plugin, Class<E> eventClass, EventHandler<E> handler) {
     register(plugin, eventClass, PostOrder.NORMAL, handler);
   }
 
@@ -47,8 +46,7 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  <E extends Event> void register(Object plugin, Class<E> eventClass, short postOrder,
-      EventHandler<E> handler);
+  <E> void register(Object plugin, Class<E> eventClass, short postOrder, EventHandler<E> handler);
 
   /**
    * Fires the specified event to the event bus asynchronously. This allows Velocity to continue
@@ -58,7 +56,7 @@ public interface EventManager {
    * @param event the event to fire
    * @return a {@link CompletableFuture} representing the posted event
    */
-  <E extends Event> CompletableFuture<E> fire(E event);
+  <E> CompletableFuture<E> fire(E event);
 
   /**
    * Posts the specified event to the event bus and discards the result.
@@ -66,7 +64,7 @@ public interface EventManager {
    * @param event the event to fire
    */
   @SuppressWarnings("FutureReturnValueIgnored")
-  default void fireAndForget(Event event) {
+  default void fireAndForget(Object event) {
     // Calling fire(Object) and not handling it is intentional.
     fire(event);
   }
@@ -93,5 +91,5 @@ public interface EventManager {
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
-  <E extends Event> void unregister(Object plugin, EventHandler<E> handler);
+  <E> void unregister(Object plugin, EventHandler<E> handler);
 }

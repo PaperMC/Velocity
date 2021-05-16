@@ -7,11 +7,9 @@
 
 package com.velocitypowered.api.event.lifecycle;
 
-import com.velocitypowered.api.event.Event;
-
 /**
  * This event is fired when the proxy is reloaded by the user using {@code /velocity reload}.
  */
-public interface ProxyReloadEvent extends Event {
+public interface ProxyReloadEvent {
 
 }
