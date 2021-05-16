@@ -17,8 +17,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * Represents a command that can be executed by a {@link CommandSource}
  * such as a {@link Player} or the console.
  *
- * <p>Velocity 1.1.0 introduces specialized command subinterfaces to separate
- * command parsing concerns. These include, in order of preference:
+ * <p><strong>You must not subclass <code>Command</code></strong>. Use one of the following
+ * <i>registrable</i> subinterfaces:</p>
  *
  * <ul>
  * <li>{@link BrigadierCommand}, which supports parameterized arguments and
