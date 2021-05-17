@@ -52,6 +52,11 @@ public class Metrics {
       return;
     }
 
+    // Disable the relocate check if velocity doesn't have bStats relocated, this happens in dev
+    if (!MetricsBase.class.getPackageName().startsWith(getClass().getPackageName())) {
+      System.setProperty("bstats.relocatecheck", "false");
+    }
+
     metricsBase = new MetricsBase(
         "server-implementation",
         config.getServerUUID(),
