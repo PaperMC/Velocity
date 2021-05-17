@@ -17,21 +17,47 @@
 
 package com.velocitypowered.proxy.event;
 
+import com.velocitypowered.api.event.Continuation;
+import com.velocitypowered.api.event.Event;
+import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventTask;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface UntargetedEventHandler {
 
-  @Nullable EventTask execute(Object targetInstance, Object event);
+  EventHandler<Event> buildHandler(Object targetInstance);
+
+  interface EventTaskHandler extends UntargetedEventHandler {
+
+    @Nullable EventTask execute(Object targetInstance, Event event);
+
+    @Override
+    default EventHandler<Event> buildHandler(final Object targetInstance) {
+      return event -> execute(targetInstance, event);
+    }
+  }
 
   interface VoidHandler extends UntargetedEventHandler {
 
-    @Override
-    default @Nullable EventTask execute(final Object targetInstance, final Object event) {
-      executeVoid(targetInstance, event);
-      return null;
-    }
+    void execute(Object targetInstance, Object event);
 
-    void executeVoid(Object targetInstance, Object event);
+    @Override
+    default EventHandler<Event> buildHandler(final Object targetInstance) {
+      return event -> {
+        execute(targetInstance, event);
+        return null;
+      };
+    }
+  }
+
+  interface WithContinuationHandler extends UntargetedEventHandler {
+
+    void execute(Object targetInstance, Object event, Continuation continuation);
+
+    @Override
+    default EventHandler<Event> buildHandler(final Object targetInstance) {
+      return event -> EventTask.withContinuation(continuation ->
+          execute(targetInstance, event, continuation));
+    }
   }
 }

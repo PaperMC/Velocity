@@ -20,6 +20,8 @@ package com.velocitypowered.proxy.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.reflect.TypeToken;
+import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
@@ -100,19 +102,19 @@ public class EventTest {
     int result;
 
     @Subscribe(async = true)
-    void async0(TestEvent event) {
+    void firstAsync(TestEvent event) {
       result++;
       threadA = Thread.currentThread();
     }
 
     @Subscribe
-    EventTask async1(TestEvent event) {
+    EventTask secondAsync(TestEvent event) {
       threadB = Thread.currentThread();
       return EventTask.async(() -> result++);
     }
 
     @Subscribe
-    void async2(TestEvent event) {
+    void thirdAsync(TestEvent event) {
       result++;
       threadC = Thread.currentThread();
     }
@@ -202,48 +204,6 @@ public class EventTest {
   }
 
   @Test
-  void testAsyncContinuation() throws Exception {
-    final AsyncContinuationListener listener = new AsyncContinuationListener();
-    handleMethodListener(listener);
-    assertSyncThread(listener.threadA);
-    assertAsyncThread(listener.threadB);
-    assertAsyncThread(listener.threadC);
-    assertEquals(2, listener.value.get());
-  }
-
-  static final class AsyncContinuationListener {
-
-    @MonotonicNonNull Thread threadA;
-    @MonotonicNonNull Thread threadB;
-    @MonotonicNonNull Thread threadC;
-
-    final AtomicInteger value = new AtomicInteger();
-
-    @Subscribe(order = PostOrder.EARLY)
-    EventTask continuation(TestEvent event) {
-      threadA = Thread.currentThread();
-      return EventTask.asyncWithContinuation(continuation -> {
-        value.incrementAndGet();
-        threadB = Thread.currentThread();
-        new Thread(() -> {
-          try {
-            Thread.sleep(100);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-          value.incrementAndGet();
-          continuation.resume();
-        }).start();
-      });
-    }
-
-    @Subscribe(order = PostOrder.LATE)
-    void afterContinuation(TestEvent event) {
-      threadC = Thread.currentThread();
-    }
-  }
-
-  @Test
   void testResumeContinuationImmediately() throws Exception {
     final ResumeContinuationImmediatelyListener listener = new ResumeContinuationImmediatelyListener();
     handleMethodListener(listener);
@@ -274,6 +234,120 @@ public class EventTest {
     void afterContinuation(TestEvent event) {
       threadC = Thread.currentThread();
       result++;
+    }
+  }
+
+  @Test
+  void testContinuationParameter() throws Exception {
+    final ContinuationParameterListener listener = new ContinuationParameterListener();
+    handleMethodListener(listener);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
+    assertAsyncThread(listener.threadC);
+    assertEquals(3, listener.result.get());
+  }
+
+  static final class ContinuationParameterListener {
+
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
+
+    final AtomicInteger result = new AtomicInteger();
+
+    @Subscribe
+    void resume(TestEvent event, Continuation continuation) {
+      threadA = Thread.currentThread();
+      result.incrementAndGet();
+      continuation.resume();
+    }
+
+    @Subscribe(order = PostOrder.LATE)
+    void resumeFromCustomThread(TestEvent event, Continuation continuation) {
+      threadB = Thread.currentThread();
+      new Thread(() -> {
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        result.incrementAndGet();
+        continuation.resume();
+      }).start();
+    }
+
+    @Subscribe(order = PostOrder.LAST)
+    void afterCustomThread(TestEvent event, Continuation continuation) {
+      threadC = Thread.currentThread();
+      result.incrementAndGet();
+      continuation.resume();
+    }
+  }
+
+  interface FancyContinuation {
+
+    void resume();
+
+    void resumeWithError(Exception exception);
+  }
+
+  private static final class FancyContinuationImpl implements FancyContinuation {
+
+    private final Continuation continuation;
+
+    private FancyContinuationImpl(final Continuation continuation) {
+      this.continuation = continuation;
+    }
+
+    @Override
+    public void resume() {
+      continuation.resume();
+    }
+
+    @Override
+    public void resumeWithError(final Exception exception) {
+      continuation.resumeWithException(exception);
+    }
+  }
+
+  interface TriConsumer<A, B, C> {
+
+    void accept(A a, B b, C c);
+  }
+
+  @Test
+  void testFancyContinuationParameter() throws Exception {
+    eventManager.registerHandlerAdapter(
+        "fancy",
+        method -> method.getParameterCount() > 1
+            && method.getParameterTypes()[1] == FancyContinuation.class,
+        (method, errors) -> {
+          if (method.getReturnType() != void.class) {
+            errors.add("method return type must be void");
+          }
+          if (method.getParameterCount() != 2) {
+            errors.add("method must have exactly two parameters, the first is the event and "
+                + "the second is the fancy continuation");
+          }
+        },
+        new TypeToken<TriConsumer<Object, Event, FancyContinuation>>() {},
+        invokeFunction -> (instance, event) ->
+            EventTask.withContinuation(continuation ->
+                invokeFunction.accept(instance, event, new FancyContinuationImpl(continuation))
+            ));
+    final FancyContinuationListener listener = new FancyContinuationListener();
+    handleMethodListener(listener);
+    assertEquals(1, listener.result);
+  }
+
+  static final class FancyContinuationListener {
+
+    int result;
+
+    @Subscribe
+    void continuation(TestEvent event, FancyContinuation continuation) {
+      result++;
+      continuation.resume();
     }
   }
 }
