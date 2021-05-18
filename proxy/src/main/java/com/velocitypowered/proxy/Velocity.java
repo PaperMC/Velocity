@@ -29,6 +29,8 @@ public class Velocity {
 
   static {
     System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+    System.setProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", "true");
+
     logger = LogManager.getLogger(Velocity.class);
 
     // By default, Netty allocates 16MiB arenas for the PooledByteBufAllocator. This is too much
