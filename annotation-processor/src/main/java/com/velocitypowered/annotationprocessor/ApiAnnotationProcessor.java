@@ -17,7 +17,6 @@
 
 package com.velocitypowered.annotationprocessor;
 
-import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENTTASK_CLASS;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.EVENT_INTERFACE;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.PLUGIN_ANNOTATION_CLASS;
 import static com.velocitypowered.annotationprocessor.AnnotationProcessorConstants.SUBSCRIBE_ANNOTATION_CLASS;
@@ -30,9 +29,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -45,7 +42,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -90,10 +86,6 @@ public class ApiAnnotationProcessor extends AbstractProcessor {
         if (enclosing != null && enclosing.getKind().isInterface()) {
           msg.printMessage(Diagnostic.Kind.ERROR,
               "interfaces cannot declare listeners", method);
-        }
-        if (method.getReturnType().getKind() != TypeKind.VOID
-            && !this.isTypeSubclass(method.getReturnType(), EVENTTASK_CLASS)) {
-          msg.printMessage(Kind.ERROR, "method must return void or EventTask", method);
         }
         final List<? extends VariableElement> parameters = method.getParameters();
         if (parameters.isEmpty()

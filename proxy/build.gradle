@@ -87,7 +87,7 @@ dependencies {
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
     implementation 'org.bstats:bstats-base:2.2.0'
-    implementation 'org.lanternpowered:lmbda:2.0.0-SNAPSHOT'
+    implementation 'org.lanternpowered:lmbda:2.0.0'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:2.8.8'
     implementation 'com.vdurmont:semver4j:3.1.0'

@@ -64,9 +64,13 @@ public class PluginClassLoader extends URLClassLoader {
     return findClass0(name, true);
   }
 
+  private boolean isKtLanguagePlugin() {
+    return description.id().equals("velocity-language-kotlin");
+  }
+
   private Class<?> findClass0(String name, boolean checkOther)
       throws ClassNotFoundException {
-    if (name.startsWith("com.velocitypowered")) {
+    if (name.startsWith("com.velocitypowered") && !isKtLanguagePlugin()) {
       throw new ClassNotFoundException();
     }
 
