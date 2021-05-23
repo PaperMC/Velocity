@@ -131,18 +131,6 @@ public class CommandManagerTests {
   }
 
   @Test
-  void testAlreadyRegisteredThrows() {
-    VelocityCommandManager manager = createManager();
-    manager.register("BAR", new NoopSimpleCommand());
-    assertThrows(IllegalArgumentException.class, () -> {
-      CommandMeta meta = manager.metaBuilder("baz")
-              .aliases("BAr")
-              .build();
-      manager.register(meta, new NoopRawCommand());
-    });
-  }
-
-  @Test
   void testBrigadierExecute() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
