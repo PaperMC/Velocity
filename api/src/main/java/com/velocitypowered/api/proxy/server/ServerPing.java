@@ -19,7 +19,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -33,33 +32,9 @@ public final class ServerPing {
   private final @Nullable Favicon favicon;
   private final @Nullable ModInfo modinfo;
 
-  @Deprecated
-  public ServerPing(Version version, @Nullable Players players,
-      net.kyori.text.Component description, @Nullable Favicon favicon) {
-    this(version, players, LegacyText3ComponentSerializer.get().deserialize(description), favicon,
-        ModInfo.DEFAULT);
-  }
-
   public ServerPing(Version version, @Nullable Players players,
       net.kyori.adventure.text.Component description, @Nullable Favicon favicon) {
     this(version, players, description, favicon, ModInfo.DEFAULT);
-  }
-
-  /**
-   * Constructs a ServerPing instance.
-   *
-   * @param version the version of the server
-   * @param players the players on the server
-   * @param description the MOTD for the server
-   * @param favicon the server's favicon
-   * @param modinfo the mods this server runs
-   */
-  @Deprecated
-  public ServerPing(Version version, @Nullable Players players,
-      net.kyori.text.Component description, @Nullable Favicon favicon,
-      @Nullable ModInfo modinfo) {
-    this(version, players, LegacyText3ComponentSerializer.get().deserialize(description), favicon,
-        modinfo);
   }
 
   /**
@@ -87,11 +62,6 @@ public final class ServerPing {
 
   public Optional<Players> getPlayers() {
     return Optional.ofNullable(players);
-  }
-
-  @Deprecated
-  public net.kyori.text.Component getDescription() {
-    return LegacyText3ComponentSerializer.get().serialize(description);
   }
 
   public net.kyori.adventure.text.Component getDescriptionComponent() {
@@ -253,12 +223,6 @@ public final class ServerPing {
       return this;
     }
 
-    @Deprecated
-    public Builder description(net.kyori.text.Component description) {
-      this.description(LegacyText3ComponentSerializer.get().deserialize(description));
-      return this;
-    }
-
     public Builder description(net.kyori.adventure.text.Component description) {
       this.description = Preconditions.checkNotNull(description, "description");
       return this;
@@ -305,11 +269,6 @@ public final class ServerPing {
 
     public List<SamplePlayer> getSamplePlayers() {
       return samplePlayers;
-    }
-
-    @Deprecated
-    public Optional<net.kyori.text.Component> getDescription() {
-      return Optional.ofNullable(description).map(LegacyText3ComponentSerializer.get()::serialize);
     }
 
     public Optional<net.kyori.adventure.text.Component> getDescriptionComponent() {

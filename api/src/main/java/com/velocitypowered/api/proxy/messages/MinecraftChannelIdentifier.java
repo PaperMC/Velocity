@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import net.kyori.minecraft.Key;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -96,7 +96,7 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
   }
 
   public Key asKey() {
-    return Key.of(namespace, name);
+    return Key.key(namespace, name);
   }
 
   @Override

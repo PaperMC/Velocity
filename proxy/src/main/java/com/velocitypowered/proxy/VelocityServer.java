@@ -35,9 +35,6 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.api.util.bossbar.BossBar;
-import com.velocitypowered.api.util.bossbar.BossBarColor;
-import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
@@ -50,7 +47,6 @@ import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
@@ -59,7 +55,6 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
-import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -179,15 +174,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     return new ProxyVersion(implName, implVendor, implVersion);
-  }
-
-  @Override
-  public @NonNull BossBar createBossBar(
-      net.kyori.text.@NonNull Component title,
-      @NonNull BossBarColor color,
-      @NonNull BossBarOverlay overlay,
-      float progress) {
-    return new VelocityBossBar(title, color, overlay, progress);
   }
 
   @Override
@@ -573,15 +559,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public Optional<Player> getPlayer(UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
     return Optional.ofNullable(connectionsByUuid.get(uuid));
-  }
-
-  @Override
-  public void broadcast(net.kyori.text.Component component) {
-    Preconditions.checkNotNull(component, "component");
-    Chat chat = Chat.createClientbound(component);
-    for (ConnectedPlayer player : connectionsByUuid.values()) {
-      player.getConnection().write(chat);
-    }
   }
 
   @Override

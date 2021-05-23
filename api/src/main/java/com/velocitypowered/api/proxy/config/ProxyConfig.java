@@ -50,15 +50,6 @@ public interface ProxyConfig {
    * Get the MOTD component shown in the tab list.
    *
    * @return the motd component
-   * @deprecated Use {@link #getMotd()} instead
-   */
-  @Deprecated
-  net.kyori.text.Component getMotdComponent();
-
-  /**
-   * Get the MOTD component shown in the tab list.
-   *
-   * @return the motd component
    */
   net.kyori.adventure.text.Component getMotd();
 

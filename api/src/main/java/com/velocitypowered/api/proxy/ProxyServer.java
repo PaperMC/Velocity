@@ -17,17 +17,11 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.api.util.bossbar.BossBar;
-import com.velocitypowered.api.util.bossbar.BossBarColor;
-import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.identity.Identified;
-import net.kyori.adventure.identity.Identity;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -63,16 +57,6 @@ public interface ProxyServer extends Audience {
    * @return an {@link Optional} with the player, which may be empty
    */
   Optional<Player> getPlayer(UUID uuid);
-
-  /**
-   * Broadcasts a message to all players currently online.
-   *
-   * @param component the message to send
-   * @deprecated Use {@link #sendMessage(Identified, Component)}
-   *     or {@link #sendMessage(Identity, Component)} instead
-   */
-  @Deprecated
-  void broadcast(net.kyori.text.Component component);
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot
@@ -202,19 +186,4 @@ public interface ProxyServer extends Audience {
    * @return the proxy version
    */
   ProxyVersion getVersion();
-
-  /**
-   * Creates a new {@link BossBar}.
-   *
-   * @param title boss bar title
-   * @param color boss bar color
-   * @param overlay boss bar overlay
-   * @param progress boss bar progress
-   * @return a completely new and fresh boss bar
-   * @deprecated Use {@link net.kyori.adventure.bossbar.BossBar} instead
-   */
-  @Deprecated
-  @NonNull
-  BossBar createBossBar(net.kyori.text.Component title, @NonNull BossBarColor color,
-      @NonNull BossBarOverlay overlay, float progress);
 }

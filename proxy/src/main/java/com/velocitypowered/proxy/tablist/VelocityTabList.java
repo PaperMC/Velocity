@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabList implements TabList {
@@ -46,18 +45,6 @@ public class VelocityTabList implements TabList {
   public VelocityTabList(final ConnectedPlayer player) {
     this.player = player;
     this.connection = player.getConnection();
-  }
-
-  @Deprecated
-  @Override
-  public void setHeaderAndFooter(net.kyori.text.Component header,
-                                 net.kyori.text.Component footer) {
-    Preconditions.checkNotNull(header, "header");
-    Preconditions.checkNotNull(footer, "footer");
-    this.player.sendPlayerListHeaderAndFooter(
-        LegacyText3ComponentSerializer.get().deserialize(header),
-        LegacyText3ComponentSerializer.get().deserialize(footer)
-    );
   }
 
   @Deprecated

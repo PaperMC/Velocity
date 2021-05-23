@@ -28,8 +28,6 @@ import java.util.List;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -49,12 +47,6 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
-  }
-
-  @Override
-  public void sendMessage(net.kyori.text.Component component) {
-    logger.info(net.kyori.text.serializer.legacy.LegacyComponentSerializer.legacy()
-        .serialize(component));
   }
 
   @Override
