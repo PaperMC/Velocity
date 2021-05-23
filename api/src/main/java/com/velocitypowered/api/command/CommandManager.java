@@ -77,7 +77,7 @@ public interface CommandManager {
    * @return a future that may be completed with the result of the command execution.
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  CompletableFuture<Boolean> execute(CommandSource source, String cmdLine);
+  CompletableFuture<Boolean> executeAsync(CommandSource source, String cmdLine);
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}
@@ -88,7 +88,7 @@ public interface CommandManager {
    * @return a future that may be completed with the result of the command execution.
    *         Can be completed exceptionally if an exception is thrown during execution.
    */
-  CompletableFuture<Boolean> executeImmediately(CommandSource source, String cmdLine);
+  CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 
   /**
    * Returns whether the given alias is registered on this manager.

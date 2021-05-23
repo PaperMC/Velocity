@@ -598,7 +598,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/"
           + commandToRun)), smc.eventLoop());
     } else {
-      return server.getCommandManager().executeImmediately(player, commandToRun)
+      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
               smc.write(Chat.createServerbound("/" + commandToRun));
