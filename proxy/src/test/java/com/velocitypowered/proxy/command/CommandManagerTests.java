@@ -34,7 +34,6 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
@@ -80,8 +79,8 @@ public class CommandManagerTests {
   void testBrigadierRegister() {
     VelocityCommandManager manager = createManager();
     LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal("foo")
-            .build();
+        .<CommandSource>literal("foo")
+        .build();
     BrigadierCommand command = new BrigadierCommand(node);
     manager.register(command);
 
@@ -89,12 +88,12 @@ public class CommandManagerTests {
     assertTrue(manager.hasCommand("fOo"));
 
     LiteralCommandNode<CommandSource> barNode = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .build();
+        .<CommandSource>literal("bar")
+        .build();
     BrigadierCommand aliasesCommand = new BrigadierCommand(barNode);
     CommandMeta meta = manager.metaBuilder(aliasesCommand)
-            .aliases("baZ")
-            .build();
+        .aliases("baZ")
+        .build();
 
     assertEquals(ImmutableSet.of("bar", "baz"), meta.getAliases());
     assertTrue(meta.getHints().isEmpty());
@@ -135,36 +134,36 @@ public class CommandManagerTests {
     AtomicBoolean executed = new AtomicBoolean(false);
     AtomicBoolean checkedRequires = new AtomicBoolean(false);
     LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal("buy")
-            .executes(context -> {
-              assertEquals(MockCommandSource.INSTANCE, context.getSource());
-              assertEquals("buy", context.getInput());
-              executed.set(true);
-              return 1;
-            })
-            .build();
+        .<CommandSource>literal("buy")
+        .executes(context -> {
+          assertEquals(MockCommandSource.INSTANCE, context.getSource());
+          assertEquals("buy", context.getInput());
+          executed.set(true);
+          return 1;
+        })
+        .build();
     CommandNode<CommandSource> quantityNode = RequiredArgumentBuilder
-            .<CommandSource, Integer>argument("quantity", IntegerArgumentType.integer(12, 16))
-            .requires(source -> {
-              assertEquals(MockCommandSource.INSTANCE, source);
-              checkedRequires.set(true);
-              return true;
-            })
-            .executes(context -> {
-              int argument = IntegerArgumentType.getInteger(context, "quantity");
-              assertEquals(14, argument);
-              executed.set(true);
-              return 1;
-            })
-            .build();
+        .<CommandSource, Integer>argument("quantity", IntegerArgumentType.integer(12, 16))
+        .requires(source -> {
+          assertEquals(MockCommandSource.INSTANCE, source);
+          checkedRequires.set(true);
+          return true;
+        })
+        .executes(context -> {
+          int argument = IntegerArgumentType.getInteger(context, "quantity");
+          assertEquals(14, argument);
+          executed.set(true);
+          return 1;
+        })
+        .build();
     CommandNode<CommandSource> productNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument("product", StringArgumentType.string())
-            .requires(source -> {
-              checkedRequires.set(true);
-              return false;
-            })
-            .executes(context -> fail("was executed"))
-            .build();
+        .<CommandSource, String>argument("product", StringArgumentType.string())
+        .requires(source -> {
+          checkedRequires.set(true);
+          return false;
+        })
+        .executes(context -> fail("was executed"))
+        .build();
     quantityNode.addChild(productNode);
     node.addChild(quantityNode);
     manager.register(new BrigadierCommand(node));
@@ -174,9 +173,9 @@ public class CommandManagerTests {
     assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 14").join());
     assertTrue(checkedRequires.compareAndSet(true, false));
     assertTrue(executed.get());
-    assertFalse(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
-            "Invalid arg returns false");
-    assertFalse(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas")
+    assertTrue(manager.execute(MockCommandSource.INSTANCE, "buy 9").join(),
+        "Invalid arg returns false");
+    assertTrue(manager.executeImmediately(MockCommandSource.INSTANCE, "buy 12 bananas")
         .join());
     assertTrue(checkedRequires.get());
   }
@@ -266,15 +265,15 @@ public class CommandManagerTests {
     VelocityCommandManager manager = createManager();
 
     LiteralCommandNode<CommandSource> brigadierNode = LiteralArgumentBuilder
-            .<CommandSource>literal("brigadier")
-            .build();
+        .<CommandSource>literal("brigadier")
+        .build();
     CommandNode<CommandSource> nameNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument("name", StringArgumentType.string())
-            .build();
+        .<CommandSource, String>argument("name", StringArgumentType.string())
+        .build();
     CommandNode<CommandSource> numberNode = RequiredArgumentBuilder
-            .<CommandSource, Integer>argument("quantity", IntegerArgumentType.integer())
-            .suggests((context, builder) -> builder.suggest(2).suggest(3).buildFuture())
-            .build();
+        .<CommandSource, Integer>argument("quantity", IntegerArgumentType.integer())
+        .suggests((context, builder) -> builder.suggest(2).suggest(3).buildFuture())
+        .build();
     nameNode.addChild(numberNode);
     brigadierNode.addChild(nameNode);
     manager.register(new BrigadierCommand(brigadierNode));
@@ -322,53 +321,53 @@ public class CommandManagerTests {
     manager.register("raw", rawCommand);
 
     assertEquals(
-            ImmutableList.of("brigadier", "raw", "simple"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "").join(),
-            "literals are in alphabetical order");
+        ImmutableList.of("brigadier", "raw", "simple"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "").join(),
+        "literals are in alphabetical order");
     assertEquals(
-            ImmutableList.of("brigadier"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "briga").join());
+        ImmutableList.of("brigadier"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "briga").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier")
-            .join().isEmpty());
+        .join().isEmpty());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier ")
-            .join().isEmpty());
+        .join().isEmpty());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo")
-            .join().isEmpty());
+        .join().isEmpty());
     assertEquals(
-            ImmutableList.of("2", "3"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ").join());
+        ImmutableList.of("2", "3"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "brigadier foo ").join());
     assertEquals(
-            ImmutableList.of("bar", "foo"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "simple ").join());
+        ImmutableList.of("bar", "foo"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "simple ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "simple")
-            .join().isEmpty());
+        .join().isEmpty());
     assertEquals(
-            ImmutableList.of("123"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "simPle foo").join());
+        ImmutableList.of("123"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "simPle foo").join());
     assertEquals(
-            ImmutableList.of("baz", "foo"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "raw ").join());
+        ImmutableList.of("baz", "foo"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "raw ").join());
     assertEquals(
-            ImmutableList.of("2", "3", "5", "7"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo ").join());
+        ImmutableList.of("2", "3", "5", "7"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo ").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "raw foo")
-            .join().isEmpty());
+        .join().isEmpty());
     assertEquals(
-            ImmutableList.of("11", "13", "17"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "rAW bar ").join());
+        ImmutableList.of("11", "13", "17"),
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "rAW bar ").join());
   }
 
   @Test
   void testBrigadierSuggestionPermissions() {
     VelocityCommandManager manager = createManager();
     LiteralCommandNode<CommandSource> manageNode = LiteralArgumentBuilder
-            .<CommandSource>literal("manage")
-            .requires(source -> false)
-            .build();
+        .<CommandSource>literal("manage")
+        .requires(source -> false)
+        .build();
     CommandNode<CommandSource> idNode = RequiredArgumentBuilder
-            .<CommandSource, Integer>argument("id", IntegerArgumentType.integer(0))
-            .suggests((context, builder) -> fail("called suggestion builder"))
-            .build();
+        .<CommandSource, Integer>argument("id", IntegerArgumentType.integer(0))
+        .suggests((context, builder) -> fail("called suggestion builder"))
+        .build();
     manageNode.addChild(idNode);
     manager.register(new BrigadierCommand(manageNode));
 
@@ -376,12 +375,11 @@ public class CommandManagerTests {
     // However, it won't query children if the source doesn't pass the parent
     // #requires predicate.
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "manage ")
-            .join().isEmpty());
+        .join().isEmpty());
   }
 
-  // TODO: Hug needs to fix this test!
-  @Disabled
   @Test
+  @Disabled
   void testHinting() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);
@@ -401,25 +399,25 @@ public class CommandManagerTests {
     };
 
     CommandNode<CommandSource> barHint = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .executes(context -> fail("hints don't get executed"))
-            .build();
+        .<CommandSource>literal("bar")
+        .executes(context -> fail("hints don't get executed"))
+        .build();
     ArgumentCommandNode<CommandSource, Integer> numberArg = RequiredArgumentBuilder
-            .<CommandSource, Integer>argument("number", IntegerArgumentType.integer())
-            .suggests((context, builder) -> {
-              calledSuggestionProvider.set(true);
-              return builder.suggest("456").buildFuture();
-            })
-            .build();
+        .<CommandSource, Integer>argument("number", IntegerArgumentType.integer())
+        .suggests((context, builder) -> {
+          calledSuggestionProvider.set(true);
+          return builder.suggest("456").buildFuture();
+        })
+        .build();
     barHint.addChild(numberArg);
     CommandNode<CommandSource> bazHint = LiteralArgumentBuilder
-            .<CommandSource>literal("baz")
-            .build();
+        .<CommandSource>literal("baz")
+        .build();
     CommandMeta meta = manager.metaBuilder("foo")
-            .aliases("foo2")
-            .hint(barHint)
-            .hint(bazHint)
-            .build();
+        .aliases("foo2")
+        .hint(barHint)
+        .hint(bazHint)
+        .build();
     manager.register(meta, command);
 
     expectedArgs.set("notBarOrBaz");
@@ -436,13 +434,13 @@ public class CommandManagerTests {
     assertTrue(executed.compareAndSet(true, false));
 
     assertEquals(ImmutableList.of("bar", "baz", "raw"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo ").join());
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "foo ").join());
     assertFalse(calledSuggestionProvider.get());
     assertEquals(ImmutableList.of("456"),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo bar ").join());
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "foo bar ").join());
     assertTrue(calledSuggestionProvider.compareAndSet(true, false));
     assertEquals(ImmutableList.of(),
-            manager.offerSuggestions(MockCommandSource.INSTANCE, "foo2 baz ").join());
+        manager.offerSuggestions(MockCommandSource.INSTANCE, "foo2 baz ").join());
   }
 
   @Test
@@ -470,20 +468,20 @@ public class CommandManagerTests {
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "foo").get().isEmpty());
     assertFalse(manager.offerSuggestions(MockCommandSource.INSTANCE, "foo bar").get().isEmpty());
 
-    Command oldCommand = new SimpleCommand() {
+    SimpleCommand oldCommand = new SimpleCommand() {
       @Override
       public void execute(Invocation invocation) {
         fail("The Command should not be executed while testing suggestions");
       }
 
       @Override
-      public List<String> suggest(Invocation invocation) {
-        return ImmutableList.of("suggestion");
+      public boolean hasPermission(Invocation invocation) {
+        return invocation.arguments().length > 0;
       }
 
       @Override
-      public boolean hasPermission(Invocation invocation) {
-        return invocation.arguments().length > 0;
+      public List<String> suggest(Invocation invocation) {
+        return ImmutableList.of("suggestion");
       }
     };
 

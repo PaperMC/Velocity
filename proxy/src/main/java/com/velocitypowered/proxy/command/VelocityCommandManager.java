@@ -124,7 +124,7 @@ public class VelocityCommandManager implements CommandManager {
    * @return the {@link CompletableFuture} of the event
    */
   public CompletableFuture<CommandExecuteEvent> callCommandEvent(final CommandSource source,
-                                                                 final String cmdLine) {
+      final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
     return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
@@ -139,7 +139,7 @@ public class VelocityCommandManager implements CommandManager {
       return dispatcher.execute(results) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
-              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+          CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
         source.sendMessage(Identity.nil(), Component.text(e.getMessage(), NamedTextColor.RED));
         // This is, of course, a lie, but the API will need to change...
@@ -169,7 +169,7 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public CompletableFuture<Boolean> executeImmediately(
-          final CommandSource source, final String cmdLine) {
+      final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -186,17 +186,17 @@ public class VelocityCommandManager implements CommandManager {
    *         possibly empty
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
-                                                          final String cmdLine) {
+      final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     ParseResults<CommandSource> parse = parse(cmdLine, source, false);
     return dispatcher.getCompletionSuggestions(parse)
-            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+        .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
   private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
-                                            final boolean trim) {
+      final boolean trim) {
     String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
     return dispatcher.parse(normalized, source);
   }
