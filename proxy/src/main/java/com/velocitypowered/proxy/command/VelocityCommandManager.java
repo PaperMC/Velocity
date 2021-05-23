@@ -34,7 +34,7 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
-import com.velocitypowered.proxy.plugin.VelocityEventManager;
+import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Iterator;
 import java.util.List;
@@ -164,7 +164,7 @@ public class VelocityCommandManager implements CommandManager {
         return false;
       }
       return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
-    }, eventManager.getService());
+    }, eventManager.getAsyncExecutor());
   }
 
   @Override
@@ -174,7 +174,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-        () -> executeImmediately0(source, cmdLine), eventManager.getService());
+        () -> executeImmediately0(source, cmdLine), eventManager.getAsyncExecutor());
   }
 
   /**
