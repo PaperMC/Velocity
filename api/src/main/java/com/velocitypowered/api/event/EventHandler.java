@@ -11,9 +11,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents an interface to perform direct dispatch of an event. This makes integration easier to
- * achieve with platforms such as RxJava. While this interface can be used to implement an
- * asynchronous event handler, {@link AsyncEventExecutor} provides a more idiomatic means of doing
- * so.
+ * achieve with platforms such as RxJava. While this interface can be used to implement an awaiting
+ * event handler, {@link AwaitingEventExecutor} provides a more idiomatic means to doing so.
  */
 @FunctionalInterface
 public interface EventHandler<E> {

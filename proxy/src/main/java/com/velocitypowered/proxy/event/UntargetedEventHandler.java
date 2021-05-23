@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.event;
 
-import com.velocitypowered.api.event.AsyncEventExecutor;
+import com.velocitypowered.api.event.AwaitingEventExecutor;
 import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventTask;
@@ -33,7 +33,7 @@ public interface UntargetedEventHandler {
 
     @Override
     default EventHandler<Object> buildHandler(final Object targetInstance) {
-      return (AsyncEventExecutor<Object>) event -> execute(targetInstance, event);
+      return (AwaitingEventExecutor<Object>) event -> execute(targetInstance, event);
     }
   }
 
@@ -43,7 +43,7 @@ public interface UntargetedEventHandler {
 
     @Override
     default EventHandler<Object> buildHandler(final Object targetInstance) {
-      return (AsyncEventExecutor<Object>) event -> {
+      return (AwaitingEventExecutor<Object>) event -> {
         execute(targetInstance, event);
         return null;
       };
@@ -56,7 +56,7 @@ public interface UntargetedEventHandler {
 
     @Override
     default EventHandler<Object> buildHandler(final Object targetInstance) {
-      return (AsyncEventExecutor<Object>) event -> EventTask.withContinuation(continuation ->
+      return (AwaitingEventExecutor<Object>) event -> EventTask.withContinuation(continuation ->
           execute(targetInstance, event, continuation));
     }
   }

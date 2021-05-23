@@ -9,8 +9,13 @@ package com.velocitypowered.api.event;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * An event handler that returns an {@link EventTask} to await on.
+ *
+ * @param <E> event type
+ */
 @FunctionalInterface
-public interface AsyncEventExecutor<E> extends EventHandler<E> {
+public interface AwaitingEventExecutor<E> extends EventHandler<E> {
 
   default void execute(E event) {
     throw new UnsupportedOperationException(
