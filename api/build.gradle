@@ -45,6 +45,7 @@ dependencies {
     api "org.spongepowered:configurate-hocon:${configurateVersion}"
     api "org.spongepowered:configurate-yaml:${configurateVersion}"
     api "org.spongepowered:configurate-gson:${configurateVersion}"
+    api "org.yaml:snakeyaml:1.28"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
