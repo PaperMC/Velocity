@@ -51,6 +51,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -59,12 +60,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private static final boolean BACKPRESSURE_LOG = Boolean
       .getBoolean("velocity.log-server-backpressure");
+  private static final int MAXIMUM_PACKETS_TO_FLUSH = Integer
+      .getInteger("velocity.max-packets-per-flush", 8192);
+
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
+  private int packetsFlushed;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
@@ -200,10 +205,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.configuration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      RootCommandNode<CommandSource> dispatcherRootNode =
-          (RootCommandNode<CommandSource>)
-              filterNode(server.commandManager().getDispatcher().getRoot());
-      assert dispatcherRootNode != null : "Filtering root node returned null.";
+      RootCommandNode<CommandSource> dispatcherRootNode = filterRootNode(server.commandManager()
+          .getDispatcher().getRoot());
       Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
       for (CommandNode<CommandSource> node : proxyNodes) {
         CommandNode<CommandSource> existingServerChild = rootNode.getChild(node.getName());
@@ -226,36 +229,52 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   /**
    * Creates a deep copy of the provided command node, but removes any node that are not accessible
+   * by the player (respecting the requirement of the node). This function is specialized for
+   * root command nodes, so as to get better safety guarantees.
+   *
+   * @param source source node
+   * @return filtered node
+   */
+  private RootCommandNode<CommandSource> filterRootNode(CommandNode<CommandSource> source) {
+    RootCommandNode<CommandSource> dest = new RootCommandNode<>();
+    for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
+      CommandNode<CommandSource> destChild = filterNode(sourceChild);
+      if (destChild == null) {
+        continue;
+      }
+      dest.addChild(destChild);
+    }
+
+    return dest;
+  }
+
+  /**
+   * Creates a deep copy of the provided command node, but removes any node that are not accessible
    * by the player (respecting the requirement of the node).
    *
    * @param source source node
    * @return filtered node
    */
-  private CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
-    CommandNode<CommandSource> dest;
-    if (source instanceof RootCommandNode) {
-      dest = new RootCommandNode<>();
-    } else {
-      if (source.getRequirement() != null) {
-        try {
-          if (!source.getRequirement().test(serverConn.player())) {
-            return null;
-          }
-        } catch (Throwable e) {
-          // swallow everything because plugins
-          logger.error(
-              "Requirement test for command node " + source + " encountered an exception", e);
+  private @Nullable CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
+    if (source.getRequirement() != null) {
+      try {
+        if (!source.getRequirement().test(serverConn.player())) {
+          return null;
         }
+      } catch (Throwable e) {
+        // swallow everything because plugins
+        logger.error(
+            "Requirement test for command node " + source + " encountered an exception", e);
       }
-
-      ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
-      destChildBuilder.requires((commandSource) -> true);
-      if (destChildBuilder.getRedirect() != null) {
-        destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
-      }
-
-      dest = destChildBuilder.build();
     }
+
+    ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
+    destChildBuilder.requires((commandSource) -> true);
+    if (destChildBuilder.getRedirect() != null) {
+      destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
+    }
+
+    CommandNode<CommandSource> dest = destChildBuilder.build();
 
     for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
       CommandNode<CommandSource> destChild = filterNode(sourceChild);
@@ -274,16 +293,25 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       ((AbstractPluginMessagePacket<?>) packet).retain();
     }
     playerConnection.delayedWrite(packet);
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
     playerConnection.delayedWrite(buf.retain());
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void readCompleted() {
     playerConnection.flush();
+    packetsFlushed = 0;
   }
 
   @Override

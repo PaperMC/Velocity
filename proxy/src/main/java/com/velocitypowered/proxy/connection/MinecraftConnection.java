@@ -36,15 +36,16 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCipherDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCipherEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftCompressDecoder;
-import com.velocitypowered.proxy.network.pipeline.MinecraftCompressEncoder;
+import com.velocitypowered.proxy.network.pipeline.MinecraftCompressorAndLengthEncoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
 import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -74,8 +75,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
   private final Channel channel;
-  private SocketAddress remoteAddress;
-  private StateRegistry state;
+  private @Nullable SocketAddress remoteAddress;
+  private ProtocolRegistry state;
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
@@ -92,7 +93,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
-    this.state = StateRegistry.HANDSHAKE;
+    this.state = ProtocolStates.HANDSHAKE;
+    this.protocolVersion = ProtocolVersion.UNKNOWN;
   }
 
   @Override
@@ -178,7 +180,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
               || sessionHandler instanceof HandshakeSessionHandler
               || sessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
-          boolean willLog = !isQuietDecoderException && !frontlineHandler;
+          boolean willLog = MinecraftDecoder.DEBUG
+              || (!isQuietDecoderException && !frontlineHandler);
           if (willLog) {
             logger.error("{}: exception encountered in {}", association, sessionHandler, cause);
           } else {
@@ -247,7 +250,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (channel.isActive()) {
       boolean is17 = this.getProtocolVersion().lt(ProtocolVersion.MINECRAFT_1_8)
           && this.getProtocolVersion().gte(ProtocolVersion.MINECRAFT_1_7_2);
-      if (is17 && this.getState() != StateRegistry.STATUS) {
+      if (is17 && this.getState() != ProtocolStates.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
@@ -303,11 +306,17 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return !channel.isActive();
   }
 
-  public SocketAddress getRemoteAddress() {
+  public @Nullable SocketAddress getRemoteAddress() {
     return remoteAddress;
   }
 
-  public StateRegistry getState() {
+  public void setRemoteAddress(@Nullable SocketAddress address) {
+    ensureOpen();
+    ensureInEventLoop();
+    this.remoteAddress = address;
+  }
+
+  public ProtocolRegistry getState() {
     return state;
   }
 
@@ -341,7 +350,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Changes the state of the Minecraft connection.
    * @param state the new state
    */
-  public void setState(StateRegistry state) {
+  public void setState(ProtocolRegistry state) {
     ensureInEventLoop();
 
     this.state = state;
@@ -408,8 +417,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     } else {
       MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
           .get(COMPRESSION_DECODER);
-      MinecraftCompressEncoder encoder = (MinecraftCompressEncoder) channel.pipeline()
-          .get(COMPRESSION_ENCODER);
+      MinecraftCompressorAndLengthEncoder encoder =
+          (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
       if (decoder != null && encoder != null) {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
@@ -417,9 +426,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         int level = server.configuration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
 
-        encoder = new MinecraftCompressEncoder(threshold, compressor);
+        encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);
         decoder = new MinecraftCompressDecoder(threshold, compressor);
 
+        channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
       }

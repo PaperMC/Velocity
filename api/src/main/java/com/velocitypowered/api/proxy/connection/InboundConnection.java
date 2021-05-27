@@ -10,7 +10,7 @@ package com.velocitypowered.api.proxy.connection;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents an incoming connection to the proxy.
@@ -22,14 +22,14 @@ public interface InboundConnection {
    *
    * @return the player's remote address
    */
-  SocketAddress remoteAddress();
+  @Nullable SocketAddress remoteAddress();
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.
    *
    * @return the hostname from the client
    */
-  Optional<InetSocketAddress> connectedHost();
+  @Nullable InetSocketAddress connectedHostname();
 
   /**
    * Determine whether or not the player remains online.

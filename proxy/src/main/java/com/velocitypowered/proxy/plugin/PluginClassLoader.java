@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.plugin;
 
+import com.velocitypowered.api.plugin.PluginDescription;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,8 +34,11 @@ public class PluginClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  public PluginClassLoader(URL[] urls) {
-    super(urls);
+  private final PluginDescription description;
+
+  public PluginClassLoader(URL[] urls, ClassLoader parent, PluginDescription description) {
+    super(urls, parent);
+    this.description = description;
   }
 
   public void addToClassloaders() {
@@ -56,14 +60,22 @@ public class PluginClassLoader extends URLClassLoader {
   }
 
   @Override
-  protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-    return loadClass0(name, resolve, true);
+  protected Class<?> findClass(String name) throws ClassNotFoundException {
+    return findClass0(name, true);
   }
 
-  private Class<?> loadClass0(String name, boolean resolve, boolean checkOther)
+  private boolean isKtLanguagePlugin() {
+    return description.id().equals("velocity-language-kotlin");
+  }
+
+  private Class<?> findClass0(String name, boolean checkOther)
       throws ClassNotFoundException {
+    if (name.startsWith("com.velocitypowered") && !isKtLanguagePlugin()) {
+      throw new ClassNotFoundException();
+    }
+
     try {
-      return super.loadClass(name, resolve);
+      return super.findClass(name);
     } catch (ClassNotFoundException ignored) {
       // Ignored: we'll try others
     }
@@ -72,7 +84,7 @@ public class PluginClassLoader extends URLClassLoader {
       for (PluginClassLoader loader : loaders) {
         if (loader != this) {
           try {
-            return loader.loadClass0(name, resolve, false);
+            return loader.findClass0(name, false);
           } catch (ClassNotFoundException ignored) {
             // We're trying others, safe to ignore
           }
@@ -81,5 +93,10 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     throw new ClassNotFoundException(name);
+  }
+
+  @Override
+  public String toString() {
+    return "plugin " + this.description.name();
   }
 }

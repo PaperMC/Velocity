@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.permission;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.PermissionSubject;
@@ -17,7 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <p>This event is only called once per subject, on initialisation.</p>
  */
-public interface PermissionsSetupEvent {
+public interface PermissionsSetupEvent extends Event {
 
   PermissionSubject subject();
 

@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
+import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -33,7 +33,7 @@ public interface KickedFromServerEvent extends
    *
    * @return the server kicked the player from the server
    */
-  Optional<Component> serverKickReason();
+  @Nullable Component serverKickReason();
 
   /**
    * Returns whether or not the player got kicked while connecting to another server.
@@ -41,6 +41,33 @@ public interface KickedFromServerEvent extends
    * @return whether or not the player got kicked
    */
   boolean kickedDuringServerConnect();
+
+  /**
+   * Handles the event by disconnecting the player with the specified {@code reason}.
+   *
+   * @param reason the reason for disconnecting the player
+   */
+  default void handleByDisconnecting(Component reason) {
+    setResult(DisconnectPlayer.create(reason));
+  }
+
+  /**
+   * Handles the event by falling back on the specified server.
+   *
+   * @param server the server to fall back to
+   */
+  default void handleByConnectingToServer(RegisteredServer server) {
+    setResult(RedirectPlayer.create(server));
+  }
+
+  /**
+   * Handles the event by giving the player the specified {@code reason}.
+   *
+   * @param reason the reason for being kicked
+   */
+  default void handleByNotifying(Component reason) {
+    setResult(Notify.create(reason));
+  }
 
   /**
    * Represents the base interface for {@link KickedFromServerEvent} results.
@@ -78,6 +105,23 @@ public interface KickedFromServerEvent extends
     public static DisconnectPlayer create(Component reason) {
       return new DisconnectPlayer(reason);
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      DisconnectPlayer that = (DisconnectPlayer) o;
+      return Objects.equals(message, that.message);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message);
+    }
   }
 
   /**
@@ -86,7 +130,7 @@ public interface KickedFromServerEvent extends
    */
   final class RedirectPlayer implements ServerKickResult {
 
-    private final Component message;
+    private final @Nullable Component message;
     private final RegisteredServer server;
 
     private RedirectPlayer(RegisteredServer server,
@@ -104,7 +148,7 @@ public interface KickedFromServerEvent extends
       return server;
     }
 
-    public Component message() {
+    public @Nullable Component message() {
       return message;
     }
 
@@ -121,6 +165,24 @@ public interface KickedFromServerEvent extends
 
     public static ServerKickResult create(RegisteredServer server) {
       return new RedirectPlayer(server, null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      RedirectPlayer that = (RedirectPlayer) o;
+      return Objects.equals(message, that.message) && Objects
+          .equals(server, that.server);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message, server);
     }
   }
 
@@ -154,6 +216,23 @@ public interface KickedFromServerEvent extends
      */
     public static Notify create(Component message) {
       return new Notify(message);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Notify notify = (Notify) o;
+      return Objects.equals(message, notify.message);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message);
     }
   }
 }

@@ -22,6 +22,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.network.PluginMessageUtil.constructChannelsPacket;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -41,7 +42,6 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
@@ -57,6 +57,7 @@ import com.velocitypowered.proxy.network.packet.serverbound.ServerboundKeepAlive
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundResourcePackResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundTabCompleteRequestPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -65,11 +66,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -176,14 +175,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       PlayerChatEvent event = new PlayerChatEventImpl(player, msg);
       server.eventManager().fire(event)
           .thenAcceptAsync(pme -> {
-            PlayerChatEventImpl.ChatResult chatResult = pme.result();
-            if (chatResult.isAllowed()) {
-              Optional<String> eventMsg = pme.result().modifiedMessage();
-              if (eventMsg.isPresent()) {
-                smc.write(new ServerboundChatPacket(eventMsg.get()));
-              } else {
-                smc.write(packet);
-              }
+            if (pme.result().isAllowed()) {
+              smc.write(new ServerboundChatPacket(pme.currentMessage()));
             }
           }, smc.eventLoop())
           .exceptionally((ex) -> {
@@ -210,7 +203,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     VelocityServerConnection serverConn = player.getConnectedServer();
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
-      if (backendConn.getState() != StateRegistry.PLAY) {
+      if (backendConn.getState() != ProtocolStates.PLAY) {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
@@ -605,7 +598,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
-    String commandToRun = result.modifiedCommand().orElse(originalCommand);
+    String commandToRun = MoreObjects.firstNonNull(result.modifiedCommand(), originalCommand);
     if (result.isForwardToServer()) {
       return CompletableFuture.runAsync(() -> smc.write(new ServerboundChatPacket("/"
           + commandToRun)), smc.eventLoop());

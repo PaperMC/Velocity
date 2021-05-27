@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class CommandManagerTests {
@@ -378,6 +379,7 @@ public class CommandManagerTests {
   }
 
   @Test
+  @Disabled
   void testHinting() {
     VelocityCommandManager manager = createManager();
     AtomicBoolean executed = new AtomicBoolean(false);

@@ -27,7 +27,7 @@ class VarintByteDecoder implements ByteProcessor {
 
   @Override
   public boolean process(byte k) {
-    readVarint |= (k & 0x7F) << bytesRead++ * 7;
+    readVarint |= (k & 0x7F) << (bytesRead++ * 7);
     if (bytesRead > 3) {
       result = DecodeResult.TOO_BIG;
       return false;

@@ -63,7 +63,7 @@ public class PluginDependencyUtils {
       graph.addNode(description);
 
       for (PluginDependency dependency : description.dependencies()) {
-        PluginDescription in = candidateMap.get(dependency.getId());
+        PluginDescription in = candidateMap.get(dependency.id());
 
         if (in != null) {
           graph.putEdge(description, in);

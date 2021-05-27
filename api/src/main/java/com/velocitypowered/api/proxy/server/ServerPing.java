@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -60,20 +59,20 @@ public final class ServerPing {
     return version;
   }
 
-  public Optional<Players> players() {
-    return Optional.ofNullable(players);
+  public @Nullable Players players() {
+    return players;
   }
 
   public Component description() {
     return description;
   }
 
-  public Optional<Favicon> favicon() {
-    return Optional.ofNullable(favicon);
+  public @Nullable Favicon favicon() {
+    return favicon;
   }
 
-  public Optional<ModInfo> modInfo() {
-    return Optional.ofNullable(modinfo);
+  public @Nullable ModInfo modInfo() {
+    return modinfo;
   }
 
   @Override
@@ -151,7 +150,7 @@ public final class ServerPing {
     private final List<SamplePlayer> samplePlayers = new ArrayList<>();
     private String modType = "FML";
     private final List<ModInfo.Mod> mods = new ArrayList<>();
-    private Component description;
+    private @Nullable Component description;
     private @Nullable Favicon favicon;
     private boolean nullOutPlayers;
     private boolean nullOutModinfo;
@@ -271,12 +270,12 @@ public final class ServerPing {
       return samplePlayers;
     }
 
-    public Optional<Component> getDescription() {
-      return Optional.ofNullable(description);
+    public @Nullable Component getDescription() {
+      return description;
     }
 
-    public Optional<Favicon> getFavicon() {
-      return Optional.ofNullable(favicon);
+    public @Nullable Favicon getFavicon() {
+      return favicon;
     }
 
     public String getModType() {

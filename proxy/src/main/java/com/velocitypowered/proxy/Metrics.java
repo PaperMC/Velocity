@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bstats.MetricsBase;
@@ -37,7 +40,7 @@ import org.bstats.json.JsonObjectBuilder;
 
 public class Metrics {
 
-  private MetricsBase metricsBase;
+  private @Nullable MetricsBase metricsBase;
 
   private Metrics(Logger logger, int serviceId, boolean defaultEnabled) {
     File configFile = Paths.get("plugins").resolve("bStats").resolve("config.txt").toFile();
@@ -47,6 +50,11 @@ public class Metrics {
     } catch (IOException e) {
       logger.error("Failed to create bStats config", e);
       return;
+    }
+
+    // Disable the relocate check if velocity doesn't have bStats relocated, this happens in dev
+    if (!MetricsBase.class.getPackageName().startsWith(getClass().getPackageName())) {
+      System.setProperty("bstats.relocatecheck", "false");
     }
 
     metricsBase = new MetricsBase(
@@ -85,7 +93,9 @@ public class Metrics {
    * @param chart The chart to add.
    */
   public void addCustomChart(CustomChart chart) {
-    metricsBase.addCustomChart(chart);
+    if (metricsBase != null) {
+      metricsBase.addCustomChart(chart);
+    }
   }
 
   private void appendPlatformData(JsonObjectBuilder builder) {
@@ -113,7 +123,7 @@ public class Metrics {
               () -> server.configuration().isOnlineMode() ? "online" : "offline")
       );
       metrics.addCustomChart(new SimplePie("velocity_version",
-          () -> server.version().getVersion()));
+          () -> server.version().version()));
 
       metrics.addCustomChart(new DrilldownPie("java_version", () -> {
         Map<String, Map<String, Integer>> map = new HashMap<>();
@@ -126,7 +136,7 @@ public class Metrics {
         // java.version system property to return $major[.$minor][.$security][-ea], as opposed to
         // 1.$major.0_$identifier we can handle pre-9 by checking if the "major" is equal to "1",
         // otherwise, 9+
-        String majorVersion = javaVersion.split("\\.")[0];
+        String majorVersion = Iterables.get(Splitter.on('.').split(javaVersion), 0);
         String release;
 
         int indexOf = javaVersion.lastIndexOf('.');

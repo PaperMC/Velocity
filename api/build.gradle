@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'org.cadixdev.licenser'
 apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply from: '../gradle/errorprone.gradle'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -16,12 +16,6 @@ java {
 
 license {
     header = project.file('HEADER.txt')
-}
-
-sourceSets {
-    ap {
-        compileClasspath += main.compileClasspath + main.output
-    }
 }
 
 dependencies {
@@ -55,20 +49,10 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource
-    from sourceSets.ap.output
-}
-
-jar {
-    from sourceSets.ap.output
-}
-
-shadowJar {
-    from sourceSets.ap.output
 }
 
 artifacts {
     archives javadocJar
-    archives shadowJar
     archives sourcesJar
 }
 
@@ -76,13 +60,13 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.source = '8'
-//    options.links(
-//            'https://www.slf4j.org/apidocs/',
-//            'https://guava.dev/releases/30.0-jre/api/docs/',
-//            'https://google.github.io/guice/api-docs/4.2/javadoc/',
-//            'https://docs.oracle.com/javase/8/docs/api/',
-//            'https://jd.adventure.kyori.net/api/4.0.0/'
-//    )
+    options.links(
+            'http://www.slf4j.org/apidocs/',
+            'https://google.github.io/guava/releases/30.0-jre/api/docs/',
+            'https://google.github.io/guice/api-docs/4.2/javadoc/',
+            'https://docs.oracle.com/javase/8/docs/api/',
+            'https://jd.adventure.kyori.net/api/4.7.0/'
+    )
 
     // Disable the crazy super-strict doclint tool in Java 8
     options.addStringOption('Xdoclint:none', '-quiet')

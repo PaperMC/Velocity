@@ -7,13 +7,14 @@
 
 package com.velocitypowered.api.event.lifecycle.network;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.network.ListenerType;
 import java.net.SocketAddress;
 
 /**
  * This event is fired by the proxy before the proxy stops accepting connections.
  */
-public interface ListenerClosedEvent {
+public interface ListenerClosedEvent extends Event {
 
   SocketAddress address();
 

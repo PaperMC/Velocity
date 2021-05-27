@@ -20,6 +20,7 @@ package com.velocitypowered.natives.util;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class NativeCodeLoader<T> implements Supplier<T> {
@@ -56,7 +57,7 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
     private final Runnable setup;
     private final String name;
     private final Supplier<T> object;
-    private T constructed;
+    private @MonotonicNonNull T constructed;
 
     Variant(BooleanSupplier possiblyAvailable, Runnable setup, String name, T object) {
       this(possiblyAvailable, setup, name, () -> object);

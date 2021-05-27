@@ -19,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ServerPostConnectEventImpl implements ServerPostConnectEvent {
 
   private final Player player;
-  private final RegisteredServer previousServer;
+  private final @Nullable RegisteredServer previousServer;
 
   public ServerPostConnectEventImpl(Player player,
       @Nullable RegisteredServer previousServer) {

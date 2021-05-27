@@ -23,14 +23,17 @@ import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+// TODO: This class is in dire need of a refactor. Suppressing the warning is only done as an
+//       implicit acknowledgement that this code is very bad.
+@SuppressWarnings("NullAway")
 public class ClientboundRespawnPacket implements Packet {
   public static final PacketReader<ClientboundRespawnPacket> DECODER = PacketReader.method(ClientboundRespawnPacket::new);
   public static final PacketWriter<ClientboundRespawnPacket> ENCODER = PacketWriter.deprecatedEncode();
@@ -49,13 +52,14 @@ public class ClientboundRespawnPacket implements Packet {
   }
 
   public ClientboundRespawnPacket(int dimension, long partialHashedSeed, short difficulty, short gamemode,
-                                  String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo,
-                                  short previousGamemode, DimensionData currentDimensionData) {
+                                  @Nullable String levelType, boolean shouldKeepPlayerData,
+                                  DimensionInfo dimensionInfo, short previousGamemode,
+                                  DimensionData currentDimensionData) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
     this.gamemode = gamemode;
-    this.levelType = levelType;
+    this.levelType = levelType == null ? "" : levelType;
     this.shouldKeepPlayerData = shouldKeepPlayerData;
     this.dimensionInfo = dimensionInfo;
     this.previousGamemode = previousGamemode;
@@ -119,7 +123,7 @@ public class ClientboundRespawnPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {

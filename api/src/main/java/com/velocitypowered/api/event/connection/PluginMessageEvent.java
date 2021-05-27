@@ -20,7 +20,7 @@ import java.io.ByteArrayInputStream;
  * This event is fired when a plugin message is sent to the proxy, either from a client ({@link
  * Player}) or a server ({@link ServerConnection}).
  */
-public interface PluginMessageEvent extends ResultedEvent<PluginMessageEvent.ForwardResult> {
+public interface PluginMessageEvent extends ResultedEvent<ResultedEvent.GenericResult> {
 
   ChannelMessageSource source();
 
@@ -34,36 +34,11 @@ public interface PluginMessageEvent extends ResultedEvent<PluginMessageEvent.For
 
   ByteArrayDataInput messageAsDataInput();
 
-  /**
-   * A result determining whether or not to forward this message on.
-   */
-  public static final class ForwardResult implements Result {
-
-    private static final ForwardResult ALLOWED = new ForwardResult(true);
-    private static final ForwardResult DENIED = new ForwardResult(false);
-
-    private final boolean status;
-
-    private ForwardResult(boolean b) {
-      this.status = b;
-    }
-
-    @Override
-    public boolean isAllowed() {
-      return status;
-    }
-
-    @Override
-    public String toString() {
-      return status ? "forward to sink" : "handled message at proxy";
-    }
-
-    public static ForwardResult forward() {
-      return ALLOWED;
-    }
-
-    public static ForwardResult handled() {
-      return DENIED;
+  default void setHandled(boolean handled) {
+    if (handled) {
+      setResult(ResultedEvent.GenericResult.denied());
+    } else {
+      setResult(ResultedEvent.GenericResult.allowed());
     }
   }
 }

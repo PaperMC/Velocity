@@ -21,9 +21,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
+import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.Semver.SemverType;
+import com.vdurmont.semver4j.SemverException;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
@@ -35,6 +39,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
+import com.velocitypowered.proxy.plugin.util.ProxyPluginContainer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -43,32 +48,36 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityPluginManager implements PluginManager {
 
   private static final Logger logger = LogManager.getLogger(VelocityPluginManager.class);
 
   private final Map<String, PluginContainer> plugins = new LinkedHashMap<>();
-  private final Map<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
+  private final IdentityHashMap<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
   private final VelocityServer server;
 
   public VelocityPluginManager(VelocityServer server) {
     this.server = checkNotNull(server, "server");
+
+    // Register ourselves as a plugin
+    this.registerPlugin(ProxyPluginContainer.VELOCITY);
   }
 
   private void registerPlugin(PluginContainer plugin) {
     plugins.put(plugin.description().id(), plugin);
-    Optional<?> instance = plugin.instance();
-    instance.ifPresent(o -> pluginInstances.put(o, plugin));
+    Object instance = plugin.instance();
+    if (instance != null) {
+      pluginInstances.put(instance, plugin);
+    }
   }
 
   /**
@@ -89,7 +98,7 @@ public class VelocityPluginManager implements PluginManager {
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadPluginDescription(path));
+          found.addAll(loader.loadPluginCandidates(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
         }
@@ -103,25 +112,56 @@ public class VelocityPluginManager implements PluginManager {
 
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
 
-    Set<String> loadedPluginsById = new HashSet<>();
+    Map<String, PluginContainer> loadedPluginsById = new HashMap<>(this.plugins);
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
     // Now load the plugins
     pluginLoad:
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
       for (PluginDependency dependency : candidate.dependencies()) {
-        if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
-          logger.error("Can't load plugin {} due to missing dependency {}", candidate.id(),
-              dependency.getId());
-          continue pluginLoad;
+        final PluginContainer dependencyContainer = loadedPluginsById.get(dependency.id());
+        if (dependencyContainer == null) {
+          if (dependency.optional()) {
+            logger.warn("Plugin {} has an optional dependency {} that is not available",
+                candidate.id(), dependency.id());
+          } else {
+            logger.error("Can't load plugin {} due to missing dependency {}",
+                candidate.id(), dependency.id());
+            continue pluginLoad;
+          }
+        } else {
+          String requiredRange = dependency.version();
+          if (!requiredRange.isEmpty()) {
+            try {
+              Semver dependencyCandidateVersion = new Semver(
+                  dependencyContainer.description().version(), SemverType.NPM);
+              if (!dependencyCandidateVersion.satisfies(requiredRange)) {
+                if (!dependency.optional()) {
+                  logger.error(
+                      "Can't load plugin {} due to incompatible dependency {} {} (you have {})",
+                      candidate.id(), dependency.id(), requiredRange,
+                      dependencyContainer.description().version());
+                  continue pluginLoad;
+                } else {
+                  logger.warn(
+                      "Plugin {} has an optional dependency on {} {}, but you have {}",
+                      candidate.id(), dependency.id(), requiredRange,
+                      dependencyContainer.description().version());
+                }
+              }
+            } catch (SemverException exception) {
+              logger.warn("Can't check dependency of {} for the proper version of {},"
+                      + " assuming they are compatible", candidate.id(), dependency.id());
+            }
+          }
         }
       }
 
       try {
-        PluginDescription realPlugin = loader.loadPlugin(candidate);
+        PluginDescription realPlugin = loader.materializePlugin(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
-        loadedPluginsById.add(realPlugin.id());
+        loadedPluginsById.put(candidate.id(), container);
       } catch (Exception e) {
         logger.error("Can't create module for plugin {}", candidate.id(), e);
       }
@@ -154,27 +194,27 @@ public class VelocityPluginManager implements PluginManager {
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", description.id(), description.version()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.authors()));
+      logger.info("Loaded plugin {} {} by {}", description.id(), MoreObjects.firstNonNull(
+          description.version(), "<UNKNOWN>"), Joiner.on(", ").join(description.authors()));
       registerPlugin(container);
     }
   }
 
   @Override
-  public Optional<PluginContainer> fromInstance(Object instance) {
+  public @Nullable PluginContainer fromInstance(Object instance) {
     checkNotNull(instance, "instance");
 
     if (instance instanceof PluginContainer) {
-      return Optional.of((PluginContainer) instance);
+      return (PluginContainer) instance;
     }
 
-    return Optional.ofNullable(pluginInstances.get(instance));
+    return pluginInstances.get(instance);
   }
 
   @Override
-  public Optional<PluginContainer> getPlugin(String id) {
+  public @Nullable PluginContainer getPlugin(String id) {
     checkNotNull(id, "id");
-    return Optional.ofNullable(plugins.get(id));
+    return plugins.get(id);
   }
 
   @Override
@@ -191,12 +231,12 @@ public class VelocityPluginManager implements PluginManager {
   public void addToClasspath(Object plugin, Path path) {
     checkNotNull(plugin, "instance");
     checkNotNull(path, "path");
-    Optional<PluginContainer> optContainer = fromInstance(plugin);
-    checkArgument(optContainer.isPresent(), "plugin is not loaded");
-    Optional<?> optInstance = optContainer.get().instance();
-    checkArgument(optInstance.isPresent(), "plugin has no instance");
+    PluginContainer optContainer = fromInstance(plugin);
+    if (optContainer == null) {
+      throw new IllegalArgumentException("plugin is not loaded");
+    }
 
-    ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();
+    ClassLoader pluginClassloader = plugin.getClass().getClassLoader();
     if (pluginClassloader instanceof PluginClassLoader) {
       ((PluginClassLoader) pluginClassloader).addPath(path);
     } else {

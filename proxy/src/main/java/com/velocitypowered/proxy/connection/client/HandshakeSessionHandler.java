@@ -29,16 +29,18 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyHandshakePacket;
 import com.velocitypowered.proxy.network.packet.legacy.LegacyPingPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Optional;
+import java.net.SocketAddress;
+import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -81,37 +83,34 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerboundHandshakePacket handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+    ProtocolRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
       connection.close(true);
     } else {
-      connection.setState(nextState);
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
-      switch (nextState) {
-        case STATUS:
-          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
-          break;
-        case LOGIN:
-          this.handleLogin(handshake, ic);
-          break;
-        default:
-          // If you get this, it's a bug in Velocity.
-          throw new AssertionError("getStateForProtocol provided invalid state!");
+      if (nextState == ProtocolStates.STATUS) {
+        connection.setState(nextState);
+        connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+      } else if (nextState == ProtocolStates.LOGIN) {
+        this.handleLogin(handshake, ic);
+      } else {
+        // If you get this, it's a bug in Velocity.
+        throw new AssertionError("getStateForProtocol provided invalid state!");
       }
     }
 
     return true;
   }
 
-  private static @Nullable StateRegistry getStateForProtocol(int status) {
+  private static @Nullable ProtocolRegistry getStateForProtocol(int status) {
     switch (status) {
-      case StateRegistry.STATUS_ID:
-        return StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID:
-        return StateRegistry.LOGIN;
+      case ServerboundHandshakePacket.STATUS_ID:
+        return ProtocolStates.STATUS;
+      case ServerboundHandshakePacket.LOGIN_ID:
+        return ProtocolStates.LOGIN;
       default:
         return null;
     }
@@ -120,12 +119,6 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private void handleLogin(ServerboundHandshakePacket handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
       ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client"));
-      return;
-    }
-
-    InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-    if (!server.getIpAttemptLimiter().attempt(address)) {
-      ic.disconnectQuietly(Component.translatable("velocity.error.logging-in-too-fast"));
       return;
     }
 
@@ -140,8 +133,41 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    server.eventManager().fireAndForget(new ConnectionHandshakeEventImpl(ic));
-    connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+    connection.setAutoReading(false);
+    connection.setState(ProtocolStates.LOGIN);
+    server.eventManager().fire(new ConnectionHandshakeEventImpl(ic, handshake.getServerAddress()))
+        .thenAcceptAsync(event -> {
+          if (connection.isClosed()) {
+            return;
+          }
+
+          @Nullable Component disconnectReason = event.result().reason();
+          if (disconnectReason != null) {
+            ic.disconnectQuietly(disconnectReason);
+          } else {
+            // if the handshake is changed, propagate the change
+            if (!event.currentHostname().equals(event.originalHostname())) {
+              ic.setCleanedHostname(cleanVhost(event.currentHostname()));
+            }
+
+            if (!Objects.equals(event.currentRemoteHostAddress(), ic.remoteAddress())) {
+              ic.setRemoteAddress(event.currentRemoteHostAddress());
+            }
+
+            if (connection.getRemoteAddress() instanceof InetSocketAddress) {
+              InetAddress address = ((InetSocketAddress) connection.getRemoteAddress())
+                  .getAddress();
+              if (!server.getIpAttemptLimiter().attempt(address)) {
+                ic.disconnectQuietly(
+                    Component.translatable("velocity.error.logging-in-too-fast"));
+                return;
+              }
+            }
+
+            connection.setSessionHandler(new LoginSessionHandler(server, connection, ic));
+            connection.setAutoReading(true);
+          }
+        }, connection.eventLoop());
   }
 
   private ConnectionType getHandshakeConnectionType(ServerboundHandshakePacket handshake) {
@@ -208,13 +234,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public InetSocketAddress remoteAddress() {
-      return (InetSocketAddress) connection.getRemoteAddress();
+    public @Nullable SocketAddress remoteAddress() {
+      return connection.getRemoteAddress();
     }
 
     @Override
-    public Optional<InetSocketAddress> connectedHost() {
-      return Optional.ofNullable(ping.getVhost());
+    public @Nullable InetSocketAddress connectedHostname() {
+      return ping.getVhost();
     }
 
     @Override

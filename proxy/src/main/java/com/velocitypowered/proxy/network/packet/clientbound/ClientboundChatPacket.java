@@ -21,58 +21,38 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
+import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientboundChatPacket implements Packet {
-  public static final PacketReader<ClientboundChatPacket> DECODER = PacketReader.method(ClientboundChatPacket::new);
-  public static final PacketWriter<ClientboundChatPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketReader<ClientboundChatPacket> DECODER = PacketReader.unsupported();
+  public static final PacketWriter<ClientboundChatPacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeString(out, packet.message);
+    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+      out.writeByte(packet.type);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+        ProtocolUtils.writeUuid(out, packet.sender.uuid());
+      }
+    }
+  };
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
   public static final byte GAME_INFO_TYPE = (byte) 2;
 
-  private @Nullable String message;
+  private String message;
   private byte type;
-  private @Nullable UUID sender;
+  private Identity sender;
 
-  private ClientboundChatPacket() {
-  }
-
-  public ClientboundChatPacket(String message, byte type, UUID sender) {
+  public ClientboundChatPacket(String message, byte type, Identity sender) {
     this.message = message;
     this.type = type;
     this.sender = sender;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    message = ProtocolUtils.readString(buf);
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      type = buf.readByte();
-      if (version.gte(ProtocolVersion.MINECRAFT_1_16)) {
-        sender = ProtocolUtils.readUuid(buf);
-      }
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    if (message == null) {
-      throw new IllegalStateException("Message is not specified");
-    }
-    ProtocolUtils.writeString(buf, message);
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      buf.writeByte(type);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-        ProtocolUtils.writeUuid(buf, sender);
-      }
-    }
   }
 
   @Override
@@ -89,10 +69,6 @@ public class ClientboundChatPacket implements Packet {
 
   public byte getType() {
     return type;
-  }
-
-  public UUID getSenderUuid() {
-    return sender;
   }
 
   @Override

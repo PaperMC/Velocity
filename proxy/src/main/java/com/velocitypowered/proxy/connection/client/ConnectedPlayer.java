@@ -50,7 +50,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -59,7 +58,6 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.PluginMessageUtil;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
@@ -69,6 +67,7 @@ import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourceP
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -82,7 +81,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -163,17 +161,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public String username() {
-    return profile.getName();
+    return profile.name();
   }
 
   @Override
   public UUID id() {
-    return profile.getId();
+    return profile.uuid();
   }
 
   @Override
-  public Optional<ServerConnection> connectedServer() {
-    return Optional.ofNullable(connectedServer);
+  public @Nullable ServerConnection connectedServer() {
+    return connectedServer;
   }
 
   /**
@@ -223,8 +221,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public Optional<ModInfo> modInfo() {
-    return Optional.ofNullable(modInfo);
+  public @Nullable ModInfo modInfo() {
+    return modInfo;
   }
 
   public void setModInfo(ModInfo modInfo) {
@@ -233,13 +231,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public SocketAddress remoteAddress() {
+  public @Nullable SocketAddress remoteAddress() {
     return connection.getRemoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> connectedHost() {
-    return Optional.ofNullable(virtualHost);
+  public @Nullable InetSocketAddress connectedHostname() {
+    return virtualHost;
   }
 
   void setPermissionFunction(PermissionFunction permissionFunction) {
@@ -274,7 +272,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         type == MessageType.CHAT
             ? ClientboundChatPacket.CHAT_TYPE
             : ClientboundChatPacket.SYSTEM_TYPE,
-        identity.uuid()
+        identity
     ));
   }
 
@@ -298,7 +296,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connection.write(new ClientboundChatPacket(
           object.toString(),
           ClientboundChatPacket.GAME_INFO_TYPE,
-          Identity.nil().uuid()
+          Identity.nil()
       ));
     }
   }
@@ -510,9 +508,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     boolean kickedFromCurrent = connectedServer == null || connectedServer.target().equals(rs);
     ServerKickResult result;
     if (kickedFromCurrent) {
-      Optional<RegisteredServer> next = getNextServerToTry(rs);
-      result = next.map(RedirectPlayer::create)
-          .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
+      RegisteredServer next = getNextServerToTry(rs);
+      if (next == null) {
+        result = DisconnectPlayer.create(friendlyReason);
+      } else {
+        result = RedirectPlayer.create(next);
+      }
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
       if (connectionInFlight != null && connectionInFlight.target().equals(rs)) {
@@ -563,11 +564,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case CONNECTION_IN_PROGRESS:
                     // Fatal case
                     case CONNECTION_CANCELLED:
-                      disconnect(status.failureReason().orElse(res.message()));
+                      Component disconnectReason = status.failureReason();
+                      if (disconnectReason == null) {
+                        disconnectReason = res.message();
+                        if (disconnectReason == null) {
+                          disconnectReason = ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR;
+                        }
+                      }
+                      disconnect(disconnectReason);
                       break;
                     case SERVER_DISCONNECTED:
-                      Component reason = status.failureReason()
-                          .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                      Component reason = status.failureReason() != null ? status.failureReason()
+                          : ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR;
                       handleConnectionException(res.getServer(), ClientboundDisconnectPacket.create(reason,
                           protocolVersion()), ((Impl) status).isSafe());
                       break;
@@ -593,7 +601,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             // In case someone gets creative, assume we want to disconnect the player.
             disconnect(friendlyReason);
           }
-        }, connection.eventLoop());
+        }, connection.eventLoop())
+        .exceptionally(throwable -> {
+          logger.error("Unable to handle server disconnection for {}", this, throwable);
+          disconnect(friendlyReason);
+          return null;
+        });
   }
 
   /**
@@ -602,7 +615,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    *
    * @return the next server to try
    */
-  public Optional<RegisteredServer> getNextServerToTry() {
+  public @Nullable RegisteredServer getNextServerToTry() {
     return this.getNextServerToTry(null);
   }
 
@@ -614,9 +627,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    *
    * @return the next server to try
    */
-  private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
+  private @Nullable RegisteredServer getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
-      String virtualHostStr = connectedHost().map(InetSocketAddress::getHostString).orElse("");
+      InetSocketAddress vhost = connectedHostname();
+      String virtualHostStr = vhost == null ? "" : vhost.getHostString().toLowerCase(Locale.ROOT);
       serversToTry = server.configuration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
     }
@@ -636,7 +650,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       tryIndex = i;
       return server.server(toTryName);
     }
-    return Optional.empty();
+    return null;
   }
 
   private static boolean hasSameName(RegisteredServer server, String name) {
@@ -683,15 +697,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connectedServer.disconnect();
     }
 
-    Optional<Player> connectedPlayer = server.getPlayer(this.id());
+    Player connectedPlayer = server.player(this.id());
     server.unregisterConnection(this);
 
-    DisconnectEventImpl.LoginStatus status;
-    if (connectedPlayer.isPresent()) {
-      if (!connectedPlayer.get().connectedServer().isPresent()) {
+    LoginStatus status;
+    if (connectedPlayer != null) {
+      if (connectedPlayer.connectedServer() != null) {
         status = LoginStatus.PRE_SERVER_JOIN;
       } else {
-        status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
+        status = connectedPlayer == this ? LoginStatus.SUCCESSFUL_LOGIN
             : LoginStatus.CONFLICTING_LOGIN;
       }
     } else {
@@ -715,7 +729,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public String toString() {
-    return "[connected player] " + profile.getName() + " (" + remoteAddress() + ")";
+    return "[connected player] " + profile.name() + " (" + remoteAddress() + ")";
   }
 
   @Override
@@ -768,7 +782,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    * ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
+    if (connection.getState() == ProtocolStates.PLAY) {
       connection.write(new ClientboundKeepAlivePacket(ThreadLocalRandom.current().nextLong()));
     }
   }
@@ -846,45 +860,44 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return toConnect;
     }
 
-    private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
+    private ConnectionRequestBuilder.@Nullable Status checkServer(RegisteredServer server) {
       Preconditions.checkArgument(server instanceof VelocityRegisteredServer,
           "Not a valid Velocity server.");
       if (connectionInFlight != null || (connectedServer != null
           && !connectedServer.hasCompletedJoin())) {
-        return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
+        return ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS;
       }
       if (connectedServer != null && connectedServer.target().equals(server)) {
-        return Optional.of(ALREADY_CONNECTED);
+        return ALREADY_CONNECTED;
       }
-      return Optional.empty();
+      return null;
     }
 
-    private CompletableFuture<Optional<Status>> getInitialStatus() {
+    private CompletableFuture<ConnectionRequestBuilder.Status> getInitialStatus() {
       return CompletableFuture.supplyAsync(() -> checkServer(toConnect), connection.eventLoop());
     }
 
     private CompletableFuture<Impl> internalConnect() {
       return this.getInitialStatus()
           .thenCompose(initialCheck -> {
-            if (initialCheck.isPresent()) {
-              return completedFuture(plainResult(initialCheck.get(), toConnect));
+            if (initialCheck != null) {
+              return completedFuture(plainResult(initialCheck, toConnect));
             }
 
             ServerPreConnectEvent event = new ServerPreConnectEventImpl(ConnectedPlayer.this,
                 toConnect);
             return server.eventManager().fire(event)
                 .thenComposeAsync(newEvent -> {
-                  Optional<RegisteredServer> newDest = newEvent.result().target();
-                  if (!newDest.isPresent()) {
+                  RegisteredServer realDestination = newEvent.result().target();
+                  if (realDestination == null) {
                     return completedFuture(
                         plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect)
                     );
                   }
 
-                  RegisteredServer realDestination = newDest.get();
-                  Optional<ConnectionRequestBuilder.Status> check = checkServer(realDestination);
-                  if (check.isPresent()) {
-                    return completedFuture(plainResult(check.get(), realDestination));
+                  ConnectionRequestBuilder.Status secondCheck = checkServer(realDestination);
+                  if (secondCheck != null) {
+                    return completedFuture(plainResult(secondCheck, realDestination));
                   }
 
                   VelocityRegisteredServer vrs = (VelocityRegisteredServer) realDestination;
@@ -944,8 +957,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 // Ignored; the plugin probably already handled this.
                 break;
               case SERVER_DISCONNECTED:
-                Component reason = status.failureReason()
-                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                Component reason = status.failureReason() != null ? status.failureReason()
+                    : ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR;
                 handleConnectionException(toConnect, ClientboundDisconnectPacket.create(reason,
                     protocolVersion()), status.isSafe());
                 break;

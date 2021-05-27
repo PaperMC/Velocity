@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -43,7 +44,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -217,19 +217,19 @@ public class VelocityCommand implements SimpleCommand {
 
       ProxyVersion version = server.version();
 
-      Component velocity = Component.text().content(version.getName() + " ")
+      Component velocity = Component.text().content(version.name() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
-          .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
+          .append(Component.text(version.version()).decoration(TextDecoration.BOLD, false))
           .build();
       Component copyright = Component
           .translatable("velocity.command.version-copyright",
-              Component.text(version.getVendor()),
-              Component.text(version.getName()));
+              Component.text(version.vendor()),
+              Component.text(version.name()));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
-      if (version.getName().equals("Velocity")) {
+      if (version.name().equals("Velocity")) {
         TextComponent embellishment = Component.text()
             .append(Component.text().content("velocitypowered.com")
                 .color(NamedTextColor.GREEN)
@@ -282,29 +282,31 @@ public class VelocityCommand implements SimpleCommand {
       TranslatableComponent.Builder output = Component.translatable()
           .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW);
+
+      TextComponent.Builder listBuilder = Component.text();
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        output.append(componentForPlugin(plugin.description()));
+        listBuilder.append(componentForPlugin(plugin.description()));
         if (i + 1 < pluginCount) {
-          output.append(Component.text(", "));
+          listBuilder.append(Component.text(", "));
         }
       }
 
-      source.sendMessage(Identity.nil(), output.build());
+      source.sendMessage(Identity.nil(), output.args(listBuilder.build()).build());
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
-      String pluginInfo = description.name().orElse(description.id())
-          + description.version().map(v -> " " + v).orElse("");
+      String pluginInfo = description.name();
 
       TextComponent.Builder hoverText = Component.text().content(pluginInfo);
 
-      description.url().ifPresent(url -> {
+      String pluginUrl = description.url();
+      if (pluginUrl != null) {
         hoverText.append(Component.newline());
         hoverText.append(Component.translatable(
             "velocity.command.plugin-tooltip-website",
-            Component.text(url)));
-      });
+            Component.text(pluginUrl)));
+      }
       if (!description.authors().isEmpty()) {
         hoverText.append(Component.newline());
         if (description.authors().size() == 1) {
@@ -312,17 +314,19 @@ public class VelocityCommand implements SimpleCommand {
               Component.text(description.authors().get(0))));
         } else {
           hoverText.append(
-              Component.translatable("velocity.command.plugin-tooltip-author",
+              Component.translatable("velocity.command.plugin-tooltip-authors",
                 Component.text(String.join(", ", description.authors()))
               )
           );
         }
       }
-      description.description().ifPresent(pdesc -> {
+
+      String humanDescription = description.description();
+      if (humanDescription != null) {
         hoverText.append(Component.newline());
         hoverText.append(Component.newline());
-        hoverText.append(Component.text(pdesc));
-      });
+        hoverText.append(Component.text(humanDescription));
+      }
 
       return Component.text(description.id(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
@@ -375,14 +379,14 @@ public class VelocityCommand implements SimpleCommand {
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
 
-      source.sendMessage(Component.text().content("Uploading gathered information...").build());
+      source.sendMessage(Component.translatable("velocity.command.dump-uploading"));
       AsyncHttpClient httpClient = ((VelocityServer) server).getAsyncHttpClient();
 
       BoundRequestBuilder request =
               httpClient.preparePost("https://dump.velocitypowered.com/documents");
       request.setHeader("Content-Type", "text/plain");
-      request.addHeader("User-Agent", server.version().getName() + "/"
-              + server.version().getVersion());
+      request.addHeader("User-Agent", server.version().name() + "/"
+              + server.version().version());
       request.setBody(
               InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
 
@@ -391,12 +395,8 @@ public class VelocityCommand implements SimpleCommand {
         try {
           Response response = future.get();
           if (response.getStatusCode() != 200) {
-            source.sendMessage(Component.text()
-                    .content("An error occurred while communicating with the Velocity servers. "
-                            + "The servers may be temporarily unavailable or there is an issue "
-                            + "with your network settings. You can find more information in the "
-                            + "log or console of your Velocity server.")
-                    .color(NamedTextColor.RED).build());
+            source.sendMessage(Component.translatable("velocity.command.dump-send-error",
+                NamedTextColor.RED));
             logger.error("Invalid status code while POST-ing Velocity dump: "
                     + response.getStatusCode());
             logger.error("Headers: \n--------------BEGIN HEADERS--------------\n"
@@ -411,55 +411,28 @@ public class VelocityCommand implements SimpleCommand {
           }
           String url = "https://dump.velocitypowered.com/"
                   + key.get("key").getAsString() + ".json";
-          source.sendMessage(Component.text()
-                  .content("Created an anonymised report containing useful information about "
-                          + "this proxy. If a developer requested it, you may share the "
-                          + "following link with them:")
+          source.sendMessage(Component.translatable("velocity.command.dump-success")
                   .append(Component.newline())
                   .append(Component.text(">> " + url)
                           .color(NamedTextColor.GREEN)
                           .clickEvent(ClickEvent.openUrl(url)))
                  .append(Component.newline())
-                 .append(Component.text("Note: This link is only valid for a few days")
-                          .color(NamedTextColor.GRAY)
-                 ).build());
-        } catch (InterruptedException e) {
-          source.sendMessage(Component.text()
-                  .content("Could not complete the request, the command was interrupted."
-                          + "Please refer to the proxy-log or console for more information.")
-                  .color(NamedTextColor.RED).build());
-          logger.error("Failed to complete dump command, "
-                  + "the executor was interrupted: " + e.getMessage());
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          TextComponent.Builder message = Component.text()
-                  .content("An error occurred while attempting to upload the gathered "
-                          + "information to the Velocity servers.")
-                  .append(Component.newline())
-                  .color(NamedTextColor.RED);
-          if (e.getCause() instanceof UnknownHostException
-              || e.getCause() instanceof ConnectException) {
-            message.append(Component.text(
-                    "Likely cause: Invalid system DNS settings or no internet connection"));
-          }
-          source.sendMessage(message
-                  .append(Component.newline()
-                  .append(Component.text(
-                          "Error details can be found in the proxy log / console"))
-                  ).build());
-
-          logger.error("Failed to complete dump command, "
-                  + "the executor encountered an Exception: " + e.getCause().getMessage());
-          e.getCause().printStackTrace();
+                 .append(Component.translatable("velocity.command.dump-will-expire",
+                     NamedTextColor.GRAY)));
         } catch (JsonParseException e) {
-          source.sendMessage(Component.text()
-                  .content("An error occurred on the Velocity servers and the dump could not "
-                          + "be completed. Please contact the Velocity staff about this problem. "
-                          + "If you do, provide the details about this error from the Velocity "
-                          + "console or server log.")
-                  .color(NamedTextColor.RED).build());
+          source.sendMessage(Component.translatable("velocity.command.dump-server-error"));
           logger.error("Invalid response from the Velocity servers: " + e.getMessage());
           e.printStackTrace();
+        } catch (Exception e) {
+          Component message = Component.translatable("velocity.command.dump-send-error")
+              .append(Component.newline())
+              .color(NamedTextColor.RED);
+          if (e.getCause() instanceof UnknownHostException
+              || e.getCause() instanceof ConnectException) {
+            message = message.append(Component.translatable("velocity.command.dump-offline"));
+          }
+          source.sendMessage(message);
+          logger.error("Failed to complete dump command", Throwables.getRootCause(e));
         }
       }, MoreExecutors.directExecutor());
     }

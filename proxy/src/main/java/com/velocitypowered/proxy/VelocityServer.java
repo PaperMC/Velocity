@@ -26,6 +26,7 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.lifecycle.ProxyInitializeEventImpl;
 import com.velocitypowered.api.event.lifecycle.ProxyReloadEventImpl;
 import com.velocitypowered.api.event.lifecycle.ProxyShutdownEventImpl;
+import com.velocitypowered.api.network.NetworkEndpoint;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -78,7 +79,6 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -90,6 +90,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
@@ -185,6 +186,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
+  public Collection<NetworkEndpoint> endpoints() {
+    return this.cm.endpoints();
+  }
+
+  @Override
   public VelocityCommandManager commandManager() {
     return commandManager;
   }
@@ -193,10 +199,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     cm.getBossGroup().terminationFuture().syncUninterruptibly();
   }
 
-  @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
-      "console", "cm", "configuration"})
+  @EnsuresNonNull({"serverKeyPair", "eventManager", "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", version().getName(), version().getVersion());
+    logger.info("Booting up {} {}...", version().name(), version().version());
     console.setupStreams();
 
     registerTranslations();
@@ -247,37 +252,37 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private void registerTranslations() {
     final TranslationRegistry translationRegistry = TranslationRegistry
         .create(Key.key("velocity", "translations"));
+    translationRegistry.defaultLocale(Locale.US);
     try {
-      FileSystemUtils.visitResources(VelocityServer.class,
-          Paths.get("com", "velocitypowered", "proxy", "l10n"), path -> {
-            logger.info("Loading localizations...");
+      FileSystemUtils.visitResources(VelocityServer.class, path -> {
+        logger.info("Loading localizations...");
 
-            try {
-              Files.walk(path).forEach(file -> {
-                if (!Files.isRegularFile(file)) {
-                  return;
-                }
-
-                String filename = com.google.common.io.Files
-                    .getNameWithoutExtension(file.getFileName().toString());
-                String localeName = filename.replace("messages_", "")
-                    .replace("messages", "")
-                    .replace('_', '-');
-                Locale locale;
-                if (localeName.isEmpty()) {
-                  locale = Locale.US;
-                } else {
-                  locale = Locale.forLanguageTag(localeName);
-                }
-
-                translationRegistry.registerAll(locale,
-                    ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
-                        locale, UTF8ResourceBundleControl.get()), false);
-              });
-            } catch (IOException e) {
-              logger.error("Encountered an I/O error whilst loading translations", e);
+        try (Stream<Path> stream = Files.walk(path)) {
+          stream.forEach(file -> {
+            if (!Files.isRegularFile(file)) {
+              return;
             }
+
+            String filename = com.google.common.io.Files
+                .getNameWithoutExtension(file.getFileName().toString());
+            String localeName = filename.replace("messages_", "")
+                .replace("messages", "")
+                .replace('_', '-');
+            Locale locale;
+            if (localeName.isEmpty()) {
+              locale = Locale.US;
+            } else {
+              locale = Locale.forLanguageTag(localeName);
+            }
+
+            translationRegistry.registerAll(locale,
+                ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
+                    locale, UTF8ResourceBundleControl.get()), false);
           });
+        } catch (IOException e) {
+          logger.error("Encountered an I/O error whilst loading translations", e);
+        }
+      }, "com", "velocitypowered", "proxy", "l10n");
     } catch (IOException e) {
       logger.error("Encountered an I/O error whilst loading translations", e);
       return;
@@ -327,18 +332,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     // Register the plugin main classes so that we can fire the proxy initialize event
     for (PluginContainer plugin : pluginManager.plugins()) {
-      Optional<?> instance = plugin.instance();
-      if (instance.isPresent()) {
+      Object instance = plugin.instance();
+      if (instance != null) {
         try {
-          eventManager.registerInternally(plugin, instance.get());
+          eventManager.registerInternally(plugin, instance);
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
-              plugin.description().name().orElse(plugin.description().id()), e);
+              MoreObjects.firstNonNull(plugin.description().name(), plugin.description().id()), e);
         }
       }
     }
 
-    logger.info("Loaded {} plugins", pluginManager.plugins().size());
+    logger.info("Loaded {} plugin(s)", pluginManager.plugins().size() - 1);
   }
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {
@@ -373,18 +378,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo =
           new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
-      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
-      if (!rs.isPresent()) {
+      RegisteredServer rs = servers.getServer(entry.getKey());
+      if (rs == null) {
         servers.register(newInfo);
-      } else if (!rs.get().serverInfo().equals(newInfo)) {
-        for (Player player : rs.get().connectedPlayers()) {
+      } else if (!rs.serverInfo().equals(newInfo)) {
+        for (Player player : rs.connectedPlayers()) {
           if (!(player instanceof ConnectedPlayer)) {
             throw new IllegalStateException("ConnectedPlayer not found for player " + player
-                + " in server " + rs.get().serverInfo().name());
+                + " in server " + rs.serverInfo().name());
           }
           evacuate.add((ConnectedPlayer) player);
         }
-        servers.unregister(rs.get().serverInfo());
+        servers.unregister(rs.serverInfo());
         servers.register(newInfo);
       }
     }
@@ -393,15 +398,21 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (!evacuate.isEmpty()) {
       CountDownLatch latch = new CountDownLatch(evacuate.size());
       for (ConnectedPlayer player : evacuate) {
-        Optional<RegisteredServer> next = player.getNextServerToTry();
-        if (next.isPresent()) {
-          player.createConnectionRequest(next.get()).connectWithIndication()
-              .whenComplete((success, ex) -> {
-                if (ex != null || success == null || !success) {
+        RegisteredServer next = player.getNextServerToTry();
+        if (next != null) {
+          player.createConnectionRequest(next).connectWithIndication()
+              .thenAccept((success) -> {
+                if (success == null || !success) {
                   player.disconnect(Component.text("Your server has been changed, but we could "
                       + "not move you to any fallback servers."));
                 }
                 latch.countDown();
+              })
+              .exceptionally(throwable -> {
+                player.disconnect(Component.text("Your server has been changed, but we could "
+                    + "not move you to any fallback servers."));
+                latch.countDown();
+                return null;
               });
         } else {
           latch.countDown();
@@ -426,8 +437,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
-        || newConfiguration.getQueryPort() != configuration.getQueryPort()
-        && oldBind instanceof InetSocketAddress)) {
+        || ((newConfiguration.getQueryPort() != configuration.getQueryPort())
+        && (oldBind instanceof InetSocketAddress)))) {
       this.cm.close(new InetSocketAddress(
           ((InetSocketAddress) oldBind).getHostString(), configuration.getQueryPort()));
     }
@@ -444,7 +455,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   * Shuts down the proxy, kicking players with the specified {@code reason}.
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    * @param reason message to kick online players with
@@ -613,15 +624,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public Optional<Player> getPlayer(String username) {
+  public @Nullable Player player(String username) {
     Preconditions.checkNotNull(username, "username");
-    return Optional.ofNullable(connectionsByName.get(username.toLowerCase(Locale.US)));
+    return connectionsByName.get(username.toLowerCase(Locale.US));
   }
 
   @Override
-  public Optional<Player> getPlayer(UUID uuid) {
+  public @Nullable Player player(UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
-    return Optional.ofNullable(connectionsByUuid.get(uuid));
+    return connectionsByUuid.get(uuid);
   }
 
   @Override
@@ -653,7 +664,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public Optional<RegisteredServer> server(String name) {
+  public @Nullable RegisteredServer server(String name) {
     return servers.getServer(name);
   }
 

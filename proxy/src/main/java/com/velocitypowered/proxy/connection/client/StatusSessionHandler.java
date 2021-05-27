@@ -25,6 +25,7 @@ import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -42,7 +43,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -75,13 +76,14 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
     VelocityConfiguration configuration = server.configuration();
+    ProxyVersion proxyVersion = server.version();
     return new ServerPing(
         new ServerPing.Version(version.protocol(),
-            "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
+            proxyVersion.name() + " " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.countConnectedPlayers(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),
-        configuration.getFavicon().orElse(null),
+        configuration.getFavicon(),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
     );
   }
@@ -91,11 +93,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     ServerPing fallback = constructLocalPing(pingingVersion);
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
-      Optional<RegisteredServer> rs = server.server(s);
-      if (!rs.isPresent()) {
+      RegisteredServer rs = server.server(s);
+      if (rs == null) {
         continue;
       }
-      VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
+      VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs;
       pings.add(vrs.ping(connection.eventLoop(), pingingVersion));
     }
     if (pings.isEmpty()) {
@@ -123,9 +125,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
             if (response == fallback) {
               continue;
             }
-            Optional<ModInfo> modInfo = response.modInfo();
-            if (modInfo.isPresent()) {
-              return fallback.asBuilder().mods(modInfo.get()).build();
+            ModInfo modInfo = response.modInfo();
+            if (modInfo != null) {
+              return fallback.asBuilder().mods(modInfo).build();
             }
           }
           return fallback;
@@ -144,10 +146,10 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
             return new ServerPing(
                 fallback.version(),
-                fallback.players().orElse(null),
+                fallback.players(),
                 response.description(),
-                fallback.favicon().orElse(null),
-                response.modInfo().orElse(null)
+                fallback.favicon(),
+                response.modInfo()
             );
           }
           return fallback;
@@ -167,8 +169,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     if (passthrough == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      String virtualHostStr = inbound.connectedHost().map(InetSocketAddress::getHostString)
-          .orElse("");
+      InetSocketAddress vhost = inbound.connectedHostname();
+      String virtualHostStr = vhost == null ? "" : vhost.getHostString().toLowerCase(Locale.ROOT);
       List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(
           virtualHostStr, server.configuration().getAttemptConnectionOrder());
       return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);
@@ -227,10 +229,5 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   public void handleUnknown(ByteBuf buf) {
     // what even is going on?
     connection.close(true);
-  }
-
-  private enum State {
-    AWAITING_REQUEST,
-    RECEIVED_REQUEST
   }
 }

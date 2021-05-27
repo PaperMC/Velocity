@@ -21,7 +21,6 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -54,7 +53,7 @@ public class ServerboundClientSettingsPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, ProtocolVersion version) {
     this.locale = ProtocolUtils.readString(buf, 16);
     this.viewDistance = buf.readByte();
     this.chatVisibility = ProtocolUtils.readVarInt(buf);

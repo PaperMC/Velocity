@@ -10,7 +10,6 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -38,8 +37,8 @@ public class PlayerChooseInitialServerEventImpl implements PlayerChooseInitialSe
   }
 
   @Override
-  public Optional<RegisteredServer> initialServer() {
-    return Optional.ofNullable(initialServer);
+  public @Nullable RegisteredServer initialServer() {
+    return initialServer;
   }
 
   /**
@@ -47,7 +46,7 @@ public class PlayerChooseInitialServerEventImpl implements PlayerChooseInitialSe
    * @param server the initial server the player should connect to
    */
   @Override
-  public void setInitialServer(RegisteredServer server) {
+  public void setInitialServer(@Nullable RegisteredServer server) {
     this.initialServer = server;
   }
 

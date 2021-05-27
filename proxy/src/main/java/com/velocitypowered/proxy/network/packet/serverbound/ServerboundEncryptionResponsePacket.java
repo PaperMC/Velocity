@@ -27,17 +27,34 @@ import com.velocitypowered.proxy.network.packet.PacketWriter;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundEncryptionResponsePacket implements Packet {
-  public static final PacketReader<ServerboundEncryptionResponsePacket> DECODER = (buf, version) -> {
-    final byte[] sharedSecret;
-    final byte[] verifyToken;
-    if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
-      sharedSecret = ProtocolUtils.readByteArray(buf, 256);
-      verifyToken = ProtocolUtils.readByteArray(buf, 128);
-    } else {
-      sharedSecret = ProtocolUtils.readByteArray17(buf);
-      verifyToken = ProtocolUtils.readByteArray17(buf);
+  public static final PacketReader<ServerboundEncryptionResponsePacket> DECODER = new PacketReader<>() {
+    @Override
+    public ServerboundEncryptionResponsePacket read(ByteBuf buf,
+        ProtocolVersion version) {
+      final byte[] sharedSecret;
+      final byte[] verifyToken;
+      if (version.gte(ProtocolVersion.MINECRAFT_1_8)) {
+        sharedSecret = ProtocolUtils.readByteArray(buf, 128);
+        verifyToken = ProtocolUtils.readByteArray(buf, 128);
+      } else {
+        sharedSecret = ProtocolUtils.readByteArray17(buf, 128);
+        verifyToken = ProtocolUtils.readByteArray17(buf, 128);
+      }
+      return new ServerboundEncryptionResponsePacket(sharedSecret, verifyToken);
     }
-    return new ServerboundEncryptionResponsePacket(sharedSecret, verifyToken);
+
+    @Override
+    public int expectedMaxLength(ByteBuf buf, ProtocolVersion version) {
+      // Both arrays are always 128 bytes long (due to padding), and each array has 2 bytes of
+      // padding (which applies to 1.7 since the length is written as a short and applies to 1.8+
+      // as 128 encodes as a 2-byte VarInt).
+      return 260;
+    }
+
+    @Override
+    public int expectedMinLength(ByteBuf buf, ProtocolVersion version) {
+      return expectedMaxLength(buf, version);
+    }
   };
   public static final PacketWriter<ServerboundEncryptionResponsePacket> ENCODER = PacketWriter.deprecatedEncode();
 

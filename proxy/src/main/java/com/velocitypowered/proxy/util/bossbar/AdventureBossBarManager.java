@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.util.bossbar;
 
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundBossBarPacket;
@@ -275,7 +274,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     private byte serializeFlags(Set<Flag> flags) {
       byte val = 0x0;
       for (Flag flag : flags) {
-        val |= FLAG_BITS_TO_PROTOCOL.get(flag);
+        val = (byte) (val | FLAG_BITS_TO_PROTOCOL.get(flag));
       }
       return val;
     }

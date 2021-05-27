@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.util;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -59,11 +60,11 @@ public enum InformationUtils {
       PluginDescription desc = plugin.description();
       JsonObject current = new JsonObject();
       current.addProperty("id", desc.id());
-      if (desc.name().isPresent()) {
-        current.addProperty("name", desc.name().get());
-      }
-      if (desc.version().isPresent()) {
-        current.addProperty("version", desc.version().get());
+      current.addProperty("name", desc.name());
+
+      String version = desc.version();
+      if (version != null) {
+        current.addProperty("version", version);
       }
       if (!desc.authors().isEmpty()) {
         JsonArray authorsArray = new JsonArray();
@@ -72,16 +73,19 @@ public enum InformationUtils {
         }
         current.add("authors", authorsArray);
       }
-      if (desc.description().isPresent()) {
-        current.addProperty("description", desc.description().get());
+
+      String humanDesc = desc.description();
+      if (humanDesc != null) {
+        current.addProperty("description", humanDesc);
       }
-      if (desc.url().isPresent()) {
-        current.addProperty("url", desc.url().get());
+      String url = desc.url();
+      if (url != null) {
+        current.addProperty("url", url);
       }
       if (!desc.dependencies().isEmpty()) {
         JsonArray dependencies = new JsonArray();
         for (PluginDependency dependency : desc.dependencies()) {
-          dependencies.add(dependency.getId());
+          dependencies.add(dependency.id());
         }
         current.add("dependencies", dependencies);
       }
@@ -151,19 +155,19 @@ public enum InformationUtils {
               || v6.isSiteLocalAddress()) {
         return address.getHostAddress();
       } else {
-        String[] bits = v6.getHostAddress().split(":");
+        List<String> bits = Splitter.on(':').splitToList(v6.getHostAddress());
         String ret = "";
         boolean flag = false;
-        for (int iter = 0; iter < bits.length; iter++) {
+        for (int iter = 0; iter < bits.size(); iter++) {
           if (flag) {
             ret += ":X";
             continue;
           }
-          if (!bits[iter].equals("0")) {
+          if (!bits.get(iter).equals("0")) {
             if (iter == 0) {
-              ret = bits[iter];
+              ret = bits.get(iter);
             } else {
-              ret = "::" + bits[iter];
+              ret = "::" + bits.get(iter);
             }
             flag = true;
           }

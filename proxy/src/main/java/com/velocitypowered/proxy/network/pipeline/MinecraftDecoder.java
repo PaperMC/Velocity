@@ -20,14 +20,18 @@ package com.velocitypowered.proxy.network.pipeline;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
+import com.velocitypowered.proxy.network.packet.PacketReader;
+import com.velocitypowered.proxy.network.registry.packet.PacketRegistryMap;
+import com.velocitypowered.proxy.network.registry.protocol.ProtocolRegistry;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
@@ -37,8 +41,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
           + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final PacketDirection direction;
-  private StateRegistry state;
-  private StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private ProtocolVersion version;
+  private ProtocolRegistry state;
+  private PacketRegistryMap registry;
 
   /**
    * Creates a new {@code MinecraftDecoder} decoding packets from the specified {@code direction}.
@@ -47,9 +52,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
    */
   public MinecraftDecoder(PacketDirection direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(direction,
-        ProtocolVersion.MINIMUM_VERSION);
-    this.state = StateRegistry.HANDSHAKE;
+    this.state = ProtocolStates.HANDSHAKE;
+    this.version = ProtocolVersion.MINIMUM_VERSION;
+    this.registry = this.state.lookup(direction, ProtocolVersion.MINIMUM_VERSION);
   }
 
   @Override
@@ -63,26 +68,27 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-    if (!ctx.channel().isActive()) {
+    if (!ctx.channel().isActive() || !buf.isReadable()) {
       buf.release();
       return;
     }
 
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
-    Packet packet = null;
+    Packet packet;
     try {
-      packet = this.registry.readPacket(packetId, buf, registry.version);
+      packet = this.readPacket(packetId, buf);
     } catch (Exception e) {
-      throw handleDecodeFailure(e, packet, packetId); // TODO: packet is always null
+      throw handleDecodeFailure(e, packetId);
     }
+
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
     } else {
       try {
         if (buf.isReadable()) {
-          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
+          throw handleOverflow(buf.readerIndex(), buf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
@@ -91,55 +97,64 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private void doLengthSanityChecks(ByteBuf buf, Packet packet) throws Exception {
-    int expectedMinLen = packet.expectedMinLength(buf, direction, registry.version);
-    int expectedMaxLen = packet.expectedMaxLength(buf, direction, registry.version);
+  private @Nullable Packet readPacket(int packetId, ByteBuf buf) throws Exception {
+    PacketReader<? extends Packet> reader = this.registry.lookupReader(packetId, this.version);
+    if (reader == null) {
+      return null;
+    }
+
+    int expectedMinLen = reader.expectedMinLength(buf, version);
+    int expectedMaxLen = reader.expectedMaxLength(buf, version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleOverflow(expectedMaxLen, buf.readableBytes());
     }
     if (buf.readableBytes() < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleUnderflow(expectedMaxLen, buf.readableBytes());
     }
+
+    return reader.read(buf, version);
   }
 
-  private Exception handleOverflow(Packet packet, int expected, int actual) {
+  private Exception handleOverflow(int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
-          + "big (expected " + expected + " bytes, got " + actual + " bytes)");
+      return new CorruptedFrameException("Packet sent was too big (expected "
+          + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleUnderflow(Packet packet, int expected, int actual) {
+  private Exception handleUnderflow(int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
-          + "small (expected " + expected + " bytes, got " + actual + " bytes)");
+      return new CorruptedFrameException("Packet was too small (expected " + expected
+          + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleDecodeFailure(Exception cause, Packet packet, int packetId) {
+  private Exception handleDecodeFailure(Exception cause, int packetId) {
     if (DEBUG) {
+      Class<? extends Packet> packetClass = this.registry.lookupPacket(packetId);
       return new CorruptedFrameException(
-          "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
+          "Error decoding " + packetClass + " " + getExtraConnectionDetail(packetId), cause);
     } else {
       return DECODE_FAILED;
     }
   }
 
   private String getExtraConnectionDetail(int packetId) {
-    return "Direction " + direction + " Protocol " + registry.version + " State " + state
+    return "Direction " + direction + " Protocol " + version + " State " + state
         + " ID " + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.registry = state.getProtocolRegistry(direction, protocolVersion);
+    this.version = protocolVersion;
+    this.registry = state.lookup(direction, protocolVersion);
   }
 
-  public void setState(StateRegistry state) {
+  public void setState(ProtocolRegistry state) {
     this.state = state;
-    this.setProtocolVersion(registry.version);
+    this.setProtocolVersion(this.version);
   }
 }

@@ -7,13 +7,14 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 
 /**
  * This event is fired when the status of a resource pack sent to the player by the server is
  * changed.
  */
-public interface PlayerResourcePackStatusEvent {
+public interface PlayerResourcePackStatusEvent extends Event {
 
   /**
    * Returns the player affected by the change in resource pack status.

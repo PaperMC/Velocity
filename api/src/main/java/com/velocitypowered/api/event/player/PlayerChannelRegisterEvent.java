@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * This event is fired when a client ({@link Player}) sends a plugin message through the
  * register channel.
  */
-public interface PlayerChannelRegisterEvent {
+public interface PlayerChannelRegisterEvent extends Event {
 
   Player player();
 

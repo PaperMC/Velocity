@@ -18,13 +18,11 @@
 package com.velocitypowered.proxy.network.packet.clientbound;
 
 import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
-import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
 public class ClientboundResourcePackRequestPacket implements Packet {
@@ -33,7 +31,10 @@ public class ClientboundResourcePackRequestPacket implements Packet {
     final String hash = ProtocolUtils.readString(buf);
     return new ClientboundResourcePackRequestPacket(url, hash);
   };
-  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ClientboundResourcePackRequestPacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeString(out, packet.url);
+    ProtocolUtils.writeString(out, packet.hash);
+  };
 
   private final String url;
   private final String hash;
@@ -41,12 +42,6 @@ public class ClientboundResourcePackRequestPacket implements Packet {
   public ClientboundResourcePackRequestPacket(final String url, final String hash) {
     this.url = Objects.requireNonNull(url, "url");
     this.hash = Objects.requireNonNull(hash, "hash");
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, url);
-    ProtocolUtils.writeString(buf, hash);
   }
 
   @Override

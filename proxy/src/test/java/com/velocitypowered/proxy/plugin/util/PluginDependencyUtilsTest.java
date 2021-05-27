@@ -33,11 +33,11 @@ class PluginDependencyUtilsTest {
   private static final PluginDescription NO_DEPENDENCY = testDescription("trivial");
   private static final PluginDescription NO_DEPENDENCY_2 = testDescription("trivial2");
   private static final PluginDescription HAS_DEPENDENCY_1 = testDescription("dependent1",
-      new PluginDependency("trivial", null, false));
+      new PluginDependency("trivial", "", false));
   private static final PluginDescription HAS_DEPENDENCY_2 = testDescription("dependent2",
-      new PluginDependency("dependent1", null, false));
+      new PluginDependency("dependent1", "", false));
   private static final PluginDescription HAS_DEPENDENCY_3 = testDescription("dependent3",
-      new PluginDependency("trivial", null, false));
+      new PluginDependency("trivial", "", false));
 
   private static final PluginDescription CIRCULAR_DEPENDENCY_1 = testDescription("circle",
       new PluginDependency("oval", "", false));

@@ -25,6 +25,7 @@ import static com.velocitypowered.proxy.util.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.util.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.permission.PermissionsSetupEventImpl;
 import com.velocitypowered.api.event.player.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.player.DisconnectEventImpl;
@@ -35,7 +36,6 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEventImpl;
 import com.velocitypowered.api.event.player.PostLoginEventImpl;
 import com.velocitypowered.api.event.player.PreLoginEvent;
-import com.velocitypowered.api.event.player.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.event.player.PreLoginEventImpl;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -46,27 +46,25 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundEncryptionResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
@@ -121,12 +119,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
-      String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
       if (server.configuration().shouldPreventClientProxyConnections()) {
-        url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
+        SocketAddress playerRemoteAddress = mcConnection.getRemoteAddress();
+        if (playerRemoteAddress instanceof InetSocketAddress) {
+          url += "&ip=" + urlFormParameterEscaper().escape(
+              ((InetSocketAddress) playerRemoteAddress).getHostString());
+        }
       }
 
       ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
@@ -158,8 +159,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           } else {
             // Something else went wrong
             logger.error(
-                "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                profileResponse.getStatusCode(), login.getUsername(), playerIp);
+                "Got an unexpected error code {} whilst contacting Mojang to log in {}",
+                profileResponse.getStatusCode(), login.getUsername());
             mcConnection.close(true);
           }
         } catch (ExecutionException e) {
@@ -182,7 +183,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
-    PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername());
+    PreLoginEvent event = new PreLoginEventImpl(inbound, login.getUsername(),
+        server.configuration().isOnlineMode());
     server.eventManager().fire(event)
         .thenRunAsync(() -> {
           if (mcConnection.isClosed()) {
@@ -190,16 +192,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          PreLoginComponentResult result = event.result();
-          Optional<Component> disconnectReason = result.denialReason();
-          if (disconnectReason.isPresent()) {
+          ComponentResult result = event.result();
+          Component disconnectReason = result.reason();
+          if (disconnectReason != null) {
             // The component is guaranteed to be provided if the connection was denied.
-            inbound.disconnect(disconnectReason.get());
+            inbound.disconnect(disconnectReason);
             return;
           }
 
-          if (!result.isForceOfflineMode() && (server.configuration().isOnlineMode() || result
-              .isOnlineModeAllowed())) {
+          if (event.onlineMode()) {
             // Request encryption.
             ClientboundEncryptionRequestPacket request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -240,7 +241,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.gameProfile(),
-          mcConnection, inbound.connectedHost().orElse(null), onlineMode);
+          mcConnection, inbound.connectedHostname(), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
@@ -289,7 +290,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     mcConnection.write(new ClientboundServerLoginSuccessPacket(playerUniqueId, player.username()));
 
     mcConnection.setAssociation(player);
-    mcConnection.setState(StateRegistry.PLAY);
+    mcConnection.setState(ProtocolStates.PLAY);
 
     server.eventManager().fire(new LoginEventImpl(player))
         .thenAcceptAsync(event -> {
@@ -300,9 +301,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          Optional<Component> reason = event.result().reason();
-          if (reason.isPresent()) {
-            player.disconnect0(reason.get(), true);
+          Component denialReason = event.result().reason();
+          if (denialReason != null) {
+            player.disconnect0(denialReason, true);
           } else {
             if (!server.registerConnection(player)) {
               player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
@@ -326,19 +327,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
-    Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
+    RegisteredServer initialFromConfig = player.getNextServerToTry();
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEventImpl(player,
-        initialFromConfig.orElse(null));
+        initialFromConfig);
 
     return server.eventManager().fire(event)
         .thenRunAsync(() -> {
-          Optional<RegisteredServer> toTry = event.initialServer();
-          if (!toTry.isPresent()) {
+          RegisteredServer toTry = event.initialServer();
+          if (toTry == null) {
             player.disconnect0(Component.translatable("velocity.error.no-available-servers",
                 NamedTextColor.RED), true);
             return;
           }
-          player.createConnectionRequest(toTry.get()).fireAndForget();
+          player.createConnectionRequest(toTry).fireAndForget();
         }, mcConnection.eventLoop());
   }
 

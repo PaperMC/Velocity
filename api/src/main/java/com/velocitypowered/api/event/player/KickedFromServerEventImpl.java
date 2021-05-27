@@ -10,7 +10,6 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -72,8 +71,8 @@ public final class KickedFromServerEventImpl implements KickedFromServerEvent {
    * @return the server kicked the player from the server
    */
   @Override
-  public Optional<Component> serverKickReason() {
-    return Optional.ofNullable(originalReason);
+  public @Nullable Component serverKickReason() {
+    return originalReason;
   }
 
   /**

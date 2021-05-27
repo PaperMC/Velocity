@@ -12,7 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
 
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -21,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class PluginDependency {
 
   private final String id;
-  private final @Nullable String version;
+  private final String version;
 
   private final boolean optional;
 
@@ -31,10 +30,10 @@ public final class PluginDependency {
    * @param version an optional version
    * @param optional whether or not this dependency is optional
    */
-  public PluginDependency(String id, @Nullable String version, boolean optional) {
+  public PluginDependency(String id, String version, boolean optional) {
     this.id = checkNotNull(id, "id");
     checkArgument(!id.isEmpty(), "id cannot be empty");
-    this.version = emptyToNull(version);
+    this.version = checkNotNull(version, "version");
     this.optional = optional;
   }
 
@@ -43,17 +42,17 @@ public final class PluginDependency {
    *
    * @return the plugin ID
    */
-  public String getId() {
+  public String id() {
     return id;
   }
 
   /**
-   * Returns the version this {@link PluginDependency} should match.
+   * Returns the version this {@link PluginDependency} should match in NPM SemVer range format.
    *
-   * @return an {@link Optional} with the plugin version, may be empty
+   * @return a String with the plugin version, may be empty if no version requirement is present
    */
-  public Optional<String> getVersion() {
-    return Optional.ofNullable(version);
+  public String version() {
+    return version;
   }
 
   /**
@@ -61,7 +60,7 @@ public final class PluginDependency {
    *
    * @return true if dependency is optional
    */
-  public boolean isOptional() {
+  public boolean optional() {
     return optional;
   }
 

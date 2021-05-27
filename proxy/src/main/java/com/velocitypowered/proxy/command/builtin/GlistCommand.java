@@ -33,12 +33,12 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.List;
-import java.util.Optional;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 
 public class GlistCommand {
 
@@ -92,13 +92,13 @@ public class GlistCommand {
       }
       sendTotalProxyCount(source);
     } else {
-      Optional<RegisteredServer> registeredServer = server.server(serverName);
-      if (!registeredServer.isPresent()) {
+      RegisteredServer registeredServer = server.server(serverName);
+      if (registeredServer == null) {
         source.sendMessage(Identity.nil(),
             CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
         return -1;
       }
-      sendServerPlayers(source, registeredServer.get(), false);
+      sendServerPlayers(source, registeredServer, false);
     }
     return 1;
   }
@@ -123,7 +123,7 @@ public class GlistCommand {
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
-        .resetStyle();
+        .style(Style.empty());
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);

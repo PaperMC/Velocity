@@ -7,15 +7,18 @@
 
 package com.velocitypowered.api.proxy.config;
 
+import com.google.common.annotations.Beta;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.Favicon;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Exposes certain proxy configuration information that plugins may use.
+ * Exposes certain proxy configuration information that plugins may use. Note that this interface
+ * is in constant flux and should never be considered stable.
  */
+@Beta
 public interface ProxyConfig {
 
   /**
@@ -126,7 +129,7 @@ public interface ProxyConfig {
    *
    * @return optional favicon
    */
-  Optional<Favicon> getFavicon();
+  @Nullable Favicon getFavicon();
 
   /**
    * Get whether this proxy displays that it supports Forge/FML.

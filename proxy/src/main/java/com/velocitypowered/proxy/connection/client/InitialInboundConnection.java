@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -24,13 +25,14 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Locale;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class InitialInboundConnection implements InboundConnection,
     MinecraftConnectionAssociation {
@@ -38,24 +40,24 @@ public final class InitialInboundConnection implements InboundConnection,
   private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
 
   private final MinecraftConnection connection;
-  private final String cleanedAddress;
+  private String cleanedHostname;
   private final ServerboundHandshakePacket handshake;
 
-  InitialInboundConnection(MinecraftConnection connection, String cleanedAddress,
+  InitialInboundConnection(MinecraftConnection connection, String cleanedHostname,
       ServerboundHandshakePacket handshake) {
     this.connection = connection;
-    this.cleanedAddress = cleanedAddress;
+    this.cleanedHostname = cleanedHostname;
     this.handshake = handshake;
   }
 
   @Override
-  public InetSocketAddress remoteAddress() {
-    return (InetSocketAddress) connection.getRemoteAddress();
+  public @Nullable SocketAddress remoteAddress() {
+    return connection.getRemoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> connectedHost() {
-    return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
+  public InetSocketAddress connectedHostname() {
+    return InetSocketAddress.createUnresolved(cleanedHostname, handshake.getPort());
   }
 
   @Override
@@ -70,7 +72,11 @@ public final class InitialInboundConnection implements InboundConnection,
 
   @Override
   public String toString() {
-    return "[initial connection] " + connection.getRemoteAddress().toString();
+    return "[initial connection] " + connection.getRemoteAddress();
+  }
+
+  public void setCleanedHostname(String hostname) {
+    this.cleanedHostname = Preconditions.checkNotNull(hostname, "hostname");
   }
 
   /**
@@ -92,5 +98,9 @@ public final class InitialInboundConnection implements InboundConnection,
   public void disconnectQuietly(Component reason) {
     Component translated = GlobalTranslator.render(reason, Locale.getDefault());
     connection.closeWith(ClientboundDisconnectPacket.create(translated, protocolVersion()));
+  }
+
+  public void setRemoteAddress(@Nullable SocketAddress currentRemoteHostAddress) {
+    connection.setRemoteAddress(currentRemoteHostAddress);
   }
 }

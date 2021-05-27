@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.network.packet;
 import static com.velocitypowered.proxy.network.PluginMessageUtil.transformLegacyToModernChannel;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.buffer.TypedDefaultByteBufHolder;
@@ -60,18 +61,14 @@ public abstract class AbstractPluginMessagePacket<S extends AbstractPluginMessag
     };
   }
 
-  protected final @Nullable String channel;
+  protected final String channel;
 
-  protected AbstractPluginMessagePacket(String channel,
-                                     @MonotonicNonNull ByteBuf backing) {
+  protected AbstractPluginMessagePacket(String channel, @MonotonicNonNull ByteBuf backing) {
     super(backing);
-    this.channel = channel;
+    this.channel = Preconditions.checkNotNull(channel, "channel");
   }
 
   public String getChannel() {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified.");
-    }
     return channel;
   }
 

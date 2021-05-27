@@ -23,10 +23,10 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.network.StateRegistry;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundStatusResponsePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundStatusRequestPacket;
+import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -50,22 +50,27 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    ServerboundHandshakePacket handshake = new ServerboundHandshakePacket();
-    handshake.setNextStatus(StateRegistry.STATUS_ID);
-
     SocketAddress address = server.serverInfo().address();
+    String hostname;
+    int port;
     if (address instanceof InetSocketAddress) {
       InetSocketAddress socketAddr = (InetSocketAddress) address;
-      handshake.setServerAddress(socketAddr.getHostString());
-      handshake.setPort(socketAddr.getPort());
+      hostname = socketAddr.getHostString();
+      port = socketAddr.getPort();
     } else {
       // Just fake it
-      handshake.setServerAddress("127.0.0.1");
+      hostname = "127.0.0.1";
+      port = 25565;
     }
-    handshake.setProtocolVersion(version);
-    connection.delayedWrite(handshake);
 
-    connection.setState(StateRegistry.STATUS);
+    connection.delayedWrite(new ServerboundHandshakePacket(
+        version,
+        hostname,
+        port,
+        ServerboundHandshakePacket.STATUS_ID
+    ));
+
+    connection.setState(ProtocolStates.STATUS);
     connection.delayedWrite(ServerboundStatusRequestPacket.INSTANCE);
 
     connection.flush();

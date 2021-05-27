@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * This event is fired after the {@link PreLoginEventImpl} in order to set up the game profile for
  * the user. This can be used to configure a custom profile for a user, i.e. skin replacement.
  */
-public interface GameProfileRequestEvent {
+public interface GameProfileRequestEvent extends Event {
 
   InboundConnection connection();
 

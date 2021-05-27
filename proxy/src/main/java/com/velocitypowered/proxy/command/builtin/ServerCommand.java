@@ -29,7 +29,6 @@ import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.kyori.adventure.identity.Identity;
@@ -62,26 +61,30 @@ public class ServerCommand implements SimpleCommand {
     if (args.length == 1) {
       // Trying to connect to a server.
       String serverName = args[0];
-      Optional<RegisteredServer> toConnect = server.server(serverName);
-      if (!toConnect.isPresent()) {
+      RegisteredServer toConnect = server.server(serverName);
+      if (toConnect == null) {
         player.sendMessage(Identity.nil(), CommandMessages.SERVER_DOES_NOT_EXIST
             .args(Component.text(serverName)));
         return;
       }
 
-      player.createConnectionRequest(toConnect.get()).fireAndForget();
+      player.createConnectionRequest(toConnect).fireAndForget();
     } else {
       outputServerInformation(player);
     }
   }
 
   private void outputServerInformation(Player executor) {
-    String currentServer = executor.connectedServer().map(ServerConnection::serverInfo)
-        .map(ServerInfo::name).orElse("<unknown>");
+    String currentServerName = "<unknown>";
+    ServerConnection connectedTo = executor.connectedServer();
+    if (connectedTo != null) {
+      currentServerName = connectedTo.serverInfo().name();
+    }
+
     executor.sendMessage(Identity.nil(), Component.translatable(
         "velocity.command.server-current-server",
         NamedTextColor.YELLOW,
-        Component.text(currentServer)));
+        Component.text(currentServerName)));
 
     List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     if (servers.size() > MAX_SERVERS_TO_LIST) {
@@ -97,7 +100,7 @@ public class ServerCommand implements SimpleCommand {
         .append(Component.space());
     for (int i = 0; i < servers.size(); i++) {
       RegisteredServer rs = servers.get(i);
-      serverListBuilder.append(formatServerComponent(currentServer, rs));
+      serverListBuilder.append(formatServerComponent(currentServerName, rs));
       if (i != servers.size() - 1) {
         serverListBuilder.append(Component.text(", ", NamedTextColor.GRAY));
       }

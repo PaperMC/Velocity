@@ -37,7 +37,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
-import com.velocitypowered.proxy.network.packet.PacketDirection;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
@@ -84,7 +83,7 @@ public class ClientboundAvailableCommandsPacket implements Packet {
   }
 
   @Override
-  public void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolVersion protocolVersion) {
     int commands = ProtocolUtils.readVarInt(buf);
     WireNode[] wireNodes = new WireNode[commands];
     for (int i = 0; i < commands; i++) {

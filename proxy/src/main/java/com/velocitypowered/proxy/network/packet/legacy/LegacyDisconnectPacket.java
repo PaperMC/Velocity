@@ -45,7 +45,10 @@ public class LegacyDisconnectPacket implements LegacyPacket {
    */
   public static LegacyDisconnectPacket fromServerPing(ServerPing response,
                                                       LegacyMinecraftPingVersion version) {
-    Players players = response.players().orElse(FAKE_PLAYERS);
+    Players players = response.players();
+    if (players == null) {
+      players = FAKE_PLAYERS;
+    }
 
     switch (version) {
       case MINECRAFT_1_3:

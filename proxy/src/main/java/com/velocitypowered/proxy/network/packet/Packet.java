@@ -23,7 +23,7 @@ import io.netty.buffer.ByteBuf;
 public interface Packet {
 
   @Deprecated
-  default void decode(ByteBuf buf, PacketDirection direction, ProtocolVersion protocolVersion) {
+  default void decode(ByteBuf buf, ProtocolVersion protocolVersion) {
     throw new UnsupportedOperationException();
   }
 
@@ -33,13 +33,4 @@ public interface Packet {
   }
 
   boolean handle(PacketHandler handler);
-
-  // TODO: Move this into decoder
-  default int expectedMinLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    return 0;
-  }
-
-  default int expectedMaxLength(ByteBuf buf, PacketDirection direction, ProtocolVersion version) {
-    return -1;
-  }
 }

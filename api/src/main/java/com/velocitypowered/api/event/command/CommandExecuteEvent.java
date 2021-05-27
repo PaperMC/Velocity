@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
-import java.util.Optional;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -44,8 +44,8 @@ public interface CommandExecuteEvent extends ResultedEvent<CommandResult> {
       this.command = command;
     }
 
-    public Optional<String> modifiedCommand() {
-      return Optional.ofNullable(command);
+    public @Nullable String modifiedCommand() {
+      return command;
     }
 
     public boolean isForwardToServer() {
@@ -109,6 +109,24 @@ public interface CommandExecuteEvent extends ResultedEvent<CommandResult> {
     public static CommandResult command(@NonNull String newCommand) {
       Preconditions.checkNotNull(newCommand, "newCommand");
       return new CommandResult(true, false, newCommand);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      CommandResult that = (CommandResult) o;
+      return status == that.status && forward == that.forward
+          && Objects.equals(command, that.command);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(command, status, forward);
     }
   }
 

@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -34,14 +33,14 @@ public final class QueryResponse {
   private final int maxPlayers;
   private final String proxyHost;
   private final int proxyPort;
-  private final ImmutableCollection<String> players;
+  private final ImmutableList<String> players;
   private final String proxyVersion;
-  private final ImmutableCollection<PluginInformation> plugins;
+  private final ImmutableList<PluginInformation> plugins;
 
   @VisibleForTesting
   QueryResponse(String hostname, String gameVersion, String map, int onlinePlayers,
-      int maxPlayers, String proxyHost, int proxyPort, ImmutableCollection<String> players,
-      String proxyVersion, ImmutableCollection<PluginInformation> plugins) {
+      int maxPlayers, String proxyHost, int proxyPort, ImmutableList<String> players,
+      String proxyVersion, ImmutableList<PluginInformation> plugins) {
     this.hostname = hostname;
     this.gameVersion = gameVersion;
     this.map = map;
@@ -423,8 +422,8 @@ public final class QueryResponse {
       return name;
     }
 
-    public Optional<String> getVersion() {
-      return Optional.ofNullable(version);
+    public @Nullable String getVersion() {
+      return version;
     }
 
     public static PluginInformation of(String name, @Nullable String version) {

@@ -13,8 +13,8 @@ import com.velocitypowered.api.proxy.connection.Player;
  * Represents a command that can be executed by a {@link CommandSource}
  * such as a {@link Player} or the console.
  *
- * <p><strong>You should not subclass <code>Command</code></strong>. Use one of the following
- * subinterfaces:</p>
+ * <p><strong>You must not subclass <code>Command</code></strong>. Use one of the following
+ * <i>registrable</i> subinterfaces:</p>
  *
  * <ul>
  * <li>{@link BrigadierCommand} wraps a Brigadier literal command node. It supports parameterized
