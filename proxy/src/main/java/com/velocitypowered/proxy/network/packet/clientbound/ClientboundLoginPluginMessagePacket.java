@@ -42,25 +42,19 @@ public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder im
     }
     return new ClientboundLoginPluginMessagePacket(id, channel, data);
   };
-  public static final PacketWriter<ClientboundLoginPluginMessagePacket> ENCODER = PacketWriter.deprecatedEncode();
+  public static final PacketWriter<ClientboundLoginPluginMessagePacket> ENCODER = (out, packet, version) -> {
+    ProtocolUtils.writeVarInt(out, packet.id);
+    ProtocolUtils.writeString(out, packet.channel);
+    out.writeBytes(packet.content());
+  };
 
   private final int id;
-  private final @Nullable String channel;
+  private final String channel;
 
-  public ClientboundLoginPluginMessagePacket(int id, @Nullable String channel, ByteBuf data) {
+  public ClientboundLoginPluginMessagePacket(int id, String channel, ByteBuf data) {
     super(data);
     this.id = id;
     this.channel = channel;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, id);
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified!");
-    }
-    ProtocolUtils.writeString(buf, channel);
-    buf.writeBytes(content());
   }
 
   @Override
@@ -73,9 +67,6 @@ public class ClientboundLoginPluginMessagePacket extends DefaultByteBufHolder im
   }
 
   public String getChannel() {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified!");
-    }
     return channel;
   }
 
