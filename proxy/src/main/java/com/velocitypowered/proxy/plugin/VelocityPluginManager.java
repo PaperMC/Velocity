@@ -37,7 +37,7 @@ import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
-import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
+import com.velocitypowered.proxy.plugin.loader.jvm.JvmPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import com.velocitypowered.proxy.plugin.util.ProxyPluginContainer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -92,7 +92,7 @@ public class VelocityPluginManager implements PluginManager {
     checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
 
     List<PluginDescription> found = new ArrayList<>();
-    JavaPluginLoader loader = new JavaPluginLoader(server, directory);
+    JvmPluginLoader loader = new JvmPluginLoader(server, directory);
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {

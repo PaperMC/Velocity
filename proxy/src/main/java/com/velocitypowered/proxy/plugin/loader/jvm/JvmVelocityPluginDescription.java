@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.plugin.loader.java;
+package com.velocitypowered.proxy.plugin.loader.jvm;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,11 +26,11 @@ import java.util.Collection;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class JavaVelocityPluginDescription extends VelocityPluginDescription {
+class JvmVelocityPluginDescription extends VelocityPluginDescription {
 
   private final Class<?> mainClass;
 
-  JavaVelocityPluginDescription(String id, @Nullable String name, String version,
+  JvmVelocityPluginDescription(String id, @Nullable String name, String version,
       @Nullable String description, @Nullable String url,
       @Nullable List<String> authors, Collection<PluginDependency> dependencies,
       @Nullable Path source, Class<?> mainClass) {

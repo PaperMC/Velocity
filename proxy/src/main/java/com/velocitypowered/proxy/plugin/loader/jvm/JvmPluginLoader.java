@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.plugin.loader.java;
+package com.velocitypowered.proxy.plugin.loader.jvm;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -52,12 +52,12 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-public class JavaPluginLoader implements PluginLoader {
+public class JvmPluginLoader implements PluginLoader {
 
   private final Path baseDirectory;
   private final Map<URI, PluginClassLoader> classLoaders = new HashMap<>();
 
-  public JavaPluginLoader(ProxyServer server, Path baseDirectory) {
+  public JvmPluginLoader(ProxyServer server, Path baseDirectory) {
     this.baseDirectory = baseDirectory;
   }
 
@@ -77,8 +77,8 @@ public class JavaPluginLoader implements PluginLoader {
 
   @Override
   public PluginDescription materializePlugin(PluginDescription source) throws Exception {
-    if (!(source instanceof JavaVelocityPluginDescriptionCandidate)) {
-      throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
+    if (!(source instanceof JvmVelocityPluginDescriptionCandidate)) {
+      throw new IllegalArgumentException("Description provided isn't of the JVM plugin loader");
     }
 
     Path jarFilePath = source.file();
@@ -91,13 +91,13 @@ public class JavaPluginLoader implements PluginLoader {
     PluginClassLoader loader = this.classLoaders.computeIfAbsent(pluginJarUri, (uri) -> {
       PluginClassLoader classLoader = AccessController.doPrivileged(
           (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl},
-              JavaPluginLoader.class.getClassLoader(), source));
+              JvmPluginLoader.class.getClassLoader(), source));
       classLoader.addToClassloaders();
       return classLoader;
     });
 
-    JavaVelocityPluginDescriptionCandidate candidate =
-        (JavaVelocityPluginDescriptionCandidate) source;
+    JvmVelocityPluginDescriptionCandidate candidate =
+        (JvmVelocityPluginDescriptionCandidate) source;
     Class mainClass = loader.loadClass(candidate.getMainClass());
     return createDescription(candidate, mainClass);
   }
@@ -105,11 +105,11 @@ public class JavaPluginLoader implements PluginLoader {
   @Override
   public Module createModule(PluginContainer container) throws Exception {
     PluginDescription description = container.description();
-    if (!(description instanceof JavaVelocityPluginDescription)) {
-      throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
+    if (!(description instanceof JvmVelocityPluginDescription)) {
+      throw new IllegalArgumentException("Description provided isn't of the JVM plugin loader");
     }
 
-    JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
+    JvmVelocityPluginDescription javaDescription = (JvmVelocityPluginDescription) description;
     Path source = javaDescription.file();
 
     if (source == null) {
@@ -125,13 +125,13 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("Container provided isn't of the Java plugin loader");
     }
     PluginDescription description = container.description();
-    if (!(description instanceof JavaVelocityPluginDescription)) {
+    if (!(description instanceof JvmVelocityPluginDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
     Injector injector = Guice.createInjector(modules);
     Object instance = injector
-        .getInstance(((JavaVelocityPluginDescription) description).getMainClass());
+        .getInstance(((JvmVelocityPluginDescription) description).getMainClass());
 
     if (instance == null) {
       throw new IllegalStateException(
@@ -190,7 +190,7 @@ public class JavaPluginLoader implements PluginLoader {
       dependencies.add(toDependencyMeta(dependency));
     }
 
-    return new JavaVelocityPluginDescriptionCandidate(
+    return new JvmVelocityPluginDescriptionCandidate(
         description.getId(),
         description.getName(),
         description.getVersion(),
@@ -204,9 +204,9 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   private VelocityPluginDescription createDescription(
-      JavaVelocityPluginDescriptionCandidate description,
+      JvmVelocityPluginDescriptionCandidate description,
       Class mainClass) {
-    return new JavaVelocityPluginDescription(
+    return new JvmVelocityPluginDescription(
         description.id(),
         description.name(),
         description.version(),

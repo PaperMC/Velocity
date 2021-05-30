@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.plugin.loader.java;
+package com.velocitypowered.proxy.plugin.loader.jvm;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 
 class VelocityPluginModule implements Module {
 
-  private final JavaVelocityPluginDescription description;
+  private final JvmVelocityPluginDescription description;
   private final PluginContainer pluginContainer;
   private final Path basePluginPath;
 
-  VelocityPluginModule(JavaVelocityPluginDescription description,
+  VelocityPluginModule(JvmVelocityPluginDescription description,
       PluginContainer pluginContainer, Path basePluginPath) {
     this.description = description;
     this.pluginContainer = pluginContainer;
