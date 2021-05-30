@@ -91,16 +91,51 @@ public enum ProtocolUtils {
    * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
    */
   public static int readVarIntSafely(ByteBuf buf) {
-    int i = 0;
-    int maxRead = Math.min(5, buf.readableBytes());
-    for (int j = 0; j < maxRead; j++) {
-      int k = buf.readByte();
-      i |= (k & 0x7F) << (j * 7);
-      if ((k & 0x80) != 128) {
-        return i;
-      }
+    // This is pretty messy, but there's two cases we must watch out for: no more bytes left to
+    // read, or we've read more than 5 bytes. It'd be nice if all the checks we had to do could be
+    // done in Netty itself, but *shrug*
+    if (!buf.isReadable()) {
+      return Integer.MIN_VALUE;
     }
-    return Integer.MIN_VALUE;
+    int tmp;
+    if ((tmp = buf.readByte()) >= 0) {
+      return tmp;
+    } else {
+      if (!buf.isReadable()) {
+        return Integer.MIN_VALUE;
+      }
+      int result = tmp & 0x7f;
+      if ((tmp = buf.readByte()) >= 0) {
+        result |= tmp << 7;
+      } else {
+        if (!buf.isReadable()) {
+          return Integer.MIN_VALUE;
+        }
+        result |= (tmp & 0x7f) << 7;
+        if ((tmp = buf.readByte()) >= 0) {
+          result |= tmp << 14;
+        } else {
+          if (!buf.isReadable()) {
+            return Integer.MIN_VALUE;
+          }
+          result |= (tmp & 0x7f) << 14;
+          if ((tmp = buf.readByte()) >= 0) {
+            result |= tmp << 21;
+          } else {
+            if (!buf.isReadable()) {
+              return Integer.MIN_VALUE;
+            }
+            result |= (tmp & 0x7f) << 21;
+            if ((tmp = buf.readByte()) >= 0) {
+              result |= tmp << 28;
+            } else {
+              return Integer.MIN_VALUE;
+            }
+          }
+        }
+      }
+      return result;
+    }
   }
 
   /**
