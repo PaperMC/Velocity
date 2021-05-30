@@ -12,23 +12,26 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
-import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.PlatformActions;
+import com.velocitypowered.api.proxy.player.PlayerIdentity;
 import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents a player who is connected to the proxy.
  */
 public interface Player extends CommandSource, Identified, InboundConnection,
-    ChannelMessageSource, ChannelMessageSink {
+    ChannelMessageSource, ChannelMessageSink, PlatformActions {
 
   /**
    * Returns the player's current username.
@@ -57,7 +60,7 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @return the settings
    */
-  ClientSettings clientSettings();
+  JavaClientSettings clientSettings();
 
   /**
    * Returns the player's mod info if they have a modded client.
@@ -93,12 +96,14 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param properties the properties
    */
-  void setGameProfileProperties(List<GameProfile.Property> properties);
+  void setGameProfileProperties(List<JavaPlayerIdentity.Property> properties);
 
   /**
-   * Returns the player's game profile.
+   * Returns the player's identity, which depends on what version of Minecraft they are currently
+   * playing.
    */
-  GameProfile gameProfile();
+  @Override
+  @NonNull PlayerIdentity identity();
 
   /**
    * Returns the player's tab list.

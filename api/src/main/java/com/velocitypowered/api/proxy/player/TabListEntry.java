@@ -7,7 +7,7 @@
 
 package com.velocitypowered.api.proxy.player;
 
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -24,18 +24,18 @@ public interface TabListEntry {
   TabList parent();
 
   /**
-   * Returns the {@link GameProfile} of the entry, which uniquely identifies the entry with the
+   * Returns the {@link JavaPlayerIdentity} of the entry, which uniquely identifies the entry with the
    * containing {@link java.util.UUID}, as well as deciding what is shown as the player head in the
    * tab list.
    *
-   * @return {@link GameProfile} of the entry
+   * @return {@link JavaPlayerIdentity} of the entry
    */
-  GameProfile gameProfile();
+  JavaPlayerIdentity gameProfile();
 
   /**
    * Returns an optional text {@link Component}, which if present is the text
    * displayed for {@code this} entry in the {@link TabList}, otherwise
-   * {@link GameProfile#name()} is shown.
+   * {@link JavaPlayerIdentity#name()} is shown.
    *
    * @return text {@link Component} of name displayed in the tab list
    */
@@ -43,7 +43,7 @@ public interface TabListEntry {
 
   /**
    * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}. If
-   * {@code null}, {@link GameProfile#name()} will be shown.
+   * {@code null}, {@link JavaPlayerIdentity#name()} will be shown.
    *
    * @param displayName to show in the {@link TabList} for {@code this} entry
    * @return {@code this}, for chaining
@@ -118,7 +118,7 @@ public interface TabListEntry {
   class Builder {
 
     private @Nullable TabList tabList;
-    private @Nullable GameProfile profile;
+    private @Nullable JavaPlayerIdentity profile;
     private @Nullable Component displayName;
     private int latency = 0;
     private int gameMode = 0;
@@ -139,13 +139,13 @@ public interface TabListEntry {
     }
 
     /**
-     * Sets the {@link GameProfile} of the {@link TabListEntry}.
+     * Sets the {@link JavaPlayerIdentity} of the {@link TabListEntry}.
      *
      * @param profile to set
      * @return {@code this}, for chaining
      * @see TabListEntry#gameProfile()
      */
-    public Builder profile(GameProfile profile) {
+    public Builder profile(JavaPlayerIdentity profile) {
       this.profile = profile;
       return this;
     }

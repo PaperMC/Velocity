@@ -8,7 +8,7 @@
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import java.util.Collection;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -40,7 +40,7 @@ public interface TabList {
   void addEntry(TabListEntry entry);
 
   /**
-   * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile} identified with
+   * Removes the {@link TabListEntry} from the tab list with the {@link JavaPlayerIdentity} identified with
    * the specified {@link UUID}.
    *
    * @param uuid of the entry
@@ -74,6 +74,6 @@ public interface TabList {
    * @return entry
    */
   @Deprecated
-  TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+  TabListEntry buildEntry(JavaPlayerIdentity profile, @Nullable Component displayName, int latency,
       int gameMode);
 }

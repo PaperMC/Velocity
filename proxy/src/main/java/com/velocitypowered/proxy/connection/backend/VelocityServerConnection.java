@@ -28,8 +28,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity.Property;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.api.util.GameProfile.Property;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -131,15 +133,18 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     if (!(playerRemoteAddress instanceof InetSocketAddress)) {
       return playerConnectedHostname();
     }
+
+    List<Property> properties = proxyPlayer.identity() instanceof JavaPlayerIdentity
+        ? ((JavaPlayerIdentity) proxyPlayer.identity()).properties()
+        : List.of();
     StringBuilder data = new StringBuilder()
         .append(playerConnectedHostname())
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.remoteAddress()).getHostString())
         .append('\0')
-        .append(proxyPlayer.gameProfile().undashedId())
+        .append(UuidUtils.toUndashed(proxyPlayer.id()))
         .append('\0');
-    GENERAL_GSON
-        .toJson(propertiesTransform.apply(proxyPlayer.gameProfile().properties()), data);
+    GENERAL_GSON.toJson(propertiesTransform.apply(properties), data);
     return data.toString();
   }
 
@@ -234,7 +239,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public String toString() {
-    return "[server connection] " + proxyPlayer.gameProfile().name() + " -> "
+    return "[server connection] " + proxyPlayer.identity().name() + " -> "
         + registeredServer.serverInfo().name();
   }
 

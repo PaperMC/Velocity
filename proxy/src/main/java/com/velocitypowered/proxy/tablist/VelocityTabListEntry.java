@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,12 +27,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityTabListEntry implements TabListEntry {
 
   private final VelocityTabList tabList;
-  private final GameProfile profile;
+  private final JavaPlayerIdentity profile;
   private @Nullable Component displayName;
   private int latency;
   private int gameMode;
 
-  VelocityTabListEntry(VelocityTabList tabList, GameProfile profile,
+  VelocityTabListEntry(VelocityTabList tabList, JavaPlayerIdentity profile,
       @Nullable Component displayName, int latency, int gameMode) {
     this.tabList = tabList;
     this.profile = profile;
@@ -47,7 +47,7 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public GameProfile gameProfile() {
+  public JavaPlayerIdentity gameProfile() {
     return profile;
   }
 

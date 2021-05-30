@@ -32,10 +32,10 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.connection.Player;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
@@ -49,7 +49,7 @@ import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.serialization.FaviconSerializer;
-import com.velocitypowered.proxy.network.serialization.GameProfileSerializer;
+import com.velocitypowered.proxy.network.serialization.JavaPlayerIdentitySerializer;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
@@ -111,7 +111,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GENERAL_GSON = new GsonBuilder()
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
-      .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
+      .registerTypeHierarchyAdapter(JavaPlayerIdentity.class, JavaPlayerIdentitySerializer.INSTANCE)
       .create();
   private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
       .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)

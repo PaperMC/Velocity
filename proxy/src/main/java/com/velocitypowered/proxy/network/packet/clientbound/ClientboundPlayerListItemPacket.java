@@ -22,7 +22,7 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketHandler;
@@ -193,7 +193,7 @@ public class ClientboundPlayerListItemPacket implements Packet {
 
     private final @Nullable UUID uuid;
     private String name = "";
-    private List<GameProfile.Property> properties = ImmutableList.of();
+    private List<JavaPlayerIdentity.Property> properties = ImmutableList.of();
     private int gameMode;
     private int latency;
     private @Nullable Component displayName;
@@ -228,11 +228,11 @@ public class ClientboundPlayerListItemPacket implements Packet {
       return this;
     }
 
-    public List<GameProfile.Property> getProperties() {
+    public List<JavaPlayerIdentity.Property> getProperties() {
       return properties;
     }
 
-    public Item setProperties(List<GameProfile.Property> properties) {
+    public Item setProperties(List<JavaPlayerIdentity.Property> properties) {
       this.properties = properties;
       return this;
     }

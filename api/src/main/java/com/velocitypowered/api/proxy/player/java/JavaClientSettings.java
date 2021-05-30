@@ -5,21 +5,21 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.proxy.player;
+package com.velocitypowered.api.proxy.player.java;
 
 import java.util.Locale;
 
 /**
  * Represents the client settings for the player.
  */
-public interface ClientSettings {
+public interface JavaClientSettings {
 
   /**
    * Returns the locale of the Minecraft client.
    *
    * @return the client locale
    */
-  Locale getLocale();
+  Locale locale();
 
   /**
    * Returns the client's view distance. This does not guarantee the client will see this many
@@ -27,14 +27,14 @@ public interface ClientSettings {
    *
    * @return the client view distance
    */
-  byte getViewDistance();
+  byte viewDistance();
 
   /**
    * Returns the chat setting for the client.
    *
    * @return the chat setting
    */
-  ChatMode getChatMode();
+  ChatMode chatMode();
 
   /**
    * Returns whether or not the client has chat colors disabled.
@@ -48,14 +48,14 @@ public interface ClientSettings {
    *
    * @return the skin parts for the client
    */
-  SkinParts getSkinParts();
+  SkinParts skinParts();
 
   /**
    * Returns the primary hand of the client.
    *
    * @return the primary hand of the client
    */
-  MainHand getMainHand();
+  MainHand mainHand();
 
   enum ChatMode {
     SHOWN,

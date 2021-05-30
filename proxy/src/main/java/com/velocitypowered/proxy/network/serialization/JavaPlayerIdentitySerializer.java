@@ -25,31 +25,31 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
-import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.GameProfile.Property;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity.Property;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class GameProfileSerializer implements JsonSerializer<GameProfile>,
-    JsonDeserializer<GameProfile> {
+public final class JavaPlayerIdentitySerializer implements JsonSerializer<JavaPlayerIdentity>,
+    JsonDeserializer<JavaPlayerIdentity> {
 
-  public static final GameProfileSerializer INSTANCE = new GameProfileSerializer();
+  public static final JavaPlayerIdentitySerializer INSTANCE = new JavaPlayerIdentitySerializer();
   private static final Type propertyList = new TypeToken<List<Property>>() {}.getType();
 
-  private GameProfileSerializer() {
+  private JavaPlayerIdentitySerializer() {
 
   }
 
   @Override
-  public GameProfile deserialize(JsonElement json, Type typeOfT,
+  public JavaPlayerIdentity deserialize(JsonElement json, Type typeOfT,
       JsonDeserializationContext context) {
     JsonObject obj = json.getAsJsonObject();
-    return new GameProfile(obj.get("id").getAsString(), obj.get("name").getAsString(),
+    return new JavaPlayerIdentity(obj.get("id").getAsString(), obj.get("name").getAsString(),
         context.deserialize(obj.get("properties"), propertyList));
   }
 
   @Override
-  public JsonElement serialize(GameProfile src, Type typeOfSrc, JsonSerializationContext context) {
+  public JsonElement serialize(JavaPlayerIdentity src, Type typeOfSrc, JsonSerializationContext context) {
     JsonObject obj = new JsonObject();
     obj.add("id", new JsonPrimitive(src.undashedId()));
     obj.add("name", new JsonPrimitive(src.name()));

@@ -5,7 +5,7 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.proxy.player;
+package com.velocitypowered.api.proxy.player.java;
 
 public final class SkinParts {
 

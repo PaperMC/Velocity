@@ -9,11 +9,11 @@ package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.event.Event;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.player.ClientSettings;
+import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
 
 public interface PlayerClientSettingsChangedEvent extends Event {
 
   Player player();
 
-  ClientSettings settings();
+  JavaClientSettings settings();
 }

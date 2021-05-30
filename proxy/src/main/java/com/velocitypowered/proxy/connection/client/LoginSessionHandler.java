@@ -38,8 +38,8 @@ import com.velocitypowered.api.event.player.PostLoginEventImpl;
 import com.velocitypowered.api.event.player.PreLoginEvent;
 import com.velocitypowered.api.event.player.PreLoginEventImpl;
 import com.velocitypowered.api.permission.PermissionFunction;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -151,7 +151,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           if (profileResponse.getStatusCode() == 200) {
             // All went well, initialize the session.
             initializePlayer(GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
-                GameProfile.class), true);
+                JavaPlayerIdentity.class), true);
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
             inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
@@ -206,7 +206,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
             mcConnection.write(request);
           } else {
-            initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
+            initializePlayer(JavaPlayerIdentity.forOfflinePlayer(login.getUsername()), false);
           }
         }, mcConnection.eventLoop())
         .exceptionally((ex) -> {
@@ -225,13 +225,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     return request;
   }
 
-  private void initializePlayer(GameProfile profile, boolean onlineMode) {
+  private void initializePlayer(JavaPlayerIdentity profile, boolean onlineMode) {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.configuration().getPlayerInfoForwardingMode());
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEventImpl(inbound, profile,
         onlineMode);
-    final GameProfile finalProfile = profile;
+    final JavaPlayerIdentity finalProfile = profile;
 
     server.eventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
       if (mcConnection.isClosed()) {

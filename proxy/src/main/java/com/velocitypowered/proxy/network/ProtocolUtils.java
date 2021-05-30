@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.velocitypowered.proxy.network.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
 import com.velocitypowered.proxy.network.serialization.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -385,13 +385,13 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
+   * Writes a list of {@link JavaPlayerIdentity.Property} to the buffer.
    * @param buf the buffer to write to
    * @param properties the properties to serialize
    */
-  public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
+  public static void writeProperties(ByteBuf buf, List<JavaPlayerIdentity.Property> properties) {
     writeVarInt(buf, properties.size());
-    for (GameProfile.Property property : properties) {
+    for (JavaPlayerIdentity.Property property : properties) {
       writeString(buf, property.name());
       writeString(buf, property.value());
       String signature = property.signature();
@@ -405,12 +405,12 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Reads a list of {@link com.velocitypowered.api.util.GameProfile.Property} from the buffer.
+   * Reads a list of {@link JavaPlayerIdentity.Property} from the buffer.
    * @param buf the buffer to read from
    * @return the read properties
    */
-  public static List<GameProfile.Property> readProperties(ByteBuf buf) {
-    List<GameProfile.Property> properties = new ArrayList<>();
+  public static List<JavaPlayerIdentity.Property> readProperties(ByteBuf buf) {
+    List<JavaPlayerIdentity.Property> properties = new ArrayList<>();
     int size = readVarInt(buf);
     for (int i = 0; i < size; i++) {
       String name = readString(buf);
@@ -420,7 +420,7 @@ public enum ProtocolUtils {
       if (hasSignature) {
         signature = readString(buf);
       }
-      properties.add(new GameProfile.Property(name, value, signature));
+      properties.add(new JavaPlayerIdentity.Property(name, value, signature));
     }
     return properties;
   }

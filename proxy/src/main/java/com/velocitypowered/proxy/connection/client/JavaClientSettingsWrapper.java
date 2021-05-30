@@ -17,28 +17,28 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.api.proxy.player.ClientSettings;
-import com.velocitypowered.api.proxy.player.SkinParts;
+import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
+import com.velocitypowered.api.proxy.player.java.SkinParts;
 import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ClientSettingsWrapper implements ClientSettings {
+public class JavaClientSettingsWrapper implements JavaClientSettings {
 
-  static final ClientSettings DEFAULT = new ClientSettingsWrapper(
+  static final JavaClientSettings DEFAULT = new JavaClientSettingsWrapper(
       new ServerboundClientSettingsPacket("en_US", (byte) 10, 0, true, (short) 127, 1));
 
   private final ServerboundClientSettingsPacket settings;
   private final SkinParts parts;
   private @Nullable Locale locale;
 
-  ClientSettingsWrapper(ServerboundClientSettingsPacket settings) {
+  JavaClientSettingsWrapper(ServerboundClientSettingsPacket settings) {
     this.settings = settings;
     this.parts = new SkinParts((byte) settings.getSkinParts());
   }
 
   @Override
-  public Locale getLocale() {
+  public Locale locale() {
     if (locale == null) {
       locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-"));
     }
@@ -46,12 +46,12 @@ public class ClientSettingsWrapper implements ClientSettings {
   }
 
   @Override
-  public byte getViewDistance() {
+  public byte viewDistance() {
     return settings.getViewDistance();
   }
 
   @Override
-  public ChatMode getChatMode() {
+  public ChatMode chatMode() {
     int chat = settings.getChatVisibility();
     if (chat < 0 || chat > 2) {
       return ChatMode.SHOWN;
@@ -65,12 +65,12 @@ public class ClientSettingsWrapper implements ClientSettings {
   }
 
   @Override
-  public SkinParts getSkinParts() {
+  public SkinParts skinParts() {
     return parts;
   }
 
   @Override
-  public MainHand getMainHand() {
+  public MainHand mainHand() {
     return settings.getMainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
   }
 
