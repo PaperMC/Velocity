@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.network;
 
 import com.google.common.base.Strings;
-import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftDecoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.handler.codec.CorruptedFrameException;
 

@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.network.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.network.java.packet.JavaPacketHandler;
 import io.netty.buffer.ByteBuf;
 
 public interface Packet {
@@ -32,5 +33,5 @@ public interface Packet {
     throw new UnsupportedOperationException();
   }
 
-  boolean handle(PacketHandler handler);
+  boolean handle(JavaPacketHandler handler);
 }

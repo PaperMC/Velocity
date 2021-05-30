@@ -51,7 +51,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JavaPluginLoader implements PluginLoader {
 

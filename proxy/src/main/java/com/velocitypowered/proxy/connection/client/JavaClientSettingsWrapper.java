@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
 import com.velocitypowered.api.proxy.player.java.SkinParts;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundClientSettingsPacket;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

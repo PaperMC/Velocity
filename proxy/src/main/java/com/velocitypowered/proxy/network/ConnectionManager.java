@@ -27,7 +27,7 @@ import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.api.network.NetworkEndpoint;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.pipeline.GS4QueryHandler;
+import com.velocitypowered.proxy.network.generic.pipeline.GS4QueryHandler;
 import com.velocitypowered.proxy.network.resolver.SeparatePoolInetNameResolver;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

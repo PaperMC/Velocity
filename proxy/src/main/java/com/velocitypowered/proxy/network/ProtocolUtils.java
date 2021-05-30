@@ -22,8 +22,8 @@ import static com.velocitypowered.proxy.network.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
-import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
-import com.velocitypowered.proxy.network.serialization.VelocityLegacyHoverEventSerializer;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.util.adventure.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
