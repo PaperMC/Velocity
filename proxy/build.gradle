@@ -62,6 +62,8 @@ dependencies {
     implementation project(':velocity-native')
     implementation project(':velocity-proxy-core')
 
+    implementation "net.kyori:adventure-nbt:${adventureVersion}"
+
     implementation "io.netty:netty-codec:${nettyVersion}"
     implementation "io.netty:netty-codec-haproxy:${nettyVersion}"
     implementation "io.netty:netty-codec-http:${nettyVersion}"
