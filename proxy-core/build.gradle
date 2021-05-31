@@ -1,0 +1,41 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'checkstyle'
+}
+
+apply plugin: 'org.cadixdev.licenser'
+apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/publish.gradle'
+apply from: '../gradle/errorprone.gradle'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+license {
+    header = project.rootProject.file('HEADER.txt')
+}
+
+dependencies {
+    implementation project(':velocity-api')
+    implementation project(':velocity-annotation-processor')
+
+    implementation "net.kyori:adventure-nbt:${adventureVersion}"
+
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+
+    implementation "org.lanternpowered:lmbda:2.0.0"
+
+    implementation "com.github.ben-manes.caffeine:caffeine:2.8.8"
+    implementation "com.vdurmont:semver4j:3.1.0"
+    compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -55,9 +55,12 @@ tasks.withType(Checkstyle) {
 }
 
 dependencies {
+    compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
+
     implementation project(':velocity-api')
     implementation project(':velocity-annotation-processor')
     implementation project(':velocity-native')
+    implementation project(':velocity-proxy-core')
 
     implementation "io.netty:netty-codec:${nettyVersion}"
     implementation "io.netty:netty-codec-haproxy:${nettyVersion}"
@@ -67,7 +70,6 @@ dependencies {
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
     implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64"
 
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-iostreams:${log4jVersion}"
@@ -79,7 +81,6 @@ dependencies {
     runtimeOnly 'com.lmax:disruptor:3.4.2' // Async loggers
 
     implementation 'it.unimi.dsi:fastutil:8.4.1'
-    implementation "net.kyori:adventure-nbt:${adventureVersion}"
 
     implementation 'org.asynchttpclient:async-http-client:2.12.1'
 
@@ -87,12 +88,6 @@ dependencies {
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
     implementation 'org.bstats:bstats-base:2.2.0'
-    implementation 'org.lanternpowered:lmbda:2.0.0'
-
-    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.8'
-    implementation 'com.vdurmont:semver4j:3.1.0'
-
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.1.2'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"

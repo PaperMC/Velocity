@@ -37,7 +37,6 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
 import com.velocitypowered.proxy.event.VelocityEventManager;
-import com.velocitypowered.proxy.util.BrigadierUtils;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;

@@ -101,7 +101,7 @@ public class VelocityCommand implements SimpleCommand {
   }
 
   @Override
-  public void execute(final SimpleCommand.Invocation invocation) {
+  public void execute(final Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 
@@ -121,7 +121,7 @@ public class VelocityCommand implements SimpleCommand {
   }
 
   @Override
-  public List<String> suggest(final SimpleCommand.Invocation invocation) {
+  public List<String> suggest(final Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] currentArgs = invocation.arguments();
 
@@ -151,7 +151,7 @@ public class VelocityCommand implements SimpleCommand {
   }
 
   @Override
-  public boolean hasPermission(final SimpleCommand.Invocation invocation) {
+  public boolean hasPermission(final Invocation invocation) {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 

@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.plugin.loader.jvm;
 
+import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -26,7 +27,6 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.PluginClassLoader;
 import com.velocitypowered.proxy.plugin.loader.PluginLoader;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
@@ -53,6 +53,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 public class JvmPluginLoader implements PluginLoader {
+
+  private static final Gson PLUGIN_FILE_DESERIALIZER = new Gson();
 
   private final Path baseDirectory;
   private final Map<URI, PluginClassLoader> classLoaders = new HashMap<>();
@@ -151,7 +153,7 @@ public class JvmPluginLoader implements PluginLoader {
       while ((entry = in.getNextJarEntry()) != null) {
         if (entry.getName().equals("velocity-plugin-info.json")) {
           try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
+            return PLUGIN_FILE_DESERIALIZER.fromJson(pluginInfoReader,
                 new TypeToken<List<SerializedPluginDescription>>() {}.getType());
           }
         }

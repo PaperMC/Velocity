@@ -26,7 +26,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.proxy.util.BrigadierUtils;
 
 @FunctionalInterface
 public interface CommandNodeFactory<T extends Command> {

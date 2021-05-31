@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.plugin.util;
 import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -36,19 +36,19 @@ public class ProxyPluginContainer implements PluginContainer {
 
     @Override
     public String name() {
-      final Package pkg = VelocityServer.class.getPackage();
+      final Package pkg = ProxyServer.class.getPackage();
       return MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
     }
 
     @Override
     public String version() {
-      final Package pkg = VelocityServer.class.getPackage();
+      final Package pkg = ProxyServer.class.getPackage();
       return MoreObjects.firstNonNull(pkg.getImplementationVersion(), "<unknown>");
     }
 
     @Override
     public List<String> authors() {
-      final Package pkg = VelocityServer.class.getPackage();
+      final Package pkg = ProxyServer.class.getPackage();
       final String vendor = MoreObjects.firstNonNull(pkg.getImplementationVendor(),
           "Velocity Contributors");
       return List.of(vendor);

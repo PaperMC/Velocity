@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.command;
 import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.proxy.util.BrigadierUtils;
 
 final class VelocitySimpleCommandInvocation extends AbstractCommandInvocation<String[]>
         implements SimpleCommand.Invocation {

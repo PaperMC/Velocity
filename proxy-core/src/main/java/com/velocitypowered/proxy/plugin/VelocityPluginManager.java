@@ -35,7 +35,6 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.jvm.JvmPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
@@ -63,9 +62,9 @@ public class VelocityPluginManager implements PluginManager {
 
   private final Map<String, PluginContainer> plugins = new LinkedHashMap<>();
   private final IdentityHashMap<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
-  private final VelocityServer server;
+  private final ProxyServer server;
 
-  public VelocityPluginManager(VelocityServer server) {
+  public VelocityPluginManager(ProxyServer server) {
     this.server = checkNotNull(server, "server");
 
     // Register ourselves as a plugin

@@ -1,11 +1,15 @@
 rootProject.name = 'velocity'
 include(
         'api',
+        'proxy-core',
         'proxy',
         'native',
+        'network',
         'annotation-processor'
 )
 findProject(':annotation-processor')?.name = 'velocity-annotation-processor'
 findProject(':api')?.name = 'velocity-api'
 findProject(':proxy')?.name = 'velocity-proxy'
+findProject(':proxy-core')?.name = 'velocity-proxy-core'
 findProject(':native')?.name = 'velocity-native'
+findProject(':network')?.name = 'velocity-network'
