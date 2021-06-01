@@ -106,6 +106,14 @@ public interface ProxyServer extends Audience {
   Collection<RegisteredServer> matchServer(String partialName);
 
   /**
+   * Creates a raw {@link RegisteredServer} without tying it into the internal server map.
+   *
+   * @param server the server to register
+   * @return the {@link RegisteredServer} implementation created by the provided {@link ServerInfo}.
+   */
+  RegisteredServer createRawRegisteredServer(ServerInfo server);
+
+  /**
    * Registers a server with this proxy. A server with this name should not already exist.
    *
    * @param server the server to register
