@@ -54,6 +54,17 @@ public class ServerMap {
   }
 
   /**
+   * Creates a raw implementation of a {@link RegisteredServer} without
+   *  tying it to the internal server map.
+   *
+   * @param serverInfo the server to create a registered server with
+   * @return the {@link RegisteredServer} built from the {@link ServerInfo}
+   */
+  public RegisteredServer createRawRegisteredServer(ServerInfo serverInfo) {
+    return new VelocityRegisteredServer(server, serverInfo);
+  }
+
+  /**
    * Registers a server with the proxy.
    *
    * @param serverInfo the server to register
