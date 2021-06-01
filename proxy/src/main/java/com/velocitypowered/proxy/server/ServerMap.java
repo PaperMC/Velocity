@@ -55,6 +55,17 @@ public class ServerMap {
   }
 
   /**
+   * Creates a raw implementation of a {@link RegisteredServer} without
+   *  tying it to the internal server map.
+   *
+   * @param serverInfo the server to create a registered server with
+   * @return the {@link RegisteredServer} built from the {@link ServerInfo}
+   */
+  public RegisteredServer createRawRegisteredServer(ServerInfo serverInfo) {
+    return new VelocityRegisteredServer(server, serverInfo);
+  }
+
+  /**
    * Registers a server with the proxy.
    *
    * @param serverInfo the server to register
@@ -63,7 +74,7 @@ public class ServerMap {
   public RegisteredServer register(ServerInfo serverInfo) {
     Preconditions.checkNotNull(serverInfo, "serverInfo");
     String lowerName = serverInfo.getName().toLowerCase(Locale.US);
-    VelocityRegisteredServer rs = new VelocityRegisteredServer(server, serverInfo);
+    RegisteredServer rs = createRawRegisteredServer(serverInfo);
 
     RegisteredServer existing = servers.putIfAbsent(lowerName, rs);
     if (existing != null && !existing.getServerInfo().equals(serverInfo)) {
