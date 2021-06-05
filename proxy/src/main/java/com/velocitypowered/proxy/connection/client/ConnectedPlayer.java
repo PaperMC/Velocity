@@ -1000,9 +1000,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (!peek) {
-      CompletableFuture.supplyAsync(() -> {
+      connection.eventLoop().execute(() -> {
         tickResourcePackQueue();
-        return true;
       });
     }
 

@@ -238,6 +238,8 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * Queues and sends a new Resource-pack offer to the player.
    * To monitor the status of the sent resource pack, subscribe to
    * {@link PlayerResourcePackStatusEvent}.
+   * To create a {@link ResourcePackInfo} use the
+   * {@link ProxyServer#createResourcePackBuilder(String)} builder.
    *
    * @param packInfo the resource-pack in question
    */
@@ -247,16 +249,17 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * Gets the {@link ResourcePackInfo} of the currently applied
    * resource-pack or null if none.
    *
-   * @return the applied resource pack
+   * @return the applied resource pack or null if none.
    */
   @Nullable
   ResourcePackInfo getAppliedResourcePack();
 
   /**
-   * Gets the {@link ResourcePackInfo} of the currently accepted
-   * and currently downloading resource-pack or null if none.
+   * Gets the {@link ResourcePackInfo} of the resource pack
+   * the user is currently downloading or is currently
+   * prompted to install or null if none.
    *
-   * @return the pending resource pack
+   * @return the pending resource pack or null if none
    */
   @Nullable
   ResourcePackInfo getPendingResourcePack();

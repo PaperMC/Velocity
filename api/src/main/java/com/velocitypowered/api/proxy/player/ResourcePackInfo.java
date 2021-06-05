@@ -113,7 +113,7 @@ public interface ResourcePackInfo {
      */
     DOWNSTREAM_SERVER,
     /**
-     * The player declined to download the resource pack.
+     * The resource-pack originated from a plugin on this proxy.
      */
     PLUGIN_ON_PROXY
   }
