@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.command;
+package com.velocitypowered.proxy.command.invocation;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandInvocation;
@@ -38,11 +38,35 @@ abstract class AbstractCommandInvocation<T> implements CommandInvocation<T> {
 
   @Override
   public CommandSource source() {
-    return source;
+    return this.source;
   }
 
   @Override
   public T arguments() {
-    return arguments;
+    return this.arguments;
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    final AbstractCommandInvocation<?> that = (AbstractCommandInvocation<?>) o;
+
+    if (!this.source.equals(that.source)) {
+      return false;
+    }
+    return this.arguments.equals(that.arguments);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = this.source.hashCode();
+    result = 31 * result + this.arguments.hashCode();
+    return result;
   }
 }

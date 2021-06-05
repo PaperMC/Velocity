@@ -19,41 +19,62 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.tree.CommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.command.CommandExecuteEventImpl;
+import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
+import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
-import com.velocitypowered.proxy.util.BrigadierUtils;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.checkerframework.checker.lock.qual.GuardedBy;
 
 public class VelocityCommandManager implements CommandManager {
 
-  private final CommandDispatcher<CommandSource> dispatcher;
-  private final VelocityEventManager eventManager;
+  private final @GuardedBy("lock") CommandDispatcher<CommandSource> dispatcher;
+  private final ReadWriteLock lock;
 
+  private final VelocityEventManager eventManager;
+  private final List<CommandRegistrar<?>> registrars;
+  private final SuggestionsProvider<CommandSource> suggestionsProvider;
+  private final CommandGraphInjector<CommandSource> injector;
+
+  /**
+   * Constructs a command manager.
+   *
+   * @param eventManager the event manager
+   */
   public VelocityCommandManager(final VelocityEventManager eventManager) {
-    this.eventManager = Preconditions.checkNotNull(eventManager);
+    this.lock = new ReentrantReadWriteLock();
     this.dispatcher = new CommandDispatcher<>();
+    this.eventManager = Preconditions.checkNotNull(eventManager);
+    final RootCommandNode<CommandSource> root = this.dispatcher.getRoot();
+    this.registrars = ImmutableList.of(
+            new BrigadierCommandRegistrar(root, this.lock.writeLock()),
+            new SimpleCommandRegistrar(root, this.lock.writeLock()),
+            new RawCommandRegistrar(root, this.lock.writeLock()));
+    this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher, this.lock.readLock());
+    this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
   }
 
   @Override
@@ -79,42 +100,34 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    Iterator<String> aliasIterator = meta.aliases().iterator();
-    String primaryAlias = aliasIterator.next();
-
-    LiteralCommandNode<CommandSource> node = null;
-    if (command instanceof BrigadierCommand) {
-      node = ((BrigadierCommand) command).getNode();
-    } else if (command instanceof SimpleCommand) {
-      node = CommandNodeFactory.SIMPLE.create(primaryAlias, (SimpleCommand) command);
-    } else if (command instanceof RawCommand) {
-      node = CommandNodeFactory.RAW.create(primaryAlias, (RawCommand) command);
-    } else {
-      throw new IllegalArgumentException("Unknown command implementation for "
-          + command.getClass().getName());
-    }
-
-    if (!(command instanceof BrigadierCommand)) {
-      for (CommandNode<CommandSource> hint : meta.hints()) {
-        node.addChild(BrigadierUtils.wrapForHinting(hint, node.getCommand()));
+    for (final CommandRegistrar<?> registrar : this.registrars) {
+      if (this.tryRegister(registrar, command, meta)) {
+        return;
       }
     }
+    throw new IllegalArgumentException(
+            command + " does not implement a registrable Command subinterface");
+  }
 
-    dispatcher.getRoot().addChild(node);
-    while (aliasIterator.hasNext()) {
-      String currentAlias = aliasIterator.next();
-      CommandNode<CommandSource> existingNode = dispatcher.getRoot()
-          .getChild(currentAlias.toLowerCase(Locale.ENGLISH));
-      if (existingNode != null) {
-        dispatcher.getRoot().getChildren().remove(existingNode);
-      }
-      dispatcher.getRoot().addChild(BrigadierUtils.buildRedirect(currentAlias, node));
+  private <T extends Command> boolean tryRegister(final CommandRegistrar<T> registrar,
+                                                  final Command command, final CommandMeta meta) {
+    final Class<T> superInterface = registrar.registrableSuperInterface();
+    if (!superInterface.isInstance(command)) {
+      return false;
+    }
+    try {
+      registrar.register(superInterface.cast(command), meta);
+      return true;
+    } catch (final IllegalArgumentException ignored) {
+      return false;
     }
   }
 
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
+    // The literals of secondary aliases will preserve the children of
+    // the removed literal in the graph.
     dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
   }
 
@@ -136,9 +149,10 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> results = parse(cmdLine, source, true);
+    final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, true);
+    final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
     try {
-      return dispatcher.execute(results) != BrigadierCommand.FORWARD;
+      return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
               CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
@@ -193,22 +207,32 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    ParseResults<CommandSource> parse = parse(cmdLine, source, false);
-    return dispatcher.getCompletionSuggestions(parse)
-            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+    final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, false);
+    return suggestionsProvider.provideSuggestions(normalizedInput, source)
+          .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
-  private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
-                                            final boolean trim) {
-    String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
-    return dispatcher.parse(normalized, source);
+  /**
+   * Parses the given command input.
+   *
+   * @param input the normalized command input, without the leading slash ('/')
+   * @param source the command source to parse the command for
+   * @return the parse results
+   */
+  private ParseResults<CommandSource> parse(final String input, final CommandSource source) {
+    lock.readLock().lock();
+    try {
+      return dispatcher.parse(input, source);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   /**
    * Returns whether the given alias is registered on this manager.
    *
    * @param alias the command alias to check
-   * @return {@code true} if the alias is registered
+   * @return true if the alias is registered; false otherwise
    */
   @Override
   public boolean hasCommand(final String alias) {
@@ -217,6 +241,11 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   public CommandDispatcher<CommandSource> getDispatcher() {
+    // TODO Can we remove this? This is only used by tests, and constitutes unsafe publication.
     return dispatcher;
+  }
+
+  public CommandGraphInjector<CommandSource> getInjector() {
+    return injector;
   }
 }

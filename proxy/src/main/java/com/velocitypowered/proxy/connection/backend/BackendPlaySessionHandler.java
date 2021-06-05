@@ -30,6 +30,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEventImpl;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -205,16 +206,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     RootCommandNode<CommandSource> rootNode = commands.getRootNode();
     if (server.configuration().isAnnounceProxyCommands()) {
       // Inject commands from the proxy.
-      RootCommandNode<CommandSource> dispatcherRootNode = filterRootNode(server.commandManager()
-          .getDispatcher().getRoot());
-      Collection<CommandNode<CommandSource>> proxyNodes = dispatcherRootNode.getChildren();
-      for (CommandNode<CommandSource> node : proxyNodes) {
-        CommandNode<CommandSource> existingServerChild = rootNode.getChild(node.getName());
-        if (existingServerChild != null) {
-          rootNode.getChildren().remove(existingServerChild);
-        }
-        rootNode.addChild(node);
-      }
+      final CommandGraphInjector<CommandSource> injector = server.commandManager().getInjector();
+      injector.inject(rootNode, serverConn.player());
     }
 
     server.eventManager().fire(
@@ -225,66 +218,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           return null;
         });
     return true;
-  }
-
-  /**
-   * Creates a deep copy of the provided command node, but removes any node that are not accessible
-   * by the player (respecting the requirement of the node). This function is specialized for
-   * root command nodes, so as to get better safety guarantees.
-   *
-   * @param source source node
-   * @return filtered node
-   */
-  private RootCommandNode<CommandSource> filterRootNode(CommandNode<CommandSource> source) {
-    RootCommandNode<CommandSource> dest = new RootCommandNode<>();
-    for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
-      CommandNode<CommandSource> destChild = filterNode(sourceChild);
-      if (destChild == null) {
-        continue;
-      }
-      dest.addChild(destChild);
-    }
-
-    return dest;
-  }
-
-  /**
-   * Creates a deep copy of the provided command node, but removes any node that are not accessible
-   * by the player (respecting the requirement of the node).
-   *
-   * @param source source node
-   * @return filtered node
-   */
-  private @Nullable CommandNode<CommandSource> filterNode(CommandNode<CommandSource> source) {
-    if (source.getRequirement() != null) {
-      try {
-        if (!source.getRequirement().test(serverConn.player())) {
-          return null;
-        }
-      } catch (Throwable e) {
-        // swallow everything because plugins
-        logger.error(
-            "Requirement test for command node " + source + " encountered an exception", e);
-      }
-    }
-
-    ArgumentBuilder<CommandSource, ?> destChildBuilder = source.createBuilder();
-    destChildBuilder.requires((commandSource) -> true);
-    if (destChildBuilder.getRedirect() != null) {
-      destChildBuilder.redirect(filterNode(destChildBuilder.getRedirect()));
-    }
-
-    CommandNode<CommandSource> dest = destChildBuilder.build();
-
-    for (CommandNode<CommandSource> sourceChild : source.getChildren()) {
-      CommandNode<CommandSource> destChild = filterNode(sourceChild);
-      if (destChild == null) {
-        continue;
-      }
-      dest.addChild(destChild);
-    }
-
-    return dest;
   }
 
   @Override
