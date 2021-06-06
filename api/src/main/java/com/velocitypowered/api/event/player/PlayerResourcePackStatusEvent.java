@@ -27,7 +27,7 @@ public class PlayerResourcePackStatusEvent {
 
 
   /**
-   * Instates this event.
+   * Instantiates this event.
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, Status, ResourcePackInfo)} instead.
    */
@@ -39,7 +39,7 @@ public class PlayerResourcePackStatusEvent {
   }
 
   /**
-   * Instates this event.
+   * Instantiates this event.
    */
   public PlayerResourcePackStatusEvent(Player player, Status status, ResourcePackInfo packInfo) {
     this.player = Preconditions.checkNotNull(player, "player");
