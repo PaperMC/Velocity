@@ -68,6 +68,7 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -490,6 +491,7 @@ public enum StateRegistry {
    * @param encodeOnly When true packet decoding will be disabled
    * @return PacketMapping with the provided arguments
    */
+  @SuppressFBWarnings({"UPM_UNCALLED_PRIVATE_METHOD"})
   private static PacketMapping map(int id, ProtocolVersion version, boolean encodeOnly) {
     return map(id, version, null, encodeOnly);
   }
