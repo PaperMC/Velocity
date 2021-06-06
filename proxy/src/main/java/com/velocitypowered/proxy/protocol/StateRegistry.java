@@ -25,6 +25,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_15;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16_4;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_17;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -60,7 +62,12 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -124,7 +131,8 @@ public enum StateRegistry {
           map(0x0A, MINECRAFT_1_12, false),
           map(0x09, MINECRAFT_1_12_1, false),
           map(0x0A, MINECRAFT_1_13, false),
-          map(0x0B, MINECRAFT_1_14, false));
+          map(0x0B, MINECRAFT_1_14, false),
+          map(0x0A, MINECRAFT_1_17, false));
       serverbound.register(KeepAlive.class, KeepAlive::new,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x0B, MINECRAFT_1_9, false),
@@ -132,7 +140,8 @@ public enum StateRegistry {
           map(0x0B, MINECRAFT_1_12_1, false),
           map(0x0E, MINECRAFT_1_13, false),
           map(0x0F, MINECRAFT_1_14, false),
-          map(0x10, MINECRAFT_1_16, false));
+          map(0x10, MINECRAFT_1_16, false),
+          map(0x0F, MINECRAFT_1_17, false));
       serverbound.register(ResourcePackResponse.class, ResourcePackResponse::new,
           map(0x19, MINECRAFT_1_8, false),
           map(0x16, MINECRAFT_1_9, false),
@@ -145,25 +154,29 @@ public enum StateRegistry {
       clientbound.register(BossBar.class, BossBar::new,
           map(0x0C, MINECRAFT_1_9, false),
           map(0x0D, MINECRAFT_1_15, false),
-          map(0x0C, MINECRAFT_1_16, false));
+          map(0x0C, MINECRAFT_1_16, false),
+          map(0x0D, MINECRAFT_1_17, false));
       clientbound.register(Chat.class, Chat::new,
           map(0x02, MINECRAFT_1_7_2, true),
           map(0x0F, MINECRAFT_1_9, true),
           map(0x0E, MINECRAFT_1_13, true),
           map(0x0F, MINECRAFT_1_15, true),
-          map(0x0E, MINECRAFT_1_16, true));
+          map(0x0E, MINECRAFT_1_16, true),
+          map(0x0F, MINECRAFT_1_17, true));
       clientbound.register(TabCompleteResponse.class, TabCompleteResponse::new,
           map(0x3A, MINECRAFT_1_7_2, false),
           map(0x0E, MINECRAFT_1_9, false),
           map(0x10, MINECRAFT_1_13, false),
           map(0x11, MINECRAFT_1_15, false),
           map(0x10, MINECRAFT_1_16, false),
-          map(0x0F, MINECRAFT_1_16_2, false));
+          map(0x0F, MINECRAFT_1_16_2, false),
+          map(0x11, MINECRAFT_1_17, false));
       clientbound.register(AvailableCommands.class, AvailableCommands::new,
           map(0x11, MINECRAFT_1_13, false),
           map(0x12, MINECRAFT_1_15, false),
           map(0x11, MINECRAFT_1_16, false),
-          map(0x10, MINECRAFT_1_16_2, false));
+          map(0x10, MINECRAFT_1_16_2, false),
+          map(0x12, MINECRAFT_1_17, false));
       clientbound.register(PluginMessage.class, PluginMessage::new,
           map(0x3F, MINECRAFT_1_7_2, false),
           map(0x18, MINECRAFT_1_9, false),
@@ -171,7 +184,8 @@ public enum StateRegistry {
           map(0x18, MINECRAFT_1_14, false),
           map(0x19, MINECRAFT_1_15, false),
           map(0x18, MINECRAFT_1_16, false),
-          map(0x17, MINECRAFT_1_16_2, false));
+          map(0x17, MINECRAFT_1_16_2, false),
+          map(0x18, MINECRAFT_1_17, false));
       clientbound.register(Disconnect.class, Disconnect::new,
           map(0x40, MINECRAFT_1_7_2, false),
           map(0x1A, MINECRAFT_1_9, false),
@@ -179,7 +193,8 @@ public enum StateRegistry {
           map(0x1A, MINECRAFT_1_14, false),
           map(0x1B, MINECRAFT_1_15, false),
           map(0x1A, MINECRAFT_1_16, false),
-          map(0x19, MINECRAFT_1_16_2, false));
+          map(0x19, MINECRAFT_1_16_2, false),
+          map(0x1A, MINECRAFT_1_17, false));
       clientbound.register(KeepAlive.class, KeepAlive::new,
           map(0x00, MINECRAFT_1_7_2, false),
           map(0x1F, MINECRAFT_1_9, false),
@@ -187,7 +202,8 @@ public enum StateRegistry {
           map(0x20, MINECRAFT_1_14, false),
           map(0x21, MINECRAFT_1_15, false),
           map(0x20, MINECRAFT_1_16, false),
-          map(0x1F, MINECRAFT_1_16_2, false));
+          map(0x1F, MINECRAFT_1_16_2, false),
+          map(0x21, MINECRAFT_1_17, false));
       clientbound.register(JoinGame.class, JoinGame::new,
           map(0x01, MINECRAFT_1_7_2, false),
           map(0x23, MINECRAFT_1_9, false),
@@ -195,7 +211,8 @@ public enum StateRegistry {
           map(0x25, MINECRAFT_1_14, false),
           map(0x26, MINECRAFT_1_15, false),
           map(0x25, MINECRAFT_1_16, false),
-          map(0x24, MINECRAFT_1_16_2, false));
+          map(0x24, MINECRAFT_1_16_2, false),
+          map(0x26, MINECRAFT_1_17, false));
       clientbound.register(Respawn.class, Respawn::new,
           map(0x07, MINECRAFT_1_7_2, true),
           map(0x33, MINECRAFT_1_9, true),
@@ -205,17 +222,19 @@ public enum StateRegistry {
           map(0x3A, MINECRAFT_1_14, true),
           map(0x3B, MINECRAFT_1_15, true),
           map(0x3A, MINECRAFT_1_16, true),
-          map(0x39, MINECRAFT_1_16_2, true));
+          map(0x39, MINECRAFT_1_16_2, true),
+          map(0x3D, MINECRAFT_1_17, true));
       clientbound.register(ResourcePackRequest.class, ResourcePackRequest::new,
-          map(0x48, MINECRAFT_1_8, true),
-          map(0x32, MINECRAFT_1_9, true),
-          map(0x33, MINECRAFT_1_12, true),
-          map(0x34, MINECRAFT_1_12_1, true),
-          map(0x37, MINECRAFT_1_13, true),
-          map(0x39, MINECRAFT_1_14, true),
-          map(0x3A, MINECRAFT_1_15, true),
-          map(0x39, MINECRAFT_1_16, true),
-          map(0x38, MINECRAFT_1_16_2, true));
+          map(0x48, MINECRAFT_1_8, false),
+          map(0x32, MINECRAFT_1_9, false),
+          map(0x33, MINECRAFT_1_12, false),
+          map(0x34, MINECRAFT_1_12_1, false),
+          map(0x37, MINECRAFT_1_13, false),
+          map(0x39, MINECRAFT_1_14, false),
+          map(0x3A, MINECRAFT_1_15, false),
+          map(0x39, MINECRAFT_1_16, false),
+          map(0x38, MINECRAFT_1_16_2, false),
+          map(0x3C, MINECRAFT_1_17, false));
       clientbound.register(HeaderAndFooter.class, HeaderAndFooter::new,
           map(0x47, MINECRAFT_1_8, true),
           map(0x48, MINECRAFT_1_9, true),
@@ -225,8 +244,9 @@ public enum StateRegistry {
           map(0x4E, MINECRAFT_1_13, true),
           map(0x53, MINECRAFT_1_14, true),
           map(0x54, MINECRAFT_1_15, true),
-          map(0x53, MINECRAFT_1_16, true));
-      clientbound.register(TitlePacket.class, TitlePacket::new,
+          map(0x53, MINECRAFT_1_16, true),
+          map(0x5E, MINECRAFT_1_17, true));
+      clientbound.register(LegacyTitlePacket.class, LegacyTitlePacket::new,
           map(0x45, MINECRAFT_1_8, true),
           map(0x45, MINECRAFT_1_9, true),
           map(0x47, MINECRAFT_1_12, true),
@@ -234,7 +254,17 @@ public enum StateRegistry {
           map(0x4B, MINECRAFT_1_13, true),
           map(0x4F, MINECRAFT_1_14, true),
           map(0x50, MINECRAFT_1_15, true),
-          map(0x4F, MINECRAFT_1_16, true));
+          map(0x4F, MINECRAFT_1_16, MINECRAFT_1_16_4, true));
+      clientbound.register(TitleSubtitlePacket.class, TitleSubtitlePacket::new,
+          map(0x57, MINECRAFT_1_17, true));
+      clientbound.register(TitleTextPacket.class, TitleTextPacket::new,
+          map(0x59, MINECRAFT_1_17, true));
+      clientbound.register(TitleActionbarPacket.class, TitleActionbarPacket::new,
+          map(0x41, MINECRAFT_1_17, true));
+      clientbound.register(TitleTimesPacket.class, TitleTimesPacket::new,
+          map(0x5A, MINECRAFT_1_17, true));
+      clientbound.register(TitleClearPacket.class, TitleClearPacket::new,
+          map(0x10, MINECRAFT_1_17, true));
       clientbound.register(PlayerListItem.class, PlayerListItem::new,
           map(0x38, MINECRAFT_1_7_2, false),
           map(0x2D, MINECRAFT_1_9, false),
@@ -243,7 +273,8 @@ public enum StateRegistry {
           map(0x33, MINECRAFT_1_14, false),
           map(0x34, MINECRAFT_1_15, false),
           map(0x33, MINECRAFT_1_16, false),
-          map(0x32, MINECRAFT_1_16_2, false));
+          map(0x32, MINECRAFT_1_16_2, false),
+          map(0x36, MINECRAFT_1_17, false));
     }
   },
   LOGIN {
@@ -311,8 +342,20 @@ public enum StateRegistry {
       for (int i = 0; i < mappings.length; i++) {
         PacketMapping current = mappings[i];
         PacketMapping next = (i + 1 < mappings.length) ? mappings[i + 1] : current;
+
         ProtocolVersion from = current.protocolVersion;
-        ProtocolVersion to = current == next ? getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
+        ProtocolVersion lastValid = current.lastValidProtocolVersion;
+        if (lastValid != null) {
+          if (next != current) {
+            throw new IllegalArgumentException("Cannot add a mapping after last valid mapping");
+          }
+          if (from.compareTo(lastValid) > 0) {
+            throw new IllegalArgumentException(
+                    "Last mapping version cannot be higher than highest mapping version");
+          }
+        }
+        ProtocolVersion to = current == next ? lastValid != null
+                ? lastValid : getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
 
         if (from.compareTo(to) >= 0 && from != getLast(SUPPORTED_VERSIONS)) {
           throw new IllegalArgumentException(String.format(
@@ -400,10 +443,13 @@ public enum StateRegistry {
     private final int id;
     private final ProtocolVersion protocolVersion;
     private final boolean encodeOnly;
+    private final @Nullable ProtocolVersion lastValidProtocolVersion;
 
-    PacketMapping(int id, ProtocolVersion protocolVersion, boolean packetDecoding) {
+    PacketMapping(int id, ProtocolVersion protocolVersion,
+                  ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
+      this.lastValidProtocolVersion = lastValidProtocolVersion;
       this.encodeOnly = packetDecoding;
     }
 
@@ -445,7 +491,21 @@ public enum StateRegistry {
    * @return PacketMapping with the provided arguments
    */
   private static PacketMapping map(int id, ProtocolVersion version, boolean encodeOnly) {
-    return new PacketMapping(id, version, encodeOnly);
+    return map(id, version, null, encodeOnly);
+  }
+
+  /**
+   * Creates a PacketMapping using the provided arguments.
+   *
+   * @param id         Packet Id
+   * @param version    Protocol version
+   * @param encodeOnly When true packet decoding will be disabled
+   * @param lastValidProtocolVersion Last version this Mapping is valid at
+   * @return PacketMapping with the provided arguments
+   */
+  private static PacketMapping map(int id, ProtocolVersion version,
+          ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
+    return new PacketMapping(id, version, lastValidProtocolVersion, encodeOnly);
   }
 
 }

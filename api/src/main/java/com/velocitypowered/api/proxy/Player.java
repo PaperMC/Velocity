@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents a player who is connected to the proxy.
@@ -158,7 +160,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
    *
    * @param url the URL for the resource pack
+   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
    */
+  @Deprecated
   void sendResourcePack(String url);
 
   /**
@@ -168,8 +172,40 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @param url the URL for the resource pack
    * @param hash the SHA-1 hash value for the resource pack
+   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
    */
+  @Deprecated
   void sendResourcePack(String url, byte[] hash);
+
+  /**
+   * Queues and sends a new Resource-pack offer to the player.
+   * To monitor the status of the sent resource pack, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
+   * To create a {@link ResourcePackInfo} use the
+   * {@link ProxyServer#createResourcePackBuilder(String)} builder.
+   *
+   * @param packInfo the resource-pack in question
+   */
+  void sendResourcePackOffer(ResourcePackInfo packInfo);
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the currently applied
+   * resource-pack or null if none.
+   *
+   * @return the applied resource pack or null if none.
+   */
+  @Nullable
+  ResourcePackInfo getAppliedResourcePack();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the resource pack
+   * the user is currently downloading or is currently
+   * prompted to install or null if none.
+   *
+   * @return the pending resource pack or null if none
+   */
+  @Nullable
+  ResourcePackInfo getPendingResourcePack();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
