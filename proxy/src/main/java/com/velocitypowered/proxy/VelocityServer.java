@@ -603,6 +603,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
+  public RegisteredServer createRawRegisteredServer(ServerInfo server) {
+    return servers.createRawRegisteredServer(server);
+  }
+
+  @Override
   public RegisteredServer registerServer(ServerInfo server) {
     return servers.register(server);
   }
