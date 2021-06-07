@@ -49,27 +49,15 @@ import org.junit.jupiter.api.Test;
 @Disabled
 public class OldCommandManagerTests {
 
-  public static final VelocityEventManager EVENT_MANAGER = new MockEventManager();
-
-  static {
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      try {
-        EVENT_MANAGER.shutdown();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }));
-  }
-
   static VelocityCommandManager createManager() {
-    return new VelocityCommandManager(EVENT_MANAGER);
+    return new VelocityCommandManager(CommandManagerTests.EVENT_MANAGER);
   }
 
   @Test
   void testConstruction() {
     VelocityCommandManager manager = createManager();
     assertFalse(manager.hasCommand("foo"));
-    assertTrue(manager.getDispatcher().getRoot().getChildren().isEmpty());
+    assertTrue(manager.getRoot().getChildren().isEmpty());
     assertFalse(manager.executeAsync(MockCommandSource.INSTANCE, "foo").join());
     assertFalse(manager.executeImmediatelyAsync(MockCommandSource.INSTANCE, "bar").join());
     assertTrue(manager.offerSuggestions(MockCommandSource.INSTANCE, "").join().isEmpty());
