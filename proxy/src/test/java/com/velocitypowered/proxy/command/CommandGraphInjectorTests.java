@@ -45,7 +45,7 @@ public class CommandGraphInjectorTests {
 
   @BeforeEach
   void setUp() {
-    this.manager = new VelocityCommandManager(OldCommandManagerTests.EVENT_MANAGER);
+    this.manager = CommandManagerTests.newManager();
     this.dest = new RootCommandNode<>();
   }
 
@@ -56,7 +56,7 @@ public class CommandGraphInjectorTests {
     manager.getInjector().inject(dest, SOURCE);
 
     // Preserves alias and arguments node
-    final var expected = manager.getDispatcher().getRoot();
+    final var expected = manager.getRoot();
     assertEquals(expected, dest);
   }
 

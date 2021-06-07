@@ -15,7 +15,7 @@ abstract class CommandTestSuite {
 
   @BeforeEach
   void setUp() {
-    this.manager = new VelocityCommandManager(OldCommandManagerTests.EVENT_MANAGER);
+    this.manager = CommandManagerTests.newManager();
   }
 
   final void assertHandled(final String input) {

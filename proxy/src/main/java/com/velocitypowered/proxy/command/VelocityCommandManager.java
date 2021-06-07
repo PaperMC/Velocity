@@ -48,6 +48,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.jetbrains.annotations.VisibleForTesting;
 
 public class VelocityCommandManager implements CommandManager {
 
@@ -241,9 +242,9 @@ public class VelocityCommandManager implements CommandManager {
     return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
   }
 
-  public CommandDispatcher<CommandSource> getDispatcher() {
-    // TODO Can we remove this? This is only used by tests, and constitutes unsafe publication.
-    return dispatcher;
+  @VisibleForTesting // this constitutes unsafe publication
+  RootCommandNode<CommandSource> getRoot() {
+    return dispatcher.getRoot();
   }
 
   public CommandGraphInjector<CommandSource> getInjector() {
