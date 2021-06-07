@@ -157,9 +157,11 @@ public class CommandManagerTests {
     assertTrue(manager.hasCommand("foo"));
   }
 
-  static class DummyCommand implements SimpleCommand {
+  static final class DummyCommand implements SimpleCommand {
 
     static final DummyCommand INSTANCE = new DummyCommand();
+
+    private DummyCommand() {}
 
     @Override
     public void execute(final Invocation invocation) {
