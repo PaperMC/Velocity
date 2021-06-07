@@ -52,11 +52,13 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
+  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private static final boolean BACKPRESSURE_LOG = Boolean
       .getBoolean("velocity.log-server-backpressure");
@@ -140,7 +142,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         .setShouldForce(packet.isRequired());
     // Why SpotBugs decides that this is unsafe I have no idea;
     if (packet.getHash() != null && !Preconditions.checkNotNull(packet.getHash()).isEmpty()) {
-      builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
+      if (PLAUSIBLE_SHA1_HASH.matcher(packet.getHash()).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
+      }
     }
 
     serverConn.getPlayer().queueResourcePack(builder.build());
