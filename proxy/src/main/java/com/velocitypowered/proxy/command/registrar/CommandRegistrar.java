@@ -33,15 +33,15 @@ public interface CommandRegistrar<T extends Command> {
   /**
    * Registers the given command.
    *
-   * @param command the command to register
    * @param meta the command metadata, including the case-insensitive aliases
+   * @param command the command to register
    * @throws IllegalArgumentException if the given command cannot be registered
    */
-  void register(final T command, final CommandMeta meta);
+  void register(final CommandMeta meta, final T command);
 
   /**
    * Returns the superclass or superinterface of all {@link Command} classes
-   * compatible with this registrar. Note that {@link #register(Command, CommandMeta)}
+   * compatible with this registrar. Note that {@link #register(CommandMeta, Command)}
    * may impose additional restrictions on individual {@link Command} instances.
    *
    * @return the superclass of all the classes compatible with this registrar

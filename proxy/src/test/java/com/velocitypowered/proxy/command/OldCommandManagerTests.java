@@ -47,9 +47,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class CommandManagerTests {
+@Disabled
+public class OldCommandManagerTests {
 
-  private static final VelocityEventManager EVENT_MANAGER = new MockEventManager();
+  public static final VelocityEventManager EVENT_MANAGER = new MockEventManager();
 
   static {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
