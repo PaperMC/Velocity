@@ -97,6 +97,7 @@ public class VelocityCommandManager implements CommandManager {
   public void register(final CommandMeta meta, final Command command) {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
+    // TODO This is quite ugly; find registrar and then attempt registering.
 
     for (final CommandRegistrar<?> registrar : this.registrars) {
       if (this.tryRegister(registrar, command, meta)) {
@@ -114,7 +115,7 @@ public class VelocityCommandManager implements CommandManager {
       return false;
     }
     try {
-      registrar.register(superInterface.cast(command), meta);
+      registrar.register(meta, superInterface.cast(command));
       return true;
     } catch (final IllegalArgumentException ignored) {
       return false;

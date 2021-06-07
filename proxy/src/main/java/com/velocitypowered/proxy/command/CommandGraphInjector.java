@@ -89,6 +89,8 @@ public final class CommandGraphInjector<S> {
                 VelocityCommands.getArgumentsNode(asLiteral);
         if (argsNode == null) {
           // This literal is associated to a BrigadierCommand, filter normally
+          // TODO Document alias redirects are not supported, see
+          // CommandGraphInjectorTests#testBrigadierCommandAliasRedirectsNotAllowed.
           this.copyChildren(node, copy, source);
         } else {
           // Copy all children nodes (arguments node and hints)
