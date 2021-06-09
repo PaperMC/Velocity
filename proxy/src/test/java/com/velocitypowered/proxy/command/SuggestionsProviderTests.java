@@ -18,18 +18,22 @@
 package com.velocitypowered.proxy.command;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.spotify.futures.CompletableFutures;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -39,13 +43,12 @@ import org.junit.jupiter.api.Test;
 public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
-  void testSuggestsAliasForEmptyInput() {
-    final var meta = manager.createMetaBuilder("foo")
-            .aliases("bar", "baz")
-            .build();
-    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+  void testSuggestsAliasesForEmptyInput() {
+    manager.register(manager.createMetaBuilder("foo").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.createMetaBuilder("bar").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.createMetaBuilder("baz").build(), NoSuggestionsCommand.INSTANCE);
 
-    assertSuggestions("", "bar", "baz", "foo");
+    assertSuggestions("", "bar", "baz", "foo"); // in alphabetical order
   }
 
   @Test
@@ -58,14 +61,20 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testSuggestsAliasesForPartialAlias() {
-    final var meta = manager.createMetaBuilder("foo")
-            .aliases("bar", "baz")
-            .build();
+    manager.register(manager.createMetaBuilder("hello").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.createMetaBuilder("hey").build(), NoSuggestionsCommand.INSTANCE);
+
+    assertSuggestions("hell", "hello");
+    assertSuggestions("He", "hello", "hey");
+  }
+
+  @Test
+  void testDoesNotSuggestForFullAlias() {
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
-    assertSuggestions("ba", "bar", "baz");
-    assertSuggestions("fo", "foo");
-    assertSuggestions("bar");
+    assertSuggestions("hello");
+    assertSuggestions("Hello");
   }
 
   @Test
@@ -78,9 +87,9 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   }
 
   @Test
-  void testDoesNotSuggestArgumentsForPartialAlias() {
+  void testDoesNotSuggestArgumentsForIncorrectAlias() {
     final var meta = manager.createMetaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -95,10 +104,26 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     assertSuggestions("hell ");
   }
 
+  // Secondary aliases
+  // The following tests check for inconsistencies between the primary alias node and
+  // a secondary alias literal.
+
   @Test
-  void testSuggestsArgumentsIgnoresAliasCase() {
-    final var meta = manager.createMetaBuilder("hello").build();
-    manager.register(meta, new SimpleCommand() {
+  void testSuggestsAllAliases() {
+    final var meta = manager.createMetaBuilder("foo")
+            .aliases("bar", "baz")
+            .build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    assertSuggestions("", "bar", "baz", "foo");
+  }
+
+  @Test
+  void testSuggestsArgumentsViaAlias() {
+    final var meta = manager.createMetaBuilder("hello")
+            .aliases("hi")
+            .build();
+    manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
         fail();
@@ -110,8 +135,10 @@ public class SuggestionsProviderTests extends CommandTestSuite {
       }
     });
 
-    assertSuggestions("Hello ", "world");
+    assertSuggestions("hi ", "world");
   }
+
+  // Hinting
 
   @Test
   void testSuggestsHintLiteral() {
@@ -169,49 +196,26 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     assertSuggestions("foo ", "bar", "baz", "qux");
     assertSuggestions("foo bar", "baz", "qux");
-  }
-
-  // Exception handling
-
-  @Test
-  void testSkipsSuggestionWhenNodeSuggestionProviderFutureCompletesExceptionally() {
-    final var meta = manager.createMetaBuilder("hello").build();
-    manager.register(meta, new RawCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
-        return CompletableFutures.exceptionallyCompletedFuture(new RuntimeException());
-      }
-    });
-
-    assertSuggestions("hello ");
+    assertSuggestions("foo baz", "bar", "qux");
   }
 
   @Test
-  void testSkipsSuggestionWhenNodeSuggestionProviderThrows() {
-    final var meta = manager.createMetaBuilder("hello").build();
-    manager.register(meta, new RawCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
+  // This doesn't make much sense, but emulates Brigadier behavior
+  void testSuggestsImpermissibleHint() {
+    final var hint = LiteralArgumentBuilder
+            .<CommandSource>literal("hint")
+            .requires(source1 -> false)
+            .build();
+    final var meta = manager.createMetaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
-      @Override
-      public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
-        throw new RuntimeException();
-      }
-    });
-
-    // Also logs an error to the console, but testing this is quite involved
-    assertSuggestions("hello ");
+    assertSuggestions("hello ", "hint");
   }
 
   @Test
-  void testSkipsSuggestionWhenHintSuggestionProviderFutureCompletesExceptionally() {
+  void testDoesNotSuggestHintIfHintSuggestionProviderFutureCompletesExceptionally() {
     final var hint = RequiredArgumentBuilder
             .<CommandSource, String>argument("hint", word())
             .suggests((context, builder) ->
@@ -226,7 +230,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   }
 
   @Test
-  void testSkipsSuggestionWhenHintSuggestionProviderThrows() {
+  void testDoesNotSuggestHintIfCustomSuggestionProviderThrows() {
     final var hint = RequiredArgumentBuilder
             .<CommandSource, String>argument("hint", word())
             .suggests((context, builder) -> {
@@ -238,9 +242,28 @@ public class SuggestionsProviderTests extends CommandTestSuite {
             .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
-    // Also logs an error to the console, but testing this is quite involved
     assertSuggestions("hello ");
   }
+
+  @Test
+  void testSuggestCompletesExceptionallyIfHintRequirementPredicateThrows() {
+    final var hint = RequiredArgumentBuilder
+            .<CommandSource, String>argument("hint", word())
+            .requires(source1 -> {
+              throw new RuntimeException();
+            })
+            .suggests((context, builder) -> fail())
+            .build();
+    final var meta = manager.createMetaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    assertThrows(CompletionException.class, () ->
+            manager.offerSuggestions(source, "hello ").join());
+  }
+
+  /*
 
   @Test
   void testSuggestionMergingIgnoresExceptionallyCompletedSuggestionFutures() {
@@ -265,7 +288,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     });
 
     assertSuggestions("hello ", "world");
-  }
+  }*/
 
   static final class NoSuggestionsCommand implements RawCommand {
 

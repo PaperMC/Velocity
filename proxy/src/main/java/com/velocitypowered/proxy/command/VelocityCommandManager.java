@@ -26,6 +26,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.RootCommandNode;
+import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
@@ -152,8 +153,9 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, true);
-    final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
     try {
+      // The parse can fail if the requirement predicates throw
+      final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
       return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
@@ -210,8 +212,14 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, false);
-    return suggestionsProvider.provideSuggestions(normalizedInput, source)
-          .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+    try {
+      return suggestionsProvider.provideSuggestions(normalizedInput, source)
+              .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+    } catch (final Throwable e) {
+      // Again, plugins are naughty
+      return CompletableFutures.exceptionallyCompletedFuture(
+        new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
+    }
   }
 
   /**
