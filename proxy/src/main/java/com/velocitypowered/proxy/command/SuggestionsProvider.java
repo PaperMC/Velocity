@@ -121,16 +121,15 @@ final class SuggestionsProvider<S> {
   }
 
   /**
-   * Returns whether a literal node with the given name should be considered for
+   * Returns whether a literal node with the given lowercase name should be considered for
    * suggestions given the specified input.
    *
-   * @param name the literal name
+   * @param name the lowercase literal name
    * @param input the partial input
    * @return true if the literal should be considered; false otherwise
    */
   private static boolean shouldConsider(final String name, final String input) {
-    // TODO (perf) If we expect input to be lowercase, no need to ignore case
-    return name.regionMatches(true, 0, input, 0, input.length());
+    return name.regionMatches(false, 0, input, 0, input.length());
   }
 
   /**
@@ -143,7 +142,9 @@ final class SuggestionsProvider<S> {
   private CompletableFuture<Suggestions> provideAliasSuggestions(
           final StringReader reader, final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
-    final String input = reader.getRead();
+    // Lowercase the alias here so all comparisons can be case-sensitive (cheaper)
+    // TODO Is this actually faster?
+    final String input = reader.getRead().toLowerCase(Locale.ENGLISH);
 
     final Collection<CommandNode<S>> aliases = contextSoFar.getRootNode().getChildren();
     @SuppressWarnings("unchecked")
@@ -188,7 +189,13 @@ final class SuggestionsProvider<S> {
       // This is a BrigadierCommand, fallback to regular suggestions
       reader.setCursor(0);
       final ParseResults<S> parse = this.dispatcher.parse(reader, source);
-      return this.dispatcher.getCompletionSuggestions(parse);
+      try {
+        return this.dispatcher.getCompletionSuggestions(parse);
+      } catch (final Throwable e) {
+        // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
+        LOGGER.error("Command node cannot provide suggestions for " + fullInput, e);
+        return Suggestions.empty();
+      }
     }
 
     if (!argsNode.canUse(source)) {
@@ -243,7 +250,7 @@ final class SuggestionsProvider<S> {
     try {
       return node.listSuggestions(built, new SuggestionsBuilder(fullInput, start));
     } catch (final Throwable e) {
-      // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
+      // Again, plugins are naughty
       LOGGER.error("Arguments node cannot provide suggestions", e);
       return Suggestions.empty();
     }
@@ -266,7 +273,7 @@ final class SuggestionsProvider<S> {
     try {
       return this.dispatcher.getCompletionSuggestions(parse);
     } catch (final Throwable e) {
-      // Again, plugins are naughty.
+      // Yet again, plugins are naughty.
       LOGGER.error("Hint node cannot provide suggestions", e);
       return Suggestions.empty();
     }

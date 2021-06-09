@@ -129,7 +129,6 @@ public class CommandManagerTests {
 
   // Un-registration
 
-
   @Test
   void testUnregisterUnregisteredAliasIsIgnored() {
     manager.unregister("hello");

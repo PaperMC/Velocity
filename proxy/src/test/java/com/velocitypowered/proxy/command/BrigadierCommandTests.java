@@ -4,12 +4,16 @@ import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -121,6 +125,41 @@ public class BrigadierCommandTests extends CommandTestSuite {
     assertEquals(1, callCount.get());
   }
 
+  @Test
+  void testExecuteAsyncCompletesExceptionallyOnCallbackException() {
+    final var expected = new RuntimeException();
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .executes(context -> {
+              throw expected;
+            })
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    final Exception wrapper = assertThrows(CompletionException.class, () ->
+            manager.executeAsync(source, "hello").join());
+
+    assertSame(expected, wrapper.getCause().getCause());
+  }
+
+  @Test
+  void testExecuteAsyncCompletesExceptionallyOnRequirementException() {
+    final var expected = new RuntimeException();
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .requires(source1 -> {
+              throw expected;
+            })
+            .executes(context -> fail()) // needed for dispatcher to consider the node
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    final Exception wrapper = assertThrows(CompletionException.class, () ->
+            manager.executeAsync(source, "hello").join());
+
+    assertSame(expected, wrapper.getCause().getCause());
+  }
+
   // Suggestions
 
   @Test
@@ -181,5 +220,51 @@ public class BrigadierCommandTests extends CommandTestSuite {
 
     assertSuggestions("parent child");
     assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testDoesNotSuggestIfCustomSuggestionProviderFutureCompletesExceptionally() {
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("parent")
+            .then(RequiredArgumentBuilder
+                    .<CommandSource, String>argument("child", word())
+                    .suggests((context, builder) ->
+                          CompletableFutures.exceptionallyCompletedFuture(new RuntimeException())))
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertSuggestions("parent ");
+  }
+
+  @Test
+  void testDoesNotSuggestIfCustomSuggestionProviderThrows() {
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("parent")
+            .then(RequiredArgumentBuilder
+                    .<CommandSource, String>argument("child", word())
+                    .suggests((context, builder) -> {
+                      throw new RuntimeException();
+                    }))
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertSuggestions("parent ");
+  }
+
+  @Test
+  void testSuggestCompletesExceptionallyIfRequirementPredicateThrows() {
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("parent")
+            .requires(source1 -> {
+              throw new RuntimeException();
+            })
+            .then(RequiredArgumentBuilder
+                    .<CommandSource, String>argument("child", word())
+                    .suggests((context, builder) -> fail()))
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertThrows(CompletionException.class, () ->
+            manager.offerSuggestions(source, "parent ").join());
   }
 }
