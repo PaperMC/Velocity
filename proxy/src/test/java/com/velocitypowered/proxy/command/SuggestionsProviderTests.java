@@ -23,10 +23,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -63,6 +66,51 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     assertSuggestions("ba", "bar", "baz");
     assertSuggestions("fo", "foo");
     assertSuggestions("bar");
+  }
+
+  @Test
+  void testDoesNotSuggestForPartialIncorrectAlias() {
+    final var meta = manager.metaBuilder("hello").build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    assertSuggestions("yo");
+    assertSuggestions("welcome");
+  }
+
+  @Test
+  void testDoesNotSuggestArgumentsForPartialAlias() {
+    final var meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return fail();
+      }
+    });
+
+    assertSuggestions("hell ");
+  }
+
+  @Test
+  void testSuggestsArgumentsIgnoresAliasCase() {
+    final var meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new SimpleCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return ImmutableList.of("world");
+      }
+    });
+
+    assertSuggestions("Hello ", "world");
   }
 
   @Test
@@ -121,6 +169,102 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     assertSuggestions("foo ", "bar", "baz", "qux");
     assertSuggestions("foo bar", "baz", "qux");
+  }
+
+  // Exception handling
+
+  @Test
+  void testSkipsSuggestionWhenNodeSuggestionProviderFutureCompletesExceptionally() {
+    final var meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
+        return CompletableFutures.exceptionallyCompletedFuture(new RuntimeException());
+      }
+    });
+
+    assertSuggestions("hello ");
+  }
+
+  @Test
+  void testSkipsSuggestionWhenNodeSuggestionProviderThrows() {
+    final var meta = manager.metaBuilder("hello").build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
+        throw new RuntimeException();
+      }
+    });
+
+    // Also logs an error to the console, but testing this is quite involved
+    assertSuggestions("hello ");
+  }
+
+  @Test
+  void testSkipsSuggestionWhenHintSuggestionProviderFutureCompletesExceptionally() {
+    final var hint = RequiredArgumentBuilder
+            .<CommandSource, String>argument("hint", word())
+            .suggests((context, builder) ->
+                CompletableFutures.exceptionallyCompletedFuture(new RuntimeException()))
+            .build();
+    final var meta = manager.metaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    assertSuggestions("hello ");
+  }
+
+  @Test
+  void testSkipsSuggestionWhenHintSuggestionProviderThrows() {
+    final var hint = RequiredArgumentBuilder
+            .<CommandSource, String>argument("hint", word())
+            .suggests((context, builder) -> {
+              throw new RuntimeException();
+            })
+            .build();
+    final var meta = manager.metaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    // Also logs an error to the console, but testing this is quite involved
+    assertSuggestions("hello ");
+  }
+
+  @Test
+  void testSuggestionMergingIgnoresExceptionallyCompletedSuggestionFutures() {
+    final var hint = RequiredArgumentBuilder
+            .<CommandSource, String>argument("hint", word())
+            .suggests((context, builder) ->
+                CompletableFutures.exceptionallyCompletedFuture(new RuntimeException()))
+            .build();
+    final var meta = manager.metaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public List<String> suggest(final Invocation invocation) {
+        return ImmutableList.of("world");
+      }
+    });
+
+    assertSuggestions("hello ", "world");
   }
 
   static final class NoSuggestionsCommand implements RawCommand {

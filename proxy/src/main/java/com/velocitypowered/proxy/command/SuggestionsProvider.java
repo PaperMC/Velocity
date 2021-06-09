@@ -182,6 +182,7 @@ final class SuggestionsProvider<S> {
           final LiteralCommandNode<S> alias, final StringReader reader,
           final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
+    final String fullInput = reader.getString();
     final VelocityArgumentCommandNode<S, ?> argsNode = VelocityCommands.getArgumentsNode(alias);
     if (argsNode == null) {
       // This is a BrigadierCommand, fallback to regular suggestions
@@ -212,15 +213,13 @@ final class SuggestionsProvider<S> {
             this.getArgumentsNodeSuggestions(argsNode, reader, context);
     final boolean hasHints = alias.getChildren().size() > 1;
     if (!hasHints) {
-      return cmdSuggestions;
+      return this.merge(fullInput, cmdSuggestions);
     }
 
     // Parse the hint nodes to get remaining suggestions
     reader.setCursor(start);
     final CompletableFuture<Suggestions> hintSuggestions =
             this.getHintSuggestions(alias, reader, contextSoFar);
-
-    final String fullInput = reader.getString();
     return this.merge(fullInput, cmdSuggestions, hintSuggestions);
   }
 
@@ -245,7 +244,7 @@ final class SuggestionsProvider<S> {
       return node.listSuggestions(built, new SuggestionsBuilder(fullInput, start));
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
-      LOGGER.error("Arguments node cannot provide suggestions, skipping", e);
+      LOGGER.error("Arguments node cannot provide suggestions", e);
       return Suggestions.empty();
     }
   }
@@ -264,7 +263,13 @@ final class SuggestionsProvider<S> {
           final LiteralCommandNode<S> alias, final StringReader reader,
           final CommandContextBuilder<S> context) {
     final ParseResults<S> parse = this.parseHints(alias, reader, context);
-    return this.dispatcher.getCompletionSuggestions(parse);
+    try {
+      return this.dispatcher.getCompletionSuggestions(parse);
+    } catch (final Throwable e) {
+      // Again, plugins are naughty.
+      LOGGER.error("Hint node cannot provide suggestions", e);
+      return Suggestions.empty();
+    }
   }
 
   /**
