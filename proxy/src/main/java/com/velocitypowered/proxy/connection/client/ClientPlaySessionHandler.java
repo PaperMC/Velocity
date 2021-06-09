@@ -285,8 +285,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponse packet) {
-    return player.onResourcePackResponse(packet.getStatus(),
-            ByteBufUtil.decodeHexDump(packet.getHash()));
+    return player.onResourcePackResponse(packet.getStatus());
   }
 
   @Override

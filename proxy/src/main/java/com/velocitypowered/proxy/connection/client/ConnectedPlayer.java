@@ -808,7 +808,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                   .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
             break;
           }
-          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED, new byte[0]);
+          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
           queued = null;
         }
         if (queued == null) {
@@ -844,9 +844,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   /**
    * Processes a client response to a sent resource-pack.
    */
-  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status,
-                                        @Nullable byte[] hash) {
-
+  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
     final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
@@ -862,7 +860,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                         .translatable("multiplayer.requiredTexturePrompt.disconnect"));
               }
             });
-
 
     switch (status) {
       case ACCEPTED:
@@ -884,9 +881,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (!peek) {
-      connection.eventLoop().execute(() -> {
-        tickResourcePackQueue();
-      });
+      connection.eventLoop().execute(this::tickResourcePackQueue);
     }
 
     return queued != null && queued.getOrigin() == ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
