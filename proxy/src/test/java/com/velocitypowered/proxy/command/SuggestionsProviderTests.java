@@ -119,9 +119,8 @@ public class SuggestionsProviderTests extends CommandTestSuite {
       }
     });
 
-    // TODO Fix merging
-    assertSuggestions("hello ", "bar", "baz", "qux");
-    assertSuggestions("hello bar", "baz", "qux");
+    assertSuggestions("foo ", "bar", "baz", "qux");
+    assertSuggestions("foo bar", "baz", "qux");
   }
 
   static final class NoSuggestionsCommand implements RawCommand {
