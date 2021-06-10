@@ -22,7 +22,6 @@ import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 import static com.mojang.brigadier.builder.RequiredArgumentBuilder.argument;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -36,16 +35,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class CommandGraphInjectorTests {
+public class CommandGraphInjectorTests extends CommandTestSuite {
 
-  private static final CommandSource SOURCE = MockCommandSource.INSTANCE;
-
-  private VelocityCommandManager manager;
   private RootCommandNode<CommandSource> dest;
 
   @BeforeEach
   void setUp() {
-    this.manager = CommandManagerTests.newManager();
+    super.setUp();
     this.dest = new RootCommandNode<>();
   }
 
@@ -53,7 +49,7 @@ public class CommandGraphInjectorTests {
   void testInjectInvocableCommand() {
     final var meta = manager.metaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> fail());
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     // Preserves alias and arguments node
     final var expected = manager.getRoot();
@@ -73,14 +69,14 @@ public class CommandGraphInjectorTests {
 
       @Override
       public boolean hasPermission(final Invocation invocation) {
-        assertEquals(SOURCE, invocation.source());
+        assertEquals(source, invocation.source());
         assertEquals("hello", invocation.alias());
         assertArrayEquals(new String[0], invocation.arguments());
         callCount.incrementAndGet();
         return false;
       }
     });
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     assertTrue(dest.getChildren().isEmpty());
     assertEquals(1, callCount.get());
@@ -94,7 +90,7 @@ public class CommandGraphInjectorTests {
             .then(argument("count", integer()))
             .build();
     manager.register(new BrigadierCommand(node));
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     assertEquals(node, dest.getChild("hello"));
   }
@@ -113,7 +109,7 @@ public class CommandGraphInjectorTests {
                     }))
             .build();
     manager.register(new BrigadierCommand(registered));
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
             .literal("greet")
@@ -131,7 +127,7 @@ public class CommandGraphInjectorTests {
                     .build())
             .build();
     manager.register(new BrigadierCommand(registered));
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
             .<CommandSource>literal("origin")
@@ -158,7 +154,7 @@ public class CommandGraphInjectorTests {
             )
             .build();
     manager.register(new BrigadierCommand(registered));
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
             .<CommandSource>literal("hello")
@@ -181,7 +177,7 @@ public class CommandGraphInjectorTests {
             .then(literal("baz"))
             .build();
     dest.addChild(original);
-    manager.getInjector().inject(dest, SOURCE);
+    manager.getInjector().inject(dest, source);
 
     assertEquals(registered, dest.getChild("foo"));
   }

@@ -18,22 +18,16 @@
 package com.velocitypowered.proxy.command;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.spotify.futures.CompletableFutures;
-import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.command.SimpleCommand;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -196,22 +190,24 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     assertSuggestions("foo ", "bar", "baz", "qux");
     assertSuggestions("foo bar", "baz", "qux");
-    assertSuggestions("foo baz", "bar", "qux");
+    assertSuggestions("foo baz", "qux");
   }
 
+  // Hints are suggested iff the source can use the given arguments; see
+  // VelocityCommandMeta#copyHints.
   @Test
-  // This doesn't make much sense, but emulates Brigadier behavior
-  void testSuggestsImpermissibleHint() {
-    final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .requires(source1 -> false)
+  void testSuggestIgnoresHintRequirementPredicateResults() {
+    final var hint = RequiredArgumentBuilder
+            .<CommandSource, String>argument("hint", word())
+            .requires(source1 -> fail())
+            .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
             .build();
     final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
-    assertSuggestions("hello ", "hint");
+    assertSuggestions("hello ", "suggestion");
   }
 
   @Test
@@ -244,51 +240,6 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     assertSuggestions("hello ");
   }
-
-  @Test
-  void testSuggestCompletesExceptionallyIfHintRequirementPredicateThrows() {
-    final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .requires(source1 -> {
-              throw new RuntimeException();
-            })
-            .suggests((context, builder) -> fail())
-            .build();
-    final var meta = manager.createMetaBuilder("hello")
-            .hint(hint)
-            .build();
-    manager.register(meta, NoSuggestionsCommand.INSTANCE);
-
-    assertThrows(CompletionException.class, () ->
-            manager.offerSuggestions(source, "hello ").join());
-  }
-
-  /*
-
-  @Test
-  void testSuggestionMergingIgnoresExceptionallyCompletedSuggestionFutures() {
-    final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) ->
-                CompletableFutures.exceptionallyCompletedFuture(new RuntimeException()))
-            .build();
-    final var meta = manager.createMetaBuilder("hello")
-            .hint(hint)
-            .build();
-    manager.register(meta, new RawCommand() {
-      @Override
-      public void execute(final Invocation invocation) {
-        fail();
-      }
-
-      @Override
-      public List<String> suggest(final Invocation invocation) {
-        return ImmutableList.of("world");
-      }
-    });
-
-    assertSuggestions("hello ", "world");
-  }*/
 
   static final class NoSuggestionsCommand implements RawCommand {
 

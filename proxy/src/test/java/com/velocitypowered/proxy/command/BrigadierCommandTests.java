@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.command;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
@@ -39,6 +56,57 @@ public class BrigadierCommandTests extends CommandTestSuite {
 
     assertHandled("hello");
     assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testExecuteIgnoresAliasCase() {
+    final var callCount = new AtomicInteger();
+
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .executes(context -> {
+              assertEquals("hello", context.getInput());
+              callCount.incrementAndGet();
+              return 1;
+            })
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertHandled("Hello");
+    assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testExecuteInputIsTrimmed() {
+    final var callCount = new AtomicInteger();
+
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .executes(context -> {
+              assertEquals("hello", context.getInput());
+              callCount.incrementAndGet();
+              return 1;
+            })
+            .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertHandled(" hello");
+    assertHandled("  hello");
+    assertHandled("hello ");
+    assertHandled("hello   ");
+    assertEquals(4, callCount.get());
+  }
+
+  @Test
+  void testExecuteAfterUnregisterForwards() {
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .executes(context -> fail())
+            .build();
+    manager.register(new BrigadierCommand(node));
+    manager.unregister("hello");
+
+    assertForwarded("hello");
   }
 
   @Test
@@ -161,6 +229,17 @@ public class BrigadierCommandTests extends CommandTestSuite {
   }
 
   // Suggestions
+
+  @Test
+  void testDoesNotSuggestAliasAfterUnregister() {
+    final var node = LiteralArgumentBuilder
+            .<CommandSource>literal("hello")
+            .build();
+    manager.register(new BrigadierCommand(node));
+    manager.unregister("hello");
+
+    assertSuggestions("");
+  }
 
   @Test
   void testArgumentSuggestions() {
