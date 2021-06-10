@@ -33,6 +33,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class VelocityArgumentBuilder<S, T>
         extends ArgumentBuilder<S, VelocityArgumentBuilder<S, T>> {
 
+  /**
+   * Creates a builder for creating {@link VelocityArgumentCommandNode}s with
+   * the given name and type.
+   *
+   * @param name the name of the node
+   * @param type the type of the argument to parse
+   * @param <S> the type of the command source
+   * @param <T> the type of the argument to parse
+   * @return a builder
+   */
   public static <S, T> VelocityArgumentBuilder<S, T> velocityArgument(final String name,
                                                                     final ArgumentType<T> type) {
     Preconditions.checkNotNull(name, "name");
@@ -44,7 +54,7 @@ public final class VelocityArgumentBuilder<S, T>
   private final ArgumentType<T> type;
   private SuggestionProvider<S> suggestionsProvider = null;
 
-  public VelocityArgumentBuilder(final String name, final ArgumentType<T> type) {
+  private VelocityArgumentBuilder(final String name, final ArgumentType<T> type) {
     this.name = name;
     this.type = type;
   }

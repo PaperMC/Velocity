@@ -85,7 +85,7 @@ public class CommandManagerTests extends CommandTestSuite {
     final var oldMeta = manager.createMetaBuilder("foo").build();
     manager.register(oldMeta, DummyCommand.INSTANCE); // fails on execution
     final var newMeta = manager.createMetaBuilder("foo").build();
-    manager.register("foo", (RawCommand) invocation -> called.set(true));
+    manager.register(newMeta, (RawCommand) invocation -> called.set(true));
     manager.execute(MockCommandSource.INSTANCE, "foo").join();
 
     assertTrue(called.get());
