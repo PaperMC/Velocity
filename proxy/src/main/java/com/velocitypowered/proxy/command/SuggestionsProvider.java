@@ -30,6 +30,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -283,12 +285,17 @@ final class SuggestionsProvider<S> {
    * Parses the hint nodes under the given node, which is either an alias node of
    * a {@link Command} or another hint node.
    *
+   * The caller must check the requirements
+   * are satisfied by a given source prior to calling this method.
+   *
    * <p>The reader and context are not mutated by this method.
    *
    * @param node the node to parse
    * @param originalReader the input reader
    * @param contextSoFar the context, containing the alias node of the command
    * @return the parse results containing the parsed hint nodes
+   * @see VelocityCommandMeta#copyHints(CommandMeta) for the conditions under which the returned
+   *      hints can be suggested to a {@link CommandSource}.
    */
   private ParseResults<S> parseHints(final CommandNode<S> node, final StringReader originalReader,
                                      final CommandContextBuilder<S> contextSoFar) {
