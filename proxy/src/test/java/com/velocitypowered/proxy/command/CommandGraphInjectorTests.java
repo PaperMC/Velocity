@@ -119,11 +119,11 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   }
 
   @Test
-  void testBrigadierCommandAliasRedirectsNotAllowed() {
+  void testInjectPreservesBrigadierCommandAliasRedirect() {
     final var registered = LiteralArgumentBuilder
             .<CommandSource>literal("origin")
             .redirect(LiteralArgumentBuilder
-                    .<CommandSource>literal("target")
+                .<CommandSource>literal("target")
                     .build())
             .build();
     manager.register(new BrigadierCommand(registered));
@@ -131,6 +131,9 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
 
     final var expected = LiteralArgumentBuilder
             .<CommandSource>literal("origin")
+            .redirect(LiteralArgumentBuilder
+                .<CommandSource>literal("target")
+                .build())
             .build();
     assertEquals(expected, dest.getChild("origin"));
   }

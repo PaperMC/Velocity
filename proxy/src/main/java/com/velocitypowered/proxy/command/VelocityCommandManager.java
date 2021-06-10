@@ -99,29 +99,38 @@ public class VelocityCommandManager implements CommandManager {
   public void register(final CommandMeta meta, final Command command) {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
-    // TODO This is quite ugly; find registrar and then attempt registering.
 
+    // TODO Warn if command implements multiple registrable interfaces?
     for (final CommandRegistrar<?> registrar : this.registrars) {
       if (this.tryRegister(registrar, command, meta)) {
-        return;
+        return; // success
       }
     }
     throw new IllegalArgumentException(
             command + " does not implement a registrable Command subinterface");
   }
 
+  /**
+   * Attempts to register the given command if it implements the
+   * {@linkplain CommandRegistrar#registrableSuperInterface() registrable superinterface}
+   * of the given registrar.
+   *
+   * @param registrar the registrar to register the command
+   * @param command the command to register
+   * @param meta the command metadata
+   * @param <T> the type of the command
+   * @return true if the command implements the registrable superinterface of the registrar;
+   *         false otherwise.
+   * @throws IllegalArgumentException if the registrar cannot register the command
+   */
   private <T extends Command> boolean tryRegister(final CommandRegistrar<T> registrar,
                                                   final Command command, final CommandMeta meta) {
     final Class<T> superInterface = registrar.registrableSuperInterface();
     if (!superInterface.isInstance(command)) {
       return false;
     }
-    try {
-      registrar.register(meta, superInterface.cast(command));
-      return true;
-    } catch (final IllegalArgumentException ignored) {
-      return false;
-    }
+    registrar.register(meta, superInterface.cast(command));
+    return true;
   }
 
   @Override

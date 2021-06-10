@@ -88,9 +88,7 @@ public final class CommandGraphInjector<S> {
         final VelocityArgumentCommandNode<S, ?> argsNode =
                 VelocityCommands.getArgumentsNode(asLiteral);
         if (argsNode == null) {
-          // This literal is associated to a BrigadierCommand, filter normally
-          // TODO Document alias redirects are not supported, see
-          // CommandGraphInjectorTests#testBrigadierCommandAliasRedirectsNotAllowed.
+          // This literal is associated to a BrigadierCommand, filter normally.
           this.copyChildren(node, copy, source);
         } else {
           // Copy all children nodes (arguments node and hints)
@@ -116,7 +114,9 @@ public final class CommandGraphInjector<S> {
     }
     final ArgumentBuilder<S, ?> builder = node.createBuilder();
     if (node.getRedirect() != null) {
-      // TODO Document redirects to non-Brigadier commands are not supported
+      // Redirects to non-Brigadier commands are not supported. Luckily,
+      // we don't expose the root node to API users, so they can't access
+      // nodes associated to other commands.
       final CommandNode<S> target = this.filterNode(node.getRedirect(), source);
       builder.forward(target, builder.getRedirectModifier(), builder.isFork());
     }
