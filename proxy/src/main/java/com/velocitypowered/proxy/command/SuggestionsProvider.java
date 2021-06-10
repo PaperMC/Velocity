@@ -145,7 +145,7 @@ final class SuggestionsProvider<S> {
           final StringReader reader, final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
     // Lowercase the alias here so all comparisons can be case-sensitive (cheaper)
-    // TODO Is this actually faster?
+    // TODO Is this actually faster? It may incur an allocation
     final String input = reader.getRead().toLowerCase(Locale.ENGLISH);
 
     final Collection<CommandNode<S>> aliases = contextSoFar.getRootNode().getChildren();
