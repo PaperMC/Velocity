@@ -51,7 +51,7 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
 
   private final ArgumentType<T> type;
 
-  public VelocityArgumentCommandNode(
+  VelocityArgumentCommandNode(
           final String name, final ArgumentType<T> type, final Command<S> command,
           final Predicate<S> requirement,
           final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,

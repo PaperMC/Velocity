@@ -220,7 +220,8 @@ public class VelocityCommandManager implements CommandManager {
     final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, false);
     try {
       return suggestionsProvider.provideSuggestions(normalizedInput, source)
-              .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+              .thenApply(suggestions ->
+                      Lists.transform(suggestions.getList(), Suggestion::getText));
     } catch (final Throwable e) {
       // Again, plugins are naughty
       return CompletableFutures.exceptionallyCompletedFuture(

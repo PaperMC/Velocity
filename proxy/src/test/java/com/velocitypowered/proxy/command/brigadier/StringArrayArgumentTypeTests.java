@@ -93,10 +93,10 @@ public class StringArrayArgumentTypeTests {
   @Test
   void testMultipleWhitespaceCharsArePreserved() throws CommandSyntaxException {
     final StringReader reader = new StringReader(
-            " This  is a   message  that shouldn't    be normalized  ");
+        " This  is a   message  that shouldn't    be normalized  ");
     assertArrayEquals(new String[] {
-            "", "This", "", "is", "a", "", "", "message", "", "that", "shouldn't", "", "", "", "be",
-            "normalized", "", ""}, TYPE.parse(reader));
+        "", "This", "", "is", "a", "", "", "message", "", "that", "shouldn't", "", "", "", "be",
+        "normalized", "", ""}, TYPE.parse(reader));
     assertFalse(reader.canRead());
   }
 

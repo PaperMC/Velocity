@@ -285,9 +285,6 @@ final class SuggestionsProvider<S> {
    * Parses the hint nodes under the given node, which is either an alias node of
    * a {@link Command} or another hint node.
    *
-   * The caller must check the requirements
-   * are satisfied by a given source prior to calling this method.
-   *
    * <p>The reader and context are not mutated by this method.
    *
    * @param node the node to parse
