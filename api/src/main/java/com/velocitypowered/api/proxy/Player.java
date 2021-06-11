@@ -23,16 +23,25 @@ import com.velocitypowered.api.util.title.Title;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.Keyed;
+import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.event.HoverEventSource;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a player who is connected to the proxy.
  */
 public interface Player extends CommandSource, Identified, InboundConnection,
-    ChannelMessageSource, ChannelMessageSink {
+    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>,
+    ComponentLike, Keyed {
 
   /**
    * Returns the player's current username.
@@ -275,4 +284,30 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+
+  @Override
+  default @NotNull Key key() {
+    return Key.key("player");
+  }
+
+  @Override
+  default @NotNull Component asComponent() {
+    return Component.text(getUsername()).hoverEvent(this);
+  }
+
+  @Override
+  default @NotNull HoverEvent<HoverEvent.ShowEntity> asHoverEvent(
+          @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
+    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
+            Component.text(getUsername()))));
+  }
+
+  @Override
+  default @NotNull Pointers pointers() {
+    return CommandSource.super.pointers().toBuilder()
+            .withDynamic(Identity.NAME, this::getUsername)
+            .withDynamic(Identity.DISPLAY_NAME, this::asComponent)
+            .withDynamic(Identity.UUID, this::getUniqueId)
+            .build();
+  }
 }
