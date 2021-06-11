@@ -224,7 +224,7 @@ public class VelocityCommandManager implements CommandManager {
                       Lists.transform(suggestions.getList(), Suggestion::getText));
     } catch (final Throwable e) {
       // Again, plugins are naughty
-      return CompletableFutures.exceptionallyCompletedFuture(
+      return CompletableFuture.failedFuture(
         new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
     }
   }

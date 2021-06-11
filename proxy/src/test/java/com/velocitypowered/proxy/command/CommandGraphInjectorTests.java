@@ -30,6 +30,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +81,50 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
 
     assertTrue(dest.getChildren().isEmpty());
     assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testInjectsHintsOfInvocableCommand() {
+    final var hint = LiteralArgumentBuilder
+            .<CommandSource>literal("hint")
+            .build();
+    final var meta = manager.metaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, (SimpleCommand) invocation -> fail());
+    manager.getInjector().inject(dest, source);
+
+    // Preserves hint node
+    final var expected = manager.getRoot();
+    assertEquals(expected, dest);
+  }
+
+  @Test
+  void testFiltersHintsOfImpermissibleAlias() {
+    final var callCount = new AtomicInteger();
+
+    final var hint = LiteralArgumentBuilder
+            .<CommandSource>literal("hint")
+            .build();
+    final var meta = manager.metaBuilder("hello")
+            .hint(hint)
+            .build();
+    manager.register(meta, new RawCommand() {
+      @Override
+      public void execute(final Invocation invocation) {
+        fail();
+      }
+
+      @Override
+      public boolean hasPermission(final Invocation invocation) {
+        callCount.incrementAndGet();
+        return false;
+      }
+    });
+    manager.getInjector().inject(dest, source);
+
+    assertTrue(dest.getChildren().isEmpty());
+    assertEquals(1, callCount.get()); // does not call hasPermission for hints
   }
 
   @Test
