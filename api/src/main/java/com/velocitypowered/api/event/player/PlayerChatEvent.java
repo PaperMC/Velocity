@@ -10,7 +10,13 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
+import java.util.Objects;
 import java.util.Optional;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -55,10 +61,10 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   @Override
   public String toString() {
     return "PlayerChatEvent{"
-        + "player=" + player
-        + ", message=" + message
-        + ", result=" + result
-        + '}';
+            + "player=" + player
+            + ", message=" + message
+            + ", result=" + result
+            + '}';
   }
 
   /**
@@ -66,19 +72,272 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    */
   public static final class ChatResult implements ResultedEvent.Result {
 
-    private static final ChatResult ALLOWED = new ChatResult(true, null);
-    private static final ChatResult DENIED = new ChatResult(false, null);
+    private static final ChatResult ALLOWED = new ChatResult(true);
+    private static final ChatResult DENIED = new ChatResult(false);
 
-    private @Nullable String message;
+    private final @Nullable Component message;
+    private final @NonNull ChatRenderer renderer;
     private final boolean status;
+    private final boolean dirty;
+    private final Destination destination;
+
+    private ChatResult(boolean status) {
+      this.status = status;
+      this.message = null;
+      this.renderer = ChatRenderer.DEFAULT;
+      this.dirty = false;
+      this.destination = Destination.SERVER;
+    }
 
     private ChatResult(boolean status, @Nullable String message) {
       this.status = status;
-      this.message = message;
+      this.message = message == null ? null
+              : LegacyComponentSerializer.legacySection().deserialize(message);
+      this.renderer = ChatRenderer.DEFAULT;
+      this.dirty = false;
+      this.destination = Destination.SERVER;
     }
 
+    private ChatResult(boolean status, @Nullable Component message) {
+      this.status = status;
+      this.message = message;
+      this.renderer = ChatRenderer.DEFAULT;
+      this.dirty = message != null;
+      this.destination = Destination.SERVER;
+    }
+
+    private ChatResult(boolean status, @Nullable Component message,
+                       @NonNull ChatRenderer renderer) {
+      this.status = status;
+      this.message = message;
+      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
+      this.dirty = message != null;
+      this.destination = Destination.SERVER;
+    }
+
+    private ChatResult(boolean status, @Nullable Component message,
+                       @NonNull ChatRenderer renderer, @NonNull Destination destination) {
+      this.status = status;
+      this.message = message;
+      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
+      this.dirty = message != null;
+      this.destination = destination;
+    }
+
+    private ChatResult(boolean status, @Nullable String message, @NonNull ChatRenderer renderer,
+                       @NonNull Destination destination) {
+      this.status = status;
+      this.message = message == null ? null
+              : LegacyComponentSerializer.legacySection().deserialize(message);
+      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
+      this.dirty = false;
+      this.destination = Preconditions.checkNotNull(destination, "destination");
+    }
+
+    private ChatResult(boolean status, @Nullable Component message, @NonNull ChatRenderer renderer,
+                       @NonNull Destination destination, boolean dirty) {
+      this.status = status;
+      this.message = message;
+      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
+      this.destination = Preconditions.checkNotNull(destination, "destination");
+      this.dirty = dirty;
+    }
+
+    /**
+     * Returns if the overridden chat {@link #message() message} is considered dirty.
+     *
+     * <p>If true, the chat message will not be detectable by proxied servers and thus will bypass
+     * their event listeners.
+     *
+     * <p>If false, the message will be stripped of any information besides color and text
+     * decorations, and will be detectable as a chat message if the {@link #renderer() renderer}
+     * and {@link #destination() destination} are both default.
+     *
+     * @return if the chat {@link #message() message} is dirty
+     */
+    public boolean isDirty() {
+      return dirty;
+    }
+
+    /**
+     * Gets the message which will be treated as the player's input.
+     *
+     * @return player's input message
+     * @deprecated in favour of {@link #message()}
+     */
+    @Deprecated
     public Optional<String> getMessage() {
+      return message().map(message -> PlainTextComponentSerializer.plainText().serialize(message));
+    }
+
+    /**
+     * Gets the message which will be treated as the player's input.
+     *
+     * @return player's input message
+     */
+    public Optional<Component> message() {
       return Optional.ofNullable(message);
+    }
+
+    /**
+     * Allows the message to be sent, but silently replaced with another.
+     *
+     * @param message the message to use instead
+     * @return a result with a new message
+     * @deprecated in favour of {@link #withMessage(Component)}
+     */
+    @Deprecated
+    public static @NonNull ChatResult message(@NonNull String message) {
+      Preconditions.checkNotNull(message, "message");
+      return new ChatResult(true, message);
+    }
+
+    /**
+     * Gets the renderer that will be used to format the message.
+     *
+     * @return renderer that will be used to format the message
+     */
+    public @NonNull ChatRenderer renderer() {
+      return renderer;
+    }
+
+    /**
+     * Allows the message to be sent, but with a custom chat renderer.
+     *
+     * <p>Setting this to a value besides {@link ChatRenderer#DEFAULT} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param renderer the renderer to format the message
+     * @return a result with a new renderer
+     * @see #isDirty()
+     */
+    public static @NonNull ChatResult renderer(@NonNull ChatRenderer renderer) {
+      return new ChatResult(true, null, Preconditions.checkNotNull(renderer, "renderer"));
+    }
+
+    /**
+     * Allows the message to be sent, but with a custom chat renderer.
+     *
+     * <p>Setting this to a value besides {@link ChatRenderer#DEFAULT} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param renderer the renderer to format the message
+     * @return a result with a new renderer
+     * @see #isDirty()
+     */
+    public static @NonNull ChatResult renderer(@NonNull ViewerUnaware renderer) {
+      return new ChatResult(true, null,
+              ChatRenderer.viewerUnaware(Preconditions.checkNotNull(renderer, "renderer")));
+    }
+
+    /**
+     * Gets where the chat message will be sent to.
+     *
+     * @return where the chat message will be sent to
+     */
+    public @NonNull Destination destination() {
+      return destination;
+    }
+
+    /**
+     * Allows the message to be sent, but with a custom destination.
+     *
+     * <p>Setting this to a value besides {@link Destination#SERVER} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param destination where to send the chat message
+     * @return a result with a new destination
+     * @see #isDirty()
+     */
+    public static @NonNull ChatResult destination(@NonNull Destination destination) {
+      return new ChatResult(true, (String) null, ChatRenderer.DEFAULT, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the status changed.
+     *
+     * @param status the status to use instead
+     * @return copy of this result with a status
+     */
+    public @NonNull ChatResult withStatus(boolean status) {
+      return new ChatResult(status, message, renderer, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the message silently changed and the {@link #isDirty()
+     * dirty} bit unset.
+     *
+     * @param message the message to use instead
+     * @return copy of this result with a new message
+     */
+    public @NonNull ChatResult withMessage(@Nullable String message) {
+      return new ChatResult(status, message, renderer, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the message silently changed and the {@link #isDirty()
+     * dirty} bit set.
+     *
+     * @param message the message to use instead
+     * @return copy of this result with a new message
+     */
+    public @NonNull ChatResult withMessage(@Nullable Component message) {
+      return new ChatResult(status, message, renderer, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the chat renderer changed.
+     *
+     * <p>Setting this to a value besides {@link ChatRenderer#DEFAULT} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param renderer the chat renderer to use instead
+     * @return copy of this result with a new chat renderer
+     * @see #isDirty()
+     */
+    public @NonNull ChatResult withRenderer(@NonNull ChatRenderer renderer) {
+      return new ChatResult(status, message, renderer, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the chat renderer changed.
+     *
+     * <p>Setting this to a value besides {@link ChatRenderer#DEFAULT} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param renderer the chat renderer to use instead
+     * @return copy of this result with a new chat renderer
+     * @see #isDirty()
+     */
+    public @NonNull ChatResult withRenderer(@NonNull ViewerUnaware renderer) {
+      return new ChatResult(status, message, ChatRenderer.viewerUnaware(
+              Preconditions.checkNotNull(renderer, "renderer")), destination);
+    }
+
+    /**
+     * Returns a copy of this result with the destination changed.
+     *
+     * <p>Setting this to a value besides {@link Destination#SERVER} will prevent proxied servers
+     * from detecting the chat message as a real chat message.
+     *
+     * @param destination the destination to use instead
+     * @return copy of this result with a new chat renderer
+     * @see #isDirty()
+     */
+    public @NonNull ChatResult withDestination(@NonNull Destination destination) {
+      return new ChatResult(status, message, renderer, destination);
+    }
+
+    /**
+     * Returns a copy of this result with the dirty bit set to {@code false}.
+     *
+     * <p>This must be called last after other "{@code with}" methods, as they will reset the bit.
+     *
+     * @return copy of this result without the dirty bit
+     * @see #isDirty()
+     */
+    public @NonNull ChatResult withoutDirty() {
+      return new ChatResult(status, message, renderer, destination, false);
     }
 
     @Override
@@ -91,30 +350,120 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       return status ? "allowed" : "denied";
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof ChatResult)) {
+        return false;
+      }
+      ChatResult that = (ChatResult) o;
+      return status == that.status
+              && Objects.equals(message(), that.message())
+              && renderer().equals(that.renderer());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(message(), renderer(), status);
+    }
+
     /**
      * Allows the message to be sent, without modification.
+     *
      * @return the allowed result
      */
-    public static ChatResult allowed() {
+    public static @NonNull ChatResult allowed() {
       return ALLOWED;
     }
 
     /**
      * Prevents the message from being sent.
+     *
      * @return the denied result
      */
-    public static ChatResult denied() {
+    public static @NonNull ChatResult denied() {
       return DENIED;
     }
+  }
+
+  /**
+   * A chat renderer is responsible for rendering chat messages sent by {@link Player}s to the
+   * server.
+   */
+  @FunctionalInterface
+  public interface ChatRenderer {
+    ChatRenderer DEFAULT = viewerUnaware((source, msg) ->
+            Component.translatable("chat.type.text", source, msg));
 
     /**
-     * Allows the message to be sent, but silently replaced with another.
-     * @param message the message to use instead
-     * @return a result with a new message
+     * Renders a chat message. This is called once for each receiving {@link Audience}.
+     * An {@link Component#empty() empty} result will skip sending any message.
+     *
+     * @param source the {@link Player} who sent the message
+     * @param message the message the player sent
+     * @param viewer the receiving {@link Audience}
+     * @return a rendered chat message
      */
-    public static ChatResult message(@NonNull String message) {
-      Preconditions.checkNotNull(message, "message");
-      return new ChatResult(true, message);
+    @NonNull Component render(@NonNull Player source, @NonNull Component message,
+                              @NonNull Audience viewer);
+
+    /**
+     * Creates a new viewer-unaware {@link ChatRenderer}, which will render the chat message a
+     * single time and display the same rendered message to every viewing {@link Audience}.
+     *
+     * @param renderer the viewer unaware renderer
+     * @return a new {@link ChatRenderer}
+     */
+    static @NonNull ChatRenderer viewerUnaware(ViewerUnaware renderer) {
+      return new ChatRenderer() {
+        private @MonotonicNonNull Component result;
+
+        @Override
+        public @NonNull Component render(@NonNull Player source,
+                                         @NonNull Component message,
+                                         @NonNull Audience viewer) {
+          if (result == null) {
+            result = renderer.render(source, message);
+          }
+          return result;
+        }
+      };
     }
+  }
+
+  /**
+   * Similar to {@link ChatRenderer}, but without knowledge of the message viewer.
+   *
+   * @see ChatRenderer#viewerUnaware(ViewerUnaware)
+   */
+  @FunctionalInterface
+  public interface ViewerUnaware {
+    /**
+     * Renders a chat message.
+     *
+     * @param source the {@link Player} who sent the message
+     * @param message the message the player sent
+     * @return a rendered chat message
+     */
+    @NonNull Component render(@NonNull Player source, @NonNull Component message);
+  }
+
+  /**
+   * Specifies where the chat message will be broadcast to.
+   */
+  public enum Destination {
+    /**
+     * Sets the chat message to broadcast to the proxied server.
+     */
+    SERVER,
+    /**
+     * Sets the chat message to broadcast to all proxied servers.
+     *
+     * <p>This will prevent proxied servers from detecting the chat message as a real chat message.
+     * @see ChatResult#isDirty()
+     */
+    GLOBAL
   }
 }

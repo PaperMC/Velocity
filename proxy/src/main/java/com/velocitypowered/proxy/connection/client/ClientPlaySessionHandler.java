@@ -30,6 +30,7 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -64,13 +65,18 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -176,13 +182,31 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
             PlayerChatEvent.ChatResult chatResult = pme.getResult();
-            if (chatResult.isAllowed()) {
-              Optional<String> eventMsg = pme.getResult().getMessage();
-              if (eventMsg.isPresent()) {
-                smc.write(Chat.createServerbound(eventMsg.get()));
-              } else {
-                smc.write(packet);
-              }
+            if (!chatResult.isAllowed()) {
+              return;
+            }
+
+            PlayerChatEvent.ChatRenderer renderer = chatResult.renderer();
+            Optional<Component> optMsg = chatResult.message();
+            Component eventMsg = optMsg.orElse(Component.text(msg));
+            boolean isGlobal = chatResult.destination() == PlayerChatEvent.Destination.GLOBAL;
+            boolean isDirty = chatResult.isDirty();
+            boolean defaultRenderer = renderer == PlayerChatEvent.ChatRenderer.DEFAULT;
+
+            if (defaultRenderer && !optMsg.isPresent() && !isGlobal) {
+              smc.write(packet);
+            } else if (defaultRenderer && !isGlobal && !isDirty) {
+              smc.write(new Chat(LegacyComponentSerializer.legacySection().serialize(eventMsg),
+                      Chat.CHAT_TYPE, player.getUniqueId()));
+            } else {
+              Collection<Player> players = isGlobal ? server.getAllPlayers()
+                      : serverConnection.getServer().getPlayersConnected();
+              players.forEach(recipient -> {
+                Component rendered = renderer.render(player, eventMsg, recipient);
+                if (!Component.EQUALS.test(rendered, Component.empty())) {
+                  recipient.sendMessage(player, rendered, MessageType.CHAT);
+                }
+              });
             }
           }, smc.eventLoop())
           .exceptionally((ex) -> {
