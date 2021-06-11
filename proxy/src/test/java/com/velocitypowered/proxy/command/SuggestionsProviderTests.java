@@ -23,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -214,8 +214,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   void testDoesNotSuggestHintIfHintSuggestionProviderFutureCompletesExceptionally() {
     final var hint = RequiredArgumentBuilder
             .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) ->
-                CompletableFutures.exceptionallyCompletedFuture(new RuntimeException()))
+            .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
             .build();
     final var meta = manager.createMetaBuilder("hello")
             .hint(hint)

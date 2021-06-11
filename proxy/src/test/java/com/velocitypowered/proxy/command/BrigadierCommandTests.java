@@ -27,9 +27,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -308,7 +308,7 @@ public class BrigadierCommandTests extends CommandTestSuite {
             .then(RequiredArgumentBuilder
                     .<CommandSource, String>argument("child", word())
                     .suggests((context, builder) ->
-                          CompletableFutures.exceptionallyCompletedFuture(new RuntimeException())))
+                        CompletableFuture.failedFuture(new RuntimeException())))
             .build();
     manager.register(new BrigadierCommand(node));
 

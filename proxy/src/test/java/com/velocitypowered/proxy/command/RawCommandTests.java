@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.command;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -26,10 +25,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.command.SimpleCommand;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -333,7 +330,7 @@ public class RawCommandTests extends CommandTestSuite {
 
       @Override
       public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
-        return CompletableFutures.exceptionallyCompletedFuture(new RuntimeException());
+        return CompletableFuture.failedFuture(new RuntimeException());
       }
     });
 
@@ -437,8 +434,7 @@ public class RawCommandTests extends CommandTestSuite {
   void testSuggestsMergesIgnoringHintsWhoseCustomSuggestionProviderFutureCompletesExceptionally() {
     final var hint = RequiredArgumentBuilder
             .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) ->
-                    CompletableFutures.exceptionallyCompletedFuture(new RuntimeException()))
+            .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
             .build();
     final var meta = manager.metaBuilder("hello")
             .hint(hint)
