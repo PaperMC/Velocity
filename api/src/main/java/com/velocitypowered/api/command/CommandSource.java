@@ -50,10 +50,12 @@ public interface CommandSource extends Audience, PermissionSubject, PermissionCh
   @Override
   default @NotNull TriState value(String permission) {
     Tristate state = getPermissionValue(permission);
-    if (state == Tristate.TRUE)
+    if (state == Tristate.TRUE) {
       return TriState.TRUE;
-    if (state == Tristate.UNDEFINED)
+    }
+    if (state == Tristate.UNDEFINED) {
       return TriState.NOT_SET;
+    }
     return TriState.FALSE;
   }
 }
