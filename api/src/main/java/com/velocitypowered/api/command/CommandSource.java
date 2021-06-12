@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Represents something that can be used to run a {@link Command}.
  */
-public interface CommandSource extends Audience, PermissionSubject, PermissionChecker {
+public interface CommandSource extends Audience, PermissionSubject {
 
   /**
    * Sends the specified {@code component} to the invoker.
@@ -44,18 +44,26 @@ public interface CommandSource extends Audience, PermissionSubject, PermissionCh
 
   @Override
   default @NotNull Pointers pointers() {
-    return Pointers.builder().withStatic(PermissionChecker.POINTER, this).build();
+    return Pointers.builder().withStatic(PermissionChecker.POINTER, getPermissionChecker()).build();
   }
 
-  @Override
-  default @NotNull TriState value(String permission) {
-    Tristate state = getPermissionValue(permission);
-    if (state == Tristate.TRUE) {
-      return TriState.TRUE;
-    }
-    if (state == Tristate.UNDEFINED) {
-      return TriState.NOT_SET;
-    }
-    return TriState.FALSE;
+  /**
+   * Gets the permission checker for the invoker.
+   *
+   * @return invoker's permission checker
+   */
+  default PermissionChecker getPermissionChecker() {
+    return permission -> {
+      final Tristate state = getPermissionValue(permission);
+      if (state == Tristate.TRUE) {
+        return TriState.TRUE;
+      } else if (state == Tristate.UNDEFINED) {
+        return TriState.NOT_SET;
+      } else if (state == Tristate.FALSE) {
+        return TriState.FALSE;
+      } else {
+        throw new IllegalArgumentException();
+      }
+    };
   }
 }

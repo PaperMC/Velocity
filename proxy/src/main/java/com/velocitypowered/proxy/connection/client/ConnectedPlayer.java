@@ -94,14 +94,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
-import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import net.kyori.adventure.util.TriState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -124,7 +122,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final MinecraftConnection connection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
-  private PermissionChecker permissionChecker;
   private PermissionFunction permissionFunction;
   private int tryIndex = 0;
   private long ping = -1;
@@ -152,7 +149,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
-    this.permissionChecker = PermissionChecker.always(TriState.FALSE);
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
@@ -253,18 +249,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   void setPermissionFunction(PermissionFunction permissionFunction) {
     this.permissionFunction = permissionFunction;
-    this.permissionChecker = permission -> {
-      final Tristate state = permissionFunction.getPermissionValue(permission);
-      if (state == Tristate.TRUE) {
-        return TriState.TRUE;
-      } else if (state == Tristate.UNDEFINED) {
-        return TriState.NOT_SET;
-      } else if (state == Tristate.FALSE) {
-        return TriState.FALSE;
-      } else {
-        throw new IllegalArgumentException();
-      }
-    };
   }
 
   @Override
