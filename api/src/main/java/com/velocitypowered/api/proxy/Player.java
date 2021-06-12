@@ -218,4 +218,11 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+
+  /**
+   * Gets the player's client brand.
+   *
+   * @return the player's client brand
+   */
+  @Nullable String getClientBrand();
 }

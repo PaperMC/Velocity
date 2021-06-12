@@ -139,11 +139,15 @@ public final class PluginMessageUtil {
     return new PluginMessage(message.getChannel(), rewrittenBuf);
   }
 
-  private static String readBrandMessage(ByteBuf content) {
-    // Some clients (mostly poorly-implemented bots) do not send validly-formed brand messages.
-    // In order to accommodate their broken behavior, we'll first try to read in the 1.8 format, and
-    // if that fails, treat it as a 1.7-format message (which has no prefixed length). (The message
-    // Velocity sends will be in the correct format depending on the protocol.)
+  /**
+   * Some clients (mostly poorly-implemented bots) do not send validly-formed brand messages.
+   * In order to accommodate their broken behavior, we'll first try to read in the 1.8 format, and
+   * if that fails, treat it as a 1.7-format message (which has no prefixed length). (The message
+   * Velocity sends will be in the correct format depending on the protocol.)
+   * @param content the brand packet
+   * @return the client brand
+   */
+  public static String readBrandMessage(ByteBuf content) {
     try {
       return ProtocolUtils.readString(content.slice());
     } catch (Exception e) {
