@@ -17,12 +17,12 @@ allprojects {
     apply plugin: "com.github.spotbugs"
 
     group 'com.velocitypowered'
-    version '1.1.9-SNAPSHOT'
+    version '3.0.0-SNAPSHOT'
 
     ext {
         // dependency versions
         textVersion = '3.0.4'
-        adventureVersion = '4.8.0'
+        adventureVersion = '4.7.0'
         adventurePlatformVersion = '4.0.0-SNAPSHOT'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
@@ -42,6 +42,11 @@ allprojects {
                 return os.toString().trim().substring(0, 8)
             }
         }
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     repositories {

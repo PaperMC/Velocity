@@ -25,6 +25,7 @@ import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -36,9 +37,6 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.api.util.bossbar.BossBar;
-import com.velocitypowered.api.util.bossbar.BossBarColor;
-import com.velocitypowered.api.util.bossbar.BossBarOverlay;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
@@ -48,11 +46,10 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.console.VelocityConsole;
+import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.network.ConnectionManager;
-import com.velocitypowered.proxy.plugin.VelocityEventManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
@@ -61,7 +58,6 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
-import com.velocitypowered.proxy.util.bossbar.VelocityBossBar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -184,15 +180,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public @NonNull BossBar createBossBar(
-      net.kyori.text.@NonNull Component title,
-      @NonNull BossBarColor color,
-      @NonNull BossBarOverlay overlay,
-      float progress) {
-    return new VelocityBossBar(title, color, overlay, progress);
-  }
-
-  @Override
   public VelocityCommandManager getCommandManager() {
     return commandManager;
   }
@@ -293,7 +280,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Optional<?> instance = plugin.getInstance();
       if (instance.isPresent()) {
         try {
-          eventManager.register(instance.get(), instance.get());
+          eventManager.registerInternally(plugin, instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
               plugin.getDescription().getName().orElse(plugin.getDescription().getId()), e);
@@ -449,7 +436,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           logger.error("Exception while tearing down player connections", e);
         }
 
-        eventManager.fireShutdownEvent();
+        eventManager.fire(new ProxyShutdownEvent()).join();
 
         timedOut = !eventManager.shutdown() || timedOut;
         timedOut = !scheduler.shutdown() || timedOut;
@@ -578,15 +565,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public void broadcast(net.kyori.text.Component component) {
-    Preconditions.checkNotNull(component, "component");
-    Chat chat = Chat.createClientbound(component);
-    for (ConnectedPlayer player : connectionsByUuid.values()) {
-      player.getConnection().write(chat);
-    }
-  }
-
-  @Override
   public Collection<Player> matchPlayer(String partialName) {
     Objects.requireNonNull(partialName);
 
@@ -622,6 +600,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public Collection<RegisteredServer> getAllServers() {
     return servers.getAllServers();
+  }
+
+  @Override
+  public RegisteredServer createRawRegisteredServer(ServerInfo server) {
+    return servers.createRawRegisteredServer(server);
   }
 
   @Override

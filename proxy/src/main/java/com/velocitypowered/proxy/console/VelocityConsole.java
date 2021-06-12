@@ -29,8 +29,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -53,12 +52,6 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
-  }
-
-  @Override
-  public void sendMessage(net.kyori.text.Component component) {
-    logger.info(net.kyori.text.serializer.legacy.LegacyComponentSerializer.legacy()
-        .serialize(component));
   }
 
   @Override
@@ -124,8 +117,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().execute(this, command)) {
-        sendMessage(TextComponent.of("Command not found.", TextColor.RED));
+      if (!this.server.getCommandManager().executeAsync(this, command).join()) {
+        sendMessage(Component.text("Command not found.", NamedTextColor.RED));
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);

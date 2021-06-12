@@ -41,11 +41,6 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   @Deprecated
   @Override
-  public void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer) {
-  }
-
-  @Deprecated
-  @Override
   public void setHeaderAndFooter(Component header, Component footer) {
   }
 

@@ -22,8 +22,6 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import java.util.Optional;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
-import net.kyori.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabListEntry implements TabListEntry {
@@ -54,21 +52,8 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public Optional<Component> getDisplayName() {
-    return Optional.ofNullable(displayName).map(LegacyText3ComponentSerializer.get()::serialize);
-  }
-
-  @Override
   public Optional<net.kyori.adventure.text.Component> getDisplayNameComponent() {
     return Optional.ofNullable(displayName);
-  }
-
-  @Override
-  public TabListEntry setDisplayName(@Nullable Component displayName) {
-    if (displayName == null) {
-      return this.setDisplayName((net.kyori.adventure.text.Component) null);
-    }
-    return this.setDisplayName(LegacyText3ComponentSerializer.get().deserialize(displayName));
   }
 
   @Override

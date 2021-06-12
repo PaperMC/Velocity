@@ -13,11 +13,6 @@ license {
     header = project.rootProject.file('HEADER.txt')
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
 jar {
     manifest {
         def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"
@@ -33,7 +28,6 @@ jar {
         attributes 'Implementation-Version': version
         attributes 'Implementation-Vendor': "Velocity Contributors"
         attributes 'Multi-Release': 'true'
-        attributes 'Add-Opens': 'java.base/java.lang'
     }
 }
 
@@ -71,7 +65,6 @@ dependencies {
     runtimeOnly 'com.lmax:disruptor:3.4.2' // Async loggers
 
     implementation 'it.unimi.dsi:fastutil:8.4.1'
-    implementation 'net.kyori:event-method-asm:4.0.0-SNAPSHOT'
 
     implementation(platform("net.kyori:adventure-bom:${adventureVersion}"))
     implementation("net.kyori:adventure-nbt")
@@ -83,6 +76,9 @@ dependencies {
     implementation 'com.electronwill.night-config:toml:3.6.3'
 
     implementation 'org.bstats:bstats-base:2.2.0'
+    implementation 'org.lanternpowered:lmbda:2.0.0'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.0.2'
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.1.2'
 

@@ -25,7 +25,6 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 
 public class ConnectionRequestResults {
 
@@ -87,11 +86,6 @@ public class ConnectionRequestResults {
     @Override
     public Status getStatus() {
       return status;
-    }
-
-    @Override
-    public Optional<net.kyori.text.Component> getReason() {
-      return Optional.ofNullable(component).map(LegacyText3ComponentSerializer.get()::serialize);
     }
 
     @Override

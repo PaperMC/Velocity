@@ -10,7 +10,6 @@ package com.velocitypowered.api.event;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -100,11 +99,6 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status;
     }
 
-    @Deprecated
-    public Optional<net.kyori.text.Component> getReason() {
-      return Optional.ofNullable(reason).map(LegacyText3ComponentSerializer.get()::serialize);
-    }
-
     public Optional<Component> getReasonComponent() {
       return Optional.ofNullable(reason);
     }
@@ -127,13 +121,6 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     public static ComponentResult denied(Component reason) {
       Preconditions.checkNotNull(reason, "reason");
       return new ComponentResult(false, reason);
-    }
-
-    @Deprecated
-    public static ComponentResult denied(net.kyori.text.Component reason) {
-      Preconditions.checkNotNull(reason, "reason");
-      return new ComponentResult(false, LegacyText3ComponentSerializer.get()
-          .deserialize(reason));
     }
   }
 }

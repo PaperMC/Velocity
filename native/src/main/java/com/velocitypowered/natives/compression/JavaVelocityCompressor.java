@@ -17,12 +17,14 @@
 
 package com.velocitypowered.natives.compression;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFER_SIZE;
 import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
+import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -33,7 +35,6 @@ public class JavaVelocityCompressor implements VelocityCompressor {
 
   private final Deflater deflater;
   private final Inflater inflater;
-  private byte[] buf = new byte[0];
   private boolean disposed = false;
 
   private JavaVelocityCompressor(int level) {
@@ -46,47 +47,32 @@ public class JavaVelocityCompressor implements VelocityCompressor {
       throws DataFormatException {
     ensureNotDisposed();
 
-    final int available = source.readableBytes();
-    this.setInflaterInput(source);
+    // We (probably) can't nicely deal with >=1 buffer nicely, so let's scream loudly.
+    checkArgument(source.nioBufferCount() == 1, "source has multiple backing buffers");
+    checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
 
-    if (destination.hasArray()) {
-      this.inflateDestinationIsHeap(destination, available, uncompressedSize);
-    } else {
-      if (buf.length == 0) {
-        buf = new byte[ZLIB_BUFFER_SIZE];
-      }
-      while (!inflater.finished() && inflater.getBytesRead() < available) {
-        ensureMaxSize(destination, uncompressedSize);
-        int read = inflater.inflate(buf);
-        destination.writeBytes(buf, 0, read);
-      }
-    }
-    inflater.reset();
-  }
+    final int origIdx = source.readerIndex();
+    inflater.setInput(source.nioBuffer());
 
-  private void setInflaterInput(ByteBuf source) {
-    final int available = source.readableBytes();
-    if (source.hasArray()) {
-      inflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(), available);
-    } else {
-      byte[] inData = new byte[available];
-      source.readBytes(inData);
-      inflater.setInput(inData);
-    }
-  }
+    try {
+      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
+        if (!destination.isWritable()) {
+          destination.ensureWritable(ZLIB_BUFFER_SIZE);
+        }
 
-  private void inflateDestinationIsHeap(ByteBuf destination, int available, int max)
-      throws DataFormatException {
-    while (!inflater.finished() && inflater.getBytesRead() < available) {
-      if (!destination.isWritable()) {
-        ensureMaxSize(destination, max);
-        destination.ensureWritable(ZLIB_BUFFER_SIZE);
+        ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
+            destination.writableBytes());
+        int produced = inflater.inflate(destNioBuf);
+        destination.writerIndex(destination.writerIndex() + produced);
       }
 
-      ensureMaxSize(destination, max);
-      int produced = inflater.inflate(destination.array(), destination.arrayOffset()
-          + destination.writerIndex(), destination.writableBytes());
-      destination.writerIndex(destination.writerIndex() + produced);
+      if (!inflater.finished()) {
+        throw new DataFormatException("Received a deflate stream that was too large, wanted "
+            + uncompressedSize);
+      }
+      source.readerIndex(origIdx + inflater.getTotalIn());
+    } finally {
+      inflater.reset();
     }
   }
 
@@ -94,44 +80,27 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
 
-    this.setDeflaterInput(source);
+    // We (probably) can't nicely deal with >=1 buffer nicely, so let's scream loudly.
+    checkArgument(source.nioBufferCount() == 1, "source has multiple backing buffers");
+    checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
+
+    final int origIdx = source.readerIndex();
+    deflater.setInput(source.nioBuffer());
     deflater.finish();
 
-    if (destination.hasArray()) {
-      this.deflateDestinationIsHeap(destination);
-    } else {
-      if (buf.length == 0) {
-        buf = new byte[ZLIB_BUFFER_SIZE];
-      }
-      while (!deflater.finished()) {
-        int bytes = deflater.deflate(buf);
-        destination.writeBytes(buf, 0, bytes);
-      }
-    }
-    deflater.reset();
-  }
-
-  private void setDeflaterInput(ByteBuf source) {
-    if (source.hasArray()) {
-      deflater.setInput(source.array(), source.arrayOffset() + source.readerIndex(),
-          source.readableBytes());
-    } else {
-      byte[] inData = new byte[source.readableBytes()];
-      source.readBytes(inData);
-      deflater.setInput(inData);
-    }
-  }
-
-  private void deflateDestinationIsHeap(ByteBuf destination) {
     while (!deflater.finished()) {
       if (!destination.isWritable()) {
         destination.ensureWritable(ZLIB_BUFFER_SIZE);
       }
 
-      int produced = deflater.deflate(destination.array(), destination.arrayOffset()
-          + destination.writerIndex(), destination.writableBytes());
+      ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
+          destination.writableBytes());
+      int produced = deflater.deflate(destNioBuf);
       destination.writerIndex(destination.writerIndex() + produced);
     }
+
+    source.readerIndex(origIdx + deflater.getTotalIn());
+    deflater.reset();
   }
 
   @Override
@@ -142,11 +111,11 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   private void ensureNotDisposed() {
-    Preconditions.checkState(!disposed, "Object already disposed");
+    checkState(!disposed, "Object already disposed");
   }
 
   @Override
   public BufferPreference preferredBufferType() {
-    return BufferPreference.HEAP_PREFERRED;
+    return BufferPreference.DIRECT_PREFERRED;
   }
 }

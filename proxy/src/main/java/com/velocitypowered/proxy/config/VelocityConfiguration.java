@@ -50,7 +50,6 @@ import java.util.Random;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -253,16 +252,6 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public boolean shouldQueryShowPlugins() {
     return query.shouldQueryShowPlugins();
-  }
-
-  /**
-   * Returns the proxy's MOTD.
-   *
-   * @return the MOTD
-   */
-  @Override
-  public net.kyori.text.Component getMotdComponent() {
-    return LegacyText3ComponentSerializer.get().serialize(this.getMotd());
   }
 
   @Override

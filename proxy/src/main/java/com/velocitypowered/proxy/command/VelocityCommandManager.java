@@ -34,16 +34,14 @@ import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
-import com.velocitypowered.proxy.plugin.VelocityEventManager;
+import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.util.BrigadierUtils;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class VelocityCommandManager implements CommandManager {
@@ -69,20 +67,6 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public void register(final Command command, final String... aliases) {
-    Preconditions.checkArgument(aliases.length > 0, "no aliases provided");
-    register(aliases[0], command, Arrays.copyOfRange(aliases, 1, aliases.length));
-  }
-
-  @Override
-  public void register(final String alias, final Command command, final String... otherAliases) {
-    Preconditions.checkNotNull(alias, "alias");
-    Preconditions.checkNotNull(command, "command");
-    Preconditions.checkNotNull(otherAliases, "otherAliases");
-    register(metaBuilder(alias).aliases(otherAliases).build(), command);
-  }
-
-  @Override
   public void register(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
     register(metaBuilder(command).build(), command);
@@ -102,20 +86,10 @@ public class VelocityCommandManager implements CommandManager {
     } else if (command instanceof SimpleCommand) {
       node = CommandNodeFactory.SIMPLE.create(primaryAlias, (SimpleCommand) command);
     } else if (command instanceof RawCommand) {
-      // This ugly hack will be removed in Velocity 2.0. Most if not all plugins
-      // have side-effect free #suggest methods. We rely on the newer RawCommand
-      // throwing UOE.
-      RawCommand asRaw = (RawCommand) command;
-      try {
-        asRaw.suggest(null, new String[0]);
-      } catch (final UnsupportedOperationException e) {
-        node = CommandNodeFactory.RAW.create(primaryAlias, asRaw);
-      } catch (final Exception ignored) {
-        // The implementation probably relies on a non-null source
-      }
-    }
-    if (node == null) {
-      node = CommandNodeFactory.FALLBACK.create(primaryAlias, command);
+      node = CommandNodeFactory.RAW.create(primaryAlias, (RawCommand) command);
+    } else {
+      throw new IllegalArgumentException("Unknown command implementation for "
+          + command.getClass().getName());
     }
 
     if (!(command instanceof BrigadierCommand)) {
@@ -150,19 +124,13 @@ public class VelocityCommandManager implements CommandManager {
    * @return the {@link CompletableFuture} of the event
    */
   public CompletableFuture<CommandExecuteEvent> callCommandEvent(final CommandSource source,
-                                                                 final String cmdLine) {
+      final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
     return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
   }
 
-  @Override
-  public boolean execute(final CommandSource source, final String cmdLine) {
-    return executeAsync(source, cmdLine).join();
-  }
-
-  @Override
-  public boolean executeImmediately(final CommandSource source, final String cmdLine) {
+  private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
@@ -171,7 +139,7 @@ public class VelocityCommandManager implements CommandManager {
       return dispatcher.execute(results) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
-              CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+          CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
         source.sendMessage(Identity.nil(), Component.text(e.getMessage(), NamedTextColor.RED));
         // This is, of course, a lie, but the API will need to change...
@@ -190,23 +158,23 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    return callCommandEvent(source, cmdLine).thenApply(event -> {
+    return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
       CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
-      return executeImmediately(source, commandResult.getCommand().orElse(event.getCommand()));
-    });
+      return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
+    }, eventManager.getAsyncExecutor());
   }
 
   @Override
   public CompletableFuture<Boolean> executeImmediatelyAsync(
-          final CommandSource source, final String cmdLine) {
+      final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-        () -> executeImmediately(source, cmdLine), eventManager.getService());
+        () -> executeImmediately0(source, cmdLine), eventManager.getAsyncExecutor());
   }
 
   /**
@@ -218,17 +186,17 @@ public class VelocityCommandManager implements CommandManager {
    *         possibly empty
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
-                                                          final String cmdLine) {
+      final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     ParseResults<CommandSource> parse = parse(cmdLine, source, false);
     return dispatcher.getCompletionSuggestions(parse)
-            .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+        .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
   private ParseResults<CommandSource> parse(final String cmdLine, final CommandSource source,
-                                            final boolean trim) {
+      final boolean trim) {
     String normalized = BrigadierUtils.normalizeInput(cmdLine, trim);
     return dispatcher.parse(normalized, source);
   }

@@ -57,4 +57,16 @@ public interface PluginManager {
    * @throws UnsupportedOperationException if the operation is not applicable to this plugin
    */
   void addToClasspath(Object plugin, Path path);
+
+  /**
+   * Ensures a plugin container exists for the given {@code plugin}.
+   *
+   * @param plugin the instance to look up the container for
+   * @return container for the plugin
+   */
+  default PluginContainer ensurePluginContainer(Object plugin) {
+    return this.fromInstance(plugin)
+        .orElseThrow(() -> new IllegalArgumentException(plugin.getClass().getCanonicalName()
+            + " does not have a container."));
+  }
 }

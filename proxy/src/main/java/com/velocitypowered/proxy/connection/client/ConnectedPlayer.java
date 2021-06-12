@@ -46,11 +46,7 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.MessagePosition;
 import com.velocitypowered.api.util.ModInfo;
-import com.velocitypowered.api.util.title.TextTitle;
-import com.velocitypowered.api.util.title.Title;
-import com.velocitypowered.api.util.title.Titles;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -270,40 +266,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void sendMessage(net.kyori.text.Component component, MessagePosition position) {
-    Preconditions.checkNotNull(component, "component");
-    Preconditions.checkNotNull(position, "position");
-
-    byte pos = (byte) position.ordinal();
-    String json;
-    if (position == MessagePosition.ACTION_BAR) {
-      if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
-        // We can use the title packet instead.
-        GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
-                        GenericTitlePacket.ActionType.SET_ACTION_BAR, this.getProtocolVersion());
-        pkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
-            .serialize(component));
-        connection.write(pkt);
-        return;
-      } else {
-        // Due to issues with action bar packets, we'll need to convert the text message into a
-        // legacy message and then inject the legacy text into a component... yuck!
-        JsonObject object = new JsonObject();
-        object.addProperty("text", net.kyori.text.serializer.legacy
-            .LegacyComponentSerializer.legacy().serialize(component));
-        json = object.toString();
-      }
-    } else {
-      json = net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE.serialize(component);
-    }
-
-    Chat chat = new Chat();
-    chat.setType(pos);
-    chat.setMessage(json);
-    connection.write(chat);
-  }
-
-  @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     connection.write(Chat.createClientbound(identity, message, this.getProtocolVersion()));
   }
@@ -445,12 +407,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     this.profile = profile.withProperties(Preconditions.checkNotNull(properties));
   }
 
-  @Deprecated
-  @Override
-  public void setHeaderAndFooter(net.kyori.text.Component header, net.kyori.text.Component footer) {
-    tabList.setHeaderAndFooter(header, footer);
-  }
-
   @Override
   public void clearHeaderAndFooter() {
     tabList.clearHeaderAndFooter();
@@ -470,26 +426,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
   }
 
-  @Override
-  public void disconnect(net.kyori.text.Component reason) {
-    if (connection.eventLoop().inEventLoop()) {
-      disconnect0(reason, false);
-    } else {
-      connection.eventLoop().execute(() -> disconnect0(reason, false));
-    }
-  }
-
-  /**
-   * Disconnects the player from the proxy.
-   * @param reason the reason for disconnecting the player
-   * @param duringLogin whether the disconnect happened during login
-   */
-  public void disconnect0(net.kyori.text.Component reason, boolean duringLogin) {
-    logger.info("{} has disconnected: {}", this,
-        net.kyori.text.serializer.legacy.LegacyComponentSerializer.legacy().serialize(reason));
-    connection.closeWith(Disconnect.create(reason));
-  }
-
   /**
    * Disconnects the player from the proxy.
    * @param reason the reason for disconnecting the player
@@ -499,58 +435,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     logger.info("{} has disconnected: {}", this,
         LegacyComponentSerializer.legacySection().serialize(reason));
     connection.closeWith(Disconnect.create(reason, this.getProtocolVersion()));
-  }
-
-  @Override
-  public void sendTitle(Title title) {
-    Preconditions.checkNotNull(title, "title");
-
-    ProtocolVersion protocolVersion = connection.getProtocolVersion();
-    if (title.equals(Titles.reset())) {
-      connection.write(GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.RESET, protocolVersion));
-    } else if (title.equals(Titles.hide())) {
-      connection.write(GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.HIDE, protocolVersion));
-    } else if (title instanceof TextTitle) {
-      TextTitle tt = (TextTitle) title;
-
-      if (tt.isResetBeforeSend()) {
-        connection.delayedWrite(GenericTitlePacket.constructTitlePacket(
-                GenericTitlePacket.ActionType.RESET, protocolVersion));
-      }
-
-      Optional<net.kyori.text.Component> titleText = tt.getTitle();
-      if (titleText.isPresent()) {
-        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-                GenericTitlePacket.ActionType.SET_TITLE, protocolVersion);
-        titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
-            .serialize(titleText.get()));
-        connection.delayedWrite(titlePkt);
-      }
-
-      Optional<net.kyori.text.Component> subtitleText = tt.getSubtitle();
-      if (subtitleText.isPresent()) {
-        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-                GenericTitlePacket.ActionType.SET_SUBTITLE, protocolVersion);
-        titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
-            .serialize(subtitleText.get()));
-        connection.delayedWrite(titlePkt);
-      }
-
-      if (tt.areTimesSet()) {
-        GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
-                GenericTitlePacket.ActionType.SET_TIMES, protocolVersion);
-        timesPkt.setFadeIn(tt.getFadeIn());
-        timesPkt.setStay(tt.getStay());
-        timesPkt.setFadeOut(tt.getFadeOut());
-        connection.delayedWrite(timesPkt);
-      }
-      connection.flush();
-    } else {
-      throw new IllegalArgumentException("Unknown title class " + title.getClass().getName());
-    }
-
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -1109,7 +993,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
-      if (connectedServer != null && connectedServer.getServer().equals(server)) {
+      if (connectedServer != null
+              && connectedServer.getServer().getServerInfo().equals(server.getServerInfo())) {
         return Optional.of(ALREADY_CONNECTED);
       }
       return Optional.empty();

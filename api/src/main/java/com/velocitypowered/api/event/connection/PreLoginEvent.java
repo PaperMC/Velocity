@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import java.util.Optional;
-import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -91,11 +90,6 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
       return result != Result.DISALLOWED;
     }
 
-    @Deprecated
-    public Optional<net.kyori.text.Component> getReason() {
-      return Optional.ofNullable(reason).map(LegacyText3ComponentSerializer.get()::serialize);
-    }
-
     public Optional<net.kyori.adventure.text.Component> getReasonComponent() {
       return Optional.ofNullable(reason);
     }
@@ -150,20 +144,6 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
      */
     public static PreLoginComponentResult forceOfflineMode() {
       return FORCE_OFFLINEMODE;
-    }
-
-    /**
-     * Denies the login with the specified reason.
-     *
-     * @param reason the reason for disallowing the connection
-     * @deprecated Use {@link #denied(net.kyori.adventure.text.Component)}
-     * @return a new result
-     */
-    @Deprecated
-    public static PreLoginComponentResult denied(net.kyori.text.Component reason) {
-      Preconditions.checkNotNull(reason, "reason");
-      return new PreLoginComponentResult(Result.DISALLOWED, LegacyText3ComponentSerializer.get()
-          .deserialize(reason));
     }
 
     /**
