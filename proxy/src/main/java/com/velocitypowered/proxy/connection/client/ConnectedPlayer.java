@@ -94,6 +94,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -148,6 +149,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
           .withDynamic(Identity.DISPLAY_NAME, this::getDisplayName)
+          .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .build();
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
