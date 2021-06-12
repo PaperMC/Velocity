@@ -30,7 +30,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
@@ -41,8 +40,7 @@ import org.jetbrains.annotations.NotNull;
  * Represents a player who is connected to the proxy.
  */
 public interface Player extends CommandSource, Identified, InboundConnection,
-    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>,
-    ComponentLike, Keyed {
+    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>, Keyed {
 
   /**
    * Returns the player's current username.
@@ -300,7 +298,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
     return Key.key("player");
   }
 
-  @Override
   default @NotNull Component asComponent() {
     return Component.text(getUsername()).hoverEvent(this)
             .clickEvent(ClickEvent.suggestCommand("/tell " + getUsername()))
