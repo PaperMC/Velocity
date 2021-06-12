@@ -142,6 +142,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
+  private @Nullable String clientBrand;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -869,6 +870,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
+  }
+
+  @Override
+  public Optional<String> getClientBrand() {
+    return Optional.ofNullable(clientBrand);
+  }
+
+  void setClientBrand(String clientBrand) {
+    this.clientBrand = clientBrand;
   }
 
   @Override
