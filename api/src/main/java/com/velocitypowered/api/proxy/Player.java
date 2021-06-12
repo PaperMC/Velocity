@@ -289,7 +289,7 @@ public interface Player extends CommandSource, Identified, InboundConnection,
     return CommandSource.super.pointers().toBuilder()
             .withDynamic(Identity.UUID, this::getUniqueId)
             .withDynamic(Identity.NAME, this::getUsername)
-            .withDynamic(Identity.DISPLAY_NAME, this::asComponent)
+            .withDynamic(Identity.DISPLAY_NAME, this::getDisplayName)
             .build();
   }
 
@@ -298,7 +298,12 @@ public interface Player extends CommandSource, Identified, InboundConnection,
     return Key.key("player");
   }
 
-  default @NotNull Component asComponent() {
+  /**
+   * Gets a {@link Component} that renders a player name similarly to vanilla.
+   *
+   * @return a Component representing this player
+   */
+  default @NotNull Component getDisplayName() {
     return Component.text(getUsername()).hoverEvent(this)
             .clickEvent(ClickEvent.suggestCommand("/tell " + getUsername()))
             .insertion(getUsername());
