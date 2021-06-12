@@ -213,7 +213,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      */
     public static @NonNull ChatResult renderer(@NonNull ViewerUnaware renderer) {
       return new ChatResult(true, null,
-              ChatRenderer.viewerUnaware(Preconditions.checkNotNull(renderer, "renderer")));
+              Preconditions.checkNotNull(renderer, "renderer").asRenderer());
     }
 
     /**
@@ -296,8 +296,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public @NonNull ChatResult withRenderer(@NonNull ViewerUnaware renderer) {
-      return new ChatResult(status, message, ChatRenderer.viewerUnaware(
-              Preconditions.checkNotNull(renderer, "renderer")), destination);
+      return new ChatResult(status, message, Preconditions.checkNotNull(renderer, "renderer")
+              .asRenderer(), destination);
     }
 
     /**
@@ -415,13 +415,24 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   @FunctionalInterface
   public interface ViewerUnaware {
     /**
-     * Renders a chat message.
+     * Renders a chat message. An {@link Component#empty() empty} result will skip sending any
+     * message, though you should consider using {@link ChatResult#denied()} instead.
      *
      * @param source the {@link Player} who sent the message
      * @param message the message the player sent
      * @return a rendered chat message
      */
     @NonNull Component render(@NonNull Player source, @NonNull Component message);
+
+    /**
+     * Creates a new viewer-unaware {@link ChatRenderer}, which will render the chat message a
+     * single time and display the same rendered message to every viewing {@link Audience}.
+     *
+     * @return a new {@link ChatRenderer}
+     */
+    default ChatRenderer asRenderer() {
+      return ChatRenderer.viewerUnaware(this);
+    }
   }
 
   /**
