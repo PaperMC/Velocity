@@ -31,6 +31,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
   /**
    * Constructs a PlayerChatEvent.
+   *
    * @param player the player sending the message
    * @param message the message being sent
    */
