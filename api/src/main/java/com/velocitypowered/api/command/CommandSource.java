@@ -9,6 +9,7 @@ package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.permission.PermissionSubject;
 import com.velocitypowered.api.permission.Tristate;
+import java.util.Optional;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identified;
@@ -20,7 +21,6 @@ import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSeria
 import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-import java.util.Optional;
 
 /**
  * Represents something that can be used to run a {@link Command}.
