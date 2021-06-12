@@ -281,5 +281,5 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    *
    * @return the player's client brand
    */
-  Optional<String> getClientBrand();
+  @Nullable String getClientBrand();
 }

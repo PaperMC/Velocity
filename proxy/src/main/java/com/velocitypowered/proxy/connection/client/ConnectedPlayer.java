@@ -873,8 +873,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public Optional<String> getClientBrand() {
-    return Optional.ofNullable(clientBrand);
+  public String getClientBrand() {
+    return clientBrand;
   }
 
   void setClientBrand(String clientBrand) {
