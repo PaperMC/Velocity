@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.proxy.Player;
 import java.util.Objects;
-import java.util.Optional;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -163,8 +162,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @deprecated in favour of {@link #message()}
      */
     @Deprecated
-    public Optional<String> getMessage() {
-      return message().map(message -> PlainTextComponentSerializer.plainText().serialize(message));
+    public @Nullable String getMessage() {
+      return message == null ? null : PlainTextComponentSerializer.plainText().serialize(message);
     }
 
     /**
@@ -172,8 +171,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      *
      * @return player's input message
      */
-    public Optional<Component> message() {
-      return Optional.ofNullable(message);
+    public @Nullable Component message() {
+      return message;
     }
 
     /**

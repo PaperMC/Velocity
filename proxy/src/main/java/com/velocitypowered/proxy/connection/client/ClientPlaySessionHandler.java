@@ -63,6 +63,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
@@ -181,22 +182,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             }
 
             PlayerChatEvent.ChatRenderer renderer = chatResult.renderer();
-            Optional<Component> optMsg = chatResult.message();
-            Component eventMsg = optMsg.orElse(Component.text(msg));
+            Component resultMsg = chatResult.message();
+            Component outMsg = Objects.requireNonNullElse(resultMsg, Component.text(msg));
             boolean isGlobal = chatResult.destination() == PlayerChatEvent.Destination.GLOBAL;
             boolean isDirty = chatResult.isDirty();
             boolean defaultRenderer = renderer == PlayerChatEvent.ChatRenderer.DEFAULT;
 
-            if (defaultRenderer && !optMsg.isPresent() && !isGlobal) {
+            if (defaultRenderer && resultMsg == null && !isGlobal) {
               smc.write(packet);
             } else if (defaultRenderer && !isGlobal && !isDirty) {
-              smc.write(new Chat(PlainTextComponentSerializer.plainText().serialize(eventMsg),
+              smc.write(new Chat(PlainTextComponentSerializer.plainText().serialize(outMsg),
                       Chat.CHAT_TYPE, player.getUniqueId()));
             } else {
               Collection<Player> players = isGlobal ? server.getAllPlayers()
                       : serverConnection.getServer().getPlayersConnected();
               players.forEach(recipient -> {
-                Component rendered = renderer.render(player, eventMsg, recipient);
+                Component rendered = renderer.render(player, outMsg, recipient);
                 if (!Component.EQUALS.test(rendered, Component.empty())) {
                   recipient.sendMessage(player, rendered, MessageType.CHAT);
                 }
