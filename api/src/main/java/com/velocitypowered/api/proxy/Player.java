@@ -31,6 +31,7 @@ import net.kyori.adventure.key.Keyed;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -292,7 +293,9 @@ public interface Player extends CommandSource, Identified, InboundConnection,
 
   @Override
   default @NotNull Component asComponent() {
-    return Component.text(getUsername()).hoverEvent(this);
+    return Component.text(getUsername()).hoverEvent(this)
+            .clickEvent(ClickEvent.suggestCommand("/tell " + getUsername()))
+            .insertion(getUsername());
   }
 
   @Override
