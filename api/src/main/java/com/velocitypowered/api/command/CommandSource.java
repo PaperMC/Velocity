@@ -16,6 +16,7 @@ import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointer;
+import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import net.kyori.adventure.util.TriState;
@@ -44,12 +45,8 @@ public interface CommandSource extends Audience, PermissionSubject, PermissionCh
   }
 
   @Override
-  @SuppressWarnings("unchecked") // safe casts
-  default @NotNull <T> Optional<T> get(final @NotNull Pointer<T> pointer) {
-    if (pointer == PermissionChecker.POINTER) {
-      return Optional.of((T) this);
-    }
-    return Audience.super.get(pointer);
+  default @NotNull Pointers pointers() {
+    return Pointers.builder().withStatic(PermissionChecker.POINTER, this).build();
   }
 
   @Override

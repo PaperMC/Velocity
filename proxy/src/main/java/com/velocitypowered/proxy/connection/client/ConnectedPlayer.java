@@ -96,6 +96,7 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointer;
+import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -108,6 +109,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
@@ -279,16 +281,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  @SuppressWarnings("unchecked") // safe casts
-  public <T> Optional<T> get(final Pointer<T> pointer) {
-    if (pointer == Identity.UUID) {
-      return Optional.of((T) this.getUniqueId());
-    } else if (pointer == Identity.NAME) {
-      return Optional.of((T) this.getGameProfile().getName());
-    } else if (pointer == Identity.DISPLAY_NAME) {
-      return Optional.of((T) asComponent());
-    }
-    return Player.super.get(pointer);
+  public @NotNull Pointers pointers() {
+    return Player.super.pointers().toBuilder()
+            .withDynamic(Identity.UUID, this::getUniqueId)
+            .withDynamic(Identity.NAME, this::getUsername)
+            .withDynamic(Identity.DISPLAY_NAME, this::asComponent)
+            .build();
   }
 
   @Override
