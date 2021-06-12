@@ -285,8 +285,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       return Optional.of((T) this.getUniqueId());
     } else if (pointer == Identity.NAME) {
       return Optional.of((T) this.getGameProfile().getName());
-    } else if (pointer == PermissionChecker.POINTER) {
-      return Optional.of((T) this.permissionChecker);
+    } else if (pointer == Identity.DISPLAY_NAME) {
+      return Optional.of((T) asComponent());
     }
     return Player.super.get(pointer);
   }

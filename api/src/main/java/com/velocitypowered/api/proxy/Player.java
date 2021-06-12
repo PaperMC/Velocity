@@ -28,7 +28,6 @@ import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
-import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -303,14 +302,5 @@ public interface Player extends CommandSource, Identified, InboundConnection,
           @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
     return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
             Component.text(getUsername()))));
-  }
-
-  @Override
-  default @NotNull Pointers pointers() {
-    return CommandSource.super.pointers().toBuilder()
-            .withDynamic(Identity.NAME, this::getUsername)
-            .withDynamic(Identity.DISPLAY_NAME, this::asComponent)
-            .withDynamic(Identity.UUID, this::getUniqueId)
-            .build();
   }
 }

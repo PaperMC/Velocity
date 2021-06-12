@@ -14,12 +14,13 @@ import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.pointer.Pointers;
+import net.kyori.adventure.pointer.Pointer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacytext3.LegacyText3ComponentSerializer;
 import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
 
 /**
  * Represents something that can be used to run a {@link Command}.
@@ -43,8 +44,12 @@ public interface CommandSource extends Audience, PermissionSubject, PermissionCh
   }
 
   @Override
-  default @NotNull Pointers pointers() {
-    return Pointers.builder().withStatic(PermissionChecker.POINTER, this).build();
+  @SuppressWarnings("unchecked") // safe casts
+  default @NotNull <T> Optional<T> get(final @NotNull Pointer<T> pointer) {
+    if (pointer == PermissionChecker.POINTER) {
+      return Optional.of((T) this);
+    }
+    return Audience.super.get(pointer);
   }
 
   @Override
