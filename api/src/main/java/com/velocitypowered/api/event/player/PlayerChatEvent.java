@@ -42,10 +42,20 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     this.result = ChatResult.allowed();
   }
 
+  /**
+   * Gets the player sending this chat message.
+   *
+   * @return player sending this chat message
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Gets the message being sent by the player.
+   *
+   * @return message being sent by the player
+   */
   public String getMessage() {
     return message;
   }
