@@ -28,7 +28,6 @@ import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
-import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -283,15 +282,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   @Override
   boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
-
-  @Override
-  default @NotNull Pointers pointers() {
-    return CommandSource.super.pointers().toBuilder()
-            .withDynamic(Identity.UUID, this::getUniqueId)
-            .withDynamic(Identity.NAME, this::getUsername)
-            .withDynamic(Identity.DISPLAY_NAME, this::getDisplayName)
-            .build();
-  }
 
   @Override
   default @NotNull Key key() {
