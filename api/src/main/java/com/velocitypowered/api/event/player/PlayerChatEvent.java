@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -368,9 +369,13 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    */
   @FunctionalInterface
   public interface ChatRenderer {
+    /**
+     * A chat renderer which replicates vanilla behavior as closely as it can.
+     */
     ChatRenderer DEFAULT = viewerUnaware((source, msg) ->
             Component.translatable("chat.type.text",
                     Component.text(source.getUsername()).hoverEvent(source)
+                            .clickEvent(ClickEvent.suggestCommand("/tell " + source.getUsername()))
                             .insertion(source.getUsername()), msg));
 
     /**
