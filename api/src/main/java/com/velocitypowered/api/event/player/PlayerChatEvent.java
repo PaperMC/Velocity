@@ -98,14 +98,6 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       this.destination = Destination.SERVER;
     }
 
-    private ChatResult(boolean status, @Nullable Component message) {
-      this.status = status;
-      this.message = message;
-      this.renderer = ChatRenderer.DEFAULT;
-      this.dirty = message != null;
-      this.destination = Destination.SERVER;
-    }
-
     private ChatResult(boolean status, @Nullable Component message,
                        @NonNull ChatRenderer renderer) {
       this.status = status;
@@ -132,15 +124,6 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       this.renderer = Preconditions.checkNotNull(renderer, "renderer");
       this.dirty = false;
       this.destination = Preconditions.checkNotNull(destination, "destination");
-    }
-
-    private ChatResult(boolean status, @Nullable Component message, @NonNull ChatRenderer renderer,
-                       @NonNull Destination destination, boolean dirty) {
-      this.status = status;
-      this.message = message;
-      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
-      this.destination = Preconditions.checkNotNull(destination, "destination");
-      this.dirty = dirty;
     }
 
     /**
@@ -328,18 +311,6 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      */
     public @NonNull ChatResult withDestination(@NonNull Destination destination) {
       return new ChatResult(status, message, renderer, destination);
-    }
-
-    /**
-     * Returns a copy of this result with the dirty bit set to {@code false}.
-     *
-     * <p>This must be called last after other "{@code with}" methods, as they will reset the bit.
-     *
-     * @return copy of this result without the dirty bit
-     * @see #isDirty()
-     */
-    public @NonNull ChatResult withoutDirty() {
-      return new ChatResult(status, message, renderer, destination, false);
     }
 
     @Override
