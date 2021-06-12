@@ -29,7 +29,6 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -286,17 +285,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   @Override
   default @NotNull Key key() {
     return Key.key("player");
-  }
-
-  /**
-   * Gets a {@link Component} that renders a player name similarly to vanilla.
-   *
-   * @return a Component representing this player
-   */
-  default @NotNull Component getDisplayName() {
-    return Component.text(getUsername()).hoverEvent(this)
-            .clickEvent(ClickEvent.suggestCommand("/tell " + getUsername()))
-            .insertion(getUsername());
   }
 
   @Override
