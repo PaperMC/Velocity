@@ -71,7 +71,7 @@ import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -190,7 +190,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (defaultRenderer && !optMsg.isPresent() && !isGlobal) {
               smc.write(packet);
             } else if (defaultRenderer && !isGlobal && !isDirty) {
-              smc.write(new Chat(LegacyComponentSerializer.legacySection().serialize(eventMsg),
+              smc.write(new Chat(PlainTextComponentSerializer.plainText().serialize(eventMsg),
                       Chat.CHAT_TYPE, player.getUniqueId()));
             } else {
               Collection<Player> players = isGlobal ? server.getAllPlayers()

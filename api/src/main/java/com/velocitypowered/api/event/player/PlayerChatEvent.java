@@ -144,14 +144,16 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     }
 
     /**
-     * Returns if the overridden chat {@link #message() message} is considered dirty.
+     * Returns if the overridden chat {@link #message() message} is considered dirty. This is
+     * determined by if it was created with {@link #withMessage(String)} or
+     * {@link #withMessage(Component)}.
      *
-     * <p>If true, the chat message will not be detectable by proxied servers and thus will bypass
-     * their event listeners.
+     * <p>If the latter, this will return true and the chat message will not be detectable by
+     * proxied servers, and thus will bypass their event listeners and may not render as expected.
      *
-     * <p>If false, the message will be stripped of any information besides color and text
-     * decorations, and will be detectable as a chat message if the {@link #renderer() renderer}
-     * and {@link #destination() destination} are both default.
+     * <p>If the former, this will return false, and the message sent will be purely plain text and
+     * therefore detectable as a chat message <b>only if the {@link #renderer() renderer}
+     * and {@link #destination() destination} are both default.</b>
      *
      * @return if the chat {@link #message() message} is dirty
      */
