@@ -80,27 +80,6 @@ public final class PluginMessageUtil {
   }
 
   /**
-   * Determines whether or not this plugin message is a legacy (<1.13) registration plugin message.
-   * @param message the plugin message
-   * @return whether this is a legacy register message
-   */
-  public static boolean isLegacyRegister(PluginMessage message) {
-    checkNotNull(message, "message");
-    return message.getChannel().equals(REGISTER_CHANNEL_LEGACY);
-  }
-
-  /**
-   * Determines whether or not this plugin message is a legacy (<1.13) unregistration plugin
-   * message.
-   * @param message the plugin message
-   * @return whether this is a legacy unregister message
-   */
-  public static boolean isLegacyUnregister(PluginMessage message) {
-    checkNotNull(message, "message");
-    return message.getChannel().equals(UNREGISTER_CHANNEL_LEGACY);
-  }
-
-  /**
    * Fetches all the channels in a register or unregister plugin message.
    * @param message the message to get the channels from
    * @return the channels, as an immutable list

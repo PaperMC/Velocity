@@ -52,7 +52,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -66,7 +65,6 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -934,31 +932,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public Collection<String> getKnownChannels() {
     return knownChannels;
-  }
-
-  /**
-   * Determines whether or not we can forward a plugin message onto the client.
-   * @param version the Minecraft protocol version
-   * @param message the plugin message to forward to the client
-   * @return {@code true} if the message can be forwarded, {@code false} otherwise
-   */
-  public boolean canForwardPluginMessage(ProtocolVersion version, PluginMessage message) {
-    boolean minecraftOrFmlMessage;
-
-    // By default, all internal Minecraft and Forge channels are forwarded from the server.
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) <= 0) {
-      String channel = message.getChannel();
-      minecraftOrFmlMessage = channel.startsWith("MC|")
-          || channel.startsWith(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)
-          || PluginMessageUtil.isLegacyRegister(message)
-          || PluginMessageUtil.isLegacyUnregister(message);
-    } else {
-      minecraftOrFmlMessage = message.getChannel().startsWith("minecraft:");
-    }
-
-    // Otherwise, we need to see if the player already knows this channel or it's known by the
-    // proxy.
-    return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
   }
 
   @Override

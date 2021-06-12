@@ -157,11 +157,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
-        .getProtocolVersion(), packet)) {
-      return true;
-    }
-
     // We need to specially handle REGISTER and UNREGISTER packets. Later on, we'll write them to
     // the client.
     if (PluginMessageUtil.isRegister(packet)) {
