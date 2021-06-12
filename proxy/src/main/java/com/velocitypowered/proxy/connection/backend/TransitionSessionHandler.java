@@ -168,11 +168,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    if (!serverConn.getPlayer().canForwardPluginMessage(serverConn.ensureConnected()
-        .getProtocolVersion(), packet)) {
-      return true;
-    }
-
     if (PluginMessageUtil.isRegister(packet)) {
       serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
     } else if (PluginMessageUtil.isUnregister(packet)) {
