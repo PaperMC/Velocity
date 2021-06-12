@@ -369,7 +369,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   @FunctionalInterface
   public interface ChatRenderer {
     ChatRenderer DEFAULT = viewerUnaware((source, msg) ->
-            Component.translatable("chat.type.text", source, msg));
+            Component.translatable("chat.type.text", source.getDisplayName(), msg));
 
     /**
      * Renders a chat message. This is called once for each receiving {@link Audience}.
