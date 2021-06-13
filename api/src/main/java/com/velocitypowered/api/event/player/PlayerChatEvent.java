@@ -169,12 +169,24 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      *
      * @param message the message to use instead
      * @return a result with a new message
-     * @deprecated in favour of {@link #withMessage(Component)}
      */
-    @Deprecated
     public static @NonNull ChatResult message(@NonNull String message) {
-      Preconditions.checkNotNull(message, "message");
-      return new ChatResult(Destination.SERVER, message);
+      return new ChatResult(Destination.SERVER, Preconditions.checkNotNull(message, "message"));
+    }
+
+    /**
+     * Allows the message to be sent, but silently replaced with another.
+     *
+     * <p>Setting this value will prevent proxied servers from detecting the chat message as a real
+     * chat message.
+     *
+     * @param message the message to use instead
+     * @return a result with a new message
+     * @see #isDirty()
+     */
+    public static @NonNull ChatResult message(@NonNull Component message) {
+      return new ChatResult(Destination.SERVER, Preconditions.checkNotNull(message, "message"),
+              ChatRenderer.DEFAULT);
     }
 
     /**
