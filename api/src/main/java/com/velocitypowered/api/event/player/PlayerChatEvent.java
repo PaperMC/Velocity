@@ -83,53 +83,40 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    */
   public static final class ChatResult implements ResultedEvent.Result {
 
-    private static final ChatResult ALLOWED = new ChatResult(true);
-    private static final ChatResult DENIED = new ChatResult(false);
+    private static final ChatResult GLOBAL = new ChatResult(Destination.GLOBAL);
+    private static final ChatResult ALLOWED = new ChatResult(Destination.SERVER);
+    private static final ChatResult DENIED = new ChatResult(Destination.NONE);
 
     private final @Nullable Component message;
     private final @NonNull ChatRenderer renderer;
-    private final boolean status;
     private final boolean dirty;
     private final Destination destination;
 
-    private ChatResult(boolean status) {
-      this.status = status;
+    private ChatResult(@NonNull Destination destination) {
       this.message = null;
       this.renderer = ChatRenderer.DEFAULT;
       this.dirty = false;
-      this.destination = Destination.SERVER;
+      this.destination = Preconditions.checkNotNull(destination, "destination");
     }
 
-    private ChatResult(boolean status, @Nullable String message) {
-      this.status = status;
+    private ChatResult(@NonNull Destination destination, @Nullable String message) {
       this.message = message == null ? null
               : LegacyComponentSerializer.legacySection().deserialize(message);
       this.renderer = ChatRenderer.DEFAULT;
       this.dirty = false;
-      this.destination = Destination.SERVER;
+      this.destination = Preconditions.checkNotNull(destination, "destination");
     }
 
-    private ChatResult(boolean status, @Nullable Component message,
+    private ChatResult(@NonNull Destination destination, @Nullable Component message,
                        @NonNull ChatRenderer renderer) {
-      this.status = status;
       this.message = message;
       this.renderer = Preconditions.checkNotNull(renderer, "renderer");
       this.dirty = message != null;
-      this.destination = Destination.SERVER;
+      this.destination = Preconditions.checkNotNull(destination, "destination");
     }
 
-    private ChatResult(boolean status, @Nullable Component message,
-                       @NonNull ChatRenderer renderer, @NonNull Destination destination) {
-      this.status = status;
-      this.message = message;
-      this.renderer = Preconditions.checkNotNull(renderer, "renderer");
-      this.dirty = message != null;
-      this.destination = destination;
-    }
-
-    private ChatResult(boolean status, @Nullable String message, @NonNull ChatRenderer renderer,
-                       @NonNull Destination destination) {
-      this.status = status;
+    private ChatResult(@NonNull Destination destination, @Nullable String message,
+                       @NonNull ChatRenderer renderer) {
       this.message = message == null ? null
               : LegacyComponentSerializer.legacySection().deserialize(message);
       this.renderer = Preconditions.checkNotNull(renderer, "renderer");
@@ -158,16 +145,18 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     /**
      * Gets the message which will be treated as the player's input.
      *
+     * <p>A {@code null} value indicates that the {@link PlayerChatEvent#getMessage()} will be used.
+     *
      * @return player's input message
-     * @deprecated in favour of {@link #message()}
      */
-    @Deprecated
     public @Nullable String getMessage() {
       return message == null ? null : PlainTextComponentSerializer.plainText().serialize(message);
     }
 
     /**
      * Gets the message which will be treated as the player's input.
+     *
+     * <p>A {@code null} value indicates that the {@link PlayerChatEvent#getMessage()} will be used.
      *
      * @return player's input message
      */
@@ -185,7 +174,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     @Deprecated
     public static @NonNull ChatResult message(@NonNull String message) {
       Preconditions.checkNotNull(message, "message");
-      return new ChatResult(true, message);
+      return new ChatResult(Destination.SERVER, message);
     }
 
     /**
@@ -208,7 +197,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public static @NonNull ChatResult renderer(@NonNull ChatRenderer renderer) {
-      return new ChatResult(true, null, Preconditions.checkNotNull(renderer, "renderer"));
+      return new ChatResult(Destination.SERVER, (String) null,
+              Preconditions.checkNotNull(renderer, "renderer"));
     }
 
     /**
@@ -222,7 +212,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public static @NonNull ChatResult renderer(@NonNull ViewerUnaware renderer) {
-      return new ChatResult(true, null,
+      return new ChatResult(Destination.SERVER, (String) null,
               Preconditions.checkNotNull(renderer, "renderer").asRenderer());
     }
 
@@ -246,17 +236,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public static @NonNull ChatResult destination(@NonNull Destination destination) {
-      return new ChatResult(true, (String) null, ChatRenderer.DEFAULT, destination);
-    }
-
-    /**
-     * Returns a copy of this result with the status changed.
-     *
-     * @param status the status to use instead
-     * @return copy of this result with a status
-     */
-    public @NonNull ChatResult withStatus(boolean status) {
-      return new ChatResult(status, message, renderer, destination);
+      return new ChatResult(destination);
     }
 
     /**
@@ -267,7 +247,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @return copy of this result with a new message
      */
     public @NonNull ChatResult withMessage(@Nullable String message) {
-      return new ChatResult(status, message, renderer, destination);
+      return new ChatResult(destination, message, renderer);
     }
 
     /**
@@ -278,7 +258,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @return copy of this result with a new message
      */
     public @NonNull ChatResult withMessage(@Nullable Component message) {
-      return new ChatResult(status, message, renderer, destination);
+      return new ChatResult(destination, message, renderer);
     }
 
     /**
@@ -292,7 +272,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public @NonNull ChatResult withRenderer(@NonNull ChatRenderer renderer) {
-      return new ChatResult(status, message, renderer, destination);
+      return new ChatResult(destination, message, renderer);
     }
 
     /**
@@ -306,8 +286,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public @NonNull ChatResult withRenderer(@NonNull ViewerUnaware renderer) {
-      return new ChatResult(status, message, Preconditions.checkNotNull(renderer, "renderer")
-              .asRenderer(), destination);
+      return new ChatResult(destination, message, Preconditions.checkNotNull(renderer, "renderer")
+              .asRenderer());
     }
 
     /**
@@ -321,17 +301,17 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @see #isDirty()
      */
     public @NonNull ChatResult withDestination(@NonNull Destination destination) {
-      return new ChatResult(status, message, renderer, destination);
+      return new ChatResult(destination, message, renderer);
     }
 
     @Override
     public boolean isAllowed() {
-      return status;
+      return destination != Destination.NONE;
     }
 
     @Override
     public String toString() {
-      return status ? "allowed" : "denied";
+      return destination != Destination.NONE ? "allowed" : "denied";
     }
 
     @Override
@@ -343,14 +323,26 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
         return false;
       }
       ChatResult that = (ChatResult) o;
-      return status == that.status
+      return destination == that.destination
               && Objects.equals(message(), that.message())
               && renderer().equals(that.renderer());
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(message(), renderer(), status);
+      return Objects.hash(message(), renderer(), destination());
+    }
+
+    /**
+     * Allows the message to be sent to all proxied servers without modification.
+     *
+     * <p>This will prevent proxied servers from detecting the chat message as a real chat message.
+     *
+     * @return the global result
+     * @see #isDirty()
+     */
+    public static ChatResult global() {
+      return GLOBAL;
     }
 
     /**
@@ -455,6 +447,10 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    * Specifies where the chat message will be broadcast to.
    */
   public enum Destination {
+    /**
+     * Cancels the chat message.
+     */
+    NONE,
     /**
      * Sets the chat message to broadcast to the proxied server.
      */

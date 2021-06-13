@@ -177,14 +177,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
             PlayerChatEvent.ChatResult chatResult = pme.getResult();
-            if (!chatResult.isAllowed()) {
+            PlayerChatEvent.Destination dest = chatResult.destination();
+            if (dest == PlayerChatEvent.Destination.NONE) {
               return;
             }
 
             PlayerChatEvent.ChatRenderer renderer = chatResult.renderer();
             Component resultMsg = chatResult.message();
             Component outMsg = Objects.requireNonNullElse(resultMsg, Component.text(msg));
-            boolean isGlobal = chatResult.destination() == PlayerChatEvent.Destination.GLOBAL;
+            boolean isGlobal = dest == PlayerChatEvent.Destination.GLOBAL;
             boolean isDirty = chatResult.isDirty();
             boolean defaultRenderer = renderer == PlayerChatEvent.ChatRenderer.DEFAULT;
 
