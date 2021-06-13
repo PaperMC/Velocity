@@ -144,6 +144,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withDynamic(Identity.NAME, this::getUsername)
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .build();
+  private @Nullable String clientBrand;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -759,6 +760,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     PluginMessage message = new PluginMessage(identifier.getId(), Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
+  }
+
+  @Override
+  public String getClientBrand() {
+    return clientBrand;
+  }
+
+  void setClientBrand(String clientBrand) {
+    this.clientBrand = clientBrand;
   }
 
   @Override

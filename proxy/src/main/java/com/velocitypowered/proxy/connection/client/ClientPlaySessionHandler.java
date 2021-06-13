@@ -249,6 +249,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
+        player.setClientBrand(PluginMessageUtil.readBrandMessage(packet.content()));
         backendConn.write(PluginMessageUtil
             .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {

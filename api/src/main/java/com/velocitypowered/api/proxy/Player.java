@@ -236,4 +236,12 @@ public interface Player extends CommandSource, Identified, InboundConnection,
     return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
             Component.text(getUsername()))));
   }
+
+
+  /**
+   * Gets the player's client brand.
+   *
+   * @return the player's client brand
+   */
+  @Nullable String getClientBrand();
 }
