@@ -83,6 +83,11 @@ public enum Tristate {
     return this.booleanValue;
   }
 
+  /**
+   * Returns the equivalent Adventure {@link TriState}.
+   *
+   * @return equivalent Adventure TriState
+   */
   public TriState toAdventureTriState() {
     if (this == Tristate.TRUE) {
       return TriState.TRUE;
