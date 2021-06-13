@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.permission;
 
+import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -80,5 +81,17 @@ public enum Tristate {
    */
   public boolean asBoolean() {
     return this.booleanValue;
+  }
+
+  public TriState toAdventureTriState() {
+    if (this == Tristate.TRUE) {
+      return TriState.TRUE;
+    } else if (this == Tristate.UNDEFINED) {
+      return TriState.NOT_SET;
+    } else if (this == Tristate.FALSE) {
+      return TriState.FALSE;
+    } else {
+      throw new IllegalArgumentException();
+    }
   }
 }
