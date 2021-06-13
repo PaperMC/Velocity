@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArgumentPropertyRegistry {
   private ArgumentPropertyRegistry() {
@@ -117,7 +118,17 @@ public class ArgumentPropertyRegistry {
     register("brigadier:float", FloatArgumentType.class, FLOAT);
     register("brigadier:double", DoubleArgumentType.class, DOUBLE);
     register("brigadier:bool", BoolArgumentType.class,
-        GenericArgumentPropertySerializer.create(BoolArgumentType::bool));
+        new ArgumentPropertySerializer<>() {
+          @Override
+          public BoolArgumentType deserialize(ByteBuf buf) {
+            return BoolArgumentType.bool();
+          }
+
+          @Override
+          public void serialize(BoolArgumentType object, ByteBuf buf) {
+
+          }
+        });
     register("brigadier:long", LongArgumentType.class, LONG);
 
     // Crossstitch support
