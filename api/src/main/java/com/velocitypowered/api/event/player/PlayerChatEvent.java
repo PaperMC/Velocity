@@ -388,7 +388,6 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     ChatRenderer DEFAULT = viewerUnaware((source, msg) ->
             Component.translatable("chat.type.text",
                     Component.text(source.getUsername()).hoverEvent(source)
-                            .clickEvent(ClickEvent.suggestCommand("/tell " + source.getUsername()))
                             .insertion(source.getUsername()), msg));
 
     /**
