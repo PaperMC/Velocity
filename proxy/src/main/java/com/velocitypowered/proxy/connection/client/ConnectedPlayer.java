@@ -474,7 +474,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.serverInfo().equals(server.serverInfo())) {
-      logger.error("{}: kicked from server {}: {}", this, server.serverInfo().name(),
+      logger.info("{}: kicked from server {}: {}", this, server.serverInfo().name(),
           plainTextReason);
       handleConnectionException(server, disconnectReason,
           Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
