@@ -39,16 +39,19 @@ import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressorAndLengthEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoop;
@@ -355,6 +358,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
     ensureInEventLoop();
 
+    boolean changed = this.protocolVersion != protocolVersion;
     this.protocolVersion = protocolVersion;
     if (protocolVersion != ProtocolVersion.LEGACY) {
       this.channel.pipeline().get(MinecraftEncoder.class).setProtocolVersion(protocolVersion);
@@ -363,6 +367,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       // Legacy handshake handling
       this.channel.pipeline().remove(MINECRAFT_ENCODER);
       this.channel.pipeline().remove(MINECRAFT_DECODER);
+    }
+
+    if (changed) {
+      channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.PROTOCOL_VERSION_CHANGED);
     }
   }
 
@@ -398,8 +406,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     ensureInEventLoop();
 
     if (threshold == -1) {
-      channel.pipeline().remove(COMPRESSION_DECODER);
-      channel.pipeline().remove(COMPRESSION_ENCODER);
+      final ChannelHandler removedDecoder = channel.pipeline().remove(COMPRESSION_DECODER);
+      final ChannelHandler removedEncoder = channel.pipeline().remove(COMPRESSION_ENCODER);
+
+      if (removedDecoder != null && removedEncoder != null) {
+        channel.pipeline().addBefore(MINECRAFT_DECODER, FRAME_ENCODER,
+            MinecraftVarintLengthEncoder.INSTANCE);
+        channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_DISABLED);
+      }
     } else {
       MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
           .get(COMPRESSION_DECODER);
@@ -418,6 +432,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
+
+        channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_ENABLED);
       }
     }
   }
@@ -440,6 +456,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
     channel.pipeline()
         .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
+
+    channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.ENCRYPTION_ENABLED);
   }
 
   public @Nullable MinecraftConnectionAssociation getAssociation() {
