@@ -503,7 +503,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
-      logger.error("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
+      logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason, Component.text()
           .append(messages.getKickPrefix(server.getServerInfo().getName())
