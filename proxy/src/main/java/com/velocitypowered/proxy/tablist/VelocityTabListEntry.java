@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.tablist;
 
-import com.velocitypowered.api.proxy.player.TabList;
-import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.TabList;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
 import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPlayerListItemPacket;
 import net.kyori.adventure.text.Component;

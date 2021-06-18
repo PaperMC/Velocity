@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
 import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPlayerListItemPacket;

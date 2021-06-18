@@ -41,10 +41,9 @@ import com.velocitypowered.proxy.network.java.serialization.brigadier.ArgumentPr
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
-import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -118,8 +117,8 @@ public class ClientboundAvailableCommandsPacket implements Packet {
   public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     // Assign all the children an index.
     Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
-    Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenCustomHashMap<>(
-        IdentityHashStrategy.instance());
+    Reference2IntMap<CommandNode<CommandSource>> idMappings =
+        new Reference2IntLinkedOpenHashMap<>();
     while (!childrenQueue.isEmpty()) {
       CommandNode<CommandSource> child = childrenQueue.poll();
       if (!idMappings.containsKey(child)) {
@@ -137,7 +136,7 @@ public class ClientboundAvailableCommandsPacket implements Packet {
   }
 
   private static void serializeNode(CommandNode<CommandSource> node, ByteBuf buf,
-      Object2IntMap<CommandNode<CommandSource>> idMappings) {
+      Reference2IntMap<CommandNode<CommandSource>> idMappings) {
     byte flags = 0;
     if (node.getRedirect() != null) {
       flags |= FLAG_IS_REDIRECT;

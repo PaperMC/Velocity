@@ -21,7 +21,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
 import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.java.packet.JavaPacketHandler;

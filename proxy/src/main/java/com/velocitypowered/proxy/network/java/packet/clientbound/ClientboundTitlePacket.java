@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.network.java.packet.JavaPacketHandler;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
-import com.velocitypowered.proxy.util.DurationUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import net.kyori.adventure.title.Title;

@@ -5,14 +5,13 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.proxy.player;
+package com.velocitypowered.api.proxy.player.java;
 
-import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Represents a single entry in a {@link TabList}.
+ * Represents a single entry in a {@link TabList}, specifically for Java players only.
  */
 public interface TabListEntry {
 

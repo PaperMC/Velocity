@@ -15,7 +15,7 @@ import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.PlatformActions;
 import com.velocitypowered.api.proxy.player.PlayerIdentity;
-import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.java.TabList;
 import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
 import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -56,13 +56,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   @Nullable ServerConnection connectedServer();
 
   /**
-   * Returns the player's client settings.
-   *
-   * @return the settings
-   */
-  JavaClientSettings clientSettings();
-
-  /**
    * Returns the player's mod info if they have a modded client.
    *
    * @return an the mod info. which may be {@code null} if no info is available
@@ -92,25 +85,11 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   ConnectionRequestBuilder createConnectionRequest(RegisteredServer server);
 
   /**
-   * Sets the player's profile properties.
-   *
-   * @param properties the properties
-   */
-  void setGameProfileProperties(List<JavaPlayerIdentity.Property> properties);
-
-  /**
    * Returns the player's identity, which depends on what version of Minecraft they are currently
    * playing.
    */
   @Override
   @NonNull PlayerIdentity identity();
-
-  /**
-   * Returns the player's tab list.
-   *
-   * @return this player's tab list
-   */
-  TabList tabList();
 
   /**
    * Disconnects the player with the specified reason. Once this method is called, further calls to
@@ -126,25 +105,6 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    * @param input the chat input to send
    */
   void spoofChatInput(String input);
-
-  /**
-   * Sends the specified resource pack from {@code url} to the user. If at all possible, send the
-   * resource pack using {@link #sendResourcePack(String, byte[])}. To monitor the status of the
-   * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
-   *
-   * @param url the URL for the resource pack
-   */
-  void sendResourcePack(String url);
-
-  /**
-   * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
-   * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   *
-   * @param url the URL for the resource pack
-   * @param hash the SHA-1 hash value for the resource pack
-   */
-  void sendResourcePack(String url, byte[] hash);
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
