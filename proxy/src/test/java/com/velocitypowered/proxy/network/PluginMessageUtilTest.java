@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.velocitypowered.proxy.network.java.PluginMessageUtil;
 import org.junit.jupiter.api.Test;
 
 class PluginMessageUtilTest {

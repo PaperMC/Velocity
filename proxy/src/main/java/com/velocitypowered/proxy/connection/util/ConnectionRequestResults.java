@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundDisconnectPacket;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;

@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+    id 'checkstyle'
+}
+
+apply plugin: 'org.cadixdev.licenser'
+apply from: '../gradle/checkstyle.gradle'
+apply from: '../gradle/errorprone.gradle'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+license {
+    header = project.rootProject.file('HEADER.txt')
+}
+
+dependencies {
+    implementation project(':velocity-api')
+    implementation project(':velocity-native')
+    implementation project(':velocity-proxy-core')
+
+    implementation "io.netty:netty-codec:${nettyVersion}"
+    implementation "io.netty:netty-codec-haproxy:${nettyVersion}"
+    implementation "io.netty:netty-codec-http:${nettyVersion}"
+    implementation "io.netty:netty-handler:${nettyVersion}"
+    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}"
+    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
+    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64"
+}

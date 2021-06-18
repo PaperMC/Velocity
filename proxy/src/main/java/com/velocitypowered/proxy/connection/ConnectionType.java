@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.connection;
 
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
@@ -42,13 +42,13 @@ public interface ConnectionType {
   BackendConnectionPhase getInitialBackendPhase();
 
   /**
-   * Adds properties to the {@link GameProfile} if required. If any properties
-   * are added, the returned {@link GameProfile} will be a copy.
+   * Adds properties to the {@link JavaPlayerIdentity} if required. If any properties
+   * are added, the returned {@link JavaPlayerIdentity} will be a copy.
    *
-   * @param original The original {@link GameProfile}
+   * @param original The original {@link JavaPlayerIdentity}
    * @param forwardingType The Velocity {@link PlayerInfoForwarding}
-   * @return The {@link GameProfile} with the properties added in.
+   * @return The {@link JavaPlayerIdentity} with the properties added in.
    */
-  GameProfile addGameProfileTokensIfRequired(GameProfile original,
+  JavaPlayerIdentity addGameProfileTokensIfRequired(JavaPlayerIdentity original,
                                              PlayerInfoForwarding forwardingType);
 }

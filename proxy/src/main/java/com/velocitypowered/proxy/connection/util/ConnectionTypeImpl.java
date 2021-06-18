@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.connection.util;
 
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionType;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
@@ -48,7 +48,7 @@ public class ConnectionTypeImpl implements ConnectionType {
   }
 
   @Override
-  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
+  public JavaPlayerIdentity addGameProfileTokensIfRequired(JavaPlayerIdentity original,
                                                     PlayerInfoForwarding forwardingType) {
     return original;
   }

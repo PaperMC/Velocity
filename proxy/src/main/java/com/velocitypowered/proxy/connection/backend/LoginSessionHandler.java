@@ -17,7 +17,8 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.PlayerIdentity;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -27,13 +28,13 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundEncryptionRequestPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundLoginPluginMessagePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundServerLoginSuccessPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundSetCompressionPacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundLoginPluginResponsePacket;
-import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundEncryptionRequestPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundLoginPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundServerLoginSuccessPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundSetCompressionPacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundLoginPluginResponsePacket;
+import com.velocitypowered.proxy.network.java.states.ProtocolStates;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -41,6 +42,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -78,7 +80,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
           cleanRemoteAddress(serverConn.player().remoteAddress()),
-          serverConn.player().gameProfile());
+          serverConn.player().identity());
       ServerboundLoginPluginResponsePacket response = new ServerboundLoginPluginResponsePacket(
           packet.getId(), true, forwardingData);
       mc.write(response);
@@ -164,14 +166,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      GameProfile profile) {
+      PlayerIdentity profile) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
       ProtocolUtils.writeVarInt(forwarded, VelocityConstants.FORWARDING_VERSION);
       ProtocolUtils.writeString(forwarded, address);
       ProtocolUtils.writeUuid(forwarded, profile.uuid());
       ProtocolUtils.writeString(forwarded, profile.name());
-      ProtocolUtils.writeProperties(forwarded, profile.properties());
+      if (profile instanceof JavaPlayerIdentity) {
+        ProtocolUtils.writeProperties(forwarded, ((JavaPlayerIdentity) profile).properties());
+      } else {
+        ProtocolUtils.writeProperties(forwarded, List.of());
+      }
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");

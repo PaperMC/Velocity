@@ -16,6 +16,7 @@ import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
+import com.velocitypowered.api.proxy.player.PlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -59,6 +60,16 @@ public interface ProxyServer extends Audience {
    * @return the player instance, if connected, else {@code null}
    */
   @Nullable Player player(UUID uuid);
+
+  /**
+   * Retrieves the player currently connected to this proxy by their identity.
+   *
+   * @param identity the identity
+   * @return the player instance, if connected, else {@code null}
+   */
+  @Nullable default Player player(PlayerIdentity identity) {
+    return player(identity.uuid());
+  }
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot

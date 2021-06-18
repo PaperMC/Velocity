@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.network.PluginMessageUtil;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.PluginMessageUtil;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundPluginMessagePacket;
 
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
 

@@ -17,14 +17,14 @@
 
 package com.velocitypowered.proxy.tablist;
 
-import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityTabListEntryLegacy extends VelocityTabListEntry {
 
-  VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,
+  VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, JavaPlayerIdentity profile,
       @Nullable Component displayName, int latency, int gameMode) {
     super(tabList, profile, displayName, latency, gameMode);
   }

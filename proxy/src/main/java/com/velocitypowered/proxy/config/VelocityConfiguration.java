@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;

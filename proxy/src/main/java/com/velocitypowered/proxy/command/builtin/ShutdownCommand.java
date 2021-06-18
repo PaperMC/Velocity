@@ -18,14 +18,14 @@
 package com.velocitypowered.proxy.command.builtin;
 
 import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class ShutdownCommand implements RawCommand {
 
-  private final VelocityServer server;
+  private final ProxyServer server;
 
-  public ShutdownCommand(VelocityServer server) {
+  public ShutdownCommand(ProxyServer server) {
     this.server = server;
   }
 
@@ -33,9 +33,9 @@ public class ShutdownCommand implements RawCommand {
   public void execute(final Invocation invocation) {
     String reason = invocation.arguments();
     if (reason.isEmpty() || reason.trim().isEmpty()) {
-      server.shutdown(true);
+      server.shutdown();
     } else {
-      server.shutdown(true, LegacyComponentSerializer.legacy('&').deserialize(reason));
+      server.shutdown(LegacyComponentSerializer.legacy('&').deserialize(reason));
     }
   }
 

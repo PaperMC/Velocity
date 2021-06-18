@@ -25,12 +25,12 @@ import static com.velocitypowered.proxy.network.HandlerNames.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.HandlerNames.READ_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.network.generic.pipeline.AutoReadHolderHandler;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftDecoder;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftEncoder;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftVarintFrameDecoder;
+import com.velocitypowered.proxy.network.java.pipeline.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.network.packet.PacketDirection;
-import com.velocitypowered.proxy.network.pipeline.AutoReadHolderHandler;
-import com.velocitypowered.proxy.network.pipeline.MinecraftDecoder;
-import com.velocitypowered.proxy.network.pipeline.MinecraftEncoder;
-import com.velocitypowered.proxy.network.pipeline.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.network.pipeline.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;

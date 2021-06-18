@@ -18,11 +18,11 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket.Item;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -89,7 +89,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
           nameMapping.put(item.getName(), uuid);
           entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
-              .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
+              .profile(new JavaPlayerIdentity(uuid, item.getName(), ImmutableList.of()))
               .latency(item.getLatency())
               .build());
         }
@@ -127,7 +127,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+  public TabListEntry buildEntry(JavaPlayerIdentity profile, @Nullable Component displayName, int latency,
       int gameMode) {
     return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
   }

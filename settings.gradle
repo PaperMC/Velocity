@@ -1,6 +1,8 @@
 rootProject.name = 'velocity'
 include(
         'api',
+        'proxy-core',
+        'implementation-java-edition',
         'proxy',
         'native',
         'annotation-processor'
@@ -8,4 +10,6 @@ include(
 findProject(':annotation-processor')?.name = 'velocity-annotation-processor'
 findProject(':api')?.name = 'velocity-api'
 findProject(':proxy')?.name = 'velocity-proxy'
+findProject(':proxy-core')?.name = 'velocity-proxy-core'
 findProject(':native')?.name = 'velocity-native'
+findProject(':implementation-java-edition')?.name = 'velocity-implementation-java-edition'

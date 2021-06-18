@@ -23,7 +23,7 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.packet.AbstractPluginMessagePacket;
 import javax.annotation.Nullable;
 
 /**

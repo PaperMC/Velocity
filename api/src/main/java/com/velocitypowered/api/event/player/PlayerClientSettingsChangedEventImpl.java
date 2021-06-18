@@ -10,17 +10,17 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.connection.Player;
-import com.velocitypowered.api.proxy.player.ClientSettings;
+import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
 
 public final class PlayerClientSettingsChangedEventImpl implements
     PlayerClientSettingsChangedEvent {
 
   private final Player player;
-  private final ClientSettings clientSettings;
+  private final JavaClientSettings javaClientSettings;
 
-  public PlayerClientSettingsChangedEventImpl(Player player, ClientSettings clientSettings) {
+  public PlayerClientSettingsChangedEventImpl(Player player, JavaClientSettings javaClientSettings) {
     this.player = Preconditions.checkNotNull(player, "player");
-    this.clientSettings = Preconditions.checkNotNull(clientSettings, "playerSettings");
+    this.javaClientSettings = Preconditions.checkNotNull(javaClientSettings, "playerSettings");
   }
 
   @Override
@@ -29,15 +29,15 @@ public final class PlayerClientSettingsChangedEventImpl implements
   }
 
   @Override
-  public ClientSettings settings() {
-    return clientSettings;
+  public JavaClientSettings settings() {
+    return javaClientSettings;
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("player", player)
-        .add("playerSettings", clientSettings)
+        .add("playerSettings", javaClientSettings)
         .toString();
   }
 }

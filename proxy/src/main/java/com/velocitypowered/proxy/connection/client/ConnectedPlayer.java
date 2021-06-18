@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.proxy.player.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
 import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
-import static com.velocitypowered.proxy.network.PluginMessageUtil.channelIdForVersion;
+import static com.velocitypowered.proxy.network.java.PluginMessageUtil.channelIdForVersion;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
@@ -44,10 +44,11 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.connection.Player;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
-import com.velocitypowered.api.proxy.player.ClientSettings;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.PlayerIdentity;
+import com.velocitypowered.api.proxy.player.java.JavaClientSettings;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -56,18 +57,18 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.network.PluginMessageUtil;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.packet.AbstractPluginMessagePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundChatPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundDisconnectPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundKeepAlivePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPluginMessagePacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundResourcePackRequestPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundTitlePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundChatPacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundClientSettingsPacket;
-import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
+import com.velocitypowered.proxy.network.java.PluginMessageUtil;
+import com.velocitypowered.proxy.network.java.packet.AbstractPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundChatPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundDisconnectPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundKeepAlivePacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundResourcePackRequestPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundTitlePacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundChatPacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundClientSettingsPacket;
+import com.velocitypowered.proxy.network.java.states.ProtocolStates;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
@@ -102,6 +103,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
@@ -112,20 +114,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
-  private final Identity identity = new IdentityImpl();
   /**
    * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
    */
   private final MinecraftConnection connection;
   private final @Nullable InetSocketAddress virtualHost;
-  private GameProfile profile;
+  private PlayerIdentity identity;
   private PermissionFunction permissionFunction;
   private int tryIndex = 0;
   private long ping = -1;
   private final boolean onlineMode;
   private @Nullable VelocityServerConnection connectedServer;
   private @Nullable VelocityServerConnection connectionInFlight;
-  private @Nullable ClientSettings settings;
+  private @Nullable JavaClientSettings settings;
   private @Nullable ModInfo modInfo;
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
@@ -136,10 +137,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
 
-  ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
+  ConnectedPlayer(VelocityServer server, PlayerIdentity identity, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
     this.server = server;
-    this.profile = profile;
+    this.identity = identity;
     this.connection = connection;
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
@@ -155,18 +156,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public @NonNull Identity identity() {
-    return this.identity;
-  }
-
-  @Override
   public String username() {
-    return profile.name();
+    return identity.name();
   }
 
   @Override
   public UUID id() {
-    return profile.uuid();
+    return identity.uuid();
   }
 
   @Override
@@ -187,8 +183,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public GameProfile gameProfile() {
-    return profile;
+  public @NotNull PlayerIdentity identity() {
+    return identity;
   }
 
   public MinecraftConnection getConnection() {
@@ -210,12 +206,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public ClientSettings clientSettings() {
-    return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
+  public JavaClientSettings clientSettings() {
+    return settings == null ? JavaClientSettingsWrapper.DEFAULT : this.settings;
   }
 
   void setPlayerSettings(ServerboundClientSettingsPacket settings) {
-    ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
+    JavaClientSettingsWrapper cs = new JavaClientSettingsWrapper(settings);
     this.settings = cs;
     server.eventManager().fireAndForget(new PlayerClientSettingsChangedEventImpl(this, cs));
   }
@@ -255,7 +251,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   public Component translateMessage(Component message) {
-    Locale locale = this.settings == null ? Locale.getDefault() : this.settings.getLocale();
+    Locale locale = this.settings == null ? Locale.getDefault() : this.settings.locale();
     return GlobalTranslator.render(message, locale);
   }
 
@@ -377,8 +373,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public void setGameProfileProperties(List<GameProfile.Property> properties) {
-    this.profile = profile.withProperties(properties);
+  public void setGameProfileProperties(List<JavaPlayerIdentity.Property> properties) {
+    if (this.identity instanceof JavaPlayerIdentity) {
+      this.identity = ((JavaPlayerIdentity) identity).withProperties(properties);
+    }
   }
 
   @Override
@@ -729,7 +727,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public String toString() {
-    return "[connected player] " + profile.name() + " (" + remoteAddress() + ")";
+    return "[connected player] " + identity.name() + " (" + remoteAddress() + ")";
   }
 
   @Override
@@ -838,13 +836,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     // Otherwise, we need to see if the player already knows this channel or it's known by the
     // proxy.
     return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
-  }
-
-  private class IdentityImpl implements Identity {
-    @Override
-    public @NonNull UUID uuid() {
-      return ConnectedPlayer.this.id();
-    }
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {

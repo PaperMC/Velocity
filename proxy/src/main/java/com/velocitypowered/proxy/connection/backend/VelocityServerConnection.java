@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.HandlerNames.HANDLER;
-import static com.velocitypowered.proxy.network.PluginMessageUtil.channelIdForVersion;
+import static com.velocitypowered.proxy.network.java.PluginMessageUtil.channelIdForVersion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -28,8 +28,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.PluginChannelId;
 import com.velocitypowered.api.proxy.player.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity.Property;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.api.util.GameProfile.Property;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -38,11 +40,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundJoinGamePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundHandshakePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundPluginMessagePacket;
-import com.velocitypowered.proxy.network.packet.serverbound.ServerboundServerLoginPacket;
-import com.velocitypowered.proxy.network.registry.state.ProtocolStates;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundJoinGamePacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundHandshakePacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundPluginMessagePacket;
+import com.velocitypowered.proxy.network.java.packet.serverbound.ServerboundServerLoginPacket;
+import com.velocitypowered.proxy.network.java.states.ProtocolStates;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -131,15 +133,18 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     if (!(playerRemoteAddress instanceof InetSocketAddress)) {
       return playerConnectedHostname();
     }
+
+    List<Property> properties = proxyPlayer.identity() instanceof JavaPlayerIdentity
+        ? ((JavaPlayerIdentity) proxyPlayer.identity()).properties()
+        : List.of();
     StringBuilder data = new StringBuilder()
         .append(playerConnectedHostname())
         .append('\0')
         .append(((InetSocketAddress) proxyPlayer.remoteAddress()).getHostString())
         .append('\0')
-        .append(proxyPlayer.gameProfile().undashedId())
+        .append(UuidUtils.toUndashed(proxyPlayer.id()))
         .append('\0');
-    GENERAL_GSON
-        .toJson(propertiesTransform.apply(proxyPlayer.gameProfile().properties()), data);
+    GENERAL_GSON.toJson(propertiesTransform.apply(properties), data);
     return data.toString();
   }
 
@@ -234,7 +239,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public String toString() {
-    return "[server connection] " + proxyPlayer.gameProfile().name() + " -> "
+    return "[server connection] " + proxyPlayer.identity().name() + " -> "
         + registeredServer.serverInfo().name();
   }
 

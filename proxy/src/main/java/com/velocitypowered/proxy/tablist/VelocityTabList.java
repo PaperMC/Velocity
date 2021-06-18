@@ -18,14 +18,14 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.player.TabList;
-import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.player.java.TabList;
+import com.velocitypowered.api.proxy.player.java.TabListEntry;
+import com.velocitypowered.api.proxy.player.java.JavaPlayerIdentity;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.network.ProtocolUtils;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundHeaderAndFooterPacket;
-import com.velocitypowered.proxy.network.packet.clientbound.ClientboundPlayerListItemPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundHeaderAndFooterPacket;
+import com.velocitypowered.proxy.network.java.packet.clientbound.ClientboundPlayerListItemPacket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -130,7 +130,7 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile,
+  public TabListEntry buildEntry(JavaPlayerIdentity profile,
       net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
   }
@@ -158,13 +158,13 @@ public class VelocityTabList implements TabList {
         case ClientboundPlayerListItemPacket.ADD_PLAYER: {
           // ensure that name and properties are available
           String name = item.getName();
-          List<GameProfile.Property> properties = item.getProperties();
+          List<JavaPlayerIdentity.Property> properties = item.getProperties();
           if (name == null || properties == null) {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
           entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
-              .profile(new GameProfile(uuid, name, properties))
+              .profile(new JavaPlayerIdentity(uuid, name, properties))
               .displayName(item.getDisplayName())
               .latency(item.getLatency())
               .gameMode(item.getGameMode())
