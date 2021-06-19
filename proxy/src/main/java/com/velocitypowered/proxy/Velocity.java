@@ -52,10 +52,9 @@ public class Velocity {
       System.setProperty("io.netty.native.workdir", System.getProperty("velocity.natives-tmpdir"));
     }
 
-    // Disable the resource leak detector by default as it reduces performance. Allow the user to
-    // override this if desired.
+    // Set the ADVANCED level of the leak detector. Time to go hunting.
     if (System.getProperty("io.netty.leakDetection.level") == null) {
-      ResourceLeakDetector.setLevel(Level.DISABLED);
+      ResourceLeakDetector.setLevel(Level.ADVANCED);
     }
   }
 
