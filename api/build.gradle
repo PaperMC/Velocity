@@ -93,7 +93,7 @@ javadoc {
             'https://google.github.io/guava/releases/25.1-jre/api/docs/',
             'https://google.github.io/guice/api-docs/4.2/javadoc/',
             'https://docs.oracle.com/javase/8/docs/api/',
-            'https://jd.adventure.kyori.net/api/4.0.0/'
+            'https://jd.adventure.kyori.net/api/4.7.0/'
     )
 
     // Disable the crazy super-strict doclint tool in Java 8

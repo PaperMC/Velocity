@@ -29,7 +29,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
-  private static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
+  public static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
 
   private MinecraftVarintLengthEncoder() {
   }
@@ -43,7 +43,8 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
   @Override
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
       throws Exception {
-    int anticipatedRequiredCapacity = 5 + msg.readableBytes();
+    int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
+        + msg.readableBytes();
     return IS_JAVA_CIPHER
         ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
         : ctx.alloc().directBuffer(anticipatedRequiredCapacity);

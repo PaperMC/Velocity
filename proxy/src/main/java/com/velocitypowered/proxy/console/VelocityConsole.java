@@ -26,6 +26,8 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.List;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.permission.PermissionChecker;
+import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -35,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.io.IoBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -45,6 +48,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   private final VelocityServer server;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
+  private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
+          .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker).build();
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
@@ -130,5 +135,10 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void shutdown() {
     this.server.shutdown(true);
+  }
+
+  @Override
+  public @NotNull Pointers pointers() {
+    return pointers;
   }
 }

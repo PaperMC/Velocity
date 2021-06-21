@@ -46,7 +46,12 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
+import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
 import io.netty.buffer.ByteBuf;
 
 public interface MinecraftSessionHandler {
@@ -191,7 +196,27 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(TitlePacket packet) {
+  default boolean handle(LegacyTitlePacket packet) {
+    return false;
+  }
+
+  default boolean handle(TitleTextPacket packet) {
+    return false;
+  }
+
+  default boolean handle(TitleSubtitlePacket packet) {
+    return false;
+  }
+
+  default boolean handle(TitleActionbarPacket packet) {
+    return false;
+  }
+
+  default boolean handle(TitleTimesPacket packet) {
+    return false;
+  }
+
+  default boolean handle(TitleClearPacket packet) {
     return false;
   }
 

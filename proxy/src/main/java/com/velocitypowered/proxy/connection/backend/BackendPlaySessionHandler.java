@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
@@ -28,10 +29,12 @@ import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
@@ -40,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -48,20 +52,26 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
 import java.util.Collection;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
+  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private static final boolean BACKPRESSURE_LOG = Boolean
       .getBoolean("velocity.log-server-backpressure");
+  private static final int MAXIMUM_PACKETS_TO_FLUSH = Integer
+      .getInteger("velocity.max-packets-per-flush", 8192);
+
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final ClientPlaySessionHandler playerSessionHandler;
   private final MinecraftConnection playerConnection;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
   private boolean exceptionTriggered = false;
+  private int packetsFlushed;
 
   BackendPlaySessionHandler(VelocityServer server, VelocityServerConnection serverConn) {
     this.server = server;
@@ -122,6 +132,23 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       playerSessionHandler.getServerBossBars().remove(packet.getUuid());
     }
     return false; // forward
+  }
+
+  @Override
+  public boolean handle(ResourcePackRequest packet) {
+    ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
+        Preconditions.checkNotNull(packet.getUrl()))
+        .setPrompt(packet.getPrompt())
+        .setShouldForce(packet.isRequired());
+    // Why SpotBugs decides that this is unsafe I have no idea;
+    if (packet.getHash() != null && !Preconditions.checkNotNull(packet.getHash()).isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(packet.getHash()).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
+      }
+    }
+
+    serverConn.getPlayer().queueResourcePack(builder.build());
+    return true;
   }
 
   @Override
@@ -271,16 +298,25 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       ((PluginMessage) packet).retain();
     }
     playerConnection.delayedWrite(packet);
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
     playerConnection.delayedWrite(buf.retain());
+    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+      playerConnection.flush();
+      packetsFlushed = 0;
+    }
   }
 
   @Override
   public void readCompleted() {
     playerConnection.flush();
+    packetsFlushed = 0;
   }
 
   @Override

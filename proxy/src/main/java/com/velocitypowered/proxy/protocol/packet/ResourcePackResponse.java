@@ -38,6 +38,10 @@ public class ResourcePackResponse implements MinecraftPacket {
     return status;
   }
 
+  public String getHash() {
+    return hash;
+  }
+
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {

@@ -31,6 +31,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResult;
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -42,6 +43,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.MessagePosition;
@@ -55,6 +57,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -66,7 +69,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.TitlePacket;
+import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
@@ -76,12 +79,14 @@ import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -89,6 +94,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.permission.PermissionChecker;
+import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -100,6 +107,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
@@ -133,6 +141,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
+  private @MonotonicNonNull Boolean previousResourceResponse;
+  private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
+  private @Nullable ResourcePackInfo pendingResourcePack;
+  private @Nullable ResourcePackInfo appliedResourcePack;
+  private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
+          .withDynamic(Identity.UUID, this::getUniqueId)
+          .withDynamic(Identity.NAME, this::getUsername)
+          .withStatic(PermissionChecker.POINTER, getPermissionChecker())
+          .build();
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -262,8 +279,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (position == MessagePosition.ACTION_BAR) {
       if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
         // We can use the title packet instead.
-        TitlePacket pkt = new TitlePacket();
-        pkt.setAction(TitlePacket.SET_ACTION_BAR);
+        GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
+                        GenericTitlePacket.ActionType.SET_ACTION_BAR, this.getProtocolVersion());
         pkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(component));
         connection.write(pkt);
@@ -307,8 +324,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // Use the title packet instead.
-      TitlePacket pkt = new TitlePacket();
-      pkt.setAction(TitlePacket.SET_ACTION_BAR);
+      GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
       pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
           .serialize(message));
       connection.write(pkt);
@@ -359,17 +376,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
           .getProtocolVersion());
 
-      TitlePacket titlePkt = new TitlePacket();
-      titlePkt.setAction(TitlePacket.SET_TITLE);
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                      GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(title.title()));
       connection.delayedWrite(titlePkt);
 
-      TitlePacket subtitlePkt = new TitlePacket();
-      subtitlePkt.setAction(TitlePacket.SET_SUBTITLE);
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
       subtitlePkt.setComponent(serializer.serialize(title.subtitle()));
       connection.delayedWrite(subtitlePkt);
 
-      TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(this.getProtocolVersion());
+      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
         timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
@@ -385,14 +403,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public void clearTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(TitlePacket.hideForProtocolVersion(this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
   }
 
   @Override
   public void resetTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(TitlePacket.resetForProtocolVersion(this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+                      GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
   }
 
@@ -487,20 +507,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     ProtocolVersion protocolVersion = connection.getProtocolVersion();
     if (title.equals(Titles.reset())) {
-      connection.write(TitlePacket.resetForProtocolVersion(protocolVersion));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.RESET, protocolVersion));
     } else if (title.equals(Titles.hide())) {
-      connection.write(TitlePacket.hideForProtocolVersion(protocolVersion));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+              GenericTitlePacket.ActionType.HIDE, protocolVersion));
     } else if (title instanceof TextTitle) {
       TextTitle tt = (TextTitle) title;
 
       if (tt.isResetBeforeSend()) {
-        connection.delayedWrite(TitlePacket.resetForProtocolVersion(protocolVersion));
+        connection.delayedWrite(GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.RESET, protocolVersion));
       }
 
       Optional<net.kyori.text.Component> titleText = tt.getTitle();
       if (titleText.isPresent()) {
-        TitlePacket titlePkt = new TitlePacket();
-        titlePkt.setAction(TitlePacket.SET_TITLE);
+        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_TITLE, protocolVersion);
         titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(titleText.get()));
         connection.delayedWrite(titlePkt);
@@ -508,15 +531,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
       Optional<net.kyori.text.Component> subtitleText = tt.getSubtitle();
       if (subtitleText.isPresent()) {
-        TitlePacket titlePkt = new TitlePacket();
-        titlePkt.setAction(TitlePacket.SET_SUBTITLE);
+        GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_SUBTITLE, protocolVersion);
         titlePkt.setComponent(net.kyori.text.serializer.gson.GsonComponentSerializer.INSTANCE
             .serialize(subtitleText.get()));
         connection.delayedWrite(titlePkt);
       }
 
       if (tt.areTimesSet()) {
-        TitlePacket timesPkt = TitlePacket.timesForProtocolVersion(protocolVersion);
+        GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+                GenericTitlePacket.ActionType.SET_TIMES, protocolVersion);
         timesPkt.setFadeIn(tt.getFadeIn());
         timesPkt.setStay(tt.getStay());
         timesPkt.setFadeOut(tt.getFadeOut());
@@ -864,29 +888,127 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
+  @Deprecated
   public void sendResourcePack(String url) {
-    Preconditions.checkNotNull(url, "url");
+    sendResourcePackOffer(new VelocityResourcePackInfo.BuilderImpl(url).build());
+  }
 
+  @Override
+  @Deprecated
+  public void sendResourcePack(String url, byte[] hash) {
+    sendResourcePackOffer(new VelocityResourcePackInfo.BuilderImpl(url).setHash(hash).build());
+  }
+
+  @Override
+  public void sendResourcePackOffer(ResourcePackInfo packInfo) {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      Preconditions.checkNotNull(packInfo, "packInfo");
+      queueResourcePack(packInfo);
+    }
+  }
+
+  /**
+   * Queues a resource-pack for sending to the player and sends it
+   * immediately if the queue is empty.
+   */
+  public void queueResourcePack(ResourcePackInfo info) {
+    outstandingResourcePacks.add(info);
+    if (outstandingResourcePacks.size() == 1) {
+      tickResourcePackQueue();
+    }
+  }
+
+  private void tickResourcePackQueue() {
+    ResourcePackInfo queued = outstandingResourcePacks.peek();
+
+    if (queued != null) {
+      // Check if the player declined a resource pack once already
+      if (previousResourceResponse != null && !previousResourceResponse) {
+        // If that happened we can flush the queue right away.
+        // Unless its 1.17+ and forced it will come back denied anyway
+        while (!outstandingResourcePacks.isEmpty()) {
+          queued = outstandingResourcePacks.peek();
+          if (queued.getShouldForce() && getProtocolVersion()
+                  .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+            break;
+          }
+          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
+          queued = null;
+        }
+        if (queued == null) {
+          // Exit as the queue was cleared
+          return;
+        }
+      }
+
       ResourcePackRequest request = new ResourcePackRequest();
-      request.setUrl(url);
-      request.setHash("");
+      request.setUrl(queued.getUrl());
+      if (queued.getHash() != null) {
+        request.setHash(ByteBufUtil.hexDump(queued.getHash()));
+      } else {
+        request.setHash("");
+      }
+      request.setRequired(queued.getShouldForce());
+      request.setPrompt(queued.getPrompt());
+
       connection.write(request);
     }
   }
 
   @Override
-  public void sendResourcePack(String url, byte[] hash) {
-    Preconditions.checkNotNull(url, "url");
-    Preconditions.checkNotNull(hash, "hash");
-    Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
+  public @Nullable ResourcePackInfo getAppliedResourcePack() {
+    return appliedResourcePack;
+  }
 
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      ResourcePackRequest request = new ResourcePackRequest();
-      request.setUrl(url);
-      request.setHash(ByteBufUtil.hexDump(hash));
-      connection.write(request);
+  @Override
+  public @Nullable ResourcePackInfo getPendingResourcePack() {
+    return pendingResourcePack;
+  }
+
+  /**
+   * Processes a client response to a sent resource-pack.
+   */
+  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
+    final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
+    final ResourcePackInfo queued = peek
+            ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
+
+    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
+            .thenAcceptAsync(event -> {
+              if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
+                      && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
+                      && (!event.isOverwriteKick() || event.getPlayer()
+                              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
+              ) {
+                event.getPlayer().disconnect(Component
+                        .translatable("multiplayer.requiredTexturePrompt.disconnect"));
+              }
+            });
+
+    switch (status) {
+      case ACCEPTED:
+        previousResourceResponse = true;
+        pendingResourcePack = queued;
+        break;
+      case DECLINED:
+        previousResourceResponse = false;
+        break;
+      case SUCCESSFUL:
+        appliedResourcePack = queued;
+        pendingResourcePack = null;
+        break;
+      case FAILED_DOWNLOAD:
+        pendingResourcePack = null;
+        break;
+      default:
+        break;
     }
+
+    if (!peek) {
+      connection.eventLoop().execute(this::tickResourcePackQueue);
+    }
+
+    return queued != null && queued.getOrigin() == ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
   }
 
   /**
@@ -953,6 +1075,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     // Otherwise, we need to see if the player already knows this channel or it's known by the
     // proxy.
     return minecraftOrFmlMessage || knownChannels.contains(message.getChannel());
+  }
+
+  @Override
+  public @NotNull Pointers pointers() {
+    return pointers;
   }
 
   private class IdentityImpl implements Identity {
