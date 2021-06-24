@@ -43,7 +43,6 @@ import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegis
 import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayDeque;
 import java.util.Arrays;

@@ -64,7 +64,7 @@ dependencies {
     runtimeOnly 'org.jline:jline-terminal-jansi:3.16.0' // Needed for JLine
     runtimeOnly 'com.lmax:disruptor:3.4.2' // Async loggers
 
-    implementation 'it.unimi.dsi:fastutil:8.4.1'
+    implementation 'it.unimi.dsi:fastutil-core:8.5.4'
 
     implementation(platform("net.kyori:adventure-bom:${adventureVersion}"))
     implementation("net.kyori:adventure-nbt")
@@ -84,6 +84,7 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.mockito:mockito-core:3.+"
 }
 
 test {
@@ -91,25 +92,35 @@ test {
 }
 
 shadowJar {
+    // Exclude all the collection types we don't intend to use
     exclude 'it/unimi/dsi/fastutil/booleans/**'
     exclude 'it/unimi/dsi/fastutil/bytes/**'
     exclude 'it/unimi/dsi/fastutil/chars/**'
     exclude 'it/unimi/dsi/fastutil/doubles/**'
     exclude 'it/unimi/dsi/fastutil/floats/**'
+    exclude 'it/unimi/dsi/fastutil/longs/**'
+    exclude 'it/unimi/dsi/fastutil/shorts/**'
+
+    // Exclude the fastutil IO utilities - we don't use them.
+    exclude 'it/unimi/dsi/fastutil/io/**'
+
+    // Exclude most of the int types - Object2IntMap have a values() method that returns an IntCollection
     exclude 'it/unimi/dsi/fastutil/ints/*Int2*'
     exclude 'it/unimi/dsi/fastutil/ints/IntAVL*'
     exclude 'it/unimi/dsi/fastutil/ints/IntArray*'
-    exclude 'it/unimi/dsi/fastutil/ints/IntBi*'
+    exclude 'it/unimi/dsi/fastutil/ints/*IntBi*'
+    exclude 'it/unimi/dsi/fastutil/ints/Int*Pair'
     exclude 'it/unimi/dsi/fastutil/ints/IntLinked*'
     exclude 'it/unimi/dsi/fastutil/ints/IntList*'
+    exclude 'it/unimi/dsi/fastutil/ints/IntHeap*'
     exclude 'it/unimi/dsi/fastutil/ints/IntOpen*'
     exclude 'it/unimi/dsi/fastutil/ints/IntRB*'
     exclude 'it/unimi/dsi/fastutil/ints/IntSet*'
     exclude 'it/unimi/dsi/fastutil/ints/IntSorted*'
     exclude 'it/unimi/dsi/fastutil/ints/*Priority*'
     exclude 'it/unimi/dsi/fastutil/ints/*BigList*'
-    exclude 'it/unimi/dsi/fastutil/io/**'
-    exclude 'it/unimi/dsi/fastutil/longs/**'
+
+    // Try to exclude everything BUT Object2Int{LinkedOpen,Open,CustomOpen}HashMap
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectArray*'
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectAVL*'
     exclude 'it/unimi/dsi/fastutil/objects/*Object*Big*'
@@ -127,7 +138,8 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/objects/*Object2Short*'
     exclude 'it/unimi/dsi/fastutil/objects/*ObjectRB*'
     exclude 'it/unimi/dsi/fastutil/objects/*Reference*'
-    exclude 'it/unimi/dsi/fastutil/shorts/**'
+
+    // Exclude Checker Framework annotations
     exclude 'org/checkerframework/checker/**'
 
     relocate 'org.bstats', 'com.velocitypowered.proxy.bstats'

@@ -247,6 +247,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         LogManager.shutdown();
         System.exit(1);
       }
+
+      commandManager.setAnnounceProxyCommands(configuration.isAnnounceProxyCommands());
     } catch (Exception e) {
       logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
       LogManager.shutdown();
@@ -384,6 +386,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           newConfiguration.getQueryPort());
     }
 
+    commandManager.setAnnounceProxyCommands(newConfiguration.isAnnounceProxyCommands());
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
     this.configuration = newConfiguration;
     eventManager.fireAndForget(new ProxyReloadEvent());

@@ -46,6 +46,17 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   }
 
   @Test
+  void willNotSuggestAliasesIfNotAnnouncingForPlayer() {
+    manager.setAnnounceProxyCommands(false);
+    manager.register(manager.metaBuilder("foo").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.metaBuilder("bar").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.metaBuilder("baz").build(), NoSuggestionsCommand.INSTANCE);
+
+    assertPlayerSuggestions(""); // for a fake player
+    assertSuggestions("", "bar", "baz", "foo"); // for non-players
+  }
+
+  @Test
   void testDoesNotSuggestForLeadingWhitespace() {
     final var meta = manager.metaBuilder("hello").build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -209,6 +220,24 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     assertSuggestions("hello ", "suggestion");
   }
+
+  // Hints and argument suggestions should still be sent even when aliases are not being suggested.
+  @Test
+  void testSuggestWillSuggestArgumentsEvenWhenAliasesAreNot() {
+    final var hint = RequiredArgumentBuilder
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
+        .build();
+    final var meta = manager.metaBuilder("hello")
+        .hint(hint)
+        .build();
+    manager.setAnnounceProxyCommands(false);
+    manager.register(meta, NoSuggestionsCommand.INSTANCE);
+
+    assertSuggestions("hello ", "suggestion");
+    assertPlayerSuggestions("hello ", "suggestion");
+  }
+
 
   @Test
   void testDoesNotSuggestHintIfHintSuggestionProviderFutureCompletesExceptionally() {

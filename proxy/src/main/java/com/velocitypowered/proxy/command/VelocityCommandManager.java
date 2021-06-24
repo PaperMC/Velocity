@@ -77,6 +77,10 @@ public class VelocityCommandManager implements CommandManager {
     this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
   }
 
+  public void setAnnounceProxyCommands(boolean announceProxyCommands) {
+    this.suggestionsProvider.setAnnounceProxyCommands(announceProxyCommands);
+  }
+
   @Override
   public CommandMeta.Builder metaBuilder(final String alias) {
     Preconditions.checkNotNull(alias, "alias");

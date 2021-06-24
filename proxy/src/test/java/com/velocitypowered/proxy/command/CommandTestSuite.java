@@ -20,8 +20,13 @@ package com.velocitypowered.proxy.command;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.permission.Tristate;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;
@@ -66,6 +71,13 @@ abstract class CommandTestSuite {
 
   final void assertSuggestions(final String input, final String... expectedSuggestions) {
     final var actual = manager.offerSuggestions(source, input).join();
+    assertEquals(Arrays.asList(expectedSuggestions), actual);
+  }
+
+  final void assertPlayerSuggestions(final String input, final String... expectedSuggestions) {
+    final var player = mock(Player.class);
+    when(player.getPermissionValue(any())).thenReturn(Tristate.UNDEFINED);
+    final var actual = manager.offerSuggestions(player, input).join();
     assertEquals(Arrays.asList(expectedSuggestions), actual);
   }
 }

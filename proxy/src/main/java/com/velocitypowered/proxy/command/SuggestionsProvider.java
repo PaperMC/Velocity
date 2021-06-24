@@ -33,6 +33,7 @@ import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,10 +63,12 @@ final class SuggestionsProvider<S> {
 
   private final @GuardedBy("lock") CommandDispatcher<S> dispatcher;
   private final Lock lock;
+  private boolean announceProxyCommands;
 
   SuggestionsProvider(final CommandDispatcher<S> dispatcher, final Lock lock) {
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "dispatcher");
     this.lock = Preconditions.checkNotNull(lock, "lock");
+    this.announceProxyCommands = true;
   }
 
   /**
@@ -148,6 +151,10 @@ final class SuggestionsProvider<S> {
     // Lowercase the alias here so all comparisons can be case-sensitive (cheaper)
     // TODO Is this actually faster? It may incur an allocation
     final String input = reader.getRead().toLowerCase(Locale.ENGLISH);
+
+    if (source instanceof Player && !this.announceProxyCommands) {
+      return new SuggestionsBuilder(input, 0).buildFuture();
+    }
 
     final Collection<CommandNode<S>> aliases = contextSoFar.getRootNode().getChildren();
     @SuppressWarnings("unchecked")
@@ -367,5 +374,14 @@ final class SuggestionsProvider<S> {
       }
       return Suggestions.merge(fullInput, suggestions);
     });
+  }
+
+  /**
+   * Sets a flag indicating whether or not alias suggestions shall be returned to the user.
+   *
+   * @param announceProxyCommands whether alias suggestions can be returned
+   */
+  public void setAnnounceProxyCommands(boolean announceProxyCommands) {
+    this.announceProxyCommands = announceProxyCommands;
   }
 }
