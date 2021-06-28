@@ -71,8 +71,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyHandshake packet) {
-    connection.closeWith(LegacyDisconnect
-        .from(Component.text("Your client is old, please upgrade!", NamedTextColor.RED)));
+    connection.closeWith(LegacyDisconnect.from(Component.text(
+        "Your client is extremely old. Please update to a newer version of Minecraft.",
+        NamedTextColor.RED)
+    ));
     return true;
   }
 
@@ -125,7 +127,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
     if (!server.getIpAttemptLimiter().attempt(address)) {
-      ic.disconnectQuietly(Component.text("You are logging in too fast, try again later."));
+      ic.disconnectQuietly(Component.translatable("velocity.error.logging-in-too-fast"));
       return;
     }
 
@@ -135,7 +137,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
-      ic.disconnectQuietly(Component.text("This server is only compatible with 1.13 and above."));
+      ic.disconnectQuietly(Component.translatable(
+          "velocity.error.modern-forwarding-needs-new-client"));
       return;
     }
 

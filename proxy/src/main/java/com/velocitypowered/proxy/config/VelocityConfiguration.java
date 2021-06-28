@@ -47,7 +47,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -74,25 +73,23 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private final Advanced advanced;
   @Expose private final Query query;
   private final Metrics metrics;
-  private final Messages messages;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics, Messages messages) {
+      Query query, Metrics metrics) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
-    this.messages = messages;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics, Messages messages) {
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -108,7 +105,6 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
-    this.messages = messages;
   }
 
   /**
@@ -375,10 +371,6 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogCommandExecutions();
   }
 
-  public Messages getMessages() {
-    return messages;
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -452,7 +444,6 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedConfig advancedConfig = config.get("advanced");
     CommentedConfig queryConfig = config.get("query");
     CommentedConfig metricsConfig = config.get("metrics");
-    CommentedConfig messagesConfig = config.get("messages");
     PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -482,8 +473,7 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig),
-        new Messages(messagesConfig, defaultConfig.get("messages"))
+        new Metrics(metricsConfig)
     );
   }
 
@@ -795,75 +785,6 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isEnabled() {
       return enabled;
-    }
-  }
-
-  public static class Messages {
-
-    private final CommentedConfig toml;
-    private final CommentedConfig defaultToml;
-
-    private final String kickPrefix;
-    private final String disconnectPrefix;
-    private final String onlineModeOnly;
-    private final String noAvailableServers;
-    private final String alreadyConnected;
-    private final String movedToNewServerPrefix;
-    private final String genericConnectionError;
-
-    private Messages(CommentedConfig toml, CommentedConfig defaultToml) {
-      this.toml = toml;
-      this.defaultToml = defaultToml;
-      this.kickPrefix = getString("kick-prefix");
-      this.disconnectPrefix = getString("disconnect-prefix");
-      this.onlineModeOnly = getString("online-mode-only");
-      this.noAvailableServers = getString("no-available-servers");
-      this.alreadyConnected = getString("already-connected");
-      this.movedToNewServerPrefix = getString("moved-to-new-server-prefix");
-      this.genericConnectionError = getString("generic-connection-error");
-    }
-
-    private String getString(String path) {
-      String def = defaultToml.getOrElse(path, "");
-      if (toml == null) {
-        return def;
-      }
-      return toml.getOrElse(path, def);
-    }
-
-    public Component getKickPrefix(String server) {
-      return deserialize(String.format(kickPrefix, server));
-    }
-
-    public Component getDisconnectPrefix(String server) {
-      return deserialize(String.format(disconnectPrefix, server));
-    }
-
-    public Component getOnlineModeOnly() {
-      return deserialize(onlineModeOnly);
-    }
-
-    public Component getNoAvailableServers() {
-      return deserialize(noAvailableServers);
-    }
-
-    public Component getAlreadyConnected() {
-      return deserialize(alreadyConnected);
-    }
-
-    public Component getMovedToNewServerPrefix() {
-      return deserialize(movedToNewServerPrefix);
-    }
-
-    public Component getGenericConnectionError() {
-      return deserialize(genericConnectionError);
-    }
-
-    private Component deserialize(String str) {
-      if (str.startsWith("{")) {
-        return GsonComponentSerializer.gson().deserialize(str);
-      }
-      return LegacyComponentSerializer.legacyAmpersand().deserialize(str);
     }
   }
 }

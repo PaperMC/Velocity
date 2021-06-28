@@ -100,7 +100,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
   public void addBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getOrCreateHandler(bar);
     if (holder.subscribers.add(player)) {
-      player.getConnection().write(holder.createAddPacket(player.getProtocolVersion()));
+      player.getConnection().write(holder.createAddPacket(player));
     }
   }
 
@@ -123,21 +123,16 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar pre116Packet = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_15_2);
-    com.velocitypowered.proxy.protocol.packet.BossBar rgbPacket = holder.createTitleUpdate(
-        newName, ProtocolVersion.MINECRAFT_1_16);
     for (ConnectedPlayer player : holder.subscribers) {
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-        player.getConnection().write(rgbPacket);
-      } else {
-        player.getConnection().write(pre116Packet);
-      }
+      Component translated = player.translateMessage(newName);
+      com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createTitleUpdate(
+          translated, player.getProtocolVersion());
+      player.getConnection().write(packet);
     }
   }
 
   @Override
-  public void bossBarPercentChanged(@NonNull BossBar bar, float oldPercent, float newPercent) {
+  public void bossBarProgressChanged(@NonNull BossBar bar, float oldPercent, float newPercent) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
@@ -208,12 +203,13 @@ public class AdventureBossBarManager implements BossBar.Listener {
       return com.velocitypowered.proxy.protocol.packet.BossBar.createRemovePacket(this.id);
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createAddPacket(ProtocolVersion version) {
+    com.velocitypowered.proxy.protocol.packet.BossBar createAddPacket(ConnectedPlayer player) {
       com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.ADD);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(bar.name()));
+      packet.setName(ProtocolUtils.getJsonChatSerializer(player.getProtocolVersion())
+          .serialize(player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setPercent(bar.progress());

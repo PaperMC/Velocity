@@ -56,12 +56,15 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
@@ -148,7 +151,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 GameProfile.class), true);
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
-            inbound.disconnect(server.getConfiguration().getMessages().getOnlineModeOnly());
+            inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
+                NamedTextColor.RED));
           } else {
             // Something else went wrong
             logger.error(
@@ -188,8 +192,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           Optional<Component> disconnectReason = result.getReasonComponent();
           if (disconnectReason.isPresent()) {
             // The component is guaranteed to be provided if the connection was denied.
-            mcConnection.closeWith(Disconnect.create(disconnectReason.get(),
-                inbound.getProtocolVersion()));
+            inbound.disconnect(disconnectReason.get());
             return;
           }
 
@@ -238,7 +241,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
-        player.disconnect0(server.getConfiguration().getMessages().getAlreadyConnected(), true);
+        player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
+            NamedTextColor.RED), true);
         return CompletableFuture.completedFuture(null);
       }
 
@@ -302,8 +306,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             player.disconnect0(reason.get(), true);
           } else {
             if (!server.registerConnection(player)) {
-              player.disconnect0(server.getConfiguration().getMessages()
-                      .getAlreadyConnected(), true);
+              player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
+                  true);
               return;
             }
 
@@ -331,8 +335,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
-            player.disconnect0(server.getConfiguration().getMessages()
-                    .getNoAvailableServers(), true);
+            player.disconnect0(Component.translatable("velocity.error.no-available-servers",
+                NamedTextColor.RED), true);
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();
