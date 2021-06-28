@@ -268,6 +268,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     return connection.getProtocolVersion();
   }
 
+  /**
+   * Translates the message in the user's locale.
+   *
+   * @param message the message to translate
+   * @return the translated message
+   */
   public Component translateMessage(Component message) {
     Locale locale = ClosestLocaleMatcher.INSTANCE
         .lookupClosest(this.settings == null ? Locale.getDefault() : this.settings.getLocale());

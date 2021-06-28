@@ -118,7 +118,6 @@ public class ServerCommand implements SimpleCommand {
       playersTextComponent = Component.translatable("velocity.command.server-tooltip-players-online");
     }
     playersTextComponent = playersTextComponent.args(Component.text(connectedPlayers));
-    String playersText = server.getPlayersConnected().size() + " player(s) online";
     if (serverInfo.getName().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
