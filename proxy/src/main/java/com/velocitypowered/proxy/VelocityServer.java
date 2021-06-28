@@ -55,6 +55,7 @@ import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.FileSystemUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
@@ -272,6 +273,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
             translationRegistry.registerAll(locale,
                 ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
                     locale, UTF8ResourceBundleControl.get()), false);
+            ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
           });
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);

@@ -24,6 +24,7 @@ import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.identity.Identity;
@@ -59,7 +60,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    Component translated = GlobalTranslator.render(message, Locale.getDefault());
+    Component translated = GlobalTranslator.render(message, ClosestLocaleMatcher.INSTANCE
+        .lookupClosest(Locale.getDefault()));
     logger.info(LegacyComponentSerializer.legacySection().serialize(translated));
   }
 
