@@ -55,7 +55,7 @@ public enum ProtocolVersion {
   MINECRAFT_1_16_3(753, "1.16.3"),
   MINECRAFT_1_16_4(754, "1.16.4", "1.16.5"),
   MINECRAFT_1_17(755, "1.17"),
-  MINECRAFT_1_17_1(-1, 37, "1.17.1"); // final version is 756
+  MINECRAFT_1_17_1(-1, 38, "1.17.1"); // final version is 756
 
   private static final int SNAPSHOT_BIT = 30;
 
