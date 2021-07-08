@@ -281,18 +281,20 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      TranslatableComponent.Builder output = Component.translatable()
-          .key("velocity.command.plugins-list")
-          .color(NamedTextColor.YELLOW);
+      TextComponent.Builder listBuilder = Component.text();
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        output.append(componentForPlugin(plugin.getDescription()));
+        listBuilder.append(componentForPlugin(plugin.getDescription()));
         if (i + 1 < pluginCount) {
-          output.append(Component.text(", "));
+          listBuilder.append(Component.text(", "));
         }
       }
 
-      source.sendMessage(Identity.nil(), output.build());
+      TranslatableComponent.Builder output = Component.translatable()
+          .key("velocity.command.plugins-list")
+          .color(NamedTextColor.YELLOW)
+          .args(listBuilder.build());
+      source.sendMessage(Identity.nil(), output);
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
@@ -361,8 +363,8 @@ public class VelocityCommand implements SimpleCommand {
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
               server.getConfiguration().getAttemptConnectionOrder());
-      for (int i = 0; i < attemptedConnectionOrder.size(); i++) {
-        connectOrder.add(attemptedConnectionOrder.get(i));
+      for (String s : attemptedConnectionOrder) {
+        connectOrder.add(s);
       }
 
       JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.getConfiguration());

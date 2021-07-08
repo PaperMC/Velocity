@@ -614,7 +614,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case CONNECTION_IN_PROGRESS:
                     // Fatal case
                     case CONNECTION_CANCELLED:
-                      disconnect(status.getReasonComponent().orElse(res.getMessageComponent()));
+                      Component fallbackMsg = res.getMessageComponent();
+                      if (fallbackMsg == null) {
+                        fallbackMsg = friendlyReason;
+                      }
+                      disconnect(status.getReasonComponent().orElse(fallbackMsg));
                       break;
                     case SERVER_DISCONNECTED:
                       Component reason = status.getReasonComponent()
@@ -623,10 +627,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      sendMessage(Component.translatable("velocity.error.moved-to-new-server",
-                          NamedTextColor.RED,
-                          Component.text(originalEvent.getServer().getServerInfo().getName()),
-                          friendlyReason));
+                      Component requestedMessage = res.getMessageComponent();
+                      if (requestedMessage == null) {
+                        requestedMessage = Component.translatable("velocity.error.moved-to-new-server",
+                            NamedTextColor.RED,
+                            Component.text(originalEvent.getServer().getServerInfo().getName()),
+                            friendlyReason);
+                      }
+                      sendMessage(requestedMessage);
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)
