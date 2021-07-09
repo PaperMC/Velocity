@@ -77,7 +77,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
   }
 
   @Override
-  public void processBackendPacket(PlayerListItem packet) {
+  public boolean processBackendPacket(PlayerListItem packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
@@ -108,6 +108,7 @@ public class VelocityTabListLegacy extends VelocityTabList {
         break;
     }
 
+    return true;
   }
 
   @Override
