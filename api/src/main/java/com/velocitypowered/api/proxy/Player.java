@@ -47,9 +47,12 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   String getUsername();
 
   /**
+   * The locale the velocity proxy is translating its messages to. By default {@link PlayerSettings#getLocale()}
    *
-   * @return the locale the velocity proxy is translating its messages to. By default {@link PlayerSettings#getLocale()}
-   * Can be null when the settings have not been initialized yet.
+   * <p>Can be null when the settings have not been initialized yet.</p>
+   *
+   * @return the locale.
+   *
    */
   @Nullable Locale getProxyLocale();
 
