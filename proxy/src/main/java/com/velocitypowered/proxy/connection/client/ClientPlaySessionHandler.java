@@ -358,23 +358,26 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     final MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
-      // Nothing special to do with regards to spawning the player
+      // The player wasn't spawned in yet, so we don't need to do anything special. Just send
+      // JoinGame.
       spawned = true;
-
-      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
       player.getConnection().delayedWrite(joinGame);
       // Required for Legacy Forge
       player.getPhase().onFirstJoin(player);
     } else {
       // Clear tab list to avoid duplicate entries
       player.getTabList().clearAll();
+
+      // The player is switching from a server already, so we need to tell the client to change
+      // entity IDs and send new dimension information.
       if (player.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
         this.doSafeClientServerSwitch(joinGame);
       } else {
         this.doFastClientServerSwitch(joinGame);
       }
-      destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
     }
+
+    destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
@@ -400,9 +403,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      player.getConnection()
-              .delayedWrite(GenericTitlePacket.constructTitlePacket(
-                      GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
+      player.getConnection().delayedWrite(GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
     }
 
     // Flush everything
