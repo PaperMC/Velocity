@@ -22,7 +22,9 @@ import static java.util.Objects.requireNonNull;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.VerifyException;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -87,7 +89,7 @@ public class VelocityEventManager implements EventManager {
   private final ExecutorService asyncExecutor;
   private final PluginManager pluginManager;
 
-  private final Multimap<Class<?>, HandlerRegistration> handlersByType = HashMultimap.create();
+  private final ListMultimap<Class<?>, HandlerRegistration> handlersByType = ArrayListMultimap.create();
   private final LoadingCache<Class<?>, HandlersCache> handlersCache =
       Caffeine.newBuilder().build(this::bakeHandlers);
 
