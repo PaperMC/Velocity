@@ -279,10 +279,6 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      TranslatableComponent.Builder output = Component.translatable()
-          .key("velocity.command.plugins-list")
-          .color(NamedTextColor.YELLOW);
-
       TextComponent.Builder listBuilder = Component.text();
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
@@ -292,7 +288,11 @@ public class VelocityCommand implements SimpleCommand {
         }
       }
 
-      source.sendMessage(Identity.nil(), output.args(listBuilder.build()).build());
+      TranslatableComponent.Builder output = Component.translatable()
+          .key("velocity.command.plugins-list")
+          .color(NamedTextColor.YELLOW)
+          .args(listBuilder.build());
+      source.sendMessage(Identity.nil(), output);
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {

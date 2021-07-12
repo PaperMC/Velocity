@@ -580,10 +580,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           protocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      sendMessage(Component.translatable("velocity.error.moved-to-new-server",
-                          NamedTextColor.RED,
-                          Component.text(originalEvent.server().serverInfo().name()),
-                          friendlyReason));
+                      Component requestedMessage = res.message();
+                      if (requestedMessage == null) {
+                        requestedMessage = Component.translatable("velocity.error.moved-to-new-server",
+                            NamedTextColor.RED,
+                            Component.text(originalEvent.server().serverInfo().name()),
+                            friendlyReason);
+                      }
+                      sendMessage(requestedMessage);
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)
