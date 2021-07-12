@@ -25,13 +25,14 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 abstract class CommandTestSuite {
 
-  private static VelocityEventManager eventManager;
+  private static @Nullable VelocityEventManager eventManager;
 
   protected VelocityCommandManager manager;
   protected final CommandSource source = MockCommandSource.INSTANCE;
@@ -44,6 +45,9 @@ abstract class CommandTestSuite {
   @AfterAll
   static void afterAll() {
     try {
+      if (eventManager == null) {
+        throw new AssertionError("Event manager must exist");
+      }
       eventManager.shutdown();
       eventManager = null;
     } catch (final InterruptedException e) {
@@ -53,6 +57,9 @@ abstract class CommandTestSuite {
 
   @BeforeEach
   void setUp() {
+    if (eventManager == null) {
+      throw new AssertionError("Event manager must exist");
+    }
     this.manager = new VelocityCommandManager(eventManager);
   }
 

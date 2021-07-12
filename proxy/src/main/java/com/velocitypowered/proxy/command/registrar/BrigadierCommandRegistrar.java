@@ -46,7 +46,7 @@ public final class BrigadierCommandRegistrar extends AbstractCommandRegistrar<Br
       this.register(literal);
     }
 
-    for (final String alias : meta.getAliases()) {
+    for (final String alias : meta.aliases()) {
       if (primaryAlias.equals(alias)) {
         continue;
       }

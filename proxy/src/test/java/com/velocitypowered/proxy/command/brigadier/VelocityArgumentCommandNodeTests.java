@@ -21,6 +21,7 @@ import static com.velocitypowered.proxy.command.brigadier.VelocityArgumentBuilde
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -67,6 +68,7 @@ public class VelocityArgumentCommandNodeTests {
     assertTrue(this.contextBuilder.getArguments().containsKey("foo"));
     final ParsedArgument<Object, String[]> parsed =
             (ParsedArgument<Object, String[]>) this.contextBuilder.getArguments().get("foo");
+    assertNotNull(parsed, "Argument foo is null!");
     assertArrayEquals(new String[] { "hello", "world" }, parsed.getResult());
     assertEquals(expectedRange, parsed.getRange());
   }

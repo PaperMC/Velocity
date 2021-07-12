@@ -39,7 +39,9 @@ public final class StringArrayArgumentType implements ArgumentType<String[]> {
           Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
   private static final List<String> EXAMPLES = Arrays.asList("word", "some words");
 
-  private StringArrayArgumentType() {}
+  private StringArrayArgumentType() {
+
+  }
 
   @Override
   public String[] parse(final StringReader reader) throws CommandSyntaxException {

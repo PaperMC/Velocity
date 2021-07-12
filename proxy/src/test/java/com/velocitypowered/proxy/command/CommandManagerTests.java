@@ -166,7 +166,9 @@ public class CommandManagerTests extends CommandTestSuite {
 
     static final DummyCommand INSTANCE = new DummyCommand();
 
-    private DummyCommand() {}
+    private DummyCommand() {
+
+    }
 
     @Override
     public void execute(final Invocation invocation) {

@@ -244,7 +244,9 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     static final NoSuggestionsCommand INSTANCE = new NoSuggestionsCommand();
 
-    private NoSuggestionsCommand() {}
+    private NoSuggestionsCommand() {
+
+    }
 
     @Override
     public void execute(final Invocation invocation) {

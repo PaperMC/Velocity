@@ -43,7 +43,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testExecutesAlias() {
     final var callCount = new AtomicInteger();
     
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> {
       assertEquals(source, invocation.source());
       assertEquals("hello", invocation.alias());
@@ -59,7 +59,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testExecuteIgnoresAliasCase() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> {
       assertEquals("hello", invocation.alias());
       callCount.incrementAndGet();
@@ -73,7 +73,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testExecuteInputIsTrimmed() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> {
       assertEquals("hello", invocation.alias());
       assertArrayEquals(new String[0], invocation.arguments());
@@ -89,7 +89,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testExecuteAfterUnregisterForwards() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> fail());
     manager.unregister("hello");
 
@@ -100,7 +100,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testForwardsAndDoesNotExecuteImpermissibleAlias() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -125,7 +125,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testExecutesWithArguments() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> {
       assertEquals("hello", invocation.alias());
       assertArrayEquals(new String[] { "dear", "world" }, invocation.arguments());
@@ -140,7 +140,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testHandlesAndDoesNotExecuteWithImpermissibleArgs() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("color").build();
+    final var meta = manager.createMetaBuilder("color").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -164,7 +164,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestAliasIfImpermissible() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -187,7 +187,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestAliasAfterUnregister() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -206,7 +206,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testSuggestsArgumentsAfterAlias() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -226,7 +226,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testSuggestsArgumentsAfterAliasIgnoresAliasCase() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -245,7 +245,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testSuggestsArgumentsAfterPartialArguments() {
-    final var meta = manager.metaBuilder("numbers").build();
+    final var meta = manager.createMetaBuilder("numbers").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -266,7 +266,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testDoesNotSuggestFirstArgumentIfImpermissibleAlias() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -295,7 +295,7 @@ public class SimpleCommandTests extends CommandTestSuite {
   void testDoesNotSuggestArgumentsAfterPartialImpermissibleArguments() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("foo").build();
+    final var meta = manager.createMetaBuilder("foo").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -322,7 +322,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestIfFutureCompletesExceptionally() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -340,7 +340,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestIfSuggestAsyncThrows() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -359,7 +359,7 @@ public class SimpleCommandTests extends CommandTestSuite {
 
   @Test
   void testSuggestCompletesExceptionallyIfHasPermissionThrows() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -390,7 +390,7 @@ public class SimpleCommandTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
             .<CommandSource>literal("hint")
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, new SimpleCommand() {
@@ -413,7 +413,7 @@ public class SimpleCommandTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
             .<CommandSource>literal("hint")
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, new SimpleCommand() {
@@ -437,7 +437,7 @@ public class SimpleCommandTests extends CommandTestSuite {
             .<CommandSource, String>argument("hint", word())
             .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, new SimpleCommand() {
@@ -463,7 +463,7 @@ public class SimpleCommandTests extends CommandTestSuite {
               throw new RuntimeException();
             })
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, new SimpleCommand() {

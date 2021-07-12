@@ -48,7 +48,7 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
 
   @Test
   void testInjectInvocableCommand() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, (SimpleCommand) invocation -> fail());
     manager.getInjector().inject(dest, source);
 
@@ -61,7 +61,7 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   void testFiltersImpermissibleAlias() {
     final var callCount = new AtomicInteger();
 
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.createMetaBuilder("hello").build();
     manager.register(meta, new SimpleCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -88,7 +88,7 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
             .<CommandSource>literal("hint")
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, (SimpleCommand) invocation -> fail());
@@ -106,7 +106,7 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
             .<CommandSource>literal("hint")
             .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.createMetaBuilder("hello")
             .hint(hint)
             .build();
     manager.register(meta, new RawCommand() {

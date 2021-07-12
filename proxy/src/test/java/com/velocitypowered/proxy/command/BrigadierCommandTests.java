@@ -205,7 +205,7 @@ public class BrigadierCommandTests extends CommandTestSuite {
     manager.register(new BrigadierCommand(node));
 
     final Exception wrapper = assertThrows(CompletionException.class, () ->
-            manager.executeAsync(source, "hello").join());
+            manager.execute(source, "hello").join());
 
     assertSame(expected, wrapper.getCause().getCause());
   }
@@ -223,7 +223,7 @@ public class BrigadierCommandTests extends CommandTestSuite {
     manager.register(new BrigadierCommand(node));
 
     final Exception wrapper = assertThrows(CompletionException.class, () ->
-            manager.executeAsync(source, "hello").join());
+            manager.execute(source, "hello").join());
 
     assertSame(expected, wrapper.getCause().getCause());
   }

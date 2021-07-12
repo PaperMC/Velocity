@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * An argument node that uses the given (possibly custom) {@link ArgumentType}
@@ -56,7 +57,7 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
           final Predicate<S> requirement,
           final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,
           final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks,
-          final SuggestionProvider<S> customSuggestions) {
+          final @Nullable SuggestionProvider<S> customSuggestions) {
     super(name, StringArgumentType.greedyString(), command, requirement, contextRequirement,
             redirect, modifier, forks, customSuggestions);
     this.type = Preconditions.checkNotNull(type, "type");

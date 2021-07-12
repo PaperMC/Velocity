@@ -52,7 +52,7 @@ public final class VelocityArgumentBuilder<S, T>
 
   private final String name;
   private final ArgumentType<T> type;
-  private SuggestionProvider<S> suggestionsProvider = null;
+  private @Nullable SuggestionProvider<S> suggestionsProvider = null;
 
   private VelocityArgumentBuilder(final String name, final ArgumentType<T> type) {
     this.name = name;
