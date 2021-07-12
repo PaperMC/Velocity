@@ -28,6 +28,7 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,37 @@ public class EventTest {
       result++;
       thread = Thread.currentThread();
     }
+
+  }
+
+  @Test
+  void listenerOrderPreserved() throws Exception {
+    final AtomicLong listenerAInvoked = new AtomicLong();
+    final AtomicLong listenerBInvoked = new AtomicLong();
+    final AtomicLong listenerCInvoked = new AtomicLong();
+
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
+      listenerAInvoked.set(System.nanoTime());
+      return null;
+    });
+    eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class, event -> {
+      listenerBInvoked.set(System.nanoTime());
+      return null;
+    });
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
+      listenerCInvoked.set(System.nanoTime());
+      return null;
+    });
+
+    try {
+      eventManager.fire(new TestEvent()).get();
+    } finally {
+      eventManager.unregisterListeners(FakePluginManager.PLUGIN_A);
+    }
+
+    // Check that the order is A < B < C. Check only that A < B and B < C as B < C and A < B => A < C.
+    assertTrue(listenerAInvoked.get() < listenerBInvoked.get(), "Listener B invoked before A!");
+    assertTrue(listenerBInvoked.get() < listenerCInvoked.get(), "Listener C invoked before B!");
   }
 
   @Test
