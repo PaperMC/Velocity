@@ -871,7 +871,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           && !connectedServer.hasCompletedJoin())) {
         return ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS;
       }
-      if (connectedServer != null && connectedServer.target().equals(server)) {
+      if (connectedServer != null && connectedServer.target().serverInfo()
+          .equals(server.serverInfo())) {
         return ALREADY_CONNECTED;
       }
       return null;
