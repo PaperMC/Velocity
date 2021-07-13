@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
@@ -44,9 +46,13 @@ public class JavaVelocityCipher implements VelocityCipher {
   private boolean disposed = false;
 
   private JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
+    var random = new SecureRandom();
+    var bytesIV = new byte[16];
+    random.nextBytes(bytesIV);
+
     this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
     this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
-        new IvParameterSpec(key.getEncoded()));
+        new IvParameterSpec(bytesIV));
   }
 
   @Override
