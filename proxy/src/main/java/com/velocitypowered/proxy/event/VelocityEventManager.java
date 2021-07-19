@@ -46,6 +46,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -175,7 +176,7 @@ public class VelocityEventManager implements EventManager {
 
   private @Nullable HandlersCache bakeHandlers(final Class<?> eventType) {
     final List<HandlerRegistration> baked = new ArrayList<>();
-    final List<Class<?>> types = eventTypeTracker.getFriendsOf(eventType);
+    final Collection<Class<?>> types = eventTypeTracker.getFriendsOf(eventType);
 
     lock.readLock().lock();
     try {
