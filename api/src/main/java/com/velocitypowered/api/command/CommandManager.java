@@ -8,6 +8,7 @@
 package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -95,10 +96,18 @@ public interface CommandManager {
   CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 
   /**
+   * Returns an immutable collection of the case-insensitive aliases registered
+   * on this manager.
+   *
+   * @return the registered aliases
+   */
+  Collection<String> getAliases();
+
+  /**
    * Returns whether the given alias is registered on this manager.
    *
    * @param alias the command alias to check
-   * @return {@code true} if the alias is registered
+   * @return true if the alias is registered; false otherwise
    */
   boolean hasCommand(String alias);
 }
