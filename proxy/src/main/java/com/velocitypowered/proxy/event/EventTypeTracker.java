@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.event;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -45,6 +44,7 @@ class EventTypeTracker {
       }
 
       friends.put(type, eventType);
+      friends.put(eventType, type);
     }
     return types;
   }
