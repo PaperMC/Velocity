@@ -24,6 +24,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
@@ -38,11 +39,13 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -249,12 +252,19 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
-  /**
-   * Returns whether the given alias is registered on this manager.
-   *
-   * @param alias the command alias to check
-   * @return true if the alias is registered; false otherwise
-   */
+  @Override
+  public Collection<String> getAliases() {
+    lock.readLock().lock();
+    try {
+      // A RootCommandNode may only contain LiteralCommandNode children instances
+      return dispatcher.getRoot().getChildren().stream()
+              .map(CommandNode::getName)
+              .collect(ImmutableList.toImmutableList());
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
   @Override
   public boolean hasCommand(final String alias) {
     Preconditions.checkNotNull(alias, "alias");

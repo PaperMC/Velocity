@@ -17,11 +17,13 @@
 
 package com.velocitypowered.proxy.command;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -41,6 +43,7 @@ public class CommandManagerTests extends CommandTestSuite {
     manager.register(meta, DummyCommand.INSTANCE);
 
     assertTrue(manager.hasCommand("hello"));
+    assertRegisteredAliases("hello");
   }
 
   @Test
@@ -55,6 +58,7 @@ public class CommandManagerTests extends CommandTestSuite {
     assertTrue(manager.hasCommand("bar"));
     assertTrue(manager.hasCommand("baz"));
     assertTrue(manager.hasCommand("qux"));
+    assertRegisteredAliases("foo", "bar", "baz", "qux");
   }
 
   @Test
@@ -66,6 +70,7 @@ public class CommandManagerTests extends CommandTestSuite {
 
     assertTrue(manager.hasCommand("foo"));
     assertTrue(manager.hasCommand("bar"));
+    assertRegisteredAliases("foo", "bar");
   }
 
   @Test
@@ -76,6 +81,7 @@ public class CommandManagerTests extends CommandTestSuite {
     manager.register(new BrigadierCommand(node));
 
     assertTrue(manager.hasCommand("hello"));
+    assertRegisteredAliases("hello");
   }
 
   @Test
@@ -125,6 +131,7 @@ public class CommandManagerTests extends CommandTestSuite {
     manager.unregister("hello");
 
     assertFalse(manager.hasCommand("hello"));
+    assertRegisteredAliases();
   }
 
   @Test
@@ -133,6 +140,7 @@ public class CommandManagerTests extends CommandTestSuite {
     manager.unregister("hello");
 
     assertFalse(manager.hasCommand("hello"));
+    assertRegisteredAliases();
   }
 
   @Test
@@ -145,6 +153,7 @@ public class CommandManagerTests extends CommandTestSuite {
 
     assertFalse(manager.hasCommand("bar"));
     assertTrue(manager.hasCommand("foo"));
+    assertRegisteredAliases("foo");
   }
 
   // Execution
