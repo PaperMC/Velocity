@@ -63,6 +63,9 @@ task sourcesJar(type: Jar) {
 
 jar {
     from sourceSets.ap.output
+    manifest {
+        attributes 'Automatic-Module-Name': 'com.velocitypowered.api'
+    }
 }
 
 shadowJar {
