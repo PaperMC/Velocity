@@ -49,14 +49,14 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   /**
    * The locale the velocity proxy is translating its messages to. By default {@link PlayerSettings#getLocale()}
    *
-   * <p>Can be {@code null} when the settings have not been initialized yet.</p>
+   * <p>This can be {@code null} when the client has not yet connected to any server.</p>
    *
    * @return the locale.
    */
   @Nullable Locale getEffectiveLocale();
 
   /**
-   * Change the locale the proxy is translating its messages to.
+   * Change the locale the proxy will be translating its messages to.
    *
    * @param locale the locale to translate to
    */

@@ -177,10 +177,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public Locale getEffectiveLocale() {
-    if (effectiveLocale == null) {
-      if (settings == null) {
-        return null;
-      }
+    if (effectiveLocale == null && settings != null) {
       return settings.getLocale();
     }
     return effectiveLocale;
