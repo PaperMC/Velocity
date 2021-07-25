@@ -145,7 +145,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .build();
   private @Nullable String clientBrand;
-  private @Nullable Locale proxyLocale;
+  private @Nullable Locale effectiveLocale;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -176,19 +176,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
-  public Locale getProxyLocale() {
-    if (proxyLocale == null) {
+  public Locale getEffectiveLocale() {
+    if (effectiveLocale == null) {
       if (settings == null) {
         return null;
       }
       return settings.getLocale();
     }
-    return proxyLocale;
+    return effectiveLocale;
   }
 
   @Override
-  public void setProxyLocale(Locale locale) {
-    proxyLocale = locale;
+  public void setEffectiveLocale(Locale locale) {
+    effectiveLocale = locale;
   }
 
   @Override
@@ -289,7 +289,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public Component translateMessage(Component message) {
     Locale locale = ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(getProxyLocale() == null ? Locale.getDefault() : getProxyLocale());
+        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
     return GlobalTranslator.render(message, locale);
   }
 
