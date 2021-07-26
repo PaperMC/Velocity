@@ -47,7 +47,8 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   String getUsername();
 
   /**
-   * The locale the velocity proxy is translating its messages to. By default {@link PlayerSettings#getLocale()}
+   * Returns the locale the proxy will use to send messages translated via the Adventure global translator.
+   * By default, the value of {@link PlayerSettings#getLocale()} is used.
    *
    * <p>This can be {@code null} when the client has not yet connected to any server.</p>
    *
