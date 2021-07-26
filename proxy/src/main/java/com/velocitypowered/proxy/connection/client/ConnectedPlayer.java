@@ -48,7 +48,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -79,7 +78,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
@@ -97,8 +95,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,6 +145,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .build();
   private @Nullable String clientBrand;
+  private @Nullable Locale effectiveLocale;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -176,6 +173,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public String getUsername() {
     return profile.getName();
+  }
+
+  @Override
+  public Locale getEffectiveLocale() {
+    if (effectiveLocale == null && settings != null) {
+      return settings.getLocale();
+    }
+    return effectiveLocale;
+  }
+
+  @Override
+  public void setEffectiveLocale(Locale locale) {
+    effectiveLocale = locale;
   }
 
   @Override
@@ -276,7 +286,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public Component translateMessage(Component message) {
     Locale locale = ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(this.settings == null ? Locale.getDefault() : this.settings.getLocale());
+        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
     return GlobalTranslator.render(message, locale);
   }
 
