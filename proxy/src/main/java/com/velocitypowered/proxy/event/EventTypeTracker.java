@@ -44,7 +44,6 @@ class EventTypeTracker {
       }
 
       friends.put(type, eventType);
-      friends.put(eventType, type);
     }
     return types;
   }
