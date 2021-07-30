@@ -639,10 +639,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case SUCCESS:
                       Component requestedMessage = res.getMessageComponent();
                       if (requestedMessage == null) {
-                        requestedMessage = Component.translatable("velocity.error.moved-to-new-server",
-                            NamedTextColor.RED,
-                            Component.text(originalEvent.getServer().getServerInfo().getName()),
-                            friendlyReason);
+                        requestedMessage = friendlyReason;
                       }
                       sendMessage(requestedMessage);
                       break;
