@@ -334,8 +334,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean writable = player.getConnection().getChannel().isWritable();
 
     if (!writable) {
-      // We might have packets queued from the server, so flush them now to free up memory.
-      player.getConnection().flush();
+      // We might have packets queued from the server, so flush them now to free up memory. Make
+      // sure to do it on a future invocation of the event loop, otherwise while the issue will
+      // fix itself, we'll still disable auto-reading and instead of backpressure resolution, we
+      // get client timeouts.
+      player.getConnection().eventLoop().execute(() -> player.getConnection().flush());
     }
 
     VelocityServerConnection serverConn = player.getConnectedServer();
