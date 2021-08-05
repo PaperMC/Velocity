@@ -62,8 +62,12 @@ public class AutoReadHolderHandler extends ChannelDuplexHandler {
 
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-    if (this.queuedMessages.isEmpty()) {
-      ctx.fireChannelReadComplete();
+    if (ctx.channel().config().isAutoRead()) {
+      if (!this.queuedMessages.isEmpty()) {
+        this.drainQueuedMessages(ctx); // will also call fireChannelReadComplete()
+      } else {
+        ctx.fireChannelReadComplete();
+      }
     }
   }
 
