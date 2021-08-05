@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.Teams;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -229,6 +230,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ResourcePackResponse packet) {
+    return false;
+  }
+
+  default boolean handle(Teams packet) {
     return false;
   }
 }

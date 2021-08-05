@@ -36,6 +36,7 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.team.Team;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
@@ -50,6 +51,7 @@ import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.team.VelocityTeam;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -339,7 +341,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 NamedTextColor.RED), true);
             return;
           }
-          player.createConnectionRequest(toTry.get()).fireAndForget();
+          player.createConnectionRequest(toTry.get()).connectWithIndication().thenAcceptAsync(success -> {
+            if (success) {
+              for (Team team : server.getTeamManager().getTeams()) {
+                mcConnection.write(((VelocityTeam) team).getCreationPacket());
+              }
+            }
+          }, mcConnection.eventLoop());
         }, mcConnection.eventLoop());
   }
 

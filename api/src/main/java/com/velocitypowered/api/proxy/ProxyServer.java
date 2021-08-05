@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
+import com.velocitypowered.api.team.TeamManager;
 import com.velocitypowered.api.util.ProxyVersion;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -217,4 +218,11 @@ public interface ProxyServer extends Audience {
    * @return a ResourcePackInfo builder
    */
   ResourcePackInfo.Builder createResourcePackBuilder(String url);
+
+  /**
+   * Gets the {@link TeamManager} instance.
+   *
+   * @return the team manager
+   */
+  TeamManager getTeamManager();
 }

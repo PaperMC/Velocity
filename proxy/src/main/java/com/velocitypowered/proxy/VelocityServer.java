@@ -54,6 +54,7 @@ import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
+import com.velocitypowered.proxy.team.VelocityTeamManager;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.EncryptionUtils;
@@ -145,12 +146,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
+  private final VelocityTeamManager teamManager;
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
     commandManager = new VelocityCommandManager(eventManager);
     scheduler = new VelocityScheduler(pluginManager);
+    teamManager = new VelocityTeamManager(this);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
@@ -725,5 +728,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public ResourcePackInfo.Builder createResourcePackBuilder(String url) {
     return new VelocityResourcePackInfo.BuilderImpl(url);
+  }
+
+  @Override
+  public VelocityTeamManager getTeamManager() {
+    return teamManager;
   }
 }

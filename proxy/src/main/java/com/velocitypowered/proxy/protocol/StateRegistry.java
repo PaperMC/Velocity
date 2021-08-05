@@ -62,6 +62,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.Teams;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -276,6 +277,15 @@ public enum StateRegistry {
           map(0x33, MINECRAFT_1_16, false),
           map(0x32, MINECRAFT_1_16_2, false),
           map(0x36, MINECRAFT_1_17, false));
+      clientbound.register(Teams.class, Teams::new,
+          map(0x3E, MINECRAFT_1_7_2, true),
+          map(0x41, MINECRAFT_1_9, true),
+          map(0x43, MINECRAFT_1_12, true),
+          map(0x44, MINECRAFT_1_12_1, true),
+          map(0x47, MINECRAFT_1_13, true),
+          map(0x4B, MINECRAFT_1_14, true),
+          map(0x4C, MINECRAFT_1_15, true),
+          map(0x55, MINECRAFT_1_17, true));
     }
   },
   LOGIN {
