@@ -14,28 +14,44 @@ package com.velocitypowered.api.team;
  */
 public enum TeamColor {
 
-  BLACK,
-  DARK_BLUE,
-  DARK_GREEN,
-  DARK_AQUA,
-  DARK_RED,
-  DARK_PURPLE,
-  GOLD,
-  GRAY,
-  DARK_GRAY,
-  BLUE,
-  GREEN,
-  AQUA,
-  RED,
-  LIGHT_PURPLE,
-  YELLOW,
-  WHITE,
+  BLACK('0'),
+  DARK_BLUE('1'),
+  DARK_GREEN('2'),
+  DARK_AQUA('3'),
+  DARK_RED('4'),
+  DARK_PURPLE('5'),
+  GOLD('6'),
+  GRAY('7'),
+  DARK_GRAY('8'),
+  BLUE('9'),
+  GREEN('a'),
+  AQUA('b'),
+  RED('c'),
+  LIGHT_PURPLE('d'),
+  YELLOW('e'),
+  WHITE('f'),
 
-  OBFUSCATED,
-  BOLD,
-  STRIKETHROUGH,
-  UNDERLINE,
-  ITALIC,
+  OBFUSCATED('k'),
+  BOLD('l'),
+  STRIKETHROUGH('m'),
+  UNDERLINE('n'),
+  ITALIC('o'),
 
-  RESET,
+  RESET('r');
+
+  private static final String COLOR_CHAR = "§";
+  private final char colorCode;
+
+  TeamColor(char colorCode) {
+    this.colorCode = colorCode;
+  }
+
+  public char getColorCode() {
+    return colorCode;
+  }
+
+  @Override
+  public String toString() {
+    return COLOR_CHAR + colorCode;
+  }
 }

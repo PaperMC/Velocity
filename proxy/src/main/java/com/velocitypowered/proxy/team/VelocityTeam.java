@@ -36,8 +36,10 @@ import com.velocitypowered.proxy.protocol.packet.Teams;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class VelocityTeam implements Team {
 
@@ -94,7 +96,7 @@ public class VelocityTeam implements Team {
     this.collisionRule = collisionRule;
     this.entries = entries;
 
-    broadcast(getCreationPacket());
+    broadcast(this::getCreationPacket);
   }
 
   @Override
@@ -110,7 +112,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setDisplayName(Component displayName) {
     this.displayName = displayName;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -121,7 +123,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setPrefix(Component prefix) {
     this.prefix = prefix;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -132,7 +134,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setSuffix(Component suffix) {
     this.suffix = suffix;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -143,7 +145,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setColor(TeamColor color) {
     this.color = color;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -154,7 +156,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setAllowFriendlyFire(boolean allowFriendlyFire) {
     this.allowFriendlyFire = allowFriendlyFire;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -165,7 +167,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setCanSeeFriendlyInvisibles(boolean canSeeFriendlyInvisibles) {
     this.canSeeFriendlyInvisibles = canSeeFriendlyInvisibles;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -176,7 +178,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setNameTagVisibility(NameTagVisibility nameTagVisibility) {
     this.nameTagVisibility = nameTagVisibility;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -187,7 +189,7 @@ public class VelocityTeam implements Team {
   @Override
   public void setCollisionRule(CollisionRule collisionRule) {
     this.collisionRule = collisionRule;
-    broadcast(getUpdatePacket());
+    broadcast(this::getUpdatePacket);
   }
 
   @Override
@@ -198,7 +200,7 @@ public class VelocityTeam implements Team {
   @Override
   public boolean addEntry(String entry) {
     if (entries.add(entry)) {
-      broadcast(getAddEntriesPacket(Collections.singleton(entry)));
+      broadcast(version -> getAddEntriesPacket(Collections.singleton(entry)));
       return true;
     } else {
       return false;
@@ -208,7 +210,7 @@ public class VelocityTeam implements Team {
   @Override
   public boolean removeEntry(String entry) {
     if (entries.remove(entry)) {
-      broadcast(getRemoveEntriesPacket(Collections.singleton(entry)));
+      broadcast(version -> getRemoveEntriesPacket(Collections.singleton(entry)));
       return true;
     } else {
       return false;
@@ -224,7 +226,7 @@ public class VelocityTeam implements Team {
    * Broadcasts the team removal packet for this team.
    */
   public void remove() {
-    broadcast(getRemovalPacket());
+    broadcast(version -> getRemovalPacket());
   }
 
   /**
@@ -232,8 +234,13 @@ public class VelocityTeam implements Team {
    *
    * @return a filled {@link Teams} for this team
    */
-  public Teams getCreationPacket() {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MAXIMUM_VERSION);
+  public Teams getCreationPacket(ProtocolVersion version) {
+    ComponentSerializer<Component, ? extends Component, String> serializer;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+      serializer = ProtocolUtils.getJsonChatSerializer(version);
+    } else {
+      serializer = LegacyComponentSerializer.legacySection();
+    }
 
     String displayName = serializer.serialize(this.displayName);
     byte friendlyFlags = (byte) ((allowFriendlyFire ? 1 : 0) + (canSeeFriendlyInvisibles ? 2 : 0));
@@ -242,6 +249,10 @@ public class VelocityTeam implements Team {
     int teamColor = this.color.ordinal();
     String teamPrefix = serializer.serialize(this.prefix);
     String teamSuffix = serializer.serialize(this.suffix);
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+      teamPrefix += this.color.toString();
+    }
 
     return new Teams(name, CREATE_TEAM, displayName, friendlyFlags, nameTagVisibility, collisionRule,
         teamColor, teamPrefix, teamSuffix, entries);
@@ -261,8 +272,13 @@ public class VelocityTeam implements Team {
    *
    * @return a filled {@link Teams} for this team
    */
-  public Teams getUpdatePacket() {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MAXIMUM_VERSION);
+  public Teams getUpdatePacket(ProtocolVersion version) {
+    ComponentSerializer<Component, ? extends Component, String> serializer;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+      serializer = ProtocolUtils.getJsonChatSerializer(version);
+    } else {
+      serializer = LegacyComponentSerializer.legacySection();
+    }
 
     String displayName = serializer.serialize(this.displayName);
     byte friendlyFlags = (byte) ((allowFriendlyFire ? 1 : 0) + (canSeeFriendlyInvisibles ? 2 : 0));
@@ -271,6 +287,10 @@ public class VelocityTeam implements Team {
     int teamColor = this.color.ordinal();
     String teamPrefix = serializer.serialize(this.prefix);
     String teamSuffix = serializer.serialize(this.suffix);
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+      teamPrefix += this.color.toString();
+    }
 
     return new Teams(name, UPDATE_TEAM_INFO, displayName, friendlyFlags, nameTagVisibility, collisionRule,
         teamColor, teamPrefix, teamSuffix);
@@ -300,11 +320,11 @@ public class VelocityTeam implements Team {
    * A private utility method for broadcasting
    * a team packet to the entire proxy.
    *
-   * @param packet the packet to broadcast
+   * @param packetSupplier the packet to broadcast
    */
-  private void broadcast(Teams packet) {
+  private void broadcast(Function<ProtocolVersion, Teams> packetSupplier) {
     for (Player player : server.getAllPlayers()) {
-      ((ConnectedPlayer) player).getConnection().write(packet);
+      ((ConnectedPlayer) player).getConnection().write(packetSupplier.apply(player.getProtocolVersion()));
     }
   }
 }

@@ -22,7 +22,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import java.util.List;
+
 import java.util.Set;
 
 public class Teams implements MinecraftPacket {
@@ -119,12 +119,28 @@ public class Teams implements MinecraftPacket {
         }
 
         ProtocolUtils.writeString(buf, displayName);
-        buf.writeByte(friendlyFlags);
-        ProtocolUtils.writeString(buf, nameTagVisibility);
-        ProtocolUtils.writeString(buf, collisionRule);
-        ProtocolUtils.writeVarInt(buf, teamColor);
-        ProtocolUtils.writeString(buf, teamPrefix);
-        ProtocolUtils.writeString(buf, teamSuffix);
+        if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+          buf.writeByte(friendlyFlags);
+          ProtocolUtils.writeString(buf, nameTagVisibility);
+          ProtocolUtils.writeString(buf, collisionRule);
+          ProtocolUtils.writeVarInt(buf, teamColor);
+          ProtocolUtils.writeString(buf, teamPrefix);
+          ProtocolUtils.writeString(buf, teamSuffix);
+        } else {
+          ProtocolUtils.writeString(buf, teamPrefix);
+          ProtocolUtils.writeString(buf, teamSuffix);
+          buf.writeByte(friendlyFlags);
+
+          if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+            ProtocolUtils.writeString(buf, nameTagVisibility);
+
+            if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+              ProtocolUtils.writeString(buf, collisionRule);
+            }
+
+            ProtocolUtils.writeVarInt(buf, teamColor);
+          }
+        }
 
         if (getAction() == UPDATE_TEAM_INFO) {
           break;
@@ -228,5 +244,21 @@ public class Teams implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public String toString() {
+    return "Teams{"
+        + "teamName='" + teamName + '\''
+        + ", action=" + action
+        + ", displayName='" + displayName + '\''
+        + ", friendlyFlags=" + friendlyFlags
+        + ", nameTagVisibility='" + nameTagVisibility + '\''
+        + ", collisionRule='" + collisionRule + '\''
+        + ", teamColor=" + teamColor
+        + ", teamPrefix='" + teamPrefix + '\''
+        + ", teamSuffix='" + teamSuffix + '\''
+        + ", entities=" + entities
+        + '}';
   }
 }

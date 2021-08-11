@@ -1109,7 +1109,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
               default:
                 // The only remaining value is successful
                 for (Team team : server.getTeamManager().getTeams()) {
-                  connection.write(((VelocityTeam) team).getCreationPacket());
+                  connection.write(((VelocityTeam) team).getCreationPacket(getProtocolVersion()));
                 }
                 break;
             }

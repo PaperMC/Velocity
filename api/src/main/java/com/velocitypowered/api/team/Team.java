@@ -8,7 +8,6 @@
 package com.velocitypowered.api.team;
 
 import java.util.Set;
-
 import net.kyori.adventure.text.Component;
 
 /**
@@ -68,6 +67,7 @@ public interface Team {
 
   /**
    * Method for getting the color for this team.
+   * Will only be sent on minecraft version 1.8 and above, the prefix will still be colored.
    *
    * @return the color for this team
    */
@@ -75,6 +75,7 @@ public interface Team {
 
   /**
    * Method for setting the color for this team.
+   * Will only be sent on minecraft version 1.8 and above, the prefix will still be colored.
    *
    * @param color the color for this team
    */
@@ -110,6 +111,7 @@ public interface Team {
 
   /**
    * Method for getting the name tag visibility for this team.
+   * Will only work on minecraft version 1.8 and above.
    *
    * @return the name tag visibility for this team
    */
@@ -117,6 +119,7 @@ public interface Team {
 
   /**
    * Method for setting the name tag visibility for this team.
+   * Will only work on minecraft version 1.8 and above.
    *
    * @param nameTagVisibility the name tag visibility for this team
    */
@@ -124,6 +127,7 @@ public interface Team {
 
   /**
    * Method for getting the collision rule for this team.
+   * Will only work on minecraft version 1.9 and above.
    *
    * @return the collision rule for this team
    */
@@ -131,6 +135,7 @@ public interface Team {
 
   /**
    * Method for setting the collision rule for this team.
+   * Will only work on minecraft version 1.9 and above.
    *
    * @param collisionRule the collision rule for this team
    */
