@@ -341,13 +341,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 NamedTextColor.RED), true);
             return;
           }
-          player.createConnectionRequest(toTry.get()).connectWithIndication().thenAcceptAsync(success -> {
-            if (success) {
-              for (Team team : server.getTeamManager().getTeams()) {
-                mcConnection.write(((VelocityTeam) team).getCreationPacket());
-              }
-            }
-          }, mcConnection.eventLoop());
+          player.createConnectionRequest(toTry.get()).fireAndForget();
         }, mcConnection.eventLoop());
   }
 

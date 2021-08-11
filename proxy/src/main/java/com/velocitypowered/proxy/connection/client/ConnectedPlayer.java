@@ -45,6 +45,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.team.Team;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -67,6 +68,7 @@ import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
+import com.velocitypowered.proxy.team.VelocityTeam;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
@@ -1105,7 +1107,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     getProtocolVersion()), status.isSafe());
                 break;
               default:
-                // The only remaining value is successful (no need to do anything!)
+                // The only remaining value is successful
+                for (Team team : server.getTeamManager().getTeams()) {
+                  connection.write(((VelocityTeam) team).getCreationPacket());
+                }
                 break;
             }
           }, connection.eventLoop())
