@@ -156,6 +156,7 @@ public class VelocityTabList implements TabList {
               .latency(item.getLatency())
               .gameMode(item.getGameMode())
               .build());
+          break;
         }
         case PlayerListItem.REMOVE_PLAYER:
           entries.remove(uuid);
