@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.network.registry.packet;
 
+import static com.velocitypowered.proxy.util.MathUtil.nextHighestPowerOfTwo;
+
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
@@ -41,11 +43,12 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
   public DensePacketRegistryMap(Int2ObjectMap<PacketMapping<?>> mappings) {
     int size = mappings.keySet().stream().mapToInt(x -> x).max().orElse(0) + 1;
+    int hashTableSize = nextHighestPowerOfTwo(size);
 
     this.readersById = new PacketReader[size];
-    this.writersByClass = new PacketWriter[size * 2];
-    this.classesByKey = new Class[size * 2];
-    this.idsByKey = new int[size * 2];
+    this.writersByClass = new PacketWriter[hashTableSize];
+    this.classesByKey = new Class[hashTableSize];
+    this.idsByKey = new int[hashTableSize];
 
     for (PacketMapping<?> value : mappings.values()) {
       this.readersById[value.id] = value.reader;
