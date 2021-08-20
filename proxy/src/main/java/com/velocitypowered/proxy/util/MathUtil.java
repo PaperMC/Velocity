@@ -26,8 +26,8 @@ public class MathUtil {
    * @return the next-highest power of 2 from {@code v}
    */
   public static int nextHighestPowerOfTwo(int v) {
-    // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    v--;
+    // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2, except the initial
+    // decrement by v
     v |= v >> 1;
     v |= v >> 2;
     v |= v >> 4;

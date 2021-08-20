@@ -17,86 +17,55 @@
 
 package com.velocitypowered.proxy.network.registry.packet;
 
-import static com.velocitypowered.proxy.util.MathUtil.nextHighestPowerOfTwo;
-
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.network.ProtocolUtils;
 import com.velocitypowered.proxy.network.packet.Packet;
 import com.velocitypowered.proxy.network.packet.PacketReader;
 import com.velocitypowered.proxy.network.packet.PacketWriter;
 import com.velocitypowered.proxy.network.registry.packet.PacketRegistryBuilder.PacketMapping;
+import com.velocitypowered.proxy.util.MathUtil;
+import com.velocitypowered.proxy.util.hash.PerfectHash;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Provides a packet registry map that is "dense", ideal for registries that are tightly packed
- * together by ID. Lookups for readers are very fast (O(1)) and for writers uses an embedded
- * open-addressing, probing hash map to conserve memory.
+ * Provides a packet registry map that is "dense". Lookups are very fast due to the use of
+ * perfect hashing.
  */
 public class DensePacketRegistryMap implements PacketRegistryMap {
 
   private final PacketReader<?>[] readersById;
-  private final PacketWriter[] writersByClass;
-  private final Class<?>[] classesByKey;
-  private final int[] idsByKey;
+  private final PacketWriter[] writersBuckets;
+  private final Class<?>[] classesBuckets;
+  private final int[] idsByClass;
+  private final int key;
 
   public DensePacketRegistryMap(Int2ObjectMap<PacketMapping<?>> mappings) {
     int size = mappings.keySet().stream().mapToInt(x -> x).max().orElse(0) + 1;
-    int hashTableSize = nextHighestPowerOfTwo(size);
+    int hashSize = MathUtil.nextHighestPowerOfTwo(size);
+    int[] classHashCodes = mappings.values().stream().map(m -> m.packetClass)
+        .mapToInt(Object::hashCode).toArray();
+
+    this.key = PerfectHash.findPerfectHashKey(classHashCodes, hashSize);
 
     this.readersById = new PacketReader[size];
-    this.writersByClass = new PacketWriter[hashTableSize];
-    this.classesByKey = new Class[hashTableSize];
-    this.idsByKey = new int[hashTableSize];
+    this.writersBuckets = new PacketWriter[hashSize];
+    this.classesBuckets = new Class[hashSize];
+    this.idsByClass = new int[hashSize];
 
     for (PacketMapping<?> value : mappings.values()) {
+      final int hashIdx = bucket(value.packetClass);
+
       this.readersById[value.id] = value.reader;
-      this.place(value.id, value.packetClass, value.writer);
+      this.writersBuckets[hashIdx] = value.writer;
+      this.classesBuckets[hashIdx] = value.packetClass;
+      this.idsByClass[hashIdx] = value.id;
     }
   }
 
-  private void place(int packetId, Class<?> key, PacketWriter<?> value) {
-    int bucket = findEmpty(key);
-    this.writersByClass[bucket] = value;
-    this.classesByKey[bucket] = key;
-    this.idsByKey[bucket] = packetId;
-  }
-
-  private int findEmpty(Class<?> key) {
-    int start = key.hashCode() % this.classesByKey.length;
-    int index = start;
-
-    for (;;) {
-      if (this.classesByKey[index] == null || this.classesByKey[index].equals(key)) {
-        // It's available, so no chance that this value exists anywhere in the map.
-        return index;
-      }
-
-      if ((index = (index + 1) % this.classesByKey.length) == start) {
-        return -1;
-      }
-    }
-  }
-
-  private int index(Class<?> key) {
-    int start = key.hashCode() % this.classesByKey.length;
-    int index = start;
-
-    for (;;) {
-      if (this.classesByKey[index] == null) {
-        // It's available, so no chance that this value exists anywhere in the map.
-        return -1;
-      }
-      if (key.equals(this.classesByKey[index])) {
-        return index;
-      }
-
-      // Conflict, keep probing ...
-      if ((index = (index + 1) % this.classesByKey.length) == start) {
-        return -1;
-      }
-    }
+  private int bucket(final Object o) {
+    return PerfectHash.hash(o.hashCode(), this.key, this.classesBuckets.length);
   }
 
   @Override
@@ -111,10 +80,10 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
   @Override
   public <P extends Packet> void writePacket(P packet, ByteBuf buf, ProtocolVersion version) {
-    int bucket = this.index(packet.getClass());
-    if (bucket != -1) {
-      ProtocolUtils.writeVarInt(buf, this.idsByKey[bucket]);
-      this.writersByClass[bucket].write(buf, packet, version);
+    int bucket = this.bucket(packet.getClass());
+    if (this.classesBuckets[bucket] == packet.getClass()) {
+      ProtocolUtils.writeVarInt(buf, this.idsByClass[bucket]);
+      this.writersBuckets[bucket].write(buf, packet, version);
     } else {
       throw new IllegalArgumentException(String.format(
           "Unable to find id for packet of type %s in protocol %s",
@@ -126,9 +95,9 @@ public class DensePacketRegistryMap implements PacketRegistryMap {
 
   @Override
   public @Nullable Class<? extends Packet> lookupPacket(int id) {
-    for (int bucket = 0; bucket < this.idsByKey.length; bucket++) {
-      if (this.idsByKey[bucket] == id) {
-        return (Class<? extends Packet>) this.classesByKey[bucket];
+    for (int bucket = 0; bucket < this.idsByClass.length; bucket++) {
+      if (this.idsByClass[bucket] == id) {
+        return (Class<? extends Packet>) this.classesBuckets[bucket];
       }
     }
     return null;
