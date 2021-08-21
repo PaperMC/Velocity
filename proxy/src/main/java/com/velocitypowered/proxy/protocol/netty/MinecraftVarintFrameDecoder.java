@@ -51,7 +51,10 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    if (reader.getResult() == DecodeResult.SUCCESS) {
+    if (reader.getResult() == DecodeResult.RUN_OF_ZEROES) {
+      // this will return to the point where the next varint starts
+      in.readerIndex(varintEnd);
+    } else if (reader.getResult() == DecodeResult.SUCCESS) {
       int readVarint = reader.getReadVarint();
       int bytesRead = reader.getBytesRead();
       if (readVarint < 0) {

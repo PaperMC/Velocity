@@ -33,7 +33,6 @@ class VarintByteDecoder implements ByteProcessor {
       return true;
     }
     if (result == DecodeResult.RUN_OF_ZEROES) {
-      result = DecodeResult.SUCCESS;
       return false;
     }
     readVarint |= (k & 0x7F) << bytesRead++ * 7;
