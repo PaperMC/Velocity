@@ -121,6 +121,12 @@ public class AvailableCommands implements MinecraftPacket {
       if (!idMappings.containsKey(child)) {
         idMappings.put(child, idMappings.size());
         childrenQueue.addAll(child.getChildren());
+        if(child.getRedirect() != null){
+          if (!idMappings.containsKey(child.getRedirect())) {
+            idMappings.put(child.getRedirect(), idMappings.size());
+            childrenQueue.addAll(child.getRedirect().getChildren());
+          }
+        }
       }
     }
 
