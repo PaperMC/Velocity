@@ -122,7 +122,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             .orElseGet(() -> registeredServer.getServerInfo().getAddress())
             .getHostString())
         .append('\0')
-        .append(proxyPlayer.getRemoteAddress().getHostString())
+        .append(proxyPlayer.getRemoteAddress().getAddress().getHostAddress())
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
         .append('\0');
