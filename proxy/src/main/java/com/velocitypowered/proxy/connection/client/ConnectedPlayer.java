@@ -370,18 +370,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
           .getProtocolVersion());
 
-      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-                      GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
-      connection.delayedWrite(titlePkt);
-
-      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
-      connection.delayedWrite(subtitlePkt);
-
       GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
+          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
         timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
@@ -389,6 +379,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
         timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
       }
       connection.delayedWrite(timesPkt);
+
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
+      subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
+      connection.delayedWrite(subtitlePkt);
+
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
+      titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
+      connection.delayedWrite(titlePkt);
 
       connection.flush();
     }
