@@ -806,7 +806,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
-  public void sendLegacyForgeHandshakeResetPacket() {
+  public void sendForgeHandshakeResetPacket() {
     connectionPhase.resetConnectionPhase(this);
   }
 

@@ -151,7 +151,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     smc.setState(StateRegistry.PLAY);
 
     // Switch to the transition handler.
-    smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
+    smc.setSessionHandler(new BackendTransitionSessionHandler(server, serverConn, resultFuture));
     return true;
   }
 

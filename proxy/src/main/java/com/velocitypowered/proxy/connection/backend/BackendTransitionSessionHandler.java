@@ -45,9 +45,9 @@ import org.apache.logging.log4j.Logger;
 /**
  * A special session handler that catches "last minute" disconnects.
  */
-public class TransitionSessionHandler implements MinecraftSessionHandler {
+public class BackendTransitionSessionHandler implements MinecraftSessionHandler {
 
-  private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
+  private static final Logger logger = LogManager.getLogger(BackendTransitionSessionHandler.class);
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -60,7 +60,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  TransitionSessionHandler(VelocityServer server,
+  BackendTransitionSessionHandler(VelocityServer server,
       VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
     this.server = server;

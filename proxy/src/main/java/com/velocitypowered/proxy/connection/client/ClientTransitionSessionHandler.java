@@ -23,11 +23,11 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
-public class InitialConnectSessionHandler implements MinecraftSessionHandler {
+public class ClientTransitionSessionHandler implements MinecraftSessionHandler {
 
   private final ConnectedPlayer player;
 
-  InitialConnectSessionHandler(ConnectedPlayer player) {
+  ClientTransitionSessionHandler(ConnectedPlayer player) {
     this.player = player;
   }
 
