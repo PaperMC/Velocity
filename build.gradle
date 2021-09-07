@@ -21,7 +21,7 @@ allprojects {
 
     ext {
         // dependency versions
-        adventureVersion = '4.8.1'
+        adventureVersion = '4.9.1'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
         log4jVersion = '2.14.1'
