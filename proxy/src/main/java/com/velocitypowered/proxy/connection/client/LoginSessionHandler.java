@@ -329,7 +329,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
+            mcConnection.setSessionHandler(new ClientTransitionSessionHandler(player));
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenCompose((ignored) -> connectToInitialServer(player))
                 .exceptionally((ex) -> {

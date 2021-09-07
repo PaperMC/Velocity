@@ -60,7 +60,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
       if (mc != null) {
         mc.setType(ConnectionTypes.LEGACY_FORGE);
       }
-      connection.getPlayer().sendLegacyForgeHandshakeResetPacket();
+      connection.getPlayer().sendForgeHandshakeResetPacket();
     }
   },
 
