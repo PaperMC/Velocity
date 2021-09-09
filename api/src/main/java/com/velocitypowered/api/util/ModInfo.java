@@ -12,6 +12,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ModInfo {
 
@@ -62,19 +64,23 @@ public final class ModInfo {
 
     @SerializedName("modid")
     private final String id;
-    private final String version;
+    private final @Nullable String version;
 
-    public Mod(String id, String version) {
+    public Mod(String id) {
+      this(id, null);
+    }
+
+    public Mod(String id, @Nullable String version) {
       this.id = Preconditions.checkNotNull(id, "id");
-      this.version = Preconditions.checkNotNull(version, "version");
+      this.version = version;
     }
 
     public String getId() {
       return id;
     }
 
-    public String getVersion() {
-      return version;
+    public Optional<String> getVersion() {
+      return Optional.ofNullable(version);
     }
 
     @Override
@@ -94,7 +100,8 @@ public final class ModInfo {
         return false;
       }
       Mod mod = (Mod) o;
-      return id.equals(mod.id) && version.equals(mod.version);
+      return Objects.equals(id, mod.id)
+          && Objects.equals(version, mod.version);
     }
 
     @Override
