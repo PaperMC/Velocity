@@ -260,11 +260,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       injector.inject(rootNode, serverConn.getPlayer());
     }
 
+    // The packet must be retained as it is released when this method returns but is used asynchronously below.
+    commands.retain();
     server.getEventManager().fire(
         new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling available commands for {}", playerConnection, ex);
+          commands.release();
           return null;
         });
     return true;

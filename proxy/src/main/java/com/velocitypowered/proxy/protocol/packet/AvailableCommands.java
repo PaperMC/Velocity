@@ -40,8 +40,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
+import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayDeque;
@@ -53,7 +55,7 @@ import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AvailableCommands implements MinecraftPacket {
+public class AvailableCommands extends DeferredByteBufHolder implements MinecraftPacket {
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
   private static final byte NODE_TYPE_ROOT = 0x00;
@@ -66,6 +68,12 @@ public class AvailableCommands implements MinecraftPacket {
   private static final byte FLAG_HAS_SUGGESTIONS = 0x10;
 
   private @MonotonicNonNull RootCommandNode<CommandSource> rootNode;
+  private WireNode rootWireNode;
+  private int offset;
+
+  public AvailableCommands() {
+    super(Unpooled.EMPTY_BUFFER);
+  }
 
   /**
    * Returns the root node.
@@ -81,8 +89,30 @@ public class AvailableCommands implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     int commands = ProtocolUtils.readVarInt(buf);
+
+    // When Minecraft serializes this packet the nodes are written in order of id,
+    // as the RootCommandNode is the first node processed it should also be the first node in the array,
+    // Velocity can read the first node of the array to check the type of the node,
+    // if it is the RootCommandNode then we can manipulate this packet without deserializing every node.
+
+    // In order to support Forge, Velocity cannot deserialize every node as it does not support custom parsers,
+    // instead Velocity can manipulate the RootWireNode to inject additional children and any additional nodes can
+    // simply be appended to the end of the remaining node array.
+    WireNode firstWireNode = deserializeNode(buf, 0, protocolVersion);
+    if ((firstWireNode.flags & FLAG_NODE_TYPE) == NODE_TYPE_ROOT) {
+      // Ignore the Root Index VarInt as it is zero and a VarInt of zero is only one byte long.
+      this.replace(buf.readRetainedSlice(buf.readableBytes() - 1));
+      buf.skipBytes(1);
+      this.rootNode = new RootCommandNode<>();
+      this.rootWireNode = firstWireNode;
+      this.offset = commands;
+      return;
+    }
+
+    // Fallback
     WireNode[] wireNodes = new WireNode[commands];
-    for (int i = 0; i < commands; i++) {
+    wireNodes[0] = firstWireNode;
+    for (int i = 1; i < commands; i++) {
       wireNodes[i] = deserializeNode(buf, i, protocolVersion);
     }
 
@@ -113,13 +143,19 @@ public class AvailableCommands implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     // Assign all the children an index.
-    Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
+    Deque<CommandNode<CommandSource>> childrenQueue;
+    if (rootWireNode != null) {
+      childrenQueue = new ArrayDeque<>(rootNode.getChildren());
+    } else {
+      childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
+    }
+
     Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenCustomHashMap<>(
         IdentityHashStrategy.instance());
     while (!childrenQueue.isEmpty()) {
       CommandNode<CommandSource> child = childrenQueue.poll();
       if (!idMappings.containsKey(child)) {
-        idMappings.put(child, idMappings.size());
+        idMappings.put(child, idMappings.size() + offset);
         childrenQueue.addAll(child.getChildren());
         if (child.getRedirect() != null) {
           childrenQueue.add(child.getRedirect());
@@ -128,11 +164,29 @@ public class AvailableCommands implements MinecraftPacket {
     }
 
     // Now serialize the children.
-    ProtocolUtils.writeVarInt(buf, idMappings.size());
+    ProtocolUtils.writeVarInt(buf, idMappings.size() + offset);
+    if (rootWireNode != null) {
+      buf.writeByte(rootWireNode.flags);
+      ProtocolUtils.writeVarInt(buf, rootWireNode.children.length + rootNode.getChildren().size());
+      for (int child : rootWireNode.children) {
+        ProtocolUtils.writeVarInt(buf, child);
+      }
+
+      for (CommandNode<CommandSource> child : rootNode.getChildren()) {
+        ProtocolUtils.writeVarInt(buf, idMappings.getInt(child));
+      }
+
+      if ((rootWireNode.flags & FLAG_IS_REDIRECT) > 0) {
+        ProtocolUtils.writeVarInt(buf, rootWireNode.redirectTo);
+      }
+
+      buf.writeBytes(content());
+    }
+
     for (CommandNode<CommandSource> child : idMappings.keySet()) {
       serializeNode(child, buf, idMappings, protocolVersion);
     }
-    ProtocolUtils.writeVarInt(buf, idMappings.getInt(rootNode));
+    ProtocolUtils.writeVarInt(buf, idMappings.getOrDefault(rootNode, 0));
   }
 
   private static void serializeNode(CommandNode<CommandSource> node, ByteBuf buf,
