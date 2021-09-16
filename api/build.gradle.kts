@@ -8,7 +8,7 @@ val gsonVersion: String by project
 val slf4jVersion: String by project
 
 license {
-  header = project.file("HEADER.txt")
+  header(project.file("HEADER.txt"))
 }
 
 dependencies {

@@ -1,5 +1,5 @@
 license {
-  header = project.rootProject.file("HEADER.txt")
+  header(project.rootProject.file("HEADER.txt"))
 }
 
 dependencies {

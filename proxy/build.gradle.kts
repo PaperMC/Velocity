@@ -23,7 +23,7 @@ val semver4jVersion: String by project.extra
 val terminalConsoleAppenderVersion: String by project.extra
 
 license {
-  header = project.rootProject.file("HEADER.txt")
+  header(project.rootProject.file("HEADER.txt"))
 }
 
 dependencies {
