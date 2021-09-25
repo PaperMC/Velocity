@@ -173,7 +173,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(destAddress.getHostString() + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
-      handshake.setServerAddress(destAddress.getHostString());
+      handshake.setServerAddress(proxyPlayer.getVirtualHost()
+          .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+          .getHostString());
     }
     handshake.setPort(destAddress.getPort());
     mc.delayedWrite(handshake);
