@@ -160,8 +160,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
-    InetSocketAddress destAddress = registeredServer.getServerInfo().getAddress();
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
+    String playerVhost = proxyPlayer.getVirtualHost()
+        .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+        .getHostString();
+
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
@@ -171,13 +174,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(destAddress.getHostString() + HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
-      handshake.setServerAddress(proxyPlayer.getVirtualHost()
-          .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-          .getHostString());
+      handshake.setServerAddress(playerVhost);
     }
-    handshake.setPort(destAddress.getPort());
+
+    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
