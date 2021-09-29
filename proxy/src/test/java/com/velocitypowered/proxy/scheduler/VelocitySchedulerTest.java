@@ -21,18 +21,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
+import com.velocitypowered.proxy.event.MockEventManager;
+import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class VelocitySchedulerTest {
   // TODO: The timings here will be inaccurate on slow systems.
 
+  private static VelocityEventManager eventManager;
+
+  @BeforeAll
+  static void beforeAll() {
+    eventManager = new MockEventManager();
+  }
+
+  @AfterAll
+  static void afterAll() {
+    try {
+      eventManager.shutdown();
+      eventManager = null;
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
   @Test
   void buildTask() throws Exception {
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), eventManager);
     CountDownLatch latch = new CountDownLatch(1);
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
         .schedule();
@@ -42,7 +63,7 @@ class VelocitySchedulerTest {
 
   @Test
   void cancelWorks() throws Exception {
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), eventManager);
     AtomicInteger i = new AtomicInteger(3);
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, i::decrementAndGet)
         .delay(100, TimeUnit.SECONDS)
@@ -55,7 +76,7 @@ class VelocitySchedulerTest {
 
   @Test
   void repeatTaskWorks() throws Exception {
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), eventManager);
     CountDownLatch latch = new CountDownLatch(3);
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
         .delay(100, TimeUnit.MILLISECONDS)

@@ -26,11 +26,13 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.exception.ProxyInternalException;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
@@ -93,6 +95,7 @@ public class VelocityPluginManager implements PluginManager {
           found.add(loader.loadPluginDescription(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
+          server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         }
       }
     }
@@ -125,6 +128,7 @@ public class VelocityPluginManager implements PluginManager {
         loadedPluginsById.add(realPlugin.getId());
       } catch (Exception e) {
         logger.error("Can't create module for plugin {}", candidate.getId(), e);
+        server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
       }
     }
 
@@ -152,6 +156,7 @@ public class VelocityPluginManager implements PluginManager {
         loader.createPlugin(container, plugin.getValue(), commonModule);
       } catch (Exception e) {
         logger.error("Can't create plugin {}", description.getId(), e);
+        server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         continue;
       }
 
