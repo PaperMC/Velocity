@@ -153,6 +153,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String msg = packet.getMessage();
+    for (int i = 0; i < msg.length(); i++) {
+      if (!isAllowedCharacter(msg.charAt(i))) {
+        player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
+            NamedTextColor.RED));
+        return true;
+      }
+    }
+
+
     if (msg.startsWith("/")) {
       String originalCommand = msg.substring(1);
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
@@ -628,5 +637,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
       }
     }
+  }
+
+  private boolean isAllowedCharacter(char c) {
+    return c != 167 && c >= ' ' && c != 127;
   }
 }
