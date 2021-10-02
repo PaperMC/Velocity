@@ -640,6 +640,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   private boolean isAllowedCharacter(char c) {
+    // 167 = §, 127 = DEL
+    // https://minecraft.fandom.com/wiki/Multiplayer#Chat
     return c != 167 && c >= ' ' && c != 127;
   }
 }
