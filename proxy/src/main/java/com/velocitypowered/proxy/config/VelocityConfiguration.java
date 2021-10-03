@@ -426,15 +426,12 @@ public class VelocityConfiguration implements ProxyConfig {
 
     // Retrieve the forwarding secret. First, from environment variable, then from config.
     byte[] forwardingSecret;
-    String forwardingSecretString = System.getenv("VELOCITY_FORWARDING_SECRET");
+    String forwardingSecretString = System.getenv()
+        .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
     if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-      forwardingSecretString = config.get("forwarding-secret");
-
-      if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-        forwardingSecretString = generateRandomString(12);
-        config.set("forwarding-secret", forwardingSecretString);
-        mustResave = true;
-      }
+      forwardingSecretString = generateRandomString(12);
+      config.set("forwarding-secret", forwardingSecretString);
+      mustResave = true;
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
