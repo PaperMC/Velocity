@@ -56,6 +56,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.util.CharacterUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -153,6 +154,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String msg = packet.getMessage();
+    if (CharacterUtil.containsIllegalCharacters(msg)) {
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
+          NamedTextColor.RED));
+      return true;
+    }
+
     if (msg.startsWith("/")) {
       String originalCommand = msg.substring(1);
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
@@ -629,4 +636,5 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
   }
+
 }
