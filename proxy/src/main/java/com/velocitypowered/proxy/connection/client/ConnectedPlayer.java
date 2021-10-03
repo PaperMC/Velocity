@@ -625,7 +625,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     // Fatal case
                     case CONNECTION_CANCELLED:
                       Component fallbackMsg = res.getMessageComponent();
-                      if (fallbackMsg == null) {
+                      if (fallbackMsg == null && res.shouldSendNotification()) {
                         fallbackMsg = friendlyReason;
                       }
                       disconnect(status.getReasonComponent().orElse(fallbackMsg));
@@ -637,11 +637,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                           getProtocolVersion()), ((Impl) status).isSafe());
                       break;
                     case SUCCESS:
-                      Component requestedMessage = res.getMessageComponent();
-                      if (requestedMessage == null) {
-                        requestedMessage = friendlyReason;
+                      if (res.shouldSendNotification()) {
+                        Component requestedMessage = res.getMessageComponent();
+                        if (requestedMessage == null) {
+                          requestedMessage = friendlyReason;
+                        }
+                        sendMessage(requestedMessage);
                       }
-                      sendMessage(requestedMessage);
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)

@@ -130,18 +130,19 @@ public final class KickedFromServerEvent implements
   }
 
   /**
-   * Tells the proxy to redirect the player to another server. No messages will be sent from the
-   * proxy when this result is used.
+   * Tells the proxy to redirect the player to another server.
    */
   public static final class RedirectPlayer implements ServerKickResult {
 
     private final net.kyori.adventure.text.Component message;
     private final RegisteredServer server;
+    private final boolean sendNotification;
 
     private RedirectPlayer(RegisteredServer server,
-        net.kyori.adventure.text.@Nullable Component message) {
+        net.kyori.adventure.text.@Nullable Component message, boolean sendNotification) {
       this.server = Preconditions.checkNotNull(server, "server");
       this.message = message;
+      this.sendNotification = sendNotification;
     }
 
     @Override
@@ -158,18 +159,74 @@ public final class KickedFromServerEvent implements
     }
 
     /**
+     * Should a message be sent to the player after the redirection.
+     * @return returns true when the player should receive a message
+     */
+    public boolean shouldSendNotification() {
+      return sendNotification;
+    }
+
+    /**
      * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The specified {@code message} will be sent to the player after the redirection
+     *
+     * @param server the server to send the player to
+     * @param message the message will be sent to the player after redirecting
+     * @return the redirect result
+     */
+    public static RedirectPlayer withNotification(RegisteredServer server,
+        net.kyori.adventure.text.@Nullable Component message) {
+      return new RedirectPlayer(server, message, true);
+    }
+
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The kick reason will be displayed to the player
      *
      * @param server the server to send the player to
      * @return the redirect result
      */
-    public static RedirectPlayer create(RegisteredServer server,
-        net.kyori.adventure.text.Component message) {
-      return new RedirectPlayer(server, message);
+    public static RedirectPlayer withNotification(RegisteredServer server) {
+      return new RedirectPlayer(server, null, true);
     }
 
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     * No message will be sent from the proxy.
+     *
+     * @param server the server to send the player to
+     * @return the redirect result
+     */
+    public static RedirectPlayer connect(RegisteredServer server) {
+      return new RedirectPlayer(server, null, false);
+    }
+
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The specified {@code message} will be sent to the player after the redirection.
+     *
+     * @param server the server to send the player to
+     * @param message the message will be sent to the player after redirecting
+     * @return the redirect result
+     * @deprecated Use {@link #withNotification(RegisteredServer, net.kyori.adventure.text.Component)} instead
+     */
+    @Deprecated
+    public static RedirectPlayer create(RegisteredServer server,
+        net.kyori.adventure.text.Component message) {
+      return new RedirectPlayer(server, message, true);
+    }
+
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The kick reason will be displayed to the player
+     *
+     * @param server the server to send the player to
+     * @return the redirect result
+     * @deprecated Use {@link #withNotification(RegisteredServer)} instead
+     */
+    @Deprecated
     public static ServerKickResult create(RegisteredServer server) {
-      return new RedirectPlayer(server, null);
+      return new RedirectPlayer(server, null, true);
     }
   }
 
