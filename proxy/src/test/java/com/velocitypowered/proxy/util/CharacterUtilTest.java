@@ -26,6 +26,7 @@ class CharacterUtilTest {
 
   private static final String CHARACTERS = "!\\\"#$%&'()*+,-./0123456789:;<=>?"
       + "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_'abcdefghijklmnopqrstuvwxyz¡«»";
+  private static final String NON_ASCII_CHARACTERS = "速度ъगꯀ▀";
 
   @Test
   void testCharacter() {
@@ -43,6 +44,7 @@ class CharacterUtilTest {
     assertFalse(CharacterUtil.containsIllegalCharacters(" "));
     assertFalse(CharacterUtil.containsIllegalCharacters("Velocity"));
     assertFalse(CharacterUtil.containsIllegalCharacters(CHARACTERS));
+    assertFalse(CharacterUtil.containsIllegalCharacters(NON_ASCII_CHARACTERS));
 
     assertTrue(CharacterUtil.containsIllegalCharacters("§cVelocity"));
     assertTrue(CharacterUtil.containsIllegalCharacters("§"));
