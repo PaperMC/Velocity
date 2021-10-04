@@ -143,9 +143,14 @@ public class VelocityCommandManager implements CommandManager {
   @Override
   public void unregister(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    // The literals of secondary aliases will preserve the children of
-    // the removed literal in the graph.
-    dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
+    lock.writeLock().lock();
+    try {
+      // The literals of secondary aliases will preserve the children of
+      // the removed literal in the graph.
+      dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   /**
