@@ -50,6 +50,7 @@ public class JoinGame implements MinecraftPacket {
   private DimensionData currentDimensionData; // 1.16.2+
   private short previousGamemode; // 1.16+
   private CompoundBinaryTag biomeRegistry; // 1.16.2+
+  private int simulationDistance; // 1.18+
 
   public int getEntityId() {
     return entityId;
@@ -163,6 +164,14 @@ public class JoinGame implements MinecraftPacket {
     return currentDimensionData;
   }
 
+  public int getSimulationDistance(){
+    return simulationDistance;
+  }
+
+  public void setSimulationDistance(int simulationDistance) {
+    this.simulationDistance = simulationDistance;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -178,6 +187,7 @@ public class JoinGame implements MinecraftPacket {
         + ", dimensionRegistry='" + dimensionRegistry + '\''
         + ", dimensionInfo='" + dimensionInfo + '\''
         + ", previousGamemode=" + previousGamemode
+        + ", simulationDistance=" + simulationDistance
         + '}';
   }
 
@@ -271,6 +281,10 @@ public class JoinGame implements MinecraftPacket {
     }
 
     this.viewDistance = ProtocolUtils.readVarInt(buf);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+      this.simulationDistance = ProtocolUtils.readVarInt(buf);
+    }
+
     this.reducedDebugInfo = buf.readBoolean();
     this.showRespawnScreen = buf.readBoolean();
     boolean isDebug = buf.readBoolean();
@@ -360,6 +374,10 @@ public class JoinGame implements MinecraftPacket {
       buf.writeByte(maxPlayers);
     }
     ProtocolUtils.writeVarInt(buf, viewDistance);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+      ProtocolUtils.writeVarInt(buf, simulationDistance);
+    }
+
     buf.writeBoolean(reducedDebugInfo);
     buf.writeBoolean(showRespawnScreen);
     buf.writeBoolean(dimensionInfo.isDebugType());

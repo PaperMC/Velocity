@@ -56,7 +56,7 @@ public enum ProtocolVersion {
   MINECRAFT_1_16_4(754, "1.16.4", "1.16.5"),
   MINECRAFT_1_17(755, "1.17"),
   MINECRAFT_1_17_1(756, "1.17.1"),
-  MINECRAFT_1_18(-1, 43, "1.18"); // Snapshot: 21w39a, future protocol: 757
+  MINECRAFT_1_18(-1, 44, "1.18"); // Snapshot: 21w40a, future protocol: 757
 
   private static final int SNAPSHOT_BIT = 30;
 
