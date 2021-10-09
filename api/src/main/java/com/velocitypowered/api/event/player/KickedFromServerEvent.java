@@ -158,18 +158,8 @@ public final class KickedFromServerEvent implements
 
     /**
      * Creates a new redirect result to forward the player to the specified {@code server}.
-     * No message will be sent from the proxy.
-     *
-     * @param server the server to send the player to
-     * @return the redirect result
-     */
-    public static RedirectPlayer connect(RegisteredServer server) {
-      return new RedirectPlayer(server, net.kyori.adventure.text.Component.empty());
-    }
-
-    /**
-     * Creates a new redirect result to forward the player to the specified {@code server}.
      * The specified {@code message} will be sent to the player after the redirection.
+     * Use {@code Component.empty()} to skip sending any messages to the player.
      *
      * @param server the server to send the player to
      * @param message the message will be sent to the player after redirecting
@@ -187,7 +177,6 @@ public final class KickedFromServerEvent implements
      * @param server the server to send the player to
      * @return the redirect result
      */
-    @Deprecated
     public static ServerKickResult create(RegisteredServer server) {
       return new RedirectPlayer(server, null);
     }
