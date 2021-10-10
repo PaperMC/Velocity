@@ -641,7 +641,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       if (requestedMessage == null) {
                         requestedMessage = friendlyReason;
                       }
-                      sendMessage(requestedMessage);
+                      if (requestedMessage != Component.empty()) {
+                        sendMessage(requestedMessage);
+                      }
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)
