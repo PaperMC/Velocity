@@ -75,7 +75,7 @@ public interface EventTask {
   }
 
   /**
-   * Creates an continuation based {@link EventTask} from the given {@link Consumer}. The task isn't
+   * Creates a continuation based {@link EventTask} from the given {@link Consumer}. The task isn't
    * guaranteed to be executed asynchronously ({@link #requiresAsync()} always returns
    * {@code false}).
    *
@@ -99,8 +99,9 @@ public interface EventTask {
   }
 
   /**
-   * Creates an continuation based {@link EventTask} for the given {@link CompletableFuture}. The
-   * continuation will be notified once the given future is completed.
+   * Creates a continuation based {@link EventTask} for the given {@link CompletableFuture}. The
+   * continuation is resumed upon completion of the given {@code future}, whether it is completed
+   * successfully or not.
    *
    * @param future The task to wait for
    * @return The event task
