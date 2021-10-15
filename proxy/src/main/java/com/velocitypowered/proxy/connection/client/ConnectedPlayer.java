@@ -414,7 +414,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       connection.write(titlePkt);
     } else if (part == TitlePart.SUBTITLE) {
       GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
       connection.write(titlePkt);
     } else if (part == TitlePart.TIMES) {
