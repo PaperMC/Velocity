@@ -404,6 +404,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       throw new NullPointerException("value");
     }
 
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0) {
+      return;
+    }
+
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
         .getProtocolVersion());
 
