@@ -434,6 +434,18 @@ public class VelocityEventManager implements EventManager {
         .collect(Collectors.toList()));
   }
 
+  /**
+   * Determines whether the given event class has any subscribers. This may bake the list of event
+   * handlers.
+   *
+   * @param eventClass the class of the event to check
+   * @return {@code true} if any subscribers were found, else {@code false}
+   */
+  public boolean hasSubscribers(final Class<?> eventClass) {
+    requireNonNull(eventClass, "eventClass");
+    return this.handlersCache.get(eventClass) != null;
+  }
+
   @Override
   public void fireAndForget(final Object event) {
     requireNonNull(event, "event");

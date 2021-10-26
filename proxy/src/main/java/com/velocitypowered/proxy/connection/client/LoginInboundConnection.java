@@ -29,26 +29,26 @@ import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import net.kyori.adventure.text.Component;
 import space.vectrix.flare.fastutil.Int2ObjectSyncMap;
 
 public class LoginInboundConnection implements LoginPhaseConnection {
 
+  private static final AtomicIntegerFieldUpdater<LoginInboundConnection> SEQUENCE_UPDATER =
+      AtomicIntegerFieldUpdater.newUpdater(LoginInboundConnection.class, "sequenceCounter");
+
   private final InitialInboundConnection delegate;
   private final Int2ObjectMap<MessageConsumer> outstandingResponses;
-  private final AtomicInteger sequenceCounter;
-  private final AtomicInteger outstandingMessages;
+  private volatile int sequenceCounter;
   private final Queue<LoginPluginMessage> loginMessagesToSend;
   private volatile Runnable onAllMessagesHandled;
   private volatile boolean loginEventFired;
 
-  public LoginInboundConnection(
+  LoginInboundConnection(
       InitialInboundConnection delegate) {
     this.delegate = delegate;
     this.outstandingResponses = Int2ObjectSyncMap.hashmap();
-    this.sequenceCounter = new AtomicInteger();
-    this.outstandingMessages = new AtomicInteger();
     this.loginMessagesToSend = new ArrayDeque<>();
   }
 
@@ -89,9 +89,8 @@ public class LoginInboundConnection implements LoginPhaseConnection {
           + "Minecraft 1.13 and above");
     }
 
-    final int id = this.sequenceCounter.getAndIncrement();
+    final int id = SEQUENCE_UPDATER.incrementAndGet(this);
     this.outstandingResponses.put(id, consumer);
-    this.outstandingMessages.incrementAndGet();
 
     final LoginPluginMessage message = new LoginPluginMessage(id, identifier.getId(),
         Unpooled.wrappedBuffer(contents));
@@ -111,13 +110,13 @@ public class LoginInboundConnection implements LoginPhaseConnection {
     this.cleanup();
   }
 
-  public void cleanup() {
+  void cleanup() {
     this.loginMessagesToSend.clear();
     this.outstandingResponses.clear();
     this.onAllMessagesHandled = null;
   }
 
-  public void handleLoginPluginResponse(final LoginPluginResponse response) {
+  void handleLoginPluginResponse(final LoginPluginResponse response) {
     final MessageConsumer consumer = this.outstandingResponses.remove(response.getId());
     if (consumer != null) {
       try {
@@ -125,7 +124,7 @@ public class LoginInboundConnection implements LoginPhaseConnection {
             : null);
       } finally {
         final Runnable onAllMessagesHandled = this.onAllMessagesHandled;
-        if (this.outstandingMessages.decrementAndGet() == 0 && onAllMessagesHandled != null) {
+        if (this.outstandingResponses.isEmpty() && onAllMessagesHandled != null) {
           onAllMessagesHandled.run();
         }
       }

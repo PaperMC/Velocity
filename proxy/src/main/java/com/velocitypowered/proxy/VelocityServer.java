@@ -682,7 +682,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public EventManager getEventManager() {
+  public VelocityEventManager getEventManager() {
     return eventManager;
   }
 
