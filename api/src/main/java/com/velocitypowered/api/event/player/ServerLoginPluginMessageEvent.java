@@ -20,6 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Fired when a server sends a login plugin message to the proxy. Plugins have the opportunity to
+ * respond to the messages as needed.
+ */
 public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResult> {
   private final ServerConnection connection;
   private final ChannelIdentifier identifier;
@@ -58,14 +62,31 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     return identifier;
   }
 
+  /**
+   * Returns a copy of the contents of the login plugin message sent by the server.
+   *
+   * @return the contents of the message
+   */
   public byte[] getContents() {
     return contents.clone();
   }
 
+  /**
+   * Returns the contents of the login plugin message sent by the server as an
+   * {@link java.io.InputStream}.
+   *
+   * @return the contents of the message as a stream
+   */
   public ByteArrayInputStream contentsAsInputStream() {
     return new ByteArrayInputStream(contents);
   }
 
+  /**
+   * Returns the contents of the login plugin message sent by the server as an
+   * {@link ByteArrayDataInput}.
+   *
+   * @return the contents of the message as a {@link java.io.DataInput}
+   */
   public ByteArrayDataInput contentsAsDataStream() {
     return ByteStreams.newDataInput(contents);
   }
