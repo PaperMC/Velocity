@@ -58,6 +58,10 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     this.result = checkNotNull(result, "result");
   }
 
+  public ServerConnection getConnection() {
+    return connection;
+  }
+
   public ChannelIdentifier getIdentifier() {
     return identifier;
   }

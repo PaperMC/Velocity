@@ -71,7 +71,7 @@ public class LoginPluginResponse extends DeferredByteBufHolder implements Minecr
     this.id = ProtocolUtils.readVarInt(buf);
     this.success = buf.readBoolean();
     if (buf.isReadable()) {
-      this.replace(buf.readSlice(buf.readableBytes()));
+      this.replace(buf.readRetainedSlice(buf.readableBytes()));
     } else {
       this.replace(Unpooled.EMPTY_BUFFER);
     }
