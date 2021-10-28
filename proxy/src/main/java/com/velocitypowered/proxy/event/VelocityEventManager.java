@@ -443,14 +443,15 @@ public class VelocityEventManager implements EventManager {
    */
   public boolean hasSubscribers(final Class<?> eventClass) {
     requireNonNull(eventClass, "eventClass");
-    return this.handlersCache.get(eventClass) != null;
+    final HandlersCache handlersCache = this.handlersCache.get(eventClass);
+    return handlersCache != null && handlersCache.handlers.length > 0;
   }
 
   @Override
   public void fireAndForget(final Object event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
-    if (handlersCache == null) {
+    if (handlersCache == null || handlersCache.handlers.length == 0) {
       // Optimization: nobody's listening.
       return;
     }
@@ -461,7 +462,7 @@ public class VelocityEventManager implements EventManager {
   public <E> CompletableFuture<E> fire(final E event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
-    if (handlersCache == null) {
+    if (handlersCache == null || handlersCache.handlers.length == 0) {
       // Optimization: nobody's listening.
       return CompletableFuture.completedFuture(event);
     }
