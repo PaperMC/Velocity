@@ -10,6 +10,7 @@ package com.velocitypowered.api.command;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handles the registration and execution of commands.
@@ -73,6 +74,13 @@ public interface CommandManager {
    * @param alias the command alias to unregister
    */
   void unregister(String alias);
+
+  /**
+   * Retrieves the {@link CommandMeta} from the specified command alias, if registered.
+   * @param alias the command alias to lookup
+   * @return an {@link CommandMeta} of the alias
+   */
+  @Nullable CommandMeta getCommandMeta(String alias);
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}.
