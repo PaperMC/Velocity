@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.command;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -44,6 +45,7 @@ public class CommandManagerTests extends CommandTestSuite {
 
     assertTrue(manager.hasCommand("hello"));
     assertRegisteredAliases("hello");
+    assertEquals(meta, manager.getCommandMeta("hello"));
   }
 
   @Test
@@ -59,6 +61,10 @@ public class CommandManagerTests extends CommandTestSuite {
     assertTrue(manager.hasCommand("baz"));
     assertTrue(manager.hasCommand("qux"));
     assertRegisteredAliases("foo", "bar", "baz", "qux");
+    assertEquals(meta, manager.getCommandMeta("foo"));
+    assertEquals(meta, manager.getCommandMeta("bar"));
+    assertEquals(meta, manager.getCommandMeta("baz"));
+    assertEquals(meta, manager.getCommandMeta("qux"));
   }
 
   @Test
@@ -90,8 +96,11 @@ public class CommandManagerTests extends CommandTestSuite {
 
     final var oldMeta = manager.metaBuilder("foo").build();
     manager.register(oldMeta, DummyCommand.INSTANCE); // fails on execution
+    assertEquals(oldMeta, manager.getCommandMeta("foo"));
+
     final var newMeta = manager.metaBuilder("foo").build();
     manager.register(newMeta, (RawCommand) invocation -> called.set(true));
+    assertEquals(newMeta, manager.getCommandMeta("foo"));
     manager.executeAsync(MockCommandSource.INSTANCE, "foo").join();
 
     assertTrue(called.get());
@@ -153,7 +162,37 @@ public class CommandManagerTests extends CommandTestSuite {
 
     assertFalse(manager.hasCommand("bar"));
     assertTrue(manager.hasCommand("foo"));
+    assertEquals(meta, manager.getCommandMeta("foo"));
     assertRegisteredAliases("foo");
+  }
+
+  @Test
+  void testUnregisterAllAliases() {
+    final var meta = manager.metaBuilder("foo")
+        .aliases("bar")
+        .build();
+    manager.register(meta, DummyCommand.INSTANCE);
+    manager.unregister(meta);
+
+    assertFalse(manager.hasCommand("bar"));
+    assertFalse(manager.hasCommand("foo"));
+  }
+
+  @Test
+  void testUnregisterAliasOverlap() {
+    final var meta1 = manager.metaBuilder("foo")
+        .aliases("bar")
+        .build();
+    manager.register(meta1, DummyCommand.INSTANCE);
+    final var meta2 = manager.metaBuilder("bar")
+        .build();
+    manager.register(meta2, DummyCommand.INSTANCE);
+    assertEquals(meta1, manager.getCommandMeta("foo"));
+    assertEquals(meta2, manager.getCommandMeta("bar"));
+
+    manager.unregister(meta1);
+    assertNull(manager.getCommandMeta("foo"));
+    assertEquals(meta2, manager.getCommandMeta("bar"));
   }
 
   // Execution

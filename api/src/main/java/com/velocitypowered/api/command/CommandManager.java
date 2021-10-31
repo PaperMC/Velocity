@@ -76,6 +76,13 @@ public interface CommandManager {
   void unregister(String alias);
 
   /**
+   * Unregisters the specified command from the manager, if registered.
+   *
+   * @param meta the command to unregister
+   */
+  void unregister(CommandMeta meta);
+
+  /**
    * Retrieves the {@link CommandMeta} from the specified command alias, if registered.
    * @param alias the command alias to lookup
    * @return an {@link CommandMeta} of the alias

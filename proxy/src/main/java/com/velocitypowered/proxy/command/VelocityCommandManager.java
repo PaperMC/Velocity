@@ -156,11 +156,23 @@ public class VelocityCommandManager implements CommandManager {
       // The literals of secondary aliases will preserve the children of
       // the removed literal in the graph.
       dispatcher.getRoot().removeChildByName(alias.toLowerCase(Locale.ENGLISH));
+      commandMetas.remove(alias);
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
 
-      CommandMeta meta = commandMetas.get(alias);
-      if (meta != null) {
-        for (String metaAlias : meta.getAliases()) {
-          commandMetas.remove(metaAlias, meta);
+  @Override
+  public void unregister(CommandMeta meta) {
+    Preconditions.checkNotNull(meta, "meta");
+    lock.writeLock().lock();
+    try {
+      // The literals of secondary aliases will preserve the children of
+      // the removed literal in the graph.
+      for (String alias : meta.getAliases()) {
+        final String lowercased = alias.toLowerCase(Locale.ENGLISH);
+        if (commandMetas.remove(lowercased, meta)) {
+          dispatcher.getRoot().removeChildByName(lowercased);
         }
       }
     } finally {
