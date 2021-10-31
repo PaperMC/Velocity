@@ -41,7 +41,6 @@ import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -50,6 +49,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 public class VelocityCommandManager implements CommandManager {
@@ -154,9 +154,9 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public Optional<CommandMeta> getCommandMeta(String alias) {
+  public @Nullable CommandMeta getCommandMeta(String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    return Optional.ofNullable(commandMeta.get(alias.toLowerCase(Locale.ENGLISH)));
+    return commandMeta.get(alias.toLowerCase(Locale.ENGLISH));
   }
 
   /**

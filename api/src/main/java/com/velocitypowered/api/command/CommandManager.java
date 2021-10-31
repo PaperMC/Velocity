@@ -8,8 +8,8 @@
 package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handles the registration and execution of commands.
@@ -77,9 +77,9 @@ public interface CommandManager {
   /**
    * Retrieves the {@link CommandMeta} from the specified command alias, if registered.
    * @param alias the command alias to lookup
-   * @return an {@link Optional} {@link CommandMeta} of the alias
+   * @return an {@link CommandMeta} of the alias
    */
-  Optional<CommandMeta> getCommandMeta(String alias);
+  @Nullable CommandMeta getCommandMeta(String alias);
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}.

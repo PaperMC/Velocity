@@ -9,7 +9,7 @@ package com.velocitypowered.api.command;
 
 import com.mojang.brigadier.tree.CommandNode;
 import java.util.Collection;
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Contains metadata for a {@link Command}.
@@ -39,7 +39,7 @@ public interface CommandMeta {
    *
    * @return the registering plugin
    */
-  Optional<Object> getPlugin();
+  @Nullable Object getPlugin();
 
   /**
    * Provides a fluent interface to create {@link CommandMeta}s.

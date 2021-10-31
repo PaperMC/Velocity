@@ -28,7 +28,6 @@ import com.velocitypowered.api.command.CommandSource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -145,8 +144,8 @@ public final class VelocityCommandMeta implements CommandMeta {
   }
 
   @Override
-  public Optional<Object> getPlugin() {
-    return Optional.ofNullable(plugin);
+  public @Nullable Object getPlugin() {
+    return plugin;
   }
 
   @Override
