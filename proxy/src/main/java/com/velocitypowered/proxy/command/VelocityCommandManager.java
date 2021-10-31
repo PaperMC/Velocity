@@ -61,7 +61,7 @@ public class VelocityCommandManager implements CommandManager {
   private final List<CommandRegistrar<?>> registrars;
   private final SuggestionsProvider<CommandSource> suggestionsProvider;
   private final CommandGraphInjector<CommandSource> injector;
-  private final Map<String, CommandMeta> commandMeta;
+  private final Map<String, CommandMeta> commandMetas;
 
   /**
    * Constructs a command manager.
@@ -79,7 +79,7 @@ public class VelocityCommandManager implements CommandManager {
             new RawCommandRegistrar(root, this.lock.writeLock()));
     this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher, this.lock.readLock());
     this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
-    this.commandMeta = new ConcurrentHashMap<>();
+    this.commandMetas = new ConcurrentHashMap<>();
   }
 
   public void setAnnounceProxyCommands(boolean announceProxyCommands) {
@@ -139,7 +139,9 @@ public class VelocityCommandManager implements CommandManager {
       return false;
     }
     registrar.register(meta, superInterface.cast(command));
-    commandMeta.put(meta.getAliases().iterator().next(), meta);
+    for (String alias : meta.getAliases()) {
+      commandMetas.put(alias, meta);
+    }
     return true;
   }
 
@@ -150,13 +152,19 @@ public class VelocityCommandManager implements CommandManager {
     // the removed literal in the graph.
     String aliasLowercase = alias.toLowerCase(Locale.ENGLISH);
     dispatcher.getRoot().removeChildByName(aliasLowercase);
-    commandMeta.remove(aliasLowercase);
+
+    CommandMeta meta = commandMetas.get(alias);
+    if (meta != null) {
+      for (String metaAlias : meta.getAliases()) {
+        commandMetas.remove(metaAlias);
+      }
+    }
   }
 
   @Override
   public @Nullable CommandMeta getCommandMeta(String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    return commandMeta.get(alias.toLowerCase(Locale.ENGLISH));
+    return commandMetas.get(alias.toLowerCase(Locale.ENGLISH));
   }
 
   /**
