@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.command;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -44,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.kyori.adventure.identity.Identity;
@@ -79,7 +79,7 @@ public class VelocityCommandManager implements CommandManager {
             new RawCommandRegistrar(root, this.lock.writeLock()));
     this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher, this.lock.readLock());
     this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
-    this.commandMeta = Maps.newConcurrentMap();
+    this.commandMeta = new ConcurrentHashMap<>();
   }
 
   public void setAnnounceProxyCommands(boolean announceProxyCommands) {
