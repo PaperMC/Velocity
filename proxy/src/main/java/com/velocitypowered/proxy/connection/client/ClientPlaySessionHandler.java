@@ -30,7 +30,11 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.exception.ProxyCommandException;
+import com.velocitypowered.api.proxy.exception.ProxyPluginMessageException;
+import com.velocitypowered.api.proxy.exception.ProxyTabCompleteException;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -176,6 +180,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 player.getUsername(), e);
             player.sendMessage(Component.translatable("velocity.command.generic-error",
                 NamedTextColor.RED));
+            server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyCommandException(e,
+                player, originalCommand)));
             return null;
           });
     } else {
@@ -282,6 +288,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                   .exceptionally((ex) -> {
                     logger.error("Exception while handling plugin message packet for {}",
                         player, ex);
+                    server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyPluginMessageException(ex,
+                        event)));
                     return null;
                   });
             }
@@ -520,6 +528,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .exceptionally((ex) -> {
           logger.error("Exception while handling command tab completion for player {} executing {}",
               player, command, ex);
+          server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyTabCompleteException(ex,
+              player, command)));
           return null;
         });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
@@ -572,12 +582,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             logger.error("Unable to provide tab list completions for {} for command '{}'",
                 player.getUsername(),
                 command, e);
+            server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyTabCompleteException(e,
+                player, command)));
           }
         }, player.getConnection().eventLoop())
         .exceptionally((ex) -> {
           logger.error(
               "Exception while finishing command tab completion, with request {} and response {}",
               request, response, ex);
+          server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyTabCompleteException(ex,
+              player, command)));
           return null;
         });
   }
@@ -599,6 +613,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           logger.error(
               "Exception while finishing regular tab completion, with request {} and response{}",
               request, response, ex);
+          server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyTabCompleteException(ex,
+              player, request.getCommand())));
           return null;
         });
   }

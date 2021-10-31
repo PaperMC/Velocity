@@ -23,9 +23,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.event.Continuation;
@@ -34,8 +32,10 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.proxy.exception.ProxyEventException;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.EventTaskHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.WithContinuationHandler;
@@ -620,10 +620,14 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  private static void logHandlerException(
+  private void logHandlerException(
       final HandlerRegistration registration, final Throwable t) {
     logger.error("Couldn't pass {} to {}", registration.eventType.getSimpleName(),
         registration.plugin.getDescription().getId(), t);
+    if (!ProxyExceptionEvent.class.equals(registration.eventType)) {
+      fireAndForget(new ProxyExceptionEvent(new ProxyEventException(t, registration.plugin,
+              registration.eventType)));
+    }
   }
 
   public boolean shutdown() throws InterruptedException {

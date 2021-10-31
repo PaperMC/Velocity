@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -31,6 +32,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.exception.ProxyInternalException;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -150,7 +152,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
     commandManager = new VelocityCommandManager(eventManager);
-    scheduler = new VelocityScheduler(pluginManager);
+    scheduler = new VelocityScheduler(pluginManager, eventManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
@@ -277,10 +279,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           });
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
+          eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         }
       }, "com", "velocitypowered", "proxy", "l10n");
     } catch (IOException e) {
       logger.error("Encountered an I/O error whilst loading translations", e);
+      eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
       return;
     }
     GlobalTranslator.get().addSource(translationRegistry);
@@ -326,6 +330,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
+      eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
     }
 
     // Register the plugin main classes so that we can fire the proxy initialize event
@@ -337,6 +342,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
               plugin.getDescription().getName().orElse(plugin.getDescription().getId()), e);
+          eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         }
       }
     }
@@ -416,6 +422,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         latch.await();
       } catch (InterruptedException e) {
         logger.error("Interrupted whilst moving players", e);
+        eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         Thread.currentThread().interrupt();
       }
     }
@@ -488,6 +495,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         } catch (ExecutionException e) {
           timedOut = true;
           logger.error("Exception while tearing down player connections", e);
+          eventManager.fireAndForget(new ProxyExceptionEvent(new ProxyInternalException(e)));
         }
 
         eventManager.fire(new ProxyShutdownEvent()).join();

@@ -24,14 +24,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.api.proxy.exception.ProxyInternalException;
+import com.velocitypowered.api.proxy.exception.ProxyPluginException;
+import com.velocitypowered.api.proxy.exception.ProxySchedulerException;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.scheduler.TaskStatus;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,6 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityScheduler implements Scheduler {
 
   private final PluginManager pluginManager;
+  private final EventManager eventManager;
   private final ExecutorService taskService;
   private final ScheduledExecutorService timerExecutionService;
   private final Multimap<Object, ScheduledTask> tasksByPlugin = Multimaps.synchronizedMultimap(
@@ -54,8 +61,9 @@ public class VelocityScheduler implements Scheduler {
    *
    * @param pluginManager the Velocity plugin manager
    */
-  public VelocityScheduler(PluginManager pluginManager) {
+  public VelocityScheduler(PluginManager pluginManager, EventManager eventManager) {
     this.pluginManager = pluginManager;
+    this.eventManager = eventManager;
     this.taskService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true)
         .setNameFormat("Velocity Task Scheduler - #%d").build());
     this.timerExecutionService = Executors
@@ -206,12 +214,15 @@ public class VelocityScheduler implements Scheduler {
           if (e instanceof InterruptedException) {
             Thread.currentThread().interrupt();
           } else {
-            String friendlyPluginName = pluginManager.fromInstance(plugin)
+            Optional<PluginContainer> pluginContainer = pluginManager.fromInstance(plugin);
+            String friendlyPluginName = pluginContainer
                 .map(container -> container.getDescription().getName()
                       .orElse(container.getDescription().getId()))
                 .orElse("UNKNOWN");
             Log.logger.error("Exception in task {} by plugin {}", runnable, friendlyPluginName,
                 e);
+            eventManager.fireAndForget(new ProxyExceptionEvent(new ProxySchedulerException(e,
+                pluginContainer.orElse(null), this)));
           }
         } finally {
           if (repeat == 0) {

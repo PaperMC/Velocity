@@ -20,9 +20,12 @@ package com.velocitypowered.proxy.console;
 import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
 
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
+import com.velocitypowered.api.event.proxy.ProxyExceptionEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
+import com.velocitypowered.api.proxy.exception.ProxyCommandException;
+import com.velocitypowered.api.proxy.exception.ProxyTabCompleteException;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import java.util.List;
@@ -100,15 +103,19 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
     return super.buildReader(builder
         .appName("Velocity")
         .completer((reader, parsedLine, list) -> {
+          String line = null;
           try {
+            line = parsedLine.line();
             List<String> offers = this.server.getCommandManager()
-                .offerSuggestions(this, parsedLine.line())
+                .offerSuggestions(this, line)
                 .join(); // Console doesn't get harmed much by this...
             for (String offer : offers) {
               list.add(new Candidate(offer));
             }
           } catch (Exception e) {
             logger.error("An error occurred while trying to perform tab completion.", e);
+            server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyTabCompleteException(e,
+                this, line)));
           }
         })
     );
@@ -128,6 +135,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);
+      server.getEventManager().fireAndForget(new ProxyExceptionEvent(new ProxyCommandException(e, this, command)));
     }
   }
 
