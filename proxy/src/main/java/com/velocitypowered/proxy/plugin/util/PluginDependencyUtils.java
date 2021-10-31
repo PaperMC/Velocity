@@ -30,6 +30,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PluginDependencyUtils {
 
@@ -38,7 +39,7 @@ public class PluginDependencyUtils {
   }
 
   /**
-   * Attempts to topographically sort all plugins for the proxy to load by dependencies using
+   * Attempts to topographically sort all plugins for the proxy to load in dependency order using
    * a depth-first search.
    *
    * @param candidates the plugins to sort
@@ -71,7 +72,10 @@ public class PluginDependencyUtils {
       }
     }
 
-    // Now we do the depth-first search.
+    // Now we do the depth-first search. The most accessible description of the algorithm is on
+    // Wikipedia: https://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=1036420482,
+    // section "Depth-first search." Apparently this algorithm originates from "Introduction to
+    // Algorithms" (2nd ed.)
     List<PluginDescription> sorted = new ArrayList<>();
     Map<PluginDescription, Mark> marks = new HashMap<>();
 
@@ -82,38 +86,41 @@ public class PluginDependencyUtils {
     return sorted;
   }
 
-  private static void visitNode(Graph<PluginDescription> dependencyGraph, PluginDescription node,
-      Map<PluginDescription, Mark> marks, List<PluginDescription> sorted,
-      Deque<PluginDescription> currentIteration) {
-    Mark mark = marks.getOrDefault(node, Mark.NOT_VISITED);
-    if (mark == Mark.PERMANENT) {
+  private static void visitNode(Graph<PluginDescription> dependencyGraph, PluginDescription current,
+      Map<PluginDescription, Mark> visited, List<PluginDescription> sorted,
+      Deque<PluginDescription> currentDependencyScanStack) {
+    Mark mark = visited.getOrDefault(current, Mark.NOT_VISITED);
+    if (mark == Mark.VISITED) {
+      // Visited this node already, nothing to do.
       return;
-    } else if (mark == Mark.TEMPORARY) {
-      // A circular dependency has been detected.
-      currentIteration.addLast(node);
-      StringBuilder loopGraph = new StringBuilder();
-      for (PluginDescription description : currentIteration) {
-        loopGraph.append(description.getId());
-        loopGraph.append(" -> ");
-      }
-      loopGraph.setLength(loopGraph.length() - 4);
-      throw new IllegalStateException("Circular dependency detected: " + loopGraph.toString());
+    } else if (mark == Mark.VISITING) {
+      // A circular dependency has been detected. (Specifically, if we are visiting any dependency
+      // and a dependency we are looking at depends on any dependency being visited, we have a
+      // circular dependency, thus we do not have a directed acyclic graph and therefore no
+      // topological sort is possible.)
+      currentDependencyScanStack.addLast(current);
+      final String loop = currentDependencyScanStack.stream().map(PluginDescription::getId)
+          .collect(Collectors.joining(" -> "));
+      throw new IllegalStateException("Circular dependency detected: " + loop);
     }
 
-    currentIteration.addLast(node);
-    marks.put(node, Mark.TEMPORARY);
-    for (PluginDescription edge : dependencyGraph.successors(node)) {
-      visitNode(dependencyGraph, edge, marks, sorted, currentIteration);
+    // Visiting this node. Mark this node as having a visit in progress and scan its edges.
+    currentDependencyScanStack.addLast(current);
+    visited.put(current, Mark.VISITING);
+    for (PluginDescription edge : dependencyGraph.successors(current)) {
+      visitNode(dependencyGraph, edge, visited, sorted, currentDependencyScanStack);
     }
 
-    marks.put(node, Mark.PERMANENT);
-    currentIteration.removeLast();
-    sorted.add(node);
+    // All other dependency nodes were visited. We are clear to mark as visited and add to the
+    // sorted list.
+    visited.put(current, Mark.VISITED);
+    currentDependencyScanStack.removeLast();
+    sorted.add(current);
   }
 
   private enum Mark {
     NOT_VISITED,
-    TEMPORARY,
-    PERMANENT
+    VISITING,
+    VISITED
   }
 }
