@@ -160,12 +160,18 @@ public class VelocityCommandManager implements CommandManager {
       CommandMeta meta = commandMetas.get(alias);
       if (meta != null) {
         for (String metaAlias : meta.getAliases()) {
-          commandMetas.remove(metaAlias);
+          commandMetas.remove(metaAlias, meta);
         }
       }
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  @Override
+  public @Nullable CommandMeta getCommandMeta(String alias) {
+    Preconditions.checkNotNull(alias, "alias");
+    return commandMetas.get(alias);
   }
 
   /**
