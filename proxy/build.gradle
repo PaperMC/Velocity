@@ -80,6 +80,9 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.0.3'
 
+    implementation 'space.vectrix.flare:flare:2.0.0'
+    implementation 'space.vectrix.flare:flare-fastutil:2.0.0'
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.4.0'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"

@@ -44,9 +44,9 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
@@ -56,7 +56,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -64,7 +63,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
@@ -80,13 +78,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
-  private final InitialInboundConnection inbound;
+  private final LoginInboundConnection inbound;
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
 
   LoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-      InitialInboundConnection inbound) {
+      LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
@@ -96,6 +94,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLogin packet) {
     this.login = packet;
     beginPreLogin();
+    return true;
+  }
+
+  @Override
+  public boolean handle(LoginPluginResponse packet) {
+    this.inbound.handleLoginPluginResponse(packet);
     return true;
   }
 
@@ -197,15 +201,24 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode() || result
-              .isOnlineModeAllowed())) {
-            // Request encryption.
-            EncryptionRequest request = generateEncryptionRequest();
-            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-            mcConnection.write(request);
-          } else {
-            initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
-          }
+          inbound.loginEventFired(() -> {
+            if (mcConnection.isClosed()) {
+              // The player was disconnected
+              return;
+            }
+
+            mcConnection.eventLoop().execute(() -> {
+              if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode()
+                  || result.isOnlineModeAllowed())) {
+                // Request encryption.
+                EncryptionRequest request = generateEncryptionRequest();
+                this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+                mcConnection.write(request);
+              } else {
+                initializePlayer(GameProfile.forOfflinePlayer(login.getUsername()), false);
+              }
+            });
+          });
         }, mcConnection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception in pre-login stage", ex);
@@ -354,5 +367,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (connectedPlayer != null) {
       connectedPlayer.teardown();
     }
+    this.inbound.cleanup();
   }
 }

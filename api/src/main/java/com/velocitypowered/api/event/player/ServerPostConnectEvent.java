@@ -28,10 +28,21 @@ public class ServerPostConnectEvent {
     this.previousServer = previousServer;
   }
 
+  /**
+   * Returns the player that has completed the connection to the server.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the previous server the player was connected to. This is {@code null} if they were not
+   * connected to another server beforehand (for instance, if the player has just joined the proxy).
+   *
+   * @return the previous server the player was connected to
+   */
   public @Nullable RegisteredServer getPreviousServer() {
     return previousServer;
   }

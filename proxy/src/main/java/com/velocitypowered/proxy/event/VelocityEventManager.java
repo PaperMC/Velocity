@@ -434,11 +434,24 @@ public class VelocityEventManager implements EventManager {
         .collect(Collectors.toList()));
   }
 
+  /**
+   * Determines whether the given event class has any subscribers. This may bake the list of event
+   * handlers.
+   *
+   * @param eventClass the class of the event to check
+   * @return {@code true} if any subscribers were found, else {@code false}
+   */
+  public boolean hasSubscribers(final Class<?> eventClass) {
+    requireNonNull(eventClass, "eventClass");
+    final HandlersCache handlersCache = this.handlersCache.get(eventClass);
+    return handlersCache != null && handlersCache.handlers.length > 0;
+  }
+
   @Override
   public void fireAndForget(final Object event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
-    if (handlersCache == null) {
+    if (handlersCache == null || handlersCache.handlers.length == 0) {
       // Optimization: nobody's listening.
       return;
     }
@@ -449,7 +462,7 @@ public class VelocityEventManager implements EventManager {
   public <E> CompletableFuture<E> fire(final E event) {
     requireNonNull(event, "event");
     final HandlersCache handlersCache = this.handlersCache.get(event.getClass());
-    if (handlersCache == null) {
+    if (handlersCache == null || handlersCache.handlers.length == 0) {
       // Optimization: nobody's listening.
       return CompletableFuture.completedFuture(event);
     }

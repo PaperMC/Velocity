@@ -74,6 +74,10 @@ public final class InitialInboundConnection implements InboundConnection,
     return "[initial connection] " + connection.getRemoteAddress().toString();
   }
 
+  public MinecraftConnection getConnection() {
+    return connection;
+  }
+
   /**
    * Disconnects the connection from the server.
    * @param reason the reason for disconnecting
