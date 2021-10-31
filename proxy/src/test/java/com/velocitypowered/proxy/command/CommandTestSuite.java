@@ -30,6 +30,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;
+import java.util.Collection;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,5 +80,13 @@ abstract class CommandTestSuite {
     when(player.getPermissionValue(any())).thenReturn(Tristate.UNDEFINED);
     final var actual = manager.offerSuggestions(player, input).join();
     assertEquals(Arrays.asList(expectedSuggestions), actual);
+  }
+
+  final void assertRegisteredAliases(final String... expected) {
+    final Collection<String> actual = manager.getAliases();
+    assertEquals(expected.length, actual.size());
+    final Collection<String> asList = Arrays.asList(expected);
+    assertTrue(asList.containsAll(actual));
+    assertTrue(actual.containsAll(asList));
   }
 }

@@ -424,9 +424,10 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();
 
-    // Handle any cases where the config needs to be saved again
+    // Retrieve the forwarding secret. First, from environment variable, then from config.
     byte[] forwardingSecret;
-    String forwardingSecretString = config.get("forwarding-secret");
+    String forwardingSecretString = System.getenv()
+        .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
     if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
       forwardingSecretString = generateRandomString(12);
       config.set("forwarding-secret", forwardingSecretString);
@@ -434,6 +435,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
+    // Handle any cases where the config needs to be saved again
     if (mustResave) {
       config.save();
     }

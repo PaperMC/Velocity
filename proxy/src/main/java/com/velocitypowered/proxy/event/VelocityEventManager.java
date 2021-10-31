@@ -46,6 +46,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -99,6 +100,7 @@ public class VelocityEventManager implements EventManager {
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   private final List<CustomHandlerAdapter<?>> handlerAdapters = new ArrayList<>();
+  private final EventTypeTracker eventTypeTracker = new EventTypeTracker();
 
   /**
    * Initializes the Velocity event manager.
@@ -172,15 +174,9 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  private static List<Class<?>> getEventTypes(final Class<?> eventType) {
-    return TypeToken.of(eventType).getTypes().rawTypes().stream()
-        .filter(type -> type != Object.class)
-        .collect(Collectors.toList());
-  }
-
   private @Nullable HandlersCache bakeHandlers(final Class<?> eventType) {
     final List<HandlerRegistration> baked = new ArrayList<>();
-    final List<Class<?>> types = getEventTypes(eventType);
+    final Collection<Class<?>> types = eventTypeTracker.getFriendsOf(eventType);
 
     lock.readLock().lock();
     try {
@@ -336,7 +332,7 @@ public class VelocityEventManager implements EventManager {
     }
     // Invalidate all the affected event subtypes
     handlersCache.invalidateAll(registrations.stream()
-        .flatMap(registration -> getEventTypes(registration.eventType).stream())
+        .flatMap(registration -> eventTypeTracker.getFriendsOf(registration.eventType).stream())
         .distinct()
         .collect(Collectors.toList()));
   }
@@ -407,7 +403,7 @@ public class VelocityEventManager implements EventManager {
     final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(handler, "handler");
     unregisterIf(registration ->
-        registration.plugin == pluginContainer && registration.handler == handler);
+        registration.plugin == pluginContainer && registration.instance == handler);
   }
 
   @Override
@@ -433,7 +429,7 @@ public class VelocityEventManager implements EventManager {
 
     // Invalidate all the affected event subtypes
     handlersCache.invalidateAll(removed.stream()
-        .flatMap(registration -> getEventTypes(registration.eventType).stream())
+        .flatMap(registration -> eventTypeTracker.getFriendsOf(registration.eventType).stream())
         .distinct()
         .collect(Collectors.toList()));
   }

@@ -19,6 +19,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
@@ -45,6 +46,22 @@ public interface Player extends CommandSource, Identified, InboundConnection,
    */
   String getUsername();
 
+  /**
+   * Returns the locale the proxy will use to send messages translated via the Adventure global translator.
+   * By default, the value of {@link PlayerSettings#getLocale()} is used.
+   *
+   * <p>This can be {@code null} when the client has not yet connected to any server.</p>
+   *
+   * @return the locale.
+   */
+  @Nullable Locale getEffectiveLocale();
+
+  /**
+   * Change the locale the proxy will be translating its messages to.
+   *
+   * @param locale the locale to translate to
+   */
+  void setEffectiveLocale(Locale locale);
 
   /**
    * Returns the player's UUID.

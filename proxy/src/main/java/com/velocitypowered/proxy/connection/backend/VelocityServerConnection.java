@@ -113,6 +113,16 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return result;
   }
 
+  String getPlayerRemoteAddressAsString() {
+    final String addr = proxyPlayer.getRemoteAddress().getAddress().getHostAddress();
+    int ipv6ScopeIdx = addr.indexOf('%');
+    if (ipv6ScopeIdx == -1) {
+      return addr;
+    } else {
+      return addr.substring(0, ipv6ScopeIdx);
+    }
+  }
+
   private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
@@ -122,7 +132,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             .orElseGet(() -> registeredServer.getServerInfo().getAddress())
             .getHostString())
         .append('\0')
-        .append(proxyPlayer.getRemoteAddress().getHostString())
+        .append(getPlayerRemoteAddressAsString())
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
         .append('\0');
@@ -150,8 +160,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
 
     // Initiate the handshake.
-    InetSocketAddress destAddress = registeredServer.getServerInfo().getAddress();
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
+    String playerVhost = proxyPlayer.getVirtualHost()
+        .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+        .getHostString();
+
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
@@ -161,11 +174,12 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(destAddress.getHostString() + HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
     } else {
-      handshake.setServerAddress(destAddress.getHostString());
+      handshake.setServerAddress(playerVhost);
     }
-    handshake.setPort(destAddress.getPort());
+
+    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);

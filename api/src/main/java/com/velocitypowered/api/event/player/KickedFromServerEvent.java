@@ -130,8 +130,7 @@ public final class KickedFromServerEvent implements
   }
 
   /**
-   * Tells the proxy to redirect the player to another server. No messages will be sent from the
-   * proxy when this result is used.
+   * Tells the proxy to redirect the player to another server.
    */
   public static final class RedirectPlayer implements ServerKickResult {
 
@@ -159,8 +158,11 @@ public final class KickedFromServerEvent implements
 
     /**
      * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The specified {@code message} will be sent to the player after the redirection.
+     * Use {@code Component.empty()} to skip sending any messages to the player.
      *
      * @param server the server to send the player to
+     * @param message the message will be sent to the player after redirecting
      * @return the redirect result
      */
     public static RedirectPlayer create(RegisteredServer server,
@@ -168,6 +170,13 @@ public final class KickedFromServerEvent implements
       return new RedirectPlayer(server, message);
     }
 
+    /**
+     * Creates a new redirect result to forward the player to the specified {@code server}.
+     * The kick reason will be displayed to the player
+     *
+     * @param server the server to send the player to
+     * @return the redirect result
+     */
     public static ServerKickResult create(RegisteredServer server) {
       return new RedirectPlayer(server, null);
     }

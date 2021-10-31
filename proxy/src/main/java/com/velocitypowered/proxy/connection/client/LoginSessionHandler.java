@@ -75,7 +75,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-      "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s";
+      System.getProperty("mojang.sessionserver", "https://sessionserver.mojang.com/session/minecraft/hasJoined")
+          .concat("?username=%s&serverId=%s");
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;

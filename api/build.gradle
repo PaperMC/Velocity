@@ -25,7 +25,7 @@ sourceSets {
 }
 
 dependencies {
-    api 'com.google.code.gson:gson:2.8.7'
+    api 'com.google.code.gson:gson:2.8.8'
     api "com.google.guava:guava:${guavaVersion}"
 
     // DEPRECATED: Will be removed in Velocity Polymer
@@ -63,6 +63,9 @@ task sourcesJar(type: Jar) {
 
 jar {
     from sourceSets.ap.output
+    manifest {
+        attributes 'Automatic-Module-Name': 'com.velocitypowered.api'
+    }
 }
 
 shadowJar {
@@ -84,7 +87,7 @@ javadoc {
             'https://google.github.io/guava/releases/25.1-jre/api/docs/',
             'https://google.github.io/guice/api-docs/5.0.1/javadoc/',
             'https://docs.oracle.com/en/java/javase/11/docs/api//',
-            'https://jd.adventure.kyori.net/api/4.7.0/'
+            "https://jd.adventure.kyori.net/api/${adventureVersion}/"
     )
 
     // Disable the crazy super-strict doclint tool in Java 8

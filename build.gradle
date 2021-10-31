@@ -17,19 +17,18 @@ allprojects {
     apply plugin: "com.github.spotbugs"
 
     group 'com.velocitypowered'
-    version '3.0.1-SNAPSHOT'
+    version '3.0.2-SNAPSHOT'
 
     ext {
         // dependency versions
-        textVersion = '3.0.4'
-        adventureVersion = '4.8.1'
+        adventureVersion = '4.9.3'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
-        log4jVersion = '2.13.3'
-        nettyVersion = '4.1.58.Final'
+        log4jVersion = '2.14.1'
+        nettyVersion = '4.1.69.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '3.6.1'
-        configurateVersion = '3.7.1'
+        configurateVersion = '3.7.2'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->

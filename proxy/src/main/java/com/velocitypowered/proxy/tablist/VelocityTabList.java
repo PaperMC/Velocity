@@ -129,9 +129,8 @@ public class VelocityTabList implements TabList {
    * Processes a tab list entry packet from the backend.
    *
    * @param packet the packet to process
-   * @return {@code true} to forward the packet on, {@code false} otherwise
    */
-  public boolean processBackendPacket(PlayerListItem packet) {
+  public void processBackendPacket(PlayerListItem packet) {
     // Packets are already forwarded on, so no need to do that here
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
@@ -150,13 +149,14 @@ public class VelocityTabList implements TabList {
           if (name == null || properties == null) {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
-          return entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
+          entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, name, properties))
               .displayName(item.getDisplayName())
               .latency(item.getLatency())
               .gameMode(item.getGameMode())
-              .build()) == null;
+              .build());
+          break;
         }
         case PlayerListItem.REMOVE_PLAYER:
           entries.remove(uuid);
@@ -187,7 +187,6 @@ public class VelocityTabList implements TabList {
           break;
       }
     }
-    return true;
   }
 
   void updateEntry(int action, TabListEntry entry) {

@@ -27,6 +27,7 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -56,6 +57,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.util.CharacterUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -153,6 +155,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String msg = packet.getMessage();
+    if (CharacterUtil.containsIllegalCharacters(msg)) {
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
+          NamedTextColor.RED));
+      return true;
+    }
+
     if (msg.startsWith("/")) {
       String originalCommand = msg.substring(1);
       server.getCommandManager().callCommandEvent(player, msg.substring(1))
@@ -229,7 +237,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
-        player.setClientBrand(PluginMessageUtil.readBrandMessage(packet.content()));
+        String brand = PluginMessageUtil.readBrandMessage(packet.content());
+        server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
+        player.setClientBrand(brand);
         backendConn.write(PluginMessageUtil
             .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
@@ -335,8 +345,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     boolean writable = player.getConnection().getChannel().isWritable();
 
     if (!writable) {
-      // We might have packets queued from the server, so flush them now to free up memory.
-      player.getConnection().flush();
+      // We might have packets queued from the server, so flush them now to free up memory. Make
+      // sure to do it on a future invocation of the event loop, otherwise while the issue will
+      // fix itself, we'll still disable auto-reading and instead of backpressure resolution, we
+      // get client timeouts.
+      player.getConnection().eventLoop().execute(() -> player.getConnection().flush());
     }
 
     VelocityServerConnection serverConn = player.getConnectedServer();
@@ -626,4 +639,5 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
   }
+
 }

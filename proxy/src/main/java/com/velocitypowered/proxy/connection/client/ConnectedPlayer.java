@@ -48,7 +48,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -79,7 +78,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
@@ -97,8 +95,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.Title.Times;
+import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,6 +147,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .build();
   private @Nullable String clientBrand;
+  private @Nullable Locale effectiveLocale;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
       @Nullable InetSocketAddress virtualHost, boolean onlineMode) {
@@ -176,6 +175,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   @Override
   public String getUsername() {
     return profile.getName();
+  }
+
+  @Override
+  public Locale getEffectiveLocale() {
+    if (effectiveLocale == null && settings != null) {
+      return settings.getLocale();
+    }
+    return effectiveLocale;
+  }
+
+  @Override
+  public void setEffectiveLocale(Locale locale) {
+    effectiveLocale = locale;
   }
 
   @Override
@@ -276,7 +288,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
    */
   public Component translateMessage(Component message) {
     Locale locale = ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(this.settings == null ? Locale.getDefault() : this.settings.getLocale());
+        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
     return GlobalTranslator.render(message, locale);
   }
 
@@ -359,19 +371,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
           .getProtocolVersion());
-
-      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-                      GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
-      connection.delayedWrite(titlePkt);
-
-      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
-      connection.delayedWrite(subtitlePkt);
-
       GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
+          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
         timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
@@ -380,7 +381,56 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       }
       connection.delayedWrite(timesPkt);
 
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
+      subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
+      connection.delayedWrite(subtitlePkt);
+
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
+      titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
+      connection.delayedWrite(titlePkt);
+
       connection.flush();
+    }
+  }
+
+  @Override
+  public <T> void sendTitlePart(@NotNull TitlePart<T> part, @NotNull T value) {
+    if (part == null) {
+      throw new NullPointerException("part");
+    }
+    if (value == null) {
+      throw new NullPointerException("value");
+    }
+
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0) {
+      return;
+    }
+
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+        .getProtocolVersion());
+
+    if (part == TitlePart.TITLE) {
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
+      titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
+      connection.write(titlePkt);
+    } else if (part == TitlePart.SUBTITLE) {
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
+      titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
+      connection.write(titlePkt);
+    } else if (part == TitlePart.TIMES) {
+      Times times = (Times) value;
+      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
+      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
+      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
+      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      connection.write(timesPkt);
+    } else {
+      throw new IllegalArgumentException("Title part " + part + " is not valid");
     }
   }
 
@@ -629,12 +679,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                     case SUCCESS:
                       Component requestedMessage = res.getMessageComponent();
                       if (requestedMessage == null) {
-                        requestedMessage = Component.translatable("velocity.error.moved-to-new-server",
-                            NamedTextColor.RED,
-                            Component.text(originalEvent.getServer().getServerInfo().getName()),
-                            friendlyReason);
+                        requestedMessage = friendlyReason;
                       }
-                      sendMessage(requestedMessage);
+                      if (requestedMessage != Component.empty()) {
+                        sendMessage(requestedMessage);
+                      }
                       break;
                     default:
                       // The only remaining value is successful (no need to do anything!)
@@ -683,7 +732,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (serversToTry.isEmpty()) {
-      serversToTry = server.getConfiguration().getAttemptConnectionOrder();
+      List<String> connOrder = server.getConfiguration().getAttemptConnectionOrder();
+      if (connOrder.isEmpty()) {
+        return Optional.empty();
+      } else {
+        serversToTry = connOrder;
+      }
     }
 
     for (int i = tryIndex; i < serversToTry.size(); i++) {
