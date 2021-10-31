@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class VelocityCommandMeta implements CommandMeta {
@@ -38,7 +39,7 @@ public final class VelocityCommandMeta implements CommandMeta {
 
     private final ImmutableSet.Builder<String> aliases;
     private final ImmutableList.Builder<CommandNode<CommandSource>> hints;
-    private Object plugin;
+    private @MonotonicNonNull Object plugin;
 
     public Builder(final String alias) {
       Preconditions.checkNotNull(alias, "alias");
