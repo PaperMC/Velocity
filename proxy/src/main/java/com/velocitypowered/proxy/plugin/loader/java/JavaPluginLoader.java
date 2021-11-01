@@ -57,7 +57,7 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   @Override
-  public PluginDescription loadPluginDescription(Path source) throws Exception {
+  public PluginDescription loadCandidate(Path source) throws Exception {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
     if (!serialized.isPresent()) {
@@ -73,20 +73,20 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   @Override
-  public PluginDescription loadPlugin(PluginDescription source) throws Exception {
-    if (!(source instanceof JavaVelocityPluginDescriptionCandidate)) {
+  public PluginDescription createPluginFromCandidate(PluginDescription candidate) throws Exception {
+    if (!(candidate instanceof JavaVelocityPluginDescriptionCandidate)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    URL pluginJarUrl = source.getSource().get().toUri().toURL();
+    URL pluginJarUrl = candidate.getSource().get().toUri().toURL();
     PluginClassLoader loader = AccessController.doPrivileged(
         (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
     loader.addToClassloaders();
 
-    JavaVelocityPluginDescriptionCandidate candidate =
-        (JavaVelocityPluginDescriptionCandidate) source;
-    Class mainClass = loader.loadClass(candidate.getMainClass());
-    return createDescription(candidate, mainClass);
+    JavaVelocityPluginDescriptionCandidate candidateInst =
+        (JavaVelocityPluginDescriptionCandidate) candidate;
+    Class mainClass = loader.loadClass(candidateInst.getMainClass());
+    return createDescription(candidateInst, mainClass);
   }
 
   @Override

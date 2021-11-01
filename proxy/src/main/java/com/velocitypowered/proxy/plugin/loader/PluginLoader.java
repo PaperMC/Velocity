@@ -27,9 +27,23 @@ import java.nio.file.Path;
  */
 public interface PluginLoader {
 
-  PluginDescription loadPluginDescription(Path source) throws Exception;
+  /**
+   * Loads a candidate description from the given {@code source}.
+   *
+   * @param source the source to load the candidate from
+   * @return a plugin candidate description
+   * @throws Exception if anything goes wrong
+   */
+  PluginDescription loadCandidate(Path source) throws Exception;
 
-  PluginDescription loadPlugin(PluginDescription source) throws Exception;
+  /**
+   * Materializes a "real" plugin description from the given {@code candidate}.
+   *
+   * @param candidate the candidate to materialize
+   * @return a plugin description
+   * @throws Exception if anything goes wrong
+   */
+  PluginDescription createPluginFromCandidate(PluginDescription candidate) throws Exception;
 
   /**
    * Creates a {@link Module} for the provided {@link PluginContainer}

@@ -43,7 +43,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -58,7 +57,7 @@ public class VelocityPluginManager implements PluginManager {
 
   private static final Logger logger = LogManager.getLogger(VelocityPluginManager.class);
 
-  private final Map<String, PluginContainer> plugins = new LinkedHashMap<>();
+  private final Map<String, PluginContainer> pluginsById = new LinkedHashMap<>();
   private final Map<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
   private final VelocityServer server;
 
@@ -67,7 +66,7 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   private void registerPlugin(PluginContainer plugin) {
-    plugins.put(plugin.getDescription().getId(), plugin);
+    pluginsById.put(plugin.getDescription().getId(), plugin);
     Optional<?> instance = plugin.getInstance();
     instance.ifPresent(o -> pluginInstances.put(o, plugin));
   }
@@ -90,7 +89,7 @@ public class VelocityPluginManager implements PluginManager {
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadPluginDescription(path));
+          found.add(loader.loadCandidate(path));
         } catch (Exception e) {
           logger.error("Unable to load plugin {}", path, e);
         }
@@ -119,7 +118,7 @@ public class VelocityPluginManager implements PluginManager {
       }
 
       try {
-        PluginDescription realPlugin = loader.loadPlugin(candidate);
+        PluginDescription realPlugin = loader.createPluginFromCandidate(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
         loadedPluginsById.add(realPlugin.getId());
@@ -175,17 +174,17 @@ public class VelocityPluginManager implements PluginManager {
   @Override
   public Optional<PluginContainer> getPlugin(String id) {
     checkNotNull(id, "id");
-    return Optional.ofNullable(plugins.get(id));
+    return Optional.ofNullable(pluginsById.get(id));
   }
 
   @Override
   public Collection<PluginContainer> getPlugins() {
-    return Collections.unmodifiableCollection(plugins.values());
+    return Collections.unmodifiableCollection(pluginsById.values());
   }
 
   @Override
   public boolean isLoaded(String id) {
-    return plugins.containsKey(id);
+    return pluginsById.containsKey(id);
   }
 
   @Override
