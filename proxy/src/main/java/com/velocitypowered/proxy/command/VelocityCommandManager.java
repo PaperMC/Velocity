@@ -253,7 +253,8 @@ public class VelocityCommandManager implements CommandManager {
    *
    * @param source the source to execute the command for
    * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
+   * @return a {@link CompletableFuture} eventually completed with a {@link List},
+   *         possibly empty
    */
   public CompletableFuture<List<String>> offerSuggestions(
       final CommandSource source, final String cmdLine) {
@@ -280,8 +281,7 @@ public class VelocityCommandManager implements CommandManager {
     } catch (final Throwable e) {
       // Again, plugins are naughty
       return CompletableFuture.failedFuture(
-          new RuntimeException(
-              "Unable to provide suggestions for " + cmdLine + " for " + source, e));
+          new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
     }
   }
 
