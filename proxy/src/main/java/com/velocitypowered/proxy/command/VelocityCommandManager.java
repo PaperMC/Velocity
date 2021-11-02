@@ -24,9 +24,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
@@ -47,7 +47,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -259,14 +258,26 @@ public class VelocityCommandManager implements CommandManager {
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
       final String cmdLine) {
+    return offerBrigadierSuggestions(source, cmdLine)
+        .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
+  }
+
+  /**
+   * Returns suggestions to fill in the given command.
+   *
+   * @param source the source to execute the command for
+   * @param cmdLine the partially completed command
+   * @return a {@link CompletableFuture} eventually completed with {@link Suggestions},
+   *         possibly empty
+   */
+  public CompletableFuture<Suggestions> offerBrigadierSuggestions(
+      final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, false);
     try {
-      return suggestionsProvider.provideSuggestions(normalizedInput, source)
-              .thenApply(suggestions ->
-                      Lists.transform(suggestions.getList(), Suggestion::getText));
+      return suggestionsProvider.provideSuggestions(normalizedInput, source);
     } catch (final Throwable e) {
       // Again, plugins are naughty
       return CompletableFuture.failedFuture(

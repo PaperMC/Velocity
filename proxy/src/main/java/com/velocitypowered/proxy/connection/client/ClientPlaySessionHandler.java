@@ -23,6 +23,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
@@ -497,15 +499,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    server.getCommandManager().offerSuggestions(player, command)
+    server.getCommandManager().offerBrigadierSuggestions(player, command)
         .thenAcceptAsync(suggestions -> {
           if (suggestions.isEmpty()) {
             return;
           }
 
           List<Offer> offers = new ArrayList<>();
-          for (String offer : suggestions) {
-            offers.add(new Offer(offer));
+          for (Suggestion suggestion : suggestions.getList()) {
+            String offer = suggestion.getText();
+            Component tooltip = null;
+            if (suggestion.getTooltip() != null
+                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+            }
+            offers.add(new Offer(offer, tooltip));
           }
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
@@ -555,16 +563,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
-    server.getCommandManager().offerSuggestions(player, command)
+    server.getCommandManager().offerBrigadierSuggestions(player, command)
         .thenAcceptAsync(offers -> {
           boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
           try {
-            for (String offer : offers) {
+            for (Suggestion suggestion : offers.getList()) {
+              String offer = suggestion.getText();
               offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
               if (legacy && offer.startsWith(command)) {
                 offer = offer.substring(command.length());
               }
-              response.getOffers().add(new Offer(offer, null));
+              Component tooltip = null;
+              if (suggestion.getTooltip() != null
+                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+              }
+              response.getOffers().add(new Offer(offer, tooltip));
             }
             response.getOffers().sort(null);
             player.getConnection().write(response);
