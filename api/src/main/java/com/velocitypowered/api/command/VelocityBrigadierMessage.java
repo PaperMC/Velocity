@@ -20,6 +20,10 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class VelocityBrigadierMessage implements Message, ComponentLike {
 
+  public static VelocityBrigadierMessage tooltip(Component message) {
+    return new VelocityBrigadierMessage(message);
+  }
+
   private final Component message;
 
   public VelocityBrigadierMessage(Component message) {
