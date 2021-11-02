@@ -26,7 +26,7 @@ public final class VelocityBrigadierMessage implements Message, ComponentLike {
 
   private final Component message;
 
-  public VelocityBrigadierMessage(Component message) {
+  private VelocityBrigadierMessage(Component message) {
     this.message = Preconditions.checkNotNull(message, "message");
   }
 
