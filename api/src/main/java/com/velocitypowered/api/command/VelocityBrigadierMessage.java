@@ -11,13 +11,14 @@ import com.google.common.base.Preconditions;
 import com.mojang.brigadier.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents an implementation of brigadier's {@link Message}, providing support for {@link
  * Component} messages.
  */
-public final class VelocityBrigadierMessage implements Message {
+public final class VelocityBrigadierMessage implements Message, ComponentLike {
 
   private final Component message;
 
@@ -25,26 +26,22 @@ public final class VelocityBrigadierMessage implements Message {
     this.message = Preconditions.checkNotNull(message, "message");
   }
 
-  public VelocityBrigadierMessage(ComponentLike message) {
-    this.message = Preconditions.checkNotNull(message, "message").asComponent();
-  }
-
   /**
-   * Returns the message as a {@link Component}.
-   *
-   * @return message as component
+   * {@inheritDoc}
    */
+  @Override
+  @NotNull
   public Component asComponent() {
     return message;
   }
 
   /**
-   * Returns the message as a legacy text.
+   * Returns the message as a plain text.
    *
-   * @return message as legacy text
+   * @return message as plain text
    */
   @Override
   public String getString() {
-    return LegacyComponentSerializer.legacySection().serialize(message);
+    return PlainTextComponentSerializer.plainText().serialize(message);
   }
 }
