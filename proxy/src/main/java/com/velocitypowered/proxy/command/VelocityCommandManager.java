@@ -256,8 +256,8 @@ public class VelocityCommandManager implements CommandManager {
    * @return a {@link CompletableFuture} eventually completed with a {@link List},
    *         possibly empty
    */
-  public CompletableFuture<List<String>> offerSuggestions(
-      final CommandSource source, final String cmdLine) {
+  public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
+      final String cmdLine) {
     return offerBrigadierSuggestions(source, cmdLine)
         .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
@@ -281,7 +281,7 @@ public class VelocityCommandManager implements CommandManager {
     } catch (final Throwable e) {
       // Again, plugins are naughty
       return CompletableFuture.failedFuture(
-          new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
+        new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
     }
   }
 
