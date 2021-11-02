@@ -10,6 +10,7 @@ package com.velocitypowered.api.command;
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.Message;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 /**
@@ -22,6 +23,10 @@ public final class VelocityBrigadierMessage implements Message {
 
   public VelocityBrigadierMessage(Component message) {
     this.message = Preconditions.checkNotNull(message, "message");
+  }
+
+  public VelocityBrigadierMessage(ComponentLike message) {
+    this.message = Preconditions.checkNotNull(message, "message").asComponent();
   }
 
   /**

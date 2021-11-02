@@ -506,12 +506,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
 
           List<Offer> offers = new ArrayList<>();
-          for (Suggestion offer : suggestions.getList()) {
+          for (Suggestion suggestion : suggestions.getList()) {
+            String offer = suggestion.getText();
             Component tooltip = null;
-            if (offer.getTooltip() != null && offer.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) offer.getTooltip()).asComponent();
+            if (suggestion.getTooltip() != null
+                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
             }
-            offers.add(new Offer(offer.getText(), tooltip));
+            offers.add(new Offer(offer, tooltip));
           }
           int startPos = packet.getCommand().lastIndexOf(' ') + 1;
           if (startPos > 0) {
