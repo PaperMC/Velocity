@@ -49,8 +49,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -65,6 +67,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
   private @MonotonicNonNull DimensionRegistry activeDimensionRegistry;
+  private @Nullable Key currentWorldName;
 
   /**
    * Initializes a new server connection.
@@ -219,6 +222,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return proxyPlayer;
   }
 
+  @Override
+  public Optional<Key> getCurrentWorldName() {
+    return Optional.ofNullable(currentWorldName);
+  }
+
   /**
    * Disconnects from the server.
    */
@@ -329,5 +337,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   public void setActiveDimensionRegistry(DimensionRegistry activeDimensionRegistry) {
     this.activeDimensionRegistry = activeDimensionRegistry;
+  }
+
+  public void setCurrentWorldName(@Nullable Key key) {
+    this.currentWorldName = key;
   }
 }

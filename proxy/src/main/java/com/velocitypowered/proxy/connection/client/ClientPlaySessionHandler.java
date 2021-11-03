@@ -44,6 +44,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -73,6 +74,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -393,6 +395,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
+
+    if (joinGame.getDimensionInfo() != null) {
+      destination.setCurrentWorldName(Key.key(joinGame.getDimensionInfo().getRegistryIdentifier()));
+    }
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
