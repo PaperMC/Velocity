@@ -67,7 +67,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
   private @MonotonicNonNull DimensionRegistry activeDimensionRegistry;
-  private @Nullable Key currentWorldName;
+  private Optional<Key> currentWorldName;
 
   /**
    * Initializes a new server connection.
@@ -224,7 +224,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public Optional<Key> getCurrentWorldName() {
-    return Optional.ofNullable(currentWorldName);
+    return currentWorldName;
   }
 
   /**
@@ -340,6 +340,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   public void setCurrentWorldName(@Nullable Key key) {
-    this.currentWorldName = key;
+    this.currentWorldName = Optional.ofNullable(key);
   }
 }
