@@ -152,8 +152,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
               + "This is usually because the remote server does not have BungeeCord IP forwarding "
-              + "correctly enabled.\nSee "
-              + "https://docs.velocitypowered.com/en/latest/users/player-info-forwarding.html "
+              + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
               + "for instructions on how to configure player info forwarding correctly.")
       );
     } else {
