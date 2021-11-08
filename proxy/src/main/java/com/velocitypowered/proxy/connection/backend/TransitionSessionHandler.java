@@ -175,12 +175,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    if (PluginMessageUtil.isRegister(packet)) {
-      serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-    } else if (PluginMessageUtil.isUnregister(packet)) {
-      serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-    }
-
     // We always need to handle plugin messages, for Forge compatibility.
     if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
       // Handled, but check the server connection phase.

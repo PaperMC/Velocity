@@ -39,11 +39,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (PluginMessageUtil.isRegister(packet)) {
-        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-      } else if (PluginMessageUtil.isUnregister(packet)) {
-        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+      if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       }
       serverConn.ensureConnected().write(packet.retain());
