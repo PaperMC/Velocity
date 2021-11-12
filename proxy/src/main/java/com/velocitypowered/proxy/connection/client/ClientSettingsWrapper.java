@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientSettingsWrapper implements PlayerSettings {
 
   static final PlayerSettings DEFAULT = new ClientSettingsWrapper(
-      new ClientSettings("en_US", (byte) 10, 0, true, (short) 127, 1, true));
+      new ClientSettings("en_US", (byte) 10, 0, true, (short) 127, 1, true, false));
 
   private final ClientSettings settings;
   private final SkinParts parts;
