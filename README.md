@@ -1,7 +1,7 @@
 # Velocity
 
 [![Build Status](https://img.shields.io/jenkins/s/https/ci.velocitypowered.com/job/velocity.svg)](https://ci.velocitypowered.com/job/velocity-3.0.0/)
-[![Join our Discord](https://img.shields.io/discord/472484458856185878.svg?logo=discord&label=)](https://discord.gg/8cB9Bgf)
+[![Join our Discord](https://img.shields.io/discord/289587909051416579.svg?logo=discord&label=)](https://discord.gg/papermc)
 
 A Minecraft server proxy with unparalleled server support, scalability,
 and flexibility.
@@ -32,5 +32,5 @@ Once you've built Velocity, you can copy and run the `-all` JAR from
 `proxy/build/libs`. Velocity will generate a default configuration file
 and you can configure it from there.
 
-Alternatively, you can get the proxy JAR from the [downloads](https://www.velocitypowered.com/downloads)
+Alternatively, you can get the proxy JAR from the [downloads](https://velocitypowered.com/downloads)
 page.

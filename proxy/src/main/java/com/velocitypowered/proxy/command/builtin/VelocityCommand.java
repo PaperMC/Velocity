@@ -237,14 +237,14 @@ public class VelocityCommand implements SimpleCommand {
             .append(Component.text().content("velocitypowered.com")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(
-                    ClickEvent.openUrl("https://www.velocitypowered.com"))
+                    ClickEvent.openUrl("https://velocitypowered.com"))
                 .build())
             .append(Component.text(" - "))
             .append(Component.text().content("GitHub")
                 .color(NamedTextColor.GREEN)
                 .decoration(TextDecoration.UNDERLINED, true)
                 .clickEvent(ClickEvent.openUrl(
-                    "https://github.com/VelocityPowered/Velocity"))
+                    "https://github.com/PaperMC/Velocity"))
                 .build())
             .build();
         source.sendMessage(Identity.nil(), embellishment);
