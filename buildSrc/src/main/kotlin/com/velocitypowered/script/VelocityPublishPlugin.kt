@@ -28,12 +28,16 @@ import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.plugins.signing.SigningExtension
+import org.gradle.plugins.signing.SigningPlugin
 
 class VelocityPublishPlugin : Plugin<Project> {
   override fun apply(target: Project) = target.afterEvaluate { configure() }
   private fun Project.configure() {
     apply<JavaBasePlugin>()
     apply<MavenPublishPlugin>()
+    apply<SigningPlugin>()
     extensions.configure<JavaPluginExtension> {
       withJavadocJar()
       withSourcesJar()
@@ -42,8 +46,8 @@ class VelocityPublishPlugin : Plugin<Project> {
       repositories {
         maven {
           credentials {
-            username = project.findProperty("publishUserName") as? String
-            password = project.findProperty("publishPassword") as? String
+            username = project.findProperty("sonatypeUsername") as? String
+            password = project.findProperty("sonatypePassword") as? String
           }
           name = "velocity-nexus"
           val releasesRepoUrl = "https://nexus.velocitypowered.com/repository/velocity-artifacts-release"
@@ -65,6 +69,9 @@ class VelocityPublishPlugin : Plugin<Project> {
             }
           }
         }
+      }
+      extensions.configure<SigningExtension> {
+        sign(extensions.getByType<PublishingExtension>().publications)
       }
     }
   }
