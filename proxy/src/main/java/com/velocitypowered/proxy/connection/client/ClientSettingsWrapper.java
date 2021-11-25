@@ -74,5 +74,9 @@ public class ClientSettingsWrapper implements PlayerSettings {
     return settings.getMainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
   }
 
+  @Override
+  public boolean isClientListingAllowed() {
+    return settings.isClientListingAllowed();
+  }
 
 }
