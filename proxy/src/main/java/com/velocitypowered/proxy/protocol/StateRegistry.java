@@ -27,6 +27,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_17;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_18;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -246,7 +247,8 @@ public enum StateRegistry {
           map(0x53, MINECRAFT_1_14, true),
           map(0x54, MINECRAFT_1_15, true),
           map(0x53, MINECRAFT_1_16, true),
-          map(0x5E, MINECRAFT_1_17, true));
+          map(0x5E, MINECRAFT_1_17, true),
+          map(0x5F, MINECRAFT_1_18, true));
       clientbound.register(LegacyTitlePacket.class, LegacyTitlePacket::new,
           map(0x45, MINECRAFT_1_8, true),
           map(0x45, MINECRAFT_1_9, true),
@@ -257,13 +259,16 @@ public enum StateRegistry {
           map(0x50, MINECRAFT_1_15, true),
           map(0x4F, MINECRAFT_1_16, MINECRAFT_1_16_4, true));
       clientbound.register(TitleSubtitlePacket.class, TitleSubtitlePacket::new,
-          map(0x57, MINECRAFT_1_17, true));
+          map(0x57, MINECRAFT_1_17, true),
+          map(0x58, MINECRAFT_1_18, true));
       clientbound.register(TitleTextPacket.class, TitleTextPacket::new,
-          map(0x59, MINECRAFT_1_17, true));
+          map(0x59, MINECRAFT_1_17, true),
+          map(0x5A, MINECRAFT_1_18, true));
       clientbound.register(TitleActionbarPacket.class, TitleActionbarPacket::new,
           map(0x41, MINECRAFT_1_17, true));
       clientbound.register(TitleTimesPacket.class, TitleTimesPacket::new,
-          map(0x5A, MINECRAFT_1_17, true));
+          map(0x5A, MINECRAFT_1_17, true),
+          map(0x5B, MINECRAFT_1_18, true));
       clientbound.register(TitleClearPacket.class, TitleClearPacket::new,
           map(0x10, MINECRAFT_1_17, true));
       clientbound.register(PlayerListItem.class, PlayerListItem::new,

@@ -34,18 +34,20 @@ public class ClientSettings implements MinecraftPacket {
   private short skinParts;
   private int mainHand;
   private boolean chatFilteringEnabled; // Added in 1.17
+  private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
 
   public ClientSettings() {
   }
 
   public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-      short skinParts, int mainHand, boolean chatFilteringEnabled) {
+      short skinParts, int mainHand, boolean chatFilteringEnabled, boolean clientListingAllowed) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
     this.chatColors = chatColors;
     this.skinParts = skinParts;
     this.mainHand = mainHand;
+    this.clientListingAllowed = clientListingAllowed;
   }
 
   public String getLocale() {
@@ -107,6 +109,14 @@ public class ClientSettings implements MinecraftPacket {
     this.chatFilteringEnabled = chatFilteringEnabled;
   }
 
+  public boolean isClientListingAllowed() {
+    return clientListingAllowed;
+  }
+
+  public void setClientListingAllowed(boolean clientListingAllowed) {
+    this.clientListingAllowed = clientListingAllowed;
+  }
+
   @Override
   public String toString() {
     return "ClientSettings{"
@@ -117,6 +127,7 @@ public class ClientSettings implements MinecraftPacket {
         + ", skinParts=" + skinParts
         + ", mainHand=" + mainHand
         + ", chatFilteringEnabled=" + chatFilteringEnabled
+        + ", clientListingAllowed=" + clientListingAllowed
         + '}';
   }
 
@@ -138,6 +149,10 @@ public class ClientSettings implements MinecraftPacket {
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         this.chatFilteringEnabled = buf.readBoolean();
+
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+          this.clientListingAllowed = buf.readBoolean();
+        }
       }
     }
   }
@@ -163,6 +178,10 @@ public class ClientSettings implements MinecraftPacket {
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         buf.writeBoolean(chatFilteringEnabled);
+
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+          buf.writeBoolean(clientListingAllowed);
+        }
       }
     }
   }
