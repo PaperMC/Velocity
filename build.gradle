@@ -1,16 +1,8 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
-    }
-}
-
 plugins {
     id 'java'
-    id "com.github.spotbugs" version "4.2.4" apply false
-    id 'org.cadixdev.licenser' version '0.5.1' apply false
+    id 'com.github.johnrengelman.shadow' version '7.1.0' apply false
+    id "com.github.spotbugs" version "5.0.2" apply false
+    id 'org.cadixdev.licenser' version '0.6.1' apply false
 }
 
 allprojects {
