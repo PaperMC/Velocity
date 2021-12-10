@@ -37,8 +37,6 @@ shadowJar {
 
 tasks.withType(Checkstyle) {
     exclude('**/com/velocitypowered/proxy/protocol/packet/*.java')
-    // TODO: Remove during l4j2 2.15 update
-    exclude('**/org/apache/logging/log4j/core/**/*.java')
 }
 
 dependencies {
