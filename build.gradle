@@ -1,13 +1,10 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.1.0' apply false
-    id "com.github.spotbugs" version "5.0.2" apply false
     id 'org.cadixdev.licenser' version '0.6.1' apply false
 }
 
 allprojects {
-    apply plugin: "com.github.spotbugs"
-
     group 'com.velocitypowered'
     version '3.1.1'
 
@@ -57,16 +54,6 @@ allprojects {
     test {
         reports {
             junitXml.enabled = true
-        }
-    }
-
-    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-        reports {
-            html {
-                enabled = true
-                destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
-                stylesheet = 'fancy-hist.xsl'
-            }
         }
     }
 }
