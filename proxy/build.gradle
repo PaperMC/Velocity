@@ -153,6 +153,9 @@ shadowJar {
     // Exclude Checker Framework annotations
     exclude 'org/checkerframework/checker/**'
 
+    // Exclude a Log4j class well-known for its use in recent security exploits.
+    exclude 'org/apache/logging/log4j/core/lookup/JndiLookup.class'
+
     relocate 'org.bstats', 'com.velocitypowered.proxy.bstats'
 }
 
