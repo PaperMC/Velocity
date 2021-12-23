@@ -10,14 +10,17 @@ package com.velocitypowered.api.event.command;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired when someone executing command.
+ * This event is fired when someone executes a command. Velocity will wait for this event to finish
+ * firing before trying to handle the command and/or forwarding it to the server.
  */
+@AwaitingEvent
 public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
   private final CommandSource commandSource;

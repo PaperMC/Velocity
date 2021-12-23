@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
@@ -16,7 +17,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired once the player has successfully connected to the target server and the
  * connection to the previous server has been de-established.
+ *
+ * <p>
+ *   <strong>Note</strong>: For historical reasons, Velocity does wait on this event to finish
+ *   firing before continuing the server connection process. This behavior is
+ *   <strong>deprecated</strong> and likely to be removed in Polymer.
+ * </p>
  */
+@AwaitingEvent
 public final class ServerConnectedEvent {
 
   private final Player player;

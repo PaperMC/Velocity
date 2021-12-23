@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,7 +17,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * This event is fired after the {@link com.velocitypowered.api.event.connection.PreLoginEvent} in
  * order to set up the game profile for the user. This can be used to configure a custom profile for
  * a user, i.e. skin replacement.
+ *
+ * <p>
+ *   Velocity will wait for this event to finish firing before proceeding with the rest of the login
+ *   process, but you should try to limit the work done in any event that fires during the login
+ *   process.
+ * </p>
  */
+@AwaitingEvent
 public final class GameProfileRequestEvent {
 
   private final String username;

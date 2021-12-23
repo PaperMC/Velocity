@@ -12,6 +12,11 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 
+/**
+ * This event is fired when the client sends new client settings for the player. This event can
+ * and typically will be fired multiple times per connection. Velocity will not wait on this event
+ * to finish firing.
+ */
 public final class PlayerSettingsChangedEvent {
 
   private final Player player;

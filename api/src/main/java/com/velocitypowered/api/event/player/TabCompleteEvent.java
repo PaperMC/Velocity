@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 /**
  * This event is fired after a tab complete response is sent by the remote server, for clients on
  * 1.12.2 and below. You have the opportunity to modify the response sent to the remote player.
+ * Velocity will wait for this event to finish firing before sending the tab complete results to
+ * the client. Be sure to be as fast as possible, since the client will freeze while it waits for
+ * the tab complete results.
  */
+@AwaitingEvent
 public class TabCompleteEvent {
   private final Player player;
   private final String partialMessage;

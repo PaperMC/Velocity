@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,8 +18,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired when a player has initiated a connection with the proxy but before the proxy
  * authenticates the player with Mojang or before the player's proxy connection is fully established
- * (for offline mode).
+ * (for offline mode). Velocity will wait for this event to finish firing before proceeding further
+ * with the login process, but you should try to limit the work done in any event that fires during
+ * the login process.
  */
+@AwaitingEvent
 public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
 
   private final InboundConnection connection;

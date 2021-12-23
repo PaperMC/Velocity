@@ -11,7 +11,8 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 
 /**
- * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message.
+ * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message. Velocity will
+ * not wait on the result of this event.
  */
 public final class PlayerClientBrandEvent {
   private final Player player;

@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.Player;
@@ -17,8 +18,10 @@ import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired before the player connects to a server.
+ * This event is fired before the player connects to a server. Velocity will wait on this event to
+ * finish firing before initiating the connection.
  */
+@AwaitingEvent
 public final class ServerPreConnectEvent implements
     ResultedEvent<ServerPreConnectEvent.ServerResult> {
 

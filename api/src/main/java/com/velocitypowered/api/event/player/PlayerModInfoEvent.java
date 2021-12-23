@@ -14,6 +14,7 @@ import com.velocitypowered.api.util.ModInfo;
 
 /**
  * This event is fired when a Forge client sends its mods to the proxy while connecting to a server.
+ * Velocity will not wait on this event to finish firing.
  */
 public final class PlayerModInfoEvent {
 

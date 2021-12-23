@@ -12,6 +12,8 @@ import com.velocitypowered.api.proxy.InboundConnection;
 
 /**
  * This event is fired when a handshake is established between a client and the proxy.
+ * Velocity will fire this event asynchronously and will not wait for it to complete before
+ * handling the connection.
  */
 public final class ConnectionHandshakeEvent {
 

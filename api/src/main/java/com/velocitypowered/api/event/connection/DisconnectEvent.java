@@ -8,12 +8,23 @@
 package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
- * This event is fired when a player disconnects from the proxy. Operations on the provided player,
- * aside from basic data retrieval operations, may behave in undefined ways.
+ * This event is fired when a player disconnects from the proxy. This operation can take place
+ * when the player disconnects due to normal network activity or when the proxy shuts down.
+ * Operations on the provided player, aside from basic data retrieval operations, may behave in
+ * undefined ways.
+ *
+ * <p>
+ *   Velocity typically fires this event asynchronously and does not wait for a response. However,
+ *   it will wait for all {@link DisconnectEvent}s for every player on the proxy to fire
+ *   successfully before the proxy shuts down. This event is the sole exception to the
+ *   {@link AwaitingEvent} contract.
+ * </p>
  */
+@AwaitingEvent
 public final class DisconnectEvent {
 
   private final Player player;

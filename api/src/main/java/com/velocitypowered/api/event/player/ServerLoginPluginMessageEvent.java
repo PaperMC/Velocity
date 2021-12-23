@@ -13,6 +13,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent.ResponseResult;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -22,8 +23,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a server sends a login plugin message to the proxy. Plugins have the opportunity to
- * respond to the messages as needed.
+ * respond to the messages as needed. Velocity will wait on this event to finish. The server will
+ * be responsible for continuing the login process once the server is satisfied with any login
+ * plugin responses sent by proxy plugins (or messages indicating a lack of response).
  */
+@AwaitingEvent
 public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResult> {
   private final ServerConnection connection;
   private final ChannelIdentifier identifier;

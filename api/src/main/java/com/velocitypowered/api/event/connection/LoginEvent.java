@@ -9,12 +9,16 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
- * This event is fired once the player has been authenticated but before they connect to a server on
- * the proxy.
+ * This event is fired once the player has been authenticated, but before they connect to a server.
+ * Velocity will wait for this event to finish firing before proceeding with the rest of the login
+ * process, but you should try to limit the work done in any event that fires during the login
+ * process.
  */
+@AwaitingEvent
 public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
 
   private final Player player;

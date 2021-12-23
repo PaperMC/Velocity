@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -21,8 +22,10 @@ import java.util.Arrays;
 
 /**
  * This event is fired when a plugin message is sent to the proxy, either from a client ({@link
- * Player}) or a server ({@link ServerConnection}).
+ * Player}) or a server ({@link ServerConnection}). Velocity will wait on this event to finish
+ * firing before discarding the sent plugin message (if handled) or forwarding it to the server.
  */
+@AwaitingEvent
 public final class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.ForwardResult> {
 
   private final ChannelMessageSource source;

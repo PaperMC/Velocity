@@ -11,12 +11,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
  * Allows plugins to modify the packet indicating commands available on the server to a
- * Minecraft 1.13+ client.
+ * Minecraft 1.13+ client. The given {@link RootCommandNode} is mutable. Velocity will wait
+ * for this event to finish firing before sending the list of available commands to the
+ * client.
  */
+@AwaitingEvent
 @Beta
 public class PlayerAvailableCommandsEvent {
 

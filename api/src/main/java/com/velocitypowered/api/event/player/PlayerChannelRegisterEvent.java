@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * This event is fired when a client ({@link Player}) sends a plugin message through the
- * register channel.
+ * register channel. Velocity will not wait on this event to finish firing.
  */
 public final class PlayerChannelRegisterEvent {
 

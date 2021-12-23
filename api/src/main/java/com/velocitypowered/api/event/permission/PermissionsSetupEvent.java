@@ -8,16 +8,26 @@
 package com.velocitypowered.api.event.permission;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.PermissionSubject;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Called when a {@link PermissionSubject}'s permissions are being setup.
+ * Called when a {@link PermissionSubject}'s permissions are being setup. This event is typically
+ * called for the {@link com.velocitypowered.api.proxy.ConsoleCommandSource} and any
+ * {@link com.velocitypowered.api.proxy.Player}s who join the proxy.
  *
  * <p>This event is only called once per subject, on initialisation.</p>
+ *
+ * <p>
+ *   Velocity will wait for this event to finish firing before proceeding further with server
+ *   startup (for the console command source) and logins (for players) but it is strongly
+ *   recommended to minimize the amount of work that must be done in this event.
+ * </p>
  */
+@AwaitingEvent
 public final class PermissionsSetupEvent {
 
   private final PermissionSubject subject;

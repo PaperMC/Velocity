@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
@@ -19,8 +20,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Fired when a player is kicked from a server. You may either allow Velocity to kick the player
  * (with an optional reason override) or redirect the player to a separate server. By default,
  * Velocity will notify the user (if they are already connected to a server) or disconnect them
- * (if they are not on a server and no other servers are available).
+ * (if they are not on a server and no other servers are available). Velocity will wait on this
+ * event to finish firing before taking the specified action.
  */
+@AwaitingEvent
 public final class KickedFromServerEvent implements
     ResultedEvent<KickedFromServerEvent.ServerKickResult> {
 

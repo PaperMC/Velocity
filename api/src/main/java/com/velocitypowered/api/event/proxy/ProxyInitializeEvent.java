@@ -7,10 +7,14 @@
 
 package com.velocitypowered.api.event.proxy;
 
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
+
 /**
  * This event is fired by the proxy after plugins have been loaded but before the proxy starts
- * accepting connections.
+ * accepting connections. Velocity will wait for this event to finish firing before it begins to
+ * accept new connections.
  */
+@AwaitingEvent
 public final class ProxyInitializeEvent {
 
   @Override
