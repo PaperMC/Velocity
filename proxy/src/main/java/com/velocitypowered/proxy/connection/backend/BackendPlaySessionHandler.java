@@ -27,6 +27,8 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackSendEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -45,6 +47,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -137,18 +140,43 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackRequest packet) {
-    ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-        Preconditions.checkNotNull(packet.getUrl()))
-        .setPrompt(packet.getPrompt())
-        .setShouldForce(packet.isRequired());
-    // Why SpotBugs decides that this is unsafe I have no idea;
-    if (packet.getHash() != null && !Preconditions.checkNotNull(packet.getHash()).isEmpty()) {
-      if (PLAUSIBLE_SHA1_HASH.matcher(packet.getHash()).matches()) {
-        builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
-      }
-    }
+    PlayerResourcePackSendEvent event = new PlayerResourcePackSendEvent(
+        packet.getUrl(), 
+        packet.getHash(), 
+        packet.isRequired(), 
+        packet.getPrompt(), 
+        packet.getPrompt() != null
+    );
 
-    serverConn.getPlayer().queueResourcePack(builder.build());
+    server.getEventManager().fire(event).thenAcceptAsync(playerResourcePackSendEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (playerResourcePackSendEvent.getResult().isAllowed()) {
+        ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
+            Preconditions.checkNotNull(playerResourcePackSendEvent.url()))
+            .setPrompt(playerResourcePackSendEvent.promptMessage())
+            .setShouldForce(playerResourcePackSendEvent.shouldForce());
+        // Why SpotBugs decides that this is unsafe I have no idea;
+        if (playerResourcePackSendEvent.hash() != null 
+            && !Preconditions.checkNotNull(playerResourcePackSendEvent.hash()).isEmpty()) {
+          if (PLAUSIBLE_SHA1_HASH.matcher(playerResourcePackSendEvent.hash()).matches()) {
+            builder.setHash(ByteBufUtil.decodeHexDump(playerResourcePackSendEvent.hash()));
+          }
+        }
+
+        serverConn.getPlayer().queueResourcePack(builder.build());
+      } else {
+        serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
+      return null;
+    });
+
     return true;
   }
 
