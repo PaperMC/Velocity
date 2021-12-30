@@ -141,10 +141,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackRequest packet) {
     PlayerResourcePackSendEvent event = new PlayerResourcePackSendEvent(
-        packet.getUrl(), 
-        packet.getHash(), 
-        packet.isRequired(), 
-        packet.getPrompt(), 
+        Preconditions.checkNotNull(packet.getUrl()),
+        packet.getHash(),
+        packet.isRequired(),
+        packet.getPrompt(),
         packet.getPrompt() != null
     );
 
@@ -154,11 +154,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       }
       if (playerResourcePackSendEvent.getResult().isAllowed()) {
         ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-            Preconditions.checkNotNull(playerResourcePackSendEvent.url()))
+            playerResourcePackSendEvent.url())
             .setPrompt(playerResourcePackSendEvent.promptMessage())
             .setShouldForce(playerResourcePackSendEvent.shouldForce());
         // Why SpotBugs decides that this is unsafe I have no idea;
-        if (playerResourcePackSendEvent.hash() != null 
+        if (playerResourcePackSendEvent.hash() != null
             && !Preconditions.checkNotNull(playerResourcePackSendEvent.hash()).isEmpty()) {
           if (PLAUSIBLE_SHA1_HASH.matcher(playerResourcePackSendEvent.hash()).matches()) {
             builder.setHash(ByteBufUtil.decodeHexDump(playerResourcePackSendEvent.hash()));
