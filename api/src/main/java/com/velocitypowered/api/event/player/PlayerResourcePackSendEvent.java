@@ -8,6 +8,8 @@
 package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.proxy.server.ServerInfo;
+
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -24,6 +26,7 @@ public class PlayerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
   private boolean shouldForce;
   private @Nullable Component promptMessage;
   private boolean hasPromptMessage;
+  private ServerInfo serverInfo;
 
   /**
    * Constructs a new PlayerResourcePackSendEvent.
@@ -33,19 +36,22 @@ public class PlayerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
    * @param shouldForce If the resource pack should force the user to accept.
    * @param promptMessage The message for the prompt if there is one. (1.17+)
    * @param hasPromptMessage Whether the resource pack should have a prompt or not.
+   * @param serverInfo The server info of the server which sent the packet.
    */
   public PlayerResourcePackSendEvent(
       String url,
       @Nullable String hash,
       boolean shouldForce,
       @Nullable Component promptMessage,
-      boolean hasPromptMessage
+      boolean hasPromptMessage,
+      ServerInfo serverInfo
   ) {
     this.url = url;
     this.hash = hash;
     this.shouldForce = shouldForce;
     this.promptMessage = promptMessage;
     this.hasPromptMessage = hasPromptMessage;
+    this.serverInfo = serverInfo;
   }
 
   public String url() {
@@ -83,6 +89,10 @@ public class PlayerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
 
   public boolean hasPromptMessage() {
     return this.hasPromptMessage;
+  }
+
+  public ServerInfo serverInfo() {
+    return this.serverInfo;
   }
 
   @Override

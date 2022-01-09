@@ -145,7 +145,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         packet.getHash(),
         packet.isRequired(),
         packet.getPrompt(),
-        packet.getPrompt() != null
+        packet.getPrompt() != null,
+        this.serverConn.getServerInfo()
     );
 
     server.getEventManager().fire(event).thenAcceptAsync(playerResourcePackSendEvent -> {
