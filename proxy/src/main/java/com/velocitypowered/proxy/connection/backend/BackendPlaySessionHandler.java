@@ -21,14 +21,12 @@ import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResp
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.player.PlayerResourcePackSendEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -55,7 +53,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
-import java.util.Collection;
+
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -140,30 +138,31 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackRequest packet) {
-    PlayerResourcePackSendEvent event = new PlayerResourcePackSendEvent(
-        Preconditions.checkNotNull(packet.getUrl()),
-        packet.getHash(),
-        packet.isRequired(),
-        packet.getPrompt(),
-        packet.getPrompt() != null,
-        this.serverConn.getServerInfo()
-    );
+    ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
+            Preconditions.checkNotNull(packet.getUrl()))
+            .setPrompt(packet.getPrompt())
+            .setShouldForce(packet.isRequired())
+            .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
-    server.getEventManager().fire(event).thenAcceptAsync(playerResourcePackSendEvent -> {
+    String hash = packet.getHash();
+    if (hash != null && !hash.isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(hash));
+      }
+    }
+
+    ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
+            builder.build(), this.serverConn);
+
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
         return;
       }
-      if (playerResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-            playerResourcePackSendEvent.url())
-            .setPrompt(playerResourcePackSendEvent.promptMessage())
-            .setShouldForce(playerResourcePackSendEvent.shouldForce());
-        // Why SpotBugs decides that this is unsafe I have no idea;
-        if (playerResourcePackSendEvent.hash() != null
-            && !Preconditions.checkNotNull(playerResourcePackSendEvent.hash()).isEmpty()) {
-          if (PLAUSIBLE_SHA1_HASH.matcher(playerResourcePackSendEvent.hash()).matches()) {
-            builder.setHash(ByteBufUtil.decodeHexDump(playerResourcePackSendEvent.hash()));
-          }
+      if (serverResourcePackSendEvent.getResult().isAllowed()) {
+        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
+          ((VelocityResourcePackInfo) toSend)
+                  .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
         serverConn.getPlayer().queueResourcePack(builder.build());
