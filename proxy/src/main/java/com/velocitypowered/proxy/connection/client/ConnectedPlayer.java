@@ -46,6 +46,7 @@ import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import com.velocitypowered.api.proxy.server.MutableServerState;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
@@ -67,7 +68,6 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
-import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
@@ -1080,7 +1080,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
-    private final @Nullable VelocityRegisteredServer previousServer;
+    private final @Nullable RegisteredServer previousServer;
 
     ConnectionRequestBuilderImpl(RegisteredServer toConnect,
         @Nullable VelocityServerConnection previousConnection) {
@@ -1094,8 +1094,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
-      Preconditions.checkArgument(server instanceof VelocityRegisteredServer,
-          "Not a valid Velocity server.");
+      Preconditions.checkArgument(server != null && server.getState() instanceof MutableServerState,
+          "Not a valid server: state must be mutable");
       if (connectionInFlight != null || (connectedServer != null
           && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
@@ -1135,8 +1135,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                     return completedFuture(plainResult(check.get(), realDestination));
                   }
 
-                  VelocityRegisteredServer vrs = (VelocityRegisteredServer) realDestination;
-                  VelocityServerConnection con = new VelocityServerConnection(vrs,
+                  VelocityServerConnection con = new VelocityServerConnection(realDestination,
                       previousServer, ConnectedPlayer.this, server);
                   connectionInFlight = con;
                   return con.connect().whenCompleteAsync(

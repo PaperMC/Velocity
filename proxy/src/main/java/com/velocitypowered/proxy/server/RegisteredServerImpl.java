@@ -25,47 +25,36 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityRegisteredServer implements RegisteredServer, ForwardingAudience {
+public class RegisteredServerImpl implements RegisteredServer, ForwardingAudience {
 
   private final @Nullable VelocityServer server;
   private final ServerInfo serverInfo;
-  private final Map<UUID, ConnectedPlayer> players = new ConcurrentHashMap<>();
+  private final DefaultMutableServerState state = new DefaultMutableServerState();
 
-  public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
+  public RegisteredServerImpl(@Nullable VelocityServer server, ServerInfo serverInfo) {
     this.server = server;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
   }
@@ -76,11 +65,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public Collection<Player> getPlayersConnected() {
-    return ImmutableList.copyOf(players.values());
-  }
-
-  @Override
   public CompletableFuture<ServerPing> ping() {
     return ping(null, ProtocolVersion.UNKNOWN);
   }
@@ -88,7 +72,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   /**
    * Pings the specified server using the specified event {@code loop}, claiming to be
    * {@code version}.
-   * @param loop the event loop to use
+   *
+   * @param loop    the event loop to use
    * @param version the version to report
    * @return the server list ping response
    */
@@ -120,7 +105,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           if (future.isSuccess()) {
             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
             conn.setSessionHandler(new PingSessionHandler(
-                pingFuture, VelocityRegisteredServer.this, conn, version));
+                pingFuture, RegisteredServerImpl.this, conn, version));
           } else {
             pingFuture.completeExceptionally(future.cause());
           }
@@ -128,37 +113,9 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     return pingFuture;
   }
 
-  public void addPlayer(ConnectedPlayer player) {
-    players.put(player.getUniqueId(), player);
-  }
-
-  public void removePlayer(ConnectedPlayer player) {
-    players.remove(player.getUniqueId(), player);
-  }
-
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
-    return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
-  }
-
-  /**
-   * Sends a plugin message to the server through this connection. The message will be released
-   * afterwards.
-   *
-   * @param identifier the channel ID to use
-   * @param data the data
-   * @return whether or not the message was sent
-   */
-  public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
-    for (ConnectedPlayer player : players.values()) {
-      VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
-        return connection.sendPluginMessage(identifier, data);
-      }
-    }
-
-    data.release();
-    return false;
+  public DefaultMutableServerState getState() {
+    return state;
   }
 
   @Override
@@ -168,6 +125,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return this.getPlayersConnected();
+    return this.getState().audiences();
   }
 }

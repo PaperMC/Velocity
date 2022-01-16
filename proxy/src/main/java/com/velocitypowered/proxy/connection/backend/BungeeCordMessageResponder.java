@@ -31,8 +31,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
-import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import com.velocitypowered.proxy.server.DefaultMutableServerState;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -104,7 +103,7 @@ public class BungeeCordMessageResponder {
       out.writeInt(proxy.getPlayerCount());
     } else {
       proxy.getServer(target).ifPresent(rs -> {
-        int playersOnServer = rs.getPlayersConnected().size();
+        int playersOnServer = rs.getState().getPlayersConnected().size();
         out.writeUTF("PlayerCount");
         out.writeUTF(rs.getServerInfo().getName());
         out.writeInt(playersOnServer);
@@ -138,7 +137,7 @@ public class BungeeCordMessageResponder {
         out.writeUTF(info.getServerInfo().getName());
 
         StringJoiner joiner = new StringJoiner(", ");
-        for (Player online : info.getPlayersConnected()) {
+        for (Player online : info.getState().getPlayersConnected()) {
           joiner.add(online.getUsername());
         }
         out.writeUTF(joiner.toString());
@@ -273,7 +272,7 @@ public class BungeeCordMessageResponder {
       try {
         for (RegisteredServer rs : proxy.getAllServers()) {
           if (!rs.getServerInfo().equals(currentUserServer)) {
-            ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
+            ((DefaultMutableServerState) rs.getState()).sendPluginMessage(LEGACY_CHANNEL,
                 toForward.retainedSlice());
           }
         }
@@ -283,7 +282,7 @@ public class BungeeCordMessageResponder {
     } else {
       Optional<RegisteredServer> server = proxy.getServer(target);
       if (server.isPresent()) {
-        ((VelocityRegisteredServer) server.get()).sendPluginMessage(LEGACY_CHANNEL, toForward);
+        ((DefaultMutableServerState) server.get().getState()).sendPluginMessage(LEGACY_CHANNEL, toForward);
       } else {
         toForward.release();
       }

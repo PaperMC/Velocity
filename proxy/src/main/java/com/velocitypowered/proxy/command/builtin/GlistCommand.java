@@ -113,7 +113,7 @@ public class GlistCommand {
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+    List<Player> onServer = ImmutableList.copyOf(server.getState().getPlayersConnected());
     if (onServer.isEmpty() && fromAll) {
       return;
     }

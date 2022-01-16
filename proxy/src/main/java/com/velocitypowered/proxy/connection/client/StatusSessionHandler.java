@@ -35,7 +35,7 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
-import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import com.velocitypowered.proxy.server.RegisteredServerImpl;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -95,8 +95,11 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       if (!rs.isPresent()) {
         continue;
       }
-      VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
-      pings.add(vrs.ping(connection.eventLoop(), pingingVersion));
+      RegisteredServer server = rs.get();
+      if (server instanceof RegisteredServerImpl) { // this should be the case if it was registered in the config
+        RegisteredServerImpl vrs = (RegisteredServerImpl) server;
+        pings.add(vrs.ping(connection.eventLoop(), pingingVersion));
+      }
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);

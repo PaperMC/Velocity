@@ -398,7 +398,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       if (!rs.isPresent()) {
         servers.register(newInfo);
       } else if (!rs.get().getServerInfo().equals(newInfo)) {
-        for (Player player : rs.get().getPlayersConnected()) {
+        for (Player player : rs.get().getState().getPlayersConnected()) {
           if (!(player instanceof ConnectedPlayer)) {
             throw new IllegalStateException("ConnectedPlayer not found for player " + player
                 + " in server " + rs.get().getServerInfo().getName());
