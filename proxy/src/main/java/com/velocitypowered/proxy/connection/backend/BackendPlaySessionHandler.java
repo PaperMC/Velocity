@@ -154,16 +154,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
             builder.build(), this.serverConn);
 
-    server.getEventManager().fire(event).exceptionally((ex) -> {
-      if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(
-                packet.getHash(),
-                PlayerResourcePackStatusEvent.Status.DECLINED
-        ));
-      }
-      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
-      return null;
-    }).thenAcceptAsync(serverResourcePackSendEvent -> {
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
         return;
       }
@@ -181,7 +172,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
       }
-    }, playerConnection.eventLoop());
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(
+                packet.getHash(),
+                PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
+      }
+      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
+      return null;
+    });
 
     return true;
   }
