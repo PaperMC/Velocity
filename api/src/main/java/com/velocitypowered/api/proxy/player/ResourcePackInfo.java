@@ -74,6 +74,20 @@ public interface ResourcePackInfo {
    */
   ResourcePackInfo.Builder asBuilder();
 
+  /**
+   * Returns a copy of this {@link ResourcePackInfo} instance as a builder with the new URL as the pack URL so that
+   * it can be modified.
+   * It is <b>not</b> guaranteed that
+   * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)} is true.
+   * That is due to the transient {@link ResourcePackInfo#getOrigin()} and
+   * {@link ResourcePackInfo#getOriginalOrigin()} fields.
+   *
+   * @param newUrl The new URL to use in the updated builder.
+   *
+   * @return a content-copy of this instance as a {@link ResourcePackInfo.Builder}
+   */
+  ResourcePackInfo.Builder asBuilder(String newUrl);
+
   interface Builder {
 
     /**

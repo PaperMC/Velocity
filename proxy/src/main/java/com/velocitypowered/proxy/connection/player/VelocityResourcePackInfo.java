@@ -82,6 +82,14 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
             .setPrompt(prompt);
   }
 
+  @Override
+  public Builder asBuilder(String newUrl) {
+    return new BuilderImpl(newUrl)
+            .setShouldForce(shouldForce)
+            .setHash(hash)
+            .setPrompt(prompt);
+  }
+
   public static final class BuilderImpl implements ResourcePackInfo.Builder {
     private final String url;
     private boolean shouldForce;

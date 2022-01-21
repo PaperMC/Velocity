@@ -8,9 +8,9 @@
 package com.velocitypowered.api.event.player;
 
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
-import jdk.internal.util.Preconditions;
 
 /**
  * This event is fired when the downstream server tries to send a player a ResourcePack packet.
@@ -19,6 +19,7 @@ import jdk.internal.util.Preconditions;
  * server in response.
  * If the downstream server has it set to "forced" it will forcefully disconnect the user.
  */
+@AwaitingEvent
 public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.GenericResult> {
   private GenericResult result;
   private final ResourcePackInfo receivedResourcePack;
@@ -35,6 +36,7 @@ public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
       ResourcePackInfo receivedResourcePack,
       ServerConnection serverConnection
   ) {
+    this.result = ResultedEvent.GenericResult.allowed();
     this.receivedResourcePack = receivedResourcePack;
     this.serverConnection = serverConnection;
     this.providedResourcePack = receivedResourcePack;
