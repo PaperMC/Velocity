@@ -166,13 +166,19 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         serverConn.getPlayer().queueResourcePack(builder.build());
-      } else {
+      } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
             packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(
+                packet.getHash(),
+                PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
+      }
       logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
       return null;
     });
