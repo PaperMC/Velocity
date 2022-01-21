@@ -30,6 +30,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Bad packet length");
   private static final QuietDecoderException VARINT_BIG_CACHED =
       new QuietDecoderException("VarInt too big");
+  private static final QuietDecoderException VARINT_SHORT_CACHED =
+      new QuietDecoderException("VarInt too short");
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
@@ -73,6 +75,9 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     } else if (reader.getResult() == DecodeResult.TOO_BIG) {
       in.clear();
       throw VARINT_BIG_CACHED;
+    } else if (reader.getResult() == DecodeResult.TOO_SHORT) {
+      in.clear();
+      throw VARINT_SHORT_CACHED;
     }
   }
 }
