@@ -30,13 +30,11 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -64,7 +62,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -72,12 +69,11 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.identity.Identity;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -91,7 +87,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final ConnectedPlayer player;
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
-  private final Queue<PluginMessage> loginPluginMessages = new ArrayDeque<>();
+  private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
 
@@ -257,36 +253,42 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         if (!player.getPhase().handle(player, packet, serverConn)) {
-          if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-              .consideredComplete()) {
-            // The client is trying to send messages too early. This is primarily caused by mods,
-            // but further aggravated by Velocity. To work around these issues, we will queue any
-            // non-FML handshake messages to be sent once the FML handshake has completed or the
-            // JoinGame packet has been received by the proxy, whichever comes first.
-            //
-            // We also need to make sure to retain these packets so they can be flushed
-            // appropriately.
-            loginPluginMessages.add(packet.retain());
-          } else {
-            ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
-            if (id == null) {
-              backendConn.write(packet.retain());
+          ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+          if (id == null) {
+            // We don't have any plugins listening on this channel, process the packet now.
+            if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+              // The client is trying to send messages too early. This is primarily caused by mods,
+              // but further aggravated by Velocity. To work around these issues, we will queue any
+              // non-FML handshake messages to be sent once the FML handshake has completed or the
+              // JoinGame packet has been received by the proxy, whichever comes first.
+              //
+              // We also need to make sure to retain these packets, so they can be flushed
+              // appropriately.
+              loginPluginMessages.add(packet.retain());
             } else {
-              byte[] copy = ByteBufUtil.getBytes(packet.content());
-              PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
-              server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-                if (pme.getResult().isAllowed()) {
-                  PluginMessage message = new PluginMessage(packet.getChannel(),
-                      Unpooled.wrappedBuffer(copy));
+              // The connection is ready, send the packet now.
+              backendConn.write(packet.retain());
+            }
+          } else {
+            byte[] copy = ByteBufUtil.getBytes(packet.content());
+            PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
+            server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+              if (pme.getResult().isAllowed()) {
+                PluginMessage message = new PluginMessage(packet.getChannel(),
+                    Unpooled.wrappedBuffer(copy));
+                if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+                  // We're still processing the connection (see above), enqueue the packet for now.
+                  loginPluginMessages.add(message.retain());
+                } else {
                   backendConn.write(message);
                 }
-              }, backendConn.eventLoop())
-                  .exceptionally((ex) -> {
-                    logger.error("Exception while handling plugin message packet for {}",
-                        player, ex);
-                    return null;
-                  });
-            }
+              }
+            }, backendConn.eventLoop())
+                .exceptionally((ex) -> {
+                  logger.error("Exception while handling plugin message packet for {}",
+                      player, ex);
+                  return null;
+                });
           }
         }
       }
