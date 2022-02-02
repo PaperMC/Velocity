@@ -21,12 +21,12 @@ import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResp
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -45,6 +45,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -52,7 +53,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
-import java.util.Collection;
+
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,17 +139,50 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackRequest packet) {
     ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-        Preconditions.checkNotNull(packet.getUrl()))
-        .setPrompt(packet.getPrompt())
-        .setShouldForce(packet.isRequired());
-    // Why SpotBugs decides that this is unsafe I have no idea;
-    if (packet.getHash() != null && !Preconditions.checkNotNull(packet.getHash()).isEmpty()) {
-      if (PLAUSIBLE_SHA1_HASH.matcher(packet.getHash()).matches()) {
-        builder.setHash(ByteBufUtil.decodeHexDump(packet.getHash()));
+            Preconditions.checkNotNull(packet.getUrl()))
+            .setPrompt(packet.getPrompt())
+            .setShouldForce(packet.isRequired())
+            .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+
+    String hash = packet.getHash();
+    if (hash != null && !hash.isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(hash));
       }
     }
 
-    serverConn.getPlayer().queueResourcePack(builder.build());
+    ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
+            builder.build(), this.serverConn);
+
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (serverResourcePackSendEvent.getResult().isAllowed()) {
+        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
+          ((VelocityResourcePackInfo) toSend)
+                  .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        }
+
+        serverConn.getPlayer().queueResourcePack(builder.build());
+      } else if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(
+                packet.getHash(),
+                PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
+      }
+      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
+      return null;
+    });
+
     return true;
   }
 

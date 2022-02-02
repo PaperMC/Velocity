@@ -31,6 +31,14 @@ public class ResourcePackResponse implements MinecraftPacket {
   private String hash = "";
   private @MonotonicNonNull Status status;
 
+  public ResourcePackResponse() {
+  }
+
+  public ResourcePackResponse(String hash, @MonotonicNonNull Status status) {
+    this.hash = hash;
+    this.status = status;
+  }
+
   public Status getStatus() {
     if (status == null) {
       throw new IllegalStateException("Packet not yet deserialized");
