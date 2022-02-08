@@ -130,6 +130,10 @@ announce-proxy-commands = true
 # Enables the logging of commands
 log-command-executions = false
 
+# Kicks the player when they attempt to send a message that's too long for the latest Minecraft version.
+# If this is disabled, the message will be cut to fit the size.
+kick-chat-length = false
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false
