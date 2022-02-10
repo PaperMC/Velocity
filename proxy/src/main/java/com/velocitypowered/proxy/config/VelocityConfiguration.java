@@ -67,6 +67,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private boolean announceForge = false;
   @Expose private boolean onlineModeKickExistingPlayers = false;
   @Expose private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
+  @Expose private boolean passthroughDefaultServerPing = true;
   private final Servers servers;
   private final ForcedHosts forcedHosts;
   @Expose private final Advanced advanced;
@@ -90,8 +91,9 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
-      boolean enablePlayerAddressLogging, Servers servers,ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
+      boolean passthroughDefaultServerPing, boolean enablePlayerAddressLogging, Servers servers,
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics,
+      boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -102,6 +104,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.forwardingSecret = forwardingSecret;
     this.onlineModeKickExistingPlayers = onlineModeKickExistingPlayers;
     this.pingPassthrough = pingPassthrough;
+    this.passthroughDefaultServerPing = passthroughDefaultServerPing;
     this.enablePlayerAddressLogging = enablePlayerAddressLogging;
     this.servers = servers;
     this.forcedHosts = forcedHosts;
@@ -355,6 +358,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return pingPassthrough;
   }
 
+  public boolean isPassthroughDefaultServerPing() {
+    return passthroughDefaultServerPing;
+  }
+
   public boolean isPlayerAddressLoggingEnabled() {
     return enablePlayerAddressLogging;
   }
@@ -499,6 +506,7 @@ public class VelocityConfiguration implements ProxyConfig {
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
         PingPassthroughMode.DISABLED);
+    Boolean passthroughDefaultServerPing = config.getOrElse("passthrough-default-server-ping", true);
 
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
     String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
@@ -530,6 +538,7 @@ public class VelocityConfiguration implements ProxyConfig {
         forwardingSecret,
         kickExisting,
         pingPassthroughMode,
+        passthroughDefaultServerPing,
         enablePlayerAddressLogging,
         new Servers(serversConfig),
         new ForcedHosts(forcedHostsConfig),

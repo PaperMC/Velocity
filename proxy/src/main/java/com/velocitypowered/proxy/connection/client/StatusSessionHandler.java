@@ -170,6 +170,12 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       String virtualHostStr = inbound.getVirtualHost().map(InetSocketAddress::getHostString)
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
+
+      if (!configuration.isPassthroughDefaultServerPing()
+              && !configuration.getForcedHosts().containsKey(virtualHostStr)) {
+        return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
+      }
+
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
           virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
       return attemptPingPassthrough(configuration.getPingPassthrough(), serversToTry, shownVersion);
