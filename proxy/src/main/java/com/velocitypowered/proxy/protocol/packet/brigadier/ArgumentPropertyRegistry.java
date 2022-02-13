@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArgumentPropertyRegistry {
   private ArgumentPropertyRegistry() {

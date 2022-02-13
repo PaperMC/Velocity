@@ -152,23 +152,23 @@ public enum InformationUtils {
         return address.getHostAddress();
       } else {
         String[] bits = v6.getHostAddress().split(":");
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
         boolean flag = false;
         for (int iter = 0; iter < bits.length; iter++) {
           if (flag) {
-            ret += ":X";
+            ret.append(":X");
             continue;
           }
           if (!bits[iter].equals("0")) {
             if (iter == 0) {
-              ret = bits[iter];
+              ret = new StringBuilder(bits[iter]);
             } else {
-              ret = "::" + bits[iter];
+              ret = new StringBuilder("::" + bits[iter]);
             }
             flag = true;
           }
         }
-        return ret;
+        return ret.toString();
       }
     } else {
       return address.getHostAddress();

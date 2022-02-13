@@ -35,7 +35,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
-import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -121,7 +120,7 @@ public final class ConnectionManager {
         .localAddress(address);
 
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+      bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
     }
 
     bootstrap.bind()
@@ -185,7 +184,7 @@ public final class ConnectionManager {
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
   }

@@ -98,19 +98,19 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
     server.createBootstrap(loop)
-        .handler(new ChannelInitializer<Channel>() {
+        .handler(new ChannelInitializer<>() {
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
-                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-                .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
-                        TimeUnit.MILLISECONDS))
-                .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-                .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
+                    .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+                    .addLast(READ_TIMEOUT,
+                            new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                                    TimeUnit.MILLISECONDS))
+                    .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+                    .addLast(MINECRAFT_DECODER,
+                            new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
+                    .addLast(MINECRAFT_ENCODER,
+                            new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
             ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }

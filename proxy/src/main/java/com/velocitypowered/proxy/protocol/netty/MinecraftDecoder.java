@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -67,9 +68,40 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       return;
     }
 
+    if (this.direction == ProtocolUtils.Direction.SERVERBOUND) {
+      int readableBytes = buf.readableBytes();
+      int capacity = buf.capacity();
+
+      if (readableBytes > 2097152) {
+        ctx.close(); // Close connection for too many readable bytes
+        throw new QuietDecoderException("Error decoding packet with too many readableBytes: " + readableBytes);
+      }
+      if (capacity > 2097152) {
+        ctx.close(); // Close connection for too many capacity
+        throw new QuietDecoderException("Error decoding packet with too big capacity: " + capacity);
+      }
+
+    }
+
     int originalReaderIndex = buf.readerIndex();
-    int packetId = ProtocolUtils.readVarInt(buf);
-    MinecraftPacket packet = this.registry.createPacket(packetId);
+    int packetId;
+
+    try {
+      packetId = ProtocolUtils.readVarInt(buf);
+    } catch (Exception e) {
+      ctx.close(); // Close connection for invalid packet id
+      return;
+    }
+
+    MinecraftPacket packet;
+
+    try {
+      packet = this.registry.createPacket(packetId);
+    } catch (Exception e) {
+      ctx.close(); // Close connection for invalid packet creation
+      return;
+    }
+
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);

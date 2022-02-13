@@ -116,7 +116,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
    */
   public AddressResolverGroup<InetSocketAddress> asGroup() {
     if (this.resolverGroup == null) {
-      this.resolverGroup = new AddressResolverGroup<InetSocketAddress>() {
+      this.resolverGroup = new AddressResolverGroup<>() {
         @Override
         protected AddressResolver<InetSocketAddress> newResolver(EventExecutor executor) {
           return asAddressResolver();

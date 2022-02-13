@@ -60,7 +60,7 @@ public class JavaPluginLoader implements PluginLoader {
   public PluginDescription loadCandidate(Path source) throws Exception {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
-    if (!serialized.isPresent()) {
+    if (serialized.isEmpty()) {
       throw new InvalidPluginException("Did not find a valid velocity-plugin.json.");
     }
 
@@ -99,7 +99,7 @@ public class JavaPluginLoader implements PluginLoader {
     JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
     Optional<Path> source = javaDescription.getSource();
 
-    if (!source.isPresent()) {
+    if (source.isEmpty()) {
       throw new IllegalArgumentException("No path in plugin description");
     }
 

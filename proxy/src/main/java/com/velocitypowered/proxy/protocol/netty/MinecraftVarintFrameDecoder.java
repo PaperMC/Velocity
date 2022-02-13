@@ -30,6 +30,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Bad packet length");
   private static final QuietDecoderException VARINT_BIG_CACHED =
       new QuietDecoderException("VarInt too big");
+  private static final QuietDecoderException VARINT_SHORT_CACHED =
+          new QuietDecoderException("VarInt too short");
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
@@ -51,28 +53,34 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    if (reader.getResult() == DecodeResult.RUN_OF_ZEROES) {
-      // this will return to the point where the next varint starts
-      in.readerIndex(varintEnd);
-    } else if (reader.getResult() == DecodeResult.SUCCESS) {
-      int readVarint = reader.getReadVarint();
-      int bytesRead = reader.getBytesRead();
-      if (readVarint < 0) {
-        in.clear();
-        throw BAD_LENGTH_CACHED;
-      } else if (readVarint == 0) {
-        // skip over the empty packet(s) and ignore it
-        in.readerIndex(varintEnd + 1);
-      } else {
-        int minimumRead = bytesRead + readVarint;
-        if (in.isReadable(minimumRead)) {
-          out.add(in.retainedSlice(varintEnd + 1, readVarint));
-          in.skipBytes(minimumRead);
+    switch (reader.getResult()) {
+      case RUN_OF_ZEROES:
+        // this will return to the point where the next varint starts
+        in.readerIndex(varintEnd);
+        break;
+      case SUCCESS:
+        int readVarint = reader.getReadVarint();
+        int bytesRead = reader.getBytesRead();
+        if (readVarint < 0) {
+          in.clear();
+          throw BAD_LENGTH_CACHED;
+        } else if (readVarint == 0) {
+          // skip over the empty packet(s) and ignore it
+          in.readerIndex(varintEnd + 1);
+        } else {
+          int minimumRead = bytesRead + readVarint;
+          if (in.isReadable(minimumRead)) {
+            out.add(in.retainedSlice(varintEnd + 1, readVarint));
+            in.skipBytes(minimumRead);
+          }
         }
-      }
-    } else if (reader.getResult() == DecodeResult.TOO_BIG) {
-      in.clear();
-      throw VARINT_BIG_CACHED;
+        break;
+      case TOO_BIG:
+        in.clear();
+        throw VARINT_BIG_CACHED;
+      case TOO_SHORT:
+        in.clear();
+        throw VARINT_SHORT_CACHED;
     }
   }
 }

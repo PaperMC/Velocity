@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
@@ -168,6 +167,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         try {
           sessionHandler.exception(cause);
         } catch (Exception ex) {
+          ctx.close(); // Close connection on exception
           logger.error("{}: exception handling exception in {}",
               (association != null ? association : channel.remoteAddress()), sessionHandler, cause);
         }
@@ -189,9 +189,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           }
         }
       }
-
-      ctx.close();
     }
+    ctx.close();
   }
 
   @Override

@@ -107,6 +107,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
     // Verify query packet magic
     if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
         || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
+      ctx.close();
+      queryMessage.clear(); // Clear and close the channel on invalid magic
       return;
     }
 
@@ -136,11 +138,13 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         int challengeToken = queryMessage.readInt();
         Integer session = sessions.getIfPresent(senderAddress);
         if (session == null || session != challengeToken) {
+          ctx.close(); // Close the channel on invalid session
           return;
         }
 
         // Check which query response client expects
         if (queryMessage.readableBytes() != 0 && queryMessage.readableBytes() != 4) {
+          ctx.close(); // Close the channel on invalid query
           return;
         }
 
@@ -189,8 +193,13 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         break;
       }
       default:
-        // Invalid query type - just don't respond
+        // Invalid query type - Just ignore the response
     }
+  }
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    ctx.close(); // Close the channel on exception
   }
 
   private static void writeString(ByteBuf buf, String string) {

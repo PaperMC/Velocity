@@ -1,11 +1,9 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'checkstyle'
 }
 
 apply plugin: 'org.cadixdev.licenser'
-apply from: '../gradle/checkstyle.gradle'
 apply from: '../gradle/publish.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
@@ -39,7 +37,6 @@ dependencies {
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:5.0.1'
-    api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
 
     api "org.spongepowered:configurate-hocon:${configurateVersion}"
