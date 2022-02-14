@@ -780,7 +780,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean enabled = true;
     private boolean nettyChecks = true;
     private boolean blacklist = false;
-    @Expose private int maxInvalidPacketSize = 100000;
+    private int maxInvalidPacketSize = 100000;
 
     private Firewall(CommentedConfig toml) {
       if (toml != null) {
