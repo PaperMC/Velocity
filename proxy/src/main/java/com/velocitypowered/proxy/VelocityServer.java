@@ -502,9 +502,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         Thread.currentThread().interrupt();
       }
 
-      // Since we manually removed the shutdown hook, we need to handle the shutdown ourselves.
-      LogManager.shutdown();
-
       shutdown = true;
 
       if (explicitExit) {
