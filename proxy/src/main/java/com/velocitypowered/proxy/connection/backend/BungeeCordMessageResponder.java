@@ -19,9 +19,11 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -30,6 +32,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -264,11 +267,15 @@ public class BungeeCordMessageResponder {
   private void processForwardToServer(ByteBufDataInput in) {
     String target = in.readUTF();
     ByteBuf toForward = in.unwrap().copy();
+    final ServerInfo currentUserServer = player.getCurrentServer()
+        .map(ServerConnection::getServerInfo).orElse(null);
     if (target.equals("ALL")) {
       try {
         for (RegisteredServer rs : proxy.getAllServers()) {
-          ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
-              toForward.retainedSlice());
+          if (!rs.getServerInfo().equals(currentUserServer)) {
+            ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
+                toForward.retainedSlice());
+          }
         }
       } finally {
         toForward.release();
