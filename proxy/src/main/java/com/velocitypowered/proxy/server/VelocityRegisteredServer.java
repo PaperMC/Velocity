@@ -102,7 +102,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           @Override
           protected void initChannel(Channel ch) throws Exception {
             ch.pipeline()
-                    .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+                    .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(server))
                     .addLast(READ_TIMEOUT,
                             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                                     TimeUnit.MILLISECONDS))

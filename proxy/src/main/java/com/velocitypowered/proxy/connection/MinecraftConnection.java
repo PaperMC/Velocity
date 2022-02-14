@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
+import com.velocitypowered.proxy.firewall.FirewallManager;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
@@ -163,13 +164,28 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if (ctx.channel().isActive()) {
+      String address = ((InetSocketAddress)ctx.channel().remoteAddress()).getAddress().getHostAddress();
+      if (server.getConfiguration().getFirewall().isNettyChecks() && (cause instanceof io.netty.handler.codec.CodecException || cause instanceof IllegalStateException) &&
+              address != null) {
+        Throwable causeCause = cause.getCause();
+        if (causeCause == null || !causeCause.getMessage().contains("CLIENTBOUND")) {
+          if (server.getConfiguration().getFirewall().isBlacklist()) {
+            FirewallManager.add(address);
+          }
+          ctx.close();
+          ctx.flush();
+          return;
+        }
+      }
+
       if (sessionHandler != null) {
         try {
           sessionHandler.exception(cause);
         } catch (Exception ex) {
           ctx.close(); // Close connection on exception
+          ctx.flush();
           logger.error("{}: exception handling exception in {}",
-              (association != null ? association : channel.remoteAddress()), sessionHandler, cause);
+                  (association != null ? association : channel.remoteAddress()), sessionHandler, cause);
         }
       }
 
@@ -178,8 +194,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           logger.error("{}: read timed out", association);
         } else {
           boolean frontlineHandler = sessionHandler instanceof LoginSessionHandler
-              || sessionHandler instanceof HandshakeSessionHandler
-              || sessionHandler instanceof StatusSessionHandler;
+                  || sessionHandler instanceof HandshakeSessionHandler
+                  || sessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
           boolean willLog = !isQuietDecoderException && !frontlineHandler;
           if (willLog) {
@@ -189,8 +205,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           }
         }
       }
+      ctx.close();
+    } else {
+      ctx.close();
+      ctx.flush();
     }
-    ctx.close();
   }
 
   @Override

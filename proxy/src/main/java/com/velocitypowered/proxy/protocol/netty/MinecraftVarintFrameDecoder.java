@@ -17,11 +17,18 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
+import com.velocitypowered.proxy.Velocity;
+import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.firewall.FirewallManager;
 import com.velocitypowered.proxy.protocol.netty.VarintByteDecoder.DecodeResult;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.List;
 
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
@@ -30,13 +37,31 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Bad packet length");
   private static final QuietDecoderException VARINT_BIG_CACHED =
       new QuietDecoderException("VarInt too big");
-  private static final QuietDecoderException VARINT_SHORT_CACHED =
-          new QuietDecoderException("VarInt too short");
+
+  private final VelocityServer server;
+
+  public MinecraftVarintFrameDecoder(final VelocityServer server) {
+    this.server = server;
+  }
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
     if (!ctx.channel().isActive()) {
       in.clear();
+      return;
+    }
+
+    InetAddress address = ((InetSocketAddress)ctx.channel().remoteAddress()).getAddress();
+    String ip = address.getHostAddress();
+
+    if (server.getConfiguration().getFirewall().isNettyChecks() &&
+            !FirewallManager.whitelistedAddresses.contains(ip) &&
+            in.readableBytes() > server.getConfiguration().getFirewall().getMaxInvalidPacketSize()) {
+      ctx.channel().flush();
+      ctx.channel().close();
+      ctx.close();
+      in.resetReaderIndex();
+      in.discardReadBytes();
       return;
     }
 
@@ -63,6 +88,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         int bytesRead = reader.getBytesRead();
         if (readVarint < 0) {
           in.clear();
+          ctx.channel().close();
           throw BAD_LENGTH_CACHED;
         } else if (readVarint == 0) {
           // skip over the empty packet(s) and ignore it
@@ -77,10 +103,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         break;
       case TOO_BIG:
         in.clear();
+        ctx.channel().close();
         throw VARINT_BIG_CACHED;
-      case TOO_SHORT:
-        in.clear();
-        throw VARINT_SHORT_CACHED;
     }
   }
 }

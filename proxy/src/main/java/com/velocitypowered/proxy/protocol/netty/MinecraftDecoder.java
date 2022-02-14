@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.firewall.FirewallManager;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -28,6 +29,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
@@ -69,14 +73,19 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
 
     if (this.direction == ProtocolUtils.Direction.SERVERBOUND) {
+      InetAddress address = ((InetSocketAddress)ctx.channel().remoteAddress()).getAddress();
+      String ip = address.getHostAddress();
+
       int readableBytes = buf.readableBytes();
       int capacity = buf.capacity();
 
       if (readableBytes > 2097152) {
+        FirewallManager.add(ip);
         ctx.close(); // Close connection for too many readable bytes
         throw new QuietDecoderException("Error decoding packet with too many readableBytes: " + readableBytes);
       }
       if (capacity > 2097152) {
+        FirewallManager.add(ip);
         ctx.close(); // Close connection for too many capacity
         throw new QuietDecoderException("Error decoding packet with too big capacity: " + capacity);
       }

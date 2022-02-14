@@ -28,6 +28,7 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
+import com.velocitypowered.proxy.firewall.FirewallManager;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingEncoder;
@@ -39,6 +40,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
@@ -52,9 +57,19 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
   @Override
   protected void initChannel(final Channel ch) {
+    final SocketAddress remoteAddress = ( ch.remoteAddress() == null ) ? ch.parent().localAddress() : ch.remoteAddress();
+
+    final InetAddress address = ((InetSocketAddress) remoteAddress).getAddress();
+    final String hostname = address.getHostAddress();
+
+    if (FirewallManager.isFirewalled(hostname)) {
+      ch.close();
+      return;
+    }
+
     ch.pipeline()
         .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
-        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(this.server))
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))

@@ -29,6 +29,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.firewall.FirewallManager;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -82,6 +83,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
         cleanVhost(handshake.getServerAddress()), handshake);
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
+      InetSocketAddress address = ((InetSocketAddress)ic.getConnection().getRemoteAddress());
+      String ip = address.getAddress().getHostAddress();
+
+      FirewallManager.add(ip);
+
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
       connection.close(true);
     } else {

@@ -72,24 +72,24 @@ public class VelocityConfiguration implements ProxyConfig {
   private final ForcedHosts forcedHosts;
   @Expose private final Advanced advanced;
   @Expose private final Query query;
-  private final Metrics metrics;
+  private final Firewall firewall;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+      Query query, Firewall firewall) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
-    this.metrics = metrics;
+    this.firewall = firewall;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Firewall firewall) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -104,7 +104,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
-    this.metrics = metrics;
+    this.firewall = firewall;
   }
 
   /**
@@ -343,8 +343,8 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.tcpFastOpen;
   }
 
-  public Metrics getMetrics() {
-    return metrics;
+  public Firewall getFirewall() {
+    return firewall;
   }
 
   public PingPassthroughMode getPingPassthrough() {
@@ -445,7 +445,7 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedConfig forcedHostsConfig = config.get("forced-hosts");
     CommentedConfig advancedConfig = config.get("advanced");
     CommentedConfig queryConfig = config.get("query");
-    CommentedConfig metricsConfig = config.get("metrics");
+    CommentedConfig firewallConfig = config.get("firewall");
     PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
         PlayerInfoForwarding.NONE);
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -475,7 +475,7 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig)
+        new Firewall(firewallConfig)
     );
   }
 
@@ -776,17 +776,35 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-  public static class Metrics {
+  public static class Firewall {
     private boolean enabled = true;
+    private boolean nettyChecks = true;
+    private boolean blacklist = false;
+    @Expose private int maxInvalidPacketSize = 100000;
 
-    private Metrics(CommentedConfig toml) {
+    private Firewall(CommentedConfig toml) {
       if (toml != null) {
         this.enabled = toml.getOrElse("enabled", true);
+        this.nettyChecks = toml.getOrElse("netty-checks", true);
+        this.blacklist = toml.getOrElse("blacklist", false);
+        this.maxInvalidPacketSize = toml.getOrElse("max-invalid-packet-size", 100000);
       }
     }
 
     public boolean isEnabled() {
       return enabled;
+    }
+
+    public boolean isBlacklist() {
+      return blacklist;
+    }
+
+    public boolean isNettyChecks() {
+      return nettyChecks;
+    }
+
+    public int getMaxInvalidPacketSize() {
+      return maxInvalidPacketSize;
     }
   }
 }
