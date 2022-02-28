@@ -130,6 +130,8 @@ public class ArgumentPropertyRegistry {
           }
         });
     register("brigadier:long", LongArgumentType.class, LONG);
+    register("minecraft:resource", RegistryKeyArgument.class, RegistryKeyArgumentSerializer.REGISTRY);
+    register("minecraft:resource_or_tag", RegistryKeyArgument.class, RegistryKeyArgumentSerializer.REGISTRY);
 
     // Crossstitch support
     register("crossstitch:mod_argument", ModArgumentProperty.class, MOD);
