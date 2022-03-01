@@ -36,6 +36,7 @@ dependencies {
     api("net.kyori:adventure-text-serializer-gson")
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
+    api("net.kyori:adventure-text-minimessage")
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api 'com.google.inject:guice:5.0.1'
