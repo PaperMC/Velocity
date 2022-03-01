@@ -726,6 +726,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     if (serversToTry == null) {
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
           .orElse("")
+          .split("/", 2)[0]
           .toLowerCase(Locale.ROOT);
       serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
