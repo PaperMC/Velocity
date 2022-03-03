@@ -986,7 +986,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     return queued != null
-            && queued.getOriginalOrigin() == ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
   }
 
   /**

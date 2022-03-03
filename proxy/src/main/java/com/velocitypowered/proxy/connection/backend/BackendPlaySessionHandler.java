@@ -165,7 +165,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                   .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
-        serverConn.getPlayer().queueResourcePack(builder.build());
+        serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
             packet.getHash(),
