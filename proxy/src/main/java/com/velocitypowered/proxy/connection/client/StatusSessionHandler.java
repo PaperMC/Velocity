@@ -75,11 +75,13 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
     VelocityConfiguration configuration = server.getConfiguration();
+    List<ServerPing.SamplePlayer> samplePlayers = server.getAllPlayers().stream().map(player ->
+            new ServerPing.SamplePlayer(player.getUsername(), player.getUniqueId())).toList();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
-            ImmutableList.of()),
+            samplePlayers),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
