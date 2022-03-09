@@ -73,6 +73,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private final Advanced advanced;
   @Expose private final Query query;
   private final Metrics metrics;
+  @Expose private boolean enablePlayerAddressLogging = true;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
 
@@ -88,8 +89,9 @@ public class VelocityConfiguration implements ProxyConfig {
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
-      boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough, Servers servers,
-      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics) {
+      boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
+      boolean enablePlayerAddressLogging, Servers servers,ForcedHosts forcedHosts,
+      Advanced advanced, Query query, Metrics metrics) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -100,6 +102,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.forwardingSecret = forwardingSecret;
     this.onlineModeKickExistingPlayers = onlineModeKickExistingPlayers;
     this.pingPassthrough = pingPassthrough;
+    this.enablePlayerAddressLogging = enablePlayerAddressLogging;
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
@@ -351,6 +354,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return pingPassthrough;
   }
 
+  public boolean isPlayerAddressLoggingEnabled() {
+    return enablePlayerAddressLogging;
+  }
+
   public boolean isBungeePluginChannelEnabled() {
     return advanced.isBungeePluginMessageChannel();
   }
@@ -386,6 +393,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("advanced", advanced)
         .add("query", query)
         .add("favicon", favicon)
+        .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
         .toString();
   }
 
@@ -459,6 +467,7 @@ public class VelocityConfiguration implements ProxyConfig {
     Boolean preventClientProxyConnections = config.getOrElse("prevent-client-proxy-connections",
         true);
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
+    Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
 
     return new VelocityConfiguration(
         bind,
@@ -471,6 +480,7 @@ public class VelocityConfiguration implements ProxyConfig {
         forwardingSecret,
         kickExisting,
         pingPassthroughMode,
+        enablePlayerAddressLogging,
         new Servers(serversConfig),
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
