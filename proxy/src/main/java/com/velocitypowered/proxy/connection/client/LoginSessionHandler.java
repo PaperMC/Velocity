@@ -145,7 +145,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         try {
           mcConnection.enableEncryption(decryptedSharedSecret);
         } catch (GeneralSecurityException e) {
-          throw new RuntimeException(e);
+          logger.error("Unable to enable encryption for connection", e);
+          // At this point, the connection is encrypted, but something's wrong on our side and
+          // we can't do anything about it.
+          mcConnection.close(true);
+          return;
         }
 
         try {
@@ -163,11 +167,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
-            mcConnection.close(true);
+            inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
-          mcConnection.close(true);
+          inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();
