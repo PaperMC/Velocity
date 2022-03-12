@@ -787,11 +787,11 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public static class Metrics {
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     private Metrics(CommentedConfig toml) {
       if (toml != null) {
-        this.enabled = toml.getOrElse("enabled", true);
+        this.enabled = toml.getOrElse("enabled", false);
       }
     }
 

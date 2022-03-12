@@ -73,11 +73,10 @@ public class Metrics {
           + " and send them to bStats (https://bStats.org).");
       logger.info("bStats collects some basic information for plugin"
           + " authors, like how many people use");
-      logger.info("their plugin and their total player count."
-          + " It's recommended to keep bStats enabled, but");
-      logger.info("if you're not comfortable with this, you can opt-out"
+      logger.info("their plugin and their total player count.");
+      logger.info("If you'd like to enable this, please opt-in"
           + " by editing the config.txt file in");
-      logger.info("the '/plugins/bStats/' folder and setting enabled to false.");
+      logger.info("the '/plugins/bStats/' folder and setting enabled to true.");
     }
   }
 
