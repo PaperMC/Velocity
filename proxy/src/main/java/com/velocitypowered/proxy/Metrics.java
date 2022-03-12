@@ -74,7 +74,7 @@ public class Metrics {
       logger.info("bStats collects some basic information for plugin"
           + " authors, like how many people use");
       logger.info("their plugin and their total player count.");
-      logger.info("If you'd like to enable this, please opt-in"
+      logger.info("If you're comfortable with this, please opt-in"
           + " by editing the config.txt file in");
       logger.info("the '/plugins/bStats/' folder and setting enabled to true.");
     }
