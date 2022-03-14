@@ -16,7 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-<Configuration status="warn">
+<!-- Disable shutdown hook, because we have our own -->
+<Configuration status="warn" shutdownHook="disable">
   <Appenders>
     <TerminalConsole name="TerminalConsole">
       <PatternLayout>
