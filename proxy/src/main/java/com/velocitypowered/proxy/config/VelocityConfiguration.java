@@ -553,16 +553,17 @@ public class VelocityConfiguration implements ProxyConfig {
     String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
 
     if ("1.0".equals(configurationVersion)) {
-      final String migratedMotd = MiniMessage.miniMessage().serialize(
-          LegacyComponentSerializer.legacy('&').deserialize(motd));
+      if (!motd.startsWith("{")) {
+        final String migratedMotd = MiniMessage.miniMessage().serialize(
+            LegacyComponentSerializer.legacy('&').deserialize(motd));
 
-      config.set("motd", migratedMotd);
+        config.set("motd", migratedMotd);
+        motd = migratedMotd;
+      }
       config.setComment("motd", 
           " What should be the MOTD? This gets displayed when the player adds your server to\n" 
           + " their server list. MiniMessage format and JSON are accepted.");
       config.set("config-version", "1.1");
-
-      motd = migratedMotd;
     }
 
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
