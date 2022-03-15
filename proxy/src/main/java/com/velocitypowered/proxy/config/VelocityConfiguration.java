@@ -608,6 +608,9 @@ public class VelocityConfiguration implements ProxyConfig {
           LegacyComponentSerializer.legacy('&').deserialize(actualMotd));
 
       config.set("motd", motd);
+      config.setComment("motd", 
+          "What should be the MOTD? This gets displayed when the player adds your server to\n" 
+          + "their server list. MiniMessage format and JSON are accepted.");
       config.set("config-version", "1.1");
     }
   }

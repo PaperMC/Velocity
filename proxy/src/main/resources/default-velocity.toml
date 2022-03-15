@@ -5,7 +5,7 @@ config-version = "2.5"
 bind = "0.0.0.0:25577"
 
 # What should be the MOTD? This gets displayed when the player adds your server to
-# their server list. MiniMessage format (with <mm> prefix), legacy color codes and JSON are accepted.
+# their server list. MiniMessage format and JSON are accepted.
 motd = "<#09add3>A Velocity Server"
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
