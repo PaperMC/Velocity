@@ -552,7 +552,18 @@ public class VelocityConfiguration implements ProxyConfig {
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
     String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
 
-    motdMigration(config, configurationVersion, motd);
+    if ("1.0".equals(configurationVersion)) {
+      final String migratedMotd = MiniMessage.miniMessage().serialize(
+          LegacyComponentSerializer.legacy('&').deserialize(motd));
+
+      config.set("motd", migratedMotd);
+      config.setComment("motd", 
+          " What should be the MOTD? This gets displayed when the player adds your server to\n" 
+          + " their server list. MiniMessage format and JSON are accepted.");
+      config.set("config-version", "1.1");
+
+      motd = migratedMotd;
+    }
 
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
@@ -600,19 +611,6 @@ public class VelocityConfiguration implements ProxyConfig {
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return builder.toString();
-  }
-
-  private static void motdMigration(CommentedConfig config, String configVersion, String actualMotd) {
-    if ("1.0".equals(configVersion)) {
-      String motd = MiniMessage.miniMessage().serialize(
-          LegacyComponentSerializer.legacy('&').deserialize(actualMotd));
-
-      config.set("motd", motd);
-      config.setComment("motd", 
-          "What should be the MOTD? This gets displayed when the player adds your server to\n" 
-          + "their server list. MiniMessage format and JSON are accepted.");
-      config.set("config-version", "1.1");
-    }
   }
 
   public boolean isOnlineModeKickExistingPlayers() {
