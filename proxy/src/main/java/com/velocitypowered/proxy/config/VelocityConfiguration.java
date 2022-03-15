@@ -274,12 +274,10 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public net.kyori.adventure.text.Component getMotd() {
     if (motdAsComponent == null) {
-      if (motd.startsWith("<mm>")) {
-        motdAsComponent = MiniMessage.miniMessage().deserialize(motd.substring(4));
-      } else if (motd.startsWith("{")) {
+      if (motd.startsWith("{")) {
         motdAsComponent = GsonComponentSerializer.gson().deserialize(motd);
       } else {
-        motdAsComponent = LegacyComponentSerializer.legacy('&').deserialize(motd);
+        motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
       }
     }
     return motdAsComponent;
@@ -550,8 +548,12 @@ public class VelocityConfiguration implements ProxyConfig {
     PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
         PingPassthroughMode.DISABLED);
 
+    String configurationVersion = config.getOrElse("config-version", "1.1");
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    String motd = config.getOrElse("motd", "<mm><#09add3>A Velocity Server");
+    String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+
+    motdMigration(config, configurationVersion, motd);
+
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
@@ -598,6 +600,16 @@ public class VelocityConfiguration implements ProxyConfig {
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return builder.toString();
+  }
+
+  private static void motdMigration(CommentedConfig config, String configVersion, String actualMotd) {
+    if ("1.0".equals(configVersion)) {
+      String motd = MiniMessage.miniMessage().serialize(
+          LegacyComponentSerializer.legacy('&').deserialize(actualMotd));
+
+      config.set("motd", motd);
+      config.set("config-version", "1.1");
+    }
   }
 
   public boolean isOnlineModeKickExistingPlayers() {
