@@ -45,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -273,7 +274,9 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public net.kyori.adventure.text.Component getMotd() {
     if (motdAsComponent == null) {
-      if (motd.startsWith("{")) {
+      if (motd.startsWith("<mm>")) {
+        motdAsComponent = MiniMessage.miniMessage().deserialize(motd.substring(4));
+      } else if (motd.startsWith("{")) {
         motdAsComponent = GsonComponentSerializer.gson().deserialize(motd);
       } else {
         motdAsComponent = LegacyComponentSerializer.legacy('&').deserialize(motd);
@@ -558,7 +561,7 @@ public class VelocityConfiguration implements ProxyConfig {
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
     Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
 
-    // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
+    // Throw an exception if the forwarding-secret file is empty and the proxy is using a
     // forwarding mode that requires it.
     if (forwardingSecret.length == 0
         && (forwardingMode == PlayerInfoForwarding.MODERN
