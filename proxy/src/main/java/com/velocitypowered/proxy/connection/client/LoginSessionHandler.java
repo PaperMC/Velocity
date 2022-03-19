@@ -65,14 +65,11 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
