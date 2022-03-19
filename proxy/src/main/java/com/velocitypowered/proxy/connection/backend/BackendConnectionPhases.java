@@ -17,8 +17,14 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.proxy.connection.ConnectionTypes;
+import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase;
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeBackendPhase;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 
 /**
@@ -46,10 +52,37 @@ public final class BackendConnectionPhases {
     @Override
     public boolean handle(VelocityServerConnection serverConn,
                           ConnectedPlayer player,
+                          LoginPluginMessage message) {
+      // The connection may be modern forge. If so, the Forge handler will deal with this
+      // for us. Otherwise, we have nothing to do.
+      return ModernForgeHandshakeBackendPhase.NOT_STARTED.handle(serverConn, player, message);
+    }
+
+    @Override
+    public boolean handle(VelocityServerConnection serverConn,
+                          ConnectedPlayer player,
                           PluginMessage message) {
       // The connection may be legacy forge. If so, the Forge handler will deal with this
       // for us. Otherwise, we have nothing to do.
       return LegacyForgeHandshakeBackendPhase.NOT_STARTED.handle(serverConn, player, message);
+    }
+
+    @Override
+    public void onLoginSuccess(VelocityServerConnection serverConnection, ConnectedPlayer player) {
+      if (player.getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
+        serverConnection.setConnectionPhase(ModernForgeHandshakeBackendPhase.COMPLETE);
+        player.setPhase(ModernForgeHandshakeClientPhase.COMPLETE);
+      }
+
+      if (player.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+        serverConnection.setConnectionPhase(LegacyForgeHandshakeBackendPhase.COMPLETE);
+        player.setPhase(LegacyForgeHandshakeClientPhase.COMPLETE);
+      }
+
+      if (player.getConnection().getType() == ConnectionTypes.VANILLA) {
+        serverConnection.setConnectionPhase(BackendConnectionPhases.VANILLA);
+        player.setPhase(ClientConnectionPhases.VANILLA);
+      }
     }
   };
 

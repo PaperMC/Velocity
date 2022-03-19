@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
@@ -27,8 +28,20 @@ public class ClientTransitionSessionHandler implements MinecraftSessionHandler {
 
   private final ConnectedPlayer player;
 
-  ClientTransitionSessionHandler(ConnectedPlayer player) {
+  public ClientTransitionSessionHandler(ConnectedPlayer player) {
     this.player = player;
+  }
+
+  @Override
+  public boolean handle(LoginPluginResponse packet) {
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      if (player.getPhase().handle(player, packet, serverConn)) {
+        return true;
+      }
+      serverConn.ensureConnected().write(packet.retain());
+    }
+    return true;
   }
 
   @Override
@@ -53,7 +66,6 @@ public class ClientTransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    // the user cancelled the login process
     player.teardown();
   }
 }

@@ -20,12 +20,17 @@ package com.velocitypowered.proxy.connection.backend;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.client.ClientTransitionSessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -42,6 +47,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -66,6 +72,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public void activated() {
+    if (serverConn.getPlayer().getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
+      VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+      if (existingConnection != null && existingConnection != serverConn) {
+        existingConnection.getPhase().onDepartForNewServer(existingConnection,
+            serverConn.getPlayer());
+
+        // Shut down the existing server connection.
+        serverConn.getPlayer().setConnectedServer(null);
+        existingConnection.disconnect();
+      } else {
+        serverConn.getPlayer().getPhase().resetConnectionPhase(serverConn.getPlayer());
+      }
+
+      serverConn.getPlayer().getConnection().setSessionHandler(
+          new ClientTransitionSessionHandler(serverConn.getPlayer()));
+    }
+  }
+
+  @Override
   public boolean handle(EncryptionRequest packet) {
     throw new IllegalStateException("Backend server is online-mode!");
   }
@@ -82,6 +108,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
+    } else if (packet.getChannel().equals(ModernForgeConstants.LOGIN_WRAPPER_CHANNEL)) {
+      if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
+        return true;
+      }
     } else {
       // Don't understand, fire event if we have subscribers
       if (!this.server.getEventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
@@ -135,6 +165,25 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
     smc.setState(StateRegistry.PLAY);
+
+    ConnectedPlayer player = serverConn.getPlayer();
+    MinecraftConnection pmc = player.getConnection();
+
+    serverConn.getPhase().onLoginSuccess(serverConn, player);
+
+    if (pmc.getState() == StateRegistry.LOGIN) {
+      VelocityConfiguration configuration = server.getConfiguration();
+      UUID playerUniqueId = player.getUniqueId();
+      if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
+        playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
+      }
+      ServerLoginSuccess success = new ServerLoginSuccess();
+      success.setUsername(player.getUsername());
+      success.setUuid(playerUniqueId);
+      pmc.write(success);
+
+      pmc.setState(StateRegistry.PLAY);
+    }
 
     // Switch to the transition handler.
     smc.setSessionHandler(new BackendTransitionSessionHandler(server, serverConn, resultFuture));
