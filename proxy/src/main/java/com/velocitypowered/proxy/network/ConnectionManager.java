@@ -17,9 +17,6 @@
 
 package com.velocitypowered.proxy.network;
 
-import static org.asynchttpclient.Dsl.asyncHttpClient;
-import static org.asynchttpclient.Dsl.config;
-
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
 import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
@@ -38,15 +35,11 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.RequestBuilder;
-import org.asynchttpclient.filter.FilterContext;
-import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
-import org.asynchttpclient.filter.RequestFilter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConnectionManager {
@@ -67,7 +60,7 @@ public final class ConnectionManager {
   public final BackendChannelInitializerHolder backendChannelInitializer;
 
   private final SeparatePoolInetNameResolver resolver;
-  private final AsyncHttpClient httpClient;
+  private final HttpClient httpClient;
 
   /**
    * Initalizes the {@code ConnectionManager}.
@@ -84,20 +77,7 @@ public final class ConnectionManager {
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
-    this.httpClient = asyncHttpClient(config()
-        .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
-        .addRequestFilter(new RequestFilter() {
-          @Override
-          public <T> FilterContext<T> filter(FilterContext<T> ctx) {
-            return new FilterContextBuilder<>(ctx)
-                .request(new RequestBuilder(ctx.getRequest())
-                    .setNameResolver(resolver)
-                    .build())
-                .build();
-          }
-        })
-        .build());
+    this.httpClient = HttpClient.newBuilder().build();
   }
 
   public void logChannelInformation() {
@@ -241,7 +221,7 @@ public final class ConnectionManager {
     return this.serverChannelInitializer;
   }
 
-  public AsyncHttpClient getHttpClient() {
+  public HttpClient getHttpClient() {
     return httpClient;
   }
 
