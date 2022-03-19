@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.protocol;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 public interface MinecraftPacket {
 

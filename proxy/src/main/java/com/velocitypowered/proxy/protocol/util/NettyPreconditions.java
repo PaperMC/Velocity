@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.protocol.util;
 import com.google.common.base.Strings;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
-import io.netty.handler.codec.CorruptedFrameException;
+import io.netty5.handler.codec.CorruptedFrameException;
 
 /**
  * Extends {@link com.google.common.base.Preconditions} for Netty's {@link CorruptedFrameException}.

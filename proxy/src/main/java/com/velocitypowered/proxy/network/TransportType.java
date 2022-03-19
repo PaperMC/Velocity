@@ -18,46 +18,49 @@
 package com.velocitypowered.proxy.network;
 
 import com.velocitypowered.proxy.util.concurrent.VelocityNettyThreadFactory;
-import io.netty.channel.ChannelFactory;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollDatagramChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.ServerSocketChannel;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty5.channel.ChannelFactory;
+import io.netty5.channel.EventLoopGroup;
+import io.netty5.channel.MultithreadEventLoopGroup;
+import io.netty5.channel.epoll.Epoll;
+import io.netty5.channel.epoll.EpollDatagramChannel;
+import io.netty5.channel.epoll.EpollHandler;
+import io.netty5.channel.epoll.EpollServerSocketChannel;
+import io.netty5.channel.epoll.EpollSocketChannel;
+import io.netty5.channel.nio.NioHandler;
+import io.netty5.channel.socket.DatagramChannel;
+import io.netty5.channel.socket.ServerSocketChannel;
+import io.netty5.channel.socket.SocketChannel;
+import io.netty5.channel.socket.nio.NioDatagramChannel;
+import io.netty5.channel.socket.nio.NioServerSocketChannel;
+import io.netty5.channel.socket.nio.NioSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
 enum TransportType {
-  NIO("NIO", NioServerSocketChannel::new,
+  NIO("NIO", NioServerSocketChannel.class,
       NioSocketChannel::new,
       NioDatagramChannel::new,
-      (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
-  EPOLL("epoll", EpollServerSocketChannel::new,
+      (name, type) -> new MultithreadEventLoopGroup(0,
+          createThreadFactory(name, type), NioHandler.newFactory())),
+  EPOLL("epoll", EpollServerSocketChannel.class,
       EpollSocketChannel::new,
       EpollDatagramChannel::new,
-      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)));
+      (name, type) -> new MultithreadEventLoopGroup(0,
+          createThreadFactory(name, type), EpollHandler.newFactory()));
 
   final String name;
-  final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
+  final Class<? extends ServerSocketChannel> serverSocketChannelClass;
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
 
   TransportType(final String name,
-      final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
+      final Class<? extends ServerSocketChannel> serverSocketChannelClass,
       final ChannelFactory<? extends SocketChannel> socketChannelFactory,
       final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
       final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
     this.name = name;
-    this.serverSocketChannelFactory = serverSocketChannelFactory;
+    this.serverSocketChannelClass = serverSocketChannelClass;
     this.socketChannelFactory = socketChannelFactory;
     this.datagramChannelFactory = datagramChannelFactory;
     this.eventLoopGroupFactory = eventLoopGroupFactory;

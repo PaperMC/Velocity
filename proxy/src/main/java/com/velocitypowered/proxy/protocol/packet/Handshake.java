@@ -24,7 +24,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 public class Handshake implements MinecraftPacket {
 

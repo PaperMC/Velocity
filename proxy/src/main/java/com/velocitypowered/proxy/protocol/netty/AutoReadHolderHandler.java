@@ -17,17 +17,17 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.ReferenceCountUtil;
+import io.netty5.channel.ChannelHandlerAdapter;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.util.ReferenceCountUtil;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
 /**
- * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages
+ * A variation on {@link io.netty5.handler.flow.FlowControlHandler} that explicitly holds messages
  * on {@code channelRead} and only releases them on an explicit read operation.
  */
-public class AutoReadHolderHandler extends ChannelDuplexHandler {
+public class AutoReadHolderHandler extends ChannelHandlerAdapter {
 
   private final Queue<Object> queuedMessages;
 
@@ -36,7 +36,7 @@ public class AutoReadHolderHandler extends ChannelDuplexHandler {
   }
 
   @Override
-  public void read(ChannelHandlerContext ctx) throws Exception {
+  public void read(ChannelHandlerContext ctx) {
     drainQueuedMessages(ctx);
     ctx.read();
   }
@@ -52,7 +52,7 @@ public class AutoReadHolderHandler extends ChannelDuplexHandler {
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) {
     if (ctx.channel().config().isAutoRead()) {
       ctx.fireChannelRead(msg);
     } else {

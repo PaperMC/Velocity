@@ -138,7 +138,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
               existingConnection == null ? null : existingConnection.getServer()));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-        }, smc.eventLoop())
+        }, smc.executor())
         .exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),

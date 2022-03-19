@@ -19,9 +19,9 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.velocitypowered.proxy.protocol.netty.VarintByteDecoder.DecodeResult;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.ByteToMessageDecoder;
 import java.util.List;
 
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
@@ -32,7 +32,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("VarInt too big");
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in) {
     if (!ctx.channel().isActive()) {
       in.clear();
       return;
@@ -66,7 +66,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       } else {
         int minimumRead = bytesRead + readVarint;
         if (in.isReadable(minimumRead)) {
-          out.add(in.retainedSlice(varintEnd + 1, readVarint));
+          ctx.fireChannelRead(in.retainedSlice(varintEnd + 1, readVarint));
           in.skipBytes(minimumRead);
         }
       }

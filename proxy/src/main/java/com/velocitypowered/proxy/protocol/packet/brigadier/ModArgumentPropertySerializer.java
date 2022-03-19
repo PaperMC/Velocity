@@ -18,8 +18,8 @@
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class ModArgumentPropertySerializer implements ArgumentPropertySerializer<ModArgumentProperty> {

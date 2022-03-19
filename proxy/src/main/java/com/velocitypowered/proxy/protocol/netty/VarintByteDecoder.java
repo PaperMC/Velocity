@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
-import io.netty.util.ByteProcessor;
+import io.netty5.util.ByteProcessor;
 
 class VarintByteDecoder implements ByteProcessor {
 

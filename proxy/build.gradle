@@ -45,13 +45,13 @@ dependencies {
     implementation project(':velocity-api').sourceSets.ap.output
     implementation project(':velocity-native')
 
-    implementation "io.netty:netty-codec:${nettyVersion}"
-    implementation "io.netty:netty-codec-haproxy:${nettyVersion}"
-    implementation "io.netty:netty-codec-http:${nettyVersion}"
-    implementation "io.netty:netty-handler:${nettyVersion}"
-    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}"
-    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64"
-    implementation "io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64"
+    implementation "io.netty:netty5-codec:${nettyVersion}"
+//    implementation "io.netty.contrib:netty5-codec-haproxy:5.0.0.Final-SNAPSHOT"
+    implementation "io.netty:netty5-codec-http:${nettyVersion}"
+    implementation "io.netty:netty5-handler:${nettyVersion}"
+    implementation "io.netty:netty5-transport-native-epoll:${nettyVersion}"
+    implementation "io.netty:netty5-transport-native-epoll:${nettyVersion}:linux-x86_64"
+    implementation "io.netty:netty5-transport-native-epoll:${nettyVersion}:linux-aarch_64"
 
     implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"

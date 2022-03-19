@@ -22,9 +22,9 @@ import static com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEnco
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.MessageToByteEncoder;
 import java.util.zip.DataFormatException;
 
 public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<ByteBuf> {

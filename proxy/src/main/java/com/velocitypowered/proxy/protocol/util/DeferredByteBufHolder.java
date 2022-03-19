@@ -17,9 +17,9 @@
 
 package com.velocitypowered.proxy.protocol.util;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufHolder;
-import io.netty.util.IllegalReferenceCountException;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufHolder;
+import io.netty5.util.IllegalReferenceCountException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /**

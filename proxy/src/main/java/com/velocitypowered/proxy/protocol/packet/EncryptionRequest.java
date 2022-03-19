@@ -23,7 +23,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.util.Arrays;
 
 public class EncryptionRequest implements MinecraftPacket {

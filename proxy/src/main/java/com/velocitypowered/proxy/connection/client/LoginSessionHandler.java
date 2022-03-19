@@ -50,14 +50,11 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
-import com.velocitypowered.proxy.util.InformationUtils;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -176,8 +173,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               hasJoinedResponse.statusCode(), login.getUsername(), playerIp);
           inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
         }
-      }, mcConnection.eventLoop()).exceptionally(err -> {
-        mcConnection.eventLoop().execute(() -> {
+      }, mcConnection.executor()).exceptionally(err -> {
+        mcConnection.executor().execute(() -> {
           if (!mcConnection.isClosed()) {
             logger.error("Unable to enable encryption", err);
             mcConnection.close(true);
@@ -219,7 +216,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            mcConnection.eventLoop().execute(() -> {
+            mcConnection.executor().execute(() -> {
               if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode()
                   || result.isOnlineModeAllowed())) {
                 // Request encryption.
@@ -231,7 +228,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               }
             });
           });
-        }, mcConnection.eventLoop())
+        }, mcConnection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception in pre-login stage", ex);
           return null;
@@ -292,8 +289,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               }
               completeLoginProtocolPhaseAndInitialize(player);
             }
-          }, mcConnection.eventLoop());
-    }, mcConnection.eventLoop()).exceptionally((ex) -> {
+          }, mcConnection.executor());
+    }, mcConnection.executor()).exceptionally((ex) -> {
       logger.error("Exception during connection of {}", finalProfile, ex);
       return null;
     });  
@@ -345,7 +342,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                   return null;
                 });
           }
-        }, mcConnection.eventLoop())
+        }, mcConnection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception while completing login initialisation phase for {}", player, ex);
           return null;
@@ -366,7 +363,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();
-        }, mcConnection.eventLoop());
+        }, mcConnection.executor());
   }
 
   @Override

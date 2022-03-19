@@ -37,7 +37,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +96,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         continue;
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
-      pings.add(vrs.ping(connection.eventLoop(), pingingVersion));
+      pings.add(vrs.ping(connection.executor(), pingingVersion));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);
@@ -186,7 +186,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
             LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
-            connection.eventLoop())
+            connection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);
           return null;
@@ -216,7 +216,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
                   .toJson(event.getPing(), json);
               connection.write(new StatusResponse(json));
             },
-            connection.eventLoop())
+            connection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception while handling status request {}", packet, ex);
           return null;

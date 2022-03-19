@@ -20,10 +20,10 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandler;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.MessageToByteEncoder;
 
 @ChannelHandler.Sharable
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {

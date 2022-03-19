@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.condition.OS.LINUX;
 
 import com.velocitypowered.natives.util.Natives;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufUtil;
+import io.netty5.buffer.Unpooled;
 import java.security.GeneralSecurityException;
 import java.util.Random;
 import java.util.function.Supplier;

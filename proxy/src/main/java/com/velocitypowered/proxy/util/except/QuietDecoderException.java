@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.util.except;
 
-import io.netty.handler.codec.DecoderException;
+import io.netty5.handler.codec.DecoderException;
 
 /**
  * A special-purpose exception thrown when we want to indicate an error decoding but do not want

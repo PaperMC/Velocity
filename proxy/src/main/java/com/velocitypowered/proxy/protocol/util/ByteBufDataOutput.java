@@ -18,8 +18,8 @@
 package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.io.ByteArrayDataOutput;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufUtil;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;

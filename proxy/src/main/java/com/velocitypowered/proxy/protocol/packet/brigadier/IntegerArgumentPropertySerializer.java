@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 class IntegerArgumentPropertySerializer implements ArgumentPropertySerializer<IntegerArgumentType> {
 

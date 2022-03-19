@@ -20,9 +20,9 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.util.MoreByteBufUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageEncoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.MessageToMessageEncoder;
 import java.util.List;
 
 public class MinecraftCipherEncoder extends MessageToMessageEncoder<ByteBuf> {

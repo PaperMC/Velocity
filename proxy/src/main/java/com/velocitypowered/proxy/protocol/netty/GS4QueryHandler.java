@@ -30,10 +30,10 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import com.velocitypowered.proxy.VelocityServer;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.socket.DatagramPacket;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.channel.SimpleChannelInboundHandler;
+import io.netty5.channel.socket.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
@@ -83,7 +83,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainComponentSerializer.plain().serialize(server.getConfiguration().getMotd()))
+        .hostname(PlainTextComponentSerializer.plainText()
+            .serialize(server.getConfiguration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
@@ -100,7 +101,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   }
 
   @Override
-  protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+  protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
     ByteBuf queryMessage = msg.content();
     InetAddress senderAddress = msg.sender().getAddress();
 
@@ -127,7 +128,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
         writeString(queryResponse, Integer.toString(challengeToken));
 
         DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
-        ctx.writeAndFlush(responsePacket, ctx.voidPromise());
+        ctx.writeAndFlush(responsePacket);
         break;
       }
 
@@ -179,8 +180,8 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
               // Send the response
               DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
-              ctx.writeAndFlush(responsePacket, ctx.voidPromise());
-            }, ctx.channel().eventLoop())
+              ctx.writeAndFlush(responsePacket);
+            }, ctx.channel().executor())
             .exceptionally((ex) -> {
               LogManager.getLogger(getClass()).error(
                   "Exception while writing GS4 response for query from {}", senderAddress, ex);

@@ -22,9 +22,9 @@ import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFr
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.ByteToMessageDecoder;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -34,7 +34,7 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
   private static final String MC_1_6_CHANNEL = "MC|PingHost";
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
     if (!in.isReadable()) {
       return;
     }
@@ -49,21 +49,21 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
     if (first == 0xfe) {
       // possibly a ping
       if (!in.isReadable()) {
-        out.add(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_3));
+        ctx.fireChannelRead(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_3));
         return;
       }
 
       short next = in.readUnsignedByte();
       if (next == 1 && !in.isReadable()) {
-        out.add(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_4));
+        ctx.fireChannelRead(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_4));
         return;
       }
 
       // We got a 1.6.x ping. Let's chomp off the stuff we don't need.
-      out.add(readExtended16Data(in));
+      ctx.fireChannelRead(readExtended16Data(in));
     } else if (first == 0x02 && in.isReadable()) {
       in.skipBytes(in.readableBytes());
-      out.add(new LegacyHandshake());
+      ctx.fireChannelRead(new LegacyHandshake());
     } else {
       in.readerIndex(originalReaderIndex);
       ctx.pipeline().remove(this);

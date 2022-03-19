@@ -25,15 +25,13 @@ import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.WriteBufferWaterMark;
-import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty5.bootstrap.Bootstrap;
+import io.netty5.bootstrap.ServerBootstrap;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelOption;
+import io.netty5.channel.EventLoopGroup;
+import io.netty5.channel.WriteBufferWaterMark;
+import io.netty5.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.util.HashMap;
@@ -92,7 +90,7 @@ public final class ConnectionManager {
    */
   public void bind(final InetSocketAddress address) {
     final ServerBootstrap bootstrap = new ServerBootstrap()
-        .channelFactory(this.transportType.serverSocketChannelFactory)
+        .channel(this.transportType.serverSocketChannelClass)
         .group(this.bossGroup, this.workerGroup)
         .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
         .childHandler(this.serverChannelInitializer.get())
@@ -100,13 +98,13 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
     }
 
     bootstrap.bind()
-        .addListener((ChannelFutureListener) future -> {
-          final Channel channel = future.channel();
+        .addListener(future -> {
+          final Channel channel = future.getNow();
           if (future.isSuccess()) {
             this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
             LOGGER.info("Listening on {}", channel.localAddress());
@@ -134,8 +132,8 @@ public final class ConnectionManager {
         .handler(new GS4QueryHandler(this.server))
         .localAddress(address);
     bootstrap.bind()
-        .addListener((ChannelFutureListener) future -> {
-          final Channel channel = future.channel();
+        .addListener(future -> {
+          final Channel channel = future.getNow();
           if (future.isSuccess()) {
             this.endpoints.put(address, new Endpoint(channel, ListenerType.QUERY));
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
@@ -164,8 +162,8 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
   }

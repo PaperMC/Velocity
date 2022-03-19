@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 /**
  * Serializes properties for {@link StringArgumentType}.

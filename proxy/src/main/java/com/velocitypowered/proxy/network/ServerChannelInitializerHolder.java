@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.network;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelInitializer;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

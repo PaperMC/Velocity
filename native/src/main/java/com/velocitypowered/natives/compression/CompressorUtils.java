@@ -17,7 +17,7 @@
 
 package com.velocitypowered.natives.compression;
 
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.util.zip.DataFormatException;
 
 class CompressorUtils {

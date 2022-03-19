@@ -52,7 +52,7 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 public interface MinecraftSessionHandler {
 

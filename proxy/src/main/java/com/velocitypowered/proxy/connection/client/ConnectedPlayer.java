@@ -70,8 +70,8 @@ import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.ByteBufUtil;
+import io.netty5.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -90,11 +90,10 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -108,8 +107,8 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
-  private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer(
-      c -> "", TranslatableComponent::key);
+  private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
+      PlainTextComponentSerializer.plainText();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
@@ -491,10 +490,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   @Override
   public void disconnect(Component reason) {
-    if (connection.eventLoop().inEventLoop()) {
+    if (connection.executor().inEventLoop()) {
       disconnect0(reason, false);
     } else {
-      connection.eventLoop().execute(() -> disconnect0(reason, false));
+      connection.executor().execute(() -> disconnect0(reason, false));
     }
   }
 
@@ -689,7 +688,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       // The only remaining value is successful (no need to do anything!)
                       break;
                   }
-                }, connection.eventLoop());
+                }, connection.executor());
           } else if (event.getResult() instanceof Notify) {
             Notify res = (Notify) event.getResult();
             if (event.kickedDuringServerConnect() && previouslyConnected) {
@@ -701,7 +700,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             // In case someone gets creative, assume we want to disconnect the player.
             disconnect(friendlyReason);
           }
-        }, connection.eventLoop());
+        }, connection.executor());
   }
 
   /**
@@ -984,7 +983,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     if (!peek) {
-      connection.eventLoop().execute(this::tickResourcePackQueue);
+      connection.executor().execute(this::tickResourcePackQueue);
     }
 
     return queued != null
@@ -1067,7 +1066,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
     }
 
     private CompletableFuture<Optional<Status>> getInitialStatus() {
-      return CompletableFuture.supplyAsync(() -> checkServer(toConnect), connection.eventLoop());
+      return CompletableFuture.supplyAsync(() -> checkServer(toConnect), connection.executor());
     }
 
     private CompletableFuture<Impl> internalConnect() {
@@ -1099,8 +1098,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                       ConnectedPlayer.this, server);
                   connectionInFlight = con;
                   return con.connect().whenCompleteAsync(
-                      (result, exception) -> this.resetIfInFlightIs(con), connection.eventLoop());
-                }, connection.eventLoop());
+                      (result, exception) -> this.resetIfInFlightIs(con), connection.executor());
+                }, connection.executor());
           });
     }
 
@@ -1123,7 +1122,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
             if (throwable != null) {
               logger.error("Exception during connect; status = {}", status, throwable);
             }
-          }, connection.eventLoop())
+          }, connection.executor())
           .thenApply(x -> x);
     }
 
@@ -1158,7 +1157,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
                 // The only remaining value is successful (no need to do anything!)
                 break;
             }
-          }, connection.eventLoop())
+          }, connection.executor())
           .thenApply(Result::isSuccessful);
     }
 

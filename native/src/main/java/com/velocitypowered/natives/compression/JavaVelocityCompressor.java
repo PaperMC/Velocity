@@ -23,7 +23,7 @@ import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFE
 import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.velocitypowered.natives.util.BufferPreference;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;

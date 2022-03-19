@@ -41,10 +41,9 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
-import java.net.InetSocketAddress;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.Unpooled;
+import io.netty5.channel.Channel;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -88,14 +87,16 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
+    server.createBootstrap(proxyPlayer.getConnection().executor())
         .handler(server.getBackendChannelInitializer())
         .connect(registeredServer.getServerInfo().getAddress())
-        .addListener((ChannelFutureListener) future -> {
+        .addListener(future -> {
           if (future.isSuccess()) {
-            connection = new MinecraftConnection(future.channel(), server);
+            final Channel channel = future.getNow();
+
+            connection = new MinecraftConnection(channel, server);
             connection.setAssociation(VelocityServerConnection.this);
-            future.channel().pipeline().addLast(HANDLER, connection);
+            channel.pipeline().addLast(HANDLER, connection);
 
             // Kick off the connection process
             connection.setSessionHandler(

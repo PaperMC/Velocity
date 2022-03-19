@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.util.concurrent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.netty.util.concurrent.FastThreadLocalThread;
+import io.netty5.util.concurrent.FastThreadLocalThread;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 

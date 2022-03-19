@@ -21,13 +21,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.netty.resolver.AddressResolver;
-import io.netty.resolver.AddressResolverGroup;
-import io.netty.resolver.DefaultNameResolver;
-import io.netty.resolver.InetNameResolver;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.Promise;
+import io.netty5.resolver.AddressResolver;
+import io.netty5.resolver.AddressResolverGroup;
+import io.netty5.resolver.DefaultNameResolver;
+import io.netty5.resolver.InetNameResolver;
+import io.netty5.util.concurrent.EventExecutor;
+import io.netty5.util.concurrent.Future;
+import io.netty5.util.concurrent.Promise;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -70,18 +70,15 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
       return;
     }
 
-    try {
-      resolveExecutor.execute(() -> {
-        promise.addListener(future -> {
+    resolveExecutor.execute(() -> this.delegate.resolve(inetHost)
+        .addListener(future -> {
           if (future.isSuccess()) {
-            cache.put(inetHost, ImmutableList.of((InetAddress) future.getNow()));
+            cache.put(inetHost, ImmutableList.of(future.getNow()));
+            promise.trySuccess(future.getNow());
+          } else {
+            promise.tryFailure(future.cause());
           }
-        });
-        this.delegate.resolve(inetHost, promise);
-      });
-    } catch (RejectedExecutionException e) {
-      promise.setFailure(e);
-    }
+        }));
   }
 
   @Override
@@ -93,16 +90,16 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
       return;
     }
 
-    try {
-      promise.addListener(future -> {
-        if (future.isSuccess()) {
-          cache.put(inetHost, (List<InetAddress>) future.getNow());
-        }
-      });
-      resolveExecutor.execute(() -> this.delegate.resolveAll(inetHost, promise));
-    } catch (RejectedExecutionException e) {
-      promise.setFailure(e);
-    }
+    resolveExecutor.execute(() -> this.delegate.resolve(inetHost)
+        .addListener(future -> {
+          if (future.isSuccess()) {
+            List<InetAddress> addressList = ImmutableList.of(future.getNow());
+            cache.put(inetHost, addressList);
+            promise.trySuccess(addressList);
+          } else {
+            promise.tryFailure(future.cause());
+          }
+        }));
   }
 
   public void shutdown() {

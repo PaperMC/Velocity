@@ -35,10 +35,9 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
-import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelInitializer;
+import io.netty5.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
@@ -67,8 +66,6 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
     connection.setSessionHandler(new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
-    if (this.server.getConfiguration().isProxyProtocol()) {
-      ch.pipeline().addFirst(new HAProxyMessageDecoder());
-    }
+    // TODO: Readd HAProxy support
   }
 }

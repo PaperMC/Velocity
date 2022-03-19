@@ -37,9 +37,9 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufUtil;
+import io.netty5.buffer.Unpooled;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
@@ -101,7 +101,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             } else {
               mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
             }
-          }, mc.eventLoop());
+          }, mc.executor());
     }
     return true;
   }

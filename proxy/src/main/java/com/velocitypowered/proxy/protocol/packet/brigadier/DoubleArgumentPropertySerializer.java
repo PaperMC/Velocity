@@ -22,7 +22,7 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumen
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.getFlags;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 class DoubleArgumentPropertySerializer implements ArgumentPropertySerializer<DoubleArgumentType> {
 

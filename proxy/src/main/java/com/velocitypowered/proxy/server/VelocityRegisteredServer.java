@@ -41,13 +41,12 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoop;
-import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.Unpooled;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelInitializer;
+import io.netty5.channel.EventLoop;
+import io.netty5.handler.timeout.ReadTimeoutHandler;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -116,9 +115,9 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           }
         })
         .connect(serverInfo.getAddress())
-        .addListener((ChannelFutureListener) future -> {
+        .addListener(future -> {
           if (future.isSuccess()) {
-            MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
+            MinecraftConnection conn = future.getNow().pipeline().get(MinecraftConnection.class);
             conn.setSessionHandler(new PingSessionHandler(
                 pingFuture, VelocityRegisteredServer.this, conn, version));
           } else {

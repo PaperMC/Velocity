@@ -23,9 +23,9 @@ import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFr
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
@@ -46,11 +46,11 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
   }
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
     int claimedUncompressedSize = ProtocolUtils.readVarInt(in);
     if (claimedUncompressedSize == 0) {
       // This message is not compressed.
-      out.add(in.retain());
+      ctx.fireChannelRead(in.retain());
       return;
     }
 
@@ -64,7 +64,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, claimedUncompressedSize);
     try {
       compressor.inflate(compatibleIn, uncompressed, claimedUncompressedSize);
-      out.add(uncompressed);
+      ctx.fireChannelRead(uncompressed);
     } catch (Exception e) {
       uncompressed.release();
       throw e;

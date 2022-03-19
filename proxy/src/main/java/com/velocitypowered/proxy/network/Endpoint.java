@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.network;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ListenerType;
-import io.netty.channel.Channel;
+import io.netty5.channel.Channel;
 
 /**
  * Represents a listener endpoint.

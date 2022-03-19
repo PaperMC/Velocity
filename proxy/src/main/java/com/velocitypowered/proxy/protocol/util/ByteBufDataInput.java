@@ -18,12 +18,12 @@
 package com.velocitypowered.proxy.protocol.util;
 
 import com.google.common.io.ByteArrayDataInput;
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
- * A wrapper around {@link io.netty.buffer.ByteBuf} that implements the exception-free
+ * A wrapper around {@link io.netty5.buffer.ByteBuf} that implements the exception-free
  * {@link ByteArrayDataInput} interface from Guava.
  */
 public class ByteBufDataInput implements ByteArrayDataInput {

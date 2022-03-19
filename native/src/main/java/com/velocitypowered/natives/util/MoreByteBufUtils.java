@@ -18,8 +18,8 @@
 package com.velocitypowered.natives.util;
 
 import com.velocitypowered.natives.Native;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufAllocator;
 
 public class MoreByteBufUtils {
   private MoreByteBufUtils() {

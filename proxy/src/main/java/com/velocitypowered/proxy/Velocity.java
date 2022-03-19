@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy;
 
-import io.netty.util.ResourceLeakDetector;
-import io.netty.util.ResourceLeakDetector.Level;
+import io.netty5.util.ResourceLeakDetector;
+import io.netty5.util.ResourceLeakDetector.Level;
 import java.text.DecimalFormat;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,12 +38,12 @@ public class Velocity {
     // If Velocity's natives are being extracted to a different temporary directory, make sure the
     // Netty natives are extracted there as well
     if (System.getProperty("velocity.natives-tmpdir") != null) {
-      System.setProperty("io.netty.native.workdir", System.getProperty("velocity.natives-tmpdir"));
+      System.setProperty("io.netty5.native.workdir", System.getProperty("velocity.natives-tmpdir"));
     }
 
     // Disable the resource leak detector by default as it reduces performance. Allow the user to
     // override this if desired.
-    if (System.getProperty("io.netty.leakDetection.level") == null) {
+    if (System.getProperty("io.netty5.leakDetection.level") == null) {
       ResourceLeakDetector.setLevel(Level.DISABLED);
     }
   }

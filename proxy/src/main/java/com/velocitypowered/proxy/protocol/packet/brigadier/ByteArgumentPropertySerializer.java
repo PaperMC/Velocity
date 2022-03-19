@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
-import io.netty.buffer.ByteBuf;
+import io.netty5.buffer.ByteBuf;
 
 class ByteArgumentPropertySerializer implements ArgumentPropertySerializer<Byte> {
 

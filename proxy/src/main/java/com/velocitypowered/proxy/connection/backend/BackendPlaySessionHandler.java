@@ -48,11 +48,11 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufUtil;
+import io.netty5.buffer.Unpooled;
+import io.netty5.channel.Channel;
+import io.netty5.handler.timeout.ReadTimeoutException;
 
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
@@ -172,7 +172,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
       }
-    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+    }, playerConnection.executor()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
                 packet.getHash(),
@@ -229,7 +229,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 Unpooled.wrappedBuffer(copy));
             playerConnection.write(copied);
           }
-        }, playerConnection.eventLoop())
+        }, playerConnection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception while handling plugin message {}", packet, ex);
           return null;
@@ -260,7 +260,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
     server.getEventManager().fire(
         new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
-        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
+        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.executor())
         .exceptionally((ex) -> {
           logger.error("Exception while handling available commands for {}", playerConnection, ex);
           return null;

@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
@@ -48,17 +47,15 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.EventLoop;
-import io.netty.handler.codec.haproxy.HAProxyMessage;
-import io.netty.handler.timeout.ReadTimeoutException;
-import io.netty.util.ReferenceCountUtil;
-import java.net.InetSocketAddress;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelFutureListeners;
+import io.netty5.channel.ChannelHandler;
+import io.netty5.channel.ChannelHandlerAdapter;
+import io.netty5.channel.ChannelHandlerContext;
+import io.netty5.channel.EventLoop;
+import io.netty5.handler.timeout.ReadTimeoutException;
+import io.netty5.util.ReferenceCountUtil;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +69,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * A utility class to make working with the pipeline a little less painful and transparently handles
  * certain Minecraft protocol mechanics.
  */
-public class MinecraftConnection extends ChannelInboundHandlerAdapter {
+public class MinecraftConnection extends ChannelHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
@@ -142,10 +139,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (!pkt.handle(sessionHandler)) {
           sessionHandler.handleGeneric((MinecraftPacket) msg);
         }
-      } else if (msg instanceof HAProxyMessage) {
-        HAProxyMessage proxyMessage = (HAProxyMessage) msg;
-        this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
-            proxyMessage.sourcePort());
+        // TODO: Readd HAProxy support
       } else if (msg instanceof ByteBuf) {
         sessionHandler.handleUnknown((ByteBuf) msg);
       }
@@ -201,12 +195,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private void ensureInEventLoop() {
-    Preconditions.checkState(this.channel.eventLoop().inEventLoop(), "Not in event loop");
+  private void ensureInExecutor() {
+    Preconditions.checkState(this.channel.executor().inEventLoop(),
+        "Not running in channel executor");
   }
 
-  public EventLoop eventLoop() {
-    return channel.eventLoop();
+  public EventLoop executor() {
+    return channel.executor();
   }
 
   /**
@@ -215,7 +210,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void write(Object msg) {
     if (channel.isActive()) {
-      channel.writeAndFlush(msg, channel.voidPromise());
+      channel.writeAndFlush(msg);
     } else {
       ReferenceCountUtil.release(msg);
     }
@@ -227,7 +222,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void delayedWrite(Object msg) {
     if (channel.isActive()) {
-      channel.write(msg, channel.voidPromise());
+      channel.write(msg);
     } else {
       ReferenceCountUtil.release(msg);
     }
@@ -251,18 +246,18 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
           && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
       if (is17 && this.getState() != StateRegistry.STATUS) {
-        channel.eventLoop().execute(() -> {
+        channel.executor().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
           this.setAutoReading(false);
-          channel.eventLoop().schedule(() -> {
+          channel.executor().schedule(() -> {
             knownDisconnect = true;
-            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+            channel.writeAndFlush(msg).addListener(channel, ChannelFutureListeners.CLOSE);
           }, 250, TimeUnit.MILLISECONDS);
         });
       } else {
         knownDisconnect = true;
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+        channel.writeAndFlush(msg).addListener(channel, ChannelFutureListeners.CLOSE);
       }
     }
   }
@@ -277,13 +272,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void close(boolean markKnown) {
     if (channel.isActive()) {
-      if (channel.eventLoop().inEventLoop()) {
+      if (channel.executor().inEventLoop()) {
         if (markKnown) {
           knownDisconnect = true;
         }
         channel.close();
       } else {
-        channel.eventLoop().execute(() -> {
+        channel.executor().execute(() -> {
           if (markKnown) {
             knownDisconnect = true;
           }
@@ -322,7 +317,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param autoReading whether or not we should read data automatically
    */
   public void setAutoReading(boolean autoReading) {
-    ensureInEventLoop();
+    ensureInExecutor();
 
     channel.config().setAutoRead(autoReading);
     if (autoReading) {
@@ -340,7 +335,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param state the new state
    */
   public void setState(StateRegistry state) {
-    ensureInEventLoop();
+    ensureInExecutor();
 
     this.state = state;
     this.channel.pipeline().get(MinecraftEncoder.class).setState(state);
@@ -356,7 +351,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param protocolVersion the protocol version to use
    */
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    ensureInEventLoop();
+    ensureInExecutor();
 
     boolean changed = this.protocolVersion != protocolVersion;
     this.protocolVersion = protocolVersion;
@@ -383,7 +378,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param sessionHandler the handler to use
    */
   public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
-    ensureInEventLoop();
+    ensureInExecutor();
 
     if (this.sessionHandler != null) {
       this.sessionHandler.deactivated();
@@ -403,7 +398,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void setCompressionThreshold(int threshold) {
     ensureOpen();
-    ensureInEventLoop();
+    ensureInExecutor();
 
     if (threshold == -1) {
       final ChannelHandler removedDecoder = channel.pipeline().remove(COMPRESSION_DECODER);
@@ -445,7 +440,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void enableEncryption(byte[] secret) throws GeneralSecurityException {
     ensureOpen();
-    ensureInEventLoop();
+    ensureInExecutor();
 
     SecretKey key = new SecretKeySpec(secret, "AES");
 
@@ -465,7 +460,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   public void setAssociation(MinecraftConnectionAssociation association) {
-    ensureInEventLoop();
+    ensureInExecutor();
     this.association = association;
   }
 

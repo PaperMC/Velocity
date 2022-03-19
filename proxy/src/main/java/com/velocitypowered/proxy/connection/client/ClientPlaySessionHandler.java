@@ -58,10 +58,10 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
-import io.netty.util.ReferenceCountUtil;
+import io.netty5.buffer.ByteBuf;
+import io.netty5.buffer.ByteBufUtil;
+import io.netty5.buffer.Unpooled;
+import io.netty5.util.ReferenceCountUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -189,7 +189,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 smc.write(packet);
               }
             }
-          }, smc.eventLoop())
+          }, smc.executor())
           .exceptionally((ex) -> {
             logger.error("Exception while handling player chat for {}", player, ex);
             return null;
@@ -283,7 +283,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                   backendConn.write(message);
                 }
               }
-            }, backendConn.eventLoop())
+            }, backendConn.executor())
                 .exceptionally((ex) -> {
                   logger.error("Exception while handling plugin message packet for {}",
                       player, ex);
@@ -353,7 +353,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // sure to do it on a future invocation of the event loop, otherwise while the issue will
       // fix itself, we'll still disable auto-reading and instead of backpressure resolution, we
       // get client timeouts.
-      player.getConnection().eventLoop().execute(() -> player.getConnection().flush());
+      player.getConnection().executor().execute(() -> player.getConnection().flush());
     }
 
     VelocityServerConnection serverConn = player.getConnectedServer();
@@ -526,7 +526,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             resp.getOffers().addAll(offers);
             player.getConnection().write(resp);
           }
-        }, player.getConnection().eventLoop())
+        }, player.getConnection().executor())
         .exceptionally((ex) -> {
           logger.error("Exception while handling command tab completion for player {} executing {}",
               player, command, ex);
@@ -589,7 +589,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 player.getUsername(),
                 command, e);
           }
-        }, player.getConnection().eventLoop())
+        }, player.getConnection().executor())
         .exceptionally((ex) -> {
           logger.error(
               "Exception while finishing command tab completion, with request {} and response {}",
@@ -610,7 +610,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             response.getOffers().add(new Offer(s));
           }
           player.getConnection().write(response);
-        }, player.getConnection().eventLoop())
+        }, player.getConnection().executor())
         .exceptionally((ex) -> {
           logger.error(
               "Exception while finishing regular tab completion, with request {} and response{}",
@@ -629,14 +629,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
       return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/"
-          + commandToRun)), smc.eventLoop());
+          + commandToRun)), smc.executor());
     } else {
       return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
               smc.write(Chat.createServerbound("/" + commandToRun));
             }
-          }, smc.eventLoop());
+          }, smc.executor());
     }
   }
 
