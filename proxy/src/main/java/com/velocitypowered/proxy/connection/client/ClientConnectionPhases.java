@@ -17,11 +17,16 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
+
 /**
  * The vanilla {@link ClientConnectionPhase}s.
  *
- * <p>See {@link com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase}
+ * <p>See {@link LegacyForgeHandshakeClientPhase}
  * for Legacy Forge phases</p>
+ * <p>See {@link ModernForgeHandshakeClientPhase}
+ * for Modern Forge phases</p>
  */
 public final class ClientConnectionPhases {
 

@@ -19,15 +19,33 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 
 /**
  * Provides connection phase specific actions.
  *
- * <p>Note that Forge phases are found in the enum
- * {@link LegacyForgeHandshakeClientPhase}.</p>
+ * <p>Note that Forge phases are found in the enums
+ * {@link LegacyForgeHandshakeClientPhase} and
+ * {@link ModernForgeHandshakeClientPhase}</p>
  */
 public interface ClientConnectionPhase {
+
+  /**
+   * Handle a login plugin response in the context of
+   * this phase.
+   *
+   * @param player The player
+   * @param message The message to handle
+   * @param server The backend connection to use
+   * @return true if handled, false otherwise.
+   */
+  default boolean handle(ConnectedPlayer player,
+      LoginPluginResponse message,
+      VelocityServerConnection server) {
+    return false;
+  }
 
   /**
    * Handle a plugin message in the context of
