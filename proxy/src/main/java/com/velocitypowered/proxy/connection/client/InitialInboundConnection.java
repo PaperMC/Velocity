@@ -85,9 +85,10 @@ public final class InitialInboundConnection implements InboundConnection,
   public void disconnect(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-
-    logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(translated));
+    if (connection.server.getConfiguration().isLogPlayerConnections()) {
+      logger.info("{} has disconnected: {}", this,
+          LegacyComponentSerializer.legacySection().serialize(translated));
+    }
     connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
   }
 
