@@ -180,6 +180,27 @@ public final class ServerPing {
       return this;
     }
 
+    /**
+     * Set the hover message that this ping will have.
+     * @param components the components of this hover
+     * @return this build, for chaining
+     */
+    public Builder hoverMessage(net.kyori.adventure.text.Component... components) {
+      SamplePlayer[] players = new SamplePlayer[components.length];
+      for (int i = 0; i < components.length; i++) {
+        players[i] = new SamplePlayer(
+          net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+            .builder()
+            .character(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.SECTION_CHAR)
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build()
+            .serialize(components[i]),
+          UUID.randomUUID()
+        );
+      }
+      return this.samplePlayers(players);
+    }
+
     public Builder modType(String modType) {
       this.modType = Preconditions.checkNotNull(modType, "modType");
       return this;
