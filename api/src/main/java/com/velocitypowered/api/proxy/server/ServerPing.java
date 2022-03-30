@@ -189,13 +189,9 @@ public final class ServerPing {
       SamplePlayer[] players = new SamplePlayer[components.length];
       for (int i = 0; i < components.length; i++) {
         players[i] = new SamplePlayer(
-          net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-            .builder()
-            .character(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.SECTION_CHAR)
-            .useUnusualXRepeatedCharacterHexFormat()
-            .build()
-            .serialize(components[i]),
-          UUID.randomUUID()
+            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+              .legacySection().serialize(components[i]),
+            UUID.randomUUID()
         );
       }
       return this.samplePlayers(players);
