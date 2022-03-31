@@ -257,6 +257,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   }
 
   @Override
+  public @NotNull Pointers pointers() {
+    return this.pointers;
+  }
+
+  @Override
   public InetSocketAddress getRemoteAddress() {
     return (InetSocketAddress) connection.getRemoteAddress();
   }
