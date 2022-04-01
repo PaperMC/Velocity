@@ -35,6 +35,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
+import com.velocitypowered.proxy.util.Translatables;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -47,6 +49,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -154,8 +157,14 @@ public class VelocityPluginManager implements PluginManager {
         continue;
       }
 
-      logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
+      Translatables.info(
+          logger,
+          net.kyori.adventure.text.Component.translatable("velocity.console.loaded-plugin"),
+          Locale.getDefault(),
+          net.kyori.adventure.text.Component.text(description.getId()),
+          net.kyori.adventure.text.Component.text(description.getVersion().orElse("<UNKNOWN>")),
+          net.kyori.adventure.text.Component.text(Joiner.on(", ").join(description.getAuthors()))
+      );
       registerPlugin(container);
     }
   }

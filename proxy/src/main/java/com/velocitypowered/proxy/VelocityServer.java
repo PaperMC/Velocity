@@ -57,6 +57,7 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.EncryptionUtils;
 import com.velocitypowered.proxy.util.FileSystemUtils;
+import com.velocitypowered.proxy.util.Translatables;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
@@ -307,10 +308,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   private void loadPlugins() {
-    logger.info("Loading plugins...");
+    Translatables.info(
+        logger,
+        Component.translatable("velocity.console.loading-plugins"),
+        Locale.getDefault()
+    );
 
     try {
-      Path pluginPath = Paths.get("plugins");
+      Path pluginPath = Path.of("plugins");
 
       if (!pluginPath.toFile().exists()) {
         Files.createDirectory(pluginPath);
@@ -340,7 +345,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     }
 
-    logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
+    Translatables.info(
+        logger,
+        Component.translatable("velocity.console.loaded-plugins-count"),
+        Locale.getDefault(),
+        Component.text(pluginManager.getPlugins().size())
+    );
   }
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
@@ -362,7 +372,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @throws IOException if we can't read {@code velocity.toml}
    */
   public boolean reloadConfiguration() throws IOException {
-    Path configPath = Paths.get("velocity.toml");
+    Path configPath = Path.of("velocity.toml");
     VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
 
     if (!newConfiguration.validate()) {
@@ -400,15 +410,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           player.createConnectionRequest(next.get()).connectWithIndication()
               .whenComplete((success, ex) -> {
                 if (ex != null || success == null || !success) {
-                  player.disconnect(Component.text("Your server has been changed, but we could "
-                      + "not move you to any fallback servers."));
+                  player.disconnect(Component
+                      .translatable("velocity.error.could-not-move-to-fallback"));
                 }
                 latch.countDown();
               });
         } else {
           latch.countDown();
-          player.disconnect(Component.text("Your server has been changed, but we could "
-              + "not move you to any fallback servers."));
+          player.disconnect(Component
+              .translatable("velocity.error.could-not-move-to-fallback"));
         }
       }
       try {

@@ -28,6 +28,8 @@ import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
 import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
+import com.velocitypowered.proxy.util.Translatables;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -100,9 +102,18 @@ public final class ConnectionManager {
         .build());
   }
 
+  /**
+   * Print in console the channel information.
+   */
   public void logChannelInformation() {
-    LOGGER.info("Connections will use {} channels, {} compression, {} ciphers", this.transportType,
-        Natives.compress.getLoadedVariant(), Natives.cipher.getLoadedVariant());
+    Translatables.info(
+        LOGGER,
+        net.kyori.adventure.text.Component.translatable("velocity.console.channel"),
+        java.util.Locale.getDefault(),
+        net.kyori.adventure.text.Component.text(this.transportType.toString()),
+        net.kyori.adventure.text.Component.text(Natives.compress.getLoadedVariant()),
+        net.kyori.adventure.text.Component.text(Natives.cipher.getLoadedVariant())
+    );
   }
 
   /**
