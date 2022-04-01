@@ -88,13 +88,17 @@ import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
+import net.kyori.adventure.platform.facet.FacetPointers;
+import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.KeybindComponent;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -108,8 +112,12 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
-  private static final PlainComponentSerializer PASS_THRU_TRANSLATE = new PlainComponentSerializer(
-      c -> "", TranslatableComponent::key);
+  private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE = PlainTextComponentSerializer.builder()
+      .flattener(ComponentFlattener.basic().toBuilder()
+          .mapper(KeybindComponent.class, c -> "")
+          .mapper(TranslatableComponent.class, TranslatableComponent::key)
+          .build())
+      .build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
@@ -145,6 +153,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
           .withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
+          .withStatic(FacetPointers.TYPE, Type.PLAYER)
           .build();
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
@@ -254,6 +263,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
     server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
+  }
+
+  @Override
+  public @NotNull Pointers pointers() {
+    return this.pointers;
   }
 
   @Override
