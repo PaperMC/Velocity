@@ -113,11 +113,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE = PlainTextComponentSerializer.builder()
-    .flattener(ComponentFlattener.basic().toBuilder()
-      .mapper(KeybindComponent.class, c -> "")
-      .mapper(TranslatableComponent.class, TranslatableComponent::key)
-      .build())
-    .build();
+      .flattener(ComponentFlattener.basic().toBuilder()
+          .mapper(KeybindComponent.class, c -> "")
+          .mapper(TranslatableComponent.class, TranslatableComponent::key)
+          .build())
+      .build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
