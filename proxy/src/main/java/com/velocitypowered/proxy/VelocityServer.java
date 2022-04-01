@@ -282,7 +282,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       logger.error("Encountered an I/O error whilst loading translations", e);
       return;
     }
-    GlobalTranslator.get().addSource(translationRegistry);
+    GlobalTranslator.translator().addSource(translationRegistry);
   }
 
   @SuppressFBWarnings("DM_EXIT")

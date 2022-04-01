@@ -23,7 +23,7 @@ import com.velocitypowered.api.proxy.server.ServerPing.Players;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class LegacyDisconnect {
 
@@ -54,7 +54,7 @@ public class LegacyDisconnect {
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
-            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
+            cleanSectionSymbol(getFirstLine(PlainTextComponentSerializer.plainText().serialize(
                 response.getDescriptionComponent()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));

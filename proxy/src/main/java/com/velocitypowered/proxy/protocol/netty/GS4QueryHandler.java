@@ -45,7 +45,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+
 import org.apache.logging.log4j.LogManager;
 
 public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
@@ -83,7 +84,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainComponentSerializer.plain().serialize(server.getConfiguration().getMotd()))
+        .hostname(PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
