@@ -114,7 +114,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
         + '}';
   }
 
-  public static class ResponseResult implements Result {
+  public static class ResponseResult implements ResultedEvent.Result {
 
     private static final ResponseResult UNKNOWN = new ResponseResult(null);
 
