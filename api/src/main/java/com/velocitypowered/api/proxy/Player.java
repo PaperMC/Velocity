@@ -92,7 +92,7 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   Optional<ModInfo> getModInfo();
 
   /**
-   * Returns the current player's ping.
+   * Gets the player's estimated ping in milliseconds.
    *
    * @return the player's ping or -1 if ping information is currently unknown
    */
