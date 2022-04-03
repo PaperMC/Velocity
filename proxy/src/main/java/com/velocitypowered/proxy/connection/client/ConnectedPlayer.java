@@ -520,8 +520,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   public void disconnect0(Component reason, boolean duringLogin) {
     Component translated = this.translateMessage(reason);
 
-    logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(translated));
+    if (server.getConfiguration().isLogPlayerConnections()) {
+      logger.info("{} has disconnected: {}", this,
+          LegacyComponentSerializer.legacySection().serialize(translated));
+    }
     connection.closeWith(Disconnect.create(translated, this.getProtocolVersion()));
   }
 

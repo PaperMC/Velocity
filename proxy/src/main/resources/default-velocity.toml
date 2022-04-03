@@ -133,6 +133,10 @@ announce-proxy-commands = true
 # Enables the logging of commands
 log-command-executions = false
 
+# Enables logging of player connections when connecting to the proxy, switching servers
+# and disconnecting from the proxy.
+log-player-connections = true
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

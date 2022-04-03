@@ -378,6 +378,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogCommandExecutions();
   }
 
+  public boolean isLogPlayerConnections() {
+    return advanced.isLogPlayerConnections();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -640,6 +644,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose private boolean failoverOnUnexpectedServerDisconnect = true;
     @Expose private boolean announceProxyCommands = true;
     @Expose private boolean logCommandExecutions = false;
+    @Expose private boolean logPlayerConnections = true;
 
     private Advanced() {
     }
@@ -663,6 +668,7 @@ public class VelocityConfiguration implements ProxyConfig {
             .getOrElse("failover-on-unexpected-server-disconnect", true);
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
+        this.logPlayerConnections = config.getOrElse("log-player-connections", true);
       }
     }
 
@@ -714,6 +720,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logCommandExecutions;
     }
 
+    public boolean isLogPlayerConnections() {
+      return logPlayerConnections;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -729,6 +739,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", failoverOnUnexpectedServerDisconnect=" + failoverOnUnexpectedServerDisconnect
           + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
+          + ", logPlayerConnections=" + logPlayerConnections
           + '}';
     }
   }
