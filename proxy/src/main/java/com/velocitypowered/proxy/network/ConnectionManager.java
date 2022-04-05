@@ -110,11 +110,11 @@ public final class ConnectionManager {
   public void logChannelInformation() {
     Translatables.info(
         LOGGER,
-        net.kyori.adventure.text.Component.translatable("velocity.console.channel"),
-        java.util.Locale.getDefault(),
-        net.kyori.adventure.text.Component.text(this.transportType.toString()),
-        net.kyori.adventure.text.Component.text(Natives.compress.getLoadedVariant()),
-        net.kyori.adventure.text.Component.text(Natives.cipher.getLoadedVariant())
+        Component.translatable("velocity.console.channel"),
+        Locale.getDefault(),
+        Component.text(this.transportType.toString()),
+        Component.text(Natives.compress.getLoadedVariant()),
+        Component.text(Natives.cipher.getLoadedVariant())
     );
   }
 

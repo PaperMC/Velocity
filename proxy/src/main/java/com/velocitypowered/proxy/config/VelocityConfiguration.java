@@ -28,7 +28,6 @@ import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.proxy.util.Translatables;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
@@ -131,7 +130,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     if (!onlineMode) {
-      Translatables.warn(
+      com.velocitypowered.proxy.util.Translatables.warn(
           logger,
           net.kyori.adventure.text.Component.translatable("velocity.console.offline-mode"),
           Locale.getDefault()

@@ -43,7 +43,7 @@ public final class Translatables {
       @NotNull Object logger,
       @NotNull TranslatableComponent translatableComponent,
       @NotNull Locale locale,
-      @NotNull Component... args) {
+      @NotNull Component@NotNull... args) {
 
     if (logger instanceof org.apache.logging.log4j.Logger) {
       ((org.apache.logging.log4j.Logger)logger).info(parse(translatableComponent, locale, args));
@@ -63,7 +63,7 @@ public final class Translatables {
       @NotNull Object logger,
       @NotNull TranslatableComponent translatableComponent,
       @NotNull Locale locale,
-      @NotNull Component... args) {
+      @NotNull Component@NotNull... args) {
 
     if (logger instanceof org.apache.logging.log4j.Logger) {
       ((org.apache.logging.log4j.Logger)logger).warn(parse(translatableComponent, locale, args));
@@ -83,7 +83,7 @@ public final class Translatables {
       @NotNull CommandSource source,
       @NotNull TranslatableComponent translatableComponent,
       @NotNull Locale locale,
-      @NotNull Component... args) {
+      @NotNull Component@NotNull... args) {
 
     source.sendMessage(GlobalTranslator.render(
         translatableComponent.args(args),
