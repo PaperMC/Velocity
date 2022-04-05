@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.util;
 
+import com.velocitypowered.api.command.CommandSource;
+
 import java.util.Locale;
 
 import net.kyori.adventure.text.Component;
@@ -24,6 +26,7 @@ import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public final class Translatables {
@@ -37,25 +40,15 @@ public final class Translatables {
    * @param args the arguments, can be an empty array
    */
   public static void info(
-      Object logger,
-      TranslatableComponent translatableComponent,
-      Locale locale,
-      Component... args) {
+      @NotNull Object logger,
+      @NotNull TranslatableComponent translatableComponent,
+      @NotNull Locale locale,
+      @NotNull Component... args) {
 
     if (logger instanceof org.apache.logging.log4j.Logger) {
-      org.apache.logging.log4j.Logger log = (org.apache.logging.log4j.Logger)logger;
-      if (args == null || args.length == 0) {
-        log.info(parse(translatableComponent, locale));
-      } else {
-        log.info(parse(translatableComponent, locale, args));
-      }
+      ((org.apache.logging.log4j.Logger)logger).info(parse(translatableComponent, locale, args));
     } else {
-      Logger log = (Logger)logger;
-      if (args == null || args.length == 0) {
-        log.info(parse(translatableComponent, locale));
-      } else {
-        log.info(parse(translatableComponent, locale, args));
-      }
+      ((Logger)logger).info(parse(translatableComponent, locale, args));
     }
   }
 
@@ -67,39 +60,35 @@ public final class Translatables {
    * @param args the arguments, can be an empty array
    */
   public static void warn(
-      Object logger,
-      TranslatableComponent translatableComponent,
-      Locale locale,
-      Component... args) {
+      @NotNull Object logger,
+      @NotNull TranslatableComponent translatableComponent,
+      @NotNull Locale locale,
+      @NotNull Component... args) {
 
     if (logger instanceof org.apache.logging.log4j.Logger) {
-      org.apache.logging.log4j.Logger log = (org.apache.logging.log4j.Logger)logger;
-      if (args == null || args.length == 0) {
-        log.warn(parse(translatableComponent, locale));
-      } else {
-        log.warn(parse(translatableComponent, locale, args));
-      }
+      ((org.apache.logging.log4j.Logger)logger).warn(parse(translatableComponent, locale, args));
     } else {
-      Logger log = (Logger)logger;
-      if (args == null || args.length == 0) {
-        log.warn(parse(translatableComponent, locale));
-      } else {
-        log.warn(parse(translatableComponent, locale, args));
-      }
+      ((Logger)logger).warn(parse(translatableComponent, locale, args));
     }
   }
 
-  static String parse(TranslatableComponent translatableComponent) {
-    return parse(translatableComponent, Locale.getDefault());
-  }
+  /**
+   * Send a translated message to a CommandSource.
+   * @param source the source
+   * @param translatableComponent the translatable component
+   * @param locale the locale desired
+   * @param args the arguments, can be an empty array
+   */
+  public static void message(
+      @NotNull CommandSource source,
+      @NotNull TranslatableComponent translatableComponent,
+      @NotNull Locale locale,
+      @NotNull Component... args) {
 
-  static String parse(TranslatableComponent translatableComponent, Locale locale) {
-    return LegacyComponentSerializer.legacySection().serialize(
-        GlobalTranslator.render(
-            translatableComponent,
-            ClosestLocaleMatcher.INSTANCE.lookupClosest(locale)
-        )
-    );
+    source.sendMessage(GlobalTranslator.render(
+        translatableComponent.args(args),
+        ClosestLocaleMatcher.INSTANCE.lookupClosest(locale)
+    ));
   }
 
   static String parse(TranslatableComponent translatableComponent, Locale locale, Component... args) {

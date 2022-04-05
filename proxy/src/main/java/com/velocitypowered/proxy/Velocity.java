@@ -66,7 +66,12 @@ public class Velocity {
         "Shutdown thread"));
 
     double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
-    logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
+    com.velocitypowered.proxy.util.Translatables.info(
+        logger,
+        net.kyori.adventure.text.Component.translatable("velocity.console.done"),
+        java.util.Locale.getDefault(),
+        net.kyori.adventure.text.Component.text(new DecimalFormat("#.##").format(bootTime))
+    );
     server.getConsoleCommandSource().start();
 
     // If we don't have a console available (because SimpleTerminalConsole returned), then we still

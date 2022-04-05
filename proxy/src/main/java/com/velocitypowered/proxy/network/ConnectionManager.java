@@ -41,7 +41,9 @@ import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
@@ -140,7 +142,12 @@ public final class ConnectionManager {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
             this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
-            LOGGER.info("Listening on {}", channel.localAddress());
+            Translatables.info(
+                LOGGER,
+                Component.translatable("velocity.console.listening-on"),
+                Locale.getDefault(),
+                Component.text(channel.localAddress().toString())
+            );
 
             // Fire the proxy bound event after the socket is bound
             server.getEventManager().fireAndForget(
@@ -216,7 +223,12 @@ public final class ConnectionManager {
     Channel serverChannel = endpoint.getChannel();
 
     Preconditions.checkState(serverChannel != null, "Endpoint %s not registered", oldBind);
-    LOGGER.info("Closing endpoint {}", serverChannel.localAddress());
+    Translatables.info(
+        LOGGER,
+        Component.translatable("velocity.console.closing-endpoint"),
+        Locale.getDefault(),
+        Component.text(serverChannel.localAddress().toString())
+    );
     serverChannel.close().syncUninterruptibly();
   }
 
@@ -233,7 +245,12 @@ public final class ConnectionManager {
       server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
 
       try {
-        LOGGER.info("Closing endpoint {}", address);
+        Translatables.info(
+            LOGGER,
+            Component.translatable("velocity.console.closing-endpoint"),
+            Locale.getDefault(),
+            Component.text(address.toString())
+        );
         endpoint.getChannel().close().sync();
       } catch (final InterruptedException e) {
         LOGGER.info("Interrupted whilst closing endpoint", e);

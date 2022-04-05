@@ -469,7 +469,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     Runnable shutdownProcess = () -> {
-      logger.info("Shutting down the proxy...");
+      Translatables.info(
+          logger,
+          Component.translatable("velocity.console.shutting-down"),
+          Locale.getDefault()
+      );
 
       // Shutdown the connection manager, this should be
       // done first to refuse new connections
