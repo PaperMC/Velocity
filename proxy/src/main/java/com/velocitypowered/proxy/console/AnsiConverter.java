@@ -25,6 +25,7 @@ final class AnsiConverter {
   private static final Pattern RGB_PATTERN = Pattern.compile(
       LegacyComponentSerializer.SECTION_CHAR + "#([0-9a-fA-F]){6}");
   private static final String RGB_ANSI = "\u001B[38;2;%d;%d;%dm";
+  private static final String RESET = LegacyComponentSerializer.SECTION_CHAR + "r";
 
   static String convert(final String input) {
     return TerminalConsoleAppender.isAnsiSupported()
@@ -39,7 +40,7 @@ final class AnsiConverter {
       final int green = hex >> 8 & 0xFF;
       final int blue = hex & 0xFF;
       return String.format(RGB_ANSI, red, green, blue);
-    });
+    }) + RESET;
   }
 
   static String stripHexColors(final String input) {
