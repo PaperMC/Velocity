@@ -62,11 +62,14 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
     this.server = server;
   }
 
+  private static final LegacyComponentSerializer HEX_SERIALIZER = LegacyComponentSerializer.builder()
+      .hexColors().character(LegacyComponentSerializer.SECTION_CHAR).hexCharacter('#').build();
+
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     Component translated = GlobalTranslator.render(message, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-    logger.info(LegacyComponentSerializer.legacySection().serialize(translated));
+    logger.info(AnsiConverter.convert(HEX_SERIALIZER.serialize(translated)));
   }
 
   @Override
