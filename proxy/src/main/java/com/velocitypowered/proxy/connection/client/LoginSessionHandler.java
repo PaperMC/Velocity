@@ -82,6 +82,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
+  private boolean receivedEncryptionResponse = false;
 
   LoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
       LoginInboundConnection inbound) {
@@ -113,6 +114,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (verify.length == 0) {
       throw new IllegalStateException("No EncryptionRequest packet sent yet.");
     }
+
+    if (receivedEncryptionResponse) {
+      throw new IllegalStateException("Too many EncryptionResponse packets received.");
+    }
+
+    receivedEncryptionResponse = true;
 
     try {
       KeyPair serverKeyPair = server.getServerKeyPair();
