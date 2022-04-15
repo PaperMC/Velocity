@@ -17,30 +17,42 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
-import com.velocitypowered.api.command.RawCommand;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.proxy.VelocityServer;
+
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-public class ShutdownCommand implements RawCommand {
+public final class ShutdownCommand  {
+  private ShutdownCommand(){}
 
-  private final VelocityServer server;
-
-  public ShutdownCommand(VelocityServer server) {
-    this.server = server;
-  }
-
-  @Override
-  public void execute(final Invocation invocation) {
-    String reason = invocation.arguments();
-    if (reason.isEmpty() || reason.trim().isEmpty()) {
-      server.shutdown(true);
-    } else {
-      server.shutdown(true, LegacyComponentSerializer.legacy('&').deserialize(reason));
-    }
-  }
-
-  @Override
-  public boolean hasPermission(final Invocation invocation) {
-    return invocation.source() == server.getConsoleCommandSource();
+  /**
+   * Creates a Velocity Shutdown Command.
+   * @param server the proxy instance
+   * @return the Shutdown Command
+   */
+  public static BrigadierCommand command(final VelocityServer server) {
+    return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("shutdown")
+      .requires(source -> source == server.getConsoleCommandSource())
+      .executes(context -> {
+        server.shutdown(true);
+        return Command.SINGLE_SUCCESS;
+      })
+      .then(RequiredArgumentBuilder.<CommandSource, String>argument("reason", StringArgumentType.greedyString())
+        .executes(context -> {
+          String reason = context.getArgument("reason", String.class);
+          server.shutdown(true, MiniMessage.miniMessage().deserialize(
+              MiniMessage.miniMessage().serialize(
+                  LegacyComponentSerializer.legacy('&').deserialize(reason)
+              )
+          ));
+          return Command.SINGLE_SUCCESS;
+        })
+      ).build());
   }
 }

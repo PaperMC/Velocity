@@ -82,7 +82,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private final VelocityServer server;
+  public final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
 
@@ -104,7 +104,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       sessionHandler.connected();
     }
 
-    if (association != null) {
+    if (association != null && server.getConfiguration().isLogPlayerConnections()) {
       logger.info("{} has connected", association);
     }
   }
@@ -116,7 +116,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     if (association != null && !knownDisconnect
-        && !(sessionHandler instanceof StatusSessionHandler)) {
+        && !(sessionHandler instanceof StatusSessionHandler)
+        && server.getConfiguration().isLogPlayerConnections()) {
       logger.info("{} has disconnected", association);
     }
   }

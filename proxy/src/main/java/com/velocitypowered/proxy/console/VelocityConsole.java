@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
+import net.kyori.adventure.platform.facet.FacetPointers;
+import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -52,7 +54,9 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private final VelocityServer server;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
-          .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker).build();
+          .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
+          .withStatic(FacetPointers.TYPE, Type.CONSOLE)
+          .build();
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;

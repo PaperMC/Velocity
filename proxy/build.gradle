@@ -68,6 +68,7 @@ dependencies {
 
     implementation(platform("net.kyori:adventure-bom:${adventureVersion}"))
     implementation("net.kyori:adventure-nbt")
+    implementation("net.kyori:adventure-platform-facet:4.0.0")
 
     implementation 'org.asynchttpclient:async-http-client:2.12.3'
 

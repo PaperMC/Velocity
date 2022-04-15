@@ -10,11 +10,11 @@ allprojects {
 
     ext {
         // dependency versions
-        adventureVersion = '4.10.0'
+        adventureVersion = '4.10.1'
         junitVersion = '5.7.0'
         slf4jVersion = '1.7.30'
         log4jVersion = '2.17.1'
-        nettyVersion = '4.1.69.Final'
+        nettyVersion = '4.1.75.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '3.6.1'
         configurateVersion = '3.7.2'
