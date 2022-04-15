@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 public class Natives {
@@ -70,7 +69,7 @@ public class Natives {
   private static Path createTemporaryNativeFilename(String ext) throws IOException {
     String temporaryFolderPath = System.getProperty("velocity.natives-tmpdir");
     if (temporaryFolderPath != null) {
-      return Files.createTempFile(Paths.get(temporaryFolderPath), "native-", ext);
+      return Files.createTempFile(Path.of(temporaryFolderPath), "native-", ext);
     } else {
       return Files.createTempFile("native-", ext);
     }

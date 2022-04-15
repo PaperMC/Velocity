@@ -38,7 +38,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -219,7 +218,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   private void loadFavicon() {
-    Path faviconPath = Paths.get("server-icon.png");
+    Path faviconPath = Path.of("server-icon.png");
     if (Files.exists(faviconPath)) {
       try {
         this.favicon = Favicon.create(faviconPath);
