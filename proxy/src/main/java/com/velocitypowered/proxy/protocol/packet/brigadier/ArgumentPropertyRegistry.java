@@ -136,6 +136,21 @@ public class ArgumentPropertyRegistry {
     // Crossstitch support
     register("crossstitch:mod_argument", ModArgumentProperty.class, MOD);
 
+    // Forge support
+    register("forge:enum", EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
+    register("forge:modid", ModIdArgumentProperty.class,
+            new ArgumentPropertySerializer<>() {
+              @Override
+              public ModIdArgumentProperty deserialize(ByteBuf buf) {
+                return new ModIdArgumentProperty();
+              }
+
+              @Override
+              public void serialize(ModIdArgumentProperty object, ByteBuf buf) {
+
+              }
+            });
+
     // Minecraft argument types with extra properties
     empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
     empty("minecraft:score_holder", ByteArgumentPropertySerializer.BYTE);
