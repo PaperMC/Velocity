@@ -79,8 +79,12 @@ public final class ModInfo {
       return id;
     }
 
-    public Optional<String> getVersion() {
-      return Optional.ofNullable(version);
+    public String getVersion() {
+      if (this.version == null) {
+        return "";
+      }
+
+      return version;
     }
 
     @Override
