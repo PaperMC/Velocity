@@ -152,6 +152,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
   private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
           .withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
+          .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
+          .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
           .withStatic(PermissionChecker.POINTER, getPermissionChecker())
           .withStatic(FacetPointers.TYPE, Type.PLAYER)
           .build();
