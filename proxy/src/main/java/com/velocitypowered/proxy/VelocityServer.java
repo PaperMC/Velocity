@@ -67,10 +67,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.KeyPair;
 import java.security.PrivilegedAction;
@@ -252,8 +252,30 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       FileSystemUtils.visitResources(VelocityServer.class, path -> {
         logger.info("Loading localizations...");
 
+        final Path langPath = Path.of("lang");
+
         try {
-          Files.walk(path).forEach(file -> {
+          if (!Files.exists(langPath)) {
+            Files.createDirectory(langPath);
+            Files.walk(path).forEach(file -> {
+              if (!Files.isRegularFile(file)) {
+                return;
+              }
+              try {
+                Path langFile = langPath.resolve(file.getFileName().toString());
+                if (!Files.exists(langFile)) {
+                  try (InputStream is = Files.newInputStream(file)) {
+                    Files.copy(is, langFile);
+                  }
+                }
+              } catch (IOException e) {
+                logger.error("Encountered an I/O error whilst loading translations", e);
+              }
+            });
+          }
+
+
+          Files.walk(langPath).forEach(file -> {
             if (!Files.isRegularFile(file)) {
               return;
             }
@@ -263,16 +285,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
             String localeName = filename.replace("messages_", "")
                 .replace("messages", "")
                 .replace('_', '-');
-            Locale locale;
-            if (localeName.isEmpty()) {
-              locale = Locale.US;
-            } else {
-              locale = Locale.forLanguageTag(localeName);
-            }
+            Locale locale = localeName.isBlank()
+                ? Locale.US
+                : Locale.forLanguageTag(localeName);
 
-            translationRegistry.registerAll(locale,
-                ResourceBundle.getBundle("com/velocitypowered/proxy/l10n/messages",
-                    locale, UTF8ResourceBundleControl.get()), false);
+            translationRegistry.registerAll(locale, file, false);
             ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
           });
         } catch (IOException e) {
@@ -289,7 +306,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @SuppressFBWarnings("DM_EXIT")
   private void doStartupConfigLoad() {
     try {
-      Path configPath = Paths.get("velocity.toml");
+      Path configPath = Path.of("velocity.toml");
       configuration = VelocityConfiguration.read(configPath);
 
       if (!configuration.validate()) {
@@ -311,7 +328,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Loading plugins...");
 
     try {
-      Path pluginPath = Paths.get("plugins");
+      Path pluginPath = Path.of("plugins");
 
       if (!pluginPath.toFile().exists()) {
         Files.createDirectory(pluginPath);
@@ -363,7 +380,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @throws IOException if we can't read {@code velocity.toml}
    */
   public boolean reloadConfiguration() throws IOException {
-    Path configPath = Paths.get("velocity.toml");
+    Path configPath = Path.of("velocity.toml");
     VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
 
     if (!newConfiguration.validate()) {

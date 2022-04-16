@@ -26,7 +26,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,7 +82,7 @@ public class FileSystemUtils {
       } catch (URISyntaxException e) {
         throw new IllegalStateException(e);
       }
-      consumer.accept(Paths.get(uri));
+      consumer.accept(Path.of(uri));
       return true;
     }
   }
