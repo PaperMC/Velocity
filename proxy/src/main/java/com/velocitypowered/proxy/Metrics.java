@@ -21,7 +21,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -42,7 +42,7 @@ public class Metrics {
   private MetricsBase metricsBase;
 
   private Metrics(Logger logger, int serviceId, boolean defaultEnabled) {
-    File configFile = Paths.get("plugins").resolve("bStats").resolve("config.txt").toFile();
+    File configFile = Path.of("plugins", "bStats", "config.txt").toFile();
     MetricsConfig config;
     try {
       config = new MetricsConfig(configFile, defaultEnabled);
