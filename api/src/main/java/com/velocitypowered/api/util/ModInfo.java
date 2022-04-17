@@ -79,6 +79,13 @@ public final class ModInfo {
       return id;
     }
 
+    /**
+     *
+     * Gets the version of the mod
+     * Will return a blank string if the version of the mod hasn't been passed
+     *
+     * @return The version of the user's mod
+     */
     public String getVersion() {
       if (this.version == null) {
         return "";
