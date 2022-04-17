@@ -73,11 +73,21 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
+    /**
+     * The following logic is used for handling the reset packet sent to the player when they transfer servers
+     * and are on a modern forge (1.13+) environment.
+     * During this time the client has to renegotiate the connection with the server as to ensure all the client side
+     * registries (blocks, items etc.) are reset and then re-sent by the server. This ensures that all the registries are
+     * correctly sync'd wit the server and as such all blocks placed, items used, (etc) will match the server (when not
+     * matching this typically results in cases such as someone attempting to place mod A's block A but the server thinking
+     * they attempted to place mod B's block B or something to this effect)
+     * If there is an error by the server during this period then it is unrecoverable and as such the user should be
+     * disconnected.
+     */
     if (serverConn.getPlayer().getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
       VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
       if (existingConnection != null && existingConnection != serverConn) {
-        existingConnection.getPhase().onDepartForNewServer(existingConnection,
-            serverConn.getPlayer());
+        existingConnection.getPhase().onDepartForNewServer(existingConnection, serverConn.getPlayer());
 
         // Shut down the existing server connection.
         serverConn.getPlayer().setConnectedServer(null);
