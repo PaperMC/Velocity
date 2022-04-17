@@ -141,17 +141,15 @@ public class ArgumentPropertyRegistry {
     // Forge support
     register("forge:enum", EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
     register("forge:modid", ModIdArgumentProperty.class,
-            new ArgumentPropertySerializer<>() {
-              @Override
-              public ModIdArgumentProperty deserialize(ByteBuf buf) {
-                return new ModIdArgumentProperty();
-              }
+        new ArgumentPropertySerializer<>() {
+          @Override
+          public ModIdArgumentProperty deserialize(ByteBuf buf) {
+            return new ModIdArgumentProperty();
+          }
 
-              @Override
-              public void serialize(ModIdArgumentProperty object, ByteBuf buf) {
-
-              }
-            });
+          @Override
+          public void serialize(ModIdArgumentProperty object, ByteBuf buf) {}
+        });
 
     // Minecraft argument types with extra properties
     empty("minecraft:entity", ByteArgumentPropertySerializer.BYTE);
