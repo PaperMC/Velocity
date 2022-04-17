@@ -33,10 +33,12 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.brigadier.forge.EnumArgumentProperty;
+import com.velocitypowered.proxy.protocol.packet.brigadier.forge.EnumArgumentPropertySerializer;
+import com.velocitypowered.proxy.protocol.packet.brigadier.forge.ModIdArgumentProperty;
 import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArgumentPropertyRegistry {
   private ArgumentPropertyRegistry() {
