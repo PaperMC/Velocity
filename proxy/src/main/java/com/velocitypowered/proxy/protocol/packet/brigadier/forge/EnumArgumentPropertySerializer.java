@@ -15,18 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.brigadier;
+package com.velocitypowered.proxy.protocol.packet.brigadier.forge;
 
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertySerializer;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * An argument property serializer that will serialize and deserialize nothing.
  */
-class EnumArgumentPropertySerializer implements ArgumentPropertySerializer<EnumArgumentProperty> {
+public class EnumArgumentPropertySerializer implements ArgumentPropertySerializer<EnumArgumentProperty> {
 
-  static final EnumArgumentPropertySerializer ENUM = new EnumArgumentPropertySerializer();
+  public static final EnumArgumentPropertySerializer ENUM = new EnumArgumentPropertySerializer();
 
   private EnumArgumentPropertySerializer() {
   }
