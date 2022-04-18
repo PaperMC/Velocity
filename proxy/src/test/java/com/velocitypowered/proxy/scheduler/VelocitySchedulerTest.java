@@ -75,13 +75,12 @@ class VelocitySchedulerTest {
     scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
       if (i.getAndIncrement() >= 1) {
         task.cancel();
+      } else {
+        scheduler.buildTask(FakePluginManager.PLUGIN_A, () ->
+          assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1)
+        ).schedule();
       }
-      scheduler.buildTask(FakePluginManager.PLUGIN_A, () -> {
-        assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
-      })
-        .schedule();
-    })
-      .delay(50, TimeUnit.MILLISECONDS)
+    }).delay(50, TimeUnit.MILLISECONDS)
       .repeat(Duration.ofMillis(5))
       .schedule();
   }
@@ -94,12 +93,8 @@ class VelocitySchedulerTest {
       actualTask.cancel();
       scheduler.buildTask(FakePluginManager.PLUGIN_B, () ->
         assertEquals(TaskStatus.CANCELLED, actualTask.status())
-      )
-        .delay(20, TimeUnit.MILLISECONDS)
-        .schedule();
-    })
-        .repeat(5, TimeUnit.MILLISECONDS)
-        .schedule();
+      ).delay(20, TimeUnit.MILLISECONDS).schedule();
+    }).repeat(5, TimeUnit.MILLISECONDS).schedule();
 
     Thread.sleep(50);
   }
