@@ -18,13 +18,12 @@
 package com.velocitypowered.proxy.scheduler;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
@@ -32,13 +31,17 @@ import com.velocitypowered.api.scheduler.TaskStatus;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityScheduler implements Scheduler {
@@ -65,10 +68,26 @@ public class VelocityScheduler implements Scheduler {
 
   @Override
   public TaskBuilder buildTask(Object plugin, Runnable runnable) {
-    checkNotNull(plugin, "plugin");
-    checkNotNull(runnable, "runnable");
+    requireNonNull(runnable, () -> "the scheduled task cannot be null");
+    requireNonNull(plugin, () -> "the plugin cannot be null");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
     return new TaskBuilderImpl(plugin, runnable);
+  }
+
+  @Override
+  public TaskBuilder builder(Object plugin) {
+    requireNonNull(plugin, () -> "the plugin cannot be null");
+    checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
+    return new TaskBuilderImpl(plugin, null);
+  }
+
+  @Override
+  public @NonNull Collection<ScheduledTask> tasksByPlugin(@NonNull Object plugin) {
+    requireNonNull(plugin, () -> "the plugin cannot be null");
+    checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
+    synchronized (tasksByPlugin) {
+      return Set.copyOf(tasksByPlugin.get(plugin));
+    }
   }
 
   /**
@@ -92,13 +111,26 @@ public class VelocityScheduler implements Scheduler {
   private class TaskBuilderImpl implements TaskBuilder {
 
     private final Object plugin;
-    private final Runnable runnable;
+    private Runnable runnable;
+    private Consumer<ScheduledTask> consumer;
     private long delay; // ms
     private long repeat; // ms
 
     private TaskBuilderImpl(Object plugin, Runnable runnable) {
       this.plugin = plugin;
       this.runnable = runnable;
+    }
+
+    @Override
+    public TaskBuilder task(Runnable runnable) {
+      this.runnable = runnable;
+      return this;
+    }
+
+    @Override
+    public TaskBuilder task(Consumer<ScheduledTask> consumer) {
+      this.consumer = consumer;
+      return this;
     }
 
     @Override
@@ -127,7 +159,11 @@ public class VelocityScheduler implements Scheduler {
 
     @Override
     public ScheduledTask schedule() {
-      VelocityTask task = new VelocityTask(plugin, runnable, delay, repeat);
+      checkArgument(!(runnable == null && consumer == null), "the scheduled task cannot be null");
+      checkArgument(!(runnable != null && consumer != null), "you need to specify a single task to run");
+      VelocityTask task = runnable == null
+          ? new VelocityTask(plugin, consumer, delay, repeat)
+          : new VelocityTask(plugin, runnable, delay, repeat);
       tasksByPlugin.put(plugin, task);
       task.schedule();
       return task;
@@ -138,6 +174,7 @@ public class VelocityScheduler implements Scheduler {
 
     private final Object plugin;
     private final Runnable runnable;
+    private final Consumer<ScheduledTask> consumer;
     private final long delay;
     private final long repeat;
     private @Nullable ScheduledFuture<?> future;
@@ -146,6 +183,15 @@ public class VelocityScheduler implements Scheduler {
     private VelocityTask(Object plugin, Runnable runnable, long delay, long repeat) {
       this.plugin = plugin;
       this.runnable = runnable;
+      this.consumer = null;
+      this.delay = delay;
+      this.repeat = repeat;
+    }
+
+    private VelocityTask(Object plugin, Consumer<ScheduledTask> consumer, long delay, long repeat) {
+      this.plugin = plugin;
+      this.runnable = null;
+      this.consumer = consumer;
       this.delay = delay;
       this.repeat = repeat;
     }
@@ -200,7 +246,11 @@ public class VelocityScheduler implements Scheduler {
       taskService.execute(() -> {
         currentTaskThread = Thread.currentThread();
         try {
-          runnable.run();
+          if (runnable == null) {
+            consumer.accept(this);
+          } else {
+            runnable.run();
+          }
         } catch (Throwable e) {
           //noinspection ConstantConditions
           if (e instanceof InterruptedException) {
