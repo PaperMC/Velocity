@@ -8,7 +8,6 @@
 package com.velocitypowered.api.permission;
 
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.util.TriState;
 
 /**
  * Represents a object that has a set of queryable permissions.
