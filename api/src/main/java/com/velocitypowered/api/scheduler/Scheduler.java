@@ -33,9 +33,10 @@ public interface Scheduler {
    * Initializes a new {@link TaskBuilder} for creating a task on the proxy.
    *
    * @param plugin the plugin to request the task for
+   * @param consumer the task to be run when scheduled with the capacity to cancel itself
    * @return the task builder
    */
-  TaskBuilder builder(@NotNull Object plugin);
+  TaskBuilder buildTask(@NotNull Object plugin, @NotNull Consumer<ScheduledTask> consumer);
 
   /**
    * Get the {@link ScheduledTask} for a specific plugin.
@@ -49,22 +50,6 @@ public interface Scheduler {
    * Represents a fluent interface to schedule tasks on the proxy.
    */
   interface TaskBuilder {
-
-    /**
-     * Specifies the task to be executed.
-     *
-     * @param runnable the task to run
-     * @return this builder, for chaining
-     */
-    TaskBuilder task(@NotNull Runnable runnable);
-
-    /**
-     * Specifies the task to be executed.
-     *
-     * @param consumer the task to be run with the capacity to cancel itself
-     * @return this builder, for chaining
-     */
-    TaskBuilder task(@NotNull Consumer<ScheduledTask> consumer);
 
     /**
      * Specifies that the task should delay its execution by the specified amount of time.

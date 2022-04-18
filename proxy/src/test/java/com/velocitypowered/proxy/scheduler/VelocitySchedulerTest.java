@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.scheduler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
@@ -67,20 +66,10 @@ class VelocitySchedulerTest {
   }
 
   @Test
-  void nullSchedulerTest() throws Exception {
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
-
-    assertThrows(NullPointerException.class, () -> scheduler.builder(null).schedule());
-    assertThrows(IllegalArgumentException.class, () -> scheduler.builder(FakePluginManager.PLUGIN_A)
-        .schedule());
-  }
-
-  @Test
   void obtainTasksFromPlugin() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
 
-    scheduler.builder(FakePluginManager.PLUGIN_A)
-      .task(ScheduledTask::cancel)
+    scheduler.buildTask(FakePluginManager.PLUGIN_A, ScheduledTask::cancel)
       .delay(100, TimeUnit.MILLISECONDS)
       .schedule();
 
@@ -91,12 +80,11 @@ class VelocitySchedulerTest {
   void testConsumerCancel() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
 
-    ScheduledTask task = scheduler.builder(FakePluginManager.PLUGIN_B)
-        .task(ScheduledTask::cancel)
+    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_B, ScheduledTask::cancel)
         .repeat(5, TimeUnit.MILLISECONDS)
         .schedule();
 
-    Thread.sleep(50);
+    Thread.sleep(75);
 
     assertEquals(TaskStatus.CANCELLED, task.status());
   }

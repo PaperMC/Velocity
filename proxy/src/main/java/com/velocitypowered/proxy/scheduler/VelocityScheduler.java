@@ -71,22 +71,24 @@ public class VelocityScheduler implements Scheduler {
     requireNonNull(runnable, () -> "the scheduled task cannot be null");
     requireNonNull(plugin, () -> "the plugin cannot be null");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
-    return new TaskBuilderImpl(plugin, runnable);
+    return new TaskBuilderImpl(plugin, runnable, null);
   }
 
   @Override
-  public TaskBuilder builder(Object plugin) {
+  public TaskBuilder buildTask(Object plugin, Consumer<ScheduledTask> consumer) {
+    requireNonNull(consumer, () -> "the scheduled task cannot be null");
     requireNonNull(plugin, () -> "the plugin cannot be null");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
-    return new TaskBuilderImpl(plugin, null);
+    return new TaskBuilderImpl(plugin, null, consumer);
   }
 
   @Override
   public @NonNull Collection<ScheduledTask> tasksByPlugin(@NonNull Object plugin) {
     requireNonNull(plugin, () -> "the plugin cannot be null");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
+    final Collection<ScheduledTask> tasks = tasksByPlugin.get(plugin);
     synchronized (tasksByPlugin) {
-      return Set.copyOf(tasksByPlugin.get(plugin));
+      return Set.copyOf(tasks);
     }
   }
 
@@ -111,26 +113,15 @@ public class VelocityScheduler implements Scheduler {
   private class TaskBuilderImpl implements TaskBuilder {
 
     private final Object plugin;
-    private Runnable runnable;
-    private Consumer<ScheduledTask> consumer;
+    private final Runnable runnable;
+    private final Consumer<ScheduledTask> consumer;
     private long delay; // ms
     private long repeat; // ms
 
-    private TaskBuilderImpl(Object plugin, Runnable runnable) {
+    private TaskBuilderImpl(Object plugin, Runnable runnable, Consumer<ScheduledTask> consumer) {
       this.plugin = plugin;
       this.runnable = runnable;
-    }
-
-    @Override
-    public TaskBuilder task(Runnable runnable) {
-      this.runnable = runnable;
-      return this;
-    }
-
-    @Override
-    public TaskBuilder task(Consumer<ScheduledTask> consumer) {
       this.consumer = consumer;
-      return this;
     }
 
     @Override
@@ -159,11 +150,7 @@ public class VelocityScheduler implements Scheduler {
 
     @Override
     public ScheduledTask schedule() {
-      checkArgument(!(runnable == null && consumer == null), "the scheduled task cannot be null");
-      checkArgument(!(runnable != null && consumer != null), "you need to specify a single task to run");
-      VelocityTask task = runnable == null
-          ? new VelocityTask(plugin, consumer, delay, repeat)
-          : new VelocityTask(plugin, runnable, delay, repeat);
+      VelocityTask task = new VelocityTask(plugin, runnable, consumer, delay, repeat);
       tasksByPlugin.put(plugin, task);
       task.schedule();
       return task;
@@ -180,17 +167,9 @@ public class VelocityScheduler implements Scheduler {
     private @Nullable ScheduledFuture<?> future;
     private volatile @Nullable Thread currentTaskThread;
 
-    private VelocityTask(Object plugin, Runnable runnable, long delay, long repeat) {
+    private VelocityTask(Object plugin, Runnable runnable, Consumer<ScheduledTask> consumer, long delay, long repeat) {
       this.plugin = plugin;
       this.runnable = runnable;
-      this.consumer = null;
-      this.delay = delay;
-      this.repeat = repeat;
-    }
-
-    private VelocityTask(Object plugin, Consumer<ScheduledTask> consumer, long delay, long repeat) {
-      this.plugin = plugin;
-      this.runnable = null;
       this.consumer = consumer;
       this.delay = delay;
       this.repeat = repeat;
@@ -246,10 +225,10 @@ public class VelocityScheduler implements Scheduler {
       taskService.execute(() -> {
         currentTaskThread = Thread.currentThread();
         try {
-          if (runnable == null) {
-            consumer.accept(this);
-          } else {
+          if (runnable != null) {
             runnable.run();
+          } else {
+            consumer.accept(this);
           }
         } catch (Throwable e) {
           //noinspection ConstantConditions
