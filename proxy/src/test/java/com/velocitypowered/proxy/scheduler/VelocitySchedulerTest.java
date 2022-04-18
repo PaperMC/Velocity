@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
+
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,25 +70,38 @@ class VelocitySchedulerTest {
   @Test
   void obtainTasksFromPlugin() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    AtomicInteger i = new AtomicInteger(0);
 
-    scheduler.buildTask(FakePluginManager.PLUGIN_A, ScheduledTask::cancel)
-      .delay(100, TimeUnit.MILLISECONDS)
+    scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
+      if (i.getAndIncrement() >= 1) {
+        task.cancel();
+      }
+      scheduler.buildTask(FakePluginManager.PLUGIN_A, () -> {
+        assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
+      })
+        .schedule();
+    })
+      .delay(50, TimeUnit.MILLISECONDS)
+      .repeat(Duration.ofMillis(5))
       .schedule();
-
-    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
   }
 
   @Test
   void testConsumerCancel() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
 
-    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_B, ScheduledTask::cancel)
+    scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
+      actualTask.cancel();
+      scheduler.buildTask(FakePluginManager.PLUGIN_B, () ->
+        assertEquals(TaskStatus.CANCELLED, actualTask.status())
+      )
+        .delay(20, TimeUnit.MILLISECONDS)
+        .schedule();
+    })
         .repeat(5, TimeUnit.MILLISECONDS)
         .schedule();
 
-    Thread.sleep(75);
-
-    assertEquals(TaskStatus.CANCELLED, task.status());
+    Thread.sleep(50);
   }
 
 }
