@@ -137,6 +137,11 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# In case player-info-forwarding-mode is set to MODERN,
+# this option allows you to set the lowest protocol in which players can connect
+# Protocol must be greater than or equal to 1.13(393)
+modern-minimun-protocol-supported = 393
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

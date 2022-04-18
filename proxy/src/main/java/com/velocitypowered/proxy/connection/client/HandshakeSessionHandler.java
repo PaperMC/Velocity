@@ -40,8 +40,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -136,9 +134,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+        && handshake.getProtocolVersion().compareTo(
+            server.getConfiguration().getModernMinimunProtocolVersion()) < 0) {
       ic.disconnectQuietly(Component.translatable(
-          "velocity.error.modern-forwarding-needs-new-client"));
+          "velocity.error.modern-forwarding-needs-new-client",
+          Component.text(
+            server.getConfiguration().getModernMinimunProtocolVersion().getVersionIntroducedIn()
+          )
+      ));
       return;
     }
 

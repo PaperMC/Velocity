@@ -25,6 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -342,7 +343,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public boolean useTcpFastOpen() {
-    return advanced.tcpFastOpen;
+    return advanced.isTcpFastOpen();
   }
 
   public Metrics getMetrics() {
@@ -379,6 +380,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   public boolean isLogPlayerConnections() {
     return advanced.isLogPlayerConnections();
+  }
+
+  public ProtocolVersion getModernMinimunProtocolVersion() {
+    return advanced.getModernMinimunProtocolVersion();
   }
 
   @Override
@@ -644,6 +649,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose private boolean announceProxyCommands = true;
     @Expose private boolean logCommandExecutions = false;
     @Expose private boolean logPlayerConnections = true;
+    @Expose private ProtocolVersion modernMinProtocolVersion = ProtocolVersion.MINECRAFT_1_13;
 
     private Advanced() {
     }
@@ -668,6 +674,12 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+
+        int minProtocol = config.getOrElse("modern-minimun-protocol-supported", 393);
+        ProtocolVersion protocol = ProtocolVersion.ID_TO_PROTOCOL_CONSTANT.get(minProtocol);
+        if (protocol != null && protocol.compareTo(ProtocolVersion.MINECRAFT_1_13) > 0) {
+          this.modernMinProtocolVersion = protocol;
+        }
       }
     }
 
@@ -721,6 +733,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isLogPlayerConnections() {
       return logPlayerConnections;
+    }
+
+    public ProtocolVersion getModernMinimunProtocolVersion() {
+      return this.modernMinProtocolVersion;
     }
 
     @Override
