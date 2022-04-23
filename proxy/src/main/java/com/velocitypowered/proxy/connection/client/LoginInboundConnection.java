@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import io.netty.buffer.ByteBufUtil;
@@ -143,5 +144,9 @@ public class LoginInboundConnection implements LoginPhaseConnection {
     } else {
       onAllMessagesHandled.run();
     }
+  }
+
+  MinecraftConnection delegatedConnection() {
+    return delegate.getConnection();
   }
 }
