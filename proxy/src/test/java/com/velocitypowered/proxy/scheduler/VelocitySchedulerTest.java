@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.jupiter.api.Test;
 
 class VelocitySchedulerTest {
@@ -77,15 +79,16 @@ class VelocitySchedulerTest {
       if (i.getAndIncrement() >= 1) {
         task.cancel();
         latch.countDown();
-      } else {
-        scheduler.buildTask(FakePluginManager.PLUGIN_A, () ->
-          assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1)
-        ).schedule();
       }
     }).delay(50, TimeUnit.MILLISECONDS)
       .repeat(Duration.ofMillis(5))
       .schedule();
+
+    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
+
     latch.await();
+
+    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 0);
   }
 
   @Test
@@ -93,14 +96,18 @@ class VelocitySchedulerTest {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
-    scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
+    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
       actualTask.cancel();
-      scheduler.buildTask(FakePluginManager.PLUGIN_B, () ->
-        assertEquals(TaskStatus.CANCELLED, actualTask.status())
-      ).schedule();
       latch.countDown();
-    }).repeat(5, TimeUnit.MILLISECONDS).schedule();
+    })
+        .repeat(5, TimeUnit.MILLISECONDS)
+        .schedule();
+
+    assertEquals(TaskStatus.SCHEDULED, task.status());
+
     latch.await();
+
+    assertEquals(TaskStatus.CANCELLED, task.status());
   }
 
   @Test
@@ -108,34 +115,19 @@ class VelocitySchedulerTest {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
-    TaskContainer consumerTask = new TaskContainer();
-    TaskContainer initialTask = new TaskContainer();
+    AtomicReference<ScheduledTask> consumerTask = new AtomicReference<>();
+    AtomicReference<ScheduledTask> initialTask = new AtomicReference<>();
 
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, scheduledTask -> {
-      consumerTask.task(scheduledTask);
+      consumerTask.set(scheduledTask);
       latch.countDown();
     }).delay(60, TimeUnit.MILLISECONDS).schedule();
 
-    initialTask.task(task);
+    initialTask.set(task);
     latch.await();
 
-    assertEquals(consumerTask.task(), initialTask.task());
+    assertEquals(consumerTask.get(), initialTask.get());
 
-  }
-
-  private class TaskContainer {
-    private ScheduledTask task;
-
-    private TaskContainer() {
-    }
-
-    private ScheduledTask task() {
-      return this.task;
-    }
-
-    private void task(ScheduledTask task) {
-      this.task = task;
-    }
   }
 
 }

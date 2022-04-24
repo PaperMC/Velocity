@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.scheduler;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
@@ -68,23 +68,23 @@ public class VelocityScheduler implements Scheduler {
 
   @Override
   public TaskBuilder buildTask(Object plugin, Runnable runnable) {
-    requireNonNull(runnable, () -> "the scheduled task cannot be null");
-    requireNonNull(plugin, () -> "the plugin cannot be null");
+    checkNotNull(plugin, "plugin");
+    checkNotNull(runnable, "runnable");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
     return new TaskBuilderImpl(plugin, runnable, null);
   }
 
   @Override
   public TaskBuilder buildTask(Object plugin, Consumer<ScheduledTask> consumer) {
-    requireNonNull(consumer, () -> "the scheduled task cannot be null");
-    requireNonNull(plugin, () -> "the plugin cannot be null");
+    checkNotNull(plugin, "plugin");
+    checkNotNull(consumer, "consumer");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
     return new TaskBuilderImpl(plugin, null, consumer);
   }
 
   @Override
   public @NonNull Collection<ScheduledTask> tasksByPlugin(@NonNull Object plugin) {
-    requireNonNull(plugin, () -> "the plugin cannot be null");
+    checkNotNull(plugin, "plugin");
     checkArgument(pluginManager.fromInstance(plugin).isPresent(), "plugin is not registered");
     final Collection<ScheduledTask> tasks = tasksByPlugin.get(plugin);
     synchronized (tasksByPlugin) {
