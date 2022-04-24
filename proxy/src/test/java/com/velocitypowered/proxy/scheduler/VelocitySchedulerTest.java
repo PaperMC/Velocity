@@ -71,10 +71,12 @@ class VelocitySchedulerTest {
   void obtainTasksFromPlugin() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     AtomicInteger i = new AtomicInteger(0);
+    CountDownLatch latch = new CountDownLatch(1);
 
     scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
       if (i.getAndIncrement() >= 1) {
         task.cancel();
+        latch.countDown();
       } else {
         scheduler.buildTask(FakePluginManager.PLUGIN_A, () ->
           assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1)
@@ -83,20 +85,57 @@ class VelocitySchedulerTest {
     }).delay(50, TimeUnit.MILLISECONDS)
       .repeat(Duration.ofMillis(5))
       .schedule();
+    latch.await();
   }
 
   @Test
   void testConsumerCancel() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    CountDownLatch latch = new CountDownLatch(1);
 
     scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
       actualTask.cancel();
       scheduler.buildTask(FakePluginManager.PLUGIN_B, () ->
         assertEquals(TaskStatus.CANCELLED, actualTask.status())
-      ).delay(20, TimeUnit.MILLISECONDS).schedule();
+      ).schedule();
+      latch.countDown();
     }).repeat(5, TimeUnit.MILLISECONDS).schedule();
+    latch.await();
+  }
 
-    Thread.sleep(50);
+  @Test
+  void testConsumerEquality() throws Exception {
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
+    CountDownLatch latch = new CountDownLatch(1);
+
+    TaskContainer consumerTask = new TaskContainer();
+    TaskContainer initialTask = new TaskContainer();
+
+    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, scheduledTask -> {
+      consumerTask.task(scheduledTask);
+      latch.countDown();
+    }).delay(60, TimeUnit.MILLISECONDS).schedule();
+
+    initialTask.task(task);
+    latch.await();
+
+    assertEquals(consumerTask.task(), initialTask.task());
+
+  }
+
+  private class TaskContainer {
+    private ScheduledTask task;
+
+    private TaskContainer() {
+    }
+
+    private ScheduledTask task() {
+      return this.task;
+    }
+
+    private void task(ScheduledTask task) {
+      this.task = task;
+    }
   }
 
 }
