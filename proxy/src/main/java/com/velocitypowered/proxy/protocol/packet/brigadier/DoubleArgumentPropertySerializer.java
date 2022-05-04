@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumen
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.getFlags;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 
 class DoubleArgumentPropertySerializer implements ArgumentPropertySerializer<DoubleArgumentType> {
@@ -32,7 +33,7 @@ class DoubleArgumentPropertySerializer implements ArgumentPropertySerializer<Dou
   }
 
   @Override
-  public DoubleArgumentType deserialize(ByteBuf buf) {
+  public DoubleArgumentType deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     byte flags = buf.readByte();
     double minimum = (flags & HAS_MINIMUM) != 0 ? buf.readDouble() : Double.MIN_VALUE;
     double maximum = (flags & HAS_MAXIMUM) != 0 ? buf.readDouble() : Double.MAX_VALUE;
@@ -40,7 +41,7 @@ class DoubleArgumentPropertySerializer implements ArgumentPropertySerializer<Dou
   }
 
   @Override
-  public void serialize(DoubleArgumentType object, ByteBuf buf) {
+  public void serialize(DoubleArgumentType object, ByteBuf buf, ProtocolVersion protocolVersion) {
     boolean hasMinimum = Double.compare(object.getMinimum(), Double.MIN_VALUE) != 0;
     boolean hasMaximum = Double.compare(object.getMaximum(), Double.MAX_VALUE) != 0;
     byte flag = getFlags(hasMinimum, hasMaximum);
