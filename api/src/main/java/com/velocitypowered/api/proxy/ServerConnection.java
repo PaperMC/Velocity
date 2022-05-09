@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import java.util.Optional;
 
 /**
  * Represents a connection to a backend server from the proxy for a client.
@@ -23,6 +24,14 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    * @return the server this connection is connected to
    */
   RegisteredServer getServer();
+
+  /**
+   * Returns the server that the player associated with this connection was connected to before
+   * switching to this connection.
+   *
+   * @return the server the player was connected to.
+   */
+  Optional<RegisteredServer> getPreviousServer();
 
   /**
    * Returns the server info for this connection.

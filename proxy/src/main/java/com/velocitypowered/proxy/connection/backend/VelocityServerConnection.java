@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.proxy.VelocityServer;
@@ -49,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -57,6 +59,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
 
   private final VelocityRegisteredServer registeredServer;
+  private final @Nullable VelocityRegisteredServer previousServer;
   private final ConnectedPlayer proxyPlayer;
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
@@ -69,12 +72,15 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   /**
    * Initializes a new server connection.
    * @param registeredServer the server to connect to
+   * @param previousServer the server the player is coming from
    * @param proxyPlayer the player connecting to the server
    * @param server the Velocity proxy instance
    */
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
+      @Nullable VelocityRegisteredServer previousServer,
       ConnectedPlayer proxyPlayer, VelocityServer server) {
     this.registeredServer = registeredServer;
+    this.previousServer = previousServer;
     this.proxyPlayer = proxyPlayer;
     this.server = server;
   }
@@ -207,6 +213,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   @Override
   public VelocityRegisteredServer getServer() {
     return registeredServer;
+  }
+
+  @Override
+  public Optional<RegisteredServer> getPreviousServer() {
+    return Optional.ofNullable(this.previousServer);
   }
 
   @Override
