@@ -33,8 +33,8 @@ prevent-client-proxy-connections = false
 #                  Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.
 player-info-forwarding-mode = "NONE"
 
-# If you are using modern or BungeeGuard IP forwarding, configure a unique secret here.
-forwarding-secret = ""
+# If you are using modern or BungeeGuard IP forwarding, configure a file that contains a unique secret here.
+forwarding-secret-file = ""
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
 # suggest turning this on.

@@ -435,21 +435,34 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();
 
-    // Retrieve the forwarding secret. First, from environment variable, then from config, then from file.
+    // Inform the user that forwarding-secret parameter has been deprecated.
+    if (config.contains("forwarding-secret")) {
+      logger.warn("The \"forwarding-secret\" configuration parameter has been deprecated due to security"
+          + " concerns. Please remove it and use the \"forwarding-secret-file\" parameter or"
+          + " \"VELOCITY_FORWARDING_SECRET\""
+          + " environment variable instead.");
+    }
+
+    // Retrieve the forwarding secret.
+    // First, from environment variable, then from config (deprecated), then from file.
     byte[] forwardingSecret;
     String forwardingSecretString = System.getenv()
         .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
-    if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-      forwardingSecretString = config.get("forwarding-secret-file");
-      if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-        forwardingSecretString = generateRandomString(12);
-        config.set("forwarding-secret", forwardingSecretString);
-        mustResave = true;
-      } else {
-        forwardingSecretString = Files.readString(Path.of(forwardingSecretString), StandardCharsets.UTF_8);
-      }
+
+    // Ensure that the "forwarding-secret-file" configuration parameter and auto-created file are present.
+    String forwardingSecretFileName = config.get("forwarding-secret-file");
+    if (forwardingSecretFileName == null || forwardingSecretFileName.isEmpty()) {
+      Files.writeString(Path.of("forwarding.secret"), generateRandomString(12));
+      config.set("forwarding-secret-file", "forwarding.secret");
+      mustResave = true;
     }
-    forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+
+    // If the environment variable and deprecated "forwarding-secret" parameter aren't set, use the file.
+    if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
+      forwardingSecret = Files.readAllBytes(Path.of("forwarding.secret"));
+    } else {
+      forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+    }
 
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
