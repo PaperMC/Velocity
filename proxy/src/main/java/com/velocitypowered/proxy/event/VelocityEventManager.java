@@ -17,44 +17,31 @@
 
 package com.velocitypowered.proxy.event;
 
-import static java.util.Objects.requireNonNull;
-
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.velocitypowered.api.event.Continuation;
-import com.velocitypowered.api.event.EventHandler;
-import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.EventTask;
-import com.velocitypowered.api.event.PostOrder;
-import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.*;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.EventTaskHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.WithContinuationHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.lanternpowered.lmbda.LambdaFactory;
+import org.lanternpowered.lmbda.LambdaType;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,11 +53,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.lanternpowered.lmbda.LambdaFactory;
-import org.lanternpowered.lmbda.LambdaType;
+
+import static java.util.Objects.requireNonNull;
 
 public class VelocityEventManager implements EventManager {
 

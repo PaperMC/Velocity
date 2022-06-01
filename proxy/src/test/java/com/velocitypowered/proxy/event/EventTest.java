@@ -72,15 +72,9 @@ public class EventTest {
     final AtomicLong listenerBInvoked = new AtomicLong();
     final AtomicLong listenerCInvoked = new AtomicLong();
 
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerAInvoked.set(System.nanoTime());
-    });
-    eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class, event -> {
-      listenerBInvoked.set(System.nanoTime());
-    });
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerCInvoked.set(System.nanoTime());
-    });
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> listenerAInvoked.set(System.nanoTime()));
+    eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class, event -> listenerBInvoked.set(System.nanoTime()));
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> listenerCInvoked.set(System.nanoTime()));
 
     try {
       eventManager.fire(new TestEvent()).get();
@@ -99,19 +93,13 @@ public class EventTest {
     final AtomicLong listenerBInvoked = new AtomicLong();
     final AtomicLong listenerCInvoked = new AtomicLong();
 
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerAInvoked.set(System.nanoTime());
-    });
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> listenerAInvoked.set(System.nanoTime()));
     eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class,
-        (AwaitingEventExecutor<TestEvent>) event -> EventTask.withContinuation(continuation -> {
-          new Thread(() -> {
-            listenerBInvoked.set(System.nanoTime());
-            continuation.resume();
-          }).start();
-        }));
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerCInvoked.set(System.nanoTime());
-    });
+        (AwaitingEventExecutor<TestEvent>) event -> EventTask.withContinuation(continuation -> new Thread(() -> {
+          listenerBInvoked.set(System.nanoTime());
+          continuation.resume();
+        }).start()));
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> listenerCInvoked.set(System.nanoTime()));
 
     try {
       eventManager.fire(new TestEvent()).get();

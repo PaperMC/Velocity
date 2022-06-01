@@ -53,11 +53,7 @@ import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
-import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
-import com.velocitypowered.proxy.util.EncryptionUtils;
-import com.velocitypowered.proxy.util.FileSystemUtils;
-import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
+import com.velocitypowered.proxy.util.*;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
@@ -66,6 +62,20 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.translation.TranslationRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncHttpClient;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -74,37 +84,11 @@ import java.nio.file.Path;
 import java.security.AccessController;
 import java.security.KeyPair;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.audience.ForwardingAudience;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.translation.GlobalTranslator;
-import net.kyori.adventure.translation.TranslationRegistry;
-import net.kyori.adventure.util.UTF8ResourceBundleControl;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityServer implements ProxyServer, ForwardingAudience {
 
@@ -526,13 +510,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       shutdown = true;
 
       if (explicitExit) {
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-          @Override
-          @SuppressFBWarnings("DM_EXIT")
-          public Void run() {
-            System.exit(0);
-            return null;
-          }
+        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+          System.exit(0);
+          return null;
         });
       }
     };

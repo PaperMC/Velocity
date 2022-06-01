@@ -17,26 +17,23 @@
 
 package com.velocitypowered.natives.compression;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.condition.OS.LINUX;
-
 import com.velocitypowered.natives.util.BufferPreference;
 import com.velocitypowered.natives.util.Natives;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+
 import java.io.IOException;
 import java.util.Random;
 import java.util.function.Supplier;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnJre;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.JRE;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.condition.OS.LINUX;
 
 class VelocityCompressorTest {
 
@@ -88,7 +85,7 @@ class VelocityCompressorTest {
     source.writeBytes(TEST_DATA);
     int uncompressedData = source.readableBytes();
 
-    try {
+    try (compressor) {
       compressor.deflate(source, dest);
       compressor.inflate(dest, decompressed, uncompressedData);
       source.readerIndex(0);
@@ -97,7 +94,6 @@ class VelocityCompressorTest {
       source.release();
       dest.release();
       decompressed.release();
-      compressor.close();
     }
   }
 }

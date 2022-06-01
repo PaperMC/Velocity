@@ -18,12 +18,12 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.util.ProxyVersion;
+import net.kyori.adventure.audience.Audience;
+
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.adventure.audience.Audience;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Provides an interface to a Minecraft server proxy.

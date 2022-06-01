@@ -17,10 +17,6 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
-import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
-import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-import static com.velocitypowered.proxy.network.Connections.HANDLER;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -45,7 +41,9 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
-import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +51,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
+import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
+import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
 

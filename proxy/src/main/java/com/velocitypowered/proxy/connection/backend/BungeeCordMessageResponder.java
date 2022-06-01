@@ -32,17 +32,17 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.util.Optional;
-import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
+import java.util.Optional;
+import java.util.StringJoiner;
 
 @SuppressFBWarnings(value = "OS_OPEN_STREAM", justification = "Most methods in this class open "
     + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "

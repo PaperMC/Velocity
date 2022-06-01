@@ -17,22 +17,17 @@
 
 package com.velocitypowered.proxy.command;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CommandManagerTests extends CommandTestSuite {
 
@@ -113,9 +108,7 @@ public class CommandManagerTests extends CommandTestSuite {
             .executes(context -> fail())
             .build();
 
-    assertThrows(IllegalArgumentException.class, () -> {
-      manager.metaBuilder("hello").hint(hintNode);
-    });
+    assertThrows(IllegalArgumentException.class, () -> manager.metaBuilder("hello").hint(hintNode));
   }
 
   @Test
@@ -128,9 +121,7 @@ public class CommandManagerTests extends CommandTestSuite {
             .redirect(targetNode)
             .build();
 
-    assertThrows(IllegalArgumentException.class, () -> {
-      manager.metaBuilder("hello").hint(hintNode);
-    });
+    assertThrows(IllegalArgumentException.class, () -> manager.metaBuilder("hello").hint(hintNode));
   }
 
   // Un-registration

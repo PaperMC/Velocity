@@ -17,6 +17,13 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import com.mojang.brigadier.arguments.*;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import io.netty.buffer.ByteBuf;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.EmptyArgumentPropertySerializer.EMPTY;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.FloatArgumentPropertySerializer.FLOAT;
@@ -24,19 +31,6 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumen
 import static com.velocitypowered.proxy.protocol.packet.brigadier.LongArgumentPropertySerializer.LONG;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ModArgumentPropertySerializer.MOD;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.StringArgumentPropertySerializer.STRING;
-
-import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.FloatArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.LongArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
-import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArgumentPropertyRegistry {
   private ArgumentPropertyRegistry() {
