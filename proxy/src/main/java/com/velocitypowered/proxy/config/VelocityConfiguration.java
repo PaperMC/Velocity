@@ -415,6 +415,12 @@ public class VelocityConfiguration implements ProxyConfig {
       throw new RuntimeException("Default configuration file does not exist.");
     }
 
+    // Create the forwarding-secret file on first-time startup if it doesn't exist
+    Path defaultForwardingSecretPath = Path.of("forwarding.secret");
+    if (!path.toFile().exists() && !defaultForwardingSecretPath.toFile().exists()) {
+      Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
+    }
+
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
         .defaultData(defaultConfigLocation)
@@ -435,34 +441,41 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();
 
-    // Inform the user that forwarding-secret parameter has been deprecated.
-    if (config.contains("forwarding-secret")) {
-      logger.warn("The \"forwarding-secret\" configuration parameter has been deprecated due to security"
-          + " concerns. Please remove it and use the \"forwarding-secret-file\" parameter or"
-          + " \"VELOCITY_FORWARDING_SECRET\""
-          + " environment variable instead.");
-    }
+    // Whether or not this config is version 1.0 which uses the deprecated "forwarding-secret" parameter
+    boolean legacyConfig = config.getOrElse("config-version", "").equalsIgnoreCase("1.0");
 
-    // Retrieve the forwarding secret.
-    // First, from environment variable, then from config (deprecated), then from file.
+    String forwardingSecretString;
     byte[] forwardingSecret;
-    String forwardingSecretString = System.getenv()
-        .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
 
-    // Ensure that the "forwarding-secret-file" configuration parameter and auto-created file are present.
-    String forwardingSecretFileName = config.get("forwarding-secret-file");
-    if (forwardingSecretFileName == null || forwardingSecretFileName.isEmpty()) {
-      Files.writeString(Path.of("forwarding.secret"), generateRandomString(12));
-      config.set("forwarding-secret-file", "forwarding.secret");
-      mustResave = true;
-    }
+    // Handle the previous (version 1.0) config
+    // There is duplicate/old code here in effort to make the future commit which abandons legacy config handling
+    // easier to implement. All that would be required is removing the if statement here and keeping the contents
+    // of the else block (with slight tidying).
+    if (legacyConfig) {
+      logger.warn("You are currently using a deprecated configuration version. The \"forwarding-secret\""
+          + " parameter has been recognized as a security concern and has been removed in config version 2.0."
+          + " It's recommended you rename your current \"velocity.toml\" to something else to allow Velocity"
+          + " to generate a config file of the new version. You may then configure that file as you normally would."
+          + " The only differences are the config-version and \"forwarding-secret\" has been replaced"
+          + " by \"forwarding-secret-file\".");
 
-    // If the environment variable and deprecated "forwarding-secret" parameter aren't set, use the file.
-    if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-      forwardingSecret = Files.readAllBytes(Path.of("forwarding.secret"));
+      // Default legacy handling
+      forwardingSecretString = System.getenv()
+          .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
+      if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
+        forwardingSecretString = generateRandomString(12);
+        config.set("forwarding-secret", forwardingSecretString);
+        mustResave = true;
+      }
     } else {
-      forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+      // New handling
+      forwardingSecretString = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
+      if (forwardingSecretString.isEmpty()) {
+        String forwardSecretFile = config.getOrElse("forwarding-secret-file", "");
+        forwardingSecretString = String.join("", Files.readAllLines(Path.of(forwardSecretFile)));
+      }
     }
+    forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
@@ -489,6 +502,14 @@ public class VelocityConfiguration implements ProxyConfig {
         true);
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
     Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
+
+    // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
+    // forwarding mode that requires it.
+    if (forwardingSecret.length == 0
+        && forwardingMode == PlayerInfoForwarding.MODERN
+        || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
+      throw new RuntimeException("The forwarding-secret file must not be empty.");
+    }
 
     return new VelocityConfiguration(
         bind,
