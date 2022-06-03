@@ -67,8 +67,8 @@ public class ServerCommand implements SimpleCommand {
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
       if (!toConnect.isPresent()) {
         player.sendMessage(ClosestLocaleMatcher.translateAndParse(
-          "velocity.command.server-does-not-exist",
-          source.pointers().get(Identity.LOCALE).orElse(null), serverName));
+            "velocity.command.server-does-not-exist",
+            source.pointers().get(Identity.LOCALE).orElse(null), serverName));
         return;
       }
 
@@ -116,8 +116,8 @@ public class ServerCommand implements SimpleCommand {
 
     int connectedPlayers = server.getPlayersConnected().size();
     Component playersTextComponent = ClosestLocaleMatcher.translateAndParse(connectedPlayers == 1
-      ? "velocity.command.server-tooltip-player-online"
-      : "velocity.command.server-tooltip-players-online", Component.text(connectedPlayers));
+        ? "velocity.command.server-tooltip-player-online"
+        : "velocity.command.server-tooltip-players-online", Component.text(connectedPlayers));
     if (serverInfo.getName().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
@@ -130,7 +130,8 @@ public class ServerCommand implements SimpleCommand {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
           .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
           .hoverEvent(
-              showText(ClosestLocaleMatcher.translateAndParse("velocity.command.server-tooltip-offer-connect-server", null)
+              showText(ClosestLocaleMatcher.translateAndParse(
+                  "velocity.command.server-tooltip-offer-connect-server")
                   .append(Component.newline())
                   .append(playersTextComponent))
           );

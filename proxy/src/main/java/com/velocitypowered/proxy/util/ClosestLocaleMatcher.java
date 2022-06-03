@@ -20,15 +20,15 @@ package com.velocitypowered.proxy.util;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.translation.GlobalTranslator;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ClosestLocaleMatcher {
   public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
@@ -70,6 +70,14 @@ public class ClosestLocaleMatcher {
     return translateAndParse(key, locale, NamedTextColor.WHITE, arguments);
   }
 
+  /**
+   * Translate and parse with MiniMessage an translation.
+   * @param key the translation key
+   * @param locale the locale
+   * @param color the color to set if the resulting component does not have color
+   * @param arguments the arguments
+   * @return the translation parsed
+   */
   public static Component translateAndParse(String key, Locale locale, TextColor color, Object... arguments) {
     return MiniMessage.miniMessage()
       .deserialize(GlobalTranslator.translator()

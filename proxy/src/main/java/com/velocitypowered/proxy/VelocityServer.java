@@ -606,7 +606,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
       if (existing != null) {
         existing.disconnect(ClosestLocaleMatcher.translateAndParse(
-          "multiplayer.disconnect.duplicate_login", existing.getEffectiveLocale()));
+            "multiplayer.disconnect.duplicate_login", existing.getEffectiveLocale()));
       }
 
       // We can now replace the entries as needed.

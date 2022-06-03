@@ -127,7 +127,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
     if (!server.getIpAttemptLimiter().attempt(address)) {
-      ic.disconnectQuietly(ClosestLocaleMatcher.translateAndParse("velocity.error.logging-in-too-fast", null));
+      ic.disconnectQuietly(ClosestLocaleMatcher.translateAndParse("velocity.error.logging-in-too-fast"));
       return;
     }
 

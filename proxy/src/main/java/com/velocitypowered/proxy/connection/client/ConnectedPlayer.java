@@ -603,14 +603,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason,
-          ClosestLocaleMatcher.translateAndParse("velocity.error.moved-to-new-server", getEffectiveLocale(), NamedTextColor.RED,
+          ClosestLocaleMatcher.translateAndParse("velocity.error.moved-to-new-server",
+              getEffectiveLocale(), NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
               disconnectReason), safe);
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason,
-          ClosestLocaleMatcher.translateAndParse("velocity.error.cant-connect", getEffectiveLocale(), NamedTextColor.RED,
+          ClosestLocaleMatcher.translateAndParse("velocity.error.cant-connect",
+              getEffectiveLocale(), NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
               disconnectReason), safe);
     }
