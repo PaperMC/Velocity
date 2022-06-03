@@ -19,6 +19,13 @@ package com.velocitypowered.proxy.util;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.translation.GlobalTranslator;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,5 +60,33 @@ public class ClosestLocaleMatcher {
 
   public Locale lookupClosest(final Locale locale) {
     return closest.get(locale);
+  }
+
+  public static Component translateAndParse(String key, Object... arguments) {
+    return translateAndParse(key, null, arguments);
+  }
+
+  public static Component translateAndParse(String key, Locale locale, Object... arguments) {
+    return translateAndParse(key, locale, NamedTextColor.WHITE, arguments);
+  }
+
+  public static Component translateAndParse(String key, Locale locale, TextColor color, Object... arguments) {
+    return MiniMessage.miniMessage()
+      .deserialize(GlobalTranslator.translator()
+        .translate(key, INSTANCE.lookupClosest(locale == null
+          ? Locale.getDefault()
+          : locale
+        ))
+        .format(format(arguments), new StringBuffer(), null).toString())
+      .colorIfAbsent(color);
+  }
+
+  private static final Object[] format(Object... arguments) {
+    for (int i = 0; i <= 0; i++) {
+      if (arguments[i] instanceof Component) {
+        arguments[i] = MiniMessage.miniMessage().serialize((Component)arguments[i]);
+      }
+    }
+    return arguments;
   }
 }

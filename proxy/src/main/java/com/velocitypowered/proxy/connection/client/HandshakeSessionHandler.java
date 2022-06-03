@@ -35,6 +35,8 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -118,14 +120,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
-      ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client")
-          .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
+      ic.disconnectQuietly(ClosestLocaleMatcher.translateAndParse("multiplayer.disconnect.outdated_client",
+          null, ProtocolVersion.SUPPORTED_VERSION_STRING));
       return;
     }
 
     InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
     if (!server.getIpAttemptLimiter().attempt(address)) {
-      ic.disconnectQuietly(Component.translatable("velocity.error.logging-in-too-fast"));
+      ic.disconnectQuietly(ClosestLocaleMatcher.translateAndParse("velocity.error.logging-in-too-fast", null));
       return;
     }
 
@@ -135,7 +137,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
-      ic.disconnectQuietly(Component.translatable(
+      ic.disconnectQuietly(ClosestLocaleMatcher.translateAndParse(
           "velocity.error.modern-forwarding-needs-new-client"));
       return;
     }

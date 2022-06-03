@@ -38,6 +38,8 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+
 import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 import java.util.UUID;
@@ -88,8 +90,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
-        player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
-            NamedTextColor.RED), true);
+        player.disconnect0(ClosestLocaleMatcher.translateAndParse("velocity.error.already-connected-proxy",
+            player.getEffectiveLocale(), NamedTextColor.RED), true);
         return CompletableFuture.completedFuture(null);
       }
 
@@ -153,7 +155,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
             player.disconnect0(reason.get(), true);
           } else {
             if (!server.registerConnection(player)) {
-              player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
+              player.disconnect0(ClosestLocaleMatcher.translateAndParse("velocity.error.already-connected-proxy", player.getEffectiveLocale()),
                   true);
               return;
             }
@@ -182,8 +184,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         .thenRunAsync(() -> {
           Optional<RegisteredServer> toTry = event.getInitialServer();
           if (!toTry.isPresent()) {
-            player.disconnect0(Component.translatable("velocity.error.no-available-servers",
-                NamedTextColor.RED), true);
+            player.disconnect0(ClosestLocaleMatcher.translateAndParse("velocity.error.no-available-servers",
+                player.getEffectiveLocale(), NamedTextColor.RED), true);
             return;
           }
           player.createConnectionRequest(toTry.get()).fireAndForget();

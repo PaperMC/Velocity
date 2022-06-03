@@ -32,12 +32,13 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+
 import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class GlistCommand {
@@ -78,8 +79,11 @@ public class GlistCommand {
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
-    source.sendMessage(Identity.nil(),
-        Component.translatable("velocity.command.glist-view-all", NamedTextColor.YELLOW));
+    source.sendMessage(
+        ClosestLocaleMatcher.translateAndParse(
+          "velocity.command.glist-view-all",
+          source.pointers().get(Identity.LOCALE).orElse(null),
+          NamedTextColor.YELLOW));
     return 1;
   }
 
@@ -94,8 +98,9 @@ public class GlistCommand {
     } else {
       Optional<RegisteredServer> registeredServer = server.getServer(serverName);
       if (!registeredServer.isPresent()) {
-        source.sendMessage(Identity.nil(),
-            CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
+        source.sendMessage(ClosestLocaleMatcher.translateAndParse(
+              "velocity.command.server-does-not-exist", NamedTextColor.RED,
+              source.pointers().get(Identity.LOCALE).orElse(null), serverName));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);
@@ -105,11 +110,12 @@ public class GlistCommand {
 
   private void sendTotalProxyCount(CommandSource target) {
     int online = server.getPlayerCount();
-    TranslatableComponent msg = online == 1
-        ? Component.translatable("velocity.command.glist-player-singular")
-        : Component.translatable("velocity.command.glist-player-plural");
-    target.sendMessage(msg.color(NamedTextColor.YELLOW)
-        .args(Component.text(Integer.toString(online), NamedTextColor.GREEN)));
+    Component msg = ClosestLocaleMatcher.translateAndParse(online == 1
+        ? "velocity.command.glist-player-singular"
+        : "velocity.command.glist-player-plural",
+        target.pointers().get(Identity.LOCALE).orElse(null), NamedTextColor.YELLOW,
+        Component.text(Integer.toString(online), NamedTextColor.GREEN));
+    target.sendMessage(msg);
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {

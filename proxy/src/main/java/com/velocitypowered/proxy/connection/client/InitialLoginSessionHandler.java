@@ -35,6 +35,8 @@ import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -192,18 +194,18 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             ));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
-            inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
-                NamedTextColor.RED));
+            inbound.disconnect(ClosestLocaleMatcher.translateAndParse("velocity.error.online-mode-only",
+                null, NamedTextColor.RED));
           } else {
             // Something else went wrong
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
-            inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+            inbound.disconnect(ClosestLocaleMatcher.translateAndParse("multiplayer.disconnect.authservers_down"));
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
-          inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+          inbound.disconnect(ClosestLocaleMatcher.translateAndParse("multiplayer.disconnect.authservers_down"));
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();

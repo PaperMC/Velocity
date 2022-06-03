@@ -35,6 +35,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.InformationUtils;
 
 import java.net.ConnectException;
@@ -51,7 +52,6 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -183,16 +183,16 @@ public class VelocityCommand implements SimpleCommand {
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
         if (server.reloadConfiguration()) {
-          source.sendMessage(Component.translatable("velocity.command.reload-success",
-              NamedTextColor.GREEN));
+          source.sendMessage(ClosestLocaleMatcher.translateAndParse("velocity.command.reload-success",
+              null, NamedTextColor.GREEN));
         } else {
-          source.sendMessage(Component.translatable("velocity.command.reload-failure",
-              NamedTextColor.RED));
+          source.sendMessage(ClosestLocaleMatcher.translateAndParse("velocity.command.reload-failure",
+              null, NamedTextColor.RED));
         }
       } catch (Exception e) {
         logger.error("Unable to reload configuration", e);
-        source.sendMessage(Component.translatable("velocity.command.reload-failure",
-            NamedTextColor.RED));
+        source.sendMessage(ClosestLocaleMatcher.translateAndParse("velocity.command.reload-failure",
+            null, NamedTextColor.RED));
       }
     }
 
@@ -276,8 +276,8 @@ public class VelocityCommand implements SimpleCommand {
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
-        source.sendMessage(Component.translatable("velocity.command.no-plugins",
-            NamedTextColor.YELLOW));
+        source.sendMessage(ClosestLocaleMatcher.translateAndParse("velocity.command.no-plugins",
+            source.pointers().get(Identity.LOCALE).orElse(null), NamedTextColor.YELLOW));
         return;
       }
 
@@ -290,10 +290,11 @@ public class VelocityCommand implements SimpleCommand {
         }
       }
 
-      TranslatableComponent.Builder output = Component.translatable()
-          .key("velocity.command.plugins-list")
-          .color(NamedTextColor.YELLOW)
-          .args(listBuilder.build());
+      Component output = ClosestLocaleMatcher.translateAndParse(
+          "velocity.command.plugins-list",
+          source.pointers().get(Identity.LOCALE).orElse(null),
+          NamedTextColor.YELLOW,
+          listBuilder.build());
       source.sendMessage(Identity.nil(), output);
     }
 
@@ -305,19 +306,19 @@ public class VelocityCommand implements SimpleCommand {
 
       description.getUrl().ifPresent(url -> {
         hoverText.append(Component.newline());
-        hoverText.append(Component.translatable(
+        hoverText.append(ClosestLocaleMatcher.translateAndParse(
             "velocity.command.plugin-tooltip-website",
-            Component.text(url)));
+            null, url));
       });
       if (!description.getAuthors().isEmpty()) {
         hoverText.append(Component.newline());
         if (description.getAuthors().size() == 1) {
-          hoverText.append(Component.translatable("velocity.command.plugin-tooltip-author",
-              Component.text(description.getAuthors().get(0))));
+          hoverText.append(ClosestLocaleMatcher.translateAndParse("velocity.command.plugin-tooltip-author",
+              null, description.getAuthors().get(0)));
         } else {
           hoverText.append(
-              Component.translatable("velocity.command.plugin-tooltip-author",
-                  Component.text(String.join(", ", description.getAuthors()))
+              ClosestLocaleMatcher.translateAndParse("velocity.command.plugin-tooltip-author",
+                  null, String.join(", ", description.getAuthors())
               )
           );
         }

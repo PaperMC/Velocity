@@ -58,6 +58,8 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -154,8 +156,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String msg = packet.getMessage();
     if (CharacterUtil.containsIllegalCharacters(msg)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-          NamedTextColor.RED));
+      player.disconnect(ClosestLocaleMatcher.translateAndParse("velocity.error.illegal-chat-characters",
+          player.getEffectiveLocale(), NamedTextColor.RED));
       return true;
     }
 
@@ -172,8 +174,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .exceptionally(e -> {
             logger.info("Exception occurred while running command for {}",
                 player.getUsername(), e);
-            player.sendMessage(Component.translatable("velocity.command.generic-error",
-                NamedTextColor.RED));
+            player.sendMessage(ClosestLocaleMatcher.translateAndParse("velocity.command.generic-error",
+                player.getEffectiveLocale(), NamedTextColor.RED));
             return null;
           });
     } else {
@@ -340,8 +342,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(Component.translatable("velocity.error.player-connection-error",
-        NamedTextColor.RED));
+    player.disconnect(ClosestLocaleMatcher.translateAndParse("velocity.error.player-connection-error",
+        player.getEffectiveLocale(), NamedTextColor.RED));
   }
 
   @Override

@@ -551,7 +551,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param explicitExit whether the user explicitly shut down the proxy
    */
   public void shutdown(boolean explicitExit) {
-    shutdown(explicitExit, Component.translatable("velocity.kick.shutdown"));
+    shutdown(explicitExit, ClosestLocaleMatcher.translateAndParse("velocity.kick.shutdown"));
   }
 
   @Override
@@ -605,7 +605,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     } else {
       ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
       if (existing != null) {
-        existing.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
+        existing.disconnect(ClosestLocaleMatcher.translateAndParse(
+          "multiplayer.disconnect.duplicate_login", existing.getEffectiveLocale()));
       }
 
       // We can now replace the entries as needed.

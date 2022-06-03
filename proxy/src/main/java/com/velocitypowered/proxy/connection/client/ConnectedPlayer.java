@@ -573,13 +573,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
 
     Component friendlyError;
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
-      friendlyError = Component.translatable("velocity.error.connected-server-error",
-          Component.text(server.getServerInfo().getName()));
+      friendlyError = ClosestLocaleMatcher.translateAndParse("velocity.error.connected-server-error",
+          getEffectiveLocale(), server.getServerInfo().getName());
     } else {
       logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(),
           wrapped);
-      friendlyError = Component.translatable("velocity.error.connecting-server-error",
-          Component.text(server.getServerInfo().getName()));
+      friendlyError = ClosestLocaleMatcher.translateAndParse("velocity.error.connecting-server-error",
+          getEffectiveLocale(), server.getServerInfo().getName());
     }
     handleConnectionException(server, null, friendlyError.color(NamedTextColor.RED), safe);
   }
@@ -603,14 +603,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player {
       logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
       handleConnectionException(server, disconnectReason,
-          Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
+          ClosestLocaleMatcher.translateAndParse("velocity.error.moved-to-new-server", getEffectiveLocale(), NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
               disconnectReason), safe);
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason,
-          Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
+          ClosestLocaleMatcher.translateAndParse("velocity.error.cant-connect", getEffectiveLocale(), NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
               disconnectReason), safe);
     }
