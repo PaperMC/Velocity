@@ -90,6 +90,9 @@ public class ClosestLocaleMatcher {
   }
 
   private static final Object[] format(Object... arguments) {
+    if (arguments == null || arguments.length == 0) {
+      return arguments;
+    }
     for (int i = 0; i <= 0; i++) {
       if (arguments[i] instanceof Component) {
         arguments[i] = MiniMessage.miniMessage().serialize((Component)arguments[i]);
