@@ -93,7 +93,7 @@ public class ClosestLocaleMatcher {
     if (arguments == null || arguments.length == 0) {
       return arguments;
     }
-    for (int i = 0; i <= arguments.length; i++) {
+    for (int i = 0; i < arguments.length; i++) {
       if (arguments[i] instanceof Component) {
         arguments[i] = MiniMessage.miniMessage().serialize((Component)arguments[i]);
       }
