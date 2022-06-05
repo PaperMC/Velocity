@@ -125,10 +125,12 @@ shadowJar {
     exclude 'it/unimi/dsi/fastutil/ints/Int*Pair'
     exclude 'it/unimi/dsi/fastutil/ints/IntLinked*'
     exclude 'it/unimi/dsi/fastutil/ints/IntList*'
+    exclude 'it/unimi/dsi/fastutil/ints/AbstractIntList*'
     exclude 'it/unimi/dsi/fastutil/ints/IntHeap*'
     exclude 'it/unimi/dsi/fastutil/ints/IntOpen*'
     exclude 'it/unimi/dsi/fastutil/ints/IntRB*'
     exclude 'it/unimi/dsi/fastutil/ints/IntSorted*'
+    exclude 'it/unimi/dsi/fastutil/ints/AbstractIntSorted*'
     exclude 'it/unimi/dsi/fastutil/ints/*Priority*'
     exclude 'it/unimi/dsi/fastutil/ints/*BigList*'
 
