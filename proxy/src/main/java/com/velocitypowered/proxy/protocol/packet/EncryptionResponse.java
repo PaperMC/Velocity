@@ -24,13 +24,19 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Arrays;
 
 public class EncryptionResponse implements MinecraftPacket {
 
+  private final static QuietDecoderException NO_SALT = new QuietDecoderException("Encryption response didn't contain salt");
+
   private byte[] sharedSecret = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
+  private @Nullable Long salt;
 
   public byte[] getSharedSecret() {
     return sharedSecret.clone();
@@ -38,6 +44,13 @@ public class EncryptionResponse implements MinecraftPacket {
 
   public byte[] getVerifyToken() {
     return verifyToken.clone();
+  }
+
+  public long getSalt() {
+    if (salt == null) {
+      throw NO_SALT;
+    }
+    return salt;
   }
 
   @Override
@@ -52,7 +65,14 @@ public class EncryptionResponse implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 128);
-      this.verifyToken = ProtocolUtils.readByteArray(buf, 128);
+
+      int cap = 128;
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        salt = buf.readLong();
+        cap += 128;
+      }
+
+      this.verifyToken = ProtocolUtils.readByteArray(buf, cap);
     } else {
       this.sharedSecret = ProtocolUtils.readByteArray17(buf);
       this.verifyToken = ProtocolUtils.readByteArray17(buf);
@@ -63,6 +83,9 @@ public class EncryptionResponse implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
+      if (salt != null && version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        buf.writeLong(salt);
+      }
       ProtocolUtils.writeByteArray(buf, verifyToken);
     } else {
       ProtocolUtils.writeByteArray17(sharedSecret, buf, false);
@@ -79,11 +102,12 @@ public class EncryptionResponse implements MinecraftPacket {
   public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.
     // The length prefix always winds up being 2 bytes.
-    return 260;
+    return 260 + (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 ? 128 + 8 : 0);
   }
 
   @Override
   public int expectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
-    return expectedMaxLength(buf, direction, version);
+    //return expectedMaxLength(buf, direction, version);
+    return -1; //TODO ## 19
   }
 }

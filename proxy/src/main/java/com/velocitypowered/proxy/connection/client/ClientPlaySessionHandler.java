@@ -32,6 +32,7 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -42,10 +43,10 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
@@ -55,6 +56,8 @@ import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
+import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
@@ -62,6 +65,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -90,6 +95,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
+  private @Nullable Instant lastChatMessage; // Added in 1.19
 
   /**
    * Constructs a client play session handler.
@@ -142,60 +148,111 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(Chat packet) {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      return true;
-    }
-    MinecraftConnection smc = serverConnection.getConnection();
-    if (smc == null) {
+  public boolean handle(PlayerChat packet) {
+    if (!validateChat(packet.getMessage())) {
       return true;
     }
 
+    if (!packet.isUnsigned()) {
+      // TODO ## 19
+      SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
+      if (signedChat != null) {
+        // Server doesn't care for expiry as long as order is correct
+        if(!tickLastMessage(signedChat)) {
+          return true;
+        }
+
+
+      }
+    } else {
+      processPlayerChat(packet.getMessage());
+    }
+
+    return true;
+  }
+  // I will not allow hacks to bypass this;
+  private boolean tickLastMessage(SignedChatMessage nextMessage) {
+    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
+      player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
+      return false;
+    }
+
+    lastChatMessage = nextMessage.getExpiryTemporal();
+    return true;
+  }
+
+  @Override
+  public boolean handle(LegacyChat packet) {
     String msg = packet.getMessage();
-    if (CharacterUtil.containsIllegalCharacters(msg)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-          NamedTextColor.RED));
+    if (!validateChat(msg)) {
       return true;
     }
 
     if (msg.startsWith("/")) {
-      String originalCommand = msg.substring(1);
-      server.getCommandManager().callCommandEvent(player, msg.substring(1))
-          .thenComposeAsync(event -> processCommandExecuteResult(originalCommand,
-              event.getResult()))
-          .whenComplete((ignored, throwable) -> {
-            if (server.getConfiguration().isLogCommandExecutions()) {
-              logger.info("{} -> executed command /{}", player, originalCommand);
-            }
-          })
-          .exceptionally(e -> {
-            logger.info("Exception occurred while running command for {}",
-                player.getUsername(), e);
-            player.sendMessage(Component.translatable("velocity.command.generic-error",
-                NamedTextColor.RED));
-            return null;
-          });
+      processCommandMessage(msg.substring(1));
     } else {
-      PlayerChatEvent event = new PlayerChatEvent(player, msg);
-      server.getEventManager().fire(event)
-          .thenAcceptAsync(pme -> {
-            PlayerChatEvent.ChatResult chatResult = pme.getResult();
-            if (chatResult.isAllowed()) {
-              Optional<String> eventMsg = pme.getResult().getMessage();
-              if (eventMsg.isPresent()) {
-                smc.write(Chat.createServerbound(eventMsg.get()));
-              } else {
-                smc.write(packet);
-              }
-            }
-          }, smc.eventLoop())
-          .exceptionally((ex) -> {
-            logger.error("Exception while handling player chat for {}", player, ex);
-            return null;
-          });
+      processPlayerChat(msg);
     }
     return true;
+  }
+
+  private boolean validateChat(String message){
+    if (CharacterUtil.containsIllegalCharacters(message)) {
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
+              NamedTextColor.RED));
+      return false;
+    }
+    return true;
+  }
+
+  private MinecraftConnection retrieveServerConnection(){
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      return null;
+    }
+    return serverConnection.getConnection();
+  }
+
+  private void processCommandMessage(String message) {
+    server.getCommandManager().callCommandEvent(player, message)
+            .thenComposeAsync(event -> processCommandExecuteResult(message,
+                    event.getResult()))
+            .whenComplete((ignored, throwable) -> {
+              if (server.getConfiguration().isLogCommandExecutions()) {
+                logger.info("{} -> executed command /{}", player, message);
+              }
+            })
+            .exceptionally(e -> {
+              logger.info("Exception occurred while running command for {}",
+                      player.getUsername(), e);
+              player.sendMessage(Component.translatable("velocity.command.generic-error",
+                      NamedTextColor.RED));
+              return null;
+            });
+  }
+
+  private void processPlayerChat(String message) {
+    MinecraftConnection smc = retrieveServerConnection();
+    if (smc == null) {
+      return;
+    }
+    PlayerChatEvent event = new PlayerChatEvent(player, message);
+    server.getEventManager().fire(event)
+            .thenAcceptAsync(pme -> {
+              PlayerChatEvent.ChatResult chatResult = pme.getResult();
+              if (chatResult.isAllowed()) {
+                Optional<String> eventMsg = pme.getResult().getMessage();
+                if (eventMsg.isPresent()) {
+                  smc.write(LegacyChat.createServerbound(eventMsg.get()));
+                } else {
+                  smc.write(packet);
+                }
+              }
+            }, smc.eventLoop())
+            .exceptionally((ex) -> {
+              logger.error("Exception while handling player chat for {}", player, ex);
+              return null;
+            });
   }
 
   @Override
@@ -628,13 +685,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
-      return CompletableFuture.runAsync(() -> smc.write(Chat.createServerbound("/"
+      return CompletableFuture.runAsync(() -> smc.write(LegacyChat.createServerbound("/"
           + commandToRun)), smc.eventLoop());
     } else {
       return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
-              smc.write(Chat.createServerbound("/" + commandToRun));
+              smc.write(LegacyChat.createServerbound("/" + commandToRun));
             }
           }, smc.eventLoop());
     }
