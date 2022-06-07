@@ -57,7 +57,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
 
   @Override
   public Instant getExpiryTemporal() {
-    return null;
+    return expiryTemporal;
   }
 
   @Override
@@ -70,7 +70,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
     if (isSignatureValid == null) {
       String pemKey = EncryptionUtils.pemEncodeRsaKey(publicKey);
       long expires = expiryTemporal.toEpochMilli();
-      byte[] toVerify = ("" + pemKey + expires).getBytes(StandardCharsets.US_ASCII);
+      byte[] toVerify = ("" + expires + pemKey).getBytes(StandardCharsets.US_ASCII);
       isSignatureValid = EncryptionUtils.verifySignature(
               EncryptionUtils.SHA1_WITH_RSA, EncryptionUtils.getYggdrasilSessionKey(), signature, toVerify);
     }
@@ -80,7 +80,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
   @Override
   public boolean verifyDataSignature(byte[] signature, byte[]... toVerify) {
     try {
-      return EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA, publicKey, signature, toVerify);
+      return EncryptionUtils.verifySignature(EncryptionUtils.SHA256_WITH_RSA, publicKey, signature, toVerify);
     } catch (IllegalArgumentException e) {
       return false;
     }

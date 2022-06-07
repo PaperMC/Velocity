@@ -21,6 +21,7 @@ import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -32,13 +33,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 public class PlayerChat implements MinecraftPacket {
-
-  private static final QuietDecoderException INVALID_SIGNATURE
-          = new QuietDecoderException("Incorrectly signed chat message");
-  private static final QuietDecoderException PREVIEW_SIGNATURE_MISSING
-          = new QuietDecoderException("Unsigned chat message requested signed preview");
-
-  private static final byte[] EMPTY = new byte[0];
 
   private String message;
   private boolean signedPreview;
@@ -91,12 +85,12 @@ public class PlayerChat implements MinecraftPacket {
     } else if(saltLong == 0L && signature.length == 0) {
       unsigned = true;
     } else {
-      throw INVALID_SIGNATURE;
+      throw EncryptionUtils.INVALID_SIGNATURE;
     }
 
     signedPreview = buf.readBoolean();
     if (signedPreview && unsigned) {
-      throw PREVIEW_SIGNATURE_MISSING;
+      throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
   }
 
@@ -106,7 +100,7 @@ public class PlayerChat implements MinecraftPacket {
 
     buf.writeLong(unsigned ? Instant.now().toEpochMilli() : expiry.toEpochMilli());
     buf.writeLong(unsigned ? 0L : Longs.fromByteArray(salt));
-    ProtocolUtils.writeByteArray(buf, unsigned ? EMPTY : signature);
+    ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
 
     buf.writeBoolean(signedPreview);
   }
@@ -114,7 +108,7 @@ public class PlayerChat implements MinecraftPacket {
   public SignedChatMessage signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
     if (unsigned) {
       if (mustSign) {
-        throw INVALID_SIGNATURE;
+        throw EncryptionUtils.INVALID_SIGNATURE;
       }
       return null;
     }

@@ -19,12 +19,14 @@ package com.velocitypowered.proxy.crypto;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import it.unimi.dsi.fastutil.Pair;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -51,8 +53,16 @@ public enum EncryptionUtils {
   public static final String SHA1_WITH_RSA = "SHA1withRSA";
   public static final String SHA256_WITH_RSA = "SHA256withRSA";
 
+  public static final QuietDecoderException INVALID_SIGNATURE
+          = new QuietDecoderException("Incorrectly signed chat message");
+  public static final QuietDecoderException PREVIEW_SIGNATURE_MISSING
+          = new QuietDecoderException("Unsigned chat message requested signed preview");
+  public static final byte[] EMPTY = new byte[0];
   private static PublicKey YGGDRASIL_SESSION_KEY;
   private static KeyFactory RSA_KEY_FACTORY;
+
+  private static final Base64.Encoder MINE_SPECIAL_ENCODER
+          = Base64.getMimeEncoder(76, "\n".getBytes(StandardCharsets.UTF_8));
 
   static {
     try {
@@ -134,7 +144,7 @@ public enum EncryptionUtils {
   }
 
   public static String encodeUrlEncoded(byte[] data) {
-    return Base64.getMimeEncoder().encodeToString(data);
+    return MINE_SPECIAL_ENCODER.encodeToString(data);
   }
 
   public static byte[] decodeUrlEncoded(String toParse) {

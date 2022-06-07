@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
@@ -39,7 +38,7 @@ public class ServerLogin implements MinecraftPacket {
   public ServerLogin() {
   }
 
-  public ServerLogin(String username) {
+  public ServerLogin(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");
   }
 
@@ -75,10 +74,7 @@ public class ServerLogin implements MinecraftPacket {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       if (buf.readBoolean()) {
-        long expiry = buf.readLong();
-        byte[] key = ProtocolUtils.readByteArray(buf);
-        byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-        playerKey = new IdentifiedKeyImpl(key, expiry, signature);
+        playerKey = ProtocolUtils.readPlayerKey(buf);
       }
     }
   }
@@ -93,9 +89,7 @@ public class ServerLogin implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       if (playerKey != null) {
         buf.writeBoolean(true);
-        buf.writeLong(playerKey.getExpiryTemporal().toEpochMilli());
-        ProtocolUtils.writeByteArray(buf, playerKey.getSignedPublicKey().getEncoded());
-        ProtocolUtils.writeByteArray(buf, playerKey.getSignature());
+        ProtocolUtils.writePlayerKey(buf, playerKey);
       } else {
         buf.writeBoolean(false);
       }

@@ -20,7 +20,6 @@ public interface SignedMessage extends KeySigned {
 
   /**
    * Returns the signers UUID.
-   * Can be a player UUID or a self-signed UUID.
    *
    * @return the uuid
    */

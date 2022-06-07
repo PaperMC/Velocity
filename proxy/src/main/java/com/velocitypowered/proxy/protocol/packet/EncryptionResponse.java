@@ -66,13 +66,13 @@ public class EncryptionResponse implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 128);
 
-      int cap = 128;
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+              && !buf.readBoolean()) {
         salt = buf.readLong();
-        cap += 128;
       }
 
-      this.verifyToken = ProtocolUtils.readByteArray(buf, cap);
+      this.verifyToken = ProtocolUtils.readByteArray(buf,
+              version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 ? 256 : 128);
     } else {
       this.sharedSecret = ProtocolUtils.readByteArray17(buf);
       this.verifyToken = ProtocolUtils.readByteArray17(buf);
@@ -83,8 +83,13 @@ public class EncryptionResponse implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
-      if (salt != null && version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        buf.writeLong(salt);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        if (salt != null) {
+          buf.writeBoolean(false);
+          buf.writeLong(salt);
+        } else  {
+          buf.writeBoolean(true);
+        }
       }
       ProtocolUtils.writeByteArray(buf, verifyToken);
     } else {
@@ -102,12 +107,22 @@ public class EncryptionResponse implements MinecraftPacket {
   public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.
     // The length prefix always winds up being 2 bytes.
-    return 260 + (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 ? 128 + 8 : 0);
+    int base = 256 + 2 + 2;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      // Verify token is twice as long on 1.19+
+      // Additional 1 byte for left <> right and 8 bytes for salt
+      base += 128 + 8 + 1;
+    }
+    return base;
   }
 
   @Override
   public int expectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
-    //return expectedMaxLength(buf, direction, version);
-    return -1; //TODO ## 19
+    int base = expectedMaxLength(buf, direction, version);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      // These are "optional"
+      base -= 128 + 8;
+    }
+    return base;
   }
 }

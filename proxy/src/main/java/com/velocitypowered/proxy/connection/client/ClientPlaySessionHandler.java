@@ -165,7 +165,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
       }
     } else {
-      processPlayerChat(packet.getMessage());
+      processPlayerChat(packet.getMessage(), packet);
     }
 
     return true;
@@ -191,7 +191,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (msg.startsWith("/")) {
       processCommandMessage(msg.substring(1));
     } else {
-      processPlayerChat(msg);
+      processPlayerChat(msg, packet);
     }
     return true;
   }
@@ -231,7 +231,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             });
   }
 
-  private void processPlayerChat(String message) {
+  private void processPlayerChat(String message, MinecraftPacket original) {
     MinecraftConnection smc = retrieveServerConnection();
     if (smc == null) {
       return;
@@ -245,7 +245,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 if (eventMsg.isPresent()) {
                   smc.write(LegacyChat.createServerbound(eventMsg.get()));
                 } else {
-                  smc.write(packet);
+                  smc.write(original);
                 }
               }
             }, smc.eventLoop())

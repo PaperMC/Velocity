@@ -48,7 +48,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,7 +80,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLogin packet) {
     assertState(LoginState.LOGIN_PACKET_EXPECTED);
     this.currentState = LoginState.LOGIN_PACKET_RECEIVED;
-
     IdentifiedKey playerKey = packet.getPlayerKey();
     if (playerKey != null) {
       if (playerKey.hasExpired()) {
@@ -93,9 +91,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
       }
-    }
-
-    if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+    } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
             && server.getConfiguration().isForceKeyAuthentication()) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
@@ -159,7 +155,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(EncryptionResponse packet) {
     assertState(LoginState.ENCRYPTION_REQUEST_SENT);
     this.currentState = LoginState.ENCRYPTION_RESPONSE_RECEIVED;
-
     ServerLogin login = this.login;
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
@@ -182,8 +177,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           throw new IllegalStateException("Unable to successfully decrypt the verification token.");
         }
       }
-
-
 
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
