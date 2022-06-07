@@ -33,6 +33,7 @@ import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.crypto.SignedCommand;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -154,7 +155,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     if (!packet.isUnsigned()) {
-      // TODO ## 19
+      // Bad if spoofed
       SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
       if (signedChat != null) {
         // Server doesn't care for expiry as long as order is correct
@@ -162,12 +163,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           return true;
         }
 
-
+        processPlayerChat(packet.getMessage(), signedChat, packet);
       }
-    } else {
-      processPlayerChat(packet.getMessage(), packet);
     }
 
+    processPlayerChat(packet.getMessage(), null, packet);
     return true;
   }
   // I will not allow hacks to bypass this;
@@ -189,9 +189,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     if (msg.startsWith("/")) {
-      processCommandMessage(msg.substring(1));
+      processCommandMessage(msg.substring(1), null, packet);
     } else {
-      processPlayerChat(msg, packet);
+      processPlayerChat(msg, null, packet);
     }
     return true;
   }
@@ -213,10 +213,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return serverConnection.getConnection();
   }
 
-  private void processCommandMessage(String message) {
+  private void processCommandMessage(String message, @Nullable SignedCommand signedCommand,
+                                     MinecraftPacket original) {
     server.getCommandManager().callCommandEvent(player, message)
             .thenComposeAsync(event -> processCommandExecuteResult(message,
-                    event.getResult()))
+                    event.getResult(), signedCommand))
             .whenComplete((ignored, throwable) -> {
               if (server.getConfiguration().isLogCommandExecutions()) {
                 logger.info("{} -> executed command /{}", player, message);
@@ -231,7 +232,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             });
   }
 
-  private void processPlayerChat(String message, MinecraftPacket original) {
+  private void processPlayerChat(String message, @Nullable SignedChatMessage signedMessage,
+                                 MinecraftPacket original) {
     MinecraftConnection smc = retrieveServerConnection();
     if (smc == null) {
       return;
@@ -243,7 +245,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (chatResult.isAllowed()) {
                 Optional<String> eventMsg = pme.getResult().getMessage();
                 if (eventMsg.isPresent()) {
-                  smc.write(LegacyChat.createServerbound(eventMsg.get()));
+                  if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+                    if (player.getIdentifiedKey() != null) {
+                      logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+                    }
+                    smc.write(new PlayerChat(eventMsg.get()));
+                  } else {
+                    smc.write(LegacyChat.createServerbound(eventMsg.get()));
+                  }
                 } else {
                   smc.write(original);
                 }
@@ -676,8 +685,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         });
   }
 
+
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
-      CommandResult result) {
+      CommandResult result, @Nullable SignedCommand signedCommand) {
     if (result == CommandResult.denied()) {
       return CompletableFuture.completedFuture(null);
     }
@@ -685,8 +695,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
-      return CompletableFuture.runAsync(() -> smc.write(LegacyChat.createServerbound("/"
-          + commandToRun)), smc.eventLoop());
+      MinecraftPacket write;
+      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        if (commandToRun.equals(originalCommand)) {
+
+        } else {
+
+        }
+      } else {
+        write = LegacyChat.createServerbound("/" + commandToRun);
+      }
+      return CompletableFuture.runAsync(() -> smc.write(write), smc.eventLoop());
     } else {
       return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
           .thenAcceptAsync(hasRun -> {

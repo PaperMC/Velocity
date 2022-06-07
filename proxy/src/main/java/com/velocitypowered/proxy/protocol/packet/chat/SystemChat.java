@@ -22,17 +22,39 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.text.Component;
 
 public class SystemChat implements MinecraftPacket {
 
+
+    public SystemChat() {}
+
+    public SystemChat(Component component, int type) {
+        this.component = component;
+        this.type = type;
+    }
+
+    private Component component;
+    private int type;
+
+    public int getType() {
+        return type;
+    }
+
+    public Component getComponent() {
+        return component;
+    }
+
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-
+        component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
+        type = ProtocolUtils.readVarInt(buf);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-
+        ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
+        ProtocolUtils.writeVarInt(buf, type);
     }
 
     @Override
