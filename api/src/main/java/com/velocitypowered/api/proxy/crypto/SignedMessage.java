@@ -25,4 +25,11 @@ public interface SignedMessage extends KeySigned {
    */
   UUID getSignerUuid();
 
+  /**
+   * If true the signature of this message applies to a stylized component instead.
+   *
+   * @return signature signs preview
+   */
+  boolean isPreviewSigned();
+
 }

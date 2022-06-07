@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
@@ -15,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Represents a single entry in a {@link TabList}.
  */
-public interface TabListEntry {
+public interface TabListEntry extends KeyIdentifiable {
 
   /**
    * Returns the parent {@link TabList} of this {@code this} {@link TabListEntry}.
@@ -125,6 +127,8 @@ public interface TabListEntry {
     private int latency = 0;
     private int gameMode = 0;
 
+    private @Nullable IdentifiedKey playerKey;
+
     private Builder() {
     }
 
@@ -149,6 +153,18 @@ public interface TabListEntry {
      */
     public Builder profile(GameProfile profile) {
       this.profile = profile;
+      return this;
+    }
+
+    /**
+     * Sets the {@link IdentifiedKey} of the {@link TabListEntry}.
+     *
+     * @param playerKey key to set
+     * @return {@code this}, for chaining
+     * @see TabListEntry#getIdentifiedKey()
+     */
+    public Builder playerKey(IdentifiedKey playerKey) {
+      this.playerKey = playerKey;
       return this;
     }
 
@@ -200,7 +216,7 @@ public interface TabListEntry {
       if (profile == null) {
         throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
       }
-      return tabList.buildEntry(profile, displayName, latency, gameMode);
+      return tabList.buildEntry(profile, displayName, latency, gameMode, playerKey);
     }
   }
 }

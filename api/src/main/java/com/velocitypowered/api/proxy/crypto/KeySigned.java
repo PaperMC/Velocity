@@ -9,6 +9,8 @@ package com.velocitypowered.api.proxy.crypto;
 
 import java.security.PublicKey;
 import java.time.Instant;
+
+import com.google.common.annotations.Beta;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface KeySigned {
@@ -52,10 +54,14 @@ public interface KeySigned {
    * Validates the signature, expiry temporal and key against the
    * signer public key. Note: This will **not** check for
    * expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
+   * <p>DOES NOT WORK YET FOR MESSAGES AND COMMANDS!</p>
    *
    * @return validity of the signature
    */
-  boolean isSignatureValid();
+  @Beta
+  default boolean isSignatureValid() {
+    return false;
+  }
 
   /**
    * Returns the signature salt or null if not salted.

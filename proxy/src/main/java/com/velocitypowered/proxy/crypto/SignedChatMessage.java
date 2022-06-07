@@ -28,6 +28,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.UUID;
+
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SignedChatMessage implements SignedMessage {
@@ -43,24 +45,27 @@ public class SignedChatMessage implements SignedMessage {
   private final Instant expiry;
   private final byte[] salt;
   private final UUID sender;
-  private final boolean isValid;
+  //private final boolean isValid;
+  private final boolean isPreviewSigned;
 
   /**
    * Create a signed message from data.
    */
   public SignedChatMessage(String message, PublicKey signer, UUID sender,
-                           Instant expiry, byte[] signature, byte[] salt) {
+                           Instant expiry, byte[] signature, byte[] salt, boolean isPreviewSigned) {
     this.message = Preconditions.checkNotNull(message);
     this.signer = Preconditions.checkNotNull(signer);
     this.sender = Preconditions.checkNotNull(sender);
     this.signature = Preconditions.checkNotNull(signature);
     this.expiry = Preconditions.checkNotNull(expiry);
     this.salt = Preconditions.checkNotNull(salt);
+    this.isPreviewSigned = isPreviewSigned;
 
-    this.isValid = EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA, signer,
-            signature, salt, EncryptionUtils.longToBigEndianByteArray(
-                    sender.getMostSignificantBits(), sender.getLeastSignificantBits()
-            ), Longs.toByteArray(expiry.getEpochSecond()), message.getBytes(StandardCharsets.UTF_8));
+
+    //this.isValid = EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA, signer,
+    //        signature, salt, EncryptionUtils.longToBigEndianByteArray(
+    //                sender.getMostSignificantBits(), sender.getLeastSignificantBits()
+    //        ), Longs.toByteArray(expiry.getEpochSecond()), message.getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
@@ -78,10 +83,10 @@ public class SignedChatMessage implements SignedMessage {
     return signature;
   }
 
-  @Override
-  public boolean isSignatureValid() {
-    return isValid;
-  }
+  //@Override
+  //public boolean isSignatureValid() {
+  //  return isValid;
+  //}
 
   @Override
   public String getMessage() {
@@ -94,7 +99,13 @@ public class SignedChatMessage implements SignedMessage {
   }
 
   @Override
+  public boolean isPreviewSigned() {
+    return isPreviewSigned;
+  }
+
+  @Override
   public byte[] getSalt() {
     return salt;
   }
+
 }

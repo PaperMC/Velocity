@@ -120,23 +120,4 @@ public class LegacyChat implements MinecraftPacket {
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
-
-  public static LegacyChat createClientbound(Identity identity,
-                                             net.kyori.adventure.text.Component component, ProtocolVersion version) {
-    return createClientbound(component, CHAT_TYPE, identity.uuid(), version);
-  }
-
-  /**
-   * Creates a Chat packet.
-   */
-  public static LegacyChat createClientbound(net.kyori.adventure.text.Component component, byte type,
-                                             UUID sender, ProtocolVersion version) {
-    Preconditions.checkNotNull(component, "component");
-    return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,
-        sender);
-  }
-
-  public static LegacyChat createServerbound(String message) {
-    return new LegacyChat(message, CHAT_TYPE, EMPTY_SENDER);
-  }
 }

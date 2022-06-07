@@ -18,14 +18,19 @@
 package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public class ChatBuilder {
@@ -35,10 +40,12 @@ public class ChatBuilder {
     private @MonotonicNonNull Component component;
     private @MonotonicNonNull String message;
     private @MonotonicNonNull SignedChatMessage signedChatMessage;
+    private @MonotonicNonNull SignedChatCommand signedCommand;
 
     private @Nullable Player sender;
+    private @Nullable Identity senderIdentity;
 
-    private @MonotonicNonNull ChatType type;
+    private ChatType type = ChatType.CHAT;
 
     private ChatBuilder(ProtocolVersion version) {
         this.version = version;
@@ -57,6 +64,7 @@ public class ChatBuilder {
 
     public ChatBuilder component(Component message) {
         this.component = Preconditions.checkNotNull(message);
+        return this;
     }
 
     public ChatBuilder message(SignedChatMessage message) {
@@ -67,14 +75,27 @@ public class ChatBuilder {
         return this;
     }
 
-
-
-    public void setType(ChatType type) {
-        this.type = type;
+    public ChatBuilder message(SignedChatCommand command) {
+        Preconditions.checkNotNull(command);
+        Preconditions.checkArgument(this.message == null);
+        this.message = command.getBaseCommand();
+        this.signedCommand = command;
+        return this;
     }
 
-    public ChatBuilder asPlayer(Player player){
-        this.sender = Preconditions.checkNotNull(player);
+
+    public ChatBuilder setType(ChatType type) {
+        this.type = type;
+        return this;
+    }
+
+    public ChatBuilder asPlayer(@Nullable Player player){
+        this.sender = player;
+        return this;
+    }
+
+    public ChatBuilder forIdentity(@Nullable Identity identity){
+        this.senderIdentity = identity;
         return this;
     }
 
@@ -84,24 +105,40 @@ public class ChatBuilder {
     }
 
     public MinecraftPacket toClient() {
-        if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-            if (sender == null) {
-                return new SystemChat(component == null ? Component.text(message) : component, type.getId());
-            } else {
-                if (signedChatMessage == null) {
+        // This is temporary
+        UUID identity = sender == null ? (senderIdentity == null ? Identity.nil().uuid()
+                : senderIdentity.uuid()) : sender.getUniqueId();
+        Component msg = component == null ? Component.text(message) : component;
 
-                }
-            }
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+            return new SystemChat(msg, type.getId());
         } else {
-            new LegacyChat()
+            return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
         }
     }
 
     public MinecraftPacket toServer() {
-
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+            if (signedChatMessage != null) {
+                return new PlayerChat(signedChatMessage);
+            } else if (signedCommand != null) {
+                return new PlayerCommand(signedCommand);
+            } else {
+                // Well crap
+                if(message.startsWith("/")) {
+                    return new PlayerCommand(message.substring(1), ImmutableList.of(), Instant.now());
+                } else {
+                    // This will produce an error on the server, but needs to be here.
+                    return new PlayerChat(message);
+                }
+            }
+        }
+        LegacyChat chat = new LegacyChat();
+        chat.setMessage(message);
+        return chat;
     }
 
-    static enum ChatType {
+    public static enum ChatType {
         CHAT((byte) 0),
         SYSTEM((byte) 1),
         GAME_INFO((byte) 2);

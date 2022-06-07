@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.registry;
 
+/*
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.nbt.*;
@@ -27,9 +28,11 @@ import net.kyori.adventure.translation.Translatable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+*/
 
+// TODO Implement
 public class ChatData {
-
+    /*
     private static final ListBinaryTag EMPTY_LIST_TAG = ListBinaryTag.empty();
 
 
@@ -102,5 +105,5 @@ public class ChatData {
         SYSTEM,
         CHAT
     }
-
+*/
 }

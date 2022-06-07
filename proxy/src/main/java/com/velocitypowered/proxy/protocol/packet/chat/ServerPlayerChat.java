@@ -23,12 +23,22 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.time.Instant;
+import java.util.UUID;
 
 public class ServerPlayerChat implements MinecraftPacket {
 
     private Component component;
+    private @Nullable Component unsignedComponent;
     private int type;
 
+    private UUID sender;
+    private Component senderName;
+    private @Nullable Component teamName;
+
+    private Instant expiry;
     public void setType(int type) {
         this.type = type;
     }
@@ -48,13 +58,28 @@ public class ServerPlayerChat implements MinecraftPacket {
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
         component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
+        if (buf.readBoolean()) {
+            unsignedComponent = component = ProtocolUtils.getJsonChatSerializer(protocolVersion)
+                    .deserialize(ProtocolUtils.readString(buf));
+        }
+
         type = ProtocolUtils.readVarInt(buf);
+
+        sender = ProtocolUtils.readUuid(buf);
+        senderName = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
+        if (buf.readBoolean()) {
+            teamName = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
+        }
+
+        expiry = Instant.ofEpochMilli(buf.readLong());
+
+        long salt = buf.readLong();
+        byte[] signature = ProtocolUtils.readByteArray(buf);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
-        ProtocolUtils.writeVarInt(buf, type);
+       // TBD
     }
 
     @Override

@@ -61,7 +61,7 @@ public enum EncryptionUtils {
   private static PublicKey YGGDRASIL_SESSION_KEY;
   private static KeyFactory RSA_KEY_FACTORY;
 
-  private static final Base64.Encoder MINE_SPECIAL_ENCODER
+  private static final Base64.Encoder MIME_SPECIAL_ENCODER
           = Base64.getMimeEncoder(76, "\n".getBytes(StandardCharsets.UTF_8));
 
   static {
@@ -144,7 +144,7 @@ public enum EncryptionUtils {
   }
 
   public static String encodeUrlEncoded(byte[] data) {
-    return MINE_SPECIAL_ENCODER.encodeToString(data);
+    return MIME_SPECIAL_ENCODER.encodeToString(data);
   }
 
   public static byte[] decodeUrlEncoded(String toParse) {

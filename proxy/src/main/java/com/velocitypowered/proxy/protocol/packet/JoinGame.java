@@ -53,6 +53,7 @@ public class JoinGame implements MinecraftPacket {
   private CompoundBinaryTag biomeRegistry; // 1.16.2+
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition;
+  private CompoundBinaryTag chatTypeRegistry; // placeholder, 1.19+
 
   public int getEntityId() {
     return entityId;
@@ -182,6 +183,14 @@ public class JoinGame implements MinecraftPacket {
     this.lastDeathPosition = lastDeathPosition;
   }
 
+  public CompoundBinaryTag getChatTypeRegistry() {
+    return chatTypeRegistry;
+  }
+
+  public void setChatTypeRegistry(CompoundBinaryTag chatTypeRegistry) {
+    this.chatTypeRegistry = chatTypeRegistry;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -264,6 +273,7 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
           .getList("value", BinaryTagTypes.COMPOUND);
       this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
+      this.chatTypeRegistry = registryContainer.getCompound("minecraft:chat_type");
     } else {
       dimensionRegistryContainer = registryContainer.getList("dimension",
           BinaryTagTypes.COMPOUND);
@@ -372,6 +382,7 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryEntry.put("value", encodedDimensionRegistry);
       registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
       registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
+      registryContainer.put("minecraft:chat_type", chatTypeRegistry);
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);
     }

@@ -46,12 +46,12 @@ public class PlayerChat implements MinecraftPacket {
     this.unsigned = true;
   }
 
-  public PlayerChat(SignedChatMessage message, boolean signedPreview) {
+  public PlayerChat(SignedChatMessage message) {
     this.message = message.getMessage();
     this.expiry = message.getExpiryTemporal();
     this.salt = message.getSalt();
     this.signature = message.getSignature();
-    this.signedPreview = signedPreview;
+    this.signedPreview = message.isPreviewSigned();
   }
 
   public Instant getExpiry() {
@@ -113,7 +113,7 @@ public class PlayerChat implements MinecraftPacket {
       return null;
     }
 
-    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature, salt);
+    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature, salt, signedPreview);
   }
 
   @Override

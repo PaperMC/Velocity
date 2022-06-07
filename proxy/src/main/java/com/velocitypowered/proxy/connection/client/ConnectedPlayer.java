@@ -64,6 +64,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -315,7 +316,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     Component translated = translateMessage(message);
-    connection.write(LegacyChat.createClientbound(identity, translated, this.getProtocolVersion()));
+
+    connection.write(ChatBuilder.builder(this.getProtocolVersion())
+            .component(translated).forIdentity(identity).toClient());
   }
 
   @Override
@@ -325,9 +328,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Preconditions.checkNotNull(type, "type");
 
     Component translated = translateMessage(message);
-    LegacyChat packet = LegacyChat.createClientbound(identity, translated, this.getProtocolVersion());
-    packet.setType(type == MessageType.CHAT ? LegacyChat.CHAT_TYPE : LegacyChat.SYSTEM_TYPE);
-    connection.write(packet);
+
+    connection.write(ChatBuilder.builder(this.getProtocolVersion())
+            .component(translated).forIdentity(identity)
+            .setType(type == MessageType.CHAT ? ChatBuilder.ChatType.CHAT : ChatBuilder.ChatType.SYSTEM)
+            .toClient());
   }
 
   @Override
@@ -885,7 +890,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Preconditions.checkArgument(input.length() <= LegacyChat.MAX_SERVERBOUND_MESSAGE_LENGTH,
         "input cannot be greater than " + LegacyChat.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
-    ensureBackendConnection().write(LegacyChat.createServerbound(input));
+    ensureBackendConnection().write(ChatBuilder.builder(getProtocolVersion())
+            .asPlayer(this).message(input).toServer());
   }
 
   @Override

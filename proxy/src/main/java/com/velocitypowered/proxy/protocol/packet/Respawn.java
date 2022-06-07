@@ -24,8 +24,10 @@ import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Respawn implements MinecraftPacket {
 
@@ -38,13 +40,14 @@ public class Respawn implements MinecraftPacket {
   private DimensionInfo dimensionInfo; // 1.16-1.16.1
   private short previousGamemode; // 1.16+
   private DimensionData currentDimensionData; // 1.16.2+
+  private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
 
   public Respawn() {
   }
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
       String levelType, boolean shouldKeepPlayerData, DimensionInfo dimensionInfo,
-      short previousGamemode, DimensionData currentDimensionData) {
+      short previousGamemode, DimensionData currentDimensionData, @Nullable Pair<String, Long> lastDeathPosition) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
@@ -54,6 +57,7 @@ public class Respawn implements MinecraftPacket {
     this.dimensionInfo = dimensionInfo;
     this.previousGamemode = previousGamemode;
     this.currentDimensionData = currentDimensionData;
+    this.lastDeathPosition = lastDeathPosition;
   }
 
   public int getDimension() {
@@ -112,6 +116,14 @@ public class Respawn implements MinecraftPacket {
     this.previousGamemode = previousGamemode;
   }
 
+  public void setLastDeathPosition(Pair<String, Long> lastDeathPosition) {
+    this.lastDeathPosition = lastDeathPosition;
+  }
+
+  public Pair<String, Long> getLastDeathPosition() {
+    return lastDeathPosition;
+  }
+
   @Override
   public String toString() {
     return "Respawn{"
@@ -133,7 +145,8 @@ public class Respawn implements MinecraftPacket {
     String dimensionIdentifier = null;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
+              && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
         CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
         this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
@@ -161,12 +174,16 @@ public class Respawn implements MinecraftPacket {
     } else {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
+      this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
+    }
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
+              && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
         ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
@@ -190,6 +207,17 @@ public class Respawn implements MinecraftPacket {
       buf.writeBoolean(shouldKeepPlayerData);
     } else {
       ProtocolUtils.writeString(buf, levelType);
+    }
+
+    // optional death location
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (lastDeathPosition != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writeString(buf, lastDeathPosition.key());
+        buf.writeLong(lastDeathPosition.value());
+      } else {
+        buf.writeBoolean(false);
+      }
     }
   }
 

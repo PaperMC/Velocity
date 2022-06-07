@@ -18,12 +18,12 @@
 package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.PreviewSigned;
-import com.velocitypowered.api.proxy.crypto.SignedCommand;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
+import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -32,6 +32,7 @@ import io.netty.buffer.ByteBuf;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class PlayerCommand implements MinecraftPacket {
 
@@ -58,6 +59,10 @@ public class PlayerCommand implements MinecraftPacket {
         return unsigned;
     }
 
+    public String getCommand() {
+        return command;
+    }
+
     public PlayerCommand(String command, List<String> arguments, Instant timestamp) {
         this.unsigned = true;
         ImmutableMap.Builder<String, byte[]> builder = ImmutableMap.builder();
@@ -69,10 +74,12 @@ public class PlayerCommand implements MinecraftPacket {
         this.salt = 0L;
     }
 
-    public PlayerCommand(String command, SignedCommand signedCommand) {
-        if (signedCommand instanceof PreviewSigned) {
-            this.signedPreview = true;
-        }
+    public PlayerCommand(SignedChatCommand signedCommand) {
+        this.command = signedCommand.getBaseCommand();
+        this.arguments = ImmutableMap.copyOf(signedCommand.getSignatures());
+        this.timestamp = signedCommand.getExpiryTemporal();
+        this.salt = Longs.fromByteArray(signedCommand.getSalt());
+        this.signedPreview = signedCommand.isPreviewSigned();
     }
 
     @Override
@@ -123,6 +130,18 @@ public class PlayerCommand implements MinecraftPacket {
 
         buf.writeBoolean(signedPreview);
 
+    }
+
+    public SignedChatCommand signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
+        if (unsigned) {
+            if (mustSign) {
+                throw EncryptionUtils.INVALID_SIGNATURE;
+            }
+            return null;
+        }
+
+        return new SignedChatCommand(command, signer.getSignedPublicKey(), sender, timestamp,
+                arguments, Longs.toByteArray(salt), signedPreview);
     }
 
     @Override

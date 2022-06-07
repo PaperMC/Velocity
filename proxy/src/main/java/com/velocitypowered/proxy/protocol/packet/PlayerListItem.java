@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -74,6 +75,12 @@ public class PlayerListItem implements MinecraftPacket {
             item.setGameMode(ProtocolUtils.readVarInt(buf));
             item.setLatency(ProtocolUtils.readVarInt(buf));
             item.setDisplayName(readOptionalComponent(buf, version));
+
+            if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+              if (buf.readBoolean()) {
+                item.setPlayerKey(ProtocolUtils.readPlayerKey(buf));
+              }
+            }
             break;
           case UPDATE_GAMEMODE:
             item.setGameMode(ProtocolUtils.readVarInt(buf));
@@ -124,8 +131,15 @@ public class PlayerListItem implements MinecraftPacket {
             ProtocolUtils.writeProperties(buf, item.getProperties());
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
             ProtocolUtils.writeVarInt(buf, item.getLatency());
-
             writeDisplayName(buf, item.getDisplayName(), version);
+            if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+              if (item.getPlayerKey() != null) {
+                buf.writeBoolean(true);
+                ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
+              } else {
+                buf.writeBoolean(false);
+              }
+            }
             break;
           case UPDATE_GAMEMODE:
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
@@ -181,6 +195,7 @@ public class PlayerListItem implements MinecraftPacket {
     private int gameMode;
     private int latency;
     private @Nullable Component displayName;
+    private @Nullable IdentifiedKey playerKey;
 
     public Item() {
       uuid = null;
@@ -196,6 +211,7 @@ public class PlayerListItem implements MinecraftPacket {
           .setProperties(entry.getProfile().getProperties())
           .setLatency(entry.getLatency())
           .setGameMode(entry.getGameMode())
+          .setPlayerKey(entry.getIdentifiedKey())
           .setDisplayName(entry.getDisplayNameComponent().orElse(null));
     }
 
@@ -246,6 +262,15 @@ public class PlayerListItem implements MinecraftPacket {
     public Item setDisplayName(@Nullable Component displayName) {
       this.displayName = displayName;
       return this;
+    }
+
+    public Item setPlayerKey(IdentifiedKey playerKey) {
+      this.playerKey = playerKey;
+      return this;
+    }
+
+    public IdentifiedKey getPlayerKey() {
+      return playerKey;
     }
   }
 }

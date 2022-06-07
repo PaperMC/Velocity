@@ -32,8 +32,6 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
-import com.velocitypowered.api.proxy.crypto.SignedCommand;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -44,6 +42,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -57,8 +56,10 @@ import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
@@ -149,6 +150,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(PlayerCommand packet) {
+    if (!validateChat(packet.getCommand())) {
+      return true;
+    }
+    if (!packet.isUnsigned()) {
+      SignedChatCommand signedCommand = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
+      if (signedCommand != null) {
+        processCommandMessage(packet.getCommand(), signedCommand, packet);
+        return true;
+      }
+    }
+
+    processCommandMessage(packet.getCommand(), null, packet);
+    return true;
+  }
+
+  @Override
   public boolean handle(PlayerChat packet) {
     if (!validateChat(packet.getMessage())) {
       return true;
@@ -213,7 +231,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return serverConnection.getConnection();
   }
 
-  private void processCommandMessage(String message, @Nullable SignedCommand signedCommand,
+  private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
                                      MinecraftPacket original) {
     server.getCommandManager().callCommandEvent(player, message)
             .thenComposeAsync(event -> processCommandExecuteResult(message,
@@ -245,14 +263,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (chatResult.isAllowed()) {
                 Optional<String> eventMsg = pme.getResult().getMessage();
                 if (eventMsg.isPresent()) {
-                  if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-                    if (player.getIdentifiedKey() != null) {
-                      logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-                    }
-                    smc.write(new PlayerChat(eventMsg.get()));
-                  } else {
-                    smc.write(LegacyChat.createServerbound(eventMsg.get()));
+                  if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+                          && player.getIdentifiedKey() != null) {
+                    logger.warn("A plugin changed a signed chat message. The server may not accept it.");
                   }
+                  smc.write(ChatBuilder.builder(player.getProtocolVersion())
+                          .message(event.getMessage()).toServer());
                 } else {
                   smc.write(original);
                 }
@@ -518,7 +534,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
             joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData()));
+            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
   }
 
   private void doSafeClientServerSwitch(JoinGame joinGame) {
@@ -535,14 +551,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
             joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData()));
+            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
 
     // Now send a respawn packet in the correct dimension.
     player.getConnection().delayedWrite(
         new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
             joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
             false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData()));
+            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
   }
 
   public List<UUID> getServerBossBars() {
@@ -687,7 +703,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
 
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
-      CommandResult result, @Nullable SignedCommand signedCommand) {
+      CommandResult result, @Nullable SignedChatCommand signedCommand) {
     if (result == CommandResult.denied()) {
       return CompletableFuture.completedFuture(null);
     }
@@ -695,22 +711,30 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
-      MinecraftPacket write;
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        if (commandToRun.equals(originalCommand)) {
+      ChatBuilder write = ChatBuilder
+              .builder(player.getProtocolVersion())
+              .asPlayer(player);
 
-        } else {
-
-        }
+      if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
+        write.message(signedCommand);
       } else {
-        write = LegacyChat.createServerbound("/" + commandToRun);
+        write.message("/" + commandToRun);
       }
-      return CompletableFuture.runAsync(() -> smc.write(write), smc.eventLoop());
+      return CompletableFuture.runAsync(() -> smc.write(write.toServer()), smc.eventLoop());
     } else {
       return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
-              smc.write(LegacyChat.createServerbound("/" + commandToRun));
+              ChatBuilder write = ChatBuilder
+                      .builder(player.getProtocolVersion())
+                      .asPlayer(player);
+
+              if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
+                write.message(signedCommand);
+              } else {
+                write.message("/" + commandToRun);
+              }
+              smc.write(write.toServer());
             }
           }, smc.eventLoop());
     }
