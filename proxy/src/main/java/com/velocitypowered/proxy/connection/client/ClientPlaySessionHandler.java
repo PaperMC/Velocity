@@ -182,6 +182,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         processPlayerChat(packet.getMessage(), signedChat, packet);
+        return true;
       }
     }
 

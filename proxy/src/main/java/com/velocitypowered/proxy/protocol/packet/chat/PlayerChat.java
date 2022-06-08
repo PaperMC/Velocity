@@ -25,7 +25,6 @@ import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -40,6 +39,9 @@ public class PlayerChat implements MinecraftPacket {
   private @Nullable Instant expiry;
   private @Nullable byte[] signature;
   private @Nullable byte[] salt;
+
+  public PlayerChat() {
+  }
 
   public PlayerChat(String message) {
     this.message = message;

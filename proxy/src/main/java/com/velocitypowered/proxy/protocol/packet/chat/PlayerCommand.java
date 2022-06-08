@@ -63,6 +63,9 @@ public class PlayerCommand implements MinecraftPacket {
         return command;
     }
 
+    public PlayerCommand() {
+    }
+
     public PlayerCommand(String command, List<String> arguments, Instant timestamp) {
         this.unsigned = true;
         ImmutableMap.Builder<String, byte[]> builder = ImmutableMap.builder();
