@@ -68,12 +68,14 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
+  private boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
                              LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
+    this.forceKeyAuthentication = Boolean.getBoolean("auth.forceSecureProfiles");
   }
 
   @Override
@@ -92,7 +94,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-            && server.getConfiguration().isForceKeyAuthentication()) {
+            && forceKeyAuthentication) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }
