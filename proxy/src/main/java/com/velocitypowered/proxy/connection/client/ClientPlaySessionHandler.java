@@ -101,12 +101,90 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   /**
    * Constructs a client play session handler.
+   *
    * @param server the Velocity server instance
    * @param player the player
    */
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
+  }
+
+  // I will not allow hacks to bypass this;
+  private boolean tickLastMessage(SignedChatMessage nextMessage) {
+    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
+      player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
+      return false;
+    }
+
+    lastChatMessage = nextMessage.getExpiryTemporal();
+    return true;
+  }
+
+  private boolean validateChat(String message) {
+    if (CharacterUtil.containsIllegalCharacters(message)) {
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
+          NamedTextColor.RED));
+      return false;
+    }
+    return true;
+  }
+
+  private MinecraftConnection retrieveServerConnection() {
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      return null;
+    }
+    return serverConnection.getConnection();
+  }
+
+  private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
+                                     MinecraftPacket original) {
+    server.getCommandManager().callCommandEvent(player, message)
+        .thenComposeAsync(event -> processCommandExecuteResult(message,
+            event.getResult(), signedCommand))
+        .whenComplete((ignored, throwable) -> {
+          if (server.getConfiguration().isLogCommandExecutions()) {
+            logger.info("{} -> executed command /{}", player, message);
+          }
+        })
+        .exceptionally(e -> {
+          logger.info("Exception occurred while running command for {}",
+              player.getUsername(), e);
+          player.sendMessage(Component.translatable("velocity.command.generic-error",
+              NamedTextColor.RED));
+          return null;
+        });
+  }
+
+  private void processPlayerChat(String message, @Nullable SignedChatMessage signedMessage,
+                                 MinecraftPacket original) {
+    MinecraftConnection smc = retrieveServerConnection();
+    if (smc == null) {
+      return;
+    }
+    PlayerChatEvent event = new PlayerChatEvent(player, message);
+    server.getEventManager().fire(event)
+        .thenAcceptAsync(pme -> {
+          PlayerChatEvent.ChatResult chatResult = pme.getResult();
+          if (chatResult.isAllowed()) {
+            Optional<String> eventMsg = pme.getResult().getMessage();
+            if (eventMsg.isPresent()) {
+              if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+                  && player.getIdentifiedKey() != null) {
+                logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+              }
+              smc.write(ChatBuilder.builder(player.getProtocolVersion())
+                  .message(event.getMessage()).toServer());
+            } else {
+              smc.write(original);
+            }
+          }
+        }, smc.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling player chat for {}", player, ex);
+          return null;
+        });
   }
 
   @Override
@@ -177,7 +255,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
       if (signedChat != null) {
         // Server doesn't care for expiry as long as order is correct
-        if(!tickLastMessage(signedChat)) {
+        if (!tickLastMessage(signedChat)) {
           return true;
         }
 
@@ -187,16 +265,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     processPlayerChat(packet.getMessage(), null, packet);
-    return true;
-  }
-  // I will not allow hacks to bypass this;
-  private boolean tickLastMessage(SignedChatMessage nextMessage) {
-    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
-      player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
-      return false;
-    }
-
-    lastChatMessage = nextMessage.getExpiryTemporal();
     return true;
   }
 
@@ -213,72 +281,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       processPlayerChat(msg, null, packet);
     }
     return true;
-  }
-
-  private boolean validateChat(String message){
-    if (CharacterUtil.containsIllegalCharacters(message)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-              NamedTextColor.RED));
-      return false;
-    }
-    return true;
-  }
-
-  private MinecraftConnection retrieveServerConnection(){
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      return null;
-    }
-    return serverConnection.getConnection();
-  }
-
-  private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
-                                     MinecraftPacket original) {
-    server.getCommandManager().callCommandEvent(player, message)
-            .thenComposeAsync(event -> processCommandExecuteResult(message,
-                    event.getResult(), signedCommand))
-            .whenComplete((ignored, throwable) -> {
-              if (server.getConfiguration().isLogCommandExecutions()) {
-                logger.info("{} -> executed command /{}", player, message);
-              }
-            })
-            .exceptionally(e -> {
-              logger.info("Exception occurred while running command for {}",
-                      player.getUsername(), e);
-              player.sendMessage(Component.translatable("velocity.command.generic-error",
-                      NamedTextColor.RED));
-              return null;
-            });
-  }
-
-  private void processPlayerChat(String message, @Nullable SignedChatMessage signedMessage,
-                                 MinecraftPacket original) {
-    MinecraftConnection smc = retrieveServerConnection();
-    if (smc == null) {
-      return;
-    }
-    PlayerChatEvent event = new PlayerChatEvent(player, message);
-    server.getEventManager().fire(event)
-            .thenAcceptAsync(pme -> {
-              PlayerChatEvent.ChatResult chatResult = pme.getResult();
-              if (chatResult.isAllowed()) {
-                Optional<String> eventMsg = pme.getResult().getMessage();
-                if (eventMsg.isPresent()) {
-                  if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-                          && player.getIdentifiedKey() != null) {
-                    logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-                  }
-                  smc.write(ChatBuilder.builder(player.getProtocolVersion())
-                          .message(event.getMessage()).toServer());
-                } else {
-                  smc.write(original);
-                }
-              }
-            }, smc.eventLoop())
-            .exceptionally((ex) -> {
-              logger.error("Exception while handling player chat for {}", player, ex);
-              return null;
-            });
   }
 
   @Override
@@ -312,7 +314,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
         }
         server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
-                ImmutableList.copyOf(channelIdentifiers)));
+            ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -451,7 +453,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   /**
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
    * switching servers in Velocity.
-   * @param joinGame the join game packet
+   *
+   * @param joinGame    the join game packet
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
@@ -704,7 +707,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
 
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
-      CommandResult result, @Nullable SignedChatCommand signedCommand) {
+                                                              CommandResult result,
+                                                              @Nullable SignedChatCommand signedCommand) {
     if (result == CommandResult.denied()) {
       return CompletableFuture.completedFuture(null);
     }
@@ -713,8 +717,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
       ChatBuilder write = ChatBuilder
-              .builder(player.getProtocolVersion())
-              .asPlayer(player);
+          .builder(player.getProtocolVersion())
+          .asPlayer(player);
 
       if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
         write.message(signedCommand);
@@ -727,8 +731,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           .thenAcceptAsync(hasRun -> {
             if (!hasRun) {
               ChatBuilder write = ChatBuilder
-                      .builder(player.getProtocolVersion())
-                      .asPlayer(player);
+                  .builder(player.getProtocolVersion())
+                  .asPlayer(player);
 
               if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
                 write.message(signedCommand);

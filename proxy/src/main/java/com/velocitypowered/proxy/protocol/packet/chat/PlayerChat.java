@@ -26,10 +26,9 @@ import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.time.Instant;
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerChat implements MinecraftPacket {
 
@@ -48,6 +47,11 @@ public class PlayerChat implements MinecraftPacket {
     this.unsigned = true;
   }
 
+  /**
+   * Create new {@link PlayerChat} based on a previously {@link SignedChatMessage}.
+   *
+   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChat}.
+   */
   public PlayerChat(SignedChatMessage message) {
     this.message = message.getMessage();
     this.expiry = message.getExpiryTemporal();
@@ -84,7 +88,7 @@ public class PlayerChat implements MinecraftPacket {
       salt = Longs.toByteArray(saltLong);
       signature = signatureBytes;
       expiry = Instant.ofEpochMilli(expiresAt);
-    } else if(saltLong == 0L && signature.length == 0) {
+    } else if (saltLong == 0L && signature.length == 0) {
       unsigned = true;
     } else {
       throw EncryptionUtils.INVALID_SIGNATURE;
@@ -107,6 +111,16 @@ public class PlayerChat implements MinecraftPacket {
     buf.writeBoolean(signedPreview);
   }
 
+  /**
+   * Validates a signature and creates a {@link SignedChatMessage} from the given signature.
+   *
+   * @param signer the signer's information
+   * @param sender the sender of the message
+   * @param mustSign instructs the function to throw if the signature is invalid.
+   * @return The {@link SignedChatMessage} or null if the signature couldn't be verified.
+   * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
+   *                                                                     is invalid.
+   */
   public SignedChatMessage signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
     if (unsigned) {
       if (mustSign) {

@@ -24,7 +24,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class PlayerChatPreview implements MinecraftPacket {
-  
+
   private int id;
   private String query;
 
