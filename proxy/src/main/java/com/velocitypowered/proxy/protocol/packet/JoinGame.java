@@ -395,7 +395,7 @@ public class JoinGame implements MinecraftPacket {
     ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
         && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-      ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
+      ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails(version));
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());

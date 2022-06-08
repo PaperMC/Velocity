@@ -29,7 +29,7 @@ public final class DimensionData {
   private final @Nullable Integer dimensionId;
   private final boolean isNatural;
   private final float ambientLight;
-  private final boolean isShrunk;
+  private final boolean isShrunk; // Removed by 1.16.2
   private final boolean isUltrawarm;
   private final boolean hasCeiling;
   private final boolean hasSkylight;
@@ -304,7 +304,7 @@ public final class DimensionData {
    * @return compound containing the dimension data
    */
   public CompoundBinaryTag encodeAsCompoundTag(ProtocolVersion version) {
-    CompoundBinaryTag details = serializeDimensionDetails();
+    CompoundBinaryTag details = serializeDimensionDetails(version);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
       if (dimensionId == null) {
         throw new IllegalStateException("Tried to serialize a 1.16.2+ dimension registry entry "
@@ -324,13 +324,16 @@ public final class DimensionData {
   /**
    * Serializes details of this dimension.
    *
+   * @param version the version to serialize as
    * @return serialized details of this dimension
    */
-  public CompoundBinaryTag serializeDimensionDetails() {
+  public CompoundBinaryTag serializeDimensionDetails(ProtocolVersion version) {
     CompoundBinaryTag.Builder ret = CompoundBinaryTag.builder();
     ret.putBoolean("natural", isNatural);
     ret.putFloat("ambient_light", ambientLight);
-    ret.putBoolean("shrunk", isShrunk);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) < 0) {
+      ret.putBoolean("shrunk", isShrunk); // Removed by 1.16.2
+    }
     ret.putBoolean("ultrawarm", isUltrawarm);
     ret.putBoolean("has_ceiling", hasCeiling);
     ret.putBoolean("has_skylight", hasSkylight);
