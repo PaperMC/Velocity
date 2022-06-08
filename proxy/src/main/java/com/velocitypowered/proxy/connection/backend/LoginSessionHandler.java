@@ -171,7 +171,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
       int forwardingVersion = version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && playerKey != null
-              ? VelocityConstants.MODERN_FORWARDING_WITH_KEY : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+              ? VelocityConstants.MODERN_FORWARDING_DEFAULT : VelocityConstants.MODERN_FORWARDING_DEFAULT;
 
       ProtocolUtils.writeVarInt(forwarded, forwardingVersion);
       ProtocolUtils.writeString(forwarded, address);
