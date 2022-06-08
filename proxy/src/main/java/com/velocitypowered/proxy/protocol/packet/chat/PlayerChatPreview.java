@@ -15,23 +15,41 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.brigadier;
+package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-
 import io.netty.buffer.ByteBuf;
 
-public class RegistryKeyArgumentSerializer implements ArgumentPropertySerializer<RegistryKeyArgument> {
-  static final RegistryKeyArgumentSerializer REGISTRY = new RegistryKeyArgumentSerializer();
+public class PlayerChatPreview implements MinecraftPacket {
 
-  @Override
-  public RegistryKeyArgument deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
-    return new RegistryKeyArgument(ProtocolUtils.readString(buf));
+  private int id;
+  private String query;
+
+  public int getId() {
+    return id;
+  }
+
+  public String getQuery() {
+    return query;
   }
 
   @Override
-  public void serialize(RegistryKeyArgument object, ByteBuf buf, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, object.getIdentifier());
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    id = buf.readInt();
+    query = ProtocolUtils.readString(buf, 256);
+  }
+
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    buf.writeInt(id);
+    ProtocolUtils.writeString(buf, query);
+  }
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
   }
 }

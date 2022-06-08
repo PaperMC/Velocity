@@ -9,6 +9,7 @@ package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.NotNull;
  * Represents a player who is connected to the proxy.
  */
 public interface Player extends CommandSource, Identified, InboundConnection,
-    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>, Keyed {
+    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable {
 
   /**
    * Returns the player's current username.

@@ -75,6 +75,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private boolean enablePlayerAddressLogging = true;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
+  @Expose private boolean forceKeyAuthentication = true; // Added in 1.19
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query, Metrics metrics) {
@@ -90,7 +91,7 @@ public class VelocityConfiguration implements ProxyConfig {
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean enablePlayerAddressLogging, Servers servers,ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics) {
+      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -107,6 +108,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.forceKeyAuthentication = forceKeyAuthentication;
   }
 
   /**
@@ -381,6 +383,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isForceKeyAuthentication() {
+    return forceKeyAuthentication;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -397,6 +403,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("query", query)
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
+        .add("forceKeyAuthentication", forceKeyAuthentication)
         .toString();
   }
 
@@ -466,6 +473,7 @@ public class VelocityConfiguration implements ProxyConfig {
     String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
+    Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
     Boolean announceForge = config.getOrElse("announce-forge", true);
     Boolean preventClientProxyConnections = config.getOrElse("prevent-client-proxy-connections",
         true);
@@ -488,7 +496,8 @@ public class VelocityConfiguration implements ProxyConfig {
         new ForcedHosts(forcedHostsConfig),
         new Advanced(advancedConfig),
         new Query(queryConfig),
-        new Metrics(metricsConfig)
+        new Metrics(metricsConfig),
+        forceKeyAuthentication
     );
   }
 

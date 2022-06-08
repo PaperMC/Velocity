@@ -87,7 +87,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode);
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode, inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(ClosestLocaleMatcher.translateAndParse("velocity.error.already-connected-proxy",
@@ -135,6 +135,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     }
     ServerLoginSuccess success = new ServerLoginSuccess();
     success.setUsername(player.getUsername());
+    success.setProperties(player.getGameProfileProperties());
     success.setUuid(playerUniqueId);
     mcConnection.write(success);
 

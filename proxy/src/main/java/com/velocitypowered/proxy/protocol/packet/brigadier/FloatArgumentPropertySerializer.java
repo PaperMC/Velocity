@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumen
 import static com.velocitypowered.proxy.protocol.packet.brigadier.IntegerArgumentPropertySerializer.getFlags;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 
 class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<FloatArgumentType> {
@@ -33,7 +34,7 @@ class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<Floa
   }
 
   @Override
-  public FloatArgumentType deserialize(ByteBuf buf) {
+  public FloatArgumentType deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     byte flags = buf.readByte();
     float minimum = (flags & HAS_MINIMUM) != 0 ? buf.readFloat() : Float.MIN_VALUE;
     float maximum = (flags & HAS_MAXIMUM) != 0 ? buf.readFloat() : Float.MAX_VALUE;
@@ -41,7 +42,7 @@ class FloatArgumentPropertySerializer implements ArgumentPropertySerializer<Floa
   }
 
   @Override
-  public void serialize(FloatArgumentType object, ByteBuf buf) {
+  public void serialize(FloatArgumentType object, ByteBuf buf, ProtocolVersion protocolVersion) {
     boolean hasMinimum = Float.compare(object.getMinimum(), Float.MIN_VALUE) != 0;
     boolean hasMaximum = Float.compare(object.getMaximum(), Float.MAX_VALUE) != 0;
     byte flag = getFlags(hasMinimum, hasMaximum);

@@ -17,11 +17,12 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface ArgumentPropertySerializer<T> {
-  @Nullable T deserialize(ByteBuf buf);
+  @Nullable T deserialize(ByteBuf buf, ProtocolVersion protocolVersion);
 
-  void serialize(T object, ByteBuf buf);
+  void serialize(T object, ByteBuf buf, ProtocolVersion protocolVersion);
 }
