@@ -17,9 +17,12 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.registry.ChatData;
+import com.velocitypowered.proxy.connection.registry.ChatRegistry;
 import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
@@ -31,6 +34,8 @@ import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.List;
 
 public class JoinGame implements MinecraftPacket {
 
@@ -53,7 +58,7 @@ public class JoinGame implements MinecraftPacket {
   private CompoundBinaryTag biomeRegistry; // 1.16.2+
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition;
-  private CompoundBinaryTag chatTypeRegistry; // placeholder, 1.19+
+  private ChatRegistry chatTypeRegistry; // placeholder, 1.19+
 
   public int getEntityId() {
     return entityId;
@@ -183,11 +188,11 @@ public class JoinGame implements MinecraftPacket {
     this.lastDeathPosition = lastDeathPosition;
   }
 
-  public CompoundBinaryTag getChatTypeRegistry() {
+  public ChatRegistry getChatTypeRegistry() {
     return chatTypeRegistry;
   }
 
-  public void setChatTypeRegistry(CompoundBinaryTag chatTypeRegistry) {
+  public void setChatTypeRegistry(ChatRegistry chatTypeRegistry) {
     this.chatTypeRegistry = chatTypeRegistry;
   }
 
@@ -274,9 +279,10 @@ public class JoinGame implements MinecraftPacket {
           .getList("value", BinaryTagTypes.COMPOUND);
       this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        this.chatTypeRegistry = registryContainer.getCompound("minecraft:chat_type");
+        final ImmutableList<ChatData> chatDataList = ChatRegistry.fromGameData(registryContainer.getCompound("minecraft:chat_type").getList("value"), version);
+        this.chatTypeRegistry = new ChatRegistry(chatDataList);
       } else {
-        this.chatTypeRegistry = CompoundBinaryTag.empty();
+        this.chatTypeRegistry = null; // TODO: Faux registry?
       }
     } else {
       dimensionRegistryContainer = registryContainer.getList("dimension",
@@ -387,7 +393,7 @@ public class JoinGame implements MinecraftPacket {
       registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
       registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        registryContainer.put("minecraft:chat_type", chatTypeRegistry);
+        registryContainer.put("minecraft:chat_type", chatTypeRegistry.build());
       }
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);

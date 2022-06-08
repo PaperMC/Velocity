@@ -318,7 +318,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component translated = translateMessage(message);
 
     connection.write(ChatBuilder.builder(this.getProtocolVersion())
-            .component(translated).forIdentity(identity).toClient());
+            .component(translated).forIdentity(identity).toClient(this));
   }
 
   @Override
@@ -332,7 +332,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     connection.write(ChatBuilder.builder(this.getProtocolVersion())
             .component(translated).forIdentity(identity)
             .setType(type == MessageType.CHAT ? ChatBuilder.ChatType.CHAT : ChatBuilder.ChatType.SYSTEM)
-            .toClient());
+            .toClient(this));
   }
 
   @Override
