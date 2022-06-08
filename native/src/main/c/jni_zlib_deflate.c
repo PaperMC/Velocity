@@ -27,7 +27,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibDeflate_free(JNIEnv *env,
     libdeflate_free_compressor((struct libdeflate_compressor *) ctx);
 }
 
-JNIEXPORT jboolean JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibDeflate_process(JNIEnv *env,
     jclass clazz,
     jlong ctx,

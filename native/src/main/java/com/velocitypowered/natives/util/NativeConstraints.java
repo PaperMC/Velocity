@@ -39,7 +39,8 @@ public class NativeConstraints {
     // HotSpot on Intel macOS prefers x86_64, but OpenJ9 on macOS and HotSpot/OpenJ9 elsewhere
     // give amd64.
     IS_AMD64 = osArch.equals("amd64") || osArch.equals("x86_64");
-    IS_AARCH64 = osArch.equals("aarch64");
+    IS_AARCH64 = osArch.equals("aarch64") || osArch.equals("arm64");
+    System.out.println(System.getProperty("os.name", ""));
   }
 
   static final BooleanSupplier NATIVE_BASE = () -> NATIVES_ENABLED && CAN_GET_MEMORYADDRESS;
@@ -52,6 +53,7 @@ public class NativeConstraints {
       && System.getProperty("os.name", "").equalsIgnoreCase("Linux")
       && IS_AARCH64;
 
-  static final BooleanSupplier JAVA_11 = () -> Double.parseDouble(
-      System.getProperty("java.specification.version")) >= 11;
+  static final BooleanSupplier MACOS_AARCH64 = () -> NATIVE_BASE.getAsBoolean()
+      && System.getProperty("os.name", "").equalsIgnoreCase("Mac OS X")
+      && IS_AARCH64;
 }
