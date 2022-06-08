@@ -48,10 +48,14 @@ public class ChatData {
   private static final ListBinaryTag EMPTY_LIST_TAG = ListBinaryTag.empty();
   private final String identifier;
   private final int id;
+  private final Decoration chatDecoration;
+  private Decoration narrationDecoration;
 
-  public ChatData(int id, String identifier) {
+  public ChatData(int id, String identifier, Decoration chatDecoration, Decoration narrationDecoration) {
     this.id = id;
     this.identifier = identifier;
+    this.chatDecoration = chatDecoration;
+    this.narrationDecoration = narrationDecoration;
   }
 
   /**
@@ -71,21 +75,26 @@ public class ChatData {
   }
 
   private ChatData annotateWith(Integer id, String registryIdentifier) {
-    return new ChatData(id, registryIdentifier);
+    return new ChatData(id, registryIdentifier, this.chatDecoration, this.narrationDecoration);
   }
 
   private static ChatData decodeElementCompound(CompoundBinaryTag element) {
-    System.out.println(element);
-    final CompoundBinaryTag chatCompund = element.getCompound("chat");
-
     Decoration chatDecoration = null;
+    Decoration narrationDecoration = null;
 
-    final CompoundBinaryTag chatDecorationCompound = chatCompund.getCompound("decoration");
+    final CompoundBinaryTag chatCompound = element.getCompound("chat");
+    final CompoundBinaryTag chatDecorationCompound = chatCompound.getCompound("decoration");
     if (chatDecorationCompound != CompoundBinaryTag.empty()) {
       chatDecoration = Decoration.decodeRegistryEntry(chatDecorationCompound);
     }
 
-    return new ChatData(-1, "invalid");
+    final CompoundBinaryTag narrationCompound = element.getCompound("narration");
+    final CompoundBinaryTag narrationDecorationCompound = narrationCompound.getCompound("decoration");
+    if (narrationDecorationCompound != CompoundBinaryTag.empty()) {
+      narrationDecoration = Decoration.decodeRegistryEntry(narrationCompound);
+    }
+
+    return new ChatData(-1, "invalid", chatDecoration, narrationDecoration);
   }
 
   public String getIdentifier() {
