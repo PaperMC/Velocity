@@ -34,6 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.List;
+import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -49,8 +50,16 @@ public class ChatData {
   private final String identifier;
   private final int id;
   private final Decoration chatDecoration;
-  private Decoration narrationDecoration;
+  private final Decoration narrationDecoration;
 
+  /**
+   * Represents a ChatRegistry entry.
+   *
+   * @param id chat type id
+   * @param identifier chat type identifier
+   * @param chatDecoration chat decoration
+   * @param narrationDecoration narration decoration
+   */
   public ChatData(int id, String identifier, Decoration chatDecoration, Decoration narrationDecoration) {
     this.id = id;
     this.identifier = identifier;
@@ -105,7 +114,14 @@ public class ChatData {
     return id;
   }
 
-
+  /**
+   * Encodes the chat data for the network.
+   * @param version The protocol version to encode this chat data for
+   * @return The encoded data structure
+   */
+  public CompoundBinaryTag encodeAsCompoundTag(ProtocolVersion version) {
+    return null;
+  }
 
 
   public static class Decoration implements Translatable {

@@ -393,7 +393,11 @@ public class JoinGame implements MinecraftPacket {
       registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
       registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        registryContainer.put("minecraft:chat_type", chatTypeRegistry.build());
+        final ListBinaryTag encodedChatRegistry = chatTypeRegistry.encodeRegistry(version);
+        CompoundBinaryTag.Builder chatRegistryEntry = CompoundBinaryTag.builder();
+        chatRegistryEntry.putString("type", "minecraft:chat_type");
+        chatRegistryEntry.put("value", encodedChatRegistry);
+        registryContainer.put("minecraft:chat_type", encodedChatRegistry);
       }
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);

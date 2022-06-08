@@ -52,7 +52,16 @@ public final class ChatRegistry {
     return builder.build();
   }
 
-  public BinaryTag build() {
-    return null;
+  /**
+   * Serialises the Chat Registry for sending over the network.
+   * @param version the version to encode for
+   * @return The serialised tag list
+   */
+  public ListBinaryTag encodeRegistry(ProtocolVersion version) {
+    final ListBinaryTag.Builder<BinaryTag> builder = ListBinaryTag.builder();
+    for (ChatData data : registeredChatTypes.values()) {
+      builder.add(data.encodeAsCompoundTag(version));
+    }
+    return builder.build();
   }
 }
