@@ -525,7 +525,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Most notably, by having the client accept the join game packet, we can work around the need
     // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
     // improving compatibility with mods.
-    int sentOldDim = joinGame.getDimension();
+    final Respawn respawn = Respawn.fromJoinGame(joinGame);
+
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
       // Before Minecraft 1.16, we could not switch to the same dimension without sending an
       // additional respawn. On older versions of Minecraft this forces the client to perform
@@ -533,12 +534,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
     }
     player.getConnection().delayedWrite(joinGame);
-
-    player.getConnection().delayedWrite(
-        new Respawn(sentOldDim, joinGame.getPartialHashedSeed(),
-            joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
+    player.getConnection().delayedWrite(respawn);
   }
 
   private void doSafeClientServerSwitch(JoinGame joinGame) {
@@ -550,19 +546,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().delayedWrite(joinGame);
 
     // Send a respawn packet in a different dimension.
-    int tempDim = joinGame.getDimension() == 0 ? -1 : 0;
-    player.getConnection().delayedWrite(
-        new Respawn(tempDim, joinGame.getPartialHashedSeed(), joinGame.getDifficulty(),
-            joinGame.getGamemode(), joinGame.getLevelType(),
-            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
+    final Respawn fakeSwitchPacket = Respawn.fromJoinGame(joinGame);
+    fakeSwitchPacket.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
+    player.getConnection().delayedWrite(fakeSwitchPacket);
 
     // Now send a respawn packet in the correct dimension.
-    player.getConnection().delayedWrite(
-        new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
-            joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
-            false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-            joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition()));
+    final Respawn correctSwitchPacket = Respawn.fromJoinGame(joinGame);
+    player.getConnection().delayedWrite(correctSwitchPacket);
   }
 
   public List<UUID> getServerBossBars() {

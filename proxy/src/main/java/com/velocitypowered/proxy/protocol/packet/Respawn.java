@@ -60,6 +60,13 @@ public class Respawn implements MinecraftPacket {
     this.lastDeathPosition = lastDeathPosition;
   }
 
+  public static Respawn fromJoinGame(JoinGame joinGame) {
+    return new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
+        joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
+        false, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
+        joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition());
+  }
+
   public int getDimension() {
     return dimension;
   }
