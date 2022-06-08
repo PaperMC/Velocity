@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
@@ -33,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JoinGame implements MinecraftPacket {
 
-  private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(2 * 1024 * 1024);
+  private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(4 * 1024 * 1024);
   private int entityId;
   private short gamemode;
   private int dimension;
@@ -51,6 +52,8 @@ public class JoinGame implements MinecraftPacket {
   private short previousGamemode; // 1.16+
   private CompoundBinaryTag biomeRegistry; // 1.16.2+
   private int simulationDistance; // 1.18+
+  private @Nullable Pair<String, Long> lastDeathPosition;
+  private CompoundBinaryTag chatTypeRegistry; // placeholder, 1.19+
 
   public int getEntityId() {
     return entityId;
@@ -172,6 +175,22 @@ public class JoinGame implements MinecraftPacket {
     this.simulationDistance = simulationDistance;
   }
 
+  public Pair<String, Long> getLastDeathPosition() {
+    return lastDeathPosition;
+  }
+
+  public void setLastDeathPosition(Pair<String, Long> lastDeathPosition) {
+    this.lastDeathPosition = lastDeathPosition;
+  }
+
+  public CompoundBinaryTag getChatTypeRegistry() {
+    return chatTypeRegistry;
+  }
+
+  public void setChatTypeRegistry(CompoundBinaryTag chatTypeRegistry) {
+    this.chatTypeRegistry = chatTypeRegistry;
+  }
+
   @Override
   public String toString() {
     return "JoinGame{"
@@ -188,6 +207,7 @@ public class JoinGame implements MinecraftPacket {
         + ", dimensionInfo='" + dimensionInfo + '\''
         + ", previousGamemode=" + previousGamemode
         + ", simulationDistance=" + simulationDistance
+        + ", lastDeathPosition='" + lastDeathPosition + '\''
         + '}';
   }
 
@@ -253,6 +273,7 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
           .getList("value", BinaryTagTypes.COMPOUND);
       this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
+      this.chatTypeRegistry = registryContainer.getCompound("minecraft:chat_type");
     } else {
       dimensionRegistryContainer = registryContainer.getList("dimension",
           BinaryTagTypes.COMPOUND);
@@ -263,7 +284,8 @@ public class JoinGame implements MinecraftPacket {
 
     String dimensionIdentifier;
     String levelName = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
+            && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
       CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
       dimensionIdentifier = ProtocolUtils.readString(buf);
       this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
@@ -290,6 +312,10 @@ public class JoinGame implements MinecraftPacket {
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
     this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    // optional death location
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
+      this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
+    }
   }
 
   @Override
@@ -356,11 +382,13 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryEntry.put("value", encodedDimensionRegistry);
       registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
       registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
+      registryContainer.put("minecraft:chat_type", chatTypeRegistry);
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);
     }
     ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
+            && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
       ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {
@@ -382,6 +410,17 @@ public class JoinGame implements MinecraftPacket {
     buf.writeBoolean(showRespawnScreen);
     buf.writeBoolean(dimensionInfo.isDebugType());
     buf.writeBoolean(dimensionInfo.isFlat());
+
+    // optional death location
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (lastDeathPosition != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writeString(buf, lastDeathPosition.key());
+        buf.writeLong(lastDeathPosition.value());
+      } else {
+        buf.writeBoolean(false);
+      }
+    }
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -32,11 +33,12 @@ public class ServerLogin implements MinecraftPacket {
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
 
   private @Nullable String username;
+  private @Nullable IdentifiedKey playerKey; // Introduced in 1.19
 
   public ServerLogin() {
   }
 
-  public ServerLogin(String username) {
+  public ServerLogin(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");
   }
 
@@ -47,10 +49,19 @@ public class ServerLogin implements MinecraftPacket {
     return username;
   }
 
+  public IdentifiedKey getPlayerKey() {
+    return playerKey;
+  }
+
+  public void setPlayerKey(IdentifiedKey playerKey) {
+    this.playerKey = playerKey;
+  }
+
   @Override
   public String toString() {
     return "ServerLogin{"
         + "username='" + username + '\''
+        + "playerKey='" + playerKey + '\''
         + '}';
   }
 
@@ -60,6 +71,12 @@ public class ServerLogin implements MinecraftPacket {
     if (username.isEmpty()) {
       throw EMPTY_USERNAME;
     }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (buf.readBoolean()) {
+        playerKey = ProtocolUtils.readPlayerKey(buf);
+      }
+    }
   }
 
   @Override
@@ -68,13 +85,27 @@ public class ServerLogin implements MinecraftPacket {
       throw new IllegalStateException("No username found!");
     }
     ProtocolUtils.writeString(buf, username);
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (playerKey != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writePlayerKey(buf, playerKey);
+      } else {
+        buf.writeBoolean(false);
+      }
+    }
   }
 
   @Override
   public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically
     // legal on the protocol level.
-    return 1 + (16 * 4);
+    int base = 1 + (16 * 4);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      return -1;
+      //TODO: ## 19
+    }
+    return base;
   }
 
   @Override

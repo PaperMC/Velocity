@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -31,14 +32,17 @@ public class VelocityTabListEntry implements TabListEntry {
   private net.kyori.adventure.text.Component displayName;
   private int latency;
   private int gameMode;
+  private @Nullable IdentifiedKey playerKey;
 
   VelocityTabListEntry(VelocityTabList tabList, GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
+      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode,
+                       @Nullable IdentifiedKey playerKey) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
     this.latency = latency;
     this.gameMode = gameMode;
+    this.playerKey = playerKey;
   }
 
   @Override
@@ -97,5 +101,14 @@ public class VelocityTabListEntry implements TabListEntry {
 
   void setGameModeInternal(int gameMode) {
     this.gameMode = gameMode;
+  }
+
+  @Override
+  public IdentifiedKey getIdentifiedKey() {
+    return playerKey;
+  }
+
+  void setPlayerKeyInternal(IdentifiedKey playerKey) {
+    this.playerKey = playerKey;
   }
 }

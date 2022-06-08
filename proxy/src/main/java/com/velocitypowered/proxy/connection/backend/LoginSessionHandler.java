@@ -18,6 +18,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -47,6 +49,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -78,7 +81,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
           serverConn.getPlayerRemoteAddressAsString(),
-          serverConn.getPlayer().getGameProfile());
+          serverConn.getPlayer().getGameProfile(), mc.getProtocolVersion(), serverConn.getPlayer().getIdentifiedKey());
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
@@ -163,14 +166,22 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      GameProfile profile) {
+                                              GameProfile profile, ProtocolVersion version,
+                                              @Nullable IdentifiedKey playerKey) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
-      ProtocolUtils.writeVarInt(forwarded, VelocityConstants.FORWARDING_VERSION);
+      int forwardingVersion = version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && playerKey != null
+              ? VelocityConstants.MODERN_FORWARDING_WITH_KEY : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+
+      ProtocolUtils.writeVarInt(forwarded, forwardingVersion);
       ProtocolUtils.writeString(forwarded, address);
       ProtocolUtils.writeUuid(forwarded, profile.getId());
       ProtocolUtils.writeString(forwarded, profile.getName());
       ProtocolUtils.writeProperties(forwarded, profile.getProperties());
+
+      if (forwardingVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
+        ProtocolUtils.writePlayerKey(forwarded, playerKey);
+      }
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");

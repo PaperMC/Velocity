@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -120,9 +121,15 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
+    return buildEntry(profile, displayName, latency, gameMode, null);
+  }
+
+  @Override
   public TabListEntry buildEntry(GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
+                                 net.kyori.adventure.text.@Nullable Component displayName,
+                                 int latency, int gameMode, @Nullable IdentifiedKey key) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, key);
   }
 
   /**

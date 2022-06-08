@@ -30,15 +30,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class ModArgumentProperty implements ArgumentType<ByteBuf> {
 
-  private final String identifier;
+  private final ArgumentIdentifier identifier;
   private final ByteBuf data;
 
-  public ModArgumentProperty(String identifier, ByteBuf data) {
+  public ModArgumentProperty(ArgumentIdentifier identifier, ByteBuf data) {
     this.identifier = identifier;
     this.data = Unpooled.unreleasableBuffer(data.asReadOnly());
   }
 
-  public String getIdentifier() {
+  public ArgumentIdentifier getIdentifier() {
     return identifier;
   }
 

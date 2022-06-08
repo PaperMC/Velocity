@@ -190,7 +190,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     mc.setProtocolVersion(protocolVersion);
     mc.setState(StateRegistry.LOGIN);
-    mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername()));
+    mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
     mc.flush();
   }
 

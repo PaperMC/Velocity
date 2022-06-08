@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -14,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Allows the server to communicate with a client logging into the proxy using login plugin
  * messages.
  */
-public interface LoginPhaseConnection extends InboundConnection {
+public interface LoginPhaseConnection extends InboundConnection, KeyIdentifiable {
   void sendLoginPluginMessage(ChannelIdentifier identifier, byte[] contents,
       MessageConsumer consumer);
 

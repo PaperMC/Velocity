@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet;
+package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -23,12 +23,11 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.UUID;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.UUID;
-
-public class Chat implements MinecraftPacket {
+public class LegacyChat implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;
   public static final byte SYSTEM_TYPE = (byte) 1;
@@ -41,15 +40,21 @@ public class Chat implements MinecraftPacket {
   private byte type;
   private @Nullable UUID sender;
 
-  public Chat() {
+  public LegacyChat() {
   }
 
-  public Chat(String message, byte type, UUID sender) {
+  /**
+   * Creates a Chat packet.
+   */
+  public LegacyChat(String message, byte type, UUID sender) {
     this.message = message;
     this.type = type;
     this.sender = sender;
   }
 
+  /**
+   * Retrieves the Chat message.
+   */
   public String getMessage() {
     if (message == null) {
       throw new IllegalStateException("Message is not specified");
@@ -114,21 +119,5 @@ public class Chat implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
-  }
-
-  public static Chat createClientbound(Identity identity,
-      net.kyori.adventure.text.Component component, ProtocolVersion version) {
-    return createClientbound(component, CHAT_TYPE, identity.uuid(), version);
-  }
-
-  public static Chat createClientbound(net.kyori.adventure.text.Component component, byte type,
-      UUID sender, ProtocolVersion version) {
-    Preconditions.checkNotNull(component, "component");
-    return new Chat(ProtocolUtils.getJsonChatSerializer(version).serialize(component), type,
-        sender);
-  }
-
-  public static Chat createServerbound(String message) {
-    return new Chat(message, CHAT_TYPE, EMPTY_SENDER);
   }
 }
