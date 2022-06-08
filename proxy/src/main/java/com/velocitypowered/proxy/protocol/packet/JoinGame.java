@@ -273,7 +273,11 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryContainer = registryContainer.getCompound("minecraft:dimension_type")
           .getList("value", BinaryTagTypes.COMPOUND);
       this.biomeRegistry = registryContainer.getCompound("minecraft:worldgen/biome");
-      this.chatTypeRegistry = registryContainer.getCompound("minecraft:chat_type");
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        this.chatTypeRegistry = registryContainer.getCompound("minecraft:chat_type");
+      } else {
+        this.chatTypeRegistry = CompoundBinaryTag.empty();
+      }
     } else {
       dimensionRegistryContainer = registryContainer.getList("dimension",
           BinaryTagTypes.COMPOUND);
@@ -285,7 +289,7 @@ public class JoinGame implements MinecraftPacket {
     String dimensionIdentifier;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-            && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+        && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
       CompoundBinaryTag currentDimDataTag = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
       dimensionIdentifier = ProtocolUtils.readString(buf);
       this.currentDimensionData = DimensionData.decodeBaseCompoundTag(currentDimDataTag, version)
@@ -382,13 +386,15 @@ public class JoinGame implements MinecraftPacket {
       dimensionRegistryEntry.put("value", encodedDimensionRegistry);
       registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
       registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
-      registryContainer.put("minecraft:chat_type", chatTypeRegistry);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+        registryContainer.put("minecraft:chat_type", chatTypeRegistry);
+      }
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);
     }
     ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-            && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+        && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
       ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {

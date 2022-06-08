@@ -229,7 +229,11 @@ public class ArgumentPropertyRegistry {
     register(id("minecraft:resource", mapSet(MINECRAFT_1_19, 44)),
             RegistryKeyArgument.class, RegistryKeyArgumentSerializer.REGISTRY);
 
-    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_19, 45))); // added in 1.16
+    empty(id("minecraft:template_mirror", mapSet(MINECRAFT_1_19, 45))); // 1.19
+    empty(id("minecraft:template_rotation", mapSet(MINECRAFT_1_19, 46))); // 1.19
+
+    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_19, 47))); // added in 1.16
+
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
