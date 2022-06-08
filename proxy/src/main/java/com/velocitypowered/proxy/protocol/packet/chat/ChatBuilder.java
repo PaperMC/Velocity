@@ -132,7 +132,7 @@ public class ChatBuilder {
     Component msg = component == null ? Component.text(message) : component;
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      return new SystemChat(msg, type.getId());
+      return new SystemChat(msg, type.getId() - 1); //CHAT type is not supported for system messages.
     } else {
       return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
     }
