@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.scheduler;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Represents a task that is scheduled to run on the proxy.
  */
@@ -17,7 +19,7 @@ public interface ScheduledTask {
    *
    * @return the plugin that scheduled this task
    */
-  Object plugin();
+  @NotNull Object plugin();
 
   /**
    * Returns the current status of this task.
