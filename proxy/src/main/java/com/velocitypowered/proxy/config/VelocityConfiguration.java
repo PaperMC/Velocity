@@ -514,8 +514,8 @@ public class VelocityConfiguration implements ProxyConfig {
     // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
     // forwarding mode that requires it.
     if (forwardingSecret.length == 0
-        && forwardingMode == PlayerInfoForwarding.MODERN
-        || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
+        && (forwardingMode == PlayerInfoForwarding.MODERN
+        || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
       throw new RuntimeException("The forwarding-secret file must not be empty.");
     }
 
