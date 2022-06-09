@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "1.0"
+config-version = "2.0"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
@@ -36,8 +36,9 @@ prevent-client-proxy-connections = false
 #                  Velocity's native forwarding. Only applicable for Minecraft 1.13 or higher.
 player-info-forwarding-mode = "NONE"
 
-# If you are using modern or BungeeGuard IP forwarding, configure a unique secret here.
-forwarding-secret = ""
+# If you are using modern or BungeeGuard IP forwarding, configure a file that contains a unique secret here.
+# The file is expected to be UTF-8 encoded and not empty.
+forwarding-secret-file = "forwarding.secret"
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
 # suggest turning this on.
