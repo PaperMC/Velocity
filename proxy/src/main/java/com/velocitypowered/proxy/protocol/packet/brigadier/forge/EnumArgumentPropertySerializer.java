@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier.forge;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertySerializer;
 import io.netty.buffer.ByteBuf;
@@ -33,12 +34,12 @@ public class EnumArgumentPropertySerializer implements ArgumentPropertySerialize
   }
 
   @Override
-  public @Nullable EnumArgumentProperty deserialize(ByteBuf buf) {
+  public @Nullable EnumArgumentProperty deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     return new EnumArgumentProperty(ProtocolUtils.readString(buf));
   }
 
   @Override
-  public void serialize(EnumArgumentProperty object, ByteBuf buf) {
+  public void serialize(EnumArgumentProperty object, ByteBuf buf, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, object.getClassName());
   }
 }

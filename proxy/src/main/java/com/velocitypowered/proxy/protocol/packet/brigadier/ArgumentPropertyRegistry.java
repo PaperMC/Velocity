@@ -242,16 +242,18 @@ public class ArgumentPropertyRegistry {
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
 
     // Forge support
-    register("forge:enum", EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
-    register("forge:modid", ModIdArgumentProperty.class,
+    register(id("forge:enum"), EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
+    register(id("forge:modid"), ModIdArgumentProperty.class,
         new ArgumentPropertySerializer<>() {
           @Override
-          public ModIdArgumentProperty deserialize(ByteBuf buf) {
+          public ModIdArgumentProperty deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
             return new ModIdArgumentProperty();
           }
 
           @Override
-          public void serialize(ModIdArgumentProperty object, ByteBuf buf) {}
+          public void serialize(ModIdArgumentProperty object, ByteBuf buf,
+                                ProtocolVersion protocolVersion) {
+          }
         });
 
     empty(id("minecraft:nbt")); // No longer in 1.19+
