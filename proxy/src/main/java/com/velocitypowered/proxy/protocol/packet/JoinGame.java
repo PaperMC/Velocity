@@ -397,7 +397,7 @@ public class JoinGame implements MinecraftPacket {
         CompoundBinaryTag.Builder chatRegistryEntry = CompoundBinaryTag.builder();
         chatRegistryEntry.putString("type", "minecraft:chat_type");
         chatRegistryEntry.put("value", encodedChatRegistry);
-        registryContainer.put("minecraft:chat_type", encodedChatRegistry);
+        registryContainer.put("minecraft:chat_type", chatRegistryEntry.build());
       }
     } else {
       registryContainer.put("dimension", encodedDimensionRegistry);
