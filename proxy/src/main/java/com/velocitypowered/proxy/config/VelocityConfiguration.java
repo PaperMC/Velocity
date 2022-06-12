@@ -448,8 +448,8 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();
 
-    // Whether or not this config is version 1.0 which uses the deprecated "forwarding-secret" parameter
-    boolean legacyConfig = config.getOrElse("config-version", "").equalsIgnoreCase("1.0");
+    // Whether or not this config version is older than 2.0 which uses the deprecated "forwarding-secret" parameter
+    boolean legacyConfig = Double.parseDouble(config.getOrElse("config-version", "1.0")) < 2.0;
 
     String forwardingSecretString;
     byte[] forwardingSecret;
@@ -478,8 +478,17 @@ public class VelocityConfiguration implements ProxyConfig {
       // New handling
       forwardingSecretString = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
       if (forwardingSecretString.isEmpty()) {
-        String forwardSecretFile = config.getOrElse("forwarding-secret-file", "");
-        forwardingSecretString = String.join("", Files.readAllLines(Path.of(forwardSecretFile)));
+        String forwardSecretFile = config.getOrElse("forwarding-secret-file", "forwarding.secret");
+        Path secretPath = Path.of(forwardSecretFile);
+        if (Files.exists(secretPath)) {
+          if (Files.isRegularFile(secretPath)) {
+            forwardingSecretString = String.join("", Files.readAllLines(secretPath));
+          } else {
+            throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
+          }
+        } else {
+          throw new RuntimeException("The forwarding-secret-file does not exists.");
+        }
       }
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
