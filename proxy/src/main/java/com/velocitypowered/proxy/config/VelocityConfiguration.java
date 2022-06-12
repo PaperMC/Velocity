@@ -424,7 +424,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
     // Create the forwarding-secret file on first-time startup if it doesn't exist
     Path defaultForwardingSecretPath = Path.of("forwarding.secret");
-    if (!path.toFile().exists() && !defaultForwardingSecretPath.toFile().exists()) {
+    if (!Files.exists(path) && !Files.exists(defaultForwardingSecretPath)) {
       Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
     }
 
@@ -478,8 +478,10 @@ public class VelocityConfiguration implements ProxyConfig {
       // New handling
       forwardingSecretString = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
       if (forwardingSecretString.isEmpty()) {
-        String forwardSecretFile = config.getOrElse("forwarding-secret-file", "forwarding.secret");
-        Path secretPath = Path.of(forwardSecretFile);
+        String forwardSecretFile = config.get("forwarding-secret-file");
+        Path secretPath = forwardSecretFile == null
+            ? defaultForwardingSecretPath
+            : Path.of(forwardSecretFile);
         if (Files.exists(secretPath)) {
           if (Files.isRegularFile(secretPath)) {
             forwardingSecretString = String.join("", Files.readAllLines(secretPath));
