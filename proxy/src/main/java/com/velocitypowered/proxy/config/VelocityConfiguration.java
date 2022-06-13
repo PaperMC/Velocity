@@ -424,7 +424,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
     // Create the forwarding-secret file on first-time startup if it doesn't exist
     Path defaultForwardingSecretPath = Path.of("forwarding.secret");
-    if (!Files.exists(path) && !Files.exists(defaultForwardingSecretPath)) {
+    if (Files.notExists(path) && Files.notExists(defaultForwardingSecretPath)) {
       Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
     }
 
@@ -448,8 +448,16 @@ public class VelocityConfiguration implements ProxyConfig {
     CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
     defaultConfig.load();
 
+    // TODO: migrate this on Velocity Polymer
+    double configVersion;
+    try {
+      configVersion = Double.parseDouble(config.getOrElse("config-version", "1.0"));
+    } catch (NumberFormatException e) {
+      configVersion = 1.0;
+    }
+
     // Whether or not this config version is older than 2.0 which uses the deprecated "forwarding-secret" parameter
-    boolean legacyConfig = Double.parseDouble(config.getOrElse("config-version", "1.0")) < 2.0;
+    boolean legacyConfig = configVersion < 2.0;
 
     String forwardingSecretString;
     byte[] forwardingSecret;
