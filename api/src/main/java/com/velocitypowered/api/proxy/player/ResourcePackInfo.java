@@ -61,6 +61,7 @@ public interface ResourcePackInfo {
    * {@link com.velocitypowered.api.event.player.ServerResourcePackSendEvent}.
    *
    * @return the origin of the resource pack
+   * @since 3.1.2
    */
   Origin getOriginalOrigin();
 
@@ -74,6 +75,7 @@ public interface ResourcePackInfo {
    *
    *
    * @return a content-copy of this instance as a {@link ResourcePackInfo.Builder}
+   * @since 3.1.2
    */
   ResourcePackInfo.Builder asBuilder();
 
@@ -88,6 +90,7 @@ public interface ResourcePackInfo {
    * @param newUrl The new URL to use in the updated builder.
    *
    * @return a content-copy of this instance as a {@link ResourcePackInfo.Builder}
+   * @since 3.1.2
    */
   ResourcePackInfo.Builder asBuilder(String newUrl);
 

@@ -99,6 +99,7 @@ public interface TabList {
    * @param key         the player key
    * @return entry
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   * @since 3.1.2
    */
   @Deprecated
   default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,

@@ -34,6 +34,7 @@ public interface Scheduler {
    * @param plugin the plugin to request the task for
    * @param consumer the task to be run when scheduled with the capacity to cancel itself
    * @return the task builder
+   * @since 3.1.2
    */
   TaskBuilder buildTask(@NotNull Object plugin, @NotNull Consumer<ScheduledTask> consumer);
 
@@ -42,6 +43,7 @@ public interface Scheduler {
    *
    * @param plugin the plugin object
    * @return the list of {@link ScheduledTask} corresponding to a specific plugin
+   * @since 3.1.2
    */
   @NotNull Collection<ScheduledTask> tasksByPlugin(@NotNull Object plugin);
 

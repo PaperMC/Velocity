@@ -11,6 +11,8 @@ import java.util.UUID;
 
 /**
  * A signed message.
+ *
+ * @since 3.1.2
  */
 public interface SignedMessage extends KeySigned {
 

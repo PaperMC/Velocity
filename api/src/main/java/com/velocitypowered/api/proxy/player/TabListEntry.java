@@ -200,6 +200,7 @@ public interface TabListEntry extends KeyIdentifiable {
      * @param chatSession session to set
      * @return {@code this}, for chaining
      * @see TabListEntry#getChatSession()
+     * @since 3.1.2
      */
     public Builder chatSession(ChatSession chatSession) {
       this.chatSession = chatSession;

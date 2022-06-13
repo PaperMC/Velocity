@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents session-server cross-signed dated RSA public key.
+ * @since 3.1.2
  */
 public interface IdentifiedKey extends KeySigned {
 

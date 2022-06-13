@@ -48,6 +48,7 @@ public final class ServerPreConnectEvent implements
    * @param player the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
    * @param previousServer the server the player ís connected to
+   * @since 3.1.2
    */
   public ServerPreConnectEvent(Player player, RegisteredServer originalServer,
       @Nullable RegisteredServer previousServer) {
@@ -94,6 +95,7 @@ public final class ServerPreConnectEvent implements
    * beforehand (for instance, if the player has just joined the proxy).
    *
    * @return the server the player is currently connected to.
+   * @since 3.1.2
    */
   public @Nullable RegisteredServer getPreviousServer() {
     return previousServer;

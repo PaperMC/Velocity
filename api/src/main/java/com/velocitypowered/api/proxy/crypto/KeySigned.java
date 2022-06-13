@@ -14,6 +14,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents the signature of a signed object.
+ *
+ * @since 3.1.2
  */
 public interface KeySigned {
 

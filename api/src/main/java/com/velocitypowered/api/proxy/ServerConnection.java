@@ -30,6 +30,7 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    * switching to this connection.
    *
    * @return the server the player was connected to.
+   * @since 3.1.2
    */
   Optional<RegisteredServer> getPreviousServer();
 
