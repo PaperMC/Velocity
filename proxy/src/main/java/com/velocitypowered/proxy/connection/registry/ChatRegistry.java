@@ -46,31 +46,10 @@ public final class ChatRegistry {
    */
   public static ImmutableList<ChatData> fromGameData(ListBinaryTag compound, ProtocolVersion version) {
     final ImmutableList.Builder<ChatData> builder = ImmutableList.builder();
-    try {
-      System.out.println(TagStringIO.builder().indent(2).build().asString(CompoundBinaryTag.empty().put("tag", compound)));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
     for (BinaryTag binaryTag : compound) {
       if (binaryTag instanceof CompoundBinaryTag) {
         final ChatData chatData = ChatData.decodeRegistryEntry((CompoundBinaryTag) binaryTag, version);
         builder.add(chatData);
-        System.out.println(chatData.encodeAsCompoundTag(version).equals(binaryTag));
-        System.out.println("========");
-        System.out.println("========");
-        try {
-          System.out.println(TagStringIO.builder().indent(2).build().asString((CompoundBinaryTag) binaryTag));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        System.out.println("========");
-        try {
-          System.out.println(TagStringIO.builder().indent(2).build().asString(chatData.encodeAsCompoundTag(version)));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        System.out.println("========");
-        System.out.println("========");
       }
     }
     return builder.build();
