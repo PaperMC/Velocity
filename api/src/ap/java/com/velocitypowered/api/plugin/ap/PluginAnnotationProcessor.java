@@ -12,6 +12,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -74,7 +75,9 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
 
       Plugin plugin = element.getAnnotation(Plugin.class);
       if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
-        environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
+        environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID: \""
+            + plugin.id()
+            +"\" for plugin "
             + qualifiedName
             + ". IDs must start alphabetically, have alphanumeric characters, and can "
             + "contain dashes or underscores.");
