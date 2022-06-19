@@ -177,9 +177,7 @@ public class VelocityTabList implements TabList {
             } else {
               // Substitute the key
               // It shouldn't be propagated to remove the signature.
-              if (expectedKey != null) {
-                providedKey = expectedKey;
-              }
+              providedKey = expectedKey;
             }
           }
 

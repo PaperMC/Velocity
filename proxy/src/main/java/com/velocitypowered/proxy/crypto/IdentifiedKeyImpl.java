@@ -112,9 +112,4 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
             && Objects.equal(this.getSignature(), that.getSignature())
             && Objects.equal(this.getSigner(), that.getSigner());
   }
-
-  @Override
-  public int hashCode() {
-    return 0;
-  }
 }
