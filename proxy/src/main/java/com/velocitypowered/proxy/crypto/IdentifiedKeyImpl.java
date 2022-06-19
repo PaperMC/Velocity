@@ -109,7 +109,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
 
     return Objects.equal(this.getSignedPublicKey(), that.getSignedPublicKey())
             && Objects.equal(this.getExpiryTemporal(), that.getExpiryTemporal())
-            && Objects.equal(this.getSignature(), that.getSignature())
+            && Arrays.equals(this.getSignature(), that.getSignature())
             && Objects.equal(this.getSigner(), that.getSigner());
   }
 }
