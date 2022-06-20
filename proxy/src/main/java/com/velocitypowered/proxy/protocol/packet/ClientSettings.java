@@ -22,9 +22,8 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
 
@@ -202,11 +201,28 @@ public class ClientSettings implements MinecraftPacket {
       return false;
     }
     final ClientSettings that = (ClientSettings) o;
-    return viewDistance == that.viewDistance && chatVisibility == that.chatVisibility && chatColors == that.chatColors && difficulty == that.difficulty && skinParts == that.skinParts && mainHand == that.mainHand && chatFilteringEnabled == that.chatFilteringEnabled && clientListingAllowed == that.clientListingAllowed && Objects.equals(locale, that.locale);
+    return viewDistance == that.viewDistance
+        && chatVisibility == that.chatVisibility
+        && chatColors == that.chatColors
+        && difficulty == that.difficulty
+        && skinParts == that.skinParts
+        && mainHand == that.mainHand
+        && chatFilteringEnabled == that.chatFilteringEnabled
+        && clientListingAllowed == that.clientListingAllowed
+        && Objects.equals(locale, that.locale);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(locale, viewDistance, chatVisibility, chatColors, difficulty, skinParts, mainHand, chatFilteringEnabled, clientListingAllowed);
+    return Objects.hash(
+        locale,
+        viewDistance,
+        chatVisibility,
+        chatColors,
+        difficulty,
+        skinParts,
+        mainHand,
+        chatFilteringEnabled,
+        clientListingAllowed);
   }
 }

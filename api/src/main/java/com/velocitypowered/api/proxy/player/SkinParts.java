@@ -7,9 +7,8 @@
 
 package com.velocitypowered.api.proxy.player;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SkinParts {
 
