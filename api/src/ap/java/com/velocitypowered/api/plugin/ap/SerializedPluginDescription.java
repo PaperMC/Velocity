@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SerializedPluginDescription {
 
-  public static final Pattern ID_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z-0-9-_]{0,63}");
+  public static final Pattern ID_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9-_]{0,63}");
 
   // @Nullable is used here to make GSON skip these in the serialized file
   private final String id;
