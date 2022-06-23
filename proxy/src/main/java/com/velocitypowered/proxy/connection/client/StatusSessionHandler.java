@@ -63,7 +63,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       throw EXPECTED_AWAITING_REQUEST;
     }
     this.pingReceived = true;
-    server.getServerLiatPingHandler().getInitialPing(this.inbound)
+    server.getServerListPingHandler().getInitialPing(this.inbound)
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
             LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
@@ -88,7 +88,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
     this.pingReceived = true;
 
-    this.server.getServerLiatPingHandler().getInitialPing(inbound)
+    this.server.getServerListPingHandler().getInitialPing(inbound)
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {

@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.connection.util;
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
@@ -35,11 +34,11 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class ServerLiatPingHandler {
+public class ServerListPingHandler {
 
   private final VelocityServer server;
 
-  public ServerLiatPingHandler(VelocityServer server) {
+  public ServerListPingHandler(VelocityServer server) {
     this.server = server;
   }
 
