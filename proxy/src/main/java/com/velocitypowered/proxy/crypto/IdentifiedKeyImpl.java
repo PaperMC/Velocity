@@ -18,12 +18,19 @@
 package com.velocitypowered.proxy.crypto;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.UUID;
+
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class IdentifiedKeyImpl implements IdentifiedKey {
 
@@ -31,6 +38,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
   private final byte[] signature;
   private final Instant expiryTemporal;
   private @MonotonicNonNull Boolean isSignatureValid;
+  private @MonotonicNonNull UUID holder;
 
   public IdentifiedKeyImpl(byte[] keyBits, long expiry,
                             byte[] signature) {
@@ -67,15 +75,50 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
   }
 
   @Override
+  public @Nullable UUID getSignatureHolder() {
+    return holder;
+  }
+
+  /**
+   * Validate a v2 signed key.
+   */
+  public boolean validateWithHolder(UUID holder) {
+    Preconditions.checkNotNull(holder);
+    if (validateData(holder)) {
+      this.holder = holder;
+      this.isSignatureValid = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @Override
   public boolean isSignatureValid() {
     if (isSignatureValid == null) {
+      isSignatureValid = validateData(holder);
+    }
+    return isSignatureValid;
+  }
+
+  private boolean validateData(@Nullable UUID uuid) {
+    if (uuid == null) {
       String pemKey = EncryptionUtils.pemEncodeRsaKey(publicKey);
       long expires = expiryTemporal.toEpochMilli();
       byte[] toVerify = ("" + expires + pemKey).getBytes(StandardCharsets.US_ASCII);
-      isSignatureValid = EncryptionUtils.verifySignature(
+      return EncryptionUtils.verifySignature(
               EncryptionUtils.SHA1_WITH_RSA, EncryptionUtils.getYggdrasilSessionKey(), signature, toVerify);
+    } else {
+      byte[] keyBytes = publicKey.getEncoded();
+      byte[] toVerify = new byte[keyBytes.length + 24]; // length long * 3
+      ByteBuffer fixedDataSet = ByteBuffer.wrap(toVerify).order(ByteOrder.BIG_ENDIAN);
+      fixedDataSet.putLong(uuid.getMostSignificantBits());
+      fixedDataSet.putLong(uuid.getLeastSignificantBits());
+      fixedDataSet.putLong(expiryTemporal.toEpochMilli());
+      fixedDataSet.put(keyBytes);
+      return EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA,
+              EncryptionUtils.getYggdrasilSessionKey(), signature, toVerify);
     }
-    return isSignatureValid;
   }
 
   @Override

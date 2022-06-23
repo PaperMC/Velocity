@@ -33,6 +33,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
@@ -89,7 +90,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (!playerKey.isSignatureValid()) {
+      if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+              && !playerKey.isSignatureValid()) {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
       }
@@ -214,9 +216,20 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         try {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
+            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
+            // Not so fast, now we verify the public key for 1.19.1+
+            if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0
+                    && inbound.getIdentifiedKey() != null) {
+              if (inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+                IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+                if (!key.validateWithHolder(profile.getId())) {
+                  inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                }
+              }
+            }
             // All went well, initialize the session.
             mcConnection.setSessionHandler(new AuthSessionHandler(
-                server, inbound, GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class), true
+                server, inbound, profile, true
             ));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.

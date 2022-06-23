@@ -8,6 +8,8 @@
 package com.velocitypowered.api.proxy.crypto;
 
 import java.security.PublicKey;
+import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents session-server cross-signed dated RSA public key.
@@ -31,5 +33,15 @@ public interface IdentifiedKey extends KeySigned {
    * @return validity of the signature
    */
   boolean verifyDataSignature(byte[] signature, byte[]... toVerify);
+
+  /**
+   * Retrieves the signature holders UUID.
+   * Returns null for versions prior to 1.19.1 or before
+   * login has completed.
+   *
+   * @return the holder UUID
+   */
+  @Nullable
+  UUID getSignatureHolder();
 
 }

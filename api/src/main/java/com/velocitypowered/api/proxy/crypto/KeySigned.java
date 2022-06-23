@@ -56,6 +56,7 @@ public interface KeySigned {
    * signer public key. Note: This will **not** check for
    * expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
    * <p>DOES NOT WORK YET FOR MESSAGES AND COMMANDS!</p>
+   * Addendum: Does not work for 1.19.1 until the user has authenticated.
    *
    * @return validity of the signature
    */
