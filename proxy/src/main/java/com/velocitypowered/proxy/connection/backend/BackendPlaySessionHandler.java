@@ -30,6 +30,7 @@ import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import com.velocitypowered.api.proxy.server.MutableServerState;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -93,7 +94,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    serverConn.getServer().addPlayer(serverConn.getPlayer());
+    ((MutableServerState) serverConn.getServer().getState()).addPlayer(serverConn.getPlayer());
 
     if (server.getConfiguration().isBungeePluginChannelEnabled()) {
       MinecraftConnection serverMc = serverConn.ensureConnected();
@@ -308,7 +309,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    serverConn.getServer().removePlayer(serverConn.getPlayer());
+    ((MutableServerState) serverConn.getServer().getState()).removePlayer(serverConn.getPlayer());
     if (!serverConn.isGracefulDisconnect() && !exceptionTriggered) {
       if (server.getConfiguration().isFailoverOnUnexpectedServerDisconnect()) {
         serverConn.getPlayer().handleConnectionException(serverConn.getServer(),

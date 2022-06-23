@@ -184,7 +184,7 @@ public enum InformationUtils {
    */
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
-    info.addProperty("currentPlayers", server.getPlayersConnected().size());
+    info.addProperty("currentPlayers", server.getState().getPlayersConnected().size());
     InetSocketAddress iaddr = server.getServerInfo().getAddress();
     if (iaddr.isUnresolved()) {
       // Greetings form Netty 4aa10db9

@@ -78,7 +78,8 @@ public interface ProxyServer extends Audience {
    * case-insensitive.
    *
    * @param name the name of the server
-   * @return the registered server, which may be empty
+   * @return the registered server, which may be empty if the server doesn't exist or if it wasn't registered with
+   *         the proxy
    */
   Optional<RegisteredServer> getServer(String name);
 

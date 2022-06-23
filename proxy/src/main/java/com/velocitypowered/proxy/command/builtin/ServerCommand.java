@@ -110,7 +110,7 @@ public class ServerCommand implements SimpleCommand {
     ServerInfo serverInfo = server.getServerInfo();
     TextComponent serverTextComponent = Component.text(serverInfo.getName());
 
-    int connectedPlayers = server.getPlayersConnected().size();
+    int connectedPlayers = server.getState().getPlayersConnected().size();
     TranslatableComponent playersTextComponent;
     if (connectedPlayers == 1) {
       playersTextComponent = Component.translatable("velocity.command.server-tooltip-player-online");

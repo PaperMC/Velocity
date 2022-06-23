@@ -41,11 +41,9 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
-import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -58,8 +56,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
 
-  private final VelocityRegisteredServer registeredServer;
-  private final @Nullable VelocityRegisteredServer previousServer;
+  private final RegisteredServer registeredServer;
+  private final @Nullable RegisteredServer previousServer;
   private final ConnectedPlayer proxyPlayer;
   private final VelocityServer server;
   private @Nullable MinecraftConnection connection;
@@ -76,8 +74,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * @param proxyPlayer the player connecting to the server
    * @param server the Velocity proxy instance
    */
-  public VelocityServerConnection(VelocityRegisteredServer registeredServer,
-      @Nullable VelocityRegisteredServer previousServer,
+  public VelocityServerConnection(RegisteredServer registeredServer,
+      @Nullable RegisteredServer previousServer,
       ConnectedPlayer proxyPlayer, VelocityServer server) {
     this.registeredServer = registeredServer;
     this.previousServer = previousServer;
@@ -211,7 +209,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public VelocityRegisteredServer getServer() {
+  public RegisteredServer getServer() {
     return registeredServer;
   }
 

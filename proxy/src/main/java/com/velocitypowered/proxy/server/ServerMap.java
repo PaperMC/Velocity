@@ -62,7 +62,7 @@ public class ServerMap {
    * @return the {@link RegisteredServer} built from the {@link ServerInfo}
    */
   public RegisteredServer createRawRegisteredServer(ServerInfo serverInfo) {
-    return new VelocityRegisteredServer(server, serverInfo);
+    return new RegisteredServerImpl(server, serverInfo);
   }
 
   /**
