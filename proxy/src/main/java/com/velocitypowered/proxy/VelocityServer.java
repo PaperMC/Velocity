@@ -44,6 +44,7 @@ import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.event.VelocityEventManager;
@@ -142,6 +143,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
+  private ServerListPingHandler serverListPingHandler;
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -151,6 +153,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
+    serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
     this.bossBarManager = new AdventureBossBarManager();
   }
@@ -368,6 +371,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   public ChannelInitializer<Channel> getBackendChannelInitializer() {
     return this.cm.backendChannelInitializer.get();
+  }
+
+  public ServerListPingHandler getServerListPingHandler() {
+    return serverListPingHandler;
   }
 
   public boolean isShutdown() {

@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
@@ -33,7 +34,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class InitialInboundConnection implements InboundConnection,
+public final class InitialInboundConnection implements VelocityInboundConnection,
     MinecraftConnectionAssociation {
 
   private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
@@ -74,6 +75,7 @@ public final class InitialInboundConnection implements InboundConnection,
     return "[initial connection] " + connection.getRemoteAddress().toString();
   }
 
+  @Override
   public MinecraftConnection getConnection() {
     return connection;
   }
