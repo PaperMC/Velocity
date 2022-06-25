@@ -229,6 +229,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PlayerCommand packet) {
+    player.ensureAndGetCurrentServer();
     if (!validateChat(packet.getCommand())) {
       return true;
     }
@@ -246,6 +247,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PlayerChat packet) {
+    player.ensureAndGetCurrentServer();
     if (!validateChat(packet.getMessage())) {
       return true;
     }
@@ -270,6 +272,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyChat packet) {
+    player.ensureAndGetCurrentServer();
     String msg = packet.getMessage();
     if (!validateChat(msg)) {
       return true;
@@ -703,7 +706,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return CompletableFuture.completedFuture(null);
     }
 
-    MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
+    MinecraftConnection smc;
+    try {
+      smc = player.ensureAndGetCurrentServer().ensureConnected();
+    } catch (Exception ex) {
+      player.disconnect(Component.translatable("velocity.error.player-connection-error",
+          NamedTextColor.RED));
+      return CompletableFuture.completedFuture(null);
+    }
+
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
       ChatBuilder write = ChatBuilder
