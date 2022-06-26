@@ -27,6 +27,7 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
@@ -35,10 +36,13 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import io.netty.buffer.ByteBuf;
+
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -131,6 +135,37 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
       playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
     }
+
+    if (player.getIdentifiedKey() != null) {
+      IdentifiedKey playerKey = player.getIdentifiedKey();
+      // Ideally I would check here for revision 1, but if the server is in offline-mode
+      // I still want to give the profile request event to supply a correct UUID to verify
+      // this signature
+      if (playerKey.getSignatureHolder() == null) {
+        if (playerKey instanceof IdentifiedKeyImpl) {
+          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+
+          // This is a failsafe for the situation mentioned above
+          if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
+            if (configuration.isOnlineMode()) {
+              inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+              return;
+            } else {
+              logger.warn("Key for player " + player.getUsername() + " could not be verified. "
+                      + "Reason: Proxy is in offline mode and the correct UUID was not supplied.");
+            }
+          }
+        } else {
+          logger.warn("A custom key type has been set for player " + player.getUsername());
+        }
+      } else {
+        if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
+          logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
+                  + "Chat/Commands will not work correctly for this player!");
+        }
+      }
+    }
+
     ServerLoginSuccess success = new ServerLoginSuccess();
     success.setUsername(player.getUsername());
     success.setProperties(player.getGameProfileProperties());

@@ -557,11 +557,13 @@ public enum ProtocolUtils {
    * @param buf the buffer
    * @return the key
    */
-  public static IdentifiedKey readPlayerKey(ByteBuf buf) {
+  public static IdentifiedKey readPlayerKey(ProtocolVersion version, ByteBuf buf) {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    return new IdentifiedKeyImpl(key, expiry, signature);
+    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+            ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+    return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
   public enum Direction {

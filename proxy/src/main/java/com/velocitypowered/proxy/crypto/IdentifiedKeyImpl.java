@@ -34,21 +34,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class IdentifiedKeyImpl implements IdentifiedKey {
 
+  private final Revision revision;
   private final PublicKey publicKey;
   private final byte[] signature;
   private final Instant expiryTemporal;
   private @MonotonicNonNull Boolean isSignatureValid;
   private @MonotonicNonNull UUID holder;
 
-  public IdentifiedKeyImpl(byte[] keyBits, long expiry,
+  public IdentifiedKeyImpl(Revision revision, byte[] keyBits, long expiry,
                             byte[] signature) {
-    this(EncryptionUtils.parseRsaPublicKey(keyBits), Instant.ofEpochMilli(expiry), signature);
+    this(revision, EncryptionUtils.parseRsaPublicKey(keyBits), Instant.ofEpochMilli(expiry), signature);
   }
 
   /**
    * Creates an Identified key from data.
    */
-  public IdentifiedKeyImpl(PublicKey publicKey, Instant expiryTemporal, byte[] signature) {
+  public IdentifiedKeyImpl(Revision revision, PublicKey publicKey, Instant expiryTemporal, byte[] signature) {
+    this.revision = revision;
     this.publicKey = publicKey;
     this.expiryTemporal = expiryTemporal;
     this.signature = signature;
@@ -71,7 +73,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
 
   @Override
   public byte[] getSignature() {
-    return signature;
+    return signature.clone();
   }
 
   @Override
@@ -79,18 +81,29 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
     return holder;
   }
 
+  @Override
+  public Revision getKeyRevision() {
+    return revision;
+  }
+
   /**
-   * Validate a v2 signed key.
+   * Sets the uuid for this key.
+   * Returns false if incorrect.
    */
-  public boolean validateWithHolder(UUID holder) {
-    Preconditions.checkNotNull(holder);
-    if (validateData(holder)) {
-      this.holder = holder;
-      this.isSignatureValid = true;
-      return true;
-    } else {
+  public boolean internalAddHolder(UUID holder) {
+    if (holder == null) {
       return false;
     }
+    if (this.holder == null) {
+      Boolean result = validateData(holder);
+      if (result == null || !result) {
+        return false;
+      }
+      isSignatureValid = true;
+      this.holder = holder;
+      return true;
+    }
+    return this.holder.equals(holder) && isSignatureValid();
   }
 
   @Override
@@ -98,22 +111,25 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
     if (isSignatureValid == null) {
       isSignatureValid = validateData(holder);
     }
-    return isSignatureValid;
+    return isSignatureValid != null && isSignatureValid;
   }
 
-  private boolean validateData(@Nullable UUID uuid) {
-    if (uuid == null) {
+  private Boolean validateData(@Nullable UUID verify) {
+    if (revision == Revision.GENERIC_V1) {
       String pemKey = EncryptionUtils.pemEncodeRsaKey(publicKey);
       long expires = expiryTemporal.toEpochMilli();
       byte[] toVerify = ("" + expires + pemKey).getBytes(StandardCharsets.US_ASCII);
       return EncryptionUtils.verifySignature(
               EncryptionUtils.SHA1_WITH_RSA, EncryptionUtils.getYggdrasilSessionKey(), signature, toVerify);
     } else {
+      if (verify == null) {
+        return null;
+      }
       byte[] keyBytes = publicKey.getEncoded();
       byte[] toVerify = new byte[keyBytes.length + 24]; // length long * 3
       ByteBuffer fixedDataSet = ByteBuffer.wrap(toVerify).order(ByteOrder.BIG_ENDIAN);
-      fixedDataSet.putLong(uuid.getMostSignificantBits());
-      fixedDataSet.putLong(uuid.getLeastSignificantBits());
+      fixedDataSet.putLong(verify.getMostSignificantBits());
+      fixedDataSet.putLong(verify.getLeastSignificantBits());
       fixedDataSet.putLong(expiryTemporal.toEpochMilli());
       fixedDataSet.put(keyBytes);
       return EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA,
@@ -133,10 +149,12 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
   @Override
   public String toString() {
     return "IdentifiedKeyImpl{"
-        + "publicKey=" + publicKey
+        + "revision=" + revision
+        + ", publicKey=" + publicKey
         + ", signature=" + Arrays.toString(signature)
         + ", expiryTemporal=" + expiryTemporal
         + ", isSignatureValid=" + isSignatureValid
+        + ", holder=" + holder
         + '}';
   }
 

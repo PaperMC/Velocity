@@ -183,7 +183,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       int actualVersion;
       if (requestedVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
         if (player.getIdentifiedKey() != null) {
-          if (player.getIdentifiedKey().getSignatureHolder() != null) {
+          if (player.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2) {
             // You won't be able to validate this with the new old system, so remove key.
             actualVersion = requestedVersion < VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
                     ? VelocityConstants.MODERN_FORWARDING_DEFAULT : requestedVersion;

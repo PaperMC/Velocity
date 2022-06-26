@@ -40,6 +40,7 @@ public class ServerLogin implements MinecraftPacket {
 
   public ServerLogin(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");
+    this.playerKey = playerKey;
   }
 
   public String getUsername() {
@@ -74,7 +75,7 @@ public class ServerLogin implements MinecraftPacket {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       if (buf.readBoolean()) {
-        playerKey = ProtocolUtils.readPlayerKey(buf);
+        playerKey = ProtocolUtils.readPlayerKey(version, buf);
       }
     }
   }

@@ -90,7 +90,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.GENERIC_V1
               && !playerKey.isSignatureValid()) {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
@@ -218,13 +218,12 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           if (profileResponse.getStatusCode() == 200) {
             final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
             // Not so fast, now we verify the public key for 1.19.1+
-            if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0
-                    && inbound.getIdentifiedKey() != null) {
-              if (inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
-                IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
-                if (!key.validateWithHolder(profile.getId())) {
-                  inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
-                }
+            if (inbound.getIdentifiedKey() != null
+                    && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+                    && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+              if (!key.internalAddHolder(profile.getId())) {
+                inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
               }
             }
             // All went well, initialize the session.

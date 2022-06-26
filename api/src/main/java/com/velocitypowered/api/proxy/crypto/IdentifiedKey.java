@@ -8,7 +8,11 @@
 package com.velocitypowered.api.proxy.crypto;
 
 import java.security.PublicKey;
+import java.util.Set;
 import java.util.UUID;
+
+import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.network.ProtocolVersion;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -36,12 +40,36 @@ public interface IdentifiedKey extends KeySigned {
 
   /**
    * Retrieves the signature holders UUID.
-   * Returns null for versions prior to 1.19.1 or before
-   * login has completed.
+   * Returns null before the {@link com.velocitypowered.api.event.connection.LoginEvent}.
    *
-   * @return the holder UUID
+   * @return the holder UUID or null if not present
    */
   @Nullable
   UUID getSignatureHolder();
+
+  /**
+   * Retrieves the key revision.
+   *
+   * @return the key revision
+   */
+  Revision getKeyRevision();
+
+  enum Revision {
+    GENERIC_V1(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19)),
+    LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1));
+
+    final Set<Revision> backwardsCompatibleTo;
+    final Set<ProtocolVersion> applicableTo;
+    Revision(Set<Revision> backwardsCompatibleTo, Set<ProtocolVersion> applicableTo) {
+      this.backwardsCompatibleTo = backwardsCompatibleTo;
+      this.applicableTo = applicableTo;
+    }
+    public Set<Revision> getBackwardsCompatibleTo() {
+      return backwardsCompatibleTo;
+    }
+    public Set<ProtocolVersion> getApplicableTo() {
+      return applicableTo;
+    }
+  }
 
 }
