@@ -76,7 +76,7 @@ dependencies {
 
     implementation 'com.electronwill.night-config:toml:3.6.4'
 
-    implementation 'org.bstats:bstats-base:2.2.1'
+    implementation 'org.bstats:bstats-base:3.0.0'
     implementation 'org.lanternpowered:lmbda:2.0.0'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.0.3'
