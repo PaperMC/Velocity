@@ -141,6 +141,12 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# Should the proxy always verify the public key of a player regardless of
+# the online-mode setting? Only affects 1.19.1 or newer. Enabling this will ensure
+# that the proxy will always query the mojang api for the UUID of a player to verify
+# any provided public key.
+force-key-verification = true
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

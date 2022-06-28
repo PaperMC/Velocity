@@ -82,16 +82,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
 
-      int proposedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      int requestedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
       // Check version
       if (packet.content().readableBytes() == 1) {
-        int requested = packet.content().readByte();
-        Preconditions.checkArgument(requested >= VelocityConstants.MODERN_FORWARDING_DEFAULT,
-                "Invalid modern forwarding version");
-        proposedForwardingVersion = Math.min(requested, VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2);
+        requestedForwardingVersion = packet.content().readByte();
       }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), proposedForwardingVersion);
+          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), requestedForwardingVersion);
 
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
@@ -176,26 +173,30 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
   }
 
+  private static int findForwardingVersion(int requested, ConnectedPlayer player) {
+    // Ensure we are in range
+    requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
+    if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
+      if (player.getIdentifiedKey() != null) {
+        return switch (player.getIdentifiedKey().getKeyRevision()) {
+          case GENERIC_V1 -> requested;
+          // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
+          case LINKED_V2 -> requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+                  ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2 : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+          default -> VelocityConstants.MODERN_FORWARDING_DEFAULT;
+        };
+      } else {
+        return VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      }
+    }
+    return requested;
+  }
+
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
                                               ConnectedPlayer player, int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
-      int actualVersion;
-      if (requestedVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
-        if (player.getIdentifiedKey() != null) {
-          if (player.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2) {
-            // You won't be able to validate this with the new old system, so remove key.
-            actualVersion = requestedVersion < VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                    ? VelocityConstants.MODERN_FORWARDING_DEFAULT : requestedVersion;
-          } else {
-            actualVersion = VelocityConstants.MODERN_FORWARDING_WITH_KEY;
-          }
-        } else {
-          actualVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
-        }
-      } else {
-        actualVersion = requestedVersion;
-      }
+      int actualVersion = findForwardingVersion(requestedVersion, player);
 
       ProtocolUtils.writeVarInt(forwarded, actualVersion);
       ProtocolUtils.writeString(forwarded, address);
@@ -206,7 +207,23 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       // This serves as additional redundancy. The key normally is stored in the
       // login start to the server, but some setups require this.
       if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
-        ProtocolUtils.writePlayerKey(forwarded, player.getIdentifiedKey());
+        IdentifiedKey key = player.getIdentifiedKey();
+        assert key != null;
+        ProtocolUtils.writePlayerKey(forwarded, key);
+
+        // Provide the signer UUID since the UUID may differ from the
+        // assigned UUID. Doing that breaks the signatures anyway but the server
+        // should be able to verify the key independently.
+        if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2) {
+          if (key.getSignatureHolder() != null) {
+            forwarded.writeBoolean(true);
+            ProtocolUtils.writeUuid(forwarded, key.getSignatureHolder());
+          } else {
+            // Should only not be provided if the player was connected
+            // as offline-mode and the signer UUID was not backfilled
+            forwarded.writeBoolean(false);
+          }
+        }
       }
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
