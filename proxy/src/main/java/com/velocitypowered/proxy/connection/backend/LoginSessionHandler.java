@@ -178,13 +178,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
       if (player.getIdentifiedKey() != null) {
-        return switch (player.getIdentifiedKey().getKeyRevision()) {
-          case GENERIC_V1 -> requested;
+        // No enhanced switch on java 11
+        switch (player.getIdentifiedKey().getKeyRevision()) {
+          case GENERIC_V1:
+            return requested;
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
-          case LINKED_V2 -> requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+          case LINKED_V2:
+            return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
                   ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2 : VelocityConstants.MODERN_FORWARDING_DEFAULT;
-          default -> VelocityConstants.MODERN_FORWARDING_DEFAULT;
-        };
+          default:
+            return VelocityConstants.MODERN_FORWARDING_DEFAULT;
+        }
       } else {
         return VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }

@@ -41,7 +41,6 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import io.netty.buffer.ByteBuf;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;

@@ -7,12 +7,11 @@
 
 package com.velocitypowered.api.proxy.crypto;
 
+import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.network.ProtocolVersion;
 import java.security.PublicKey;
 import java.util.Set;
 import java.util.UUID;
-
-import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.network.ProtocolVersion;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

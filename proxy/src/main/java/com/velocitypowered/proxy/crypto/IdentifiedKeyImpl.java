@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.crypto;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -28,7 +27,6 @@ import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
-
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
