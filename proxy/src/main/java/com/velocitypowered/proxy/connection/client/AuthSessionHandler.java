@@ -151,7 +151,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
               return;
             } else {
               logger.warn("Key for player " + player.getUsername() + " could not be verified. "
-                      + "Reason: Proxy is in offline mode and the correct UUID was not supplied.");
+                      + "Enable force-key-verification to fix this.");
             }
           }
         } else {

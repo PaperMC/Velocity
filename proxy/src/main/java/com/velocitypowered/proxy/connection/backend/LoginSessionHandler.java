@@ -181,7 +181,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         // No enhanced switch on java 11
         switch (player.getIdentifiedKey().getKeyRevision()) {
           case GENERIC_V1:
-            return requested;
+            return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
           case LINKED_V2:
             return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
