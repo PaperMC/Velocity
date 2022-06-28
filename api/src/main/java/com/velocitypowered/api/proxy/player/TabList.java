@@ -49,7 +49,7 @@ public interface TabList {
    *
    * @param uuid of the entry
    * @return {@link Optional} containing the removed {@link TabListEntry} if present, otherwise
-   * {@link Optional#empty()}
+   *     {@link Optional#empty()}
    */
   Optional<TabListEntry> removeEntry(UUID uuid);
 
@@ -71,12 +71,12 @@ public interface TabList {
   /**
    * Builds a tab list entry.
    *
-   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    * @param profile profile
    * @param displayName display name
    * @param latency latency
    * @param gameMode game mode
    * @return entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
@@ -85,13 +85,13 @@ public interface TabList {
   /**
    * Builds a tab list entry.
    *
-   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    * @param profile profile
    * @param displayName display name
    * @param latency latency
    * @param gameMode game mode
    * @param key the player key
    * @return entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.   
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,

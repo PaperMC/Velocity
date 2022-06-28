@@ -60,13 +60,16 @@ public interface IdentifiedKey extends KeySigned {
 
     final Set<Revision> backwardsCompatibleTo;
     final Set<ProtocolVersion> applicableTo;
+    
     Revision(Set<Revision> backwardsCompatibleTo, Set<ProtocolVersion> applicableTo) {
       this.backwardsCompatibleTo = backwardsCompatibleTo;
       this.applicableTo = applicableTo;
     }
+    
     public Set<Revision> getBackwardsCompatibleTo() {
       return backwardsCompatibleTo;
     }
+    
     public Set<ProtocolVersion> getApplicableTo() {
       return applicableTo;
     }
