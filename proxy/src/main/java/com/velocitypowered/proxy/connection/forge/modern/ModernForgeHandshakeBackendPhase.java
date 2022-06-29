@@ -53,13 +53,10 @@ public enum ModernForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
     @Override
     void onTransitionToNewPhase(VelocityServerConnection connection) {
-      // We must always reset the handshake before a modded connection is established if
-      // we haven't done so already.
       MinecraftConnection mc = connection.getConnection();
       if (mc != null) {
         mc.setType(ConnectionTypes.MODERN_FORGE);
       }
-      connection.getPlayer().sendForgeHandshakeResetPacket();
     }
   },
 
