@@ -175,7 +175,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 logger.warn("A plugin changed a signed chat message. The server may not accept it.");
               }
               smc.write(ChatBuilder.builder(player.getProtocolVersion())
-                  .message(event.getMessage()).toServer());
+                  .message(eventMsg.get()).toServer());
             } else {
               smc.write(original);
             }
