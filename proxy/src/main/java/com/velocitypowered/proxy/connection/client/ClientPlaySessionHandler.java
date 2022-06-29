@@ -478,6 +478,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // entity IDs and send new dimension information.
       if (player.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
         this.doSafeClientServerSwitch(joinGame);
+      } else if (player.getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
+        player.getConnection().delayedWrite(joinGame);
       } else {
         this.doFastClientServerSwitch(joinGame);
       }
