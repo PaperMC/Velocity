@@ -96,10 +96,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         // Shut down the existing server connection.
         serverConn.getPlayer().setConnectedServer(null);
         existingConnection.disconnect();
-      } else {
-        serverConn.getPlayer().getPhase().resetConnectionPhase(serverConn.getPlayer());
       }
 
+      serverConn.getPlayer().sendForgeHandshakeResetPacket();
       serverConn.getPlayer().getConnection().setSessionHandler(
           new ClientTransitionSessionHandler(serverConn.getPlayer()));
     }

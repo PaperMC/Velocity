@@ -287,7 +287,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
           connection.setType(ConnectionTypes.VANILLA);
         }
         if (proxyPlayer.getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
-          connectionPhase = ModernForgeHandshakeBackendPhase.COMPLETE;
           proxyPlayer.setPhase(ModernForgeHandshakeClientPhase.COMPLETE);
         }
       }
