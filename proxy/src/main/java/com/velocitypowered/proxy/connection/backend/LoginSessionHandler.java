@@ -193,7 +193,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         return VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }
     }
-    return requested;
+    return VelocityConstants.MODERN_FORWARDING_DEFAULT;
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,

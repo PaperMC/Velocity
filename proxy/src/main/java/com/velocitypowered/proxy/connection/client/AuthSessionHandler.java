@@ -137,21 +137,16 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
     if (player.getIdentifiedKey() != null) {
       IdentifiedKey playerKey = player.getIdentifiedKey();
-      // Ideally I would check here for revision 1, but if the server is in offline-mode
-      // I still want to give the profile request event to supply a correct UUID to verify
-      // this signature
       if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl) {
-          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+        if (playerKey instanceof IdentifiedKeyImpl unlinkedKey) {
 
-          // This is a failsafe for the situation mentioned above
+          // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
               inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
-              logger.warn("Key for player " + player.getUsername() + " could not be verified. "
-                      + "Enable force-key-verification to fix this.");
+              logger.warn("Key for player " + player.getUsername() + " could not be verified!");
             }
           }
         } else {
@@ -160,7 +155,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
           logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-                  + "Chat/Commands will not work correctly for this player!");
+                  + "Chat/Commands signatures will not work correctly for this player!");
         }
       }
     }

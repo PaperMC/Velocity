@@ -28,15 +28,15 @@ public class SystemChat implements MinecraftPacket {
 
   public SystemChat() {}
 
-  public SystemChat(Component component, int type) {
+  public SystemChat(Component component, ChatBuilder.ChatType type) {
     this.component = component;
     this.type = type;
   }
 
   private Component component;
-  private int type;
+  private ChatBuilder.ChatType type;
 
-  public int getType() {
+  public ChatBuilder.ChatType getType() {
     return type;
   }
 
@@ -47,13 +47,27 @@ public class SystemChat implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
-    type = ProtocolUtils.readVarInt(buf);
+    // System chat is never decoded so this doesn't matter for now
+    type = ChatBuilder.ChatType.values()[ProtocolUtils.readVarInt(buf)];
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
-    ProtocolUtils.writeVarInt(buf, type);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      switch (type) {
+        case SYSTEM:
+          buf.writeBoolean(false);
+          break;
+        case GAME_INFO:
+          buf.writeBoolean(true);
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid chat type");
+      }
+    } else {
+      ProtocolUtils.writeVarInt(buf, type.getId());
+    }
   }
 
   @Override

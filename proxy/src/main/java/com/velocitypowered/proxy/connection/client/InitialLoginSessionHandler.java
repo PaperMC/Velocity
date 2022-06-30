@@ -69,9 +69,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       System.getProperty("mojang.sessionserver", "https://sessionserver.mojang.com/session/minecraft/hasJoined")
           .concat("?username=%s&serverId=%s");
 
-  private static final String MOJANG_API_URL =
-          System.getProperty("mojang.apiservices", "https://api.mojang.com");
-
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
   private final LoginInboundConnection inbound;
@@ -85,7 +82,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
-    this.forceKeyAuthentication = Boolean.getBoolean("auth.forceSecureProfiles");
+    this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
+            ? Boolean.getBoolean("auth.forceSecureProfiles") : server.getConfiguration().isForceKeyAuthentication();
   }
 
   @Override
@@ -99,8 +97,15 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.GENERIC_V1
-              && !playerKey.isSignatureValid()) {
+      boolean isKeyValid;
+      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+              && playerKey instanceof IdentifiedKeyImpl keyImpl) {
+        isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
+      } else {
+        isKeyValid = playerKey.isSignatureValid();
+      }
+
+      if (!isKeyValid) {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
       }
@@ -143,7 +148,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 mcConnection.write(request);
                 this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
               } else {
-                verifyOfflineConnection(playerKey);
+                mcConnection.setSessionHandler(new AuthSessionHandler(
+                        server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
+                ));
               }
             });
           });
@@ -291,57 +298,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
       mcConnection.close(true);
     }
-  }
-
-  private void verifyOfflineConnection(@Nullable IdentifiedKey playerKey) {
-    if (playerKey != null && playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-            && server.getConfiguration().isForceKeyVerification()) {
-      String url = String.format(MOJANG_API_URL.concat("/users/profiles/minecraft/%s"),
-              urlFormParameterEscaper().escape(login.getUsername()));
-
-      ListenableFuture<Response> uuidResponse = server.getAsyncHttpClient().prepareGet(url)
-              .execute();
-
-      uuidResponse.addListener(() -> {
-        if (mcConnection.isClosed()) {
-          return;
-        }
-
-
-        try {
-          Response apiResponse = uuidResponse.get();
-          if (apiResponse.getStatusCode() == 200) {
-            JsonObject jso = (JsonObject) JsonParser.parseString(apiResponse.getResponseBody());
-            UUID uuid = UuidUtils.fromUndashed(jso.get("id").getAsString());
-            String name = jso.get("name").getAsString();
-
-            IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
-            if (!key.internalAddHolder(uuid)) {
-              inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
-            } else {
-              // All went well, initialize the session.
-              acceptOfflinePlayer();
-            }
-          } else {
-            inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
-          }
-        } catch (ExecutionException e) {
-          logger.error("Unable to query UUID from Mojang", e);
-          inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
-        } catch (InterruptedException e) {
-          // not much we can do usefully
-          Thread.currentThread().interrupt();
-        }
-      }, mcConnection.eventLoop());
-    } else {
-      acceptOfflinePlayer();
-    }
-  }
-
-  private void acceptOfflinePlayer() {
-    mcConnection.setSessionHandler(new AuthSessionHandler(
-            server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
-    ));
   }
 
   private enum LoginState {

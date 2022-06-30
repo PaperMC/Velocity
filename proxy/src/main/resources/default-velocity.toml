@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.0"
+config-version = "2.5"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
@@ -140,12 +140,6 @@ log-command-executions = false
 # Enables logging of player connections when connecting to the proxy, switching servers
 # and disconnecting from the proxy.
 log-player-connections = true
-
-# Should the proxy always verify the public key of a player regardless of
-# the online-mode setting? Only affects 1.19.1 or newer. Enabling this will ensure
-# that the proxy will always query the mojang api for the UUID of a player to verify
-# any provided public key.
-force-key-verification = true
 
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
