@@ -40,6 +40,10 @@ import com.velocitypowered.proxy.util.InformationUtils;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -91,6 +95,7 @@ public class VelocityCommand implements SimpleCommand {
         .put("plugins", new Plugins(server))
         .put("reload", new Reload(server))
         .put("dump", new Dump(server))
+        .put("heap", new Heap())
         .build();
   }
 
@@ -472,5 +477,50 @@ public class VelocityCommand implements SimpleCommand {
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
     }
+  }
+
+  public static class Heap implements SubCommand {
+    private static final Logger logger = LogManager.getLogger(Heap.class);
+
+    @Override
+    public void execute(CommandSource source, String @NonNull [] args) {
+      try {
+        Path dir = Path.of("./dumps");
+        if (Files.notExists(dir)) {
+          Files.createDirectories(dir);
+        }
+
+        javax.management.MBeanServer server = java.lang.management.ManagementFactory.getPlatformMBeanServer();
+        Path file;
+        String name = "heap-dump-" + DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(LocalDateTime.now());
+
+        try {
+          Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
+          Object openj9Mbean = java.lang.management.ManagementFactory.newPlatformMXBeanProxy(
+              server, "openj9.lang.management:type=OpenJ9Diagnostics", clazz);
+          java.lang.reflect.Method m = clazz.getMethod("triggerDumpToFile", String.class, String.class);
+          file = dir.resolve(name + ".phd");
+          m.invoke(openj9Mbean, "heap", file.toString());
+        } catch (ClassNotFoundException e) {
+          Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
+          Object hotspotMBean = java.lang.management.ManagementFactory.newPlatformMXBeanProxy(
+              server, "com.sun.management:type=HotSpotDiagnostic", clazz);
+          java.lang.reflect.Method m = clazz.getMethod("dumpHeap", String.class, boolean.class);
+          file = dir.resolve(name + ".hprof");
+          m.invoke(hotspotMBean, file.toString(), true);
+        }
+
+        source.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+      } catch (Throwable t) {
+        source.sendMessage(Component.text("Failed to write heap dump, see server log for details", NamedTextColor.RED));
+        logger.error("Could not write heap", t);
+      } 
+    }
+
+    @Override
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+      return source.getPermissionValue("velocity.command.heap") == Tristate.TRUE;
+    }
+
   }
 }
