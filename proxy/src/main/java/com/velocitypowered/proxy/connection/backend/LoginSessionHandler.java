@@ -17,7 +17,10 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -47,6 +50,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -76,9 +80,19 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+
+      int proposedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      // Check version
+      if (packet.content().readableBytes() == 1) {
+        int requested = packet.content().readByte();
+        Preconditions.checkArgument(requested >= VelocityConstants.MODERN_FORWARDING_DEFAULT,
+                "Invalid modern forwarding version");
+        proposedForwardingVersion = Math.min(requested, VelocityConstants.MODERN_FORWARDING_WITH_KEY);
+      }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(),
-          serverConn.getPlayer().getGameProfile());
+          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer().getGameProfile(),
+          serverConn.getPlayer().getIdentifiedKey(), proposedForwardingVersion);
+
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
@@ -163,14 +177,24 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      GameProfile profile) {
+                                              GameProfile profile, @Nullable IdentifiedKey playerKey,
+                                              int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
-      ProtocolUtils.writeVarInt(forwarded, VelocityConstants.FORWARDING_VERSION);
+      int actualVersion = requestedVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY
+              ? (playerKey != null ? requestedVersion : VelocityConstants.MODERN_FORWARDING_DEFAULT) : requestedVersion;
+
+      ProtocolUtils.writeVarInt(forwarded, actualVersion);
       ProtocolUtils.writeString(forwarded, address);
       ProtocolUtils.writeUuid(forwarded, profile.getId());
       ProtocolUtils.writeString(forwarded, profile.getName());
       ProtocolUtils.writeProperties(forwarded, profile.getProperties());
+
+      // This serves as additional redundancy. The key normally is stored in the
+      // login start to the server, but some setups require this.
+      if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
+        ProtocolUtils.writePlayerKey(forwarded, playerKey);
+      }
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");

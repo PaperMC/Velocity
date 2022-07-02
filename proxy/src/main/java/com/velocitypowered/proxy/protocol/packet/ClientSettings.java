@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
@@ -189,5 +190,39 @@ public class ClientSettings implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    final ClientSettings that = (ClientSettings) o;
+    return viewDistance == that.viewDistance
+        && chatVisibility == that.chatVisibility
+        && chatColors == that.chatColors
+        && difficulty == that.difficulty
+        && skinParts == that.skinParts
+        && mainHand == that.mainHand
+        && chatFilteringEnabled == that.chatFilteringEnabled
+        && clientListingAllowed == that.clientListingAllowed
+        && Objects.equals(locale, that.locale);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        locale,
+        viewDistance,
+        chatVisibility,
+        chatColors,
+        difficulty,
+        skinParts,
+        mainHand,
+        chatFilteringEnabled,
+        clientListingAllowed);
   }
 }

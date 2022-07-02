@@ -19,6 +19,8 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
@@ -32,9 +34,10 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import space.vectrix.flare.fastutil.Int2ObjectSyncMap;
 
-public class LoginInboundConnection implements LoginPhaseConnection {
+public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifiable {
 
   private static final AtomicIntegerFieldUpdater<LoginInboundConnection> SEQUENCE_UPDATER =
       AtomicIntegerFieldUpdater.newUpdater(LoginInboundConnection.class, "sequenceCounter");
@@ -45,6 +48,7 @@ public class LoginInboundConnection implements LoginPhaseConnection {
   private final Queue<LoginPluginMessage> loginMessagesToSend;
   private volatile Runnable onAllMessagesHandled;
   private volatile boolean loginEventFired;
+  private @MonotonicNonNull IdentifiedKey playerKey;
 
   LoginInboundConnection(
       InitialInboundConnection delegate) {
@@ -148,5 +152,14 @@ public class LoginInboundConnection implements LoginPhaseConnection {
 
   MinecraftConnection delegatedConnection() {
     return delegate.getConnection();
+  }
+
+  public void setPlayerKey(IdentifiedKey playerKey) {
+    this.playerKey = playerKey;
+  }
+
+  @Override
+  public IdentifiedKey getIdentifiedKey() {
+    return playerKey;
   }
 }

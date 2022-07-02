@@ -7,6 +7,9 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public final class SkinParts {
 
   private final byte bitmask;
@@ -41,5 +44,22 @@ public final class SkinParts {
 
   public boolean hasHat() {
     return ((bitmask >> 6) & 1) == 1;
+  }
+
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    final SkinParts skinParts = (SkinParts) o;
+    return bitmask == skinParts.bitmask;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(bitmask);
   }
 }
