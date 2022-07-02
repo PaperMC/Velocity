@@ -29,6 +29,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -62,7 +63,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyPing packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
-    StatusSessionHandler handler = new StatusSessionHandler(server, connection,
+    StatusSessionHandler handler = new StatusSessionHandler(server,
         new LegacyInboundConnection(connection, packet));
     connection.setSessionHandler(handler);
     handler.handle(packet);
@@ -93,7 +94,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
       switch (nextState) {
         case STATUS:
-          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+          connection.setSessionHandler(new StatusSessionHandler(server, ic));
           break;
         case LOGIN:
           this.handleLogin(handshake, ic);
@@ -199,7 +200,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     connection.close(true);
   }
 
-  private static class LegacyInboundConnection implements InboundConnection {
+  private static class LegacyInboundConnection implements VelocityInboundConnection {
 
     private final MinecraftConnection connection;
     private final LegacyPing ping;
@@ -233,6 +234,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     @Override
     public String toString() {
       return "[legacy connection] " + this.getRemoteAddress().toString();
+    }
+
+    @Override
+    public MinecraftConnection getConnection() {
+      return connection;
     }
   }
 }

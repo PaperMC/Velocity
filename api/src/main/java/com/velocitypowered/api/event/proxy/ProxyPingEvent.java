@@ -13,10 +13,11 @@ import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
 
 /**
- * This event is fired when a server list ping request is sent by a remote client. Velocity will
+ * This event is fired when a request for server information is sent by a remote client, or when the
+ * server sends the MOTD and favicon to the client after a successful login. Velocity will
  * wait on this event to finish firing before delivering the results to the remote client, but
- * you are urged to be as parsimonious as possible when handling this event due to the amount of
- * ping packets a client can send.
+ * you are urged to handle this event as quickly as possible when handling this event due to the
+ * amount of ping packets a client can send.
  */
 @AwaitingEvent
 public final class ProxyPingEvent {

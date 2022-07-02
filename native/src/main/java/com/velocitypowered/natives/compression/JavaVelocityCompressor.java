@@ -20,7 +20,6 @@ package com.velocitypowered.natives.compression;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFER_SIZE;
-import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;

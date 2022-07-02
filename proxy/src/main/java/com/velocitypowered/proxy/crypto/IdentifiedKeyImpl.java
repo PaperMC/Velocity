@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.crypto;
 
+import com.google.common.base.Objects;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
@@ -94,5 +95,21 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
         + ", expiryTemporal=" + expiryTemporal
         + ", isSignatureValid=" + isSignatureValid
         + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof IdentifiedKey)) {
+      return false;
+    }
+    IdentifiedKey that = (IdentifiedKey) o; // This cannot be simplified because checkstyle doesn't like it.
+
+    return Objects.equal(this.getSignedPublicKey(), that.getSignedPublicKey())
+            && Objects.equal(this.getExpiryTemporal(), that.getExpiryTemporal())
+            && Arrays.equals(this.getSignature(), that.getSignature())
+            && Objects.equal(this.getSigner(), that.getSigner());
   }
 }

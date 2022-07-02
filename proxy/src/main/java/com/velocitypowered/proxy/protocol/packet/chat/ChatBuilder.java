@@ -132,7 +132,8 @@ public class ChatBuilder {
     Component msg = component == null ? Component.text(message) : component;
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      return new SystemChat(msg, type.getId());
+      // hard override chat > system for now
+      return new SystemChat(msg, type == ChatType.CHAT ? ChatType.SYSTEM.getId() : type.getId());
     } else {
       return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
     }

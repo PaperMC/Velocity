@@ -88,7 +88,7 @@ public class PlayerChat implements MinecraftPacket {
       salt = Longs.toByteArray(saltLong);
       signature = signatureBytes;
       expiry = Instant.ofEpochMilli(expiresAt);
-    } else if (saltLong == 0L && signature.length == 0) {
+    } else if (saltLong == 0L && signatureBytes.length == 0) {
       unsigned = true;
     } else {
       throw EncryptionUtils.INVALID_SIGNATURE;

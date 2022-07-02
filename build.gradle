@@ -53,7 +53,7 @@ allprojects {
 
     test {
         reports {
-            junitXml.enabled = true
+            junitXml.required = true
         }
     }
 }
