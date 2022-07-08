@@ -428,7 +428,6 @@ public class VelocityConfiguration implements ProxyConfig {
       Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
     }
 
-    boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
         .defaultData(defaultConfigLocation)
         .autosave()
@@ -456,57 +455,52 @@ public class VelocityConfiguration implements ProxyConfig {
       configVersion = 1.0;
     }
 
-    // Whether or not this config version is older than 2.0 which uses the deprecated "forwarding-secret" parameter
-    boolean legacyConfig = configVersion < 2.0;
-
-    String forwardingSecretString;
-    byte[] forwardingSecret;
+    String forwardingSecretString = null;
 
     // Handle the previous (version 1.0) config
-    // There is duplicate/old code here in effort to make the future commit which abandons legacy config handling
-    // easier to implement. All that would be required is removing the if statement here and keeping the contents
-    // of the else block (with slight tidying).
-    if (legacyConfig) {
-      logger.warn("You are currently using a deprecated configuration version. The \"forwarding-secret\""
-          + " parameter has been recognized as a security concern and has been removed in config version 2.0."
-          + " It's recommended you rename your current \"velocity.toml\" to something else to allow Velocity"
-          + " to generate a config file of the new version. You may then configure that file as you normally would."
-          + " The only differences are the config-version and \"forwarding-secret\" has been replaced"
-          + " by \"forwarding-secret-file\".");
-
+    if (configVersion < 2.0) {
       // Default legacy handling
       forwardingSecretString = System.getenv()
           .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
       if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
         forwardingSecretString = generateRandomString(12);
-        config.set("forwarding-secret", forwardingSecretString);
-        mustResave = true;
       }
-    } else {
-      // New handling
-      forwardingSecretString = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
-      if (forwardingSecretString.isEmpty()) {
-        String forwardSecretFile = config.get("forwarding-secret-file");
-        Path secretPath = forwardSecretFile == null
-            ? defaultForwardingSecretPath
-            : Path.of(forwardSecretFile);
-        if (Files.exists(secretPath)) {
-          if (Files.isRegularFile(secretPath)) {
-            forwardingSecretString = String.join("", Files.readAllLines(secretPath));
-          } else {
-            throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
-          }
-        } else {
-          throw new RuntimeException("The forwarding-secret-file does not exists.");
-        }
-      }
-    }
-    forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
-
-    // Handle any cases where the config needs to be saved again
-    if (mustResave) {
+      Files.writeString(defaultForwardingSecretPath, forwardingSecretString);
+      // Configuration was migrated to 2.0
+      config.set("config-version", 2.0);
+      // Remove old forwarding secret option
+      config.removeComment("forwarding-secret");
+      config.remove("forwarding-secret");
+      // Implement actual forwarding-secret-file option
+      config.set("forwarding-secret-file", "forwarding-secret");
+      config.setComment("forwarding-secret-file",
+          "If you are using modern or BungeeGuard IP forwarding, configure a file that contains a unique secret here.\n"
+          + "The file is expected to be UTF-8 encoded and not empty.");
+      // Save configuration
       config.save();
+      logger.info("Migrated forwarding-secret to his own file");
     }
+
+    forwardingSecretString = forwardingSecretString == null
+      ? System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "")
+      : forwardingSecretString;
+    if (forwardingSecretString.isEmpty()) {
+      String forwardSecretFile = config.get("forwarding-secret-file");
+      Path secretPath = forwardSecretFile == null
+          ? defaultForwardingSecretPath
+          : Path.of(forwardSecretFile);
+      if (Files.exists(secretPath)) {
+        if (Files.isRegularFile(secretPath)) {
+          forwardingSecretString = String.join("", Files.readAllLines(secretPath));
+        } else {
+          throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
+        }
+      } else {
+        throw new RuntimeException("The forwarding-secret-file does not exists.");
+      }
+    }
+
+    byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
     // Read the rest of the config
     CommentedConfig serversConfig = config.get("servers");
