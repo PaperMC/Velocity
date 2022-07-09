@@ -467,18 +467,21 @@ public class VelocityConfiguration implements ProxyConfig {
       }
       Files.writeString(defaultForwardingSecretPath, forwardingSecretString);
       // Configuration was migrated to 2.0
-      config.set("config-version", 2.0);
+      config.set("config-version", "2.0");
       // Remove old forwarding secret option
       config.removeComment("forwarding-secret");
       config.remove("forwarding-secret");
       // Implement actual forwarding-secret-file option
-      config.set("forwarding-secret-file", "forwarding-secret");
+      config.set("forwarding-secret-file", "forwarding.secret");
       config.setComment("forwarding-secret-file",
           "If you are using modern or BungeeGuard IP forwarding, configure a file that contains a unique secret here.\n"
           + "The file is expected to be UTF-8 encoded and not empty.");
       // Save configuration
       config.save();
-      logger.info("Migrated forwarding-secret to his own file");
+      logger.info("Migrated the forwarding-secret configuration option to its own file for security reasons."
+          + " You can configure the custom file where you will put your forwarding-secret "
+          + "in the new configuration option \"forwarding-secret-file\"");
+      configVersion = 2.0;
     }
 
     forwardingSecretString = forwardingSecretString == null
