@@ -496,8 +496,6 @@ public class VelocityConfiguration implements ProxyConfig {
           } else {
             throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
           }
-        } else {
-          throw new RuntimeException("The forwarding-secret-file does not exists.");
         }
       }
     }
@@ -535,7 +533,7 @@ public class VelocityConfiguration implements ProxyConfig {
     if (forwardingSecret.length == 0
         && (forwardingMode == PlayerInfoForwarding.MODERN
         || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
-      throw new RuntimeException("The forwarding-secret file must not be empty.");
+      throw new RuntimeException("The forwarding-secret file must exist and must not be empty.");
     }
 
     return new VelocityConfiguration(
