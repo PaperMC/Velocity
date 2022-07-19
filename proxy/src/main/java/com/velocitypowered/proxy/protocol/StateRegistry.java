@@ -312,7 +312,7 @@ public enum StateRegistry {
       clientbound.register(SystemChat.class, SystemChat::new,
           map(0x5F, MINECRAFT_1_19, true));
       clientbound.register(ServerData.class, ServerData::new,
-          map(0x3F, MINECRAFT_1_19, true));
+          map(0x3F, MINECRAFT_1_19, false));
     }
   },
   LOGIN {
