@@ -99,7 +99,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
   private @Nullable Instant lastChatMessage; // Added in 1.19
-  private final ChatQueue chatQueue;
 
   /**
    * Constructs a client play session handler.
@@ -110,7 +109,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
-    this.chatQueue = new ChatQueue(player);
   }
 
   // I will not allow hacks to bypass this;
@@ -143,7 +141,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
                                      MinecraftPacket original, Instant passedTimestamp) {
-    this.chatQueue.queuePacket(server.getCommandManager().callCommandEvent(player, message)
+    this.player.getChatQueue().queuePacket(server.getCommandManager().callCommandEvent(player, message)
         .thenComposeAsync(event -> processCommandExecuteResult(message,
             event.getResult(), signedCommand, passedTimestamp))
         .whenComplete((ignored, throwable) -> {
@@ -169,15 +167,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     if (signedMessage == null) {
       PlayerChatEvent event = new PlayerChatEvent(player, message);
-      callChat(original, event).thenAccept(smc::write);
+      callChat(original, event, null).thenAccept(smc::write);
     } else {
       Instant messageTimestamp = signedMessage.getExpiryTemporal();
       PlayerChatEvent event = new PlayerChatEvent(player, message);
-      this.chatQueue.queuePacket(callChat(original, event), messageTimestamp);
+      this.player.getChatQueue().queuePacket(callChat(original, event, signedMessage), messageTimestamp);
     }
   }
 
-  private CompletableFuture<MinecraftPacket> callChat(MinecraftPacket original, PlayerChatEvent event) {
+  private CompletableFuture<MinecraftPacket> callChat(MinecraftPacket original, PlayerChatEvent event,
+                                                      @Nullable SignedChatMessage signedChat) {
     return server.getEventManager().fire(event)
         .thenApply(pme -> {
           PlayerChatEvent.ChatResult chatResult = pme.getResult();
@@ -193,6 +192,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             } else {
               return original;
             }
+          } else if (signedChat != null) {
+            ByteBuf bufMessage = Unpooled.buffer(signedChat.getSignature().length);
+            bufMessage.writeBytes(signedChat.getSignature());
+            return new PluginMessage("velocity:cancel_chat_header", bufMessage);
           }
           return null;
         })
@@ -376,17 +379,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             byte[] copy = ByteBufUtil.getBytes(packet.content());
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-              if (pme.getResult().isAllowed()) {
-                PluginMessage message = new PluginMessage(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
-                if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
-                  // We're still processing the connection (see above), enqueue the packet for now.
-                  loginPluginMessages.add(message.retain());
-                } else {
-                  backendConn.write(message);
-                }
-              }
-            }, backendConn.eventLoop())
+                  if (pme.getResult().isAllowed()) {
+                    PluginMessage message = new PluginMessage(packet.getChannel(),
+                        Unpooled.wrappedBuffer(copy));
+                    if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+                      // We're still processing the connection (see above), enqueue the packet for now.
+                      loginPluginMessages.add(message.retain());
+                    } else {
+                      backendConn.write(message);
+                    }
+                  }
+                }, backendConn.eventLoop())
                 .exceptionally((ex) -> {
                   logger.error("Exception while handling plugin message packet for {}",
                       player, ex);

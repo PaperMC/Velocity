@@ -66,6 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -155,19 +156,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
   private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
-          .withDynamic(Identity.UUID, this::getUniqueId)
-          .withDynamic(Identity.NAME, this::getUsername)
-          .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
-          .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
-          .withStatic(PermissionChecker.POINTER, getPermissionChecker())
-          .withStatic(FacetPointers.TYPE, Type.PLAYER)
-          .build();
+      .withDynamic(Identity.UUID, this::getUniqueId)
+      .withDynamic(Identity.NAME, this::getUsername)
+      .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
+      .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
+      .withStatic(PermissionChecker.POINTER, getPermissionChecker())
+      .withStatic(FacetPointers.TYPE, Type.PLAYER)
+      .build();
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
+  private ChatQueue chatQueue;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
-      @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
+                  @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
     this.server = server;
     this.profile = profile;
     this.connection = connection;
@@ -183,6 +185,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       this.tabList = new VelocityTabListLegacy(this, server);
     }
     this.playerKey = playerKey;
+    this.chatQueue = new ChatQueue(this);
+  }
+
+  ChatQueue getChatQueue() {
+    return chatQueue;
   }
 
   @Override
@@ -220,6 +227,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   /**
    * Makes sure the player is connected to a server and returns the server they are connected to.
+   *
    * @return the server the player is connected to
    */
   public VelocityServerConnection ensureAndGetCurrentServer() {
@@ -320,21 +328,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component translated = translateMessage(message);
 
     connection.write(ChatBuilder.builder(this.getProtocolVersion())
-            .component(translated).forIdentity(identity).toClient());
+        .component(translated).forIdentity(identity).toClient());
   }
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
-      @NonNull MessageType type) {
+                          @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
     Component translated = translateMessage(message);
 
     connection.write(ChatBuilder.builder(this.getProtocolVersion())
-            .component(translated).forIdentity(identity)
-            .setType(type == MessageType.CHAT ? ChatBuilder.ChatType.CHAT : ChatBuilder.ChatType.SYSTEM)
-            .toClient());
+        .component(translated).forIdentity(identity)
+        .setType(type == MessageType.CHAT ? ChatBuilder.ChatType.CHAT : ChatBuilder.ChatType.SYSTEM)
+        .toClient());
   }
 
   @Override
@@ -345,7 +353,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // Use the title packet instead.
       GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
+          GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
       pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
           .serialize(translated));
       connection.write(pkt);
@@ -465,7 +473,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void clearTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       connection.write(GenericTitlePacket.constructTitlePacket(
-              GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
+          GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
   }
 
@@ -473,7 +481,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void resetTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       connection.write(GenericTitlePacket.constructTitlePacket(
-                      GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
+          GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
   }
 
@@ -497,7 +505,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private ConnectionRequestBuilder createConnectionRequest(RegisteredServer server,
-      @Nullable VelocityServerConnection previousConnection) {
+                                                           @Nullable VelocityServerConnection previousConnection) {
     return new ConnectionRequestBuilderImpl(server, previousConnection);
   }
 
@@ -532,7 +540,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   /**
    * Disconnects the player from the proxy.
-   * @param reason the reason for disconnecting the player
+   *
+   * @param reason      the reason for disconnecting the player
    * @param duringLogin whether the disconnect happened during login
    */
   public void disconnect0(Component reason, boolean duringLogin) {
@@ -559,12 +568,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   /**
    * Handles unexpected disconnects.
-   * @param server the server we disconnected from
+   *
+   * @param server    the server we disconnected from
    * @param throwable the exception
-   * @param safe whether or not we can safely reconnect to a new server
+   * @param safe      whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Throwable throwable,
-      boolean safe) {
+                                        boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -597,12 +607,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   /**
    * Handles unexpected disconnects.
-   * @param server the server we disconnected from
+   *
+   * @param server     the server we disconnected from
    * @param disconnect the disconnect packet
-   * @param safe whether or not we can safely reconnect to a new server
+   * @param safe       whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Disconnect disconnect,
-      boolean safe) {
+                                        boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -628,7 +639,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private void handleConnectionException(RegisteredServer rs,
-      @Nullable Component kickReason, Component friendlyReason, boolean safe) {
+                                         @Nullable Component kickReason, Component friendlyReason, boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -661,7 +672,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
-      boolean kickedFromCurrent) {
+                               boolean kickedFromCurrent) {
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {
           // There can't be any connection in flight now.
@@ -696,7 +707,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                     // Impossible/nonsensical cases
                     case ALREADY_CONNECTED:
                     case CONNECTION_IN_PROGRESS:
-                    // Fatal case
+                      // Fatal case
                     case CONNECTION_CANCELLED:
                       Component fallbackMsg = res.getMessageComponent();
                       if (fallbackMsg == null) {
@@ -753,7 +764,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * server.
    *
    * @param current the "current" server that the player is on, useful as an override
-   *
    * @return the next server to try
    */
   private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
@@ -897,8 +907,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Preconditions.checkArgument(input.length() <= LegacyChat.MAX_SERVERBOUND_MESSAGE_LENGTH,
         "input cannot be greater than " + LegacyChat.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
-    ensureBackendConnection().write(ChatBuilder.builder(getProtocolVersion())
-            .asPlayer(this).message(input).toServer());
+    if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      this.chatQueue.hijack(ChatBuilder.builder(getProtocolVersion()).asPlayer(this).message(input),
+          (instant, item) -> {
+            item.timestamp(instant);
+            return item.toServer();
+          });
+    } else {
+      ensureBackendConnection().write(ChatBuilder.builder(getProtocolVersion())
+          .asPlayer(this).message(input).toServer());
+    }
   }
 
   @Override
@@ -943,7 +961,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         while (!outstandingResourcePacks.isEmpty()) {
           queued = outstandingResourcePacks.peek();
           if (queued.getShouldForce() && getProtocolVersion()
-                  .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+              .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
             break;
           }
           onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
@@ -985,19 +1003,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
     final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
     final ResourcePackInfo queued = peek
-            ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
+        ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
     server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
-            .thenAcceptAsync(event -> {
-              if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
-                      && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
-                      && (!event.isOverwriteKick() || event.getPlayer()
-                              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
-              ) {
-                event.getPlayer().disconnect(Component
-                        .translatable("multiplayer.requiredTexturePrompt.disconnect"));
-              }
-            });
+        .thenAcceptAsync(event -> {
+          if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
+              && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
+              && (!event.isOverwriteKick() || event.getPlayer()
+              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
+          ) {
+            event.getPlayer().disconnect(Component
+                .translatable("multiplayer.requiredTexturePrompt.disconnect"));
+          }
+        });
 
     switch (status) {
       case ACCEPTED:
@@ -1023,7 +1041,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     return queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+        && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
   }
 
   /**
@@ -1061,6 +1079,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   /**
    * Return all the plugin message channels "known" to the client.
+   *
    * @return the channels
    */
   public Collection<String> getKnownChannels() {
@@ -1085,7 +1104,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     private final @Nullable VelocityRegisteredServer previousServer;
 
     ConnectionRequestBuilderImpl(RegisteredServer toConnect,
-        @Nullable VelocityServerConnection previousConnection) {
+                                 @Nullable VelocityServerConnection previousConnection) {
       this.toConnect = Preconditions.checkNotNull(toConnect, "info");
       this.previousServer = previousConnection == null ? null : previousConnection.getServer();
     }
@@ -1103,7 +1122,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
       if (connectedServer != null
-              && connectedServer.getServer().getServerInfo().equals(server.getServerInfo())) {
+          && connectedServer.getServer().getServerInfo().equals(server.getServerInfo())) {
         return Optional.of(ALREADY_CONNECTED);
       }
       return Optional.empty();
