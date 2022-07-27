@@ -138,8 +138,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     if (player.getIdentifiedKey() != null) {
       IdentifiedKey playerKey = player.getIdentifiedKey();
       if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl unlinkedKey) {
-
+        if (playerKey instanceof IdentifiedKeyImpl) {
+          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
           // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {

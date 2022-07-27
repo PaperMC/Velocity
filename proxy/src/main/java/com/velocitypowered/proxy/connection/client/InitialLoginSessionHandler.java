@@ -99,7 +99,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-              && playerKey instanceof IdentifiedKeyImpl keyImpl) {
+              && playerKey instanceof IdentifiedKeyImpl) {
+        IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
       } else {
         isKeyValid = playerKey.isSignatureValid();

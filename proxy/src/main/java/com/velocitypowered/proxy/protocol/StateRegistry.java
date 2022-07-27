@@ -30,6 +30,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_17;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_18;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_18_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19_1;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -66,6 +67,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -310,6 +312,8 @@ public enum StateRegistry {
           map(0x34, MINECRAFT_1_19, false));
       clientbound.register(SystemChat.class, SystemChat::new,
           map(0x5F, MINECRAFT_1_19, true));
+      clientbound.register(PlayerChatCompletion.class, PlayerChatCompletion::new,
+          StateRegistry.map(0x15, MINECRAFT_1_19_1, true));
     }
   },
   LOGIN {
