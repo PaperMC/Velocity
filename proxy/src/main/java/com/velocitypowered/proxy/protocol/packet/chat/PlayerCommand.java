@@ -17,12 +17,16 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
+import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.INVALID_PREVIOUS_MESSAGES;
+import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -30,6 +34,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,6 +51,7 @@ public class PlayerCommand implements MinecraftPacket {
   private Instant timestamp;
   private long salt;
   private boolean signedPreview; // Good god. Please no.
+  private SignaturePair[] previousMessages = new SignaturePair[0];
   private Map<String, byte[]> arguments = ImmutableMap.of();
 
   public boolean isSignedPreview() {
@@ -124,6 +130,20 @@ public class PlayerCommand implements MinecraftPacket {
     if (unsigned && signedPreview) {
       throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
+
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      int size = ProtocolUtils.readVarInt(buf);
+      if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
+        throw INVALID_PREVIOUS_MESSAGES;
+      }
+
+      SignaturePair[] lastSignatures = new SignaturePair[size];
+      for (int i = 0; i < size; i++) {
+        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+      }
+      previousMessages = lastSignatures;
+    }
+
   }
 
   @Override
@@ -146,6 +166,14 @@ public class PlayerCommand implements MinecraftPacket {
 
     buf.writeBoolean(signedPreview);
 
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      ProtocolUtils.writeVarInt(buf, previousMessages.length);
+      for (SignaturePair previousMessage : previousMessages) {
+        ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
+        ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
+      }
+    }
+
   }
 
   /**
@@ -167,7 +195,20 @@ public class PlayerCommand implements MinecraftPacket {
     }
 
     return new SignedChatCommand(command, signer.getSignedPublicKey(), sender, timestamp,
-        arguments, Longs.toByteArray(salt), signedPreview);
+        arguments, Longs.toByteArray(salt), signedPreview, previousMessages);
+  }
+
+  @Override
+  public String toString() {
+    return "PlayerCommand{"
+            + "unsigned=" + unsigned
+            + ", command='" + command + '\''
+            + ", timestamp=" + timestamp
+            + ", salt=" + salt
+            + ", signedPreview=" + signedPreview
+            + ", previousMessages=" + Arrays.toString(previousMessages)
+            + ", arguments=" + arguments
+            + '}';
   }
 
   @Override

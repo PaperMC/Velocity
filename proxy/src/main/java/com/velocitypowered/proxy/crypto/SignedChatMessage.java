@@ -18,17 +18,13 @@
 package com.velocitypowered.proxy.crypto;
 
 import com.google.common.base.Preconditions;
-import com.google.common.primitives.Longs;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.UUID;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SignedChatMessage implements SignedMessage {
@@ -45,13 +41,15 @@ public class SignedChatMessage implements SignedMessage {
   private final byte[] salt;
   private final UUID sender;
   //private final boolean isValid;
+  private final SignaturePair[] previousSignatures;
   private final boolean isPreviewSigned;
 
   /**
    * Create a signed message from data.
    */
   public SignedChatMessage(String message, PublicKey signer, UUID sender,
-                           Instant expiry, byte[] signature, byte[] salt, boolean isPreviewSigned) {
+                           Instant expiry, byte[] signature, byte[] salt,
+                           boolean isPreviewSigned, @Nullable SignaturePair[] previousSignatures) {
     this.message = Preconditions.checkNotNull(message);
     this.signer = Preconditions.checkNotNull(signer);
     this.sender = Preconditions.checkNotNull(sender);
@@ -59,7 +57,7 @@ public class SignedChatMessage implements SignedMessage {
     this.expiry = Preconditions.checkNotNull(expiry);
     this.salt = Preconditions.checkNotNull(salt);
     this.isPreviewSigned = isPreviewSigned;
-
+    this.previousSignatures = previousSignatures;
 
     //this.isValid = EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA, signer,
     //        signature, salt, EncryptionUtils.longToBigEndianByteArray(
@@ -80,6 +78,10 @@ public class SignedChatMessage implements SignedMessage {
   @Override
   public @Nullable byte[] getSignature() {
     return signature;
+  }
+
+  public SignaturePair[] getPreviousSignatures() {
+    return previousSignatures;
   }
 
   //@Override
