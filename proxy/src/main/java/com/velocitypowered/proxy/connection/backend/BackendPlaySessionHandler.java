@@ -280,7 +280,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             this.playerConnection.write(
                 new ServerData(pingEvent.getPing().getDescriptionComponent(),
                     pingEvent.getPing().getFavicon().orElse(null),
-                    packet.isPreviewsChat())
+                    packet.isPreviewsChat(), packet.isSecureChatEnforced())
             ), playerConnection.eventLoop());
     return true;
   }
