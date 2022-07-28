@@ -41,6 +41,7 @@ public class PlayerChat implements MinecraftPacket {
   private @Nullable byte[] signature;
   private @Nullable byte[] salt;
   private SignaturePair[] previousMessages = new SignaturePair[0];
+  private @Nullable SignaturePair lastMessage;
 
   public static final int MAXIMUM_PREVIOUS_MESSAGE_COUNT = 5;
 
@@ -66,6 +67,8 @@ public class PlayerChat implements MinecraftPacket {
     this.salt = message.getSalt();
     this.signature = message.getSignature();
     this.signedPreview = message.isPreviewSigned();
+    this.lastMessage = message.getPreviousSignature();
+    this.previousMessages = message.getPreviousSignatures();
   }
 
   public Instant getExpiry() {
@@ -118,6 +121,10 @@ public class PlayerChat implements MinecraftPacket {
         lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
       }
       previousMessages = lastSignatures;
+
+      if (buf.readBoolean()) {
+        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+      }
     }
   }
 
@@ -137,6 +144,14 @@ public class PlayerChat implements MinecraftPacket {
       for (SignaturePair previousMessage : previousMessages) {
         ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
         ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
+      }
+
+      if (lastMessage != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writeUuid(buf, lastMessage.getSigner());
+        ProtocolUtils.writeByteArray(buf, lastMessage.getSignature());
+      } else {
+        buf.writeBoolean(false);
       }
     }
   }
@@ -160,7 +175,7 @@ public class PlayerChat implements MinecraftPacket {
     }
 
     return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature,
-            salt, signedPreview, previousMessages);
+            salt, signedPreview, previousMessages, lastMessage);
   }
 
   @Override

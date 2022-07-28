@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerCommand implements MinecraftPacket {
 
@@ -52,6 +53,7 @@ public class PlayerCommand implements MinecraftPacket {
   private long salt;
   private boolean signedPreview; // Good god. Please no.
   private SignaturePair[] previousMessages = new SignaturePair[0];
+  private @Nullable SignaturePair lastMessage;
   private Map<String, byte[]> arguments = ImmutableMap.of();
 
   public boolean isSignedPreview() {
@@ -102,6 +104,8 @@ public class PlayerCommand implements MinecraftPacket {
     this.timestamp = signedCommand.getExpiryTemporal();
     this.salt = Longs.fromByteArray(signedCommand.getSalt());
     this.signedPreview = signedCommand.isPreviewSigned();
+    this.lastMessage = signedCommand.getLastSignature();
+    this.previousMessages = signedCommand.getPreviousSignatures();
   }
 
   @Override
@@ -142,6 +146,10 @@ public class PlayerCommand implements MinecraftPacket {
         lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
       }
       previousMessages = lastSignatures;
+
+      if (buf.readBoolean()) {
+        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+      }
     }
 
   }
@@ -172,6 +180,14 @@ public class PlayerCommand implements MinecraftPacket {
         ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
         ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
       }
+
+      if (lastMessage != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writeUuid(buf, lastMessage.getSigner());
+        ProtocolUtils.writeByteArray(buf, lastMessage.getSignature());
+      } else {
+        buf.writeBoolean(false);
+      }
     }
 
   }
@@ -195,7 +211,7 @@ public class PlayerCommand implements MinecraftPacket {
     }
 
     return new SignedChatCommand(command, signer.getSignedPublicKey(), sender, timestamp,
-        arguments, Longs.toByteArray(salt), signedPreview, previousMessages);
+        arguments, Longs.toByteArray(salt), signedPreview, previousMessages, lastMessage);
   }
 
   @Override

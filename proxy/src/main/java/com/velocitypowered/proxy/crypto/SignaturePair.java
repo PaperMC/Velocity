@@ -18,6 +18,7 @@
 
 package com.velocitypowered.proxy.crypto;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class SignaturePair {
@@ -36,5 +37,13 @@ public class SignaturePair {
 
   public UUID getSigner() {
     return signer;
+  }
+
+  @Override
+  public String toString() {
+    return "SignaturePair{"
+            + "signer=" + signer
+            + ", signature=" + Arrays.toString(signature)
+            + '}';
   }
 }
