@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.0"
+config-version = "2.5"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"

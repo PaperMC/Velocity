@@ -32,6 +32,7 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -67,7 +68,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -170,14 +170,38 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           if (chatResult.isAllowed()) {
             Optional<String> eventMsg = pme.getResult().getMessage();
             if (eventMsg.isPresent()) {
-              if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-                  && player.getIdentifiedKey() != null) {
-                logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+              String messageNew = eventMsg.get();
+              if (player.getIdentifiedKey() != null) {
+                if (!messageNew.equals(signedMessage.getMessage())) {
+                  if (player.getIdentifiedKey().getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+                    // Bad, very bad.
+                    logger.fatal("A plugin tried to change a signed chat message. "
+                            + "This is no longer possible in 1.19.1 and newer. "
+                            + "Disconnecting player " + player.getUsername());
+                    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+                           + "Contact your network administrator."));
+                  } else {
+                    logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+                    smc.write(ChatBuilder.builder(player.getProtocolVersion())
+                            .message(messageNew).toServer());
+                  }
+                } else {
+                  smc.write(original);
+                }
+              } else {
+                smc.write(ChatBuilder.builder(player.getProtocolVersion())
+                        .message(messageNew).toServer());
               }
-              smc.write(ChatBuilder.builder(player.getProtocolVersion())
-                  .message(event.getMessage()).toServer());
             } else {
               smc.write(original);
+            }
+          } else {
+            if (player.getIdentifiedKey().getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              logger.fatal("A plugin tried to cancel a signed chat message."
+                      + " This is no longer possible in 1.19.1 and newer. "
+                      + "Disconnecting player " + player.getUsername());
+              player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+                      + "Contact your network administrator."));
             }
           }
         }, smc.eventLoop())
@@ -702,7 +726,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
                                                               CommandResult result,
                                                               @Nullable SignedChatCommand signedCommand) {
-    if (result == CommandResult.denied()) {
+    IdentifiedKey playerKey = player.getIdentifiedKey();
+    if (result == CommandResult.denied() && playerKey != null) {
+      if (signedCommand != null && playerKey.getKeyRevision()
+          .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+        logger.fatal("A plugin tried to deny a command with signable component(s). "
+                + "This is not supported. "
+                + "Disconnecting player " + player.getUsername());
+        player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+                + "Contact your network administrator."));
+      }
       return CompletableFuture.completedFuture(null);
     }
 
@@ -724,6 +757,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
         write.message(signedCommand);
       } else {
+        if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
+                .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+          logger.fatal("A plugin tried to change a command with signed component(s). "
+                  + "This is not supported. "
+                  + "Disconnecting player " + player.getUsername());
+          player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+                  + "Contact your network administrator."));
+          return CompletableFuture.completedFuture(null);
+        }
         write.message("/" + commandToRun);
       }
       return CompletableFuture.runAsync(() -> smc.write(write.toServer()), smc.eventLoop());
@@ -738,12 +780,25 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
                 write.message(signedCommand);
               } else {
+                if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
+                        .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+                  logger.fatal("A plugin tried to change a command with signed component(s). "
+                          + "This is not supported. "
+                          + "Disconnecting player " + player.getUsername());
+                  player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+                          + "Contact your network administrator."));
+                  return;
+                }
                 write.message("/" + commandToRun);
               }
               smc.write(write.toServer());
             }
           }, smc.eventLoop());
     }
+  }
+
+  private void handleCommandForward() {
+
   }
 
   /**

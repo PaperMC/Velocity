@@ -20,7 +20,7 @@ class QueryResponseTest {
     QueryResponse response = new QueryResponse("test", "test", "test",
         1, 2, "test", 1234, ImmutableList.of("tuxed"),
         "0.0.1", ImmutableList.of(new PluginInformation("test", "1.0.0"),
-        new PluginInformation("test2", null)));
+          new PluginInformation("test2", null)));
     assertEquals(response, response.toBuilder().build());
   }
 }

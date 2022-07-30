@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
@@ -226,8 +227,19 @@ public class VelocityTabList implements TabList {
     if (entries.containsKey(entry.getProfile().getId())) {
       PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
 
+      IdentifiedKey selectedKey = packetItem.getPlayerKey();
       Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
-      existing.ifPresent(value -> packetItem.setPlayerKey(value.getIdentifiedKey()));
+      if (existing.isPresent()) {
+        selectedKey = existing.get().getIdentifiedKey();
+      }
+
+      if (selectedKey != null
+              && selectedKey.getKeyRevision().getApplicableTo().contains(connection.getProtocolVersion())
+              && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
+        packetItem.setPlayerKey(selectedKey);
+      } else {
+        packetItem.setPlayerKey(null);
+      }
 
       connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
     }

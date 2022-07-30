@@ -133,7 +133,7 @@ public class ChatBuilder {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       // hard override chat > system for now
-      return new SystemChat(msg, type == ChatType.CHAT ? ChatType.SYSTEM.getId() : type.getId());
+      return new SystemChat(msg, type == ChatType.CHAT ? ChatType.SYSTEM : type);
     } else {
       return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
     }

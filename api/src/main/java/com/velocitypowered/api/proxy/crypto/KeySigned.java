@@ -8,10 +8,8 @@
 package com.velocitypowered.api.proxy.crypto;
 
 import com.google.common.annotations.Beta;
-
 import java.security.PublicKey;
 import java.time.Instant;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface KeySigned {
@@ -56,6 +54,7 @@ public interface KeySigned {
    * signer public key. Note: This will **not** check for
    * expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
    * <p>DOES NOT WORK YET FOR MESSAGES AND COMMANDS!</p>
+   * Addendum: Does not work for 1.19.1 until the user has authenticated.
    *
    * @return validity of the signature
    */
