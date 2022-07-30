@@ -726,9 +726,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private CompletableFuture<Void> processCommandExecuteResult(String originalCommand,
                                                               CommandResult result,
                                                               @Nullable SignedChatCommand signedCommand) {
-    if (result == CommandResult.denied()) {
-      if (signedCommand != null && player.getIdentifiedKey().getKeyRevision()
-              .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+    IdentifiedKey playerKey = player.getIdentifiedKey();
+    if (result == CommandResult.denied() && playerKey != null) {
+      if (signedCommand != null && playerKey.getKeyRevision()
+          .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
         logger.fatal("A plugin tried to deny a command with signable component(s). "
                 + "This is not supported. "
                 + "Disconnecting player " + player.getUsername());
@@ -756,7 +757,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
         write.message(signedCommand);
       } else {
-        if (signedCommand != null && player.getIdentifiedKey().getKeyRevision()
+        if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
                 .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
           logger.fatal("A plugin tried to change a command with signed component(s). "
                   + "This is not supported. "
@@ -779,7 +780,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
                 write.message(signedCommand);
               } else {
-                if (signedCommand != null && player.getIdentifiedKey().getKeyRevision()
+                if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
                         .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
                   logger.fatal("A plugin tried to change a command with signed component(s). "
                           + "This is not supported. "
