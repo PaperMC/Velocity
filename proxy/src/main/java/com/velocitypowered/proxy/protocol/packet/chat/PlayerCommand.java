@@ -202,8 +202,12 @@ public class PlayerCommand implements MinecraftPacket {
    * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
    *                                                                     is invalid.
    */
-  public SignedChatCommand signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
-    if (unsigned) {
+  public SignedChatCommand signedContainer(
+      @Nullable IdentifiedKey signer, UUID sender, boolean mustSign) {
+    // There's a certain mod that is very broken that still signs messages but
+    // doesn't provide the player key. This is broken and wrong, but we need to
+    // work around that.
+    if (unsigned || signer == null) {
       if (mustSign) {
         throw EncryptionUtils.INVALID_SIGNATURE;
       }
