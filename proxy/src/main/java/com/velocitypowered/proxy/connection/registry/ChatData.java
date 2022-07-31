@@ -17,93 +17,129 @@
 
 package com.velocitypowered.proxy.connection.registry;
 
-/*
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import net.kyori.adventure.nbt.*;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.format.TextFormat;
-import net.kyori.adventure.translation.Translatable;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-*/
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.connection.registry.chat.ChatTypeElement;
+import net.kyori.adventure.nbt.BinaryTag;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO Implement
 public class ChatData {
-    /*
-    private static final ListBinaryTag EMPTY_LIST_TAG = ListBinaryTag.empty();
 
+  private final String identifier;
+  private final int id;
+  private final ChatTypeElement chatElement;
+  private final ChatTypeElement overlayElement;
+  private final ChatTypeElement narrationElement;
 
-    private final String identifier;
-    private final int id;
-    private final Map<>
+  /**
+   * Represents a ChatRegistry entry.
+   *
+   * @param id               chat type id
+   * @param identifier       chat type identifier
+   * @param chatElement      chat element
+   * @param overlayElement   overlay element
+   * @param narrationElement narration element
+   */
+  public ChatData(int id, String identifier, @Nullable ChatTypeElement chatElement, ChatTypeElement overlayElement,
+                  @Nullable ChatTypeElement narrationElement) {
+    this.id = id;
+    this.identifier = identifier;
+    this.chatElement = chatElement;
+    this.overlayElement = overlayElement;
+    this.narrationElement = narrationElement;
+  }
 
+  /**
+   * Decodes an entry in the registry.
+   *
+   * @param binaryTag the binary tag to decode.
+   * @param version   the version to decode for.
+   * @return The decoded ChatData
+   */
+  public static ChatData decodeRegistryEntry(CompoundBinaryTag binaryTag, ProtocolVersion version) {
+    final String registryIdentifier = binaryTag.getString("name");
+    final Integer id = binaryTag.getInt("id");
 
-    public static class Decoration implements Translatable {
+    CompoundBinaryTag element = binaryTag.getCompound("element");
+    ChatData decodedChatData = decodeElementCompound(element, version);
+    return decodedChatData.annotateWith(id, registryIdentifier);
+  }
 
-        private final List<String> parameters;
-        private final List<TextFormat> style;
-        private final String translationKey;
+  private ChatData annotateWith(Integer id, String registryIdentifier) {
+    return new ChatData(id, registryIdentifier, this.chatElement, this.overlayElement,
+        this.narrationElement);
+  }
 
-        public List<String> getParameters() {
-            return parameters;
-        }
+  private static ChatData decodeElementCompound(CompoundBinaryTag element, ProtocolVersion version) {
+    ChatTypeElement chatElement = null;
+    ChatTypeElement overlayElement = null;
+    ChatTypeElement narrationElement = null;
 
-        public List<TextFormat> getStyle() {
-            return style;
-        }
-
-        @Override
-        public @NotNull String translationKey() {
-            return translationKey;
-        }
-
-        public Decoration(List<String> parameters, List<TextFormat> style, String translationKey) {
-            this.parameters = Preconditions.checkNotNull(parameters);
-            this.style = Preconditions.checkNotNull(style);
-            this.translationKey = Preconditions.checkNotNull(translationKey);
-            Preconditions.checkArgument(translationKey.length() > 0);
-        }
-
-        public static Decoration decodeRegistryEntry(CompoundBinaryTag toDecode) {
-            ImmutableList.Builder<String> parameters = ImmutableList.builder();
-            ListBinaryTag paramList = toDecode.getList("parameters", EMPTY_LIST_TAG);
-            if (paramList != EMPTY_LIST_TAG) {
-                paramList.forEach(binaryTag -> parameters.add(binaryTag.toString()));
-            }
-
-            ImmutableList.Builder<TextFormat> style = ImmutableList.builder();
-            CompoundBinaryTag styleList = toDecode.getCompound("style");
-            for (String key : styleList.keySet()) {
-                if ("color".equals(key)) {
-                    NamedTextColor color = Preconditions.checkNotNull(
-                            NamedTextColor.NAMES.value(styleList.getString(key)));
-                    style.add(color);
-                } else {
-                    // Key is a Style option instead
-                    TextDecoration deco = TextDecoration.NAMES.value(key);
-                    // This wouldn't be here if it wasn't applied, but here it goes anyway:
-                    byte val = styleList.getByte(key);
-                    if (val != 0) {
-                        style.add(deco);
-                    }
-                }
-            }
-
-            String translationKey = toDecode.getString("translation_key");
-
-            return new Decoration(parameters.build(), style.build(), translationKey);
-        }
-
-        public void encodeRegistryEntry(CompoundBinaryTag )
-
+    final BinaryTag chatCompound = element.get("chat");
+    if (chatCompound != null) {
+      chatElement =
+          ChatTypeElement.decodeFromRegistry(ChatTypeElement.ElementType.CHAT, (CompoundBinaryTag) chatCompound,
+              version);
     }
 
-    public static enum Priority {
-        SYSTEM,
-        CHAT
+    final BinaryTag overlayCompound = element.get("overlay");
+    if (overlayCompound != null) {
+      overlayElement =
+          ChatTypeElement.decodeFromRegistry(ChatTypeElement.ElementType.OVERLAY, (CompoundBinaryTag) overlayCompound,
+              version);
     }
-*/
+
+    final BinaryTag narrationCompound = element.get("narration");
+    if (narrationCompound != null) {
+      narrationElement = ChatTypeElement.decodeFromRegistry(ChatTypeElement.ElementType.NARRATION,
+          (CompoundBinaryTag) narrationCompound, version);
+    }
+
+    return new ChatData(-1, "invalid", chatElement, overlayElement, narrationElement);
+  }
+
+  public String getIdentifier() {
+    return identifier;
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  /**
+   * Encodes the chat data for the network.
+   *
+   * @param version The protocol version to encode this chat data for
+   * @return The encoded data structure
+   */
+  public CompoundBinaryTag encodeAsCompoundTag(ProtocolVersion version) {
+    final CompoundBinaryTag.Builder compound = CompoundBinaryTag.builder();
+    compound.putString("name", identifier);
+    compound.putInt("id", id);
+
+    final CompoundBinaryTag.Builder elementCompound = CompoundBinaryTag.builder();
+
+    if (chatElement != null) {
+      elementCompound.put("chat", chatElement.encodeForRegistry(version));
+    }
+
+    if (overlayElement != null) {
+      elementCompound.put("overlay", overlayElement.encodeForRegistry(version));
+    }
+
+    if (narrationElement != null) {
+      elementCompound.put("narration", narrationElement.encodeForRegistry(version));
+    }
+
+    compound.put("element", elementCompound.build());
+
+    return compound.build();
+  }
+
+
+  public static enum Priority {
+    SYSTEM,
+    CHAT
+  }
 }

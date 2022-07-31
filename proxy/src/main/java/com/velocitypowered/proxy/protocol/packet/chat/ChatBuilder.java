@@ -21,15 +21,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
+
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ChatBuilder {
@@ -125,10 +132,10 @@ public class ChatBuilder {
    *
    * @return The {@link MinecraftPacket} to send to the client.
    */
-  public MinecraftPacket toClient() {
+  public MinecraftPacket toClient(ConnectedPlayer player) {
     // This is temporary
     UUID identity = sender == null ? (senderIdentity == null ? Identity.nil().uuid()
-        : senderIdentity.uuid()) : sender.getUniqueId();
+                                        : senderIdentity.uuid()) : sender.getUniqueId();
     Component msg = component == null ? Component.text(message) : component;
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
@@ -165,19 +172,45 @@ public class ChatBuilder {
     return chat;
   }
 
-  public static enum ChatType {
-    CHAT((byte) 0),
-    SYSTEM((byte) 1),
-    GAME_INFO((byte) 2);
+  public static class ChatType {
+    public static final ChatType CHAT = new ChatType((byte) 0, Key.key("minecraft", "chat"));
+    public static final ChatType SYSTEM = new ChatType((byte) 1, Key.key("minecraft", "system"));
+    public static final ChatType GAME_INFO = new ChatType((byte) 2, Key.key("minecraft", "game_info"));
 
     private final byte raw;
+    @NonNull
+    private final Key key;
 
-    ChatType(byte raw) {
+    ChatType(byte raw, @NonNull Key key) {
+      Preconditions.checkNotNull(key, "Key cannot be null!");
       this.raw = raw;
+      this.key = key;
     }
 
     public byte getId() {
       return raw;
+    }
+
+    @NonNull
+    public Key getKey() {
+      return key;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ChatType chatType = (ChatType) o;
+      return raw == chatType.raw && key.equals(chatType.key);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(raw, key);
     }
   }
 }

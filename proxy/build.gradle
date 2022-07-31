@@ -2,11 +2,11 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     id 'java'
-    id 'checkstyle'
+    //id 'checkstyle' // This is bork
 }
 
 apply plugin: 'org.cadixdev.licenser'
-apply from: '../gradle/checkstyle.gradle'
+//apply from: '../gradle/checkstyle.gradle' // This is bork
 apply plugin: 'com.github.johnrengelman.shadow'
 
 license {
