@@ -399,17 +399,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             byte[] copy = ByteBufUtil.getBytes(packet.content());
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-                  if (pme.getResult().isAllowed()) {
-                    PluginMessage message = new PluginMessage(packet.getChannel(),
-                        Unpooled.wrappedBuffer(copy));
-                    if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
-                      // We're still processing the connection (see above), enqueue the packet for now.
-                      loginPluginMessages.add(message.retain());
-                    } else {
-                      backendConn.write(message);
-                    }
-                  }
-                }, backendConn.eventLoop())
+              if (pme.getResult().isAllowed()) {
+                PluginMessage message = new PluginMessage(packet.getChannel(),
+                    Unpooled.wrappedBuffer(copy));
+                if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+                  // We're still processing the connection (see above), enqueue the packet for now.
+                  loginPluginMessages.add(message.retain());
+                } else {
+                  backendConn.write(message);
+                }
+              }
+            }, backendConn.eventLoop())
                 .exceptionally((ex) -> {
                   logger.error("Exception while handling plugin message packet for {}",
                       player, ex);
