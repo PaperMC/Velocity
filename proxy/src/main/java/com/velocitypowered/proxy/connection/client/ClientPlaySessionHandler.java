@@ -751,6 +751,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
             + "Contact your network administrator."));
       }
+      return CompletableFuture.completedFuture(null);
     }
 
     String commandToRun = result.getCommand().orElse(originalCommand);
