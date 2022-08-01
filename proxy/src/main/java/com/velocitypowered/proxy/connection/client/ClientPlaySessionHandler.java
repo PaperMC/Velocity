@@ -176,7 +176,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   private CompletableFuture<MinecraftPacket> callChat(MinecraftPacket original, PlayerChatEvent event,
-                                                      @Nullable SignedChatMessage signedChat) {
+                                                      @Nullable SignedChatMessage signedMessage) {
     return server.getEventManager().fire(event)
         .thenApply(pme -> {
           PlayerChatEvent.ChatResult chatResult = pme.getResult();
@@ -185,7 +185,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             if (eventMsg.isPresent()) {
               String messageNew = eventMsg.get();
               if (player.getIdentifiedKey() != null) {
-                if (!messageNew.equals(signedMessage.getMessage())) {
+                if (signedMessage != null && !messageNew.equals(signedMessage.getMessage())) {
                   if (player.getIdentifiedKey().getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
                     // Bad, very bad.
                     logger.fatal("A plugin tried to change a signed chat message. "
@@ -794,7 +794,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                       + "Disconnecting player " + player.getUsername());
                   player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
                       + "Contact your network administrator."));
-                  return;
+                  return null;
                 }
                 write.message("/" + commandToRun);
               }
