@@ -22,9 +22,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
 import java.util.UUID;
@@ -38,6 +40,13 @@ public class PlayerChat implements MinecraftPacket {
   private @Nullable Instant expiry;
   private @Nullable byte[] signature;
   private @Nullable byte[] salt;
+  private SignaturePair[] previousMessages = new SignaturePair[0];
+  private @Nullable SignaturePair lastMessage;
+
+  public static final int MAXIMUM_PREVIOUS_MESSAGE_COUNT = 5;
+
+  public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
+          new QuietDecoderException("Invalid previous messages");
 
   public PlayerChat() {
   }
@@ -58,6 +67,8 @@ public class PlayerChat implements MinecraftPacket {
     this.salt = message.getSalt();
     this.signature = message.getSignature();
     this.signedPreview = message.isPreviewSigned();
+    this.lastMessage = message.getPreviousSignature();
+    this.previousMessages = message.getPreviousSignatures();
   }
 
   public Instant getExpiry() {
@@ -98,6 +109,23 @@ public class PlayerChat implements MinecraftPacket {
     if (signedPreview && unsigned) {
       throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
+
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      int size = ProtocolUtils.readVarInt(buf);
+      if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
+        throw INVALID_PREVIOUS_MESSAGES;
+      }
+
+      SignaturePair[] lastSignatures = new SignaturePair[size];
+      for (int i = 0; i < size; i++) {
+        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+      }
+      previousMessages = lastSignatures;
+
+      if (buf.readBoolean()) {
+        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+      }
+    }
   }
 
   @Override
@@ -109,6 +137,23 @@ public class PlayerChat implements MinecraftPacket {
     ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
 
     buf.writeBoolean(signedPreview);
+
+
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      ProtocolUtils.writeVarInt(buf, previousMessages.length);
+      for (SignaturePair previousMessage : previousMessages) {
+        ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
+        ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
+      }
+
+      if (lastMessage != null) {
+        buf.writeBoolean(true);
+        ProtocolUtils.writeUuid(buf, lastMessage.getSigner());
+        ProtocolUtils.writeByteArray(buf, lastMessage.getSignature());
+      } else {
+        buf.writeBoolean(false);
+      }
+    }
   }
 
   /**
@@ -129,7 +174,8 @@ public class PlayerChat implements MinecraftPacket {
       return null;
     }
 
-    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature, salt, signedPreview);
+    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature,
+            salt, signedPreview, previousMessages, lastMessage);
   }
 
   @Override

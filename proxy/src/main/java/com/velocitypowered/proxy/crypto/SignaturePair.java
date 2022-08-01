@@ -15,19 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection;
 
-public class VelocityConstants {
+package com.velocitypowered.proxy.crypto;
 
-  private VelocityConstants() {
-    throw new AssertionError();
+import java.util.Arrays;
+import java.util.UUID;
+
+public class SignaturePair {
+
+  private final UUID signer;
+  private final byte[] signature;
+
+  public SignaturePair(UUID signer, byte[] signature) {
+    this.signer = signer;
+    this.signature = signature;
   }
 
-  public static final String VELOCITY_IP_FORWARDING_CHANNEL = "velocity:player_info";
-  public static final int MODERN_FORWARDING_DEFAULT = 1;
-  public static final int MODERN_FORWARDING_WITH_KEY = 2;
-  public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
-  public static final int MODERN_FORWARDING_MAX_VERSION = MODERN_FORWARDING_WITH_KEY_V2;
+  public byte[] getSignature() {
+    return signature;
+  }
 
-  public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+  public UUID getSigner() {
+    return signer;
+  }
+
+  @Override
+  public String toString() {
+    return "SignaturePair{"
+            + "signer=" + signer
+            + ", signature=" + Arrays.toString(signature)
+            + '}';
+  }
 }

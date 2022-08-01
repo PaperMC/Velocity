@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-
 import io.netty.buffer.ByteBuf;
 
 public class RegistryKeyArgumentSerializer implements ArgumentPropertySerializer<RegistryKeyArgument> {

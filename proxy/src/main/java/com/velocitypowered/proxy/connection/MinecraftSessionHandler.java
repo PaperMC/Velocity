@@ -48,6 +48,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatPreview;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.ServerChatPreview;
@@ -263,6 +264,10 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
+  default boolean handle(PlayerChatCompletion packet) {
+    return false;
+  }
+  
   default boolean handle(ServerData serverData) {
     return false;
   }

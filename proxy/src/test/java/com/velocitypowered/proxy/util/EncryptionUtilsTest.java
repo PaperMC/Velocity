@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-
 import org.junit.jupiter.api.Test;
 
 class EncryptionUtilsTest {

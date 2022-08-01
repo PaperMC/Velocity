@@ -318,9 +318,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
 
       commandManager.setAnnounceProxyCommands(configuration.isAnnounceProxyCommands());
-      if (System.getProperty("auth.forceSecureProfiles") == null) {
-        System.setProperty("auth.forceSecureProfiles", String.valueOf(configuration.isForceKeyAuthentication()));
-      }
     } catch (Exception e) {
       logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
       LogManager.shutdown();

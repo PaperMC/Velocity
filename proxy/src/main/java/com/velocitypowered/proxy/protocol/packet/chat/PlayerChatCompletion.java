@@ -22,56 +22,49 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.text.Component;
 
-public class SystemChat implements MinecraftPacket {
+public class PlayerChatCompletion implements MinecraftPacket {
 
-  public SystemChat() {}
+  private String[] completions;
+  private Action action;
 
-  public SystemChat(Component component, ChatBuilder.ChatType type) {
-    this.component = component;
-    this.type = type;
+
+  public String[] getCompletions() {
+    return completions;
   }
 
-  private Component component;
-  private ChatBuilder.ChatType type;
-
-  public ChatBuilder.ChatType getType() {
-    return type;
+  public Action getAction() {
+    return action;
   }
 
-  public Component getComponent() {
-    return component;
+  public void setCompletions(String[] completions) {
+    this.completions = completions;
+  }
+
+  public void setAction(Action action) {
+    this.action = action;
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
-    // System chat is never decoded so this doesn't matter for now
-    type = ChatBuilder.ChatType.values()[ProtocolUtils.readVarInt(buf)];
+    action = Action.values()[ProtocolUtils.readVarInt(buf)];
+    completions = ProtocolUtils.readStringArray(buf);
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-      switch (type) {
-        case SYSTEM:
-          buf.writeBoolean(false);
-          break;
-        case GAME_INFO:
-          buf.writeBoolean(true);
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid chat type");
-      }
-    } else {
-      ProtocolUtils.writeVarInt(buf, type.getId());
-    }
+    ProtocolUtils.writeVarInt(buf, action.ordinal());
+    ProtocolUtils.writeStringArray(buf, completions);
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  enum Action {
+    ADD,
+    REMOVE,
+    ALTER
   }
 }

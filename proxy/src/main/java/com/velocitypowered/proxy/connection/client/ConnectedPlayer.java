@@ -1087,7 +1087,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public IdentifiedKey getIdentifiedKey() {
+  public @Nullable IdentifiedKey getIdentifiedKey() {
     return playerKey;
   }
 
