@@ -180,13 +180,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     return server.getEventManager().fire(event)
         .thenApply(pme -> {
           PlayerChatEvent.ChatResult chatResult = pme.getResult();
+          IdentifiedKey playerKey = player.getIdentifiedKey();
           if (chatResult.isAllowed()) {
             Optional<String> eventMsg = pme.getResult().getMessage();
             if (eventMsg.isPresent()) {
               String messageNew = eventMsg.get();
-              if (player.getIdentifiedKey() != null) {
+              if (playerKey != null) {
                 if (signedMessage != null && !messageNew.equals(signedMessage.getMessage())) {
-                  if (player.getIdentifiedKey().getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+                  if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
                     // Bad, very bad.
                     logger.fatal("A plugin tried to change a signed chat message. "
                         + "This is no longer possible in 1.19.1 and newer. "
@@ -209,7 +210,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               return original;
             }
           } else {
-            if (player.getIdentifiedKey().getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+            if (playerKey != null && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
               logger.fatal("A plugin tried to cancel a signed chat message."
                   + " This is no longer possible in 1.19.1 and newer. "
                   + "Disconnecting player " + player.getUsername());
