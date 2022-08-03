@@ -15,8 +15,18 @@ show-max-players = 500
 # Should we authenticate players with Mojang? By default, this is on.
 online-mode = true
 
-# Should the proxy enforce the new public key security standard? By default, this is on.
-force-key-authentication = true
+# Should the proxy support secure profiles (and signed chat) for 1.19.1+ clients and servers?
+# This option only affects 1.19.1+ clients and servers.
+#
+# Available options:
+# - "disabled":    Secure profiles are not checked, all chat messages will appear unsigned to backend
+#                  servers. This option is not recommended as it may break compatibility with 1.19.1
+#                  servers, and it will cause newer clients to show a warning upon login.
+# - "enabled":     The proxy will support secure profiles for 1.19.1+ clients, but will also allow
+#                  insecure profiles. 1.19.1+ backend servers might reject insecure logins.
+# - "enforced":    (default) The proxy will only allow secure profiles to log in. This has the same effect
+#                  as the old "force-key-authentication" option.
+key-authentication-policy = "ENFORCED"
 
 # If client's ISP/AS sent from this proxy is different from the one from Mojang's
 # authentication server, the player is kicked. This disallows some VPN and proxy

@@ -25,15 +25,11 @@ import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Longs;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -50,7 +46,6 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
@@ -60,7 +55,6 @@ import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
@@ -75,13 +69,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
-  private boolean forceKeyAuthentication;
+  private final boolean keyAuthenticationEnabled;
+  private final boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
                              LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
+    this.keyAuthenticationEnabled = System.getProperties().containsKey("auth.enableSecureProfiles")
+        ? Boolean.getBoolean("auth.enableSecureProfiles") : server.getConfiguration().isKeyAuthenticationEnabled();
     this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
             ? Boolean.getBoolean("auth.forceSecureProfiles") : server.getConfiguration().isForceKeyAuthentication();
   }
@@ -99,7 +96,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-              && playerKey instanceof IdentifiedKeyImpl) {
+          && playerKey instanceof IdentifiedKeyImpl) {
         IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
       } else {
@@ -111,7 +108,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-            && forceKeyAuthentication) {
+        && forceKeyAuthentication) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }
@@ -199,6 +196,12 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
+
+      if (!keyAuthenticationEnabled) {
+        // Once we've used the key to decrypt the client's data, we can discard it if key authentication
+        // is disabled.
+        inbound.setPlayerKey(null);
+      }
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
