@@ -31,6 +31,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public class ChatBuilder {
 
@@ -43,11 +44,13 @@ public class ChatBuilder {
 
   private @Nullable Player sender;
   private @Nullable Identity senderIdentity;
+  private @NotNull Instant timestamp;
 
   private ChatType type = ChatType.CHAT;
 
   private ChatBuilder(ProtocolVersion version) {
     this.version = version;
+    this.timestamp = Instant.now();
   }
 
   public static ChatBuilder builder(ProtocolVersion version) {
@@ -115,6 +118,11 @@ public class ChatBuilder {
     return this;
   }
 
+  public ChatBuilder timestamp(Instant timestamp) {
+    this.timestamp = timestamp;
+    return this;
+  }
+
   public ChatBuilder asServer() {
     this.sender = null;
     return this;
@@ -153,7 +161,7 @@ public class ChatBuilder {
       } else {
         // Well crap
         if (message.startsWith("/")) {
-          return new PlayerCommand(message.substring(1), ImmutableList.of(), Instant.now());
+          return new PlayerCommand(message.substring(1), ImmutableList.of(), timestamp);
         } else {
           // This will produce an error on the server, but needs to be here.
           return new PlayerChat(message);
