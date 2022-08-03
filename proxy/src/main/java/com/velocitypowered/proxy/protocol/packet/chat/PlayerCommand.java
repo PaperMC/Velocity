@@ -114,9 +114,6 @@ public class PlayerCommand implements MinecraftPacket {
     timestamp = Instant.ofEpochMilli(buf.readLong());
 
     salt = buf.readLong();
-    if (salt == 0L) {
-      unsigned = true;
-    }
 
     int mapSize = ProtocolUtils.readVarInt(buf);
     if (mapSize > MAX_NUM_ARGUMENTS) {
@@ -150,6 +147,10 @@ public class PlayerCommand implements MinecraftPacket {
       if (buf.readBoolean()) {
         lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
       }
+    }
+
+    if (salt == 0L && previousMessages.length == 0) {
+      unsigned = true;
     }
 
   }
