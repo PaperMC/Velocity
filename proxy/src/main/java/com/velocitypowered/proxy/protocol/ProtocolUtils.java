@@ -24,6 +24,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -70,6 +71,9 @@ public enum ProtocolUtils {
     }
     VARINT_EXACT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
   }
+
+  public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
+          new QuietDecoderException("Invalid previous messages");
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.
@@ -562,6 +566,35 @@ public enum ProtocolUtils {
     IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
             ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
+  }
+
+  public static SignaturePair readSignaturePair(ByteBuf buf) {
+    return new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+  }
+
+  public static void writeSignaturePair(ByteBuf buf, SignaturePair pair) {
+    ProtocolUtils.writeUuid(buf, pair.getSigner());
+    ProtocolUtils.writeByteArray(buf, pair.getSignature());
+  }
+  public static SignaturePair[] readSignaturePairArray(ByteBuf buf, int limit) {
+    int size = ProtocolUtils.readVarInt(buf);
+    if (size < 0 || size > limit) {
+      throw INVALID_PREVIOUS_MESSAGES;
+    }
+
+    SignaturePair[] lastSignatures = new SignaturePair[size];
+    for (int i = 0; i < size; i++) {
+      lastSignatures[i] = ProtocolUtils.readSignaturePair(buf);
+    }
+    return lastSignatures;
+  }
+
+  public static void writeSignaturePairArray(ByteBuf buf, final SignaturePair[] pairs) {
+    ProtocolUtils.writeVarInt(buf, pairs.length);
+
+    for (int i = 0; i < pairs.length; i++) {
+      ProtocolUtils.writeSignaturePair(buf, pairs[i]);
+    }
   }
 
   public enum Direction {

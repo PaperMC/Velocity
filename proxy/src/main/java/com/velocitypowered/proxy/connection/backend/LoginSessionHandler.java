@@ -32,12 +32,14 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
+import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
@@ -79,44 +81,106 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LoginPluginMessage packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
-    if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+    switch (packet.getChannel()) {
+      case VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL:
+        return handleModernForwarding(packet, configuration, mc);
+      case VelocityConstants.CHAT_SYNC_CHANNEL:
+        return handleChatForwarding(packet, configuration, mc);
+    }
 
+    // Don't understand, fire event if we have subscribers
+    if (!this.server.getEventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
+      mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+      return true;
+    }
+
+    final byte[] contents = ByteBufUtil.getBytes(packet.content());
+    final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
+        .from(packet.getChannel());
+    this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
+        contents, packet.getId()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
+                .wrappedBuffer(event.getResult().getResponse())));
+          } else {
+            mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+          }
+        }, mc.eventLoop());
+    return true;
+  }
+
+  private boolean handleChatForwarding(LoginPluginMessage packet, VelocityConfiguration configuration,
+                                       MinecraftConnection mc) {
+    ByteBuf data = packet.content();
+    // pos 1 : version : varint
+    // pos 2 : enforce secure chat : boolean
+    // pos 3 : support preview
+    // next positions in v2
+    data.skipBytes(data.readableBytes());
+    ConnectedPlayer player = serverConn.getPlayer();
+
+    ByteBuf responseData = Unpooled.buffer(2048);
+    ProtocolUtils.writeVarInt(responseData, VelocityConstants.CHAT_SYNC_VERSION);
+    // Is proxy enforcing secure chat?
+    responseData.writeBoolean(configuration.isForceKeyAuthentication() && configuration.isOnlineMode());
+    // Is proxy using chat previews?
+    responseData.writeBoolean(false); // Velocity does itself not support previews yet
+
+    // Is the old server enforcing secure chat?
+    ServerData current = player.getCurrentServerData();
+    // False : first server
+    if (current != null) {
+      responseData.writeBoolean(true);
+      responseData.writeBoolean(current.isSecureChatEnforced());
+      responseData.writeBoolean(current.isPreviewsChat());
+    } else {
+      responseData.writeBoolean(false);
+    }
+
+    // has sent messages yet?
+    byte[] lastMessageSignature = player.getLastChatSignatureData();
+    ProtocolUtils.writeByteArray(responseData, lastMessageSignature == null ? new byte[0] : lastMessageSignature);
+
+    // Last seen messages
+    SignaturePair[] lastSeenMessages = player.getLastSeenMessages();
+    ProtocolUtils.writeSignaturePairArray(responseData, lastSeenMessages);
+
+    // Last seen message
+    SignaturePair lastMessage = player.getLastMessage();
+    if (lastMessage != null) {
+      responseData.writeBoolean(true);
+      ProtocolUtils.writeSignaturePair(responseData, lastMessage);
+    } else {
+      responseData.writeBoolean(false);
+    }
+
+    LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, responseData);
+    mc.write(response);
+    return true;
+  }
+
+
+  private boolean handleModernForwarding(LoginPluginMessage packet, VelocityConfiguration configuration,
+                                         MinecraftConnection mc) {
+    if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN) {
       int requestedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
       // Check version
       if (packet.content().readableBytes() == 1) {
         requestedForwardingVersion = packet.content().readByte();
       }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), requestedForwardingVersion);
+              serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), requestedForwardingVersion);
 
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
     } else {
-      // Don't understand, fire event if we have subscribers
-      if (!this.server.getEventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
-        mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
-        return true;
-      }
-
-      final byte[] contents = ByteBufUtil.getBytes(packet.content());
-      final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
-          .from(packet.getChannel());
-      this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
-          contents, packet.getId()))
-          .thenAcceptAsync(event -> {
-            if (event.getResult().isAllowed()) {
-              mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
-                  .wrappedBuffer(event.getResult().getResponse())));
-            } else {
-              mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
-            }
-          }, mc.eventLoop());
+      // Todo: Add a warning here
+      mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
     }
     return true;
   }
-
   @Override
   public boolean handle(Disconnect packet) {
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));

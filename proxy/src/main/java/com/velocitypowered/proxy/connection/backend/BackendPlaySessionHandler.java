@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -271,7 +272,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerData packet) {
-    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
+    ConnectedPlayer who = this.serverConn.getPlayer();
+    who.setCurrentServerData(packet);
+    server.getServerListPingHandler().getInitialPing(who)
         .thenComposeAsync(
             ping -> server.getEventManager().fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
             playerConnection.eventLoop()

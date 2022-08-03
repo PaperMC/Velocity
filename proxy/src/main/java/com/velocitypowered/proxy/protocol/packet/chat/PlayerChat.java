@@ -26,7 +26,6 @@ import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
 import java.util.UUID;
@@ -44,9 +43,6 @@ public class PlayerChat implements MinecraftPacket {
   private @Nullable SignaturePair lastMessage;
 
   public static final int MAXIMUM_PREVIOUS_MESSAGE_COUNT = 5;
-
-  public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
-          new QuietDecoderException("Invalid previous messages");
 
   public PlayerChat() {
   }
@@ -111,19 +107,9 @@ public class PlayerChat implements MinecraftPacket {
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-      int size = ProtocolUtils.readVarInt(buf);
-      if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
-        throw INVALID_PREVIOUS_MESSAGES;
-      }
-
-      SignaturePair[] lastSignatures = new SignaturePair[size];
-      for (int i = 0; i < size; i++) {
-        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
-      }
-      previousMessages = lastSignatures;
-
+      previousMessages = ProtocolUtils.readSignaturePairArray(buf, MAXIMUM_PREVIOUS_MESSAGE_COUNT);
       if (buf.readBoolean()) {
-        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+        lastMessage = ProtocolUtils.readSignaturePair(buf);
       }
     }
   }
@@ -140,16 +126,11 @@ public class PlayerChat implements MinecraftPacket {
 
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-      ProtocolUtils.writeVarInt(buf, previousMessages.length);
-      for (SignaturePair previousMessage : previousMessages) {
-        ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
-        ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
-      }
+      ProtocolUtils.writeSignaturePairArray(buf, previousMessages);
 
       if (lastMessage != null) {
         buf.writeBoolean(true);
-        ProtocolUtils.writeUuid(buf, lastMessage.getSigner());
-        ProtocolUtils.writeByteArray(buf, lastMessage.getSignature());
+        ProtocolUtils.writeSignaturePair(buf, lastMessage);
       } else {
         buf.writeBoolean(false);
       }

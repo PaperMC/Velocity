@@ -57,6 +57,7 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -65,6 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
@@ -167,6 +169,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
   private ChatQueue chatQueue;
+  private @MonotonicNonNull ServerData currentServerData;
+  private @MonotonicNonNull byte[] lastChatSignatureData;
+  private SignaturePair[] lastSeenMessages = new SignaturePair[0];
+  private @MonotonicNonNull SignaturePair lastMessage;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
@@ -1228,5 +1234,37 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     public void fireAndForget() {
       connectWithIndication();
     }
+  }
+
+  public ServerData getCurrentServerData() {
+    return currentServerData;
+  }
+
+  public void setCurrentServerData(ServerData currentServerData) {
+    this.currentServerData = currentServerData;
+  }
+
+  public byte[] getLastChatSignatureData() {
+    return lastChatSignatureData;
+  }
+
+  public void setLastChatSignatureData(byte[] lastChatSignatureData) {
+    this.lastChatSignatureData = lastChatSignatureData;
+  }
+
+  public SignaturePair getLastMessage() {
+    return lastMessage;
+  }
+
+  public void setLastMessage(SignaturePair lastMessage) {
+    this.lastMessage = lastMessage;
+  }
+
+  public SignaturePair[] getLastSeenMessages() {
+    return lastSeenMessages;
+  }
+
+  public void setLastSeenMessages(SignaturePair[] lastSeenMessages) {
+    this.lastSeenMessages = lastSeenMessages;
   }
 }
