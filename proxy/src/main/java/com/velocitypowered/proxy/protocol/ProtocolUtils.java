@@ -576,6 +576,7 @@ public enum ProtocolUtils {
     ProtocolUtils.writeUuid(buf, pair.getSigner());
     ProtocolUtils.writeByteArray(buf, pair.getSignature());
   }
+
   public static SignaturePair[] readSignaturePairArray(ByteBuf buf, int limit) {
     int size = ProtocolUtils.readVarInt(buf);
     if (size < 0 || size > limit) {

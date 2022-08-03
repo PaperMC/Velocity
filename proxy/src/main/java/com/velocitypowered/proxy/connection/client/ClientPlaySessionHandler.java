@@ -276,6 +276,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       SignedChatCommand signedCommand = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
       if (signedCommand != null) {
         processCommandMessage(packet.getCommand(), signedCommand, packet, packet.getTimestamp());
+        player.setLastChatSignatureData(signedCommand.getSignature());
+        player.setLastMessage(signedCommand.getLastSignature());
+        player.setLastSeenMessages(signedCommand.getPreviousSignatures());
         return true;
       }
     }
@@ -301,6 +304,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
 
         processPlayerChat(packet.getMessage(), signedChat, packet);
+        player.setLastChatSignatureData(signedChat.getSignature());
+        player.setLastMessage(signedChat.getPreviousSignature());
+        player.setLastSeenMessages(signedChat.getPreviousSignatures());
         return true;
       }
     }
