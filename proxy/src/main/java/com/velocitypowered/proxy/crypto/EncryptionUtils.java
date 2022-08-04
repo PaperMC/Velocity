@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import it.unimi.dsi.fastutil.Pair;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

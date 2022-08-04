@@ -74,8 +74,8 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    */
   public static final class CommandResult implements ResultedEvent.Result {
 
-    private static final CommandResult ALLOWED = new CommandResult(true, false,null);
-    private static final CommandResult DENIED = new CommandResult(false, false,null);
+    private static final CommandResult ALLOWED = new CommandResult(true, false, null);
+    private static final CommandResult DENIED = new CommandResult(false, false, null);
     private static final CommandResult FORWARD_TO_SERVER = new CommandResult(false, true, null);
 
     private @Nullable String command;

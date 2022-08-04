@@ -28,7 +28,6 @@ import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +89,7 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
-      boolean enablePlayerAddressLogging, Servers servers,ForcedHosts forcedHosts,
+      boolean enablePlayerAddressLogging, Servers servers, ForcedHosts forcedHosts,
       Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
@@ -502,6 +501,14 @@ public class VelocityConfiguration implements ProxyConfig {
       }
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+
+    if (configVersion == 1.0 || configVersion == 2.0) {
+      config.set("force-key-authentication", config.getOrElse("force-key-authentication", true));
+      config.setComment("force-key-authentication",
+              "Should the proxy enforce the new public key security standard? By default, this is on.");
+      config.set("config-version", configVersion == 2.0 ? "2.5" : "1.5");
+      mustResave = true;
+    }
 
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
