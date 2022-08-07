@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

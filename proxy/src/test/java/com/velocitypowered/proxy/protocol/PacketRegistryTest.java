@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
-
 import org.junit.jupiter.api.Test;
 
 class PacketRegistryTest {

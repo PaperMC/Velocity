@@ -25,14 +25,19 @@ import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Longs;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
@@ -45,6 +50,7 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
@@ -54,6 +60,7 @@ import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
@@ -75,7 +82,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
-    this.forceKeyAuthentication = Boolean.getBoolean("auth.forceSecureProfiles");
+    this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
+            ? Boolean.getBoolean("auth.forceSecureProfiles") : server.getConfiguration().isForceKeyAuthentication();
   }
 
   @Override
@@ -89,7 +97,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (!playerKey.isSignatureValid()) {
+      boolean isKeyValid;
+      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+              && playerKey instanceof IdentifiedKeyImpl) {
+        IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
+        isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
+      } else {
+        isKeyValid = playerKey.isSignatureValid();
+      }
+
+      if (!isKeyValid) {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
       }
@@ -133,7 +150,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
               } else {
                 mcConnection.setSessionHandler(new AuthSessionHandler(
-                    server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
+                        server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
                 ));
               }
             });
@@ -214,9 +231,19 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         try {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
+            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
+            // Not so fast, now we verify the public key for 1.19.1+
+            if (inbound.getIdentifiedKey() != null
+                    && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+                    && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+              if (!key.internalAddHolder(profile.getId())) {
+                inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+              }
+            }
             // All went well, initialize the session.
             mcConnection.setSessionHandler(new AuthSessionHandler(
-                server, inbound, GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class), true
+                server, inbound, profile, true
             ));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.

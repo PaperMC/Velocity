@@ -34,7 +34,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -42,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -557,11 +555,13 @@ public enum ProtocolUtils {
    * @param buf the buffer
    * @return the key
    */
-  public static IdentifiedKey readPlayerKey(ByteBuf buf) {
+  public static IdentifiedKey readPlayerKey(ProtocolVersion version, ByteBuf buf) {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    return new IdentifiedKeyImpl(key, expiry, signature);
+    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+            ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+    return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
   public enum Direction {

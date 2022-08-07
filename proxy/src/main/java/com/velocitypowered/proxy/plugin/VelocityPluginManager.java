@@ -138,7 +138,7 @@ public class VelocityPluginManager implements PluginManager {
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
             .annotatedWith(Names.named(container.getDescription().getId()))
-            .toInstance(container);
+                  .toInstance(container);
         }
       }
     };
