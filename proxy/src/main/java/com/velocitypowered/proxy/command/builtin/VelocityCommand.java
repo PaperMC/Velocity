@@ -37,6 +37,9 @@ import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -50,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import net.kyori.adventure.identity.Identity;
@@ -481,36 +485,63 @@ public class VelocityCommand implements SimpleCommand {
 
   public static class Heap implements SubCommand {
     private static final Logger logger = LogManager.getLogger(Heap.class);
+    private MethodHandle heapGenerator;
+    private Consumer<CommandSource> heapConsumer;
+    private final Path dir = Path.of("./dumps");
 
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       try {
-        Path dir = Path.of("./dumps");
         if (Files.notExists(dir)) {
           Files.createDirectories(dir);
         }
 
-        javax.management.MBeanServer server = java.lang.management.ManagementFactory.getPlatformMBeanServer();
-        Path file;
-        String name = "heap-dump-" + DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(LocalDateTime.now());
+        // A single lookup of the heap dump generator method is performed on execution
+        // to avoid assigning variables unnecessarily in case the user never executes the command
+        if (heapGenerator == null || heapConsumer == null) {
+          javax.management.MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+          MethodHandles.Lookup lookup = MethodHandles.lookup();
+          DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss");
+          try {
+            Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
 
-        try {
-          Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
-          Object openj9Mbean = java.lang.management.ManagementFactory.newPlatformMXBeanProxy(
-              server, "openj9.lang.management:type=OpenJ9Diagnostics", clazz);
-          java.lang.reflect.Method m = clazz.getMethod("triggerDumpToFile", String.class, String.class);
-          file = dir.resolve(name + ".phd");
-          m.invoke(openj9Mbean, "heap", file.toString());
-        } catch (ClassNotFoundException e) {
-          Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
-          Object hotspotMBean = java.lang.management.ManagementFactory.newPlatformMXBeanProxy(
-              server, "com.sun.management:type=HotSpotDiagnostic", clazz);
-          java.lang.reflect.Method m = clazz.getMethod("dumpHeap", String.class, boolean.class);
-          file = dir.resolve(name + ".hprof");
-          m.invoke(hotspotMBean, file.toString(), true);
+            this.heapGenerator = lookup.unreflect(
+                  clazz.getMethod("triggerDumpToFile", String.class, String.class));
+            this.heapConsumer = (src) -> {
+              String name = "heap-dump-" + format.format(LocalDateTime.now());
+              Path file = dir.resolve(name + ".phd");
+              try {
+                Object openj9Mbean = ManagementFactory.newPlatformMXBeanProxy(
+                    server, "openj9.lang.management:type=OpenJ9Diagnostics", clazz);
+                heapGenerator.invoke(openj9Mbean, "heap", file.toString());
+              } catch (Throwable e) {
+                // This should not occur
+                throw new RuntimeException(e);
+              }
+              src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+            };
+          } catch (ClassNotFoundException e) {
+            Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
+
+            this.heapGenerator = lookup.unreflect(
+                  clazz.getMethod("dumpHeap", String.class, boolean.class));
+            this.heapConsumer = (src) -> {
+              String name = "heap-dump-" + format.format(LocalDateTime.now());
+              Path file = dir.resolve(name + ".hprof");
+              try {
+                Object hotspotMBean = ManagementFactory.newPlatformMXBeanProxy(
+                    server, "com.sun.management:type=HotSpotDiagnostic", clazz);
+                this.heapGenerator.invoke(hotspotMBean, file.toString(), true);
+              } catch (Throwable e1) {
+                // This should not occur
+                throw new RuntimeException(e);
+              }
+              src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+            };
+          }
         }
 
-        source.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+        this.heapConsumer.accept(source);
       } catch (Throwable t) {
         source.sendMessage(Component.text("Failed to write heap dump, see server log for details", NamedTextColor.RED));
         logger.error("Could not write heap", t);
