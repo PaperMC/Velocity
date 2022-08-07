@@ -37,6 +37,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -499,11 +500,12 @@ public class VelocityCommand implements SimpleCommand {
           javax.management.MBeanServer server = ManagementFactory.getPlatformMBeanServer();
           MethodHandles.Lookup lookup = MethodHandles.lookup();
           DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss");
+          MethodType type;
           try {
             Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
+            type = MethodType.methodType(String.class, String.class, String.class);
 
-            this.heapGenerator = lookup.unreflect(
-                  clazz.getMethod("triggerDumpToFile", String.class, String.class));
+            this.heapGenerator = lookup.findVirtual(clazz, "triggerDumpToFile", type);
             this.heapConsumer = (src) -> {
               String name = "heap-dump-" + format.format(LocalDateTime.now());
               Path file = dir.resolve(name + ".phd");
@@ -519,9 +521,9 @@ public class VelocityCommand implements SimpleCommand {
             };
           } catch (ClassNotFoundException e) {
             Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
+            type = MethodType.methodType(void.class, String.class, boolean.class);
 
-            this.heapGenerator = lookup.unreflect(
-                  clazz.getMethod("dumpHeap", String.class, boolean.class));
+            this.heapGenerator = lookup.findVirtual(clazz, "dumpHeap", type);
             this.heapConsumer = (src) -> {
               String name = "heap-dump-" + format.format(LocalDateTime.now());
               Path file = dir.resolve(name + ".hprof");
