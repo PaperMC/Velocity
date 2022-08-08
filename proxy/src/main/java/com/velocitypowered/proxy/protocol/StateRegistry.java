@@ -420,7 +420,9 @@ public enum StateRegistry {
         ProtocolVersion to = current == next ? lastValid != null
                 ? lastValid : getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
 
-        if (from.compareTo(to) >= 0 && from != getLast(SUPPORTED_VERSIONS)) {
+        ProtocolVersion lastInList = lastValid != null ? lastValid : getLast(SUPPORTED_VERSIONS);
+
+        if (from.compareTo(to) >= 0 && from != lastInList) {
           throw new IllegalArgumentException(String.format(
               "Next mapping version (%s) should be lower then current (%s)", to, from));
         }
