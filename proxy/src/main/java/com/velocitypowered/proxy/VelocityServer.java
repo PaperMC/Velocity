@@ -332,18 +332,38 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     try {
       Path pluginPath = Path.of("plugins");
+      Path updatePath = pluginPath.resolve("to-update");
+      Path outdatedPluginsPath = pluginPath.resolve("outdated");
 
-      if (!pluginPath.toFile().exists()) {
+      if (!Files.exists(pluginPath)) {
         Files.createDirectory(pluginPath);
-      } else {
-        if (!pluginPath.toFile().isDirectory()) {
-          logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
-              pluginPath);
-          return;
-        }
-
-        pluginManager.loadPlugins(pluginPath);
       }
+      if (!Files.exists(updatePath)) {
+        Files.createDirectory(updatePath);
+      }
+      if (!Files.exists(outdatedPluginsPath)) {
+        Files.createDirectory(outdatedPluginsPath);
+      }
+      if (!Files.isDirectory(pluginPath)) {
+        logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
+                pluginPath);
+        return;
+      }
+
+      boolean applyUpdates = true;
+      if (!Files.isDirectory(updatePath)) {
+        logger.warn("Plugin update location {} is not a directory, plugins will not be updated",
+                updatePath);
+        applyUpdates = false;
+      }
+      if (!Files.isDirectory(outdatedPluginsPath)) {
+        logger.warn("Plugin outdated location {} is not a directory, plugins will not be updated",
+                outdatedPluginsPath);
+        applyUpdates = false;
+      }
+      pluginManager.loadPlugins(pluginPath, updatePath, outdatedPluginsPath, applyUpdates);
+
+
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
     }
