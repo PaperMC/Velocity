@@ -17,7 +17,7 @@ allprojects {
         nettyVersion = '4.1.77.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '3.6.1'
-        configurateVersion = '3.7.2'
+        configurateVersion = '3.7.3'
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
