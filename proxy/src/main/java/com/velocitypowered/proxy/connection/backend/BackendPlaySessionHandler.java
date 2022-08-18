@@ -27,6 +27,7 @@ import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
+import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -46,6 +47,7 @@ import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
+import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -53,7 +55,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
-
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -265,6 +266,22 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           logger.error("Exception while handling available commands for {}", playerConnection, ex);
           return null;
         });
+    return true;
+  }
+
+  @Override
+  public boolean handle(ServerData packet) {
+    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
+        .thenComposeAsync(
+            ping -> server.getEventManager().fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
+            playerConnection.eventLoop()
+        )
+        .thenAcceptAsync(pingEvent ->
+            this.playerConnection.write(
+                new ServerData(pingEvent.getPing().getDescriptionComponent(),
+                    pingEvent.getPing().getFavicon().orElse(null),
+                    packet.isPreviewsChat(), packet.isSecureChatEnforced())
+            ), playerConnection.eventLoop());
     return true;
   }
 

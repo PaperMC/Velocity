@@ -31,7 +31,6 @@ import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.DynamicTest;

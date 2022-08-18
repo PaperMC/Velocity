@@ -17,7 +17,10 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
@@ -26,6 +29,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -47,6 +51,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -76,9 +81,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+
+      int requestedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      // Check version
+      if (packet.content().readableBytes() == 1) {
+        requestedForwardingVersion = packet.content().readByte();
+      }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(),
-          serverConn.getPlayer().getGameProfile());
+          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), requestedForwardingVersion);
+
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
@@ -162,15 +173,62 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     }
   }
 
+  private static int findForwardingVersion(int requested, ConnectedPlayer player) {
+    // Ensure we are in range
+    requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
+    if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
+      if (player.getIdentifiedKey() != null) {
+        // No enhanced switch on java 11
+        switch (player.getIdentifiedKey().getKeyRevision()) {
+          case GENERIC_V1:
+            return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
+          // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
+          case LINKED_V2:
+            return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+                  ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2 : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+          default:
+            return VelocityConstants.MODERN_FORWARDING_DEFAULT;
+        }
+      } else {
+        return VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      }
+    }
+    return VelocityConstants.MODERN_FORWARDING_DEFAULT;
+  }
+
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      GameProfile profile) {
+                                              ConnectedPlayer player, int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
-      ProtocolUtils.writeVarInt(forwarded, VelocityConstants.FORWARDING_VERSION);
+      int actualVersion = findForwardingVersion(requestedVersion, player);
+
+      ProtocolUtils.writeVarInt(forwarded, actualVersion);
       ProtocolUtils.writeString(forwarded, address);
-      ProtocolUtils.writeUuid(forwarded, profile.getId());
-      ProtocolUtils.writeString(forwarded, profile.getName());
-      ProtocolUtils.writeProperties(forwarded, profile.getProperties());
+      ProtocolUtils.writeUuid(forwarded, player.getGameProfile().getId());
+      ProtocolUtils.writeString(forwarded, player.getGameProfile().getName());
+      ProtocolUtils.writeProperties(forwarded, player.getGameProfile().getProperties());
+
+      // This serves as additional redundancy. The key normally is stored in the
+      // login start to the server, but some setups require this.
+      if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
+        IdentifiedKey key = player.getIdentifiedKey();
+        assert key != null;
+        ProtocolUtils.writePlayerKey(forwarded, key);
+
+        // Provide the signer UUID since the UUID may differ from the
+        // assigned UUID. Doing that breaks the signatures anyway but the server
+        // should be able to verify the key independently.
+        if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2) {
+          if (key.getSignatureHolder() != null) {
+            forwarded.writeBoolean(true);
+            ProtocolUtils.writeUuid(forwarded, key.getSignatureHolder());
+          } else {
+            // Should only not be provided if the player was connected
+            // as offline-mode and the signer UUID was not backfilled
+            forwarded.writeBoolean(false);
+          }
+        }
+      }
 
       SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
       Mac mac = Mac.getInstance("HmacSHA256");

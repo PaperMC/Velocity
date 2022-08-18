@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -35,8 +36,8 @@ public class VelocityTabListLegacy extends VelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
 
-  public VelocityTabListLegacy(final ConnectedPlayer player) {
-    super(player);
+  public VelocityTabListLegacy(final ConnectedPlayer player, final ProxyServer proxyServer) {
+    super(player, proxyServer);
   }
 
   @Deprecated

@@ -70,11 +70,13 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
           destinationAddress, destination.writableBytes());
       if (produced > 0) {
         destination.writerIndex(destination.writerIndex() + produced);
-        return;
+        break;
+      } else if (produced == 0) {
+        // Insufficient room - enlarge the buffer.
+        destination.capacity(destination.capacity() * 2);
+      } else {
+        throw new DataFormatException("libdeflate returned unknown code " + produced);
       }
-
-      // Insufficient room - enlarge the buffer.
-      destination.capacity(destination.capacity() * 2);
     }
   }
 

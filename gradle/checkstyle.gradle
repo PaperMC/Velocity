@@ -1,5 +1,5 @@
 checkstyle {
-    toolVersion '8.14'
+    toolVersion '10.3.1'
     configFile new File(project.rootDir, ['config', 'checkstyle', 'checkstyle.xml'].join(File.separator))
     
     // The build should immediately fail if we have errors.

@@ -17,20 +17,20 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-
 import io.netty.buffer.ByteBuf;
 
 public class RegistryKeyArgumentSerializer implements ArgumentPropertySerializer<RegistryKeyArgument> {
   static final RegistryKeyArgumentSerializer REGISTRY = new RegistryKeyArgumentSerializer();
 
   @Override
-  public RegistryKeyArgument deserialize(ByteBuf buf) {
+  public RegistryKeyArgument deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     return new RegistryKeyArgument(ProtocolUtils.readString(buf));
   }
 
   @Override
-  public void serialize(RegistryKeyArgument object, ByteBuf buf) {
+  public void serialize(RegistryKeyArgument object, ByteBuf buf, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, object.getIdentifier());
   }
 }

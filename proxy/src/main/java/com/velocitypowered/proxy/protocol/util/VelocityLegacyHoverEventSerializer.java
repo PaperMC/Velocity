@@ -29,7 +29,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEvent.ShowEntity;
 import net.kyori.adventure.text.event.HoverEvent.ShowItem;
 import net.kyori.adventure.text.serializer.gson.LegacyHoverEventSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.util.Codec.Decoder;
 import net.kyori.adventure.util.Codec.Encoder;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -54,7 +54,7 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
   @Override
   public HoverEvent.@NonNull ShowItem deserializeShowItem(@NonNull Component input)
       throws IOException {
-    String snbt = PlainComponentSerializer.plain().serialize(input);
+    String snbt = PlainTextComponentSerializer.plainText().serialize(input);
     CompoundBinaryTag item = TagStringIO.get().asCompound(snbt);
 
     Key key;
@@ -66,13 +66,13 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
     }
 
     byte count = item.getByte("Count", (byte) 1);
-    return ShowItem.of(key, count, BinaryTagHolder.of(snbt));
+    return ShowItem.of(key, count, BinaryTagHolder.binaryTagHolder(snbt));
   }
 
   @Override
   public HoverEvent.@NonNull ShowEntity deserializeShowEntity(@NonNull Component input,
       Decoder<Component, String, ? extends RuntimeException> componentDecoder) throws IOException {
-    String snbt = PlainComponentSerializer.plain().serialize(input);
+    String snbt = PlainTextComponentSerializer.plainText().serialize(input);
     CompoundBinaryTag item = TagStringIO.get().asCompound(snbt);
 
     Component name;

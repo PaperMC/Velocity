@@ -21,7 +21,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -32,7 +34,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -40,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -59,7 +59,7 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
           .build();
 
-  private static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
+  public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad VarInt decoded");
   private static final int[] VARINT_EXACT_BYTE_LENGTHS = new int[33];
@@ -535,6 +535,33 @@ public enum ProtocolUtils {
       return MODERN_SERIALIZER;
     }
     return PRE_1_16_SERIALIZER;
+  }
+
+  /**
+   * Writes a players {@link IdentifiedKey} to the buffer.
+   *
+   * @param buf the buffer
+   * @param playerKey the key to write
+   */
+  public static void writePlayerKey(ByteBuf buf, IdentifiedKey playerKey) {
+    buf.writeLong(playerKey.getExpiryTemporal().toEpochMilli());
+    ProtocolUtils.writeByteArray(buf, playerKey.getSignedPublicKey().getEncoded());
+    ProtocolUtils.writeByteArray(buf, playerKey.getSignature());
+  }
+
+  /**
+   * Reads a players {@link IdentifiedKey} from the buffer.
+   *
+   * @param buf the buffer
+   * @return the key
+   */
+  public static IdentifiedKey readPlayerKey(ProtocolVersion version, ByteBuf buf) {
+    long expiry = buf.readLong();
+    byte[] key = ProtocolUtils.readByteArray(buf);
+    byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
+    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+            ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+    return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
   public enum Direction {

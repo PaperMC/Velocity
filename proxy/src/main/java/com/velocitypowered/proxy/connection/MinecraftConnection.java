@@ -34,9 +34,8 @@ import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
-import com.velocitypowered.proxy.connection.client.LoginSessionHandler;
+import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
-import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
@@ -82,7 +81,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private @Nullable MinecraftSessionHandler sessionHandler;
   private ProtocolVersion protocolVersion;
   private @Nullable MinecraftConnectionAssociation association;
-  private final VelocityServer server;
+  public final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
 
@@ -104,7 +103,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       sessionHandler.connected();
     }
 
-    if (association != null) {
+    if (association != null && server.getConfiguration().isLogPlayerConnections()) {
       logger.info("{} has connected", association);
     }
   }
@@ -116,7 +115,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
 
     if (association != null && !knownDisconnect
-        && !(sessionHandler instanceof StatusSessionHandler)) {
+        && !(sessionHandler instanceof StatusSessionHandler)
+        && server.getConfiguration().isLogPlayerConnections()) {
       logger.info("{} has disconnected", association);
     }
   }
@@ -177,7 +177,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
-          boolean frontlineHandler = sessionHandler instanceof LoginSessionHandler
+          boolean frontlineHandler = sessionHandler instanceof InitialLoginSessionHandler
               || sessionHandler instanceof HandshakeSessionHandler
               || sessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;

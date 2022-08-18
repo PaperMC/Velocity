@@ -18,6 +18,10 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -30,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,10 +45,15 @@ public class VelocityTabList implements TabList {
 
   protected final ConnectedPlayer player;
   protected final MinecraftConnection connection;
+  protected final ProxyServer proxyServer;
   protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
 
-  public VelocityTabList(final ConnectedPlayer player) {
+  /**
+  * Creates a new VelocityTabList.
+  */
+  public VelocityTabList(final ConnectedPlayer player, final ProxyServer proxyServer) {
     this.player = player;
+    this.proxyServer = proxyServer;
     this.connection = player.getConnection();
   }
 
@@ -120,9 +130,15 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
+    return buildEntry(profile, displayName, latency, gameMode, null);
+  }
+
+  @Override
   public TabListEntry buildEntry(GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
+                                 net.kyori.adventure.text.@Nullable Component displayName,
+                                 int latency, int gameMode, @Nullable IdentifiedKey key) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, key);
   }
 
   /**
@@ -149,11 +165,29 @@ public class VelocityTabList implements TabList {
           if (name == null || properties == null) {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
+          // Verify key
+          IdentifiedKey providedKey = item.getPlayerKey();
+          Optional<Player> connected = proxyServer.getPlayer(uuid);
+          if (connected.isPresent()) {
+            IdentifiedKey expectedKey = connected.get().getIdentifiedKey();
+            if (providedKey != null) {
+              if (!Objects.equals(expectedKey, providedKey)) {
+                throw new IllegalStateException("Server provided incorrect player key in playerlist for "
+                        + name + " UUID: " + uuid);
+              }
+            } else {
+              // Substitute the key
+              // It shouldn't be propagated to remove the signature.
+              providedKey = expectedKey;
+            }
+          }
+
           entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, name, properties))
               .displayName(item.getDisplayName())
               .latency(item.getLatency())
+              .playerKey(providedKey)
               .gameMode(item.getGameMode())
               .build());
           break;
@@ -192,6 +226,21 @@ public class VelocityTabList implements TabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+
+      IdentifiedKey selectedKey = packetItem.getPlayerKey();
+      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
+      if (existing.isPresent()) {
+        selectedKey = existing.get().getIdentifiedKey();
+      }
+
+      if (selectedKey != null
+              && selectedKey.getKeyRevision().getApplicableTo().contains(connection.getProtocolVersion())
+              && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
+        packetItem.setPlayerKey(selectedKey);
+      } else {
+        packetItem.setPlayerKey(null);
+      }
+
       connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
     }
   }

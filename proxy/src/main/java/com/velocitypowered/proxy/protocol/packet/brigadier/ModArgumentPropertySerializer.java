@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -30,14 +31,22 @@ class ModArgumentPropertySerializer implements ArgumentPropertySerializer<ModArg
   }
 
   @Override
-  public @Nullable ModArgumentProperty deserialize(ByteBuf buf) {
-    String identifier = ProtocolUtils.readString(buf);
+  public @Nullable ModArgumentProperty deserialize(ByteBuf buf, ProtocolVersion version) {
+    ArgumentIdentifier identifier;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      int idx = ProtocolUtils.readVarInt(buf);
+      identifier = ArgumentIdentifier.id("crossstitch:identified_" + (idx < 0 ? "n" + (-idx) : idx),
+              ArgumentIdentifier.mapSet(version, idx));
+    } else {
+      identifier = ArgumentIdentifier.id(ProtocolUtils.readString(buf));
+    }
+
     byte[] extraData = ProtocolUtils.readByteArray(buf);
     return new ModArgumentProperty(identifier, Unpooled.wrappedBuffer(extraData));
   }
 
   @Override
-  public void serialize(ModArgumentProperty object, ByteBuf buf) {
+  public void serialize(ModArgumentProperty object, ByteBuf buf, ProtocolVersion version) {
     // This is special-cased by ArgumentPropertyRegistry
     throw new UnsupportedOperationException();
   }

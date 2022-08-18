@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 public class Natives {
@@ -70,7 +69,7 @@ public class Natives {
   private static Path createTemporaryNativeFilename(String ext) throws IOException {
     String temporaryFolderPath = System.getProperty("velocity.natives-tmpdir");
     if (temporaryFolderPath != null) {
-      return Files.createTempFile(Paths.get(temporaryFolderPath), "native-", ext);
+      return Files.createTempFile(Path.of(temporaryFolderPath), "native-", ext);
     } else {
       return Files.createTempFile("native-", ext);
     }
@@ -85,6 +84,10 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
               "libdeflate (Linux aarch64)",
+              LibdeflateVelocityCompressor.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
+              copyAndLoadNative("/macos_arm64/velocity-compress.dylib"),
+              "libdeflate (macOS ARM64 / Apple Silicon)",
               LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCompressor.FACTORY)
@@ -105,6 +108,10 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
               "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
+              copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
+              "native (macOS ARM64 / Apple Silicon)",
+               NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )

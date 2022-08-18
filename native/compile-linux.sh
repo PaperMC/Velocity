@@ -21,5 +21,5 @@ ARCH=$(uname -m)
 mkdir -p src/main/resources/linux_$ARCH
 $CC $CFLAGS -Ilibdeflate src/main/c/jni_util.c src/main/c/jni_zlib_deflate.c src/main/c/jni_zlib_inflate.c \
     libdeflate/libdeflate.a -o src/main/resources/linux_$ARCH/velocity-compress.so
-$CC $CFLAGS -shared src/main/c/jni_util.c src/main/c/jni_cipher.c \
+$CC $CFLAGS -shared src/main/c/jni_util.c src/main/c/jni_cipher_openssl.c \
     -o src/main/resources/linux_$ARCH/velocity-cipher.so -lcrypto
