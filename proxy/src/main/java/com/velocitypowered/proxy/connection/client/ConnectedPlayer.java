@@ -706,7 +706,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   switch (status.getStatus()) {
                     // Impossible/nonsensical cases
                     case ALREADY_CONNECTED:
-                      logger.error("{}: already connected to {}", this, status.getAttemptedConnection().getServerInfo().getName());
+                      logger.error("{}: already connected to {}",
+                          this,
+                          status.getAttemptedConnection().getServerInfo().getName()
+                      );
                       break;
                     case CONNECTION_IN_PROGRESS:
                       // Fatal case
