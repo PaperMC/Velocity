@@ -185,9 +185,9 @@ public enum ProtocolUtils {
   private static String readString(ByteBuf buf, int cap, int length) {
     checkFrame(length >= 0, "Got a negative-length string (%s)", length);
     // `cap` is interpreted as a UTF-8 character length. To cover the full Unicode plane, we must
-    // consider the length of a UTF-8 character, which can be up to 4 bytes. We do an initial
+    // consider the length of a UTF-8 character, which can be up to 3 bytes. We do an initial
     // sanity check and then check again to make sure our optimistic guess was good.
-    checkFrame(length <= cap * 4, "Bad string size (got %s, maximum is %s)", length, cap);
+    checkFrame(length <= cap * 3, "Bad string size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
         "Trying to read a string that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
