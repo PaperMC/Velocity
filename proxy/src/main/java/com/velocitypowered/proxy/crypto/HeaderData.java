@@ -15,46 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 package com.velocitypowered.proxy.crypto;
 
-import java.util.Arrays;
-import java.util.UUID;
+import com.velocitypowered.api.proxy.crypto.SignedMessage;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SignaturePair {
+public class HeaderData {
 
-  private final UUID signer;
+  private final SignaturePair header;
   private final byte[] signature;
+  private final byte[] dataHash;
+  //private final IdentifiedKey signer;
+  private final @Nullable SignedMessage message;
 
-  private static final byte[] EMPTY = new byte[0];
-
-  public SignaturePair(UUID signer, byte[] signature) {
-    this.signer = signer;
+  public HeaderData(SignaturePair header, byte[] signature, byte[] dataHash) {
+    this.header = header;
     this.signature = signature;
+    this.dataHash = dataHash;
+    this.message = null;
   }
 
-  public SignaturePair(UUID signer) {
-    this(signer, EMPTY);
+  public byte[] getDataHash() {
+    return dataHash;
   }
 
-  public byte[] getSignature() {
+  public SignaturePair getHeader() {
+    return header;
+  }
+
+  public @Nullable byte[] getSignature() {
     return signature;
-  }
-
-  public UUID getSigner() {
-    return signer;
-  }
-
-
-  public boolean isEmpty() {
-    return signature.length == 0;
-  }
-
-  @Override
-  public String toString() {
-    return "SignaturePair{"
-            + "signer=" + signer
-            + ", signature=" + Arrays.toString(signature)
-            + '}';
   }
 }

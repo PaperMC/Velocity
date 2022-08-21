@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
+import com.velocitypowered.proxy.util.StableGsonComponentSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -59,6 +60,8 @@ public enum ProtocolUtils {
       GsonComponentSerializer.builder()
           .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
           .build();
+
+  public static final GsonComponentSerializer STABLE_MODERN_SERIALIZER = new StableGsonComponentSerializer();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
@@ -595,6 +598,45 @@ public enum ProtocolUtils {
 
     for (int i = 0; i < pairs.length; i++) {
       ProtocolUtils.writeSignaturePair(buf, pairs[i]);
+    }
+  }
+
+  public static SignaturePair readSignatureHeader(ByteBuf buf) {
+    return buf.readBoolean() ? ProtocolUtils.readSignaturePair(buf) : new SignaturePair(ProtocolUtils.readUuid(buf));
+  }
+
+  public static void writeSignatureHeader(ByteBuf buf, SignaturePair signaturePair) {
+    if (signaturePair.isEmpty()) {
+      buf.writeBoolean(false);
+      ProtocolUtils.writeUuid(buf, signaturePair.getSigner());
+    } else {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeSignaturePair(buf, signaturePair);
+    }
+  }
+
+  public static long[] readLongArray(ByteBuf buf) {
+    return readLongArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  public static long[] readLongArray(ByteBuf buf, int cap) {
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
+    checkFrame(buf.isReadable(length),
+            "Trying to read an array that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
+    long[] array = new long[length];
+    for (int i = 0; i < length; i++) {
+      array[i] = buf.readLong();
+    }
+    return array;
+  }
+
+  public static void writeLongArray(ByteBuf buf, long[] array) {
+    writeVarInt(buf, array.length);
+    for (long entry : array) {
+      buf.writeLong(entry);
     }
   }
 

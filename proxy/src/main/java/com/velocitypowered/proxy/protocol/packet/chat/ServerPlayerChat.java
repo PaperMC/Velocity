@@ -17,73 +17,159 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.crypto.HeaderData;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServerPlayerChat implements MinecraftPacket {
 
-  private Component component;
-  private @Nullable Component unsignedComponent;
-  private int type;
+  private static final QuietRuntimeException BODY_HASHING_ERROR
+          = new QuietRuntimeException("Cannot hash message body");
 
-  private UUID sender;
-  private Component senderName;
-  private @Nullable Component teamName;
+  private SignaturePair header;
+  private byte[] headerSignature;
 
+  private String message;
+  private @Nullable Component previewed;
   private Instant expiry;
+  private long salt;
+  private SignaturePair[] lastSeen;
+  private @Nullable Component unsignedContent;
+  
+  private FilterType filter;
+  private long @Nullable[] mask;
 
-  public void setType(int type) {
-    this.type = type;
-  }
-
-  public void setComponent(Component component) {
-    this.component = component;
-  }
-
-  public int getType() {
-    return type;
-  }
-
-  public Component getComponent() {
-    return component;
-  }
+  private int chatType;
+  private Component name;
+  private @Nullable Component targetName;
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
-    if (buf.readBoolean()) {
-      unsignedComponent = component = ProtocolUtils.getJsonChatSerializer(protocolVersion)
-          .deserialize(ProtocolUtils.readString(buf));
-    }
+    header = ProtocolUtils.readSignatureHeader(buf);
+    headerSignature = ProtocolUtils.readByteArray(buf);
 
-    type = ProtocolUtils.readVarInt(buf);
-
-    sender = ProtocolUtils.readUuid(buf);
-    senderName = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
-    if (buf.readBoolean()) {
-      teamName = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
-    }
-
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);
+    message = ProtocolUtils.readString(buf, 256);
+    previewed = buf.readBoolean() ? serializer.deserialize(ProtocolUtils.readString(buf)) : null;
     expiry = Instant.ofEpochMilli(buf.readLong());
+    salt = buf.readLong();
+    lastSeen = ProtocolUtils.readSignaturePairArray(buf, 5);
+    unsignedContent = buf.readBoolean() ? serializer.deserialize(ProtocolUtils.readString(buf)) : null;
+    
+    FilterType filter = FilterType.values()[ProtocolUtils.readVarInt(buf)];
+    if (filter == FilterType.PARTIAL) {
+      mask = ProtocolUtils.readLongArray(buf);
+    }
 
-    long salt = buf.readLong();
-    byte[] signature = ProtocolUtils.readByteArray(buf);
+    chatType = ProtocolUtils.readVarInt(buf);
+    name = serializer.deserialize(ProtocolUtils.readString(buf));
+    targetName = buf.readBoolean() ? serializer.deserialize(ProtocolUtils.readString(buf)) : null;
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    // TBD
+    ProtocolUtils.writeSignatureHeader(buf, header);
+    ProtocolUtils.writeByteArray(buf, headerSignature);
+
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);
+    ProtocolUtils.writeString(buf, message);
+    if (previewed != null) {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeString(buf, serializer.serialize(previewed));
+    } else {
+      buf.writeBoolean(false);
+    }
+    buf.writeLong(expiry.toEpochMilli());
+    buf.writeLong(salt);
+    ProtocolUtils.writeSignaturePairArray(buf, lastSeen);
+    if (unsignedContent != null) {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeString(buf, serializer.serialize(unsignedContent));
+    } else {
+      buf.writeBoolean(false);
+    }
+
+    ProtocolUtils.writeVarInt(buf, filter.ordinal());
+    if (filter == FilterType.PARTIAL) {
+      ProtocolUtils.writeLongArray(buf, mask);
+    }
+
+    ProtocolUtils.writeVarInt(buf, chatType);
+    ProtocolUtils.writeString(buf, serializer.serialize(name));
+    if (targetName != null) {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeString(buf, serializer.serialize(targetName));
+    } else {
+      buf.writeBoolean(false);
+    }
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+  
+  // Another magic network registry for no reason.
+  static enum FilterType {
+    NONE,
+    FULL,
+    PARTIAL;
+  }
+
+  /**
+   * Creates the {@link HeaderData} from the given message.
+   *
+   * @return The {@link HeaderData} or null if unsigned
+   */
+  public HeaderData getHeaderData() {
+    return new HeaderData(header, headerSignature, contentHash());
+  }
+
+
+  private byte[] contentHash() {
+    HashingOutputStream hashStream = new HashingOutputStream(Hashing.sha256(), OutputStream.nullOutputStream());
+
+    try {
+      DataOutputStream dataOut = new DataOutputStream(hashStream);
+      dataOut.writeLong(salt);
+      dataOut.writeLong(expiry.getEpochSecond());
+
+      OutputStreamWriter outputStream = new OutputStreamWriter(dataOut, StandardCharsets.UTF_8);
+      outputStream.write(message);
+      outputStream.flush();
+      dataOut.write(70);
+      if (previewed != null) {
+        outputStream.write(ProtocolUtils.STABLE_MODERN_SERIALIZER.serialize(previewed));
+        outputStream.flush();
+      }
+
+      for (SignaturePair pair : lastSeen) {
+        dataOut.writeByte(70);
+        dataOut.writeLong(pair.getSigner().getMostSignificantBits());
+        dataOut.writeLong(pair.getSigner().getLeastSignificantBits());
+        dataOut.write(pair.getSignature());
+      }
+
+    } catch (IOException e) {
+      throw BODY_HASHING_ERROR;
+    }
+
+    return hashStream.hash().asBytes();
   }
 }
