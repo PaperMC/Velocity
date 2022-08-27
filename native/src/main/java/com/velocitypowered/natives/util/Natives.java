@@ -100,6 +100,9 @@ public class Natives {
               copyAndLoadNative("/linux_x86_64/velocity-cipher.so"), // Any local version
               "OpenSSL local (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl30x.so"), // Debian "Bookworm"
+              "OpenSSL 3.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Debian 9
               "OpenSSL 1.1.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
