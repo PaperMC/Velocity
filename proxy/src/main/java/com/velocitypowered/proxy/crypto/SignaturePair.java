@@ -19,6 +19,8 @@
 package com.velocitypowered.proxy.crypto;
 
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Objects;
 import java.util.UUID;
 
 public class SignaturePair {
@@ -54,7 +56,22 @@ public class SignaturePair {
   public String toString() {
     return "SignaturePair{"
             + "signer=" + signer
-            + ", signature=" + Arrays.toString(signature)
+            + ", signature=" + new String(Base64.getEncoder().encode(signature))
             + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SignaturePair that = (SignaturePair) o;
+    return signer.equals(that.signer) && Arrays.equals(signature, that.signature);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(signer);
+    result = 31 * result + Arrays.hashCode(signature);
+    return result;
   }
 }

@@ -57,7 +57,7 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
-import com.velocitypowered.proxy.crypto.SignaturePair;
+import com.velocitypowered.proxy.crypto.ChatTracker;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -170,9 +170,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable IdentifiedKey playerKey;
   private ChatQueue chatQueue;
   private @MonotonicNonNull ServerData currentServerData;
-  private @MonotonicNonNull byte[] lastChatSignatureData;
-  private SignaturePair[] lastSeenMessages = new SignaturePair[0];
-  private @MonotonicNonNull SignaturePair lastMessage;
+  private @MonotonicNonNull ChatTracker signedChatTracker;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
@@ -192,6 +190,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
+    this.signedChatTracker = ChatTracker.forKey(playerKey);
   }
 
   ChatQueue getChatQueue() {
@@ -1244,27 +1243,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.currentServerData = currentServerData;
   }
 
-  public byte[] getLastChatSignatureData() {
-    return lastChatSignatureData;
-  }
-
-  public void setLastChatSignatureData(byte[] lastChatSignatureData) {
-    this.lastChatSignatureData = lastChatSignatureData;
-  }
-
-  public SignaturePair getLastMessage() {
-    return lastMessage;
-  }
-
-  public void setLastMessage(SignaturePair lastMessage) {
-    this.lastMessage = lastMessage;
-  }
-
-  public SignaturePair[] getLastSeenMessages() {
-    return lastSeenMessages;
-  }
-
-  public void setLastSeenMessages(SignaturePair[] lastSeenMessages) {
-    this.lastSeenMessages = lastSeenMessages;
+  public @Nullable ChatTracker getSignedChatTracker() {
+    return signedChatTracker;
   }
 }

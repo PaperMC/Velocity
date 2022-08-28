@@ -72,7 +72,7 @@ public class ServerPlayerChat implements MinecraftPacket {
     lastSeen = ProtocolUtils.readSignaturePairArray(buf, 5);
     unsignedContent = buf.readBoolean() ? serializer.deserialize(ProtocolUtils.readString(buf)) : null;
     
-    FilterType filter = FilterType.values()[ProtocolUtils.readVarInt(buf)];
+    filter = FilterType.values()[ProtocolUtils.readVarInt(buf)];
     if (filter == FilterType.PARTIAL) {
       mask = ProtocolUtils.readLongArray(buf);
     }
@@ -138,7 +138,10 @@ public class ServerPlayerChat implements MinecraftPacket {
    * @return The {@link HeaderData} or null if unsigned
    */
   public HeaderData getHeaderData() {
-    return new HeaderData(header, headerSignature, contentHash());
+    if (headerSignature.length > 0) {
+      return new HeaderData(header, headerSignature, contentHash());
+    }
+    return null;
   }
 
 

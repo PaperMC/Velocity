@@ -18,6 +18,8 @@
 package com.velocitypowered.proxy.crypto;
 
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
+import java.util.Arrays;
+import java.util.Base64;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class HeaderData {
@@ -45,5 +47,15 @@ public class HeaderData {
 
   public @Nullable byte[] getSignature() {
     return signature;
+  }
+
+  @Override
+  public String toString() {
+    return "HeaderData{"
+            + "header=" + header
+            + ", signature=" + new String(Base64.getEncoder().encode(signature))
+            + ", dataHash=" + new String(Base64.getEncoder().encode(dataHash))
+            + ", message=" + message
+            + '}';
   }
 }

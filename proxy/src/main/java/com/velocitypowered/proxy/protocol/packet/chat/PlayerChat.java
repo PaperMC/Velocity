@@ -28,7 +28,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
-import java.util.UUID;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerChat implements MinecraftPacket {
@@ -64,7 +64,7 @@ public class PlayerChat implements MinecraftPacket {
     this.signature = message.getSignature();
     this.signedPreview = message.isPreviewSigned();
     this.lastMessage = message.getPreviousSignature();
-    this.previousMessages = message.getPreviousSignatures();
+    this.previousMessages = message.getSeenSignatures();
   }
 
   public Instant getExpiry() {
@@ -138,24 +138,17 @@ public class PlayerChat implements MinecraftPacket {
   }
 
   /**
-   * Validates a signature and creates a {@link SignedChatMessage} from the given signature.
+   * Creates a {@link SignedChatMessage} from the given signature if possible.
    *
    * @param signer the signer's information
-   * @param sender the sender of the message
-   * @param mustSign instructs the function to throw if the signature is invalid.
    * @return The {@link SignedChatMessage} or null if the signature couldn't be verified.
-   * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
-   *                                                                     is invalid.
    */
-  public SignedChatMessage signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
+  public SignedChatMessage signedContainer(IdentifiedKey signer) {
     if (unsigned) {
-      if (mustSign) {
-        throw EncryptionUtils.INVALID_SIGNATURE;
-      }
       return null;
     }
 
-    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature,
+    return new SignedChatMessage(message, signer.getSignedPublicKey(), signer.getSignatureHolder(), expiry, signature,
             salt, signedPreview, previousMessages, lastMessage);
   }
 

@@ -602,17 +602,21 @@ public enum ProtocolUtils {
   }
 
   public static SignaturePair readSignatureHeader(ByteBuf buf) {
-    return buf.readBoolean() ? ProtocolUtils.readSignaturePair(buf) : new SignaturePair(ProtocolUtils.readUuid(buf));
+    if (buf.readBoolean()) {
+      byte[] data = ProtocolUtils.readByteArray(buf);
+      return new SignaturePair(ProtocolUtils.readUuid(buf), data);
+    }
+    return new SignaturePair(ProtocolUtils.readUuid(buf));
   }
 
   public static void writeSignatureHeader(ByteBuf buf, SignaturePair signaturePair) {
     if (signaturePair.isEmpty()) {
       buf.writeBoolean(false);
-      ProtocolUtils.writeUuid(buf, signaturePair.getSigner());
     } else {
       buf.writeBoolean(true);
-      ProtocolUtils.writeSignaturePair(buf, signaturePair);
+      ProtocolUtils.writeByteArray(buf, signaturePair.getSignature());
     }
+    ProtocolUtils.writeUuid(buf, signaturePair.getSigner());
   }
 
   public static long[] readLongArray(ByteBuf buf) {
