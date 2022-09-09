@@ -72,7 +72,6 @@ import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
@@ -318,8 +317,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * @return the translated message
    */
   public Component translateMessage(Component message) {
-    Locale locale = ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
+    Locale locale = getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale();
     return GlobalTranslator.render(message, locale);
   }
 

@@ -56,7 +56,7 @@ import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+import com.velocitypowered.proxy.util.ClosestLocaleTranslator;
 import com.velocitypowered.proxy.util.FileSystemUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
@@ -249,6 +249,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     final TranslationRegistry translationRegistry = TranslationRegistry
         .create(Key.key("velocity", "translations"));
     translationRegistry.defaultLocale(Locale.US);
+    final ClosestLocaleTranslator closestLocaleTranslator = new ClosestLocaleTranslator(translationRegistry);
+
     try {
       FileSystemUtils.visitResources(VelocityServer.class, path -> {
         logger.info("Loading localizations...");
@@ -291,7 +293,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
                 : Locale.forLanguageTag(localeName);
 
             translationRegistry.registerAll(locale, file, false);
-            ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
+            closestLocaleTranslator.registerKnown(locale);
           });
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
@@ -301,7 +303,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       logger.error("Encountered an I/O error whilst loading translations", e);
       return;
     }
-    GlobalTranslator.translator().addSource(translationRegistry);
+    GlobalTranslator.translator().addSource(closestLocaleTranslator);
   }
 
   @SuppressFBWarnings("DM_EXIT")
