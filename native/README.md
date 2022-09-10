@@ -16,8 +16,8 @@ traditional Java fallbacks.
   way to use AES-NI extensions on modern processors, but this is less important since JDK 8 has native support.
 * OpenSSL is not included in Velocity. Every distribution provides it now. To deal with ABI incompatibilities,
   the native library (which only calls into OpenSSL and contains no cryptographic code) are available for
-  CentOS 7 (OpenSSL 1.0.0-based) and Debian 9 (OpenSSL 1.1.0-based) to provide the widest, most reasonable
-  compatibility with most modern distributions.
+  CentOS 7 (OpenSSL 1.0.0-based), Debian 9 (OpenSSL 1.1.0-based) and Debian Bookworm (OpenSSL 3.0.0-based) 
+  to provide the widest, most reasonable compatibility with most modern distributions.
 
 ## OS support
 

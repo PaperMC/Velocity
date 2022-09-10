@@ -26,7 +26,7 @@ public class VelocityTabListEntryLegacy extends VelocityTabListEntry {
 
   VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,
       @Nullable Component displayName, int latency, int gameMode) {
-    super(tabList, profile, displayName, latency, gameMode);
+    super(tabList, profile, displayName, latency, gameMode, null);
   }
 
   @Override

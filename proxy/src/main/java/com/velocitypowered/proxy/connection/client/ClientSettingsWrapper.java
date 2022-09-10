@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.SkinParts;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import java.util.Locale;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettingsWrapper implements PlayerSettings {
@@ -79,4 +80,21 @@ public class ClientSettingsWrapper implements PlayerSettings {
     return settings.isClientListingAllowed();
   }
 
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ClientSettingsWrapper that = (ClientSettingsWrapper) o;
+    return Objects.equals(settings, that.settings) && Objects.equals(parts, that.parts)
+        && Objects.equals(locale, that.locale);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(settings, parts, locale);
+  }
 }

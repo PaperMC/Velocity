@@ -34,9 +34,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.JRE;
 
 class VelocityCompressorTest {
 
