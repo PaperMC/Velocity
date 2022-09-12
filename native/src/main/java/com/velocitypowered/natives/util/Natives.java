@@ -84,7 +84,7 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
               "libdeflate (Linux aarch64)",
-              LibdeflateVelocityCompressor.FACTORY),
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Fedora 36
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-compress.dylib"),
               "libdeflate (macOS ARM64 / Apple Silicon)",
@@ -109,8 +109,11 @@ public class Natives {
               copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl10x.so"), // CentOS 7
               "OpenSSL 1.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
-              copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
-              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY),
+              copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl30x.so"),
+              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY), // Fedora 36
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
+              copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl11x.so"),
+              "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Debian 11
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
               "native (macOS ARM64 / Apple Silicon)",
