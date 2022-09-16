@@ -124,8 +124,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-          NamedTextColor.RED));
+      player.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"));
       return false;
     }
     return true;
