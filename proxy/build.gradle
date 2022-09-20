@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 plugins {
     id 'java'
     id 'checkstyle'
+    id "com.github.spotbugs" version "5.0.12"
 }
 
 apply plugin: 'org.cadixdev.licenser'
@@ -60,35 +61,34 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-jul:${log4jVersion}"
 
     implementation 'net.sf.jopt-simple:jopt-simple:5.0.4' // command-line options
-    implementation 'net.minecrell:terminalconsoleappender:1.2.0'
-    runtimeOnly 'org.jline:jline-terminal-jansi:3.20.0' // Needed for JLine
+    implementation 'net.minecrell:terminalconsoleappender:1.3.0'
+    runtimeOnly 'org.jline:jline-terminal-jansi:3.21.0' // Needed for JLine
     runtimeOnly 'com.lmax:disruptor:3.4.4' // Async loggers
 
-    implementation 'it.unimi.dsi:fastutil-core:8.5.4'
+    implementation 'it.unimi.dsi:fastutil-core:8.5.8'
 
     implementation(platform("net.kyori:adventure-bom:${adventureVersion}"))
     implementation("net.kyori:adventure-nbt")
-    implementation("net.kyori:adventure-platform-facet:4.0.0")
+    implementation('net.kyori:adventure-platform-facet:4.1.2')
 
     implementation 'org.asynchttpclient:async-http-client:2.12.3'
 
     implementation 'com.spotify:completable-futures:0.3.5'
 
-    implementation 'com.electronwill.night-config:toml:3.6.4'
+    implementation 'com.electronwill.night-config:toml:3.6.6'
 
-    implementation 'org.bstats:bstats-base:2.2.1'
+    implementation 'org.bstats:bstats-base:3.0.0'
     implementation 'org.lanternpowered:lmbda:2.0.0'
 
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.0.3'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
 
-    implementation 'space.vectrix.flare:flare:2.0.0'
-    implementation 'space.vectrix.flare:flare-fastutil:2.0.0'
+    implementation 'space.vectrix.flare:flare:2.0.1'
+    implementation 'space.vectrix.flare:flare-fastutil:2.0.1'
 
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.4.0'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-    testImplementation "org.mockito:mockito-core:3.+"
+    testImplementation 'org.mockito:mockito-core:4.8.0'
 }
 
 test {
