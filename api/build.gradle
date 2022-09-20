@@ -39,7 +39,7 @@ dependencies {
     api("net.kyori:adventure-text-minimessage")
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
-    api 'com.google.inject:guice:5.0.1'
+    api 'com.google.inject:guice:5.1.0'
     api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
 
@@ -84,7 +84,7 @@ javadoc {
     options.charSet = 'UTF-8'
     options.source = '8'
     options.links(
-            'http://www.slf4j.org/apidocs/',
+            'https://www.slf4j.org/apidocs/',
             'https://google.github.io/guava/releases/25.1-jre/api/docs/',
             'https://google.github.io/guice/api-docs/5.0.1/javadoc/',
             'https://docs.oracle.com/en/java/javase/11/docs/api//',
