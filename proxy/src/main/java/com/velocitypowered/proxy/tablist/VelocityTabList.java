@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -234,7 +235,8 @@ public class VelocityTabList implements TabList {
                     ServerUpdateTablistEvent.Action.of(packet.getAction()),
                     Collections.unmodifiableSet(modifiedEntries))
     ).thenAccept(event -> {
-      List<PlayerListItem.Item> items = event.getEntries().stream().map(this::convertToItem).toList();
+      List<PlayerListItem.Item> items = event.getEntries().stream()
+              .map(this::convertToItem).collect(Collectors.toList());
       connection.delayedWrite(new PlayerListItem(packet.getAction(), items));
     });
   }
