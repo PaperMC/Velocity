@@ -1227,7 +1227,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     @Override
     public void fireAndForget() {
-      connectWithIndication();
+      connectWithIndication().exceptionally((ex) -> {
+        logger.error("Exception while connecting with indication", ex);
+        return null;
+      });
     }
   }
 }
