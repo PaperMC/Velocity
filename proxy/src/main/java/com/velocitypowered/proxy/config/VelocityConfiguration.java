@@ -496,7 +496,7 @@ public class VelocityConfiguration implements ProxyConfig {
             throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
           }
         } else {
-          throw new RuntimeException("The forwarding-secret-file does not exists.");
+          throw new RuntimeException("The forwarding-secret-file does not exist.");
         }
       }
     }
