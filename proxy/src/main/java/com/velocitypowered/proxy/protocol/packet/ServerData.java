@@ -31,15 +31,17 @@ public class ServerData implements MinecraftPacket {
   private @Nullable Component description;
   private @Nullable Favicon favicon;
   private boolean previewsChat;
+  private boolean secureChatEnforced; // Added in 1.19.1
 
   public ServerData() {
   }
 
   public ServerData(@Nullable Component description, @Nullable Favicon favicon,
-      boolean previewsChat) {
+      boolean previewsChat, boolean secureChatEnforced) {
     this.description = description;
     this.favicon = favicon;
     this.previewsChat = previewsChat;
+    this.secureChatEnforced = secureChatEnforced;
   }
 
   @Override
@@ -53,6 +55,9 @@ public class ServerData implements MinecraftPacket {
       this.favicon = new Favicon(ProtocolUtils.readString(buf));
     }
     this.previewsChat = buf.readBoolean();
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      this.secureChatEnforced = buf.readBoolean();
+    }
   }
 
   @Override
@@ -73,6 +78,9 @@ public class ServerData implements MinecraftPacket {
     }
 
     buf.writeBoolean(this.previewsChat);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      buf.writeBoolean(this.secureChatEnforced);
+    }
   }
 
   @Override
@@ -90,5 +98,9 @@ public class ServerData implements MinecraftPacket {
 
   public boolean isPreviewsChat() {
     return previewsChat;
+  }
+
+  public boolean isSecureChatEnforced() {
+    return secureChatEnforced;
   }
 }

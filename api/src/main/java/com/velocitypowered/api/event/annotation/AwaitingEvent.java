@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
@@ -17,6 +18,7 @@ import java.lang.annotation.Target;
  * operations in a non-blocking matter.
  */
 @Target(ElementType.TYPE)
+@Documented
 public @interface AwaitingEvent {
 
 }

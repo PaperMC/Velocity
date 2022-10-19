@@ -78,7 +78,7 @@ public class PlayerListItem implements MinecraftPacket {
 
             if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
               if (buf.readBoolean()) {
-                item.setPlayerKey(ProtocolUtils.readPlayerKey(buf));
+                item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
               }
             }
             break;
