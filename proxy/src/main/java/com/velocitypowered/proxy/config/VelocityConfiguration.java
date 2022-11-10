@@ -74,7 +74,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose private boolean enablePlayerAddressLogging = true;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
-  @Expose private boolean forceKeyAuthentication = true; // Added in 1.19
+  @Expose private KeyAuthenticationPolicy keyAuthenticationPolicy; // Added in 1.19
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query, Metrics metrics) {
@@ -90,7 +90,7 @@ public class VelocityConfiguration implements ProxyConfig {
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean enablePlayerAddressLogging, Servers servers, ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
+      Advanced advanced, Query query, Metrics metrics, KeyAuthenticationPolicy keyAuthenticationPolicy) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -107,7 +107,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
-    this.forceKeyAuthentication = forceKeyAuthentication;
+    this.keyAuthenticationPolicy = keyAuthenticationPolicy;
   }
 
   /**
@@ -383,7 +383,11 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public boolean isForceKeyAuthentication() {
-    return forceKeyAuthentication;
+    return keyAuthenticationPolicy == KeyAuthenticationPolicy.ENFORCED;
+  }
+
+  public boolean isKeyAuthenticationEnabled() {
+    return keyAuthenticationPolicy != KeyAuthenticationPolicy.DISABLED;
   }
 
   @Override
@@ -402,7 +406,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("query", query)
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
-        .add("forceKeyAuthentication", forceKeyAuthentication)
+        .add("keyAuthenticationPolicy", keyAuthenticationPolicy)
         .toString();
   }
 
@@ -502,11 +506,25 @@ public class VelocityConfiguration implements ProxyConfig {
     }
     forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
 
-    if (configVersion == 1.0 || configVersion == 2.0) {
-      config.set("force-key-authentication", config.getOrElse("force-key-authentication", true));
-      config.setComment("force-key-authentication",
-              "Should the proxy enforce the new public key security standard? By default, this is on.");
-      config.set("config-version", configVersion == 2.0 ? "2.5" : "1.5");
+    KeyAuthenticationPolicy keyAuthenticationPolicy = config.getEnum("key-authentication-policy",
+        KeyAuthenticationPolicy.class);
+    if (config.contains("force-key-authentication")) {
+      // Migrate old "force-key-authentication" option
+      logger.warn("Found old \"force-key-authentication\" option, "
+          + "replacing with equivalent \"key-authentication-policy\"");
+      // If "force-key-authentication" was previously disabled, disable enforced policy
+      if (keyAuthenticationPolicy == null && !((boolean) config.get("force-key-authentication"))) {
+        keyAuthenticationPolicy = KeyAuthenticationPolicy.ENABLED;
+        config.set("key-authentication-policy", keyAuthenticationPolicy);
+      }
+      config.remove("force-key-authentication");
+      mustResave = true;
+    }
+
+    if (keyAuthenticationPolicy == null) {
+      // Set default if we couldn't find it in the config
+      keyAuthenticationPolicy = KeyAuthenticationPolicy.ENFORCED;
+      config.set("key-authentication-policy", keyAuthenticationPolicy);
       mustResave = true;
     }
 
@@ -530,7 +548,6 @@ public class VelocityConfiguration implements ProxyConfig {
     String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
-    Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
     Boolean announceForge = config.getOrElse("announce-forge", true);
     Boolean preventClientProxyConnections = config.getOrElse("prevent-client-proxy-connections",
         true);
@@ -562,7 +579,7 @@ public class VelocityConfiguration implements ProxyConfig {
         new Advanced(advancedConfig),
         new Query(queryConfig),
         new Metrics(metricsConfig),
-        forceKeyAuthentication
+        keyAuthenticationPolicy
     );
   }
 

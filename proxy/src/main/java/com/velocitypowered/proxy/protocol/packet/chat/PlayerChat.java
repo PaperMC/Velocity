@@ -168,7 +168,7 @@ public class PlayerChat implements MinecraftPacket {
    *                                                                     is invalid.
    */
   public SignedChatMessage signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
-    if (unsigned) {
+    if (unsigned || signer == null) {
       if (mustSign) {
         throw EncryptionUtils.INVALID_SIGNATURE;
       }
