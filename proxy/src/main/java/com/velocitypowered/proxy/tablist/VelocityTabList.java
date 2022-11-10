@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.event.player.ServerUpdateTablistEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
@@ -32,12 +32,15 @@ import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -148,6 +151,8 @@ public class VelocityTabList implements TabList {
    */
   public void processBackendPacket(PlayerListItem packet) {
     // Packets are already forwarded on, so no need to do that here
+    Set<TabListEntry> modifiedEntries = new HashSet<>();
+
     for (PlayerListItem.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
       assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
@@ -182,23 +187,26 @@ public class VelocityTabList implements TabList {
             }
           }
 
-          entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
-              .tabList(this)
-              .profile(new GameProfile(uuid, name, properties))
-              .displayName(item.getDisplayName())
-              .latency(item.getLatency())
-              .playerKey(providedKey)
-              .gameMode(item.getGameMode())
-              .build());
+          VelocityTabListEntry entry = (VelocityTabListEntry) TabListEntry.builder()
+                  .tabList(this)
+                  .profile(new GameProfile(uuid, name, properties))
+                  .displayName(item.getDisplayName())
+                  .latency(item.getLatency())
+                  .playerKey(providedKey)
+                  .gameMode(item.getGameMode())
+                  .build();
+          this.entries.putIfAbsent(entry.getProfile().getId(), entry);
+          modifiedEntries.add(entry);
           break;
         }
         case PlayerListItem.REMOVE_PLAYER:
-          entries.remove(uuid);
+          modifiedEntries.add(entries.remove(uuid));
           break;
         case PlayerListItem.UPDATE_DISPLAY_NAME: {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setDisplayNameInternal(item.getDisplayName());
+            modifiedEntries.add(entry);
           }
           break;
         }
@@ -206,6 +214,7 @@ public class VelocityTabList implements TabList {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
+            modifiedEntries.add(entry);
           }
           break;
         }
@@ -213,6 +222,7 @@ public class VelocityTabList implements TabList {
           VelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setGameModeInternal(item.getGameMode());
+            modifiedEntries.add(entry);
           }
           break;
         }
@@ -221,27 +231,39 @@ public class VelocityTabList implements TabList {
           break;
       }
     }
+    proxyServer.getEventManager().fire(new ServerUpdateTablistEvent(player,
+                    ServerUpdateTablistEvent.Action.of(packet.getAction()),
+                    Collections.unmodifiableSet(modifiedEntries))
+    ).thenAccept(event -> {
+      List<PlayerListItem.Item> items = event.getEntries().stream()
+              .map(this::convertToItem).collect(Collectors.toList());
+      connection.delayedWrite(new PlayerListItem(packet.getAction(), items));
+    });
   }
 
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-
-      IdentifiedKey selectedKey = packetItem.getPlayerKey();
-      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
-      if (existing.isPresent()) {
-        selectedKey = existing.get().getIdentifiedKey();
-      }
-
-      if (selectedKey != null
-              && selectedKey.getKeyRevision().getApplicableTo().contains(connection.getProtocolVersion())
-              && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
-        packetItem.setPlayerKey(selectedKey);
-      } else {
-        packetItem.setPlayerKey(null);
-      }
-
+      PlayerListItem.Item packetItem = convertToItem(entry);
       connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
     }
+  }
+
+  private PlayerListItem.Item convertToItem(TabListEntry entry) {
+    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+
+    IdentifiedKey selectedKey = packetItem.getPlayerKey();
+    Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
+    if (existing.isPresent()) {
+      selectedKey = existing.get().getIdentifiedKey();
+    }
+
+    if (selectedKey != null
+            && selectedKey.getKeyRevision().getApplicableTo().contains(connection.getProtocolVersion())
+            && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
+      packetItem.setPlayerKey(selectedKey);
+    } else {
+      packetItem.setPlayerKey(null);
+    }
+    return packetItem;
   }
 }
