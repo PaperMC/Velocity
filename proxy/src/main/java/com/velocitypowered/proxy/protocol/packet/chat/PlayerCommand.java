@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
-import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.INVALID_PREVIOUS_MESSAGES;
 import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
 
 import com.google.common.collect.ImmutableMap;
@@ -133,19 +132,9 @@ public class PlayerCommand implements MinecraftPacket {
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-      int size = ProtocolUtils.readVarInt(buf);
-      if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
-        throw INVALID_PREVIOUS_MESSAGES;
-      }
-
-      SignaturePair[] lastSignatures = new SignaturePair[size];
-      for (int i = 0; i < size; i++) {
-        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
-      }
-      previousMessages = lastSignatures;
-
+      previousMessages = ProtocolUtils.readSignaturePairArray(buf, MAXIMUM_PREVIOUS_MESSAGE_COUNT);
       if (buf.readBoolean()) {
-        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+        lastMessage = ProtocolUtils.readSignaturePair(buf);
       }
     }
 
@@ -176,16 +165,11 @@ public class PlayerCommand implements MinecraftPacket {
     buf.writeBoolean(signedPreview);
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-      ProtocolUtils.writeVarInt(buf, previousMessages.length);
-      for (SignaturePair previousMessage : previousMessages) {
-        ProtocolUtils.writeUuid(buf, previousMessage.getSigner());
-        ProtocolUtils.writeByteArray(buf, previousMessage.getSignature());
-      }
+      ProtocolUtils.writeSignaturePairArray(buf, previousMessages);
 
       if (lastMessage != null) {
         buf.writeBoolean(true);
-        ProtocolUtils.writeUuid(buf, lastMessage.getSigner());
-        ProtocolUtils.writeByteArray(buf, lastMessage.getSignature());
+        ProtocolUtils.writeSignaturePair(buf, lastMessage);
       } else {
         buf.writeBoolean(false);
       }

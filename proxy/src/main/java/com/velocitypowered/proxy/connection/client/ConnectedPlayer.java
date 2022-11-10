@@ -57,6 +57,7 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
+import com.velocitypowered.proxy.crypto.ChatTracker;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -65,6 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
@@ -167,6 +169,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
   private ChatQueue chatQueue;
+  private @MonotonicNonNull ServerData currentServerData;
+  private @MonotonicNonNull ChatTracker signedChatTracker;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
@@ -186,6 +190,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
+    this.signedChatTracker = ChatTracker.forKey(playerKey);
   }
 
   ChatQueue getChatQueue() {
@@ -1229,5 +1234,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     public void fireAndForget() {
       connectWithIndication();
     }
+  }
+
+  public ServerData getCurrentServerData() {
+    return currentServerData;
+  }
+
+  public void setCurrentServerData(ServerData currentServerData) {
+    this.currentServerData = currentServerData;
+  }
+
+  public @Nullable ChatTracker getSignedChatTracker() {
+    return signedChatTracker;
   }
 }

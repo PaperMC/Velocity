@@ -41,7 +41,7 @@ public class SignedChatMessage implements SignedMessage {
   private final byte[] salt;
   private final UUID sender;
   //private final boolean isValid;
-  private final SignaturePair[] previousSignatures;
+  private final SignaturePair[] seenSignatures;
   private final @Nullable SignaturePair previousSignature;
   private final boolean isPreviewSigned;
 
@@ -50,7 +50,7 @@ public class SignedChatMessage implements SignedMessage {
    */
   public SignedChatMessage(String message, PublicKey signer, UUID sender,
                            Instant expiry, byte[] signature, byte[] salt,
-                           boolean isPreviewSigned, @Nullable SignaturePair[] previousSignatures,
+                           boolean isPreviewSigned, @Nullable SignaturePair[] seenSignatures,
                            @Nullable SignaturePair previousSignature) {
     this.message = Preconditions.checkNotNull(message);
     this.signer = Preconditions.checkNotNull(signer);
@@ -59,7 +59,7 @@ public class SignedChatMessage implements SignedMessage {
     this.expiry = Preconditions.checkNotNull(expiry);
     this.salt = Preconditions.checkNotNull(salt);
     this.isPreviewSigned = isPreviewSigned;
-    this.previousSignatures = previousSignatures;
+    this.seenSignatures = seenSignatures;
     this.previousSignature = previousSignature;
 
     //this.isValid = EncryptionUtils.verifySignature(EncryptionUtils.SHA1_WITH_RSA, signer,
@@ -83,8 +83,8 @@ public class SignedChatMessage implements SignedMessage {
     return signature;
   }
 
-  public SignaturePair[] getPreviousSignatures() {
-    return previousSignatures;
+  public SignaturePair[] getSeenSignatures() {
+    return seenSignatures;
   }
 
   public SignaturePair getPreviousSignature() {

@@ -24,10 +24,15 @@ public class VelocityConstants {
   }
 
   public static final String VELOCITY_IP_FORWARDING_CHANNEL = "velocity:player_info";
+  public static final String CHAT_SYNC_CHANNEL = "proxy:chatsync";
+
   public static final int MODERN_FORWARDING_DEFAULT = 1;
   public static final int MODERN_FORWARDING_WITH_KEY = 2;
   public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
   public static final int MODERN_FORWARDING_MAX_VERSION = MODERN_FORWARDING_WITH_KEY_V2;
+
+  public static final int CHAT_SYNC_VERSION = 1;
+  public static final int CHAT_SYNC_MAX_VERSION = CHAT_SYNC_VERSION;
 
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 }

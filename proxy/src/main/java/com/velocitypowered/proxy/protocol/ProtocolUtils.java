@@ -24,8 +24,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
+import com.velocitypowered.proxy.util.StableGsonComponentSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -59,6 +61,8 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
           .build();
 
+  public static final GsonComponentSerializer STABLE_MODERN_SERIALIZER = new StableGsonComponentSerializer();
+
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad VarInt decoded");
@@ -70,6 +74,9 @@ public enum ProtocolUtils {
     }
     VARINT_EXACT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
   }
+
+  public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
+          new QuietDecoderException("Invalid previous messages");
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.
@@ -562,6 +569,79 @@ public enum ProtocolUtils {
     IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
             ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
+  }
+
+  public static SignaturePair readSignaturePair(ByteBuf buf) {
+    return new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+  }
+
+  public static void writeSignaturePair(ByteBuf buf, SignaturePair pair) {
+    ProtocolUtils.writeUuid(buf, pair.getSigner());
+    ProtocolUtils.writeByteArray(buf, pair.getSignature());
+  }
+
+  public static SignaturePair[] readSignaturePairArray(ByteBuf buf, int limit) {
+    int size = ProtocolUtils.readVarInt(buf);
+    if (size < 0 || size > limit) {
+      throw INVALID_PREVIOUS_MESSAGES;
+    }
+
+    SignaturePair[] lastSignatures = new SignaturePair[size];
+    for (int i = 0; i < size; i++) {
+      lastSignatures[i] = ProtocolUtils.readSignaturePair(buf);
+    }
+    return lastSignatures;
+  }
+
+  public static void writeSignaturePairArray(ByteBuf buf, final SignaturePair[] pairs) {
+    ProtocolUtils.writeVarInt(buf, pairs.length);
+
+    for (int i = 0; i < pairs.length; i++) {
+      ProtocolUtils.writeSignaturePair(buf, pairs[i]);
+    }
+  }
+
+  public static SignaturePair readSignatureHeader(ByteBuf buf) {
+    if (buf.readBoolean()) {
+      byte[] data = ProtocolUtils.readByteArray(buf);
+      return new SignaturePair(ProtocolUtils.readUuid(buf), data);
+    }
+    return new SignaturePair(ProtocolUtils.readUuid(buf));
+  }
+
+  public static void writeSignatureHeader(ByteBuf buf, SignaturePair signaturePair) {
+    if (signaturePair.isEmpty()) {
+      buf.writeBoolean(false);
+    } else {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeByteArray(buf, signaturePair.getSignature());
+    }
+    ProtocolUtils.writeUuid(buf, signaturePair.getSigner());
+  }
+
+  public static long[] readLongArray(ByteBuf buf) {
+    return readLongArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  public static long[] readLongArray(ByteBuf buf, int cap) {
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
+    checkFrame(buf.isReadable(length),
+            "Trying to read an array that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
+    long[] array = new long[length];
+    for (int i = 0; i < length; i++) {
+      array[i] = buf.readLong();
+    }
+    return array;
+  }
+
+  public static void writeLongArray(ByteBuf buf, long[] array) {
+    writeVarInt(buf, array.length);
+    for (long entry : array) {
+      buf.writeLong(entry);
+    }
   }
 
   public enum Direction {

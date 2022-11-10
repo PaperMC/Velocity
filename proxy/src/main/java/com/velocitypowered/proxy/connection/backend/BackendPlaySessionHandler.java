@@ -36,8 +36,10 @@ import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
+import com.velocitypowered.proxy.crypto.HeaderData;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -49,6 +51,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.chat.ServerPlayerChat;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -270,8 +273,20 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(ServerPlayerChat packet) {
+    HeaderData chatHeader = packet.getHeaderData();
+    if (chatHeader != null) {
+      ConnectedPlayer who = this.serverConn.getPlayer();
+      who.pushHeader(chatHeader);
+    }
+    return false;
+  }
+
+  @Override
   public boolean handle(ServerData packet) {
-    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
+    ConnectedPlayer who = this.serverConn.getPlayer();
+    who.setCurrentServerData(packet);
+    server.getServerListPingHandler().getInitialPing(who)
         .thenComposeAsync(
             ping -> server.getEventManager().fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
             playerConnection.eventLoop()

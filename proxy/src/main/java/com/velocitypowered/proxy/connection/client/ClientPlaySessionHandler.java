@@ -58,7 +58,6 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
@@ -98,7 +97,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
-  private @Nullable Instant lastChatMessage; // Added in 1.19
 
   /**
    * Constructs a client play session handler.
@@ -111,16 +109,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     this.server = server;
   }
 
-  // I will not allow hacks to bypass this;
-  private boolean tickLastMessage(SignedChatMessage nextMessage) {
-    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
-      player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
-      return false;
-    }
-
-    lastChatMessage = nextMessage.getExpiryTemporal();
-    return true;
-  }
 
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
@@ -291,15 +279,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    if (!packet.isUnsigned()) {
-      // Bad if spoofed
-      SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
-      if (signedChat != null) {
-        // Server doesn't care for expiry as long as order is correct
-        if (!tickLastMessage(signedChat)) {
-          return true;
-        }
+    SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey());
 
+
+    if (player.getSignedChatTracker() != null) {
+      if (signedChat != null) {
         processPlayerChat(packet.getMessage(), signedChat, packet);
         return true;
       }
