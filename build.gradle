@@ -14,7 +14,7 @@ allprojects {
         junitVersion = '5.9.0'
         slf4jVersion = '1.7.30'
         log4jVersion = '2.19.0'
-        nettyVersion = '4.1.82.Final'
+        nettyVersion = '4.1.85.Final'
         guavaVersion = '25.1-jre'
         checkerFrameworkVersion = '3.6.1'
         configurateVersion = '3.7.3'
