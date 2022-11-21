@@ -125,4 +125,13 @@ public interface CommandManager {
    * @return true if the alias is registered; false otherwise
    */
   boolean hasCommand(String alias);
+
+  /**
+   * Determines whether a player has the command in their "permissible scope".
+   *
+   * @param alias the command alias to check
+   * @param source the source to check the permissibility against
+   * @return true if the alias is registered - and accessible by the source; false otherwise
+   */
+  boolean hasPermissibleCommand(String alias, CommandSource source);
 }

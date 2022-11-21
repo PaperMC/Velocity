@@ -78,6 +78,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Supplier;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -610,7 +611,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String commandLabel = command.substring(0, commandEndPosition);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
+    if (!server.getCommandManager().hasPermissibleCommand(commandLabel, player)) {
       if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.
@@ -758,7 +759,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String commandToRun = result.getCommand().orElse(originalCommand);
-    if (result.isForwardToServer()) {
+
+    Supplier<Boolean> permissible = () -> { // lazy, if it's already forwarding we don't care
+      int commandEndPosition = commandToRun.indexOf(' ');
+      if (commandEndPosition == -1) {
+        commandEndPosition = commandToRun.length();
+      }
+
+      String commandLabel = commandToRun.substring(0, commandEndPosition);
+      return server.getCommandManager().hasPermissibleCommand(commandLabel, player);
+    };
+
+    if (result.isForwardToServer() || !permissible.get()) {
       ChatBuilder write = ChatBuilder
           .builder(player.getProtocolVersion())
           .timestamp(passedTimestamp)

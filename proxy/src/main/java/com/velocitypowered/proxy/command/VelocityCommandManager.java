@@ -22,10 +22,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.context.CommandContextBuilder;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
@@ -314,10 +318,32 @@ public class VelocityCommandManager implements CommandManager {
     }
   }
 
+  private @Nullable CommandNode<CommandSource> retrieveCommandLocal(final String alias) {
+    Preconditions.checkNotNull(alias, "alias");
+    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH));
+  }
+
   @Override
   public boolean hasCommand(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
+    return retrieveCommandLocal(alias) != null;
+  }
+
+  @Override
+  public boolean hasPermissibleCommand(String alias, CommandSource source) {
+    CommandNode<CommandSource> command = retrieveCommandLocal(alias);
+    if (command instanceof LiteralCommandNode) {
+      var argsNode = VelocityCommands.getArgumentsNode((LiteralCommandNode<CommandSource>) command);
+      if (argsNode != null) {
+        CommandContextBuilder<CommandSource> contextBuilder = new CommandContextBuilder<>(
+            this.dispatcher, source, this.dispatcher.getRoot(), 0);
+        contextBuilder.withNode(command, StringRange.at(alias.length()));
+        if (!argsNode.canUse(contextBuilder, new StringReader(alias))) {
+          return false;
+        }
+      }
+    }
+    return command != null;
   }
 
   @VisibleForTesting // this constitutes unsafe publication
