@@ -67,6 +67,7 @@ public class EncryptionResponse implements MinecraftPacket {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 128);
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+              && version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0
               && !buf.readBoolean()) {
         salt = buf.readLong();
       }
@@ -83,7 +84,8 @@ public class EncryptionResponse implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+          && version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
         if (salt != null) {
           buf.writeBoolean(false);
           buf.writeLong(salt);
@@ -108,6 +110,9 @@ public class EncryptionResponse implements MinecraftPacket {
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.
     // The length prefix always winds up being 2 bytes.
     int base = 256 + 2 + 2;
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      return base + 128;
+    }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       // Verify token is twice as long on 1.19+
       // Additional 1 byte for left <> right and 8 bytes for salt

@@ -35,7 +35,7 @@ public class ServerLogin implements MinecraftPacket {
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
 
   private @Nullable String username;
-  private @Nullable IdentifiedKey playerKey; // Introduced in 1.19
+  private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3
   private @Nullable UUID holderUuid; // Used for key revision 2
 
   public ServerLogin() {
@@ -46,6 +46,12 @@ public class ServerLogin implements MinecraftPacket {
     this.playerKey = playerKey;
   }
 
+  public ServerLogin(String username, @Nullable UUID holderUuid) {
+    this.username = Preconditions.checkNotNull(username, "username");
+    this.holderUuid = holderUuid;
+    this.playerKey = null;
+  }
+
   public String getUsername() {
     if (username == null) {
       throw new IllegalStateException("No username found!");
@@ -53,15 +59,15 @@ public class ServerLogin implements MinecraftPacket {
     return username;
   }
 
-  public IdentifiedKey getPlayerKey() {
-    return playerKey;
+  public @Nullable IdentifiedKey getPlayerKey() {
+    return this.playerKey;
   }
 
   public void setPlayerKey(IdentifiedKey playerKey) {
     this.playerKey = playerKey;
   }
 
-  public UUID getHolderUuid() {
+  public @Nullable UUID getHolderUuid() {
     return holderUuid;
   }
 
@@ -74,15 +80,21 @@ public class ServerLogin implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  public void decode(ByteBuf buf, Direction direction, ProtocolVersion version) {
     username = ProtocolUtils.readString(buf, 16);
     if (username.isEmpty()) {
       throw EMPTY_USERNAME;
     }
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      if (buf.readBoolean()) {
-        playerKey = ProtocolUtils.readPlayerKey(version, buf);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+        playerKey = null;
+      } else {
+        if (buf.readBoolean()) {
+          playerKey = ProtocolUtils.readPlayerKey(version, buf);
+        } else {
+          playerKey = null;
+        }
       }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
@@ -90,6 +102,8 @@ public class ServerLogin implements MinecraftPacket {
           holderUuid = ProtocolUtils.readUuid(buf);
         }
       }
+    } else {
+      playerKey = null;
     }
   }
 
@@ -101,17 +115,22 @@ public class ServerLogin implements MinecraftPacket {
     ProtocolUtils.writeString(buf, username);
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      if (playerKey != null) {
-        buf.writeBoolean(true);
-        ProtocolUtils.writePlayerKey(buf, playerKey);
-      } else {
-        buf.writeBoolean(false);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        if (playerKey != null) {
+          buf.writeBoolean(true);
+          ProtocolUtils.writePlayerKey(buf, playerKey);
+        } else {
+          buf.writeBoolean(false);
+        }
       }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
         if (playerKey != null && playerKey.getSignatureHolder() != null) {
           buf.writeBoolean(true);
           ProtocolUtils.writeUuid(buf, playerKey.getSignatureHolder());
+        } else if (this.holderUuid != null) {
+          buf.writeBoolean(true);
+          ProtocolUtils.writeUuid(buf, this.holderUuid);
         } else {
           buf.writeBoolean(false);
         }
@@ -126,13 +145,15 @@ public class ServerLogin implements MinecraftPacket {
     int base = 1 + (16 * 4);
     // Adjustments for Key-authentication
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      // + 1 for the boolean present/ not present
-      // + 8 for the long expiry
-      // + 2 len for varint key size
-      // + 294 for the key
-      // + 2 len for varint signature size
-      // + 512 for signature
-      base += 1 + 8 + 2 + 294 + 2 + 512;
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        // + 1 for the boolean present/ not present
+        // + 8 for the long expiry
+        // + 2 len for varint key size
+        // + 294 for the key
+        // + 2 len for varint signature size
+        // + 512 for signature
+        base += 1 + 8 + 2 + 294 + 2 + 512;
+      }
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
         // +1 boolean uuid optional
         // + 2 * 8 for the long msb/lsb

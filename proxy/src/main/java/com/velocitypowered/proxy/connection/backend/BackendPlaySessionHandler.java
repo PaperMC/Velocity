@@ -43,7 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
@@ -245,7 +245,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PlayerListItem packet) {
+  public boolean handle(LegacyPlayerListItem packet) {
     serverConn.getPlayer().getTabList().processBackendPacket(packet);
     return false;
   }
@@ -280,7 +280,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             this.playerConnection.write(
                 new ServerData(pingEvent.getPing().getDescriptionComponent(),
                     pingEvent.getPing().getFavicon().orElse(null),
-                    packet.isPreviewsChat(), packet.isSecureChatEnforced())
+                    packet.isSecureChatEnforced())
             ), playerConnection.eventLoop());
     return true;
   }

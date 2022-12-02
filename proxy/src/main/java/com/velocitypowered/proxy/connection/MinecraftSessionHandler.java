@@ -30,9 +30,9 @@ import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
@@ -49,10 +49,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatPreview;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.chat.ServerChatPreview;
-import com.velocitypowered.proxy.protocol.packet.chat.ServerPlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
@@ -228,7 +225,7 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerListItem packet) {
+  default boolean handle(LegacyPlayerListItem packet) {
     return false;
   }
 
@@ -245,18 +242,6 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(SystemChat packet) {
-    return false;
-  }
-
-  default boolean handle(ServerPlayerChat packet) {
-    return false;
-  }
-
-  default boolean handle(PlayerChatPreview packet) {
-    return false;
-  }
-
-  default boolean handle(ServerChatPreview packet) {
     return false;
   }
 
