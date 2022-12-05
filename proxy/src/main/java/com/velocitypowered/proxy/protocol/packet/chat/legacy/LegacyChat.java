@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat;
+package com.velocitypowered.proxy.protocol.packet.chat.legacy;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;

@@ -58,9 +58,8 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
-import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -285,7 +284,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PlayerChat packet) {
+  public boolean handle(PlayerChatV1 packet) {
     player.ensureAndGetCurrentServer();
     if (!validateChat(packet.getMessage())) {
       return true;

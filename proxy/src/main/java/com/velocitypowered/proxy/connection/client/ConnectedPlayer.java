@@ -67,7 +67,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
-import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.VelocityTabList;

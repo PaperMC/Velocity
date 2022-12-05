@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
-import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.INVALID_PREVIOUS_MESSAGES;
-import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
+import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1.INVALID_PREVIOUS_MESSAGES;
+import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Longs;
@@ -28,7 +28,6 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.crypto.SignedChatCommand;
-import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;

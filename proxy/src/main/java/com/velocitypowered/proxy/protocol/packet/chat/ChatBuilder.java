@@ -25,6 +25,8 @@ import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1;
 import java.time.Instant;
 import java.util.UUID;
 import net.kyori.adventure.identity.Identity;
@@ -155,7 +157,7 @@ public class ChatBuilder {
   public MinecraftPacket toServer() {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       if (signedChatMessage != null) {
-        return new PlayerChat(signedChatMessage);
+        return new PlayerChatV1(signedChatMessage);
       } else if (signedCommand != null) {
         return new PlayerCommand(signedCommand);
       } else {
@@ -164,7 +166,7 @@ public class ChatBuilder {
           return new PlayerCommand(message.substring(1), ImmutableList.of(), timestamp);
         } else {
           // This will produce an error on the server, but needs to be here.
-          return new PlayerChat(message);
+          return new PlayerChatV1(message);
         }
       }
     }

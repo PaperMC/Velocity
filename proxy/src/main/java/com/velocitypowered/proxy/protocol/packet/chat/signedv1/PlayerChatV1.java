@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat;
+package com.velocitypowered.proxy.protocol.packet.chat.signedv1;
 
 import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -32,7 +32,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerChat implements MinecraftPacket {
+public class PlayerChatV1 implements MinecraftPacket {
 
   private String message;
   private boolean signedPreview;
@@ -48,20 +48,20 @@ public class PlayerChat implements MinecraftPacket {
   public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
           new QuietDecoderException("Invalid previous messages");
 
-  public PlayerChat() {
+  public PlayerChatV1() {
   }
 
-  public PlayerChat(String message) {
+  public PlayerChatV1(String message) {
     this.message = message;
     this.unsigned = true;
   }
 
   /**
-   * Create new {@link PlayerChat} based on a previously {@link SignedChatMessage}.
+   * Create new {@link PlayerChatV1} based on a previously {@link SignedChatMessage}.
    *
-   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChat}.
+   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChatV1}.
    */
-  public PlayerChat(SignedChatMessage message) {
+  public PlayerChatV1(SignedChatMessage message) {
     this.message = message.getMessage();
     this.expiry = message.getExpiryTemporal();
     this.salt = message.getSalt();
