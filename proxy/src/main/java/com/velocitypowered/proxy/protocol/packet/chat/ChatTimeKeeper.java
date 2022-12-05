@@ -13,9 +13,9 @@ public class ChatTimeKeeper {
   public boolean update(Instant instant) {
     if (instant.isBefore(this.lastTimestamp)) {
       this.lastTimestamp = instant;
-      return true;
+      return false;
     }
     this.lastTimestamp = instant;
-    return false;
+    return true;
   }
 }

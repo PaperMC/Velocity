@@ -58,6 +58,8 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
@@ -97,7 +99,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
-  private @Nullable Instant lastChatMessage; // Added in 1.19
+  private ChatHandler<? extends MinecraftPacket> chatHandler;
+  private final ChatTimeKeeper timeKeeper = new ChatTimeKeeper();
 
   /**
    * Constructs a client play session handler.
@@ -110,17 +113,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     this.server = server;
   }
 
-  // I will not allow hacks to bypass this;
-  private boolean tickLastMessage(SignedChatMessage nextMessage) {
-    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+  private boolean updateTimeKeeper(Instant instant) {
+    if (!this.timeKeeper.update(instant)) {
       player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
       return false;
     }
-
-    lastChatMessage = nextMessage.getExpiryTemporal();
     return true;
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
       player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
@@ -155,74 +157,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               NamedTextColor.RED));
           return null;
         }), passedTimestamp);
-  }
-
-  private void processPlayerChat(String message, @Nullable SignedChatMessage signedMessage,
-                                 MinecraftPacket original) {
-    MinecraftConnection smc = retrieveServerConnection();
-    if (smc == null) {
-      return;
-    }
-
-    if (signedMessage == null) {
-      PlayerChatEvent event = new PlayerChatEvent(player, message);
-      callChat(original, event, null).thenAccept(smc::write);
-    } else {
-      Instant messageTimestamp = signedMessage.getExpiryTemporal();
-      PlayerChatEvent event = new PlayerChatEvent(player, message);
-      this.player.getChatQueue().queuePacket(callChat(original, event, signedMessage), messageTimestamp);
-    }
-  }
-
-  private CompletableFuture<MinecraftPacket> callChat(MinecraftPacket original, PlayerChatEvent event,
-                                                      @Nullable SignedChatMessage signedMessage) {
-    return server.getEventManager().fire(event)
-        .thenApply(pme -> {
-          PlayerChatEvent.ChatResult chatResult = pme.getResult();
-          IdentifiedKey playerKey = player.getIdentifiedKey();
-          if (chatResult.isAllowed()) {
-            Optional<String> eventMsg = pme.getResult().getMessage();
-            if (eventMsg.isPresent()) {
-              String messageNew = eventMsg.get();
-              if (playerKey != null) {
-                if (signedMessage != null && !messageNew.equals(signedMessage.getMessage())) {
-                  if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-                    // Bad, very bad.
-                    logger.fatal("A plugin tried to change a signed chat message. "
-                        + "This is no longer possible in 1.19.1 and newer. "
-                        + "Disconnecting player " + player.getUsername());
-                    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                        + "Contact your network administrator."));
-                  } else {
-                    logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-                    return ChatBuilder.builder(player.getProtocolVersion())
-                        .message(messageNew).toServer();
-                  }
-                } else {
-                  return original;
-                }
-              } else {
-                return ChatBuilder.builder(player.getProtocolVersion())
-                    .message(messageNew).toServer();
-              }
-            } else {
-              return original;
-            }
-          } else {
-            if (playerKey != null && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-              logger.fatal("A plugin tried to cancel a signed chat message."
-                  + " This is no longer possible in 1.19.1 and newer. "
-                  + "Disconnecting player " + player.getUsername());
-              player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                  + "Contact your network administrator."));
-            }
-          }
-          return null;
-        })
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling player chat for {}", player, ex);
-          return null;
-        });
   }
 
   @Override
@@ -268,6 +202,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(PlayerCommand packet) {
     player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getTimestamp())) {
+      return true;
+    }
+
     if (!validateChat(packet.getCommand())) {
       return true;
     }
@@ -286,26 +225,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(PlayerChatV1 packet) {
     player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getExpiry())) {
+      return true;
+    }
+
     if (!validateChat(packet.getMessage())) {
       return true;
     }
 
-    if (!packet.isUnsigned()) {
-      // Bad if spoofed
-      SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
-      if (signedChat != null) {
-        // Server doesn't care for expiry as long as order is correct
-        if (!tickLastMessage(signedChat)) {
-          return true;
-        }
-
-        processPlayerChat(packet.getMessage(), signedChat, packet);
-        return true;
-      }
-    }
-
-    processPlayerChat(packet.getMessage(), null, packet);
-    return true;
+    return this.chatHandler.handlePlayerChat(packet);
   }
 
   @Override
@@ -319,7 +248,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (msg.startsWith("/")) {
       processCommandMessage(msg.substring(1), null, packet, Instant.now());
     } else {
-      processPlayerChat(msg, null, packet);
+      this.chatHandler.handlePlayerChat(packet);
     }
     return true;
   }
@@ -399,17 +328,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             byte[] copy = ByteBufUtil.getBytes(packet.content());
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-              if (pme.getResult().isAllowed()) {
-                PluginMessage message = new PluginMessage(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
-                if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
-                  // We're still processing the connection (see above), enqueue the packet for now.
-                  loginPluginMessages.add(message.retain());
-                } else {
-                  backendConn.write(message);
-                }
-              }
-            }, backendConn.eventLoop())
+                  if (pme.getResult().isAllowed()) {
+                    PluginMessage message = new PluginMessage(packet.getChannel(),
+                        Unpooled.wrappedBuffer(copy));
+                    if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+                      // We're still processing the connection (see above), enqueue the packet for now.
+                      loginPluginMessages.add(message.retain());
+                    } else {
+                      backendConn.write(message);
+                    }
+                  }
+                }, backendConn.eventLoop())
                 .exceptionally((ex) -> {
                   logger.error("Exception while handling plugin message packet for {}",
                       player, ex);

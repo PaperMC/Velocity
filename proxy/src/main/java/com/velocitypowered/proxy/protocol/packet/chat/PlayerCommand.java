@@ -50,14 +50,10 @@ public class PlayerCommand implements MinecraftPacket {
   private String command;
   private Instant timestamp;
   private long salt;
-  private boolean signedPreview; // Good god. Please no.
+  private boolean signedPreview; // purely for pass through for 1.19 -> 1.19.2 - this will never be implemented
   private SignaturePair[] previousMessages = new SignaturePair[0];
   private @Nullable SignaturePair lastMessage;
   private Map<String, byte[]> arguments = ImmutableMap.of();
-
-  public boolean isSignedPreview() {
-    return signedPreview;
-  }
 
   public Instant getTimestamp() {
     return timestamp;
@@ -126,9 +122,13 @@ public class PlayerCommand implements MinecraftPacket {
     }
     arguments = entries.build();
 
-    signedPreview = buf.readBoolean();
-    if (unsigned && signedPreview) {
-      throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      this.signedPreview = buf.readBoolean();
+      if (unsigned && signedPreview) {
+        throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
+      }
+    } else {
+      this.signedPreview = false;
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
@@ -172,7 +172,9 @@ public class PlayerCommand implements MinecraftPacket {
       ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : entry.getValue());
     }
 
-    buf.writeBoolean(signedPreview);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      buf.writeBoolean(signedPreview);
+    }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       ProtocolUtils.writeVarInt(buf, previousMessages.length);

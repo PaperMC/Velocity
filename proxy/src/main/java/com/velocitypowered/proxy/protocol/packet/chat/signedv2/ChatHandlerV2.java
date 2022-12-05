@@ -9,7 +9,7 @@ public class ChatHandlerV2 implements ChatHandler<PlayerChatV2> {
   }
 
   @Override
-  public void handlePlayerChat(PlayerChatV2 packet) {
+  public void handlePlayerChatInternal(PlayerChatV2 packet) {
 
   }
 }

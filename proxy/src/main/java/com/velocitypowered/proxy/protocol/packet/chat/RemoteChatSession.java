@@ -4,10 +4,12 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Objects;
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class RemoteChatSession {
-  private final UUID sessionId;
+  private final @Nullable UUID sessionId;
   private final IdentifiedKey identifiedKey;
 
   public RemoteChatSession(ProtocolVersion version, ByteBuf buf) {
@@ -15,7 +17,7 @@ public class RemoteChatSession {
     this.identifiedKey = ProtocolUtils.readPlayerKey(version, buf);
   }
 
-  public RemoteChatSession(UUID sessionId, IdentifiedKey identifiedKey) {
+  public RemoteChatSession(@Nullable UUID sessionId, IdentifiedKey identifiedKey) {
     this.sessionId = sessionId;
     this.identifiedKey = identifiedKey;
   }
@@ -24,12 +26,16 @@ public class RemoteChatSession {
     return identifiedKey;
   }
 
-  public UUID getSessionId() {
+  public @Nullable UUID getSessionId() {
     return sessionId;
   }
 
   public void write(ByteBuf buf) {
-    ProtocolUtils.writeUuid(buf, this.sessionId);
+    ProtocolUtils.writeUuid(buf, Objects.requireNonNull(this.sessionId));
     ProtocolUtils.writePlayerKey(buf, this.identifiedKey);
+  }
+
+  public void validate() {
+
   }
 }

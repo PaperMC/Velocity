@@ -188,7 +188,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.chatQueue = new ChatQueue(this);
   }
 
-  ChatQueue getChatQueue() {
+  public ChatQueue getChatQueue() {
     return chatQueue;
   }
 
