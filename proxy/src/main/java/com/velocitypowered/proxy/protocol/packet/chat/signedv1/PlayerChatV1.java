@@ -71,6 +71,10 @@ public class PlayerChatV1 implements MinecraftPacket {
     this.previousMessages = message.getPreviousSignatures();
   }
 
+  public void setExpiry(@Nullable Instant expiry) {
+    this.expiry = expiry;
+  }
+
   public Instant getExpiry() {
     return expiry;
   }

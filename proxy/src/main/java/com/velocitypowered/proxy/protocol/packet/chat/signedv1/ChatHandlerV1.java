@@ -68,7 +68,7 @@ public class ChatHandlerV1 implements ChatHandler<PlayerChatV1> {
             } else {
               logger.warn("A plugin changed a signed chat message. The server may not accept it.");
               return ChatBuilder.builder(player.getProtocolVersion())
-                  .message(messageNew).toServer();
+                  .message(messageNew).timestamp(packet.getExpiry()).toServer();
             }
           }
         }
@@ -82,7 +82,7 @@ public class ChatHandlerV1 implements ChatHandler<PlayerChatV1> {
         }
 
         return ChatBuilder.builder(this.player.getProtocolVersion())
-            .message(chatResult.getMessage().orElse(packet.getMessage())).toServer();
+            .message(chatResult.getMessage().orElse(packet.getMessage())).timestamp(packet.getExpiry()).toServer();
       });
     }
     chatQueue.queuePacket(

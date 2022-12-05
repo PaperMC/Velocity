@@ -166,7 +166,9 @@ public class ChatBuilder {
           return new PlayerCommand(message.substring(1), ImmutableList.of(), timestamp);
         } else {
           // This will produce an error on the server, but needs to be here.
-          return new PlayerChatV1(message);
+          PlayerChatV1 v1Chat = new PlayerChatV1(message);
+          v1Chat.setExpiry(this.timestamp);
+          return v1Chat;
         }
       }
     }
