@@ -30,6 +30,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -155,7 +156,7 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public void clearAll() {
-    this.connection.delayedWrite(new RemovePlayerInfo(this.entries.keySet().stream().toList()));
+    this.connection.delayedWrite(new RemovePlayerInfo(new ArrayList<>(this.entries.keySet())));
     this.entries.clear();
   }
 
