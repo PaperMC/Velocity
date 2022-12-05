@@ -55,6 +55,7 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
@@ -67,6 +68,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
@@ -345,6 +347,10 @@ public enum StateRegistry {
           map(0x36, MINECRAFT_1_17, false),
           map(0x34, MINECRAFT_1_19, false),
           map(0x37, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
+      clientbound.register(RemovePlayerInfo.class, RemovePlayerInfo::new,
+          map(0x36, MINECRAFT_1_19_3, false));
+      clientbound.register(UpsertPlayerInfo.class, UpsertPlayerInfo::new,
+          map(0x37, MINECRAFT_1_19_3, false));
       clientbound.register(SystemChat.class, SystemChat::new,
           map(0x5F, MINECRAFT_1_19, true),
           map(0x62, MINECRAFT_1_19_1, true),
