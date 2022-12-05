@@ -22,7 +22,7 @@ import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabListEntryLegacy extends VelocityTabListEntry {
+public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
 
   VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,
       @Nullable Component displayName, int latency, int gameMode) {

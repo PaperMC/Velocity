@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabListLegacy extends VelocityTabList {
+public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
 
@@ -73,20 +73,20 @@ public class VelocityTabListLegacy extends VelocityTabList {
   }
 
   @Override
-  public void processBackendPacket(LegacyPlayerListItem packet) {
+  public void processLegacy(LegacyPlayerListItem packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
       case LegacyPlayerListItem.ADD_PLAYER:
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
-          VelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
+          KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
         } else {
           UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
           nameMapping.put(item.getName(), uuid);
-          entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
+          entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
               .latency(item.getLatency())

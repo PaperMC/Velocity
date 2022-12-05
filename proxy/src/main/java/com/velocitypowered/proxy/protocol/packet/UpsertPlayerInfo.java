@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -29,6 +46,23 @@ public class UpsertPlayerInfo implements MinecraftPacket {
   public UpsertPlayerInfo(Action action) {
     this.actions = EnumSet.of(action);
     this.entries = new ArrayList<>();
+  }
+
+  public UpsertPlayerInfo(EnumSet<Action> actions, List<Entry> entries) {
+    this.actions = actions;
+    this.entries = entries;
+  }
+
+  public List<Entry> getEntries() {
+    return entries;
+  }
+
+  public EnumSet<Action> getActions() {
+    return actions;
+  }
+
+  public boolean containsAction(Action action) {
+    return this.actions.contains(action);
   }
 
   public void addAction(Action action) {
@@ -93,7 +127,7 @@ public class UpsertPlayerInfo implements MinecraftPacket {
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
-    return false;
+    return handler.handle(this);
   }
 
   public BitSet readFixedBitSet(ByteBuf buf, int param0) {
@@ -185,6 +219,60 @@ public class UpsertPlayerInfo implements MinecraftPacket {
 
     public Entry(UUID uuid) {
       this.profileId = uuid;
+    }
+
+    public UUID getProfileId() {
+      return profileId;
+    }
+
+    public GameProfile getProfile() {
+      return profile;
+    }
+
+    public boolean isListed() {
+      return listed;
+    }
+
+    public int getLatency() {
+      return latency;
+    }
+
+    public int getGameMode() {
+      return gameMode;
+    }
+
+    @Nullable
+    public Component getDisplayName() {
+      return displayName;
+    }
+
+    @Nullable
+    public RemoteChatSession getChatSession() {
+      return chatSession;
+    }
+
+    public void setProfile(GameProfile profile) {
+      this.profile = profile;
+    }
+
+    public void setListed(boolean listed) {
+      this.listed = listed;
+    }
+
+    public void setLatency(int latency) {
+      this.latency = latency;
+    }
+
+    public void setGameMode(int gameMode) {
+      this.gameMode = gameMode;
+    }
+
+    public void setDisplayName(@Nullable Component displayName) {
+      this.displayName = displayName;
+    }
+
+    public void setChatSession(@Nullable RemoteChatSession chatSession) {
+      this.chatSession = chatSession;
     }
   }
 }

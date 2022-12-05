@@ -130,8 +130,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-          NamedTextColor.RED));
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters", NamedTextColor.RED));
       return false;
     }
     return true;
@@ -140,26 +139,22 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
                                      MinecraftPacket original, Instant passedTimestamp) {
     this.player.getChatQueue().queuePacket(server.getCommandManager().callCommandEvent(player, message)
-        .thenComposeAsync(event -> processCommandExecuteResult(message,
-            event.getResult(), signedCommand, passedTimestamp))
+        .thenComposeAsync(
+            event -> processCommandExecuteResult(message, event.getResult(), signedCommand, passedTimestamp))
         .whenComplete((ignored, throwable) -> {
           if (server.getConfiguration().isLogCommandExecutions()) {
             logger.info("{} -> executed command /{}", player, message);
           }
-        })
-        .exceptionally(e -> {
-          logger.info("Exception occurred while running command for {}",
-              player.getUsername(), e);
-          player.sendMessage(Component.translatable("velocity.command.generic-error",
-              NamedTextColor.RED));
+        }).exceptionally(e -> {
+          logger.info("Exception occurred while running command for {}", player.getUsername(), e);
+          player.sendMessage(Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
           return null;
         }), passedTimestamp);
   }
 
   @Override
   public void activated() {
-    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
-        .getProtocolVersion());
+    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
       player.getConnection().write(register);
@@ -267,8 +262,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
-        logger.warn("A plugin message was received while the backend server was not "
-            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
+        logger.warn(
+            "A plugin message was received while the backend server was not " + "ready. Channel: {}. Packet discarded.",
+            packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         player.getKnownChannels().addAll(channels);
@@ -280,8 +276,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             channelIdentifiers.add(new LegacyChannelIdentifier(channel));
           }
         }
-        server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
-            ImmutableList.copyOf(channelIdentifiers)));
+        server.getEventManager()
+            .fireAndForget(new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -290,8 +286,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
-        backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+        backendConn.write(
+            PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -325,22 +321,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             byte[] copy = ByteBufUtil.getBytes(packet.content());
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-                  if (pme.getResult().isAllowed()) {
-                    PluginMessage message = new PluginMessage(packet.getChannel(),
-                        Unpooled.wrappedBuffer(copy));
-                    if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
-                      // We're still processing the connection (see above), enqueue the packet for now.
-                      loginPluginMessages.add(message.retain());
-                    } else {
-                      backendConn.write(message);
-                    }
-                  }
-                }, backendConn.eventLoop())
-                .exceptionally((ex) -> {
-                  logger.error("Exception while handling plugin message packet for {}",
-                      player, ex);
-                  return null;
-                });
+              if (pme.getResult().isAllowed()) {
+                PluginMessage message = new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
+                if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
+                  // We're still processing the connection (see above), enqueue the packet for now.
+                  loginPluginMessages.add(message.retain());
+                } else {
+                  backendConn.write(message);
+                }
+              }
+            }, backendConn.eventLoop()).exceptionally((ex) -> {
+              logger.error("Exception while handling plugin message packet for {}", player, ex);
+              return null;
+            });
           }
         }
       }
@@ -392,8 +385,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(Component.translatable("velocity.error.player-connection-error",
-        NamedTextColor.RED));
+    player.disconnect(Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
   @Override
@@ -473,8 +465,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      player.getConnection().delayedWrite(GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
+      player.getConnection().delayedWrite(
+          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
     }
 
     // Flush everything
@@ -544,37 +536,33 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(suggestions -> {
-          if (suggestions.isEmpty()) {
-            return;
-          }
+    server.getCommandManager().offerBrigadierSuggestions(player, command).thenAcceptAsync(suggestions -> {
+      if (suggestions.isEmpty()) {
+        return;
+      }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            Component tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-            }
-            offers.add(new Offer(offer, tooltip));
-          }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-          if (startPos > 0) {
-            TabCompleteResponse resp = new TabCompleteResponse();
-            resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
-            resp.setLength(packet.getCommand().length() - startPos);
-            resp.getOffers().addAll(offers);
-            player.getConnection().write(resp);
-          }
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling command tab completion for player {} executing {}",
-              player, command, ex);
-          return null;
-        });
+      List<Offer> offers = new ArrayList<>();
+      for (Suggestion suggestion : suggestions.getList()) {
+        String offer = suggestion.getText();
+        Component tooltip = null;
+        if (suggestion.getTooltip() != null && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+          tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+        }
+        offers.add(new Offer(offer, tooltip));
+      }
+      int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+      if (startPos > 0) {
+        TabCompleteResponse resp = new TabCompleteResponse();
+        resp.setTransactionId(packet.getTransactionId());
+        resp.setStart(startPos);
+        resp.setLength(packet.getCommand().length() - startPos);
+        resp.getOffers().addAll(offers);
+        player.getConnection().write(resp);
+      }
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling command tab completion for player {} executing {}", player, command, ex);
+      return null;
+    });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -608,37 +596,32 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
-    server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(offers -> {
-          boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
-          try {
-            for (Suggestion suggestion : offers.getList()) {
-              String offer = suggestion.getText();
-              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
-              if (legacy && offer.startsWith(command)) {
-                offer = offer.substring(command.length());
-              }
-              Component tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-              }
-              response.getOffers().add(new Offer(offer, tooltip));
-            }
-            response.getOffers().sort(null);
-            player.getConnection().write(response);
-          } catch (Exception e) {
-            logger.error("Unable to provide tab list completions for {} for command '{}'",
-                player.getUsername(),
-                command, e);
+    server.getCommandManager().offerBrigadierSuggestions(player, command).thenAcceptAsync(offers -> {
+      boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+      try {
+        for (Suggestion suggestion : offers.getList()) {
+          String offer = suggestion.getText();
+          offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+          if (legacy && offer.startsWith(command)) {
+            offer = offer.substring(command.length());
           }
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing command tab completion, with request {} and response {}",
-              request, response, ex);
-          return null;
-        });
+          Component tooltip = null;
+          if (suggestion.getTooltip() != null && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+            tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+          }
+          response.getOffers().add(new Offer(offer, tooltip));
+        }
+        response.getOffers().sort(null);
+        player.getConnection().write(response);
+      } catch (Exception e) {
+        logger.error("Unable to provide tab list completions for {} for command '{}'", player.getUsername(), command,
+            e);
+      }
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while finishing command tab completion, with request {} and response {}", request,
+          response, ex);
+      return null;
+    });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -646,37 +629,31 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
-        .thenAcceptAsync(e -> {
-          response.getOffers().clear();
-          for (String s : e.getSuggestions()) {
-            response.getOffers().add(new Offer(s));
-          }
-          player.getConnection().write(response);
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing regular tab completion, with request {} and response{}",
-              request, response, ex);
-          return null;
-        });
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers)).thenAcceptAsync(e -> {
+      response.getOffers().clear();
+      for (String s : e.getSuggestions()) {
+        response.getOffers().add(new Offer(s));
+      }
+      player.getConnection().write(response);
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while finishing regular tab completion, with request {} and response{}", request,
+          response, ex);
+      return null;
+    });
   }
 
 
-  private CompletableFuture<MinecraftPacket> processCommandExecuteResult(String originalCommand,
-                                                                         CommandResult result,
+  private CompletableFuture<MinecraftPacket> processCommandExecuteResult(String originalCommand, CommandResult result,
                                                                          @Nullable SignedChatCommand signedCommand,
                                                                          Instant passedTimestamp) {
     IdentifiedKey playerKey = player.getIdentifiedKey();
     if (result == CommandResult.denied()) {
       if (playerKey != null) {
-        if (signedCommand != null && playerKey.getKeyRevision()
-            .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-          logger.fatal("A plugin tried to deny a command with signable component(s). "
-              + "This is not supported. "
+        if (signedCommand != null && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+          logger.fatal("A plugin tried to deny a command with signable component(s). " + "This is not supported. "
               + "Disconnecting player " + player.getUsername());
-          player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-              + "Contact your network administrator."));
+          player.disconnect(Component.text(
+              "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
         }
       }
       return CompletableFuture.completedFuture(null);
@@ -684,53 +661,45 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String commandToRun = result.getCommand().orElse(originalCommand);
     if (result.isForwardToServer()) {
-      ChatBuilder write = ChatBuilder
-          .builder(player.getProtocolVersion())
-          .timestamp(passedTimestamp)
-          .asPlayer(player);
+      ChatBuilder write = ChatBuilder.builder(player.getProtocolVersion()).timestamp(passedTimestamp).asPlayer(player);
 
       if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
         write.message(signedCommand);
       } else {
-        if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
-            .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-          logger.fatal("A plugin tried to change a command with signed component(s). "
-              + "This is not supported. "
+        if (signedCommand != null && playerKey != null
+            && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+          logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
               + "Disconnecting player " + player.getUsername());
-          player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-              + "Contact your network administrator."));
+          player.disconnect(Component.text(
+              "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
           return CompletableFuture.completedFuture(null);
         }
         write.message("/" + commandToRun);
       }
       return CompletableFuture.completedFuture(write.toServer());
     } else {
-      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
-          .thenApply(hasRun -> {
-            if (!hasRun) {
-              ChatBuilder write = ChatBuilder
-                  .builder(player.getProtocolVersion())
-                  .timestamp(passedTimestamp)
-                  .asPlayer(player);
+      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun).thenApply(hasRun -> {
+        if (!hasRun) {
+          ChatBuilder write =
+              ChatBuilder.builder(player.getProtocolVersion()).timestamp(passedTimestamp).asPlayer(player);
 
-              if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
-                write.message(signedCommand);
-              } else {
-                if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
-                    .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-                  logger.fatal("A plugin tried to change a command with signed component(s). "
-                      + "This is not supported. "
-                      + "Disconnecting player " + player.getUsername());
-                  player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                      + "Contact your network administrator."));
-                  return null;
-                }
-                write.message("/" + commandToRun);
-              }
-              return write.toServer();
+          if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
+            write.message(signedCommand);
+          } else {
+            if (signedCommand != null && playerKey != null
+                && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
+                  + "Disconnecting player " + player.getUsername());
+              player.disconnect(Component.text(
+                  "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
+              return null;
             }
-            return null;
-          });
+            write.message("/" + commandToRun);
+          }
+          return write.toServer();
+        }
+        return null;
+      });
     }
   }
 

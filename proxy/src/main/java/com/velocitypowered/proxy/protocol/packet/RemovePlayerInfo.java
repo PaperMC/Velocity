@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2018 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.Lists;
@@ -7,32 +24,32 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 
 public class RemovePlayerInfo implements MinecraftPacket {
-  private List<UUID> profilesToRemove;
+  private Collection<UUID> profilesToRemove;
 
   public RemovePlayerInfo() {
     this.profilesToRemove = new ArrayList<>();
   }
 
-  public RemovePlayerInfo(List<UUID> profilesToRemove) {
+  public RemovePlayerInfo(Collection<UUID> profilesToRemove) {
     this.profilesToRemove = profilesToRemove;
   }
 
-  public List<UUID> getProfilesToRemove() {
+  public Collection<UUID> getProfilesToRemove() {
     return profilesToRemove;
   }
 
-  public void setProfilesToRemove(List<UUID> profilesToRemove) {
+  public void setProfilesToRemove(Collection<UUID> profilesToRemove) {
     this.profilesToRemove = profilesToRemove;
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     int length = ProtocolUtils.readVarInt(buf);
-    List<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
+    Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
     for (int idx = 0; idx < length; idx++) {
       profilesToRemove.add(ProtocolUtils.readUuid(buf));
     }
@@ -49,6 +66,6 @@ public class RemovePlayerInfo implements MinecraftPacket {
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
-    return false;
+    return handler.handle(this);
   }
 }

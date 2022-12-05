@@ -99,8 +99,12 @@ public class PlayerChat implements MinecraftPacket {
     long saltLong = buf.readLong();
     byte[] signatureBytes;
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      signatureBytes = new byte[256];
-      buf.readBytes(signatureBytes);
+      if (buf.readBoolean()) {
+        signatureBytes = new byte[256];
+        buf.readBytes(signatureBytes);
+      } else {
+        signatureBytes = new byte[0];
+      }
     } else {
       signatureBytes = ProtocolUtils.readByteArray(buf);
     }
@@ -149,7 +153,10 @@ public class PlayerChat implements MinecraftPacket {
     buf.writeLong(unsigned ? 0L : Longs.fromByteArray(salt));
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      buf.writeBytes(signature);
+      buf.writeBoolean(!this.unsigned);
+      if (!this.unsigned && this.signature != null && this.signature.length == 256) {
+        buf.writeBytes(signature);
+      }
     } else {
       ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
     }

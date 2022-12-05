@@ -69,31 +69,52 @@ public interface TabList {
   Collection<TabListEntry> getEntries();
 
   /**
+   * Clears all entries from the tab list.
+   */
+  void clearAll();
+
+  /**
    * Builds a tab list entry.
    *
-   * @param profile profile
+   * @param profile     profile
    * @param displayName display name
-   * @param latency latency
-   * @param gameMode game mode
+   * @param latency     latency
+   * @param gameMode    game mode
    * @return entry
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-      int gameMode);
+                          int gameMode);
 
   /**
    * Builds a tab list entry.
    *
-   * @param profile profile
+   * @param profile     profile
    * @param displayName display name
-   * @param latency latency
-   * @param gameMode game mode
-   * @param key the player key
+   * @param latency     latency
+   * @param gameMode    game mode
+   * @param key         the player key
    * @return entry
-   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.   
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
                           int gameMode, @Nullable IdentifiedKey key);
+
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
+  TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession);
 }
