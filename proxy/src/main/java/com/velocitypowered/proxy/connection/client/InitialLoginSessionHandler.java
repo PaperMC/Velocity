@@ -105,7 +105,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-            && forceKeyAuthentication) {
+            && forceKeyAuthentication
+            && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }

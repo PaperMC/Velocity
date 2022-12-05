@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.connection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.ChatSessionUpdate;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -47,12 +46,11 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv2.PlayerChatV2;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChat;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -239,11 +237,9 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerChatV1 packet) {
+  default boolean handle(PlayerChat packet) {
     return false;
   }
-
-  default boolean handle(PlayerChatV2 packet) { return false; }
 
   default boolean handle(SystemChat packet) {
     return false;
@@ -258,10 +254,6 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ServerData serverData) {
-    return false;
-  }
-
-  default boolean handle(ChatSessionUpdate update) {
     return false;
   }
 }

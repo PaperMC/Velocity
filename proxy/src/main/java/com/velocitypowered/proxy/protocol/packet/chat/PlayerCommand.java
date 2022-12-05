@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
-import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1.INVALID_PREVIOUS_MESSAGES;
-import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
+import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChat.INVALID_PREVIOUS_MESSAGES;
+import static com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Longs;

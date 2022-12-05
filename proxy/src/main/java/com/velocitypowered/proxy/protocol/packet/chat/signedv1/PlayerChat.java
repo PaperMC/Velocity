@@ -32,7 +32,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerChatV1 implements MinecraftPacket {
+public class PlayerChat implements MinecraftPacket {
 
   private String message;
   private boolean signedPreview;
@@ -46,22 +46,22 @@ public class PlayerChatV1 implements MinecraftPacket {
   public static final int MAXIMUM_PREVIOUS_MESSAGE_COUNT = 5;
 
   public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
-          new QuietDecoderException("Invalid previous messages");
+      new QuietDecoderException("Invalid previous messages");
 
-  public PlayerChatV1() {
+  public PlayerChat() {
   }
 
-  public PlayerChatV1(String message) {
+  public PlayerChat(String message) {
     this.message = message;
     this.unsigned = true;
   }
 
   /**
-   * Create new {@link PlayerChatV1} based on a previously {@link SignedChatMessage}.
+   * Create new {@link PlayerChat} based on a previously {@link SignedChatMessage}.
    *
-   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChatV1}.
+   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChat}.
    */
-  public PlayerChatV1(SignedChatMessage message) {
+  public PlayerChat(SignedChatMessage message) {
     this.message = message.getMessage();
     this.expiry = message.getExpiryTemporal();
     this.salt = message.getSalt();
@@ -97,7 +97,13 @@ public class PlayerChatV1 implements MinecraftPacket {
 
     long expiresAt = buf.readLong();
     long saltLong = buf.readLong();
-    byte[] signatureBytes = ProtocolUtils.readByteArray(buf);
+    byte[] signatureBytes;
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      signatureBytes = new byte[256];
+      buf.readBytes(signatureBytes);
+    } else {
+      signatureBytes = ProtocolUtils.readByteArray(buf);
+    }
 
     if (saltLong != 0L && signatureBytes.length > 0) {
       salt = Longs.toByteArray(saltLong);
@@ -110,9 +116,11 @@ public class PlayerChatV1 implements MinecraftPacket {
       throw EncryptionUtils.INVALID_SIGNATURE;
     }
 
-    signedPreview = buf.readBoolean();
-    if (signedPreview && unsigned) {
-      throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      signedPreview = buf.readBoolean();
+      if (signedPreview && unsigned) {
+        throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
+      }
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
@@ -139,10 +147,16 @@ public class PlayerChatV1 implements MinecraftPacket {
 
     buf.writeLong(unsigned ? Instant.now().toEpochMilli() : expiry.toEpochMilli());
     buf.writeLong(unsigned ? 0L : Longs.fromByteArray(salt));
-    ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
 
-    buf.writeBoolean(signedPreview);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      buf.writeBytes(signature);
+    } else {
+      ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
+    }
 
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      buf.writeBoolean(signedPreview);
+    }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       ProtocolUtils.writeVarInt(buf, previousMessages.length);
@@ -164,8 +178,8 @@ public class PlayerChatV1 implements MinecraftPacket {
   /**
    * Validates a signature and creates a {@link SignedChatMessage} from the given signature.
    *
-   * @param signer the signer's information
-   * @param sender the sender of the message
+   * @param signer   the signer's information
+   * @param sender   the sender of the message
    * @param mustSign instructs the function to throw if the signature is invalid.
    * @return The {@link SignedChatMessage} or null if the signature couldn't be verified.
    * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
@@ -180,7 +194,7 @@ public class PlayerChatV1 implements MinecraftPacket {
     }
 
     return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature,
-            salt, signedPreview, previousMessages, lastMessage);
+        salt, signedPreview, previousMessages, lastMessage);
   }
 
   @Override

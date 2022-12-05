@@ -28,7 +28,6 @@ import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
-import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -44,11 +43,9 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.crypto.SignedChatCommand;
-import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.ChatSessionUpdate;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
@@ -61,14 +58,11 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
-import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv1.ChatHandlerV1;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChatV1;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv2.ChatHandlerV2;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv2.PlayerChatV2;
+import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.signedv1.SignableChatHandler;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
@@ -80,7 +74,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -105,7 +98,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
-  private ChatHandler<? extends MinecraftPacket> chatHandler;
+  private final ChatHandler<? extends MinecraftPacket> chatHandler;
   private final ChatTimeKeeper timeKeeper = new ChatTimeKeeper();
 
   /**
@@ -118,10 +111,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     this.player = player;
     this.server = server;
 
-    if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      this.chatHandler = new ChatHandlerV2(this.server, this.player, null);
-    } else if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      this.chatHandler = new ChatHandlerV1(this.server, this.player);
+    if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      this.chatHandler = new SignableChatHandler(this.server, this.player);
     } else {
       this.chatHandler = new LegacyChatHandler(this.server, this.player);
     }
@@ -144,14 +135,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
     return true;
-  }
-
-  private MinecraftConnection retrieveServerConnection() {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      return null;
-    }
-    return serverConnection.getConnection();
   }
 
   private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
@@ -237,7 +220,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PlayerChatV1 packet) {
+  public boolean handle(PlayerChat packet) {
     player.ensureAndGetCurrentServer();
 
     if (!updateTimeKeeper(packet.getExpiry())) {
@@ -247,13 +230,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!validateChat(packet.getMessage())) {
       return true;
     }
-
-    return this.chatHandler.handlePlayerChat(packet);
-  }
-
-  @Override
-  public boolean handle(PlayerChatV2 packet) {
-    player.ensureAndGetCurrentServer();
 
     return this.chatHandler.handlePlayerChat(packet);
   }
@@ -376,12 +352,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackResponse packet) {
     return player.onResourcePackResponse(packet.getStatus());
-  }
-
-  @Override
-  public boolean handle(ChatSessionUpdate update) {
-    this.chatHandler = new ChatHandlerV2(this.server, this.player, update.getSession());
-    return false;
   }
 
   @Override
