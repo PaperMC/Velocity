@@ -25,6 +25,7 @@ public interface TabListEntry extends KeyIdentifiable {
    */
   @Nullable ChatSession getChatSession();
 
+  @Override
   default IdentifiedKey getIdentifiedKey() {
     ChatSession session = getChatSession();
     if (session == null) {
