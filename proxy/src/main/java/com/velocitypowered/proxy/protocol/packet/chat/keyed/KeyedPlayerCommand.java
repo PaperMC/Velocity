@@ -21,13 +21,10 @@ import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCh
 import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignaturePair;
-import com.velocitypowered.proxy.crypto.SignedChatCommand;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -36,7 +33,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class KeyedPlayerCommand implements MinecraftPacket {
