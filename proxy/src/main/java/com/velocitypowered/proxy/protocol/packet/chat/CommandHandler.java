@@ -56,7 +56,7 @@ public interface CommandHandler<T extends MinecraftPacket> {
         server.getCommandManager().callCommandEvent(player, message).thenComposeAsync(futurePacketCreator)
             .thenApply(pkt -> {
               if (server.getConfiguration().isLogCommandExecutions()) {
-                logger.info("{} -> executed command /{} ({})", player, message, pkt.getClass().getSimpleName());
+                logger.info("{} -> executed command /{}", player, message);
               }
               return pkt;
             }).exceptionally(e -> {
