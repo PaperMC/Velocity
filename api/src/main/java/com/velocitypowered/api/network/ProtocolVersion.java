@@ -60,7 +60,7 @@ public enum ProtocolVersion {
   MINECRAFT_1_18_2(758, "1.18.2"),
   MINECRAFT_1_19(759, "1.19"),
   MINECRAFT_1_19_1(760, "1.19.1", "1.19.2"),
-  MINECRAFT_1_19_3(761, 113, "1.19.3");
+  MINECRAFT_1_19_3(761, 114, "1.19.3");
 
   private static final int SNAPSHOT_BIT = 30;
 
