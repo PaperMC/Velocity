@@ -108,7 +108,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param player the player
    */
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
-    logger.info("Creating client with protocol version {}", player.getProtocolVersion());
+    logger.info("Creating client with protocol version {} ({})", player.getProtocolVersion(),
+        player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3));
     this.player = player;
     this.server = server;
 
