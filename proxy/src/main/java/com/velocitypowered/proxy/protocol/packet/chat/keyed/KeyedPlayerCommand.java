@@ -88,21 +88,6 @@ public class KeyedPlayerCommand implements MinecraftPacket {
     this.salt = 0L;
   }
 
-  /**
-   * Create new {@link KeyedPlayerCommand} based on a previously {@link SignedChatCommand}.
-   *
-   * @param signedCommand The {@link SignedChatCommand} to turn into {@link KeyedPlayerCommand}.
-   */
-  public KeyedPlayerCommand(SignedChatCommand signedCommand) {
-    this.command = signedCommand.getBaseCommand();
-    this.arguments = ImmutableMap.copyOf(signedCommand.getSignatures());
-    this.timestamp = signedCommand.getExpiryTemporal();
-    this.salt = Longs.fromByteArray(signedCommand.getSalt());
-    this.signedPreview = signedCommand.isPreviewSigned();
-    this.lastMessage = signedCommand.getLastSignature();
-    this.previousMessages = signedCommand.getPreviousSignatures();
-  }
-
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     command = ProtocolUtils.readString(buf, 256);
@@ -117,15 +102,8 @@ public class KeyedPlayerCommand implements MinecraftPacket {
     // Mapped as Argument : signature
     ImmutableMap.Builder<String, byte[]> entries = ImmutableMap.builderWithExpectedSize(mapSize);
     for (int i = 0; i < mapSize; i++) {
-      if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-        String name = ProtocolUtils.readString(buf, MAX_LENGTH_ARGUMENTS);
-        byte[] bytes = new byte[256];
-        buf.readBytes(bytes);
-        entries.put(name, bytes);
-      } else {
-        entries.put(ProtocolUtils.readString(buf, MAX_LENGTH_ARGUMENTS),
-            ProtocolUtils.readByteArray(buf, unsigned ? 0 : ProtocolUtils.DEFAULT_MAX_STRING_SIZE));
-      }
+      entries.put(ProtocolUtils.readString(buf, MAX_LENGTH_ARGUMENTS),
+          ProtocolUtils.readByteArray(buf, unsigned ? 0 : ProtocolUtils.DEFAULT_MAX_STRING_SIZE));
     }
     arguments = entries.build();
 
@@ -134,9 +112,7 @@ public class KeyedPlayerCommand implements MinecraftPacket {
       throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      int offset = ProtocolUtils.readVarInt(buf);
-    } else if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       int size = ProtocolUtils.readVarInt(buf);
       if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
         throw INVALID_PREVIOUS_MESSAGES;
@@ -195,32 +171,6 @@ public class KeyedPlayerCommand implements MinecraftPacket {
       }
     }
 
-  }
-
-  /**
-   * Validates a signature and creates a {@link SignedChatCommand} from the given signature.
-   *
-   * @param signer   the signer's information
-   * @param sender   the sender of the message
-   * @param mustSign instructs the function to throw if the signature is invalid.
-   * @return The {@link SignedChatCommand} or null if the signature couldn't be verified.
-   * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
-   *                                                                     is invalid.
-   */
-  public SignedChatCommand signedContainer(
-      @Nullable IdentifiedKey signer, UUID sender, boolean mustSign) {
-    // There's a certain mod that is very broken that still signs messages but
-    // doesn't provide the player key. This is broken and wrong, but we need to
-    // work around that.
-    if (unsigned || signer == null) {
-      if (mustSign) {
-        throw EncryptionUtils.INVALID_SIGNATURE;
-      }
-      return null;
-    }
-
-    return new SignedChatCommand(command, signer.getSignedPublicKey(), sender, timestamp,
-        arguments, Longs.toByteArray(salt), signedPreview, previousMessages, lastMessage);
   }
 
   @Override
