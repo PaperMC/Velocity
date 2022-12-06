@@ -204,7 +204,7 @@ public class VelocityTabList implements InternalTabList {
         logger.debug("Received an add player packet for an existing entry; this does nothing.");
       }
     } else if (currentEntry == null) {
-      logger.warn(
+      logger.debug(
           "Received a partial player before an ADD_PLAYER action; profile could not be built. {}", entry);
       return;
     }
