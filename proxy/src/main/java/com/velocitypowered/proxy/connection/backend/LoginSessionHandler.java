@@ -51,9 +51,12 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+  private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
   private static final Component MODERN_IP_FORWARDING_FAILURE = Component
       .translatable("velocity.error.modern-forwarding-failed");
@@ -119,6 +122,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
+    logger.info("Received disconnect from {}: {}", serverConn.getServerInfo().getName(), packet.getReason());
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
     return true;
@@ -126,12 +130,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SetCompression packet) {
+    logger.info("Received compression from {}: {}", serverConn.getServerInfo().getName(), packet.getThreshold());
     serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
   @Override
   public boolean handle(ServerLoginSuccess packet) {
+    logger.info("Login successful for {} on {}", serverConn.getPlayer().getUsername(),
+        serverConn.getServerInfo().getName());
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,

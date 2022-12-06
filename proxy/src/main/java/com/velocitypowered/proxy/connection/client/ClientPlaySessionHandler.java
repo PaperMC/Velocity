@@ -108,6 +108,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param player the player
    */
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
+    logger.info("Creating client with protocol version {}", player.getProtocolVersion());
     this.player = player;
     this.server = server;
 
@@ -193,6 +194,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PlayerCommand packet) {
+    logger.info("{} -> /{}", player, packet.getCommand());
+
     player.ensureAndGetCurrentServer();
 
     if (!updateTimeKeeper(packet.getTimestamp())) {
@@ -216,6 +219,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PlayerChat packet) {
+    logger.info("{} -> {}", player.getUsername(), packet.getMessage());
+
     player.ensureAndGetCurrentServer();
 
     if (!updateTimeKeeper(packet.getExpiry())) {
@@ -231,6 +236,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyChat packet) {
+    logger.info("{} -> {}", player.getUsername(), packet.getMessage());
+
     player.ensureAndGetCurrentServer();
     String msg = packet.getMessage();
     if (!validateChat(msg)) {
@@ -417,6 +424,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
+    logger.info("{} has joined game connected to {}", player.getUsername(), destination.getServerInfo().getName());
     final MinecraftConnection serverMc = destination.ensureConnected();
 
     if (!spawned) {
