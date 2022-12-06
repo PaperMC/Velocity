@@ -15,24 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat.signedv1;
+package com.velocitypowered.proxy.protocol.packet.chat.keyed;
 
 import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignaturePair;
-import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
-import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerChat implements MinecraftPacket {
+public class KeyedPlayerChat implements MinecraftPacket {
 
   private String message;
   private boolean signedPreview;
@@ -48,27 +45,12 @@ public class PlayerChat implements MinecraftPacket {
   public static final QuietDecoderException INVALID_PREVIOUS_MESSAGES =
       new QuietDecoderException("Invalid previous messages");
 
-  public PlayerChat() {
+  public KeyedPlayerChat() {
   }
 
-  public PlayerChat(String message) {
+  public KeyedPlayerChat(String message) {
     this.message = message;
     this.unsigned = true;
-  }
-
-  /**
-   * Create new {@link PlayerChat} based on a previously {@link SignedChatMessage}.
-   *
-   * @param message The {@link SignedChatMessage} to turn into {@link PlayerChat}.
-   */
-  public PlayerChat(SignedChatMessage message) {
-    this.message = message.getMessage();
-    this.expiry = message.getExpiryTemporal();
-    this.salt = message.getSalt();
-    this.signature = message.getSignature();
-    this.signedPreview = message.isPreviewSigned();
-    this.lastMessage = message.getPreviousSignature();
-    this.previousMessages = message.getPreviousSignatures();
   }
 
   public void setExpiry(@Nullable Instant expiry) {
@@ -97,17 +79,7 @@ public class PlayerChat implements MinecraftPacket {
 
     long expiresAt = buf.readLong();
     long saltLong = buf.readLong();
-    byte[] signatureBytes;
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      if (buf.readBoolean()) {
-        signatureBytes = new byte[256];
-        buf.readBytes(signatureBytes);
-      } else {
-        signatureBytes = new byte[0];
-      }
-    } else {
-      signatureBytes = ProtocolUtils.readByteArray(buf);
-    }
+    byte[] signatureBytes = ProtocolUtils.readByteArray(buf);
 
     if (saltLong != 0L && signatureBytes.length > 0) {
       salt = Longs.toByteArray(saltLong);
@@ -120,11 +92,9 @@ public class PlayerChat implements MinecraftPacket {
       throw EncryptionUtils.INVALID_SIGNATURE;
     }
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
-      signedPreview = buf.readBoolean();
-      if (signedPreview && unsigned) {
-        throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
-      }
+    signedPreview = buf.readBoolean();
+    if (signedPreview && unsigned) {
+      throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
@@ -152,18 +122,9 @@ public class PlayerChat implements MinecraftPacket {
     buf.writeLong(unsigned ? Instant.now().toEpochMilli() : expiry.toEpochMilli());
     buf.writeLong(unsigned ? 0L : Longs.fromByteArray(salt));
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      buf.writeBoolean(!this.unsigned);
-      if (!this.unsigned && this.signature != null && this.signature.length == 256) {
-        buf.writeBytes(signature);
-      }
-    } else {
-      ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
-    }
+    ProtocolUtils.writeByteArray(buf, unsigned ? EncryptionUtils.EMPTY : signature);
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
-      buf.writeBoolean(signedPreview);
-    }
+    buf.writeBoolean(signedPreview);
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       ProtocolUtils.writeVarInt(buf, previousMessages.length);
@@ -180,28 +141,6 @@ public class PlayerChat implements MinecraftPacket {
         buf.writeBoolean(false);
       }
     }
-  }
-
-  /**
-   * Validates a signature and creates a {@link SignedChatMessage} from the given signature.
-   *
-   * @param signer   the signer's information
-   * @param sender   the sender of the message
-   * @param mustSign instructs the function to throw if the signature is invalid.
-   * @return The {@link SignedChatMessage} or null if the signature couldn't be verified.
-   * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
-   *                                                                     is invalid.
-   */
-  public SignedChatMessage signedContainer(IdentifiedKey signer, UUID sender, boolean mustSign) {
-    if (unsigned) {
-      if (mustSign) {
-        throw EncryptionUtils.INVALID_SIGNATURE;
-      }
-      return null;
-    }
-
-    return new SignedChatMessage(message, signer.getSignedPublicKey(), sender, expiry, signature,
-        salt, signedPreview, previousMessages, lastMessage);
   }
 
   @Override

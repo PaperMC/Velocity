@@ -46,7 +46,6 @@ import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
-import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
@@ -66,8 +65,9 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
+import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
@@ -170,6 +170,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
   private final ChatQueue chatQueue;
+  private final ChatBuilderFactory chatBuilderFactory;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode, @Nullable IdentifiedKey playerKey) {
@@ -191,6 +192,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
+    this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
+  }
+
+  public ChatBuilderFactory getChatBuilderFactory() {
+    return chatBuilderFactory;
   }
 
   public ChatQueue getChatQueue() {
@@ -332,7 +338,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     Component translated = translateMessage(message);
 
-    connection.write(ChatBuilder.builder(this.getProtocolVersion())
+    connection.write(getChatBuilderFactory().builder()
         .component(translated).forIdentity(identity).toClient());
   }
 
@@ -344,9 +350,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     Component translated = translateMessage(message);
 
-    connection.write(ChatBuilder.builder(this.getProtocolVersion())
+    connection.write(getChatBuilderFactory().builder()
         .component(translated).forIdentity(identity)
-        .setType(type == MessageType.CHAT ? ChatBuilder.ChatType.CHAT : ChatBuilder.ChatType.SYSTEM)
+        .setType(type == MessageType.CHAT ? ChatType.CHAT : ChatType.SYSTEM)
         .toClient());
   }
 
@@ -918,13 +924,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         "input cannot be greater than " + LegacyChat.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
     if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      this.chatQueue.hijack(ChatBuilder.builder(getProtocolVersion()).asPlayer(this).message(input),
+      this.chatQueue.hijack(getChatBuilderFactory().builder().asPlayer(this).message(input),
           (instant, item) -> {
-            item.timestamp(instant);
+            item.setTimestamp(instant);
             return item.toServer();
           });
     } else {
-      ensureBackendConnection().write(ChatBuilder.builder(getProtocolVersion())
+      ensureBackendConnection().write(getChatBuilderFactory().builder()
           .asPlayer(this).message(input).toServer());
     }
   }

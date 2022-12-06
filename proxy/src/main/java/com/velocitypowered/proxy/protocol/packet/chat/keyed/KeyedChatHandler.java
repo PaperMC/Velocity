@@ -15,17 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat.signedv1;
+package com.velocitypowered.proxy.protocol.packet.chat.keyed;
 
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
-import com.velocitypowered.api.proxy.crypto.SignedMessage;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -33,23 +30,23 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SignableChatHandler implements com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<PlayerChat> {
-  private static final Logger logger = LogManager.getLogger(SignableChatHandler.class);
+public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChat> {
+  private static final Logger logger = LogManager.getLogger(KeyedChatHandler.class);
 
   private final VelocityServer server;
   private final ConnectedPlayer player;
 
-  public SignableChatHandler(VelocityServer server, ConnectedPlayer player) {
+  public KeyedChatHandler(VelocityServer server, ConnectedPlayer player) {
     this.server = server;
     this.player = player;
   }
 
   @Override
-  public Class<PlayerChat> packetClass() {
-    return PlayerChat.class;
+  public Class<KeyedPlayerChat> packetClass() {
+    return KeyedPlayerChat.class;
   }
 
-  private void invalidCancel() {
+  public static void invalidCancel(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to cancel a signed chat message."
         + " This is no longer possible in 1.19.1 and newer. "
         + "Disconnecting player " + player.getUsername());
@@ -57,7 +54,7 @@ public class SignableChatHandler implements com.velocitypowered.proxy.protocol.p
         + "Contact your network administrator."));
   }
 
-  private void invalidChange() {
+  public static void invalidChange(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to change a signed chat message. "
         + "This is no longer possible in 1.19.1 and newer. "
         + "Disconnecting player " + player.getUsername());
@@ -66,27 +63,29 @@ public class SignableChatHandler implements com.velocitypowered.proxy.protocol.p
   }
 
   @Override
-  public void handlePlayerChatInternal(PlayerChat packet) {
+  public void handlePlayerChatInternal(KeyedPlayerChat packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
-    SignedMessage signedMessage = packet.isUnsigned()
-        ? null
-        : packet.signedContainer(this.player.getIdentifiedKey(), this.player.getUniqueId(), false);
     CompletableFuture<MinecraftPacket> chatFuture;
     IdentifiedKey playerKey = this.player.getIdentifiedKey();
 
-    if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      // latest chat
-      chatFuture = future.thenApply(handleChat(packet, packet.isUnsigned()));
-    } else if (playerKey != null && signedMessage != null) {
+    if (playerKey != null && !packet.isUnsigned()) {
       // 1.19->1.19.2 signed version
-      chatFuture = future.thenApply(handleOldSignedChat(packet, signedMessage));
+      chatFuture = future.thenApply(handleOldSignedChat(packet));
     } else {
       // 1.19->1.19.2 unsigned version
-      chatFuture = future.thenApply(handleOldUnsignedChat(packet));
+      chatFuture = future.thenApply(pme -> {
+        PlayerChatEvent.ChatResult chatResult = pme.getResult();
+        if (!chatResult.isAllowed()) {
+          return null;
+        }
+
+        return player.getChatBuilderFactory().builder()
+            .message(chatResult.getMessage().orElse(packet.getMessage())).setTimestamp(packet.getExpiry()).toServer();
+      });
     }
     chatQueue.queuePacket(
         chatFuture.exceptionally((ex) -> {
@@ -97,58 +96,29 @@ public class SignableChatHandler implements com.velocitypowered.proxy.protocol.p
     );
   }
 
-  private Function<PlayerChatEvent, MinecraftPacket> handleChat(PlayerChat packet, boolean unsigned) {
-    return pme -> {
-      PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed()) {
-        if (!unsigned) {
-          invalidCancel();
-        }
-        return null;
-      }
-
-      if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        invalidChange();
-      }
-      return packet;
-    };
-  }
-
-  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(PlayerChat packet, SignedMessage signed) {
+  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChat packet) {
     IdentifiedKey playerKey = this.player.getIdentifiedKey();
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
       if (!chatResult.isAllowed() && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-        invalidCancel();
+        invalidCancel(logger, player);
         return null;
       }
 
       if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
         if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
           // Bad, very bad.
-          invalidChange();
+          invalidChange(logger, player);
         } else {
           logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-          return ChatBuilder.builder(player.getProtocolVersion())
+          return player.getChatBuilderFactory().builder()
               .message(chatResult.getMessage().get() /* always present at this point */)
-              .timestamp(packet.getExpiry())
+              .setTimestamp(packet.getExpiry())
               .toServer();
         }
       }
       return packet;
-    };
-  }
-
-  private Function<PlayerChatEvent, MinecraftPacket> handleOldUnsignedChat(PlayerChat packet) {
-    return pme -> {
-      PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed()) {
-        return null;
-      }
-
-      return ChatBuilder.builder(this.player.getProtocolVersion())
-          .message(chatResult.getMessage().orElse(packet.getMessage())).timestamp(packet.getExpiry()).toServer();
     };
   }
 }

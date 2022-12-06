@@ -49,10 +49,12 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.signedv1.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -239,7 +241,11 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerChat packet) {
+  default boolean handle(KeyedPlayerChat packet) {
+    return false;
+  }
+
+  default boolean handle(SessionPlayerChat packet) {
     return false;
   }
 
@@ -247,7 +253,11 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerCommand packet) {
+  default boolean handle(KeyedPlayerCommand packet) {
+    return false;
+  }
+
+  default boolean handle(SessionPlayerCommand packet) {
     return false;
   }
 

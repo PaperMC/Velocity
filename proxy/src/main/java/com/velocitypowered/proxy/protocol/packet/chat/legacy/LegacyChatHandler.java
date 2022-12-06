@@ -21,7 +21,6 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 
 public class LegacyChatHandler implements ChatHandler<LegacyChat> {
@@ -50,7 +49,7 @@ public class LegacyChatHandler implements ChatHandler<LegacyChat> {
             return;
           }
 
-          serverConnection.write(ChatBuilder.builder(this.player.getProtocolVersion())
+          serverConnection.write(this.player.getChatBuilderFactory().builder()
               .message(chatEvent.getResult().getMessage().orElse(packet.getMessage())).toServer());
         });
   }
