@@ -274,5 +274,18 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     public void setChatSession(@Nullable RemoteChatSession chatSession) {
       this.chatSession = chatSession;
     }
+
+    @Override
+    public String toString() {
+      return "Entry{" +
+          "profileId=" + profileId +
+          ", profile=" + profile +
+          ", listed=" + listed +
+          ", latency=" + latency +
+          ", gameMode=" + gameMode +
+          ", displayName=" + displayName +
+          ", chatSession=" + chatSession +
+          '}';
+    }
   }
 }

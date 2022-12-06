@@ -201,10 +201,11 @@ public class VelocityTabList implements InternalTabList {
             )
         );
       } else {
-        logger.warn("Received an add player packet for an existing entry; this does nothing.");
+        logger.debug("Received an add player packet for an existing entry; this does nothing.");
       }
     } else if (currentEntry == null) {
-      logger.warn("Received a partial player before an ADD_PLAYER action.");
+      logger.warn(
+          "Received a partial player before an ADD_PLAYER action; profile could not be built. {}", entry);
       return;
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_GAME_MODE)) {
