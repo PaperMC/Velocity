@@ -247,21 +247,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyPlayerListItem packet) {
-    logger.info("Legacy player list item handle");
     serverConn.getPlayer().getTabList().processLegacy(packet);
     return false;
   }
 
   @Override
   public boolean handle(UpsertPlayerInfo packet) {
-    logger.info("Upsert player info handle");
     serverConn.getPlayer().getTabList().processUpdate(packet);
     return false;
   }
 
   @Override
   public boolean handle(RemovePlayerInfo packet) {
-    logger.info("Remove player info handle");
     serverConn.getPlayer().getTabList().processRemove(packet);
     return false;
   }
@@ -287,7 +284,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerData packet) {
-    logger.info("Server data handle");
     server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
         .thenComposeAsync(
             ping -> server.getEventManager().fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),

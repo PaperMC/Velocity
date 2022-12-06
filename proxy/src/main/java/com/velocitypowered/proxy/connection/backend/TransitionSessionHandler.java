@@ -88,9 +88,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(JoinGame packet) {
-    logger.info("{} has connected to server (JoinGame) {}", serverConn.getPlayer().getUsername(),
-        serverConn.getServer().getServerInfo().getName());
-
     MinecraftConnection smc = serverConn.ensureConnected();
     RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
@@ -157,9 +154,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    logger.info("Handling disconnect packet from server {} for {}: {}",
-        serverConn.getServerInfo().getName(), serverConn.getPlayer().getUsername(),
-        packet.getReason());
     final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
 

@@ -122,7 +122,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    logger.info("Received disconnect from {}: {}", serverConn.getServerInfo().getName(), packet.getReason());
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
     return true;
@@ -130,14 +129,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SetCompression packet) {
-    logger.info("Received compression from {}: {}", serverConn.getServerInfo().getName(), packet.getThreshold());
     serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
   @Override
   public boolean handle(ServerLoginSuccess packet) {
-    logger.info("Login successful for {} on {}", serverConn.getPlayer().getUsername(),
         serverConn.getServerInfo().getName());
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {

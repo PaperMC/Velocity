@@ -84,20 +84,17 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
   private boolean knownDisconnect = false;
-  private boolean debug;
 
   /**
    * Initializes a new {@link MinecraftConnection} instance.
    * @param channel the channel on the connection
    * @param server the Velocity instance
-   * @param debug to debug
    */
-  public MinecraftConnection(Channel channel, VelocityServer server, boolean debug) {
+  public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
     this.state = StateRegistry.HANDSHAKE;
-    this.debug = debug;
   }
 
   @Override
@@ -217,9 +214,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param msg the message to write
    */
   public void write(Object msg) {
-    if (this.debug) {
-      logger.info("Writing packet {}", msg.getClass());
-    }
     if (channel.isActive()) {
       channel.writeAndFlush(msg, channel.voidPromise());
     } else {
@@ -232,9 +226,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param msg the message to write
    */
   public void delayedWrite(Object msg) {
-    if (this.debug) {
-      logger.info("Delayed write {}", msg.getClass());
-    }
     if (channel.isActive()) {
       channel.write(msg, channel.voidPromise());
     } else {
@@ -246,9 +237,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Flushes the connection.
    */
   public void flush() {
-    if (this.debug) {
-      logger.info("Flush!");
-    }
     if (channel.isActive()) {
       channel.flush();
     }
