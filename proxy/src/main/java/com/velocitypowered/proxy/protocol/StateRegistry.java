@@ -334,7 +334,7 @@ public enum StateRegistry {
           map(0x5B, MINECRAFT_1_19_3, true));
       clientbound.register(TitleClearPacket.class, TitleClearPacket::new,
           map(0x10, MINECRAFT_1_17, true),
-          map(0x0D, MINECRAFT_1_19, true));
+          map(0x0C, MINECRAFT_1_19, true));
       clientbound.register(LegacyPlayerListItem.class, LegacyPlayerListItem::new,
           map(0x38, MINECRAFT_1_7_2, false),
           map(0x2D, MINECRAFT_1_9, false),
