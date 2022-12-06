@@ -226,7 +226,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:float_range", mapSet(MINECRAFT_1_19_3, 37), mapSet(MINECRAFT_1_19, 38)));
     empty(id("minecraft:item_enchantment", mapSet(MINECRAFT_1_19_3, -1), mapSet(MINECRAFT_1_19, 39)));
     empty(id("minecraft:entity_summon", mapSet(MINECRAFT_1_19_3, -1), mapSet(MINECRAFT_1_19, 40)));
-    empty(id("minecraft:dimension", mapSet(MINECRAFT_1_19_3, -38), mapSet(MINECRAFT_1_19, 41)));
+    empty(id("minecraft:dimension", mapSet(MINECRAFT_1_19_3, 38), mapSet(MINECRAFT_1_19, 41)));
     empty(id("minecraft:gamemode", mapSet(MINECRAFT_1_19_3, 39))); // 1.19.3
     empty(id("minecraft:time", mapSet(MINECRAFT_1_19_3, 40), mapSet(MINECRAFT_1_19, 42))); // added in 1.14
 
