@@ -55,7 +55,7 @@ public interface IdentifiedKey extends KeySigned {
 
   enum Revision {
     GENERIC_V1(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19)),
-    LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1, ProtocolVersion.MINECRAFT_1_19_3));
+    LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1));
 
     final Set<Revision> backwardsCompatibleTo;
     final Set<ProtocolVersion> applicableTo;
