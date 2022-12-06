@@ -185,7 +185,6 @@ public class VelocityTabList implements InternalTabList {
   }
 
   private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions, UpsertPlayerInfo.Entry entry) {
-    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
     Preconditions.checkNotNull(entry.getProfileId(), "Profile ID cannot be null");
     UUID profileId = entry.getProfileId();
     VelocityTabListEntry currentEntry = this.entries.get(profileId);
@@ -204,6 +203,9 @@ public class VelocityTabList implements InternalTabList {
       } else {
         logger.warn("Received an add player packet for an existing entry; this does nothing.");
       }
+    } else if (currentEntry == null) {
+      logger.warn("Received a partial player before an ADD_PLAYER action.");
+      return;
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_GAME_MODE)) {
       currentEntry.setGameMode(entry.getGameMode());
