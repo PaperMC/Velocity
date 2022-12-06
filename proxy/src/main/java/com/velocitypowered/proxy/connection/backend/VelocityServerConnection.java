@@ -99,7 +99,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .connect(registeredServer.getServerInfo().getAddress())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
-            connection = new MinecraftConnection(future.channel(), server, false);
+            connection = new MinecraftConnection(future.channel(), server);
             connection.setAssociation(VelocityServerConnection.this);
             future.channel().pipeline().addLast(HANDLER, connection);
 

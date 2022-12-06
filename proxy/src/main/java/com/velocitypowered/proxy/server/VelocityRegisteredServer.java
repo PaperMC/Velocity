@@ -112,7 +112,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
                 .addLast(MINECRAFT_ENCODER,
                     new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server, false));
+            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
           }
         })
         .connect(serverInfo.getAddress())
