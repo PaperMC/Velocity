@@ -15,41 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat;
+package com.velocitypowered.proxy.protocol.packet.chat.legacy;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import io.netty.buffer.ByteBuf;
+import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
+import java.util.UUID;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 
-public class PlayerChatPreview implements MinecraftPacket {
-
-  private int id;
-  private String query;
-
-  public int getId() {
-    return id;
-  }
-
-  public String getQuery() {
-    return query;
+public class LegacyChatBuilder extends ChatBuilderV2 {
+  public LegacyChatBuilder(ProtocolVersion version) {
+    super(version);
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    id = buf.readInt();
-    query = ProtocolUtils.readString(buf, 256);
+  public MinecraftPacket toClient() {
+    // This is temporary
+    UUID identity = sender == null ? (senderIdentity == null ? Identity.nil().uuid()
+        : senderIdentity.uuid()) : sender.getUniqueId();
+    Component msg = component == null ? Component.text(message) : component;
+
+    return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    buf.writeInt(id);
-    ProtocolUtils.writeString(buf, query);
-  }
-
-  @Override
-  public boolean handle(MinecraftSessionHandler handler) {
-    return handler.handle(this);
+  public MinecraftPacket toServer() {
+    LegacyChat chat = new LegacyChat();
+    chat.setMessage(message);
+    return chat;
   }
 }

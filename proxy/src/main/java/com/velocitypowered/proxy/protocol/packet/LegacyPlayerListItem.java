@@ -33,7 +33,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerListItem implements MinecraftPacket {
+public class LegacyPlayerListItem implements MinecraftPacket {
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;
@@ -43,12 +43,12 @@ public class PlayerListItem implements MinecraftPacket {
   private int action;
   private final List<Item> items = new ArrayList<>();
 
-  public PlayerListItem(int action, List<Item> items) {
+  public LegacyPlayerListItem(int action, List<Item> items) {
     this.action = action;
     this.items.addAll(items);
   }
 
-  public PlayerListItem() {
+  public LegacyPlayerListItem() {
   }
 
   public int getAction() {

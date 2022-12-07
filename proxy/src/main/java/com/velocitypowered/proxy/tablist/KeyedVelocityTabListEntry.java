@@ -17,108 +17,105 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabListEntry implements TabListEntry {
-  private final VelocityTabList tabList;
+public class KeyedVelocityTabListEntry implements TabListEntry {
+
+  private final KeyedVelocityTabList tabList;
   private final GameProfile profile;
-  private Component displayName;
+  private net.kyori.adventure.text.Component displayName;
   private int latency;
   private int gameMode;
-  private boolean listed;
-  private @Nullable ChatSession session;
+  private @Nullable IdentifiedKey playerKey;
 
-  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName, int latency,
-                              int gameMode, @Nullable ChatSession session, boolean listed) {
+  KeyedVelocityTabListEntry(KeyedVelocityTabList tabList, GameProfile profile,
+                            net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode,
+                            @Nullable IdentifiedKey playerKey) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
     this.latency = latency;
     this.gameMode = gameMode;
-    this.session = session;
-    this.listed = listed;
-  }
-
-  @Override
-  public @Nullable ChatSession getChatSession() {
-    return this.session;
+    this.playerKey = playerKey;
   }
 
   @Override
   public TabList getTabList() {
-    return this.tabList;
+    return tabList;
   }
 
   @Override
   public GameProfile getProfile() {
-    return this.profile;
+    return profile;
   }
 
   @Override
-  public Optional<Component> getDisplayNameComponent() {
+  public Optional<net.kyori.adventure.text.Component> getDisplayNameComponent() {
     return Optional.ofNullable(displayName);
   }
 
   @Override
-  public TabListEntry setDisplayName(@Nullable Component displayName) {
+  public TabListEntry setDisplayName(net.kyori.adventure.text.@Nullable Component displayName) {
     this.displayName = displayName;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setDisplayName(displayName);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
+    tabList.updateEntry(LegacyPlayerListItem.UPDATE_DISPLAY_NAME, this);
     return this;
+  }
+
+  void setDisplayNameInternal(net.kyori.adventure.text.@Nullable Component displayName) {
+    this.displayName = displayName;
   }
 
   @Override
   public int getLatency() {
-    return this.latency;
+    return latency;
   }
 
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setLatency(latency);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LATENCY, upsertEntry);
+    tabList.updateEntry(LegacyPlayerListItem.UPDATE_LATENCY, this);
     return this;
+  }
+
+  void setLatencyInternal(int latency) {
+    this.latency = latency;
   }
 
   @Override
   public int getGameMode() {
-    return this.gameMode;
+    return gameMode;
   }
 
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setGameMode(gameMode);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_GAME_MODE, upsertEntry);
+    tabList.updateEntry(LegacyPlayerListItem.UPDATE_GAMEMODE, this);
     return this;
   }
 
-  protected void setChatSession(@Nullable ChatSession session) {
-    this.session = session;
+  void setGameModeInternal(int gameMode) {
+    this.gameMode = gameMode;
   }
 
   @Override
-  public boolean isListed() {
-    return listed;
+  public @Nullable ChatSession getChatSession() {
+    return new RemoteChatSession(null, this.playerKey);
   }
 
   @Override
-  public VelocityTabListEntry setListed(boolean listed) {
-    this.listed = listed;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setListed(listed);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LISTED, upsertEntry);
-    return this;
+  public IdentifiedKey getIdentifiedKey() {
+    return playerKey;
+  }
+
+  void setPlayerKeyInternal(IdentifiedKey playerKey) {
+    this.playerKey = playerKey;
   }
 }

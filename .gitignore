@@ -5,6 +5,7 @@
 *.iml
 .idea_modules/
 atlassian-ide-plugin.xml
+.fleet/
 
 ### Eclipse ###
 .metadata
