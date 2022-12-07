@@ -127,7 +127,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  private boolean updateTimeKeeper(Instant instant) {
+  private boolean updateTimeKeeper(@Nullable Instant instant) {
+    if (instant == null) {
+      return true;
+    }
     if (!this.timeKeeper.update(instant)) {
       player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
       return false;
