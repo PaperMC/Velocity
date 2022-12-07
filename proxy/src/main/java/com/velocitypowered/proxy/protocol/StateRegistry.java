@@ -334,7 +334,8 @@ public enum StateRegistry {
       clientbound.register(TitleActionbarPacket.class, TitleActionbarPacket::new,
           map(0x41, MINECRAFT_1_17, true),
           map(0x40, MINECRAFT_1_19, true),
-          map(0x42, MINECRAFT_1_19_1, true));
+          map(0x43, MINECRAFT_1_19_1, true),
+          map(0x42, MINECRAFT_1_19_3, true));
       clientbound.register(TitleTimesPacket.class, TitleTimesPacket::new,
           map(0x5A, MINECRAFT_1_17, true),
           map(0x5B, MINECRAFT_1_18, true),
