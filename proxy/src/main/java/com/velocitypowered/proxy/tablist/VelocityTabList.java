@@ -120,6 +120,7 @@ public class VelocityTabList implements InternalTabList {
       actions.addAll(EnumSet.of(UpsertPlayerInfo.Action.ADD_PLAYER,
           UpsertPlayerInfo.Action.UPDATE_LATENCY,
           UpsertPlayerInfo.Action.UPDATE_LISTED));
+      playerInfoEntry.setProfile(entry.getProfile());
       if (entry.getDisplayNameComponent().isPresent()) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
         playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().get());
