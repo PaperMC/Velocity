@@ -54,6 +54,7 @@ public class SessionChatBuilder extends ChatBuilderV2 {
       chat.signature = new byte[0];
       chat.timestamp = timestamp;
       chat.salt = 0L;
+      chat.lastSeenMessages = new LastSeenMessages();
       return chat;
     }
   }
