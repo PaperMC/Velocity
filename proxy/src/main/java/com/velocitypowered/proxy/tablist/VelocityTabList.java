@@ -75,7 +75,7 @@ public class VelocityTabList implements InternalTabList {
       entry = (VelocityTabListEntry) entry1;
     } else {
       entry = new VelocityTabListEntry(this, entry1.getProfile(), entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession());
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
     }
 
     EnumSet<UpsertPlayerInfo.Action> actions = EnumSet.noneOf(UpsertPlayerInfo.Action.class);
@@ -162,19 +162,19 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null);
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null, true);
   }
 
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
                                  @Nullable IdentifiedKey key) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null);
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null, true);
   }
 
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
                                  @Nullable ChatSession chatSession) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession);
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession, true);
   }
 
   @Override
@@ -182,6 +182,17 @@ public class VelocityTabList implements InternalTabList {
     for (UpsertPlayerInfo.Entry entry : infoPacket.getEntries()) {
       processUpsert(infoPacket.getActions(), entry);
     }
+  }
+
+  protected UpsertPlayerInfo.Entry createRawEntry(VelocityTabListEntry entry) {
+    Preconditions.checkNotNull(entry, "entry");
+    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+    return new UpsertPlayerInfo.Entry(entry.getProfile().getId());
+  }
+
+  protected void emitActionRaw(UpsertPlayerInfo.Action action, UpsertPlayerInfo.Entry entry) {
+    this.connection.write(new UpsertPlayerInfo(EnumSet.of(action), List.of(entry)));
   }
 
   private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions, UpsertPlayerInfo.Entry entry) {
@@ -197,7 +208,8 @@ public class VelocityTabList implements InternalTabList {
                 null,
                 0,
                 -1,
-                null
+                null,
+                true
             )
         );
       } else {

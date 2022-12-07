@@ -21,6 +21,8 @@ import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,16 +33,18 @@ public class VelocityTabListEntry implements TabListEntry {
   private Component displayName;
   private int latency;
   private int gameMode;
+  private boolean listed;
   private @Nullable ChatSession session;
 
-  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile,
-                              Component displayName, int latency, int gameMode, @Nullable ChatSession session) {
+  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName, int latency,
+                              int gameMode, @Nullable ChatSession session, boolean listed) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
     this.latency = latency;
     this.gameMode = gameMode;
     this.session = session;
+    this.listed = listed;
   }
 
   @Override
@@ -66,6 +70,9 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
+    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    upsertEntry.setDisplayName(displayName);
+    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
     return this;
   }
 
@@ -77,6 +84,9 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
+    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    upsertEntry.setLatency(latency);
+    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LATENCY, upsertEntry);
     return this;
   }
 
@@ -88,10 +98,27 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
+    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    upsertEntry.setGameMode(gameMode);
+    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_GAME_MODE, upsertEntry);
     return this;
   }
 
-  protected void setChatSession(ChatSession session) {
+  protected void setChatSession(@Nullable ChatSession session) {
     this.session = session;
+  }
+
+  @Override
+  public boolean isListed() {
+    return listed;
+  }
+
+  @Override
+  public VelocityTabListEntry setListed(boolean listed) {
+    this.listed = listed;
+    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    upsertEntry.setListed(listed);
+    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LISTED, upsertEntry);
+    return this;
   }
 }
