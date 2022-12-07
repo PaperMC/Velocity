@@ -47,7 +47,7 @@ public class ArgumentIdentifier {
 
       for (ProtocolVersion v : ProtocolVersion.values()) {
         if (v.compareTo(current.getVersion()) >= 0) {
-          temp.put(v, current.getId());
+          temp.putIfAbsent(v, current.getId());
         }
       }
       previous = current.getVersion();

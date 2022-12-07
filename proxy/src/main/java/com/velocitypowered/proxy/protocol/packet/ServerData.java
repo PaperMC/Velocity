@@ -30,17 +30,15 @@ public class ServerData implements MinecraftPacket {
 
   private @Nullable Component description;
   private @Nullable Favicon favicon;
-  private boolean previewsChat;
   private boolean secureChatEnforced; // Added in 1.19.1
 
   public ServerData() {
   }
 
   public ServerData(@Nullable Component description, @Nullable Favicon favicon,
-      boolean previewsChat, boolean secureChatEnforced) {
+      boolean secureChatEnforced) {
     this.description = description;
     this.favicon = favicon;
-    this.previewsChat = previewsChat;
     this.secureChatEnforced = secureChatEnforced;
   }
 
@@ -54,7 +52,9 @@ public class ServerData implements MinecraftPacket {
     if (buf.readBoolean()) {
       this.favicon = new Favicon(ProtocolUtils.readString(buf));
     }
-    this.previewsChat = buf.readBoolean();
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      buf.readBoolean();
+    }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       this.secureChatEnforced = buf.readBoolean();
     }
@@ -77,7 +77,9 @@ public class ServerData implements MinecraftPacket {
       ProtocolUtils.writeString(buf, favicon.getBase64Url());
     }
 
-    buf.writeBoolean(this.previewsChat);
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      buf.writeBoolean(false);
+    }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       buf.writeBoolean(this.secureChatEnforced);
     }
@@ -88,16 +90,12 @@ public class ServerData implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public Component getDescription() {
+  public @Nullable Component getDescription() {
     return description;
   }
 
-  public Favicon getFavicon() {
+  public @Nullable Favicon getFavicon() {
     return favicon;
-  }
-
-  public boolean isPreviewsChat() {
-    return previewsChat;
   }
 
   public boolean isSecureChatEnforced() {

@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * A precisely ordered queue which allows for outside entries into the ordered queue through piggybacking timestamps.

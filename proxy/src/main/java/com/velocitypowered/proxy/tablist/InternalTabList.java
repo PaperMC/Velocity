@@ -17,21 +17,18 @@
 
 package com.velocitypowered.proxy.tablist;
 
-import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.util.GameProfile;
-import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 
-public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
-
-  VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,
-      @Nullable Component displayName, int latency, int gameMode) {
-    super(tabList, profile, displayName, latency, gameMode, null);
+public interface InternalTabList extends TabList {
+  default void processLegacy(LegacyPlayerListItem packet) {
   }
 
-  @Override
-  public TabListEntry setDisplayName(@Nullable Component displayName) {
-    getTabList().removeEntry(getProfile().getId()); // We have to remove first if updating
-    return super.setDisplayName(displayName);
+  default void processUpdate(UpsertPlayerInfo infoPacket) {
+  }
+
+  default void processRemove(RemovePlayerInfo infoPacket) {
   }
 }

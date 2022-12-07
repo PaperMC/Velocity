@@ -25,14 +25,11 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.construc
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
-import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
-import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -43,8 +40,6 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.crypto.SignedChatCommand;
-import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
@@ -57,11 +52,20 @@ import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatBuilder;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
-import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
+import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedCommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyCommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionCommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
@@ -73,10 +77,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -98,7 +100,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final Queue<PluginMessage> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequest outstandingTabComplete;
-  private @Nullable Instant lastChatMessage; // Added in 1.19
+  private final ChatHandler<? extends MinecraftPacket> chatHandler;
+  private final CommandHandler<? extends MinecraftPacket> commandHandler;
+  private final ChatTimeKeeper timeKeeper = new ChatTimeKeeper();
 
   /**
    * Constructs a client play session handler.
@@ -109,127 +113,43 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public ClientPlaySessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.player = player;
     this.server = server;
+
+    if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      this.chatHandler = new SessionChatHandler(this.player, this.server);
+      this.commandHandler = new SessionCommandHandler(this.player, this.server);
+    } else if (this.player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+      this.chatHandler = new KeyedChatHandler(this.server, this.player);
+      this.commandHandler = new KeyedCommandHandler(this.player, this.server);
+    } else {
+      this.chatHandler = new LegacyChatHandler(this.server, this.player);
+      this.commandHandler = new LegacyCommandHandler(this.player, this.server);
+    }
   }
 
-  // I will not allow hacks to bypass this;
-  private boolean tickLastMessage(SignedChatMessage nextMessage) {
-    if (lastChatMessage != null && lastChatMessage.isAfter(nextMessage.getExpiryTemporal())) {
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+  private boolean updateTimeKeeper(@Nullable Instant instant) {
+    if (instant == null) {
+      return true;
+    }
+    if (!this.timeKeeper.update(instant)) {
       player.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
       return false;
     }
-
-    lastChatMessage = nextMessage.getExpiryTemporal();
     return true;
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
-      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters",
-          NamedTextColor.RED));
+      player.disconnect(Component.translatable("velocity.error.illegal-chat-characters", NamedTextColor.RED));
       return false;
     }
     return true;
-  }
-
-  private MinecraftConnection retrieveServerConnection() {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      return null;
-    }
-    return serverConnection.getConnection();
-  }
-
-  private void processCommandMessage(String message, @Nullable SignedChatCommand signedCommand,
-                                     MinecraftPacket original, Instant passedTimestamp) {
-    this.player.getChatQueue().queuePacket(server.getCommandManager().callCommandEvent(player, message)
-        .thenComposeAsync(event -> processCommandExecuteResult(message,
-            event.getResult(), signedCommand, passedTimestamp))
-        .whenComplete((ignored, throwable) -> {
-          if (server.getConfiguration().isLogCommandExecutions()) {
-            logger.info("{} -> executed command /{}", player, message);
-          }
-        })
-        .exceptionally(e -> {
-          logger.info("Exception occurred while running command for {}",
-              player.getUsername(), e);
-          player.sendMessage(Component.translatable("velocity.command.generic-error",
-              NamedTextColor.RED));
-          return null;
-        }), passedTimestamp);
-  }
-
-  private void processPlayerChat(String message, @Nullable SignedChatMessage signedMessage,
-                                 MinecraftPacket original) {
-    MinecraftConnection smc = retrieveServerConnection();
-    if (smc == null) {
-      return;
-    }
-
-    if (signedMessage == null) {
-      PlayerChatEvent event = new PlayerChatEvent(player, message);
-      callChat(original, event, null).thenAccept(smc::write);
-    } else {
-      Instant messageTimestamp = signedMessage.getExpiryTemporal();
-      PlayerChatEvent event = new PlayerChatEvent(player, message);
-      this.player.getChatQueue().queuePacket(callChat(original, event, signedMessage), messageTimestamp);
-    }
-  }
-
-  private CompletableFuture<MinecraftPacket> callChat(MinecraftPacket original, PlayerChatEvent event,
-                                                      @Nullable SignedChatMessage signedMessage) {
-    return server.getEventManager().fire(event)
-        .thenApply(pme -> {
-          PlayerChatEvent.ChatResult chatResult = pme.getResult();
-          IdentifiedKey playerKey = player.getIdentifiedKey();
-          if (chatResult.isAllowed()) {
-            Optional<String> eventMsg = pme.getResult().getMessage();
-            if (eventMsg.isPresent()) {
-              String messageNew = eventMsg.get();
-              if (playerKey != null) {
-                if (signedMessage != null && !messageNew.equals(signedMessage.getMessage())) {
-                  if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-                    // Bad, very bad.
-                    logger.fatal("A plugin tried to change a signed chat message. "
-                        + "This is no longer possible in 1.19.1 and newer. "
-                        + "Disconnecting player " + player.getUsername());
-                    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                        + "Contact your network administrator."));
-                  } else {
-                    logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-                    return ChatBuilder.builder(player.getProtocolVersion())
-                        .message(messageNew).toServer();
-                  }
-                } else {
-                  return original;
-                }
-              } else {
-                return ChatBuilder.builder(player.getProtocolVersion())
-                    .message(messageNew).toServer();
-              }
-            } else {
-              return original;
-            }
-          } else {
-            if (playerKey != null && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-              logger.fatal("A plugin tried to cancel a signed chat message."
-                  + " This is no longer possible in 1.19.1 and newer. "
-                  + "Disconnecting player " + player.getUsername());
-              player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                  + "Contact your network administrator."));
-            }
-          }
-          return null;
-        })
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling player chat for {}", player, ex);
-          return null;
-        });
   }
 
   @Override
   public void activated() {
-    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player
-        .getProtocolVersion());
+    Collection<String> channels = server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
       player.getConnection().write(register);
@@ -267,46 +187,63 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PlayerCommand packet) {
+  public boolean handle(SessionPlayerCommand packet) {
     player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getTimeStamp())) {
+      return true;
+    }
+
     if (!validateChat(packet.getCommand())) {
       return true;
     }
-    if (!packet.isUnsigned()) {
-      SignedChatCommand signedCommand = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
-      if (signedCommand != null) {
-        processCommandMessage(packet.getCommand(), signedCommand, packet, packet.getTimestamp());
-        return true;
-      }
-    }
 
-    processCommandMessage(packet.getCommand(), null, packet, packet.getTimestamp());
-    return true;
+    return this.commandHandler.handlePlayerCommand(packet);
   }
 
   @Override
-  public boolean handle(PlayerChat packet) {
+  public boolean handle(SessionPlayerChat packet) {
     player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getTimestamp())) {
+      return true;
+    }
+
     if (!validateChat(packet.getMessage())) {
       return true;
     }
 
-    if (!packet.isUnsigned()) {
-      // Bad if spoofed
-      SignedChatMessage signedChat = packet.signedContainer(player.getIdentifiedKey(), player.getUniqueId(), false);
-      if (signedChat != null) {
-        // Server doesn't care for expiry as long as order is correct
-        if (!tickLastMessage(signedChat)) {
-          return true;
-        }
+    return this.chatHandler.handlePlayerChat(packet);
+  }
 
-        processPlayerChat(packet.getMessage(), signedChat, packet);
-        return true;
-      }
+  @Override
+  public boolean handle(KeyedPlayerCommand packet) {
+    player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getTimestamp())) {
+      return true;
     }
 
-    processPlayerChat(packet.getMessage(), null, packet);
-    return true;
+    if (!validateChat(packet.getCommand())) {
+      return true;
+    }
+
+    return this.commandHandler.handlePlayerCommand(packet);
+  }
+
+  @Override
+  public boolean handle(KeyedPlayerChat packet) {
+    player.ensureAndGetCurrentServer();
+
+    if (!updateTimeKeeper(packet.getExpiry())) {
+      return true;
+    }
+
+    if (!validateChat(packet.getMessage())) {
+      return true;
+    }
+
+    return this.chatHandler.handlePlayerChat(packet);
   }
 
   @Override
@@ -318,9 +255,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     if (msg.startsWith("/")) {
-      processCommandMessage(msg.substring(1), null, packet, Instant.now());
+      this.commandHandler.handlePlayerCommand(packet);
     } else {
-      processPlayerChat(msg, null, packet);
+      this.chatHandler.handlePlayerChat(packet);
     }
     return true;
   }
@@ -342,8 +279,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
-        logger.warn("A plugin message was received while the backend server was not "
-            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
+        logger.warn(
+            "A plugin message was received while the backend server was not " + "ready. Channel: {}. Packet discarded.",
+            packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         player.getKnownChannels().addAll(channels);
@@ -355,8 +293,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             channelIdentifiers.add(new LegacyChannelIdentifier(channel));
           }
         }
-        server.getEventManager().fireAndForget(new PlayerChannelRegisterEvent(player,
-            ImmutableList.copyOf(channelIdentifiers)));
+        server.getEventManager()
+            .fireAndForget(new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -365,8 +303,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
-        backendConn.write(PluginMessageUtil
-            .rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
+        backendConn.write(
+            PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(), player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -401,8 +339,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
               if (pme.getResult().isAllowed()) {
-                PluginMessage message = new PluginMessage(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
+                PluginMessage message = new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
                 if (!player.getPhase().consideredComplete() || !serverConn.getPhase().consideredComplete()) {
                   // We're still processing the connection (see above), enqueue the packet for now.
                   loginPluginMessages.add(message.retain());
@@ -410,12 +347,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                   backendConn.write(message);
                 }
               }
-            }, backendConn.eventLoop())
-                .exceptionally((ex) -> {
-                  logger.error("Exception while handling plugin message packet for {}",
-                      player, ex);
-                  return null;
-                });
+            }, backendConn.eventLoop()).exceptionally((ex) -> {
+              logger.error("Exception while handling plugin message packet for {}", player, ex);
+              return null;
+            });
           }
         }
       }
@@ -467,8 +402,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(Component.translatable("velocity.error.player-connection-error",
-        NamedTextColor.RED));
+    player.disconnect(Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
   @Override
@@ -548,8 +482,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      player.getConnection().delayedWrite(GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
+      player.getConnection().delayedWrite(
+          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
     }
 
     // Flush everything
@@ -619,37 +553,33 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(suggestions -> {
-          if (suggestions.isEmpty()) {
-            return;
-          }
+    server.getCommandManager().offerBrigadierSuggestions(player, command).thenAcceptAsync(suggestions -> {
+      if (suggestions.isEmpty()) {
+        return;
+      }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            Component tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-            }
-            offers.add(new Offer(offer, tooltip));
-          }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-          if (startPos > 0) {
-            TabCompleteResponse resp = new TabCompleteResponse();
-            resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
-            resp.setLength(packet.getCommand().length() - startPos);
-            resp.getOffers().addAll(offers);
-            player.getConnection().write(resp);
-          }
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling command tab completion for player {} executing {}",
-              player, command, ex);
-          return null;
-        });
+      List<Offer> offers = new ArrayList<>();
+      for (Suggestion suggestion : suggestions.getList()) {
+        String offer = suggestion.getText();
+        Component tooltip = null;
+        if (suggestion.getTooltip() != null && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+          tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+        }
+        offers.add(new Offer(offer, tooltip));
+      }
+      int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+      if (startPos > 0) {
+        TabCompleteResponse resp = new TabCompleteResponse();
+        resp.setTransactionId(packet.getTransactionId());
+        resp.setStart(startPos);
+        resp.setLength(packet.getCommand().length() - startPos);
+        resp.getOffers().addAll(offers);
+        player.getConnection().write(resp);
+      }
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling command tab completion for player {} executing {}", player, command, ex);
+      return null;
+    });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -683,37 +613,32 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
-    server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(offers -> {
-          boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
-          try {
-            for (Suggestion suggestion : offers.getList()) {
-              String offer = suggestion.getText();
-              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
-              if (legacy && offer.startsWith(command)) {
-                offer = offer.substring(command.length());
-              }
-              Component tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-              }
-              response.getOffers().add(new Offer(offer, tooltip));
-            }
-            response.getOffers().sort(null);
-            player.getConnection().write(response);
-          } catch (Exception e) {
-            logger.error("Unable to provide tab list completions for {} for command '{}'",
-                player.getUsername(),
-                command, e);
+    server.getCommandManager().offerBrigadierSuggestions(player, command).thenAcceptAsync(offers -> {
+      boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+      try {
+        for (Suggestion suggestion : offers.getList()) {
+          String offer = suggestion.getText();
+          offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+          if (legacy && offer.startsWith(command)) {
+            offer = offer.substring(command.length());
           }
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing command tab completion, with request {} and response {}",
-              request, response, ex);
-          return null;
-        });
+          Component tooltip = null;
+          if (suggestion.getTooltip() != null && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+            tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+          }
+          response.getOffers().add(new Offer(offer, tooltip));
+        }
+        response.getOffers().sort(null);
+        player.getConnection().write(response);
+      } catch (Exception e) {
+        logger.error("Unable to provide tab list completions for {} for command '{}'", player.getUsername(), command,
+            e);
+      }
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while finishing command tab completion, with request {} and response {}", request,
+          response, ex);
+      return null;
+    });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -721,96 +646,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
-        .thenAcceptAsync(e -> {
-          response.getOffers().clear();
-          for (String s : e.getSuggestions()) {
-            response.getOffers().add(new Offer(s));
-          }
-          player.getConnection().write(response);
-        }, player.getConnection().eventLoop())
-        .exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing regular tab completion, with request {} and response{}",
-              request, response, ex);
-          return null;
-        });
-  }
-
-
-  private CompletableFuture<MinecraftPacket> processCommandExecuteResult(String originalCommand,
-                                                                         CommandResult result,
-                                                                         @Nullable SignedChatCommand signedCommand,
-                                                                         Instant passedTimestamp) {
-    IdentifiedKey playerKey = player.getIdentifiedKey();
-    if (result == CommandResult.denied()) {
-      if (playerKey != null) {
-        if (signedCommand != null && playerKey.getKeyRevision()
-            .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-          logger.fatal("A plugin tried to deny a command with signable component(s). "
-              + "This is not supported. "
-              + "Disconnecting player " + player.getUsername());
-          player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-              + "Contact your network administrator."));
-        }
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers)).thenAcceptAsync(e -> {
+      response.getOffers().clear();
+      for (String s : e.getSuggestions()) {
+        response.getOffers().add(new Offer(s));
       }
-      return CompletableFuture.completedFuture(null);
-    }
-
-    String commandToRun = result.getCommand().orElse(originalCommand);
-    if (result.isForwardToServer()) {
-      ChatBuilder write = ChatBuilder
-          .builder(player.getProtocolVersion())
-          .timestamp(passedTimestamp)
-          .asPlayer(player);
-
-      if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
-        write.message(signedCommand);
-      } else {
-        if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
-            .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-          logger.fatal("A plugin tried to change a command with signed component(s). "
-              + "This is not supported. "
-              + "Disconnecting player " + player.getUsername());
-          player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-              + "Contact your network administrator."));
-          return CompletableFuture.completedFuture(null);
-        }
-        write.message("/" + commandToRun);
-      }
-      return CompletableFuture.completedFuture(write.toServer());
-    } else {
-      return server.getCommandManager().executeImmediatelyAsync(player, commandToRun)
-          .thenApply(hasRun -> {
-            if (!hasRun) {
-              ChatBuilder write = ChatBuilder
-                  .builder(player.getProtocolVersion())
-                  .timestamp(passedTimestamp)
-                  .asPlayer(player);
-
-              if (signedCommand != null && commandToRun.equals(signedCommand.getBaseCommand())) {
-                write.message(signedCommand);
-              } else {
-                if (signedCommand != null && playerKey != null && playerKey.getKeyRevision()
-                    .compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-                  logger.fatal("A plugin tried to change a command with signed component(s). "
-                      + "This is not supported. "
-                      + "Disconnecting player " + player.getUsername());
-                  player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-                      + "Contact your network administrator."));
-                  return null;
-                }
-                write.message("/" + commandToRun);
-              }
-              return write.toServer();
-            }
-            return null;
-          });
-    }
-  }
-
-  private void handleCommandForward() {
-
+      player.getConnection().write(response);
+    }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while finishing regular tab completion, with request {} and response{}", request,
+          response, ex);
+      return null;
+    });
   }
 
   /**

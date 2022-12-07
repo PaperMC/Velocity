@@ -15,20 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat;
+package com.velocitypowered.proxy.protocol.packet.chat.keyed;
 
-import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.INVALID_PREVIOUS_MESSAGES;
-import static com.velocitypowered.proxy.protocol.packet.chat.PlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
+import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat.INVALID_PREVIOUS_MESSAGES;
+import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat.MAXIMUM_PREVIOUS_MESSAGE_COUNT;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.crypto.SignaturePair;
-import com.velocitypowered.proxy.crypto.SignedChatCommand;
-import com.velocitypowered.proxy.crypto.SignedChatMessage;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -37,10 +33,9 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class PlayerCommand implements MinecraftPacket {
+public class KeyedPlayerCommand implements MinecraftPacket {
 
   private static final int MAX_NUM_ARGUMENTS = 8;
   private static final int MAX_LENGTH_ARGUMENTS = 16;
@@ -51,14 +46,10 @@ public class PlayerCommand implements MinecraftPacket {
   private String command;
   private Instant timestamp;
   private long salt;
-  private boolean signedPreview; // Good god. Please no.
+  private boolean signedPreview; // purely for pass through for 1.19 -> 1.19.2 - this will never be implemented
   private SignaturePair[] previousMessages = new SignaturePair[0];
   private @Nullable SignaturePair lastMessage;
   private Map<String, byte[]> arguments = ImmutableMap.of();
-
-  public boolean isSignedPreview() {
-    return signedPreview;
-  }
 
   public Instant getTimestamp() {
     return timestamp;
@@ -72,17 +63,17 @@ public class PlayerCommand implements MinecraftPacket {
     return command;
   }
 
-  public PlayerCommand() {
+  public KeyedPlayerCommand() {
   }
 
   /**
-   * Creates an {@link PlayerCommand} packet based on a command and list of arguments.
+   * Creates an {@link KeyedPlayerCommand} packet based on a command and list of arguments.
    *
-   * @param command the command to run
+   * @param command   the command to run
    * @param arguments the arguments of the command
    * @param timestamp the timestamp of the command execution
    */
-  public PlayerCommand(String command, List<String> arguments, Instant timestamp) {
+  public KeyedPlayerCommand(String command, List<String> arguments, Instant timestamp) {
     this.unsigned = true;
     ImmutableMap.Builder<String, byte[]> builder = ImmutableMap.builder();
     arguments.forEach(entry -> builder.put(entry, EncryptionUtils.EMPTY));
@@ -91,21 +82,6 @@ public class PlayerCommand implements MinecraftPacket {
     this.command = command;
     this.signedPreview = false;
     this.salt = 0L;
-  }
-
-  /**
-   * Create new {@link PlayerCommand} based on a previously {@link SignedChatCommand}.
-   *
-   * @param signedCommand The {@link SignedChatCommand} to turn into {@link PlayerCommand}.
-   */
-  public PlayerCommand(SignedChatCommand signedCommand) {
-    this.command = signedCommand.getBaseCommand();
-    this.arguments = ImmutableMap.copyOf(signedCommand.getSignatures());
-    this.timestamp = signedCommand.getExpiryTemporal();
-    this.salt = Longs.fromByteArray(signedCommand.getSalt());
-    this.signedPreview = signedCommand.isPreviewSigned();
-    this.lastMessage = signedCommand.getLastSignature();
-    this.previousMessages = signedCommand.getPreviousSignatures();
   }
 
   @Override
@@ -127,7 +103,7 @@ public class PlayerCommand implements MinecraftPacket {
     }
     arguments = entries.build();
 
-    signedPreview = buf.readBoolean();
+    this.signedPreview = buf.readBoolean();
     if (unsigned && signedPreview) {
       throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
@@ -193,43 +169,17 @@ public class PlayerCommand implements MinecraftPacket {
 
   }
 
-  /**
-   * Validates a signature and creates a {@link SignedChatCommand} from the given signature.
-   *
-   * @param signer the signer's information
-   * @param sender the sender of the message
-   * @param mustSign instructs the function to throw if the signature is invalid.
-   * @return The {@link SignedChatCommand} or null if the signature couldn't be verified.
-   * @throws com.velocitypowered.proxy.util.except.QuietDecoderException when mustSign is {@code true} and the signature
-   *                                                                     is invalid.
-   */
-  public SignedChatCommand signedContainer(
-      @Nullable IdentifiedKey signer, UUID sender, boolean mustSign) {
-    // There's a certain mod that is very broken that still signs messages but
-    // doesn't provide the player key. This is broken and wrong, but we need to
-    // work around that.
-    if (unsigned || signer == null) {
-      if (mustSign) {
-        throw EncryptionUtils.INVALID_SIGNATURE;
-      }
-      return null;
-    }
-
-    return new SignedChatCommand(command, signer.getSignedPublicKey(), sender, timestamp,
-        arguments, Longs.toByteArray(salt), signedPreview, previousMessages, lastMessage);
-  }
-
   @Override
   public String toString() {
     return "PlayerCommand{"
-            + "unsigned=" + unsigned
-            + ", command='" + command + '\''
-            + ", timestamp=" + timestamp
-            + ", salt=" + salt
-            + ", signedPreview=" + signedPreview
-            + ", previousMessages=" + Arrays.toString(previousMessages)
-            + ", arguments=" + arguments
-            + '}';
+        + "unsigned=" + unsigned
+        + ", command='" + command + '\''
+        + ", timestamp=" + timestamp
+        + ", salt=" + salt
+        + ", signedPreview=" + signedPreview
+        + ", previousMessages=" + Arrays.toString(previousMessages)
+        + ", arguments=" + arguments
+        + '}';
   }
 
   @Override

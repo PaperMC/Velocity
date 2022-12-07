@@ -30,10 +30,11 @@ import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
@@ -46,14 +47,14 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.chat.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChat;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatPreview;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.chat.ServerChatPreview;
-import com.velocitypowered.proxy.protocol.packet.chat.ServerPlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -228,7 +229,7 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerListItem packet) {
+  default boolean handle(LegacyPlayerListItem packet) {
     return false;
   }
 
@@ -240,7 +241,11 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerChat packet) {
+  default boolean handle(KeyedPlayerChat packet) {
+    return false;
+  }
+
+  default boolean handle(SessionPlayerChat packet) {
     return false;
   }
 
@@ -248,27 +253,27 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(ServerPlayerChat packet) {
+  default boolean handle(KeyedPlayerCommand packet) {
     return false;
   }
 
-  default boolean handle(PlayerChatPreview packet) {
-    return false;
-  }
-
-  default boolean handle(ServerChatPreview packet) {
-    return false;
-  }
-
-  default boolean handle(PlayerCommand packet) {
+  default boolean handle(SessionPlayerCommand packet) {
     return false;
   }
 
   default boolean handle(PlayerChatCompletion packet) {
     return false;
   }
-  
+
   default boolean handle(ServerData serverData) {
+    return false;
+  }
+
+  default boolean handle(RemovePlayerInfo packet) {
+    return false;
+  }
+
+  default boolean handle(UpsertPlayerInfo packet) {
     return false;
   }
 }
