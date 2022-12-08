@@ -42,7 +42,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
   public void handlePlayerCommandInternal(SessionPlayerCommand packet) {
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
-      if (!result.isAllowed()) {
+      if (result == CommandExecuteEvent.CommandResult.denied()) {
         if (packet.isSigned()) {
           logger.fatal("A plugin tried to deny a command with signable component(s). " + "This is not supported. "
               + "Disconnecting player " + player.getUsername());
