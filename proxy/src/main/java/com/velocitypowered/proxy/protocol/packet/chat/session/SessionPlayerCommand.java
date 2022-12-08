@@ -61,6 +61,10 @@ public class SessionPlayerCommand implements MinecraftPacket {
     return timeStamp;
   }
 
+  public boolean isSigned() {
+    return salt != 0 || !lastSeenMessages.isEmpty() || !argumentSignatures.isEmpty();
+  }
+
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);

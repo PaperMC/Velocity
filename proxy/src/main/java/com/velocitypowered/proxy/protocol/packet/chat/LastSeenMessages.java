@@ -44,4 +44,8 @@ public class LastSeenMessages {
     ProtocolUtils.writeVarInt(buf, offset);
     buf.writeBytes(Arrays.copyOf(acknowledged.toByteArray(), DIV_FLOOR));
   }
+
+  public boolean isEmpty() {
+    return acknowledged.isEmpty();
+  }
 }

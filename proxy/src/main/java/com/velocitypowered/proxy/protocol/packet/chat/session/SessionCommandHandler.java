@@ -42,8 +42,8 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
   public void handlePlayerCommandInternal(SessionPlayerCommand packet) {
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
-      if (!result.isAllowed()) {
-        if (!packet.argumentSignatures.isEmpty()) {
+      if (result == CommandExecuteEvent.CommandResult.denied()) {
+        if (packet.isSigned()) {
           logger.fatal("A plugin tried to deny a command with signable component(s). " + "This is not supported. "
               + "Disconnecting player " + player.getUsername());
           player.disconnect(Component.text(
@@ -54,10 +54,10 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
 
       String commandToRun = result.getCommand().orElse(packet.command);
       if (result.isForwardToServer()) {
-        if (!packet.argumentSignatures.isEmpty() && commandToRun.equals(packet.command)) {
+        if (!packet.isSigned() && commandToRun.equals(packet.command)) {
           return CompletableFuture.completedFuture(packet);
         } else {
-          if (!packet.argumentSignatures.isEmpty()) {
+          if (packet.isSigned()) {
             logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
                 + "Disconnecting player " + player.getUsername());
             player.disconnect(Component.text(
@@ -76,10 +76,10 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
 
       return runCommand(this.server, this.player, commandToRun, hasRun -> {
         if (!hasRun) {
-          if (!packet.argumentSignatures.isEmpty() && commandToRun.equals(packet.command)) {
+          if (packet.isSigned() && commandToRun.equals(packet.command)) {
             return packet;
           } else {
-            if (!packet.argumentSignatures.isEmpty()) {
+            if (packet.isSigned()) {
               logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
                   + "Disconnecting player " + player.getUsername());
               player.disconnect(Component.text(
