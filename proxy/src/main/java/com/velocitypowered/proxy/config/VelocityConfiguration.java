@@ -421,12 +421,6 @@ public class VelocityConfiguration implements ProxyConfig {
       throw new RuntimeException("Default configuration file does not exist.");
     }
 
-    // Create the forwarding-secret file on first-time startup if it doesn't exist
-    Path defaultForwardingSecretPath = Path.of("forwarding.secret");
-    if (Files.notExists(path) && Files.notExists(defaultForwardingSecretPath)) {
-      Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
-    }
-
     boolean mustResave = false;
     CommentedFileConfig config = CommentedFileConfig.builder(path)
         .defaultData(defaultConfigLocation)
@@ -487,7 +481,7 @@ public class VelocityConfiguration implements ProxyConfig {
       if (forwardingSecretString.isEmpty()) {
         String forwardSecretFile = config.get("forwarding-secret-file");
         Path secretPath = forwardSecretFile == null
-            ? defaultForwardingSecretPath
+            ? Path.of("forwarding.secret")
             : Path.of(forwardSecretFile);
         if (Files.exists(secretPath)) {
           if (Files.isRegularFile(secretPath)) {
@@ -496,7 +490,8 @@ public class VelocityConfiguration implements ProxyConfig {
             throw new RuntimeException("The file " + forwardSecretFile + " is not a valid file or it is a directory.");
           }
         } else {
-          throw new RuntimeException("The forwarding-secret-file does not exists.");
+          forwardingSecretString = generateRandomString(12);
+          Files.writeString(secretPath, forwardingSecretString);
         }
       }
     }
@@ -536,14 +531,6 @@ public class VelocityConfiguration implements ProxyConfig {
         true);
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
     Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
-
-    // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
-    // forwarding mode that requires it.
-    if (forwardingSecret.length == 0
-        && (forwardingMode == PlayerInfoForwarding.MODERN
-        || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
-      throw new RuntimeException("The forwarding-secret file must not be empty.");
-    }
 
     return new VelocityConfiguration(
         bind,
