@@ -76,6 +76,10 @@ public class VelocityTabListEntry implements TabListEntry {
     return this;
   }
 
+  void setDisplayNameWithoutUpdate(@Nullable Component displayName) {
+    this.displayName = displayName;
+  }
+
   @Override
   public int getLatency() {
     return this.latency;
@@ -90,6 +94,10 @@ public class VelocityTabListEntry implements TabListEntry {
     return this;
   }
 
+  void setLatencyWithoutUpdate(int latency) {
+    this.latency = latency;
+  }
+
   @Override
   public int getGameMode() {
     return this.gameMode;
@@ -102,6 +110,10 @@ public class VelocityTabListEntry implements TabListEntry {
     upsertEntry.setGameMode(gameMode);
     this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_GAME_MODE, upsertEntry);
     return this;
+  }
+
+  void setGameModeWithoutUpdate(int gameMode) {
+    this.gameMode = gameMode;
   }
 
   protected void setChatSession(@Nullable ChatSession session) {
@@ -120,5 +132,9 @@ public class VelocityTabListEntry implements TabListEntry {
     upsertEntry.setListed(listed);
     this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LISTED, upsertEntry);
     return this;
+  }
+
+  void setListedWithoutUpdate(boolean listed) {
+    this.listed = listed;
   }
 }

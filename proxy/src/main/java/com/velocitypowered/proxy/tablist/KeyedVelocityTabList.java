@@ -132,11 +132,6 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
-    return buildEntry(profile, displayName, latency, gameMode, (ChatSession) null);
-  }
-
-  @Override
   public TabListEntry buildEntry(GameProfile profile,
                                  net.kyori.adventure.text.@Nullable Component displayName,
                                  int latency, int gameMode, @Nullable IdentifiedKey key) {
@@ -145,7 +140,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
-                                 @Nullable ChatSession chatSession) {
+                                 @Nullable ChatSession chatSession, boolean listed) {
     return new KeyedVelocityTabListEntry(this, profile, displayName, latency, gameMode,
         chatSession == null ? null : chatSession.getIdentifiedKey());
   }

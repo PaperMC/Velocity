@@ -160,6 +160,7 @@ public interface TabListEntry extends KeyIdentifiable {
     private @Nullable Component displayName;
     private int latency = 0;
     private int gameMode = 0;
+    private boolean listed = true;
 
     private @Nullable ChatSession chatSession;
 
@@ -242,6 +243,18 @@ public interface TabListEntry extends KeyIdentifiable {
     }
 
     /**
+     * Sets wether this entry should be visible.
+     *
+     * @param listed to set
+     * @return ${code this}, for chaining
+     * @see TabListEntry#isListed()
+     */
+    public Builder listed(boolean listed) {
+      this.listed = listed;
+      return this;
+    }
+
+    /**
      * Constructs the {@link TabListEntry} specified by {@code this} {@link Builder}.
      *
      * @return the constructed {@link TabListEntry}
@@ -253,7 +266,7 @@ public interface TabListEntry extends KeyIdentifiable {
       if (profile == null) {
         throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
       }
-      return tabList.buildEntry(profile, displayName, latency, gameMode, chatSession);
+      return tabList.buildEntry(profile, displayName, latency, gameMode, chatSession, listed);
     }
   }
 }
