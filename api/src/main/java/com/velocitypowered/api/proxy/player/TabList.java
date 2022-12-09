@@ -84,8 +84,10 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
-  TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode);
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode) {
+    return buildEntry(profile, displayName, latency, gameMode, null, true);
+  }
 
   /**
    * Builds a tab list entry.
@@ -99,8 +101,10 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
-  TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable IdentifiedKey key);
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable IdentifiedKey key) {
+    return buildEntry(profile, displayName, latency, gameMode, null, true);
+  }
 
 
   /**
@@ -115,6 +119,24 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, true);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession);
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed);
 }

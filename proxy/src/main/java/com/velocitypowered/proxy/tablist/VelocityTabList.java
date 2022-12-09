@@ -163,20 +163,9 @@ public class VelocityTabList implements InternalTabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null, true);
-  }
-
-  @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
-                                 @Nullable IdentifiedKey key) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, null, true);
-  }
-
-  @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
-                                 @Nullable ChatSession chatSession) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession, true);
+                                 @Nullable ChatSession chatSession, boolean listed) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession, listed);
   }
 
   @Override
@@ -211,7 +200,7 @@ public class VelocityTabList implements InternalTabList {
                 0,
                 -1,
                 null,
-                true
+                false
             )
         );
       } else {
