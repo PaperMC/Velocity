@@ -223,19 +223,19 @@ public class VelocityTabList implements InternalTabList {
       return;
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_GAME_MODE)) {
-      currentEntry.setGameMode(entry.getGameMode());
+      currentEntry.setGameModeWithoutUpdate(entry.getGameMode());
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_LATENCY)) {
-      currentEntry.setLatency(entry.getLatency());
+      currentEntry.setLatencyWithoutUpdate(entry.getLatency());
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME)) {
-      currentEntry.setDisplayName(entry.getDisplayName());
+      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName());
     }
     if (actions.contains(UpsertPlayerInfo.Action.INITIALIZE_CHAT)) {
       currentEntry.setChatSession(entry.getChatSession());
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_LISTED)) {
-      currentEntry.setListed(entry.isListed());
+      currentEntry.setListedWithoutUpdate(entry.isListed());
     }
   }
 
