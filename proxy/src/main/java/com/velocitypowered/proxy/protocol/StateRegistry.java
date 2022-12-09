@@ -188,7 +188,8 @@ public enum StateRegistry {
           map(0x20, MINECRAFT_1_16, false),
           map(0x21, MINECRAFT_1_16_2, false),
           map(0x23, MINECRAFT_1_19, false),
-          map(0x24, MINECRAFT_1_19_1, false));
+          map(0x24, MINECRAFT_1_19_1, false),
+          map(0x23, MINECRAFT_1_19_3, false));
 
       clientbound.register(BossBar.class, BossBar::new,
           map(0x0C, MINECRAFT_1_9, false),
