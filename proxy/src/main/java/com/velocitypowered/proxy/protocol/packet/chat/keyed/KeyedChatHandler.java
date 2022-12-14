@@ -50,16 +50,12 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
     logger.fatal("A plugin tried to cancel a signed chat message."
         + " This is no longer possible in 1.19.1 and newer. "
         + "Disconnecting player " + player.getUsername());
-    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-        + "Contact your network administrator."));
   }
 
   public static void invalidChange(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to change a signed chat message. "
         + "This is no longer possible in 1.19.1 and newer. "
         + "Disconnecting player " + player.getUsername());
-    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
-        + "Contact your network administrator."));
   }
 
   @Override
