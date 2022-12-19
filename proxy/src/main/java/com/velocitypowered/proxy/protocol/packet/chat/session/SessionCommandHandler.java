@@ -54,7 +54,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
 
       String commandToRun = result.getCommand().orElse(packet.command);
       if (result.isForwardToServer()) {
-        if (!packet.isSigned() && commandToRun.equals(packet.command)) {
+        if (packet.isSigned() && commandToRun.equals(packet.command)) {
           return CompletableFuture.completedFuture(packet);
         } else {
           if (packet.isSigned()) {
