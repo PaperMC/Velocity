@@ -53,6 +53,9 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConnectionType;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeBackendPhase;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -671,7 +674,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     handleKickEvent(originalEvent, friendlyReason, kickedFromCurrent);
   }
 
-  private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
+  public void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
                                boolean kickedFromCurrent) {
     server.getEventManager().fire(originalEvent)
         .thenAcceptAsync(event -> {

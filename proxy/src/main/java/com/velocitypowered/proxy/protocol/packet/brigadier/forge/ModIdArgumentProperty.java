@@ -25,9 +25,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.util.ModInfo;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 

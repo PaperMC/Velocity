@@ -492,12 +492,6 @@ public enum StateRegistry {
        */
       public int getPacketId(final MinecraftPacket packet) {
         final int id = this.packetClassToId.getInt(packet.getClass());
-        if (id == Integer.MIN_VALUE) {
-          throw new IllegalArgumentException(String.format(
-              "Unable to find id for packet of type %s in %s protocol %s",
-              packet.getClass().getName(), PacketRegistry.this.direction, this.version
-          ));
-        }
         return id;
       }
     }

@@ -17,12 +17,11 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
-import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -34,7 +33,6 @@ import com.velocitypowered.proxy.connection.VelocityConstants;
 import com.velocitypowered.proxy.connection.client.ClientTransitionSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -51,13 +49,14 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
 
@@ -78,7 +77,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    /**
+    /*
      * The following logic is used for handling the reset packet sent to the player when they transfer servers
      * and are on a modern forge (1.13+) environment.
      * During this time the client has to renegotiate the connection with the server as to ensure all the client side
@@ -158,8 +157,18 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
-    serverConn.disconnect();
+    if (this.server != null) {
+      Component reason = GsonComponentSerializer.gson().deserialize(packet.getReason());
+      Optional<RegisteredServer> next = serverConn.getPlayer().getNextServerToTry();
+      KickedFromServerEvent.ServerKickResult result = next.map(KickedFromServerEvent.RedirectPlayer::create)
+              .orElseGet(() -> KickedFromServerEvent.DisconnectPlayer.create(reason));
+
+      serverConn.getPlayer().handleKickEvent(new KickedFromServerEvent(serverConn.getPlayer(),
+                      serverConn.getServer(), reason, true, result), reason, true);
+    } else {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+      serverConn.disconnect();
+    }
     return true;
   }
 
@@ -201,6 +210,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       success.setUsername(player.getUsername());
       success.setUuid(playerUniqueId);
       pmc.write(success);
+
+      if (pmc == null) {
+        return true;
+      }
 
       pmc.setState(StateRegistry.PLAY);
     }

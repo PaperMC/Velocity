@@ -47,6 +47,11 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   @Override
   protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
     int packetId = this.registry.getPacketId(msg);
+
+    if (packetId == Integer.MIN_VALUE) {
+      return;
+    }
+
     ProtocolUtils.writeVarInt(out, packetId);
     msg.encode(out, direction, registry.version);
   }

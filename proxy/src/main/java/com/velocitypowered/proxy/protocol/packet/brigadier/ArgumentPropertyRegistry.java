@@ -83,7 +83,7 @@ public class ArgumentPropertyRegistry {
 
     ArgumentPropertySerializer<?> serializer = byIdentifier.get(identifier);
     if (serializer == null) {
-      throw new IllegalArgumentException("Argument type identifier " + identifier + " unknown.");
+      return null;
     }
     Object result = serializer.deserialize(buf, protocolVersion);
 

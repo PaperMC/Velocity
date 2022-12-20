@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.forge.modern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -28,8 +29,9 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class ModernForgeUtil {
 
@@ -56,11 +58,30 @@ class ModernForgeUtil {
       return null;
     }
 
-    ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
+    List<String> modIds = Lists.newArrayList();
     int modLength = ProtocolUtils.readVarInt(buf);
     for (int index = 0; index < modLength; index++) {
       String id = ProtocolUtils.readString(buf, 256);
-      mods.add(new ModInfo.Mod(id));
+      modIds.add(id);
+    }
+
+    Map<String, String> channels = new HashMap<>();
+    modLength = ProtocolUtils.readVarInt(buf);
+    for (int x = 0; x < modLength; ++x) {
+      channels.put(ProtocolUtils.readString(buf, 32767), ProtocolUtils.readString(buf, 256));
+    }
+
+    ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
+    channels.forEach((s, s2) -> {
+      String[] args = s.split(":");
+      if (modIds.contains(args[0])) {
+        mods.add(new ModInfo.Mod(s, s2));
+        modIds.remove(args[0]);
+      }
+    });
+
+    for (String modId : modIds) {
+      mods.add(new ModInfo.Mod(modId));
     }
 
     return mods.build();

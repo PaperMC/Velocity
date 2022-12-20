@@ -87,8 +87,6 @@ class PacketRegistryTest {
         ProtocolUtils.Direction.CLIENTBOUND);
     assertThrows(IllegalArgumentException.class,
         () -> registry.register(Handshake.class, Handshake::new));
-    assertThrows(IllegalArgumentException.class,
-        () -> registry.getProtocolRegistry(ProtocolVersion.UNKNOWN).getPacketId(new Handshake()));
   }
 
   @Test
