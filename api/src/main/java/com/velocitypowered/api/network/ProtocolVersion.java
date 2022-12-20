@@ -23,11 +23,11 @@ public enum ProtocolVersion {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
   MINECRAFT_1_7_2(4,
-          "1.7.2", "1.7.3", "1.7.4", "1.7.5"),
+      "1.7.2", "1.7.3", "1.7.4", "1.7.5"),
   MINECRAFT_1_7_6(5,
-          "1.7.6", "1.7.7", "1.7.8", "1.7.9", "1.7.10"),
+      "1.7.6", "1.7.7", "1.7.8", "1.7.9", "1.7.10"),
   MINECRAFT_1_8(47,
-          "1.8", "1.8.1", "1.8.2", "1.8.3", "1.8.4", "1.8.5", "1.8.6", "1.8.7", "1.8.8", "1.8.9"),
+      "1.8", "1.8.1", "1.8.2", "1.8.3", "1.8.4", "1.8.5", "1.8.6", "1.8.7", "1.8.8", "1.8.9"),
   MINECRAFT_1_9(107, "1.9"),
   MINECRAFT_1_9_1(108, "1.9.1"),
   MINECRAFT_1_9_2(109, "1.9.2"),
@@ -59,7 +59,8 @@ public enum ProtocolVersion {
   MINECRAFT_1_18(757, "1.18", "1.18.1"),
   MINECRAFT_1_18_2(758, "1.18.2"),
   MINECRAFT_1_19(759, "1.19"),
-  MINECRAFT_1_19_1(760, "1.19.1", "1.19.2");
+  MINECRAFT_1_19_1(760, "1.19.1", "1.19.2"),
+  MINECRAFT_1_19_3(761, "1.19.3");
 
   private static final int SNAPSHOT_BIT = 30;
 
@@ -80,8 +81,8 @@ public enum ProtocolVersion {
    * The user-friendly representation of the lowest and highest supported versions.
    */
   public static final String SUPPORTED_VERSION_STRING = String
-          .format("%s-%s", MINIMUM_VERSION.getVersionIntroducedIn(),
-                  MAXIMUM_VERSION.getMostRecentSupportedVersion());
+      .format("%s-%s", MINIMUM_VERSION.getVersionIntroducedIn(),
+          MAXIMUM_VERSION.getMostRecentSupportedVersion());
 
   /**
    * A map linking the protocol version number to its {@link ProtocolVersion} representation.

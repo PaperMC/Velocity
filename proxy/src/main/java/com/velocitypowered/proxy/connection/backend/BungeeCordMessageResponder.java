@@ -269,7 +269,7 @@ public class BungeeCordMessageResponder {
     ByteBuf toForward = in.unwrap().copy();
     final ServerInfo currentUserServer = player.getCurrentServer()
         .map(ServerConnection::getServerInfo).orElse(null);
-    if (target.equals("ALL")) {
+    if (target.equals("ALL") || target.equals("ONLINE")) {
       try {
         for (RegisteredServer rs : proxy.getAllServers()) {
           if (!rs.getServerInfo().equals(currentUserServer)) {

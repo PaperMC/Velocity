@@ -28,15 +28,15 @@ public class SystemChat implements MinecraftPacket {
 
   public SystemChat() {}
 
-  public SystemChat(Component component, ChatBuilder.ChatType type) {
+  public SystemChat(Component component, ChatType type) {
     this.component = component;
     this.type = type;
   }
 
   private Component component;
-  private ChatBuilder.ChatType type;
+  private ChatType type;
 
-  public ChatBuilder.ChatType getType() {
+  public ChatType getType() {
     return type;
   }
 
@@ -48,7 +48,7 @@ public class SystemChat implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
     // System chat is never decoded so this doesn't matter for now
-    type = ChatBuilder.ChatType.values()[ProtocolUtils.readVarInt(buf)];
+    type = ChatType.values()[ProtocolUtils.readVarInt(buf)];
   }
 
   @Override

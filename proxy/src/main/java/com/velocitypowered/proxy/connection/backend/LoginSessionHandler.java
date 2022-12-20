@@ -56,9 +56,11 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LoginSessionHandler implements MinecraftSessionHandler {
+  private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
   private static final Component MODERN_IP_FORWARDING_FAILURE = Component
       .translatable("velocity.error.modern-forwarding-failed");
@@ -248,6 +250,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Ensure we are in range
     requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
+      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+        return requested >= VelocityConstants.MODERN_LAZY_SESSION ? VelocityConstants.MODERN_LAZY_SESSION
+            : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      }
       if (player.getIdentifiedKey() != null) {
         // No enhanced switch on java 11
         switch (player.getIdentifiedKey().getKeyRevision()) {
@@ -281,7 +287,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       // This serves as additional redundancy. The key normally is stored in the
       // login start to the server, but some setups require this.
-      if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY) {
+      if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY
+          && actualVersion < VelocityConstants.MODERN_LAZY_SESSION) {
         IdentifiedKey key = player.getIdentifiedKey();
         assert key != null;
         ProtocolUtils.writePlayerKey(forwarded, key);

@@ -15,46 +15,52 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.chat;
+package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.collect.Lists;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
 
-public class ServerChatPreview implements MinecraftPacket {
+public class RemovePlayerInfo implements MinecraftPacket {
+  private Collection<UUID> profilesToRemove;
 
-  private int id;
-  private @Nullable Component preview;
-
-  public Component getPreview() {
-    return preview;
+  public RemovePlayerInfo() {
+    this.profilesToRemove = new ArrayList<>();
   }
 
-  public int getId() {
-    return id;
+  public RemovePlayerInfo(Collection<UUID> profilesToRemove) {
+    this.profilesToRemove = profilesToRemove;
+  }
+
+  public Collection<UUID> getProfilesToRemove() {
+    return profilesToRemove;
+  }
+
+  public void setProfilesToRemove(Collection<UUID> profilesToRemove) {
+    this.profilesToRemove = profilesToRemove;
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    id = buf.readInt();
-    if (buf.readBoolean()) {
-      preview = GsonComponentSerializer.gson().deserialize(ProtocolUtils.readString(buf));
+    int length = ProtocolUtils.readVarInt(buf);
+    Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
+    for (int idx = 0; idx < length; idx++) {
+      profilesToRemove.add(ProtocolUtils.readUuid(buf));
     }
+    this.profilesToRemove = profilesToRemove;
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    buf.writeInt(id);
-    if (preview != null) {
-      buf.writeBoolean(true);
-      ProtocolUtils.writeString(buf, GsonComponentSerializer.gson().serialize(preview));
-    } else {
-      buf.writeBoolean(false);
+    ProtocolUtils.writeVarInt(buf, this.profilesToRemove.size());
+    for (UUID uuid : this.profilesToRemove) {
+      ProtocolUtils.writeUuid(buf, uuid);
     }
   }
 

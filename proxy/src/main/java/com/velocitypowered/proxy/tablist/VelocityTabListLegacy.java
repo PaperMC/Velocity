@@ -22,8 +22,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem.Item;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabListLegacy extends VelocityTabList {
+public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
 
@@ -65,35 +65,35 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
-      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER,
-          Collections.singletonList(PlayerListItem.Item.from(value))));
+      connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
+          Collections.singletonList(LegacyPlayerListItem.Item.from(value))));
     }
     entries.clear();
     nameMapping.clear();
   }
 
   @Override
-  public void processBackendPacket(PlayerListItem packet) {
+  public void processLegacy(LegacyPlayerListItem packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
-      case PlayerListItem.ADD_PLAYER:
+      case LegacyPlayerListItem.ADD_PLAYER:
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
-          VelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
+          KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
         } else {
           UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
           nameMapping.put(item.getName(), uuid);
-          entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
+          entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
               .latency(item.getLatency())
               .build());
         }
         break;
-      case PlayerListItem.REMOVE_PLAYER:
+      case LegacyPlayerListItem.REMOVE_PLAYER:
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
@@ -109,11 +109,11 @@ public class VelocityTabListLegacy extends VelocityTabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       switch (action) {
-        case PlayerListItem.UPDATE_LATENCY:
-        case PlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
+        case LegacyPlayerListItem.UPDATE_LATENCY:
+        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
           connection
-              .write(new PlayerListItem(PlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
-                  Collections.singletonList(PlayerListItem.Item.from(entry))));
+              .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
+                  Collections.singletonList(LegacyPlayerListItem.Item.from(entry))));
           break;
         default:
           // Can't do anything else

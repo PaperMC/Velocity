@@ -15,20 +15,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection;
+package com.velocitypowered.proxy.protocol.packet.chat;
 
-public class VelocityConstants {
+import java.time.Instant;
 
-  private VelocityConstants() {
-    throw new AssertionError();
+public class ChatTimeKeeper {
+  private Instant lastTimestamp;
+
+  public ChatTimeKeeper() {
+    this.lastTimestamp = Instant.MIN;
   }
 
-  public static final String VELOCITY_IP_FORWARDING_CHANNEL = "velocity:player_info";
-  public static final int MODERN_FORWARDING_DEFAULT = 1;
-  public static final int MODERN_FORWARDING_WITH_KEY = 2;
-  public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
-  public static final int MODERN_LAZY_SESSION = 4;
-  public static final int MODERN_FORWARDING_MAX_VERSION = MODERN_LAZY_SESSION;
-
-  public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+  public boolean update(Instant instant) {
+    if (instant.isBefore(this.lastTimestamp)) {
+      this.lastTimestamp = instant;
+      return false;
+    }
+    this.lastTimestamp = instant;
+    return true;
+  }
 }
