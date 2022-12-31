@@ -18,39 +18,23 @@
 package com.velocitypowered.api.proxy.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.network.ProtocolVersion;
 
 /**
  * Represents the handshake sent from the proxy to a server. This class is immutable.
  */
 public final class ServerHandshake {
 
-  private final ProtocolVersion protocolVersion;
   private final String serverAddress;
   private final int port;
-  private final int nextStatus;
 
   /**
    * Creates a new server handshake.
-   * @param protocolVersion the protocol version
    * @param serverAddress the server address
    * @param port the server port
-   * @param nextStatus the next status
    */
-  public ServerHandshake(ProtocolVersion protocolVersion, String serverAddress, int port,
-      int nextStatus) {
-    this.protocolVersion = Preconditions.checkNotNull(protocolVersion, "protocolVersion");
+  public ServerHandshake(String serverAddress, int port) {
     this.serverAddress = Preconditions.checkNotNull(serverAddress, "serverAddress");
     this.port = port;
-    this.nextStatus = nextStatus;
-  }
-
-  /**
-   * Returns the protocol version to send to the server.
-   * @return the protocol version
-   */
-  public ProtocolVersion getProtocolVersion() {
-    return protocolVersion;
   }
 
   /**
@@ -70,21 +54,13 @@ public final class ServerHandshake {
   }
 
   /**
-   * Returns the next status to send to the server.
-   * @return the next status
-   */
-  public int getNextStatus() {
-    return nextStatus;
-  }
-
-  /**
    * Creates a new {@code ServerHandshake} with the specified server address.
    *
    * @param serverAddress the new server address
    * @return the new {@code ServerHandshake}
    */
   public ServerHandshake withAddress(String serverAddress) {
-    return new ServerHandshake(protocolVersion, serverAddress, port, nextStatus);
+    return new ServerHandshake(serverAddress, port);
   }
 
   /**
@@ -94,16 +70,14 @@ public final class ServerHandshake {
    * @return the new {@code ServerHandshake}
    */
   public ServerHandshake withPort(int port) {
-    return new ServerHandshake(protocolVersion, serverAddress, port, nextStatus);
+    return new ServerHandshake(serverAddress, port);
   }
 
   @Override
   public String toString() {
     return "ServerHandshake{"
-        + "protocolVersion=" + protocolVersion
-        + ", serverAddress='" + serverAddress + '\''
+        + "serverAddress='" + serverAddress + '\''
         + ", port=" + port
-        + ", nextStatus=" + nextStatus
         + '}';
   }
 }

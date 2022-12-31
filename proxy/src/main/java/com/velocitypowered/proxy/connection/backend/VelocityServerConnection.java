@@ -188,19 +188,19 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       serverAddress = playerVhost;
     }
 
-    ServerHandshake serverHandshake = new ServerHandshake(protocolVersion, serverAddress,
-        registeredServer.getServerInfo().getAddress().getPort(), StateRegistry.LOGIN_ID);
+    ServerHandshake serverHandshake = new ServerHandshake(serverAddress,
+        registeredServer.getServerInfo().getAddress().getPort());
 
     ServerHandshakeEvent event = new ServerHandshakeEvent(proxyPlayer, registeredServer,
-        serverHandshake);
+        protocolVersion, StateRegistry.LOGIN_ID, serverHandshake);
     server.getEventManager().fire(event).thenAcceptAsync(newEvent -> {
       if (mc.isClosed()) {
         return;
       }
       ServerHandshake handshakeData = newEvent.getHandshake();
       Handshake handshake = new Handshake();
-      handshake.setNextStatus(handshakeData.getNextStatus());
-      handshake.setProtocolVersion(handshakeData.getProtocolVersion());
+      handshake.setNextStatus(event.getNextStatus());
+      handshake.setProtocolVersion(event.getProtocolVersion());
       handshake.setServerAddress(handshakeData.getServerAddress());
       handshake.setPort(handshakeData.getPort());
 
