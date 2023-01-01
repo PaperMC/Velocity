@@ -448,13 +448,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.close(configuration.getBind());
     }
 
-    if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
-        || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
+    boolean queryPortChanged = newConfiguration.getQueryPort() != configuration.getQueryPort();
+    boolean queryAlreadyEnabled = configuration.isQueryEnabled();
+    boolean queryEnabled = newConfiguration.isQueryEnabled();
+    if ((!queryEnabled && queryAlreadyEnabled) || queryPortChanged) {
       this.cm.close(new InetSocketAddress(
           configuration.getBind().getHostString(), configuration.getQueryPort()));
     }
-
-    if (newConfiguration.isQueryEnabled()) {
+    if (queryEnabled && queryPortChanged) {
       this.cm.queryBind(newConfiguration.getBind().getHostString(),
           newConfiguration.getQueryPort());
     }
