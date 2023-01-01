@@ -55,6 +55,8 @@ tasks {
         }
     }
     withType<Javadoc> {
+        exclude("com/velocitypowered/api/plugin/ap/**")
+
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
         o.source = "8"
