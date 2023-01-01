@@ -1,21 +1,16 @@
 plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'checkstyle'
+    id "java-library"
+    id "maven-publish"
+    id "checkstyle"
 }
 
-apply plugin: 'org.cadixdev.licenser'
-apply from: '../gradle/checkstyle.gradle'
-apply from: '../gradle/publish.gradle'
-apply plugin: 'com.github.johnrengelman.shadow'
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
+apply plugin: "org.cadixdev.licenser"
+apply from: "../gradle/checkstyle.gradle"
+apply from: "../gradle/publish.gradle"
+apply plugin: "com.github.johnrengelman.shadow"
 
 license {
-    header = project.file('HEADER.txt')
+    header = project.file("HEADER.txt")
 }
 
 sourceSets {
@@ -25,11 +20,11 @@ sourceSets {
 }
 
 dependencies {
-    api 'com.google.code.gson:gson:2.9.0'
+    api "com.google.code.gson:gson:2.9.0"
     api "com.google.guava:guava:${guavaVersion}"
 
     // DEPRECATED: Will be removed in Velocity Polymer
-    api 'com.moandjiezana.toml:toml4j:0.7.2'
+    api "com.moandjiezana.toml:toml4j:0.7.2"
 
     api(platform("net.kyori:adventure-bom:${adventureVersion}"))
     api("net.kyori:adventure-api")
@@ -39,9 +34,9 @@ dependencies {
     api("net.kyori:adventure-text-minimessage")
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
-    api 'com.google.inject:guice:5.0.1'
+    api "com.google.inject:guice:5.0.1"
     api "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-    api 'com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT'
+    api "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 
     api "org.spongepowered:configurate-hocon:${configurateVersion}"
     api "org.spongepowered:configurate-yaml:${configurateVersion}"
@@ -52,12 +47,12 @@ dependencies {
 }
 
 task javadocJar(type: Jar) {
-    classifier 'javadoc'
+    classifier "javadoc"
     from javadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier 'sources'
+    classifier "sources"
     from sourceSets.main.allSource
     from sourceSets.ap.output
 }
@@ -65,7 +60,7 @@ task sourcesJar(type: Jar) {
 jar {
     from sourceSets.ap.output
     manifest {
-        attributes 'Automatic-Module-Name': 'com.velocitypowered.api'
+        attributes "Automatic-Module-Name": "com.velocitypowered.api"
     }
 }
 
@@ -80,26 +75,26 @@ artifacts {
 }
 
 javadoc {
-    options.encoding = 'UTF-8'
-    options.charSet = 'UTF-8'
-    options.source = '8'
+    options.encoding = "UTF-8"
+    options.charSet = "UTF-8"
+    options.source = "8"
     options.links(
-            'https://www.slf4j.org/apidocs/',
-            'https://guava.dev/releases/25.1-jre/api/docs/',
-            'https://google.github.io/guice/api-docs/5.0.1/javadoc/',
-            'https://docs.oracle.com/en/java/javase/11/docs/api//',
+            "https://www.slf4j.org/apidocs/",
+            "https://guava.dev/releases/25.1-jre/api/docs/",
+            "https://google.github.io/guice/api-docs/5.0.1/javadoc/",
+            "https://docs.oracle.com/en/java/javase/11/docs/api//",
             "https://jd.adventure.kyori.net/api/${adventureVersion}/"
     )
 
     // Disable the crazy super-strict doclint tool in Java 8
-    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption("Xdoclint:none", "-quiet")
 
     // Mark sources as Java 8 source compatible
-    options.source = '8'
+    options.source = "8"
 
-    // Remove 'undefined' from seach paths when generating javadoc for a non-modular project (JDK-8215291)
+    // Remove "undefined" from seach paths when generating javadoc for a non-modular project (JDK-8215291)
     if (JavaVersion.current() >= JavaVersion.VERSION_1_9 && JavaVersion.current() < JavaVersion.VERSION_12) {
-        options.addBooleanOption('-no-module-directories', true)
+        options.addBooleanOption("-no-module-directories", true)
     }
 }
 
