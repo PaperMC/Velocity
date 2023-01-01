@@ -1,23 +1,23 @@
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '7.1.0' apply false
-    id 'org.cadixdev.licenser' version '0.6.1' apply false
+    id "java"
+    id "com.github.johnrengelman.shadow" version "7.1.0" apply false
+    id "org.cadixdev.licenser" version "0.6.1" apply false
 }
 
 allprojects {
-    group 'com.velocitypowered'
-    version '3.1.2-SNAPSHOT'
+    group "com.velocitypowered"
+    version "3.1.2-SNAPSHOT"
 
     ext {
         // dependency versions
-        adventureVersion = '4.12.0'
-        junitVersion = '5.9.0'
-        slf4jVersion = '1.7.30'
-        log4jVersion = '2.19.0'
-        nettyVersion = '4.1.86.Final'
-        guavaVersion = '25.1-jre'
-        checkerFrameworkVersion = '3.6.1'
-        configurateVersion = '3.7.3'
+        adventureVersion = "4.12.0"
+        junitVersion = "5.9.0"
+        slf4jVersion = "1.7.30"
+        log4jVersion = "2.19.0"
+        nettyVersion = "4.1.86.Final"
+        guavaVersion = "25.1-jre"
+        checkerFrameworkVersion = "3.6.1"
+        configurateVersion = "3.7.3"
 
         getCurrentShortRevision = {
             new ByteArrayOutputStream().withStream { os ->
@@ -42,7 +42,7 @@ allprojects {
 
         // for kyoripowered dependencies
         maven {
-            url 'https://oss.sonatype.org/content/groups/public/'
+            url "https://oss.sonatype.org/content/groups/public/"
         }
 
         // Velocity repo

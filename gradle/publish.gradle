@@ -3,11 +3,11 @@ publishing {
         maven {
             credentials(PasswordCredentials.class)
 
-            name = 'paper'
-            def base = 'https://papermc.io/repo/repository/maven'
+            name = "paper"
+            def base = "https://papermc.io/repo/repository/maven"
             def releasesRepoUrl = "$base-releases/"
             def snapshotsRepoUrl = "$base-snapshots/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
         }
     }
 }
