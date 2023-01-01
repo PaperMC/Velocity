@@ -35,6 +35,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
+/**
+ * Enumerates the supported transports for Velocity.
+ */
 public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
@@ -76,6 +79,11 @@ public enum TransportType {
     return new VelocityNettyThreadFactory("Netty " + name + ' ' + type.toString() + " #%d");
   }
 
+  /**
+   * Determines the "best" transport to initialize.
+   *
+   * @return the transport to use
+   */
   public static TransportType bestType() {
     if (Boolean.getBoolean("velocity.disable-native-transport")) {
       return NIO;
@@ -83,13 +91,22 @@ public enum TransportType {
 
     if (Epoll.isAvailable()) {
       return EPOLL;
-    } else {
-      return NIO;
     }
+
+    return NIO;
   }
 
+  /**
+   * Event loop group types.
+   */
   public enum Type {
+    /**
+     * Accepts connections and distributes them to workers.
+     */
     BOSS("Boss"),
+    /**
+     * Thread that handles connections.
+     */
     WORKER("Worker");
 
     private final String name;

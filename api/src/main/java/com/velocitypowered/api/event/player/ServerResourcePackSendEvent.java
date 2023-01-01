@@ -28,7 +28,7 @@ public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
 
   /**
    * Constructs a new ServerResourcePackSendEvent.
-   * 
+   *
    * @param receivedResourcePack The resource pack the server sent.
    * @param serverConnection The connection this occurred on.
    */

@@ -26,6 +26,9 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Protocol utils test.
+ */
 public class ProtocolUtilsTest {
 
   @Test

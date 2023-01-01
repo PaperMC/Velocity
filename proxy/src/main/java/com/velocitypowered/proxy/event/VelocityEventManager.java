@@ -72,6 +72,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.lanternpowered.lmbda.LambdaFactory;
 import org.lanternpowered.lmbda.LambdaType;
 
+/**
+ * Implements the Velocity event handler.
+ */
 public class VelocityEventManager implements EventManager {
 
   private static final Logger logger = LogManager.getLogger(VelocityEventManager.class);
@@ -90,7 +93,8 @@ public class VelocityEventManager implements EventManager {
   private final ExecutorService asyncExecutor;
   private final PluginManager pluginManager;
 
-  private final ListMultimap<Class<?>, HandlerRegistration> handlersByType = ArrayListMultimap.create();
+  private final ListMultimap<Class<?>, HandlerRegistration> handlersByType =
+      ArrayListMultimap.create();
   private final LoadingCache<Class<?>, HandlersCache> handlersCache =
       Caffeine.newBuilder().build(this::bakeHandlers);
 
@@ -159,8 +163,7 @@ public class VelocityEventManager implements EventManager {
      */
     ALWAYS,
     /**
-     * The event will never run async, everything is handled on
-     * the netty thread.
+     * The event will never run async, everything is handled on the netty thread.
      */
     NEVER
   }
@@ -198,9 +201,8 @@ public class VelocityEventManager implements EventManager {
   /**
    * Creates an {@link UntargetedEventHandler} for the given {@link Method}. This essentially
    * implements the {@link UntargetedEventHandler} (or the no async task variant) to invoke the
-   * target method. The implemented class is defined in the same package as the declaring class.
-   * The {@link UntargetedEventHandler} interface must be public so the implementation can access
-   * it.
+   * target method. The implemented class is defined in the same package as the declaring class. The
+   * {@link UntargetedEventHandler} interface must be public so the implementation can access it.
    *
    * @param method The method to generate an untargeted handler for
    * @return The untargeted handler
@@ -364,7 +366,7 @@ public class VelocityEventManager implements EventManager {
    * Registers the listener for a given plugin.
    *
    * @param pluginContainer registering plugin
-   * @param listener listener to register
+   * @param listener        listener to register
    */
   public void registerInternally(final PluginContainer pluginContainer, final Object listener) {
     final Class<?> targetClass = listener.getClass();
@@ -537,8 +539,8 @@ public class VelocityEventManager implements EventManager {
     }
 
     /**
-     * Executes the task and returns whether the next one should be executed
-     * immediately after this one without scheduling.
+     * Executes the task and returns whether the next one should be executed immediately after this
+     * one without scheduling.
      */
     boolean execute() {
       state = TASK_STATE_EXECUTING;

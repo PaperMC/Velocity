@@ -31,6 +31,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * Enumerates all supported natives for Velocity.
+ */
 public class Natives {
 
   private Natives() {

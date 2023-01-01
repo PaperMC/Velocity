@@ -28,7 +28,7 @@ import java.util.concurrent.locks.Lock;
  * Registers {@link RawCommand}s in a root node.
  */
 public final class RawCommandRegistrar
-        extends InvocableCommandRegistrar<RawCommand, RawCommand.Invocation, String> {
+    extends InvocableCommandRegistrar<RawCommand, RawCommand.Invocation, String> {
 
   public RawCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock) {
     super(root, lock, RawCommandInvocation.FACTORY, StringArgumentType.greedyString());

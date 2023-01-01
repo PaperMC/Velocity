@@ -24,8 +24,8 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 /**
- * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages
- * on {@code channelRead} and only releases them on an explicit read operation.
+ * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages on
+ * {@code channelRead} and only releases them on an explicit read operation.
  */
 public class AutoReadHolderHandler extends ChannelDuplexHandler {
 

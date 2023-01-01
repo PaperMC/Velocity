@@ -46,6 +46,9 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+/**
+ * Implements loading a Java plugin.
+ */
 public class JavaPluginLoader implements PluginLoader {
 
   private final ProxyServer server;
@@ -122,7 +125,7 @@ public class JavaPluginLoader implements PluginLoader {
 
     if (instance == null) {
       throw new IllegalStateException(
-        "Got nothing from injector for plugin " + description.getId());
+          "Got nothing from injector for plugin " + description.getId());
     }
 
     ((VelocityPluginContainer) container).setInstance(instance);

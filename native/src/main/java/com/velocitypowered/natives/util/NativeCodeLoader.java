@@ -22,6 +22,11 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A loader for native code.
+ *
+ * @param <T> the interface of the instance to load
+ */
 public final class NativeCodeLoader<T> implements Supplier<T> {
 
   private final Variant<T> selected;

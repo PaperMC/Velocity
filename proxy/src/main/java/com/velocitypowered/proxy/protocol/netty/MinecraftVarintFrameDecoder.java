@@ -24,6 +24,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import java.util.List;
 
+/**
+ * Frames Minecraft server packets which are prefixed by a 21-bit VarInt encoding.
+ */
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   private static final QuietDecoderException BAD_LENGTH_CACHED =

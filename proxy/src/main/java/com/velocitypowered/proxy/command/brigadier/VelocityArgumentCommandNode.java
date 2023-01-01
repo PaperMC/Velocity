@@ -40,9 +40,9 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
- * An argument node that uses the given (possibly custom) {@link ArgumentType}
- * for parsing, while maintaining compatibility with the vanilla client.
- * The argument type must be greedy and accept any input.
+ * An argument node that uses the given (possibly custom) {@link ArgumentType} for parsing, while
+ * maintaining compatibility with the vanilla client. The argument type must be greedy and accept
+ * any input.
  *
  * @param <S> the type of the command source
  * @param <T> the type of the argument to parse
@@ -52,25 +52,25 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
   private final ArgumentType<T> type;
 
   VelocityArgumentCommandNode(
-          final String name, final ArgumentType<T> type, final Command<S> command,
-          final Predicate<S> requirement,
-          final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,
-          final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks,
-          final SuggestionProvider<S> customSuggestions) {
+      final String name, final ArgumentType<T> type, final Command<S> command,
+      final Predicate<S> requirement,
+      final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,
+      final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks,
+      final SuggestionProvider<S> customSuggestions) {
     super(name, StringArgumentType.greedyString(), command, requirement, contextRequirement,
-            redirect, modifier, forks, customSuggestions);
+        redirect, modifier, forks, customSuggestions);
     this.type = Preconditions.checkNotNull(type, "type");
   }
 
   @Override
   public void parse(final StringReader reader, final CommandContextBuilder<S> contextBuilder)
-          throws CommandSyntaxException {
+      throws CommandSyntaxException {
     // Same as super, except we use the rich ArgumentType
     final int start = reader.getCursor();
     final T result = this.type.parse(reader);
     if (reader.canRead()) {
       throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
-              .createWithContext(reader, "Expected greedy ArgumentType to parse all input");
+          .createWithContext(reader, "Expected greedy ArgumentType to parse all input");
     }
 
     final ParsedArgument<S, T> parsed = new ParsedArgument<>(start, reader.getCursor(), result);
@@ -80,8 +80,8 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
 
   @Override
   public CompletableFuture<Suggestions> listSuggestions(
-          final CommandContext<S> context, final SuggestionsBuilder builder)
-          throws CommandSyntaxException {
+      final CommandContext<S> context, final SuggestionsBuilder builder)
+      throws CommandSyntaxException {
     if (getCustomSuggestions() == null) {
       return Suggestions.empty();
     }

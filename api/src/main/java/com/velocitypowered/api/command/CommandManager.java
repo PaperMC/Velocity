@@ -84,6 +84,7 @@ public interface CommandManager {
 
   /**
    * Retrieves the {@link CommandMeta} from the specified command alias, if registered.
+   *
    * @param alias the command alias to lookup
    * @return an {@link CommandMeta} of the alias
    */

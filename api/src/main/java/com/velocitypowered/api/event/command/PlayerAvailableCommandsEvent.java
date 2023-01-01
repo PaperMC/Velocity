@@ -29,6 +29,7 @@ public class PlayerAvailableCommandsEvent {
 
   /**
    * Constructs an available commands event.
+   *
    * @param player the targeted player
    * @param rootNode the Brigadier root node
    */

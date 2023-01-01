@@ -27,6 +27,9 @@ import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+/**
+ * Annotation processor for Velocity.
+ */
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
 

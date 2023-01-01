@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.config;
 
+/**
+ * Supported passthrough modes for ping passthrough.
+ */
 public enum PingPassthroughMode {
   DISABLED,
   MODS,

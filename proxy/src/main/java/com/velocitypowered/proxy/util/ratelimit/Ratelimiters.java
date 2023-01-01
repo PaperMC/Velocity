@@ -19,7 +19,11 @@ package com.velocitypowered.proxy.util.ratelimit;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Factory to create rate limiters.
+ */
 public final class Ratelimiters {
+
   private Ratelimiters() {
     throw new AssertionError();
   }

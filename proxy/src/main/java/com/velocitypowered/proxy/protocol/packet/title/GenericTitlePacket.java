@@ -41,7 +41,7 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
 
     public int getAction(ProtocolVersion version) {
       return version.compareTo(ProtocolVersion.MINECRAFT_1_11) < 0
-              ? action > 2 ? action - 1 : action : action;
+          ? action > 2 ? action - 1 : action : action;
     }
   }
 
@@ -89,18 +89,17 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
   }
 
 
-
   @Override
   public final void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                           ProtocolVersion version) {
+      ProtocolVersion version) {
     throw new UnsupportedOperationException(); // encode only
   }
 
   /**
    * Creates a version and type dependent TitlePacket.
    *
-   * @param type       Action the packet should invoke
-   * @param version    Protocol version of the target player
+   * @param type    Action the packet should invoke
+   * @param version Protocol version of the target player
    * @return GenericTitlePacket instance that follows the invoker type/version
    */
   public static GenericTitlePacket constructTitlePacket(ActionType type, ProtocolVersion version) {

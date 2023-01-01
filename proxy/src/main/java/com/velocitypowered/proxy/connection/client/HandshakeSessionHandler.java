@@ -46,6 +46,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The initial handler used when a connection is established to the proxy. This will either
+ * transition to {@link StatusSessionHandler} or {@link InitialLoginSessionHandler} as soon
+ * as the handshake packet is received.
+ */
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);

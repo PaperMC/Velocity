@@ -25,6 +25,7 @@ import io.netty.channel.Channel;
  * Represents a listener endpoint.
  */
 public final class Endpoint {
+
   private final Channel channel;
   private final ListenerType type;
 

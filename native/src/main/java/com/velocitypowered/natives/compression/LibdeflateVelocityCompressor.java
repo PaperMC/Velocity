@@ -22,6 +22,9 @@ import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.util.zip.DataFormatException;
 
+/**
+ * Implements deflate compression using the {@code libdeflate} native C library.
+ */
 public class LibdeflateVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = LibdeflateVelocityCompressor::new;

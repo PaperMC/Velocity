@@ -26,6 +26,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 
+/**
+ * Implements AES-CFB8 encryption/decryption using {@link Cipher}.
+ */
 public class JavaVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {

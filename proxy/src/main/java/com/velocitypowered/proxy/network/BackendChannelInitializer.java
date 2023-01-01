@@ -36,6 +36,9 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Backend channel initializer.
+ */
 @SuppressWarnings("WeakerAccess")
 public class BackendChannelInitializer extends ChannelInitializer<Channel> {
 

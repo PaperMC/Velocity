@@ -24,6 +24,9 @@ import java.util.Locale;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Wraps the settings received in the Client Settings packet.
+ */
 public class ClientSettingsWrapper implements PlayerSettings {
 
   static final PlayerSettings DEFAULT = new ClientSettingsWrapper(

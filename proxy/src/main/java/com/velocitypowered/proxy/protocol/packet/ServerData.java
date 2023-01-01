@@ -61,7 +61,8 @@ public class ServerData implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     boolean hasDescription = this.description != null;
     buf.writeBoolean(hasDescription);
     if (hasDescription) {

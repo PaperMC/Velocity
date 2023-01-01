@@ -22,6 +22,9 @@ import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles 1.7 tab list entries.
+ */
 public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
 
   VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,

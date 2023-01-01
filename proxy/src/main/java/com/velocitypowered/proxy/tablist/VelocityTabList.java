@@ -45,12 +45,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Base class for handling tab lists.
+ */
 public class VelocityTabList implements InternalTabList {
+
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
   private final ConnectedPlayer player;
   private final MinecraftConnection connection;
   private final Map<UUID, VelocityTabListEntry> entries;
 
+  /**
+   * Constructs the instance.
+   *
+   * @param player player associated with this tab list
+   */
   public VelocityTabList(ConnectedPlayer player) {
     this.player = player;
     this.connection = player.getConnection();
@@ -75,7 +84,8 @@ public class VelocityTabList implements InternalTabList {
     if (entry1 instanceof VelocityTabListEntry) {
       entry = (VelocityTabListEntry) entry1;
     } else {
-      entry = new VelocityTabListEntry(this, entry1.getProfile(), entry1.getDisplayNameComponent().orElse(null),
+      entry = new VelocityTabListEntry(this, entry1.getProfile(),
+          entry1.getDisplayNameComponent().orElse(null),
           entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
     }
 
@@ -113,7 +123,8 @@ public class VelocityTabList implements InternalTabList {
         ChatSession from = entry.getChatSession();
         if (from != null) {
           actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
-          playerInfoEntry.setChatSession(new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+          playerInfoEntry.setChatSession(
+              new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
         }
       }
     } else {
@@ -128,7 +139,8 @@ public class VelocityTabList implements InternalTabList {
       if (entry.getChatSession() != null) {
         actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
         ChatSession from = entry.getChatSession();
-        playerInfoEntry.setChatSession(new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+        playerInfoEntry.setChatSession(
+            new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
       }
       if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_GAME_MODE);
@@ -163,9 +175,11 @@ public class VelocityTabList implements InternalTabList {
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode,
-                                 @Nullable ChatSession chatSession, boolean listed) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession, listed);
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+      int gameMode,
+      @Nullable ChatSession chatSession, boolean listed) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
+        listed);
   }
 
   @Override
@@ -183,10 +197,12 @@ public class VelocityTabList implements InternalTabList {
   }
 
   protected void emitActionRaw(UpsertPlayerInfo.Action action, UpsertPlayerInfo.Entry entry) {
-    this.connection.write(new UpsertPlayerInfo(EnumSet.of(action), Collections.singletonList(entry)));
+    this.connection.write(
+        new UpsertPlayerInfo(EnumSet.of(action), Collections.singletonList(entry)));
   }
 
-  private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions, UpsertPlayerInfo.Entry entry) {
+  private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions,
+      UpsertPlayerInfo.Entry entry) {
     Preconditions.checkNotNull(entry.getProfileId(), "Profile ID cannot be null");
     UUID profileId = entry.getProfileId();
     VelocityTabListEntry currentEntry = this.entries.get(profileId);
@@ -208,7 +224,8 @@ public class VelocityTabList implements InternalTabList {
       }
     } else if (currentEntry == null) {
       logger.debug(
-          "Received a partial player before an ADD_PLAYER action; profile could not be built. {}", entry);
+          "Received a partial player before an ADD_PLAYER action; profile could not be built. {}",
+          entry);
       return;
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_GAME_MODE)) {

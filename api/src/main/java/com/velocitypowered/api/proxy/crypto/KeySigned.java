@@ -12,6 +12,9 @@ import java.security.PublicKey;
 import java.time.Instant;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the signature of a signed object.
+ */
 public interface KeySigned {
 
   /**

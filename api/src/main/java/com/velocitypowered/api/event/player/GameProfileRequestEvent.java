@@ -35,6 +35,7 @@ public final class GameProfileRequestEvent {
 
   /**
    * Creates a new instance.
+   *
    * @param connection the connection connecting to the proxy
    * @param originalProfile the original {@link GameProfile} for the user
    * @param onlineMode whether or not the user connected in online or offline mode

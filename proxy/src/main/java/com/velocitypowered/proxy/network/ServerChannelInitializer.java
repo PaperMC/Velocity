@@ -41,6 +41,9 @@ import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Server channel initializer.
+ */
 @SuppressWarnings("WeakerAccess")
 public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 

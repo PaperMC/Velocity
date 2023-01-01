@@ -32,13 +32,17 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a player who is connected to the proxy.
  */
-public interface Player extends CommandSource, Identified, InboundConnection,
-    ChannelMessageSource, ChannelMessageSink, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable {
+public interface Player extends
+    /* Fundamental Velocity interfaces */
+    CommandSource, InboundConnection, ChannelMessageSource, ChannelMessageSink,
+    /* Adventure-specific interfaces */
+    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable {
 
   /**
    * Returns the player's current username.
@@ -48,8 +52,8 @@ public interface Player extends CommandSource, Identified, InboundConnection,
   String getUsername();
 
   /**
-   * Returns the locale the proxy will use to send messages translated via the Adventure global translator.
-   * By default, the value of {@link PlayerSettings#getLocale()} is used.
+   * Returns the locale the proxy will use to send messages translated via the Adventure global
+   * translator. By default, the value of {@link PlayerSettings#getLocale()} is used.
    *
    * <p>This can be {@code null} when the client has not yet connected to any server.</p>
    *

@@ -22,6 +22,9 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+/**
+ * Common messages that might be sent a client for various connection-related states.
+ */
 public class ConnectionMessages {
 
   public static final TranslatableComponent ALREADY_CONNECTED = Component

@@ -21,6 +21,9 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a Minecraft packet.
+ */
 public interface MinecraftPacket {
 
   void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion);

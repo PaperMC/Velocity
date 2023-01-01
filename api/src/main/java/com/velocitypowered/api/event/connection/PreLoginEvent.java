@@ -37,6 +37,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
   /**
    * Creates a new instance.
+   *
    * @param connection the connection logging into the proxy
    * @param username the player's username
    */

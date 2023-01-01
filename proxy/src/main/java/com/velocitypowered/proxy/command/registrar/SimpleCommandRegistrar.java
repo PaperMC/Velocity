@@ -28,7 +28,7 @@ import java.util.concurrent.locks.Lock;
  * Registers {@link SimpleCommand}s in a root node.
  */
 public final class SimpleCommandRegistrar
-        extends InvocableCommandRegistrar<SimpleCommand, SimpleCommand.Invocation, String[]> {
+    extends InvocableCommandRegistrar<SimpleCommand, SimpleCommand.Invocation, String[]> {
 
   public SimpleCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock) {
     super(root, lock, SimpleCommandInvocation.FACTORY, StringArrayArgumentType.INSTANCE);

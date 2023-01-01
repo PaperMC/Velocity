@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
 public class KeyedChatBuilder extends ChatBuilderV2 {
+
   public KeyedChatBuilder(ProtocolVersion version) {
     super(version);
   }

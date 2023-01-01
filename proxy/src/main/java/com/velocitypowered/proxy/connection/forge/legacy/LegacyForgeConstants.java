@@ -23,9 +23,8 @@ package com.velocitypowered.proxy.connection.forge.legacy;
 public class LegacyForgeConstants {
 
   /**
-   * Clients attempting to connect to 1.8-1.12.2 Forge servers will have
-   * this token appended to the hostname in the initial handshake
-   * packet.
+   * Clients attempting to connect to 1.8-1.12.2 Forge servers will have this token appended to the
+   * hostname in the initial handshake packet.
    */
   public static final String HANDSHAKE_HOSTNAME_TOKEN = "\0FML\0";
 

@@ -32,7 +32,8 @@ import java.util.UUID;
 
 public class ServerLogin implements MinecraftPacket {
 
-  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
+  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
+      "Empty username!");
 
   private @Nullable String username;
   private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3

@@ -51,6 +51,9 @@ public final class DisconnectEvent {
         + '}';
   }
 
+  /**
+   * The status of the connection when the player disconnected.
+   */
   public enum LoginStatus {
 
     SUCCESSFUL_LOGIN,

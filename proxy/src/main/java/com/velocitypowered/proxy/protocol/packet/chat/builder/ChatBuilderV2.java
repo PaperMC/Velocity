@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class ChatBuilderV2 {
+
   protected final ProtocolVersion version;
   protected @MonotonicNonNull Component component;
   protected @MonotonicNonNull String message;

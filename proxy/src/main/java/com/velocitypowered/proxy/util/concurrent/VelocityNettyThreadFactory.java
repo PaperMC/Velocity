@@ -23,6 +23,9 @@ import io.netty.util.concurrent.FastThreadLocalThread;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Factory to create threads for the Netty event loop groups.
+ */
 public class VelocityNettyThreadFactory implements ThreadFactory {
 
   private final AtomicInteger threadNumber = new AtomicInteger();

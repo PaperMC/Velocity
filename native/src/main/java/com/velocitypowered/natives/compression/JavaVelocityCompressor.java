@@ -28,6 +28,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+/**
+ * Implements deflate compression by wrapping {@link Deflater} and {@link Inflater}.
+ */
 public class JavaVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = JavaVelocityCompressor::new;

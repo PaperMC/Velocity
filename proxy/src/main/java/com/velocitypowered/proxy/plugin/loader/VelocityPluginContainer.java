@@ -21,6 +21,9 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import java.util.Optional;
 
+/**
+ * Implements {@link PluginContainer}.
+ */
 public class VelocityPluginContainer implements PluginContainer {
 
   private final PluginDescription description;

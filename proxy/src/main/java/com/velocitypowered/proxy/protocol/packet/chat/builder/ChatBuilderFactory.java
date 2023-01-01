@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatBuilder
 import java.util.function.Function;
 
 public class ChatBuilderFactory {
+
   private final ProtocolVersion version;
   private final Function<ProtocolVersion, ChatBuilderV2> builderFunction;
 

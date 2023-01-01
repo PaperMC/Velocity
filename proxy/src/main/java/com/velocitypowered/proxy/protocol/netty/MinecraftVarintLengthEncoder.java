@@ -25,6 +25,9 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+/**
+ * Handler for appending a length for Minecraft packets.
+ */
 @ChannelHandler.Sharable
 public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 

@@ -42,13 +42,13 @@ public interface ConnectionType {
   BackendConnectionPhase getInitialBackendPhase();
 
   /**
-   * Adds properties to the {@link GameProfile} if required. If any properties
-   * are added, the returned {@link GameProfile} will be a copy.
+   * Adds properties to the {@link GameProfile} if required. If any properties are added, the
+   * returned {@link GameProfile} will be a copy.
    *
-   * @param original The original {@link GameProfile}
+   * @param original       The original {@link GameProfile}
    * @param forwardingType The Velocity {@link PlayerInfoForwarding}
    * @return The {@link GameProfile} with the properties added in.
    */
   GameProfile addGameProfileTokensIfRequired(GameProfile original,
-                                             PlayerInfoForwarding forwardingType);
+      PlayerInfoForwarding forwardingType);
 }

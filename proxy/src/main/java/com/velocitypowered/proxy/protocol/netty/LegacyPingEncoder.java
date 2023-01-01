@@ -24,6 +24,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Encodes {@code LegacyDisconnect} for Minecraft 1.3-1.6.4.
+ */
 @ChannelHandler.Sharable
 public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnect> {
 

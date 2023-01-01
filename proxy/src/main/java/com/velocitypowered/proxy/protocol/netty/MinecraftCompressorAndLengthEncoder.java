@@ -27,6 +27,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import java.util.zip.DataFormatException;
 
+/**
+ * Handler for compressing Minecraft packets.
+ */
 public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<ByteBuf> {
 
   private int threshold;

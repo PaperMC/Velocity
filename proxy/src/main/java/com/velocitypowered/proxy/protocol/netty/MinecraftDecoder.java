@@ -28,6 +28,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
 
+/**
+ * Decodes Minecraft packets.
+ */
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
@@ -46,8 +49,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
    */
   public MinecraftDecoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = direction.getProtocolRegistry(StateRegistry.HANDSHAKE,
-        ProtocolVersion.MINIMUM_VERSION);
+    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
+        direction, ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 
@@ -137,7 +140,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.registry = direction.getProtocolRegistry(state, protocolVersion);
+    this.registry = state.getProtocolRegistry(direction, protocolVersion);
   }
 
   public void setState(StateRegistry state) {

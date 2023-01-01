@@ -27,9 +27,14 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import io.netty.channel.EventLoop;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Session handler used to implement
+ * {@link VelocityRegisteredServer#ping(EventLoop, ProtocolVersion)}.
+ */
 public class PingSessionHandler implements MinecraftSessionHandler {
 
   private final CompletableFuture<ServerPing> result;

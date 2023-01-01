@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 
+/**
+ * Handles the play state between exiting the login phase and establishing the first connection
+ * to a backend server.
+ */
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
 
   private final ConnectedPlayer player;

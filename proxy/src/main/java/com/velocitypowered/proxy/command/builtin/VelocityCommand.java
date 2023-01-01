@@ -60,6 +60,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * Implements the {@code /velocity} command and friends.
+ */
 public class VelocityCommand implements SimpleCommand {
 
   private interface SubCommand {
@@ -125,9 +128,9 @@ public class VelocityCommand implements SimpleCommand {
 
     if (currentArgs.length == 0) {
       return commands.entrySet().stream()
-              .filter(e -> e.getValue().hasPermission(source, new String[0]))
-              .map(Map.Entry::getKey)
-              .collect(ImmutableList.toImmutableList());
+          .filter(e -> e.getValue().hasPermission(source, new String[0]))
+          .map(Map.Entry::getKey)
+          .collect(ImmutableList.toImmutableList());
     }
 
     if (currentArgs.length == 1) {
@@ -353,11 +356,11 @@ public class VelocityCommand implements SimpleCommand {
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
         servers.add(iter.getServerInfo().getName(),
-                InformationUtils.collectServerInfo(iter));
+            InformationUtils.collectServerInfo(iter));
       }
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
-              server.getConfiguration().getAttemptConnectionOrder());
+          server.getConfiguration().getAttemptConnectionOrder());
       for (String s : attemptedConnectionOrder) {
         connectOrder.add(s);
       }
@@ -366,7 +369,7 @@ public class VelocityCommand implements SimpleCommand {
       proxyConfig.add("servers", servers);
       proxyConfig.add("connectOrder", connectOrder);
       proxyConfig.add("forcedHosts",
-              InformationUtils.collectForcedHosts(server.getConfiguration()));
+          InformationUtils.collectForcedHosts(server.getConfiguration()));
 
       JsonObject dump = new JsonObject();
       dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
@@ -383,7 +386,8 @@ public class VelocityCommand implements SimpleCommand {
 
         source.sendMessage(Component.text(
             "An anonymised report containing useful information about "
-                + "this proxy has been saved at " + dumpPath.toAbsolutePath(), NamedTextColor.GREEN));
+                + "this proxy has been saved at " + dumpPath.toAbsolutePath(),
+            NamedTextColor.GREEN));
       } catch (IOException e) {
         logger.error("Failed to complete dump command, "
             + "the executor was interrupted: " + e.getMessage());

@@ -44,9 +44,16 @@ import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-@SuppressFBWarnings(value = "OS_OPEN_STREAM", justification = "Most methods in this class open "
-    + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
-    + "nothing.")
+/**
+ * Handles messages coming from servers trying to communicate with the BungeeCord plugin
+ * messaging channel interface.
+ */
+@SuppressFBWarnings(
+    value = "OS_OPEN_STREAM",
+    justification = "Most methods in this class open "
+      + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
+      + "nothing."
+)
 public class BungeeCordMessageResponder {
 
   private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier

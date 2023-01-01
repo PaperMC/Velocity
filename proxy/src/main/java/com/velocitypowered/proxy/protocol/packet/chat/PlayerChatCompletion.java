@@ -46,13 +46,15 @@ public class PlayerChatCompletion implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     action = Action.values()[ProtocolUtils.readVarInt(buf)];
     completions = ProtocolUtils.readStringArray(buf);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, action.ordinal());
     ProtocolUtils.writeStringArray(buf, completions);
   }

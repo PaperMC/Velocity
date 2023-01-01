@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class RegistryKeyArgument implements ArgumentType<String> {
+
   private static final List<String> EXAMPLES = Arrays.asList("foo", "foo:bar", "012");
   private String identifier;
 
@@ -46,7 +47,8 @@ public class RegistryKeyArgument implements ArgumentType<String> {
   }
 
   @Override
-  public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
+  public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context,
+      SuggestionsBuilder builder) {
     return Suggestions.empty();
   }
 

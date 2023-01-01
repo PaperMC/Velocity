@@ -23,6 +23,9 @@ import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
 import javax.crypto.SecretKey;
 
+/**
+ * Implements AES-CFB8 encryption/decryption using a native library.
+ */
 public class NativeVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {

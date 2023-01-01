@@ -7,6 +7,9 @@
 
 package com.velocitypowered.api.scheduler;
 
+/**
+ * Enumerates all possible task statuses.
+ */
 public enum TaskStatus {
   /**
    * The task is scheduled and is currently running.

@@ -56,8 +56,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   /**
    * Creates the new transition handler.
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   *
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,

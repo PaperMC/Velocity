@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.connection;
 
+/**
+ * Marker interface for something that can be associated with a {@link MinecraftConnection}.
+ */
 public interface MinecraftConnectionAssociation {
 
 }
