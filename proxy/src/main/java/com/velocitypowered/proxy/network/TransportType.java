@@ -35,7 +35,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
-enum TransportType {
+public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,

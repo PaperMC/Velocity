@@ -32,6 +32,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.natives.util.Natives;
+import com.velocitypowered.proxy.network.TransportType;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -102,6 +104,14 @@ public enum InformationUtils {
     envInfo.addProperty("operatingSystemArchitecture", System.getProperty("os.arch"));
     envInfo.addProperty("javaVersion", System.getProperty("java.version"));
     envInfo.addProperty("javaVendor", System.getProperty("java.vendor"));
+
+    JsonObject listenerInfo = new JsonObject();
+    listenerInfo.addProperty("listenerType", TransportType.bestType().toString());
+    listenerInfo.addProperty("compression", Natives.compress.getLoadedVariant());
+    listenerInfo.addProperty("encryption", Natives.cipher.getLoadedVariant());
+
+    envInfo.add("listener", listenerInfo);
+
     return envInfo;
   }
 
