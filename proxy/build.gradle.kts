@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 
 plugins {
-    `application`
+    application
     `set-manifest-impl-version`
     id("com.github.johnrengelman.shadow") version "7.1.0"
 }
