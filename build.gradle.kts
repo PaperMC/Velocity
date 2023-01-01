@@ -11,7 +11,7 @@ val junitVersion: String by project.extra
 
 subprojects {
     group = "com.velocitypowered"
-    version = "3.1.2-SNAPSHOT"
+    version = "3.2.0-SNAPSHOT"
 
     apply<JavaLibraryPlugin>()
     apply<Licenser>()
