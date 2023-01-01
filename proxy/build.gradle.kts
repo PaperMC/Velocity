@@ -149,7 +149,7 @@ dependencies {
     implementation("space.vectrix.flare:flare:$flareVersion")
     implementation("space.vectrix.flare:flare-fastutil:$flareVersion")
 
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.4.0")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     testImplementation("org.mockito:mockito-core:3.+")
 }
