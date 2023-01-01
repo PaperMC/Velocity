@@ -70,7 +70,7 @@ public class HeaderAndFooter implements MinecraftPacket {
   }
 
   public static HeaderAndFooter create(Component header,
-                                       Component footer, ProtocolVersion protocolVersion) {
+      Component footer, ProtocolVersion protocolVersion) {
     GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);
     return new HeaderAndFooter(serializer.serialize(header), serializer.serialize(footer));
   }

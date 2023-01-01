@@ -21,6 +21,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+/**
+ * Basic, common command messages.
+ */
 public class CommandMessages {
 
   public static final TranslatableComponent PLAYERS_ONLY = Component.translatable(

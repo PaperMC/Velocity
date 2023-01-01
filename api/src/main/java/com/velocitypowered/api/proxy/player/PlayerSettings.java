@@ -67,12 +67,18 @@ public interface PlayerSettings {
    */
   boolean isClientListingAllowed();
 
+  /**
+   * The client's current chat display mode.
+   */
   enum ChatMode {
     SHOWN,
     COMMANDS_ONLY,
     HIDDEN
   }
 
+  /**
+   * The player's selected dominant hand.
+   */
   enum MainHand {
     LEFT,
     RIGHT

@@ -37,6 +37,9 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import space.vectrix.flare.fastutil.Int2ObjectSyncMap;
 
+/**
+ * Handles the actual login stage of a player logging in.
+ */
 public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifiable {
 
   private static final AtomicIntegerFieldUpdater<LoginInboundConnection> SEQUENCE_UPDATER =
@@ -108,6 +111,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
 
   /**
    * Disconnects the connection from the server.
+   *
    * @param reason the reason for disconnecting
    */
   public void disconnect(Component reason) {

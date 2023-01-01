@@ -28,6 +28,7 @@ class CompressorUtils {
 
   /**
    * Ensures that the buffer does not go over {@code max}.
+   *
    * @param buf the buffer for check
    * @param max the maximum size for the buffer
    * @throws DataFormatException if the buffer becomes too bug

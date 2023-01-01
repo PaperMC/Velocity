@@ -25,6 +25,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import java.util.List;
 
+/**
+ * Encrypts Minecraft protocol packets using {@link VelocityCipher}.
+ */
 public class MinecraftCipherEncoder extends MessageToMessageEncoder<ByteBuf> {
 
   private final VelocityCipher cipher;

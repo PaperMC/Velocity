@@ -35,6 +35,7 @@ public final class KickedFromServerEvent implements
 
   /**
    * Creates a {@code KickedFromServerEvent} instance.
+   *
    * @param player the player affected
    * @param server the server the player disconnected from
    * @param originalReason the reason for being kicked, optional

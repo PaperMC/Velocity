@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
 public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
+
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
@@ -47,11 +48,14 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
       IdentifiedKey playerKey = player.getIdentifiedKey();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
         if (playerKey != null) {
-          if (!packet.isUnsigned() && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-            logger.fatal("A plugin tried to deny a command with signable component(s). " + "This is not supported. "
+          if (!packet.isUnsigned()
+              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+            logger.fatal("A plugin tried to deny a command with signable component(s). "
+                + "This is not supported. "
                 + "Disconnecting player " + player.getUsername());
             player.disconnect(Component.text(
-                "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
+                "A proxy plugin caused an illegal protocol state. "
+                    + "Contact your network administrator."));
           }
         }
         return CompletableFuture.completedFuture(null);
@@ -69,10 +73,12 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
         } else {
           if (!packet.isUnsigned() && playerKey != null
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-            logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
+            logger.fatal("A plugin tried to change a command with signed component(s). "
+                + "This is not supported. "
                 + "Disconnecting player " + player.getUsername());
             player.disconnect(Component.text(
-                "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
+                "A proxy plugin caused an illegal protocol state. "
+                    + "Contact your network administrator."));
             return CompletableFuture.completedFuture(null);
           }
           write.message("/" + commandToRun);
@@ -87,10 +93,12 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
 
           if (!packet.isUnsigned() && playerKey != null
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-            logger.fatal("A plugin tried to change a command with signed component(s). " + "This is not supported. "
+            logger.fatal("A plugin tried to change a command with signed component(s). "
+                + "This is not supported. "
                 + "Disconnecting player " + player.getUsername());
             player.disconnect(Component.text(
-                "A proxy plugin caused an illegal protocol state. " + "Contact your network administrator."));
+                "A proxy plugin caused an illegal protocol state. "
+                    + "Contact your network administrator."));
             return null;
           }
 

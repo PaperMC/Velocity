@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 
 public class LegacyChatHandler implements ChatHandler<LegacyChat> {
+
   private final VelocityServer server;
   private final ConnectedPlayer player;
 

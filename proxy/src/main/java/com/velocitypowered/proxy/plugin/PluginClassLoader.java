@@ -26,6 +26,9 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+/**
+ * The per-plugin class loader.
+ */
 public class PluginClassLoader extends URLClassLoader {
 
   private static final Set<PluginClassLoader> loaders = new CopyOnWriteArraySet<>();

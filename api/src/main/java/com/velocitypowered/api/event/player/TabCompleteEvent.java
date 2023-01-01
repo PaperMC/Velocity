@@ -29,6 +29,7 @@ public class TabCompleteEvent {
 
   /**
    * Constructs a new TabCompleteEvent instance.
+   *
    * @param player the player
    * @param partialMessage the partial message
    * @param suggestions the initial list of suggestions
@@ -41,6 +42,7 @@ public class TabCompleteEvent {
 
   /**
    * Returns the player requesting the tab completion.
+   *
    * @return the requesting player
    */
   public Player getPlayer() {
@@ -49,6 +51,7 @@ public class TabCompleteEvent {
 
   /**
    * Returns the message being partially completed.
+   *
    * @return the partial message
    */
   public String getPartialMessage() {
@@ -57,6 +60,7 @@ public class TabCompleteEvent {
 
   /**
    * Returns all the suggestions provided to the user, as a mutable list.
+   *
    * @return the suggestions
    */
   public List<String> getSuggestions() {

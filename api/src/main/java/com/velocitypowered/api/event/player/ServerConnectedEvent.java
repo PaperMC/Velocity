@@ -33,6 +33,7 @@ public final class ServerConnectedEvent {
 
   /**
    * Constructs a ServerConnectedEvent.
+   *
    * @param player the player that was connected
    * @param server the server the player was connected to
    * @param previousServer the server the player was previously connected to, null if none

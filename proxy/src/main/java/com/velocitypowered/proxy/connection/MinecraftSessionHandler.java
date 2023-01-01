@@ -63,6 +63,9 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Interface for dispatching received Minecraft packets.
+ */
 public interface MinecraftSessionHandler {
 
   default boolean beforeHandle() {

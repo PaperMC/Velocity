@@ -57,7 +57,7 @@ class LegacyForgeUtil {
   static List<ModInfo.Mod> readModList(PluginMessage message) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
-            "message is not a FML HS plugin message");
+        "message is not a FML HS plugin message");
 
     ByteBuf contents = message.content().slice();
     byte discriminator = contents.readByte();

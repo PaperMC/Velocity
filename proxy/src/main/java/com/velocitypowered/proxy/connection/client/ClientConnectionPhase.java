@@ -30,12 +30,11 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 public interface ClientConnectionPhase {
 
   /**
-   * Handle a plugin message in the context of
-   * this phase.
+   * Handle a plugin message in the context of this phase.
    *
-   * @param player The player
+   * @param player  The player
    * @param message The message to handle
-   * @param server The backend connection to use
+   * @param server  The backend connection to use
    * @return true if handled, false otherwise.
    */
   default boolean handle(ConnectedPlayer player,
@@ -45,8 +44,7 @@ public interface ClientConnectionPhase {
   }
 
   /**
-   * Instruct Velocity to reset the connection phase
-   * back to its default for the connection type.
+   * Instruct Velocity to reset the connection phase back to its default for the connection type.
    *
    * @param player The player
    */
@@ -54,8 +52,7 @@ public interface ClientConnectionPhase {
   }
 
   /**
-   * Perform actions just as the player joins the
-   * server.
+   * Perform actions just as the player joins the server.
    *
    * @param player The player
    */
@@ -64,6 +61,7 @@ public interface ClientConnectionPhase {
 
   /**
    * Indicates whether the connection is considered complete.
+   *
    * @return true if so
    */
   default boolean consideredComplete() {

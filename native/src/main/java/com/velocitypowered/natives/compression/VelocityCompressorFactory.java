@@ -17,6 +17,9 @@
 
 package com.velocitypowered.natives.compression;
 
+/**
+ * Factory for {@link VelocityCompressor}.
+ */
 public interface VelocityCompressorFactory {
 
   VelocityCompressor create(int level);

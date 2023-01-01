@@ -27,6 +27,9 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests {@link EventTask}.
+ */
 public class EventTaskTest {
 
   @Test
@@ -79,10 +82,10 @@ public class EventTaskTest {
     CountDownLatch latch = new CountDownLatch(1);
     continuation.onComplete = (ignored) -> latch.countDown();
     CompletableFuture<Void> async = CompletableFuture.supplyAsync(() -> null)
-            .thenAccept((v) -> {
-              throw new RuntimeException();
-            })
-            .thenCompose((v) -> CompletableFuture.completedFuture(null));
+        .thenAccept((v) -> {
+          throw new RuntimeException();
+        })
+        .thenCompose((v) -> CompletableFuture.completedFuture(null));
     EventTask.resumeWhenComplete(async).execute(continuation);
     latch.await();
 
@@ -90,8 +93,8 @@ public class EventTaskTest {
   }
 
   /**
-   * An extremely simplified implementation of {@link Continuation} for verifying the completion
-   * of an operation.
+   * An extremely simplified implementation of {@link Continuation} for verifying the completion of
+   * an operation.
    */
   private static class WitnessContinuation implements Continuation {
 

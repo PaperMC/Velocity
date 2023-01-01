@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * An argument type that parses the remaining contents of a {@link StringReader},
- * splitting the input into words and placing the results in a string array.
+ * An argument type that parses the remaining contents of a {@link StringReader}, splitting the
+ * input into words and placing the results in a string array.
  */
 public final class StringArrayArgumentType implements ArgumentType<String[]> {
 
@@ -36,10 +36,11 @@ public final class StringArrayArgumentType implements ArgumentType<String[]> {
   public static final String[] EMPTY = new String[0];
 
   private static final Splitter WORD_SPLITTER =
-          Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
+      Splitter.on(CommandDispatcher.ARGUMENT_SEPARATOR_CHAR);
   private static final List<String> EXAMPLES = Arrays.asList("word", "some words");
 
-  private StringArrayArgumentType() {}
+  private StringArrayArgumentType() {
+  }
 
   @Override
   public String[] parse(final StringReader reader) throws CommandSyntaxException {

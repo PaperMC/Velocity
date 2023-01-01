@@ -31,13 +31,11 @@ shadowJar {
 }
 
 tasks.withType(Checkstyle) {
-    exclude("**/com/velocitypowered/proxy/protocol/packet/*.java")
+    exclude("**/com/velocitypowered/proxy/protocol/packet/**")
 }
 
 dependencies {
-    // Note: we depend on the API twice, first the main sourceset, and then the annotation processor.
     implementation project(":velocity-api")
-    implementation project(":velocity-api").sourceSets.ap.output
     implementation project(":velocity-native")
 
     implementation "io.netty:netty-codec:${nettyVersion}"

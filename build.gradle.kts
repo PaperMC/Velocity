@@ -1,3 +1,4 @@
+import com.velocitypowered.script.VelocityCheckstylePlugin
 import org.cadixdev.gradle.licenser.Licenser
 
 plugins {
@@ -14,6 +15,8 @@ subprojects {
 
     apply<JavaLibraryPlugin>()
     apply<Licenser>()
+
+    apply<VelocityCheckstylePlugin>()
 
     java {
         toolchain {

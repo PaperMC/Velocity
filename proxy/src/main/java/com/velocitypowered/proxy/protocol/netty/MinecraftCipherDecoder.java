@@ -25,6 +25,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
+/**
+ * Handler for decrypting Minecraft packets.
+ */
 public class MinecraftCipherDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private final VelocityCipher cipher;

@@ -9,6 +9,9 @@ package com.velocitypowered.api.proxy.crypto;
 
 import java.util.UUID;
 
+/**
+ * A signed message.
+ */
 public interface SignedMessage extends KeySigned {
 
   /**

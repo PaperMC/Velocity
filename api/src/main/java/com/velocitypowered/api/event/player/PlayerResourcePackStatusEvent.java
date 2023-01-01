@@ -30,6 +30,7 @@ public class PlayerResourcePackStatusEvent {
 
   /**
    * Instantiates this event.
+   *
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, Status, ResourcePackInfo)} instead.
    */

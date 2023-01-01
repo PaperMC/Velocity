@@ -24,6 +24,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
+/**
+ * Mock of {@link PluginManager}.
+ */
 public class MockPluginManager implements PluginManager {
 
   public static final PluginManager INSTANCE = new MockPluginManager();

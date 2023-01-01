@@ -36,7 +36,7 @@ class VelocityPluginModule implements Module {
   private final Path basePluginPath;
 
   VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-                       PluginContainer pluginContainer, Path basePluginPath) {
+      PluginContainer pluginContainer, Path basePluginPath) {
     this.server = server;
     this.description = description;
     this.pluginContainer = pluginContainer;

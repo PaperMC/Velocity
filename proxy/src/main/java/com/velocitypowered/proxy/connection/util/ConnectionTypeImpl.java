@@ -32,7 +32,7 @@ public class ConnectionTypeImpl implements ConnectionType {
   private final BackendConnectionPhase initialBackendPhase;
 
   public ConnectionTypeImpl(ClientConnectionPhase initialClientPhase,
-                            BackendConnectionPhase initialBackendPhase) {
+      BackendConnectionPhase initialBackendPhase) {
     this.initialClientPhase = initialClientPhase;
     this.initialBackendPhase = initialBackendPhase;
   }
@@ -49,7 +49,7 @@ public class ConnectionTypeImpl implements ConnectionType {
 
   @Override
   public GameProfile addGameProfileTokensIfRequired(GameProfile original,
-                                                    PlayerInfoForwarding forwardingType) {
+      PlayerInfoForwarding forwardingType) {
     return original;
   }
 }

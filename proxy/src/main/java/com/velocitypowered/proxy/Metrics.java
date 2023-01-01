@@ -35,6 +35,9 @@ import org.bstats.charts.SingleLineChart;
 import org.bstats.config.MetricsConfig;
 import org.bstats.json.JsonObjectBuilder;
 
+/**
+ * Initializes bStats.
+ */
 public class Metrics {
 
   private MetricsBase metricsBase;

@@ -125,6 +125,7 @@ public class TabCompleteResponse implements MinecraftPacket {
   }
 
   public static class Offer implements Comparable<Offer> {
+
     private final String text;
     private final @Nullable Component tooltip;
 

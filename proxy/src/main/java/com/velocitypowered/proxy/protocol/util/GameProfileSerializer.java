@@ -30,11 +30,15 @@ import com.velocitypowered.api.util.GameProfile.Property;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * Serializes {@link GameProfile} instances into JSON.
+ */
 public final class GameProfileSerializer implements JsonSerializer<GameProfile>,
     JsonDeserializer<GameProfile> {
 
   public static final GameProfileSerializer INSTANCE = new GameProfileSerializer();
-  private static final Type propertyList = new TypeToken<List<Property>>() {}.getType();
+  private static final Type propertyList = new TypeToken<List<Property>>() {
+  }.getType();
 
   private GameProfileSerializer() {
 

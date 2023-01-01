@@ -48,7 +48,10 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 
-public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+/**
+ * Implements the GameSpy protocol for Velocity.
+ */
+public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
   private static final short QUERY_MAGIC_FIRST = 0xFE;
   private static final short QUERY_MAGIC_SECOND = 0xFD;
@@ -76,14 +79,15 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
   private final SecureRandom random;
   private final VelocityServer server;
 
-  public GS4QueryHandler(VelocityServer server) {
+  public GameSpyQueryHandler(VelocityServer server) {
     this.server = server;
     this.random = new SecureRandom();
   }
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
+        .hostname(
+            PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
@@ -264,7 +268,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       if (isBasic) {
         return;
       }
-      
+
       StringBuilder pluginsString = new StringBuilder();
       pluginsString.append(serverVersion).append(':').append(' ');
       Iterator<QueryResponse.PluginInformation> iterator = plugins.iterator();

@@ -24,8 +24,12 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.api.util.GameProfile;
 import java.lang.reflect.Type;
 
+/**
+ * Serializes {@link Favicon} instances into JSON.
+ */
 public final class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
 
   public static final FaviconSerializer INSTANCE = new FaviconSerializer();

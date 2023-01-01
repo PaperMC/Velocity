@@ -46,9 +46,9 @@ public class Respawn implements MinecraftPacket {
   }
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
-                 String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
-                 short previousGamemode, DimensionData currentDimensionData,
-                 @Nullable Pair<String, Long> lastDeathPosition) {
+      String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
+      short previousGamemode, DimensionData currentDimensionData,
+      @Nullable Pair<String, Long> lastDeathPosition) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;

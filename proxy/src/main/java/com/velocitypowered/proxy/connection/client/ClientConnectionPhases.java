@@ -28,7 +28,8 @@ public final class ClientConnectionPhases {
   /**
    * The client is connecting with a vanilla client (as far as we can tell).
    */
-  public static final ClientConnectionPhase VANILLA = new ClientConnectionPhase() {};
+  public static final ClientConnectionPhase VANILLA = new ClientConnectionPhase() {
+  };
 
   private ClientConnectionPhases() {
     throw new AssertionError();

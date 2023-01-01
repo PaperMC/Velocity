@@ -26,6 +26,9 @@ import java.util.Collection;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A fake plugin manager.
+ */
 public class FakePluginManager implements PluginManager {
 
   public static final Object PLUGIN_A = new Object();

@@ -53,9 +53,9 @@ abstract class AbstractCommandRegistrar<T extends Command> implements CommandReg
   }
 
   protected void register(final LiteralCommandNode<CommandSource> node,
-                          final String secondaryAlias) {
+      final String secondaryAlias) {
     final LiteralCommandNode<CommandSource> copy =
-            VelocityCommands.shallowCopy(node, secondaryAlias);
+        VelocityCommands.shallowCopy(node, secondaryAlias);
     this.register(copy);
   }
 }

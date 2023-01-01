@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
 public class SessionChatBuilder extends ChatBuilderV2 {
+
   public SessionChatBuilder(ProtocolVersion version) {
     super(version);
   }

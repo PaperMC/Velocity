@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.util.except;
 import io.netty.handler.codec.DecoderException;
 
 /**
- * A special-purpose exception thrown when we want to indicate an error decoding but do not want
- * to see a large stack trace in logs.
+ * A special-purpose exception thrown when we want to indicate an error decoding but do not want to
+ * see a large stack trace in logs.
  */
 public class QuietDecoderException extends DecoderException {
 

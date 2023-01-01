@@ -35,8 +35,8 @@ import net.kyori.adventure.util.Codec.Encoder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * An implementation of {@link LegacyHoverEventSerializer} that implements the interface in the
- * most literal, albeit "incompatible" way possible.
+ * An implementation of {@link LegacyHoverEventSerializer} that implements the interface in the most
+ * literal, albeit "incompatible" way possible.
  */
 public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSerializer {
 

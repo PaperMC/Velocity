@@ -23,6 +23,10 @@ import java.text.DecimalFormat;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * The main class. Responsible for parsing command line arguments and then launching the
+ * proxy.
+ */
 public class Velocity {
 
   private static final Logger logger;
@@ -50,6 +54,7 @@ public class Velocity {
 
   /**
    * Main method that the JVM will call when {@code java -jar velocity.jar} is executed.
+   *
    * @param args the arguments to the proxy
    */
   public static void main(String... args) {

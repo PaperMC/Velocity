@@ -79,8 +79,8 @@ class VelocitySchedulerTest {
         latch.countDown();
       }
     }).delay(50, TimeUnit.MILLISECONDS)
-      .repeat(Duration.ofMillis(5))
-      .schedule();
+        .repeat(Duration.ofMillis(5))
+        .schedule();
 
     assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
 
@@ -94,10 +94,11 @@ class VelocitySchedulerTest {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
-    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
-      actualTask.cancel();
-      latch.countDown();
-    })
+    ScheduledTask task = scheduler.buildTask(
+        FakePluginManager.PLUGIN_B, actualTask -> {
+          actualTask.cancel();
+          latch.countDown();
+        })
         .repeat(5, TimeUnit.MILLISECONDS)
         .schedule();
 

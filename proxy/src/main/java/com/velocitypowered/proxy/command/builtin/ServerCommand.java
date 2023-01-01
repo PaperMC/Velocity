@@ -39,6 +39,9 @@ import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+/**
+ * Implements Velocity's {@code /server} command.
+ */
 public class ServerCommand implements SimpleCommand {
 
   public static final int MAX_SERVERS_TO_LIST = 50;
@@ -54,7 +57,7 @@ public class ServerCommand implements SimpleCommand {
     final String[] args = invocation.arguments();
 
     if (!(source instanceof Player)) {
-      source.sendMessage(Identity.nil(), CommandMessages.PLAYERS_ONLY);
+      source.sendMessage(CommandMessages.PLAYERS_ONLY);
       return;
     }
 
@@ -63,9 +66,8 @@ public class ServerCommand implements SimpleCommand {
       // Trying to connect to a server.
       String serverName = args[0];
       Optional<RegisteredServer> toConnect = server.getServer(serverName);
-      if (!toConnect.isPresent()) {
-        player.sendMessage(Identity.nil(), CommandMessages.SERVER_DOES_NOT_EXIST
-            .args(Component.text(serverName)));
+      if (toConnect.isEmpty()) {
+        player.sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
         return;
       }
 
@@ -78,14 +80,14 @@ public class ServerCommand implements SimpleCommand {
   private void outputServerInformation(Player executor) {
     String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
         .map(ServerInfo::getName).orElse("<unknown>");
-    executor.sendMessage(Identity.nil(), Component.translatable(
+    executor.sendMessage(Component.translatable(
         "velocity.command.server-current-server",
         NamedTextColor.YELLOW,
         Component.text(currentServer)));
 
     List<RegisteredServer> servers = BuiltinCommandUtil.sortedServerList(server);
     if (servers.size() > MAX_SERVERS_TO_LIST) {
-      executor.sendMessage(Identity.nil(), Component.translatable(
+      executor.sendMessage(Component.translatable(
           "velocity.command.server-too-many", NamedTextColor.RED));
       return;
     }
@@ -103,7 +105,7 @@ public class ServerCommand implements SimpleCommand {
       }
     }
 
-    executor.sendMessage(Identity.nil(), serverListBuilder.build());
+    executor.sendMessage(serverListBuilder.build());
   }
 
   private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {
@@ -113,9 +115,11 @@ public class ServerCommand implements SimpleCommand {
     int connectedPlayers = server.getPlayersConnected().size();
     TranslatableComponent playersTextComponent;
     if (connectedPlayers == 1) {
-      playersTextComponent = Component.translatable("velocity.command.server-tooltip-player-online");
+      playersTextComponent = Component.translatable(
+          "velocity.command.server-tooltip-player-online");
     } else {
-      playersTextComponent = Component.translatable("velocity.command.server-tooltip-players-online");
+      playersTextComponent = Component.translatable(
+          "velocity.command.server-tooltip-players-online");
     }
     playersTextComponent = playersTextComponent.args(Component.text(connectedPlayers));
     if (serverInfo.getName().equals(currentPlayerServer)) {
@@ -130,9 +134,10 @@ public class ServerCommand implements SimpleCommand {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
           .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
           .hoverEvent(
-              showText(Component.translatable("velocity.command.server-tooltip-offer-connect-server")
-                  .append(Component.newline())
-                  .append(playersTextComponent))
+              showText(
+                  Component.translatable("velocity.command.server-tooltip-offer-connect-server")
+                      .append(Component.newline())
+                      .append(playersTextComponent))
           );
     }
     return serverTextComponent;
@@ -142,7 +147,7 @@ public class ServerCommand implements SimpleCommand {
   public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
     Stream<String> possibilities = server.getAllServers().stream()
-            .map(rs -> rs.getServerInfo().getName());
+        .map(rs -> rs.getServerInfo().getName());
 
     if (currentArgs.length == 0) {
       return possibilities.collect(Collectors.toList());

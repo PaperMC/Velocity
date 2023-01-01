@@ -167,7 +167,7 @@ public class JoinGame implements MinecraftPacket {
     return currentDimensionData;
   }
 
-  public int getSimulationDistance(){
+  public int getSimulationDistance() {
     return simulationDistance;
   }
 

@@ -34,6 +34,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests for {@link RawCommand}.
+ */
 public class RawCommandTests extends CommandTestSuite {
 
   // Execution
@@ -377,7 +380,7 @@ public class RawCommandTests extends CommandTestSuite {
     });
 
     assertThrows(CompletionException.class, () ->
-            manager.offerSuggestions(source, "hello ").join());
+        manager.offerSuggestions(source, "hello ").join());
   }
 
   // Hinting
@@ -387,11 +390,11 @@ public class RawCommandTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestHintIfImpermissibleAlias() {
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .build();
+        .<CommandSource>literal("hint")
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -410,11 +413,11 @@ public class RawCommandTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestHintIfImpermissibleArguments() {
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .build();
+        .<CommandSource>literal("hint")
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -433,12 +436,12 @@ public class RawCommandTests extends CommandTestSuite {
   @Test
   void testSuggestsMergesIgnoringHintsWhoseCustomSuggestionProviderFutureCompletesExceptionally() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -457,14 +460,14 @@ public class RawCommandTests extends CommandTestSuite {
   @Test
   void testSuggestsMergesIgnoringHintsWhoseCustomSuggestionProviderThrows() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) -> {
-              throw new RuntimeException();
-            })
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> {
+          throw new RuntimeException();
+        })
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {

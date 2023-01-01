@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
+
   private final ConnectedPlayer player;
   private final VelocityServer server;
 

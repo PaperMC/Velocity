@@ -36,6 +36,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * An implementation of {@code InetNameResolver} that performs blocking DNS name lookups
+ * in a separate thread, avoiding blocking the Netty threads for an extended period of time
+ * and without the downsides of Netty's native DNS resolver.
+ */
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
 
   private final ExecutorService resolveExecutor;
@@ -46,8 +51,8 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   /**
    * Creates a new instance of {@code SeparatePoolInetNameResolver}.
    *
-   * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link
-   *                 Future} returned by {@link #resolve(String)}
+   * @param executor the {@link EventExecutor} which is used to notify the listeners of the
+   *                 {@link Future} returned by {@link #resolve(String)}
    */
   public SeparatePoolInetNameResolver(EventExecutor executor) {
     super(executor);

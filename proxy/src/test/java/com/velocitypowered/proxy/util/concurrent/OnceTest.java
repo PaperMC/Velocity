@@ -27,7 +27,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests the proper functionality of {@code Once}.
+ */
 public class OnceTest {
+
   @Test
   void uncontendedOnce() {
     AtomicInteger i = new AtomicInteger();

@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import java.time.Instant;
 
 public class ChatTimeKeeper {
+
   private Instant lastTimestamp;
 
   public ChatTimeKeeper() {

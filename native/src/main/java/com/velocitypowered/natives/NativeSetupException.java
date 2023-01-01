@@ -17,6 +17,9 @@
 
 package com.velocitypowered.natives;
 
+/**
+ * Thrown when we cannot set up a variant of a native library.
+ */
 public class NativeSetupException extends RuntimeException {
 
   public NativeSetupException() {

@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.connection;
 
+/**
+ * Various useful constants.
+ */
 public class VelocityConstants {
 
   private VelocityConstants() {

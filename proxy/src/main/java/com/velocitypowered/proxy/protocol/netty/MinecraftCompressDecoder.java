@@ -28,6 +28,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
+/**
+ * Decompresses a Minecraft packet.
+ */
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private static final int VANILLA_MAXIMUM_UNCOMPRESSED_SIZE = 8 * 1024 * 1024; // 8MiB
@@ -55,7 +58,7 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
     }
 
     checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
-            + " threshold %s", claimedUncompressedSize, threshold);
+        + " threshold %s", claimedUncompressedSize, threshold);
     checkFrame(claimedUncompressedSize <= UNCOMPRESSED_CAP,
         "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
         UNCOMPRESSED_CAP);

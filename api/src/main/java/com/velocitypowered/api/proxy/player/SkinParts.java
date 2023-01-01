@@ -10,6 +10,9 @@ package com.velocitypowered.api.proxy.player;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents what, if any, extended parts of the skin this player has.
+ */
 public final class SkinParts {
 
   private final byte bitmask;

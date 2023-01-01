@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class RemoteChatSession implements ChatSession {
+
   private final @Nullable UUID sessionId;
   private final IdentifiedKey identifiedKey;
 

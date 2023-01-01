@@ -19,6 +19,11 @@ package com.velocitypowered.proxy.util.collect;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
 
+/**
+ * An identity hash strategy for fastutil.
+ *
+ * @param <T> the type
+ */
 public final class IdentityHashStrategy<T> implements Strategy<T> {
 
   @SuppressWarnings("rawtypes")

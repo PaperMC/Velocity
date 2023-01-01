@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 public class RemovePlayerInfo implements MinecraftPacket {
+
   private Collection<UUID> profilesToRemove;
 
   public RemovePlayerInfo() {
@@ -47,7 +48,8 @@ public class RemovePlayerInfo implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     int length = ProtocolUtils.readVarInt(buf);
     Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
     for (int idx = 0; idx < length; idx++) {
@@ -57,7 +59,8 @@ public class RemovePlayerInfo implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, this.profilesToRemove.size());
     for (UUID uuid : this.profilesToRemove) {
       ProtocolUtils.writeUuid(buf, uuid);

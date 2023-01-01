@@ -7,6 +7,9 @@
 
 package com.velocitypowered.api.plugin;
 
+/**
+ * Thrown if a JAR in the plugin directory does not look valid.
+ */
 public class InvalidPluginException extends Exception {
 
   public InvalidPluginException() {

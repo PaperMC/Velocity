@@ -23,7 +23,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
+/**
+ * Utilities to parse addresses.
+ */
 public final class AddressUtil {
+
   private static final int DEFAULT_MINECRAFT_PORT = 25565;
 
   private AddressUtil() {
