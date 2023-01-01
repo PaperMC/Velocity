@@ -40,7 +40,7 @@ subprojects {
         test {
             useJUnitPlatform()
             reports {
-                junitXml.isEnabled = true
+                junitXml.required.set(true)
             }
         }
     }
