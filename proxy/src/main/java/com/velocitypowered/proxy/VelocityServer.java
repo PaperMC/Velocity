@@ -106,7 +106,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Implementation pf {@link ProxyServer}.
+ * Implementation of {@link ProxyServer}.
  */
 public class VelocityServer implements ProxyServer, ForwardingAudience {
 
