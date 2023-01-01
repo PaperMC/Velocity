@@ -6,10 +6,6 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
-license {
-    header(project.rootProject.file("HEADER.txt"))
-}
-
 application {
     mainClass.set("com.velocitypowered.proxy.Velocity")
 }

@@ -17,22 +17,28 @@
 
 package com.velocitypowered.script
 
+import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.gradle.spotless.SpotlessPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.quality.CheckstyleExtension
-import org.gradle.api.plugins.quality.CheckstylePlugin
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
+import java.io.File
 
-class VelocityCheckstylePlugin : Plugin<Project> {
+class VelocitySpotlessPlugin : Plugin<Project> {
     override fun apply(target: Project) = target.configure()
+
     private fun Project.configure() {
-        apply<CheckstylePlugin>()
-        extensions.configure<CheckstyleExtension> {
-            configFile = project.rootProject.file("config/checkstyle/checkstyle.xml")
-            maxErrors = 0
-            maxWarnings = 0
-            toolVersion = "10.6.0"
+        apply<SpotlessPlugin>()
+
+        extensions.configure<SpotlessExtension> {
+            java {
+                if (project.name == "velocity-api") {
+                    licenseHeaderFile(project.file("HEADER.txt"))
+                } else {
+                    licenseHeaderFile(project.rootProject.file("HEADER.txt"))
+                }
+            }
         }
     }
 }

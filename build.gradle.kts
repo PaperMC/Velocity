@@ -1,10 +1,9 @@
 import com.velocitypowered.script.VelocityCheckstylePlugin
 import com.velocitypowered.script.VelocityPublishPlugin
-import org.cadixdev.gradle.licenser.Licenser
+import com.velocitypowered.script.VelocitySpotlessPlugin
 
 plugins {
     `java-library`
-    id("org.cadixdev.licenser") version "0.6.1"
 }
 
 val junitVersion: String by project.extra
@@ -14,10 +13,10 @@ subprojects {
     version = "3.2.0-SNAPSHOT"
 
     apply<JavaLibraryPlugin>()
-    apply<Licenser>()
 
     apply<VelocityCheckstylePlugin>()
     apply<VelocityPublishPlugin>()
+    apply<VelocitySpotlessPlugin>()
 
     java {
         toolchain {

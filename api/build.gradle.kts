@@ -3,10 +3,6 @@ plugins {
     `maven-publish`
 }
 
-license {
-    header(project.file("HEADER.txt"))
-}
-
 java {
     withJavadocJar()
     withSourcesJar()

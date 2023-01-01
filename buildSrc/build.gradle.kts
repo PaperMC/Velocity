@@ -2,11 +2,16 @@ plugins {
     `kotlin-dsl`
     checkstyle
     id("net.kyori.indra.publishing") version "2.0.6"
+    id("com.diffplug.spotless") version "6.12.0"
 }
 
 repositories {
     mavenCentral()
     maven("https://plugins.gradle.org/m2")
+}
+
+dependencies {
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.12.0")
 }
 
 gradlePlugin {
@@ -19,9 +24,19 @@ gradlePlugin {
             id = "velocity-checkstyle"
             implementationClass = "com.velocitypowered.script.VelocityCheckstylePlugin"
         }
+        register("velocity-spotless") {
+            id = "velocity-spotless"
+            implementationClass = "com.velocitypowered.script.VelocitySpotlessPlugin"
+        }
         register("velocity-publish") {
             id = "velocity-publish"
             implementationClass = "com.velocitypowered.script.VelocityPublishPlugin"
         }
+    }
+}
+
+spotless {
+    kotlin {
+        licenseHeaderFile(project.rootProject.file("../HEADER.txt"))
     }
 }

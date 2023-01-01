@@ -3,10 +3,6 @@ plugins {
     `maven-publish`
 }
 
-license {
-    header(project.rootProject.file("HEADER.txt"))
-}
-
 val guavaVersion: String by project.extra
 val nettyVersion: String by project.extra
 val checkerFrameworkVersion: String by project.extra
