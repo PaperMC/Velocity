@@ -32,6 +32,8 @@ public interface BackendConnectionPhase {
   /**
    * Handle a plugin message in the context of this phase.
    *
+   * @param server the server connection
+   * @param player the player
    * @param message The message to handle
    * @return true if handled, false otherwise.
    */

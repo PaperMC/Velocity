@@ -48,7 +48,7 @@ public class ChatQueue {
 
   /**
    * Queues a packet sent from the player - all packets must wait until this processes to send their
-   * packets. <br /> This maintains order on the server-level for the client insertions of commands
+   * packets. This maintains order on the server-level for the client insertions of commands
    * and messages. All entries are locked through an internal object lock.
    *
    * @param nextPacket the {@link CompletableFuture} which will provide the next-processed packet.

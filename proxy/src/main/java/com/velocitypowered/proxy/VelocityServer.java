@@ -470,7 +470,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   * Shuts down the proxy, kicking players with the specified reason.
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    * @param reason       message to kick online players with

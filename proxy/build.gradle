@@ -2,11 +2,9 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     id "java"
-    id "checkstyle"
 }
 
-apply plugin: "org.cadixdev.licenser"
-apply from: "../gradle/checkstyle.gradle"
+apply plugin: "set-manifest-impl-version"
 apply plugin: "com.github.johnrengelman.shadow"
 
 license {
@@ -15,12 +13,8 @@ license {
 
 jar {
     manifest {
-        def buildNumber = System.getenv("BUILD_NUMBER") ?: "unknown"
-        def version = "test"
-
         attributes "Main-Class": "com.velocitypowered.proxy.Velocity"
         attributes "Implementation-Title": "Velocity"
-        attributes "Implementation-Version": version
         attributes "Implementation-Vendor": "Velocity Contributors"
         attributes "Multi-Release": "true"
     }

@@ -168,7 +168,7 @@ public final class PluginMessageUtil {
   private static final Pattern INVALID_IDENTIFIER_REGEX = Pattern.compile("[^a-z0-9\\-_]*");
 
   /**
-   * Transform a plugin message channel from a "legacy" (<1.13) form to a modern one.
+   * Transform a plugin message channel from a "legacy" (less than 1.13) form to a modern one.
    *
    * @param name the existing name
    * @return the new name

@@ -32,7 +32,6 @@ class VelocityCheckstylePlugin : Plugin<Project> {
             configFile = project.rootProject.file("config/checkstyle/checkstyle.xml")
             maxErrors = 0
             maxWarnings = 0
-            version = "10.6.0"
         }
     }
 }
