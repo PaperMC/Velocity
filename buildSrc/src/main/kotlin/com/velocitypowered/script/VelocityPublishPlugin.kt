@@ -19,6 +19,7 @@ package com.velocitypowered.script
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.repositories.PasswordCredentials
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
@@ -42,11 +43,9 @@ class VelocityPublishPlugin : Plugin<Project> {
         extensions.configure<PublishingExtension> {
             repositories {
                 maven {
-                    credentials {
-                        username = project.findProperty("sonatypeUsername") as? String
-                        password = project.findProperty("sonatypePassword") as? String
-                    }
-                    name = "velocity-nexus"
+                    credentials(PasswordCredentials::class.java)
+
+                    name = "paper"
                     val base = "https://papermc.io/repo/repository/maven-"
                     val releasesRepoUrl = "$base-releases/"
                     val snapshotsRepoUrl = "$base-snapshots/"
