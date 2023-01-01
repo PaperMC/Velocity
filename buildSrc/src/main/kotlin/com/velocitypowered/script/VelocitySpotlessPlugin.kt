@@ -38,6 +38,8 @@ class VelocitySpotlessPlugin : Plugin<Project> {
                 } else {
                     licenseHeaderFile(project.rootProject.file("HEADER.txt"))
                 }
+
+                removeUnusedImports()
             }
         }
     }

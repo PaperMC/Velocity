@@ -24,7 +24,6 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.api.util.GameProfile;
 import java.lang.reflect.Type;
 
 /**
