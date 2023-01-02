@@ -8,10 +8,12 @@ plugins {
 
 val junitVersion: String by project.extra
 
-subprojects {
+allprojects {
     group = "com.velocitypowered"
     version = "3.2.0-SNAPSHOT"
+}
 
+subprojects {
     apply<JavaLibraryPlugin>()
 
     apply<VelocityCheckstylePlugin>()
