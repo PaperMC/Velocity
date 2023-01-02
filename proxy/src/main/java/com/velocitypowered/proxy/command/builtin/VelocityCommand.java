@@ -34,7 +34,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -410,6 +409,9 @@ public class VelocityCommand implements SimpleCommand {
     }
   }
 
+  /**
+   * Heap SubCommand.
+   */
   public static class Heap implements SubCommand {
     private static final Logger logger = LogManager.getLogger(Heap.class);
     private MethodHandle heapGenerator;
@@ -457,9 +459,9 @@ public class VelocityCommand implements SimpleCommand {
               String name = "heap-dump-" + format.format(new Date());
               Path file = dir.resolve(name + ".hprof");
               try {
-                Object hotspotMBean = ManagementFactory.newPlatformMXBeanProxy(
+                Object hotspotMbean = ManagementFactory.newPlatformMXBeanProxy(
                     server, "com.sun.management:type=HotSpotDiagnostic", clazz);
-                this.heapGenerator.invoke(hotspotMBean, file.toString(), true);
+                this.heapGenerator.invoke(hotspotMbean, file.toString(), true);
               } catch (Throwable e1) {
                 // This should not occur
                 throw new RuntimeException(e);
@@ -471,7 +473,8 @@ public class VelocityCommand implements SimpleCommand {
 
         this.heapConsumer.accept(source);
       } catch (Throwable t) {
-        source.sendMessage(Component.text("Failed to write heap dump, see server log for details", NamedTextColor.RED));
+        source.sendMessage(Component.text("Failed to write heap dump, see server log for details",
+            NamedTextColor.RED));
         logger.error("Could not write heap", t);
       }
     }
