@@ -44,8 +44,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -54,7 +52,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -106,7 +103,7 @@ public class VelocityCommand implements SimpleCommand {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(Identity.nil(), Component.text(commandText, NamedTextColor.RED));
+    source.sendMessage(Component.text(commandText, NamedTextColor.RED));
   }
 
   @Override
@@ -220,7 +217,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Identity.nil(), Component.text("/velocity version", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity version", NamedTextColor.RED));
         return;
       }
 
@@ -235,8 +232,8 @@ public class VelocityCommand implements SimpleCommand {
           .translatable("velocity.command.version-copyright",
               Component.text(version.getVendor()),
               Component.text(version.getName()));
-      source.sendMessage(Identity.nil(), velocity);
-      source.sendMessage(Identity.nil(), copyright);
+      source.sendMessage(velocity);
+      source.sendMessage(copyright);
 
       if (version.getName().equals("Velocity")) {
         TextComponent embellishment = Component.text()
@@ -253,7 +250,7 @@ public class VelocityCommand implements SimpleCommand {
                     "https://github.com/PaperMC/Velocity"))
                 .build())
             .build();
-        source.sendMessage(Identity.nil(), embellishment);
+        source.sendMessage(embellishment);
       }
     }
 
@@ -274,7 +271,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Identity.nil(), Component.text("/velocity plugins", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity plugins", NamedTextColor.RED));
         return;
       }
 
@@ -300,7 +297,7 @@ public class VelocityCommand implements SimpleCommand {
           .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW)
           .args(listBuilder.build());
-      source.sendMessage(Identity.nil(), output);
+      source.sendMessage(output);
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
@@ -431,7 +428,7 @@ public class VelocityCommand implements SimpleCommand {
         if (heapGenerator == null || heapConsumer == null) {
           javax.management.MBeanServer server = ManagementFactory.getPlatformMBeanServer();
           MethodHandles.Lookup lookup = MethodHandles.lookup();
-          DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss");
+          SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
           MethodType type;
           try {
             Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
@@ -439,7 +436,7 @@ public class VelocityCommand implements SimpleCommand {
 
             this.heapGenerator = lookup.findVirtual(clazz, "triggerDumpToFile", type);
             this.heapConsumer = (src) -> {
-              String name = "heap-dump-" + format.format(LocalDateTime.now());
+              String name = "heap-dump-" + format.format(new Date());
               Path file = dir.resolve(name + ".phd");
               try {
                 Object openj9Mbean = ManagementFactory.newPlatformMXBeanProxy(
@@ -457,7 +454,7 @@ public class VelocityCommand implements SimpleCommand {
 
             this.heapGenerator = lookup.findVirtual(clazz, "dumpHeap", type);
             this.heapConsumer = (src) -> {
-              String name = "heap-dump-" + format.format(LocalDateTime.now());
+              String name = "heap-dump-" + format.format(new Date());
               Path file = dir.resolve(name + ".hprof");
               try {
                 Object hotspotMBean = ManagementFactory.newPlatformMXBeanProxy(
