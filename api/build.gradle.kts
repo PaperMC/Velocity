@@ -10,6 +10,10 @@ java {
     sourceSets["main"].java {
         srcDir("src/ap/java")
     }
+    
+    sourceSets["main"].resources {
+        srcDir("src/ap/resources")
+    }
 }
 
 val gsonVersion: String by project.extra
