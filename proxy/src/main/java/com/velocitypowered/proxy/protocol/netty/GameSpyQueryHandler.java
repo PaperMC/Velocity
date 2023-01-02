@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.protocol.netty;
 import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.BASIC;
 import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.FULL;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.event.query.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -73,7 +73,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
       "hostip"
   );
 
-  private final Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
+  private final Cache<InetAddress, Integer> sessions = Caffeine.newBuilder()
       .expireAfterWrite(30, TimeUnit.SECONDS)
       .build();
   private final SecureRandom random;

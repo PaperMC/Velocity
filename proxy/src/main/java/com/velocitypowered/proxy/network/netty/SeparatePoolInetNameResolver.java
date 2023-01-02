@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.network.netty;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.resolver.AddressResolver;
@@ -62,7 +62,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
             .setDaemon(true)
             .build());
     this.delegate = new DefaultNameResolver(executor);
-    this.cache = CacheBuilder.newBuilder()
+    this.cache = Caffeine.newBuilder()
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .build();
   }

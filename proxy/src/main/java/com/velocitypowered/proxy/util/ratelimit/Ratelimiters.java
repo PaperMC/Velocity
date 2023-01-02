@@ -29,7 +29,7 @@ public final class Ratelimiters {
   }
 
   public static Ratelimiter createWithMilliseconds(long ms) {
-    return ms <= 0 ? NoopCacheRatelimiter.INSTANCE : new GuavaCacheRatelimiter(ms,
+    return ms <= 0 ? NoopCacheRatelimiter.INSTANCE : new CaffeineCacheRatelimiter(ms,
         TimeUnit.MILLISECONDS);
   }
 }
