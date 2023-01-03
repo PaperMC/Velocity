@@ -31,7 +31,7 @@ subprojects {
         // kyoripowered
         maven("https://oss.sonatype.org/content/groups/public/")
         // velocity
-        maven("https://nexus.velocitypowered.com/repository/maven-public/")
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
     dependencies {
         testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
