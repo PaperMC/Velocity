@@ -70,6 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.Team;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
@@ -377,6 +378,17 @@ public enum StateRegistry {
           map(0x3F, MINECRAFT_1_19, false),
           map(0x42, MINECRAFT_1_19_1, false),
           map(0x41, MINECRAFT_1_19_3, false));
+      clientbound.register(Team.class, Team::new,
+          map(0x3E, MINECRAFT_1_8, true),
+          map(0x41, MINECRAFT_1_9, true),
+          map(0x43, MINECRAFT_1_12, true),
+          map(0x44, MINECRAFT_1_12_1, true),
+          map(0x47, MINECRAFT_1_13, true),
+          map(0x4B, MINECRAFT_1_14, true),
+          map(0x4C, MINECRAFT_1_15, true),
+          map(0x55, MINECRAFT_1_17, true),
+          map(0x58, MINECRAFT_1_19_1, true),
+          map(0x56, MINECRAFT_1_19_3, true));
     }
   },
   LOGIN {
