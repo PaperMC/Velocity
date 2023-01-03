@@ -30,7 +30,7 @@ subprojects {
         mavenCentral()
         // kyoripowered
         maven("https://oss.sonatype.org/content/groups/public/")
-        // velocity
+        // papermc/velocity
         maven("https://repo.papermc.io/repository/maven-public/")
     }
     dependencies {
