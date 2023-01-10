@@ -23,8 +23,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
+
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.Component;
 
 public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
 
@@ -47,7 +47,8 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       IdentifiedKey playerKey = player.getIdentifiedKey();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
-        if (playerKey != null) {
+        //Removed because shit
+        /*if (playerKey != null) {
           if (!packet.isUnsigned()
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to deny a command with signable component(s). "
@@ -58,6 +59,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
                     + "Contact your network administrator."));
           }
         }
+         */
         return CompletableFuture.completedFuture(null);
       }
 
@@ -71,7 +73,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
         if (!packet.isUnsigned() && commandToRun.equals(packet.getCommand())) {
           return CompletableFuture.completedFuture(packet);
         } else {
-          if (!packet.isUnsigned() && playerKey != null
+          /*if (!packet.isUnsigned() && playerKey != null
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
@@ -82,7 +84,10 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
             return CompletableFuture.completedFuture(null);
           }
           write.message("/" + commandToRun);
+
+           */
         }
+
         return CompletableFuture.completedFuture(write.toServer());
       }
       return runCommand(this.server, this.player, commandToRun, hasRun -> {
@@ -91,7 +96,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
             return packet;
           }
 
-          if (!packet.isUnsigned() && playerKey != null
+          /*if (!packet.isUnsigned() && playerKey != null
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
@@ -101,6 +106,8 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
                     + "Contact your network administrator."));
             return null;
           }
+
+           */
 
           return this.player.getChatBuilderFactory()
               .builder()
