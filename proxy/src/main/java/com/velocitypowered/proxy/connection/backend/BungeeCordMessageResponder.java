@@ -27,6 +27,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
@@ -61,10 +62,12 @@ public class BungeeCordMessageResponder {
       new LegacyChannelIdentifier("BungeeCord");
 
   private final VelocityServer proxy;
+  private final MinecraftSessionHandler minecraftSessionHandler;
   private final ConnectedPlayer player;
 
-  BungeeCordMessageResponder(VelocityServer proxy, ConnectedPlayer player) {
+  BungeeCordMessageResponder(VelocityServer proxy, MinecraftSessionHandler minecraftSessionHandler, ConnectedPlayer player) {
     this.proxy = proxy;
+    this.minecraftSessionHandler = minecraftSessionHandler;
     this.player = player;
   }
 
@@ -375,7 +378,9 @@ public class BungeeCordMessageResponder {
         this.processKick(in);
         break;
       default:
-        // Do nothing, unknown command
+        // Probably a sub channel of another plugin.
+        PluginMessage pluginMessage = new PluginMessage(subChannel, in.unwrap().slice());
+        pluginMessage.handle(this.minecraftSessionHandler);
         break;
     }
 

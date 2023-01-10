@@ -67,7 +67,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
-    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server, this,
         serverConn.getPlayer());
   }
 

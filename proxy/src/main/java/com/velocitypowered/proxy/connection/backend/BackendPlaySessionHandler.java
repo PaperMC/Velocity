@@ -93,7 +93,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
     this.playerSessionHandler = (ClientPlaySessionHandler) psh;
 
-    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server, this,
         serverConn.getPlayer());
   }
 
