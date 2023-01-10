@@ -378,7 +378,7 @@ public class BungeeCordMessageResponder {
         this.processKick(in);
         break;
       default:
-        // Probably a sub channel of another plugin.
+        // Probably a custom sub channel of another plugin.
         PluginMessage pluginMessage = new PluginMessage(subChannel, in.unwrap().slice());
         pluginMessage.handle(this.minecraftSessionHandler);
         break;
