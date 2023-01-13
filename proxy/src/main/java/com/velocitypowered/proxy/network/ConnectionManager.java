@@ -122,7 +122,7 @@ public final class ConnectionManager {
         .childHandler(this.serverChannelInitializer.get())
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
-    if(!PlatformDependent.canEnableTcpNoDelayByDefault()) {
+    if (!PlatformDependent.canEnableTcpNoDelayByDefault()) {
       bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
     }
 
@@ -188,7 +188,7 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if(!PlatformDependent.canEnableTcpNoDelayByDefault()) {
+    if (!PlatformDependent.canEnableTcpNoDelayByDefault()) {
       bootstrap.option(ChannelOption.TCP_NODELAY, true);
     }
 
