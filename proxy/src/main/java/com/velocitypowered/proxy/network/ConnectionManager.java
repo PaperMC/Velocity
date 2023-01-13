@@ -37,6 +37,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty.util.internal.PlatformDependent;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -119,9 +120,11 @@ public final class ConnectionManager {
         .group(this.bossGroup, this.workerGroup)
         .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
         .childHandler(this.serverChannelInitializer.get())
-        .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
+    if(!PlatformDependent.canEnableTcpNoDelayByDefault()) {
+      bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+    }
 
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
@@ -181,11 +184,14 @@ public final class ConnectionManager {
   public Bootstrap createWorker(@Nullable EventLoopGroup group) {
     Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.socketChannelFactory)
-        .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
+    if(!PlatformDependent.canEnableTcpNoDelayByDefault()) {
+      bootstrap.option(ChannelOption.TCP_NODELAY, true);
+    }
+
     if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
