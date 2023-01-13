@@ -155,9 +155,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
-      VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
-        return connection.sendPluginMessage(identifier, data);
+      VelocityServerConnection serverConnection = player.getConnectedServer();
+      if (serverConnection != null && serverConnection.getConnection() != null
+              && serverConnection.getServer() == this) {
+        return serverConnection.sendPluginMessage(identifier, data);
       }
     }
 
