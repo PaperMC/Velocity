@@ -53,9 +53,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConnectionType;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeBackendPhase;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -690,6 +687,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     handleKickEvent(originalEvent, friendlyReason, kickedFromCurrent);
   }
 
+  /**
+   * Handles the player being kicked.
+   *
+   * @param originalEvent The original kick event
+   * @param friendlyReason The reason they were kicked as a component
+   * @param kickedFromCurrent If it should kick them from the current server
+   */
   public void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
                                boolean kickedFromCurrent) {
     server.getEventManager().fire(originalEvent)

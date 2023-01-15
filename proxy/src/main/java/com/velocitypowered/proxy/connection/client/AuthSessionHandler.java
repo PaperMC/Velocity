@@ -37,8 +37,6 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
@@ -187,7 +185,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            mcConnection.setSessionHandler(new ClientTransitionSessionHandler(player));
+            mcConnection.setSessionHandler(new ClientTransitionSessionHandler(player, server));
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenCompose((ignored) -> connectToInitialServer(player))
                 .exceptionally((ex) -> {

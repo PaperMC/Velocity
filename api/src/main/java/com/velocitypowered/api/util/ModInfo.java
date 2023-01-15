@@ -12,7 +12,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -97,6 +96,7 @@ public final class ModInfo {
      * Gets the version of the mod.
      * Will return a blank string if the version of the mod hasn't been passed.
      * </p>
+     *
      * @return The version of the user's mod
      */
     public String getVersion() {

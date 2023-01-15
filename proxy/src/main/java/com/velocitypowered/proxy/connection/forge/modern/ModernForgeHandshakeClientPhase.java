@@ -66,7 +66,8 @@ public enum ModernForgeHandshakeClientPhase implements ClientConnectionPhase {
    */
   WAITING_RESET {
     @Override
-    boolean onHandle(ConnectedPlayer player, LoginPluginResponse message, MinecraftConnection backendConn) {
+    boolean onHandle(ConnectedPlayer player, LoginPluginResponse message,
+                     MinecraftConnection backendConn) {
       if (message.getId() == ModernForgeConstants.RESET_DISCRIMINATOR) {
         player.setPhase(ModernForgeHandshakeClientPhase.IN_PROGRESS);
 

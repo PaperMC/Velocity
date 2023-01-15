@@ -37,11 +37,13 @@ import org.apache.logging.log4j.Logger;
  */
 public class ClientTransitionSessionHandler implements MinecraftSessionHandler {
 
-  private static final Logger logger = LogManager.getLogger(InitialConnectSessionHandler.class);
+  private static final Logger logger = LogManager.getLogger(ClientTransitionSessionHandler.class);
 
   private final ConnectedPlayer player;
+  private final VelocityServer server;
 
-  public ClientTransitionSessionHandler(ConnectedPlayer player) {
+  public ClientTransitionSessionHandler(ConnectedPlayer player, VelocityServer server) {
+    this.player = player;
     this.server = server;
   }
 

@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -56,6 +57,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,20 +86,30 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     /*
-     * The following logic is used for handling the reset packet sent to the player when they transfer servers
+     * The following logic is used for handling the reset packet sent to the player when
+     * they transfer servers
      * and are on a modern forge (1.13+) environment.
-     * During this time the client has to renegotiate the connection with the server as to ensure all the client side
-     * registries (blocks, items etc.) are reset and then re-sent by the server. This ensures that all the registries
-     * are correctly sync'd wit the server and as such all blocks placed, items used, (etc) will match the server
-     * (when not matching this typically results in cases such as someone attempting to place mod A's block A but the
-     * server thinking they attempted to place mod B's block B or something to this effect)
-     * If there is an error by the server during this period then it is unrecoverable and as such the user should be
+     * During this time the client has to renegotiate the connection with the server as
+     * to ensure all the client side
+     * registries (blocks, items etc.) are reset and then re-sent by the server. This
+     * ensures that all the registries
+     * are correctly sync'd wit the server and as such all blocks placed, items used,
+     * (etc) will match the server
+     * (when not matching this typically results in cases such as someone attempting
+     * to place mod A's block A but the
+     * server thinking they attempted to place mod B's block B or something to
+     * this effect)
+     * If there is an error by the server during this period then it is unrecoverable
+     * and as such the user should be
      * disconnected.
      */
     if (serverConn.getPlayer().getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
       VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
       if (existingConnection != null && existingConnection != serverConn) {
-        existingConnection.getPhase().onDepartForNewServer(existingConnection, serverConn.getPlayer());
+        existingConnection.getPhase().onDepartForNewServer(
+                existingConnection,
+                serverConn.getPlayer()
+        );
 
         // Shut down the existing server connection.
         serverConn.getPlayer().setConnectedServer(null);
@@ -106,7 +118,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       serverConn.getPlayer().sendForgeHandshakeResetPacket();
       serverConn.getPlayer().getConnection().setSessionHandler(
-          new ClientTransitionSessionHandler(serverConn.getPlayer()));
+          new ClientTransitionSessionHandler(serverConn.getPlayer(), server));
     }
   }
 
@@ -167,7 +179,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (this.server != null) {
       Component reason = GsonComponentSerializer.gson().deserialize(packet.getReason());
       Optional<RegisteredServer> next = serverConn.getPlayer().getNextServerToTry();
-      KickedFromServerEvent.ServerKickResult result = next.map(KickedFromServerEvent.RedirectPlayer::create)
+      KickedFromServerEvent.ServerKickResult result = next
+              .map(KickedFromServerEvent.RedirectPlayer::create)
               .orElseGet(() -> KickedFromServerEvent.DisconnectPlayer.create(reason));
 
       serverConn.getPlayer().handleKickEvent(new KickedFromServerEvent(serverConn.getPlayer(),

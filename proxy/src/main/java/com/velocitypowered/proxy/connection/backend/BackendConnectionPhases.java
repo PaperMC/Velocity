@@ -21,7 +21,6 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase;
 import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeBackendPhase;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 
 /**
  * Contains Vanilla {@link BackendConnectionPhase}s.
@@ -54,6 +53,7 @@ public final class BackendConnectionPhases {
       // for us. Otherwise, we have nothing to do.
       return ModernForgeHandshakeBackendPhase.NOT_STARTED.handle(serverConn, player, message);
     }
+  };
 
   /**
    * A special backend phase used to indicate that this connection is about to become obsolete

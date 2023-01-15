@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeBackendPhase;
 import com.velocitypowered.proxy.connection.forge.modern.ModernForgeHandshakeClientPhase;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
