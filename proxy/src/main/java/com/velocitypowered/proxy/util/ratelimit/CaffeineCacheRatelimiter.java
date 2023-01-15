@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,35 +17,33 @@
 
 package com.velocitypowered.proxy.util.ratelimit;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Ticker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import java.net.InetAddress;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A simple rate-limiter based on a Guava {@link Cache}.
+ * A simple rate-limiter based on a Caffeine {@link Cache}.
  */
-public class GuavaCacheRatelimiter implements Ratelimiter {
+public class CaffeineCacheRatelimiter implements Ratelimiter {
 
   private final Cache<InetAddress, Long> expiringCache;
   private final long timeoutNanos;
 
-  GuavaCacheRatelimiter(long time, TimeUnit unit) {
+  CaffeineCacheRatelimiter(long time, TimeUnit unit) {
     this(time, unit, Ticker.systemTicker());
   }
 
   @VisibleForTesting
-  GuavaCacheRatelimiter(long time, TimeUnit unit, Ticker ticker) {
+  CaffeineCacheRatelimiter(long time, TimeUnit unit, Ticker ticker) {
     Preconditions.checkNotNull(unit, "unit");
     Preconditions.checkNotNull(ticker, "ticker");
     this.timeoutNanos = unit.toNanos(time);
-    this.expiringCache = CacheBuilder.newBuilder()
+    this.expiringCache = Caffeine.newBuilder()
         .ticker(ticker)
-        .concurrencyLevel(Runtime.getRuntime().availableProcessors())
         .expireAfterWrite(time, unit)
         .build();
   }
@@ -60,13 +58,7 @@ public class GuavaCacheRatelimiter implements Ratelimiter {
   public boolean attempt(InetAddress address) {
     Preconditions.checkNotNull(address, "address");
     long expectedNewValue = System.nanoTime() + timeoutNanos;
-    long last;
-    try {
-      last = expiringCache.get(address, () -> expectedNewValue);
-    } catch (ExecutionException e) {
-      // It should be impossible for this to fail.
-      throw new AssertionError(e);
-    }
+    long last = expiringCache.get(address, (address1) -> expectedNewValue);
     return expectedNewValue == last;
   }
 }

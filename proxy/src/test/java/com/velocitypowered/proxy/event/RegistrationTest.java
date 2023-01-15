@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+/**
+ * Tests event listener registration.
+ */
 public class RegistrationTest {
 
   private EventManager eventManager;
@@ -54,13 +57,16 @@ public class RegistrationTest {
   }
 
   // Must be public in order to generate a method calling it
-  public static class SimpleEvent {
+  private static class SimpleEvent {
+
     int value;
   }
 
-  public static class SimpleSubclassedEvent extends SimpleEvent { }
+  private static class SimpleSubclassedEvent extends SimpleEvent {
 
-  public static class HandlerListener implements EventHandler<SimpleEvent> {
+  }
+
+  private static class HandlerListener implements EventHandler<SimpleEvent> {
 
     @Override
     public void execute(SimpleEvent event) {
@@ -68,7 +74,7 @@ public class RegistrationTest {
     }
   }
 
-  public static class AnnotatedListener {
+  private static class AnnotatedListener {
 
     @Subscribe
     public void increment(SimpleEvent event) {
@@ -88,7 +94,7 @@ public class RegistrationTest {
 
   private Stream<DynamicNode> composeTests(String name, TestFunction testFunction) {
     Set<DynamicNode> tests = new HashSet<>();
-    boolean[] trueAndFalse = new boolean[] {true, false};
+    boolean[] trueAndFalse = new boolean[]{true, false};
     for (boolean annotated : trueAndFalse) {
       for (boolean subclassed : trueAndFalse) {
 
@@ -98,13 +104,14 @@ public class RegistrationTest {
           assertSame(simpleEvent, shouldBeSameEvent);
           assertEquals(value, simpleEvent.value);
         };
-        tests.add(DynamicTest.dynamicTest(name + ". Annotated : " + annotated + ", Subclassed: " + subclassed, () -> {
-          try {
-            testFunction.runTest(annotated, generator);
-          } finally {
-            resetEventManager();
-          }
-        }));
+        tests.add(DynamicTest.dynamicTest(
+            name + ". Annotated : " + annotated + ", Subclassed: " + subclassed, () -> {
+              try {
+                testFunction.runTest(annotated, generator);
+              } finally {
+                resetEventManager();
+              }
+            }));
       }
     }
     return tests.stream();
@@ -121,7 +128,8 @@ public class RegistrationTest {
       generator.assertFiredEventValue(1);
       eventManager.unregisterListeners(PLUGIN_A);
       generator.assertFiredEventValue(0);
-      assertDoesNotThrow(() -> eventManager.unregisterListeners(PLUGIN_A), "Extra unregister is a no-op");
+      assertDoesNotThrow(() -> eventManager.unregisterListeners(PLUGIN_A),
+          "Extra unregister is a no-op");
     });
   }
 

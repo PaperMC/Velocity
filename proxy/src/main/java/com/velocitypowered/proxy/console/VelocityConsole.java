@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,10 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 
+/**
+ * Implements the Velocity console, including sending commands and being the recipient
+ * of messages from plugins.
+ */
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
@@ -55,18 +59,19 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private final VelocityServer server;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
-          .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
-          .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
-              .lookupClosest(Locale.getDefault()))
-          .withStatic(FacetPointers.TYPE, Type.CONSOLE)
-          .build();
+      .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
+      .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
+          .lookupClosest(Locale.getDefault()))
+      .withStatic(FacetPointers.TYPE, Type.CONSOLE)
+      .build();
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message, @NonNull MessageType messageType) {
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
+      @NonNull MessageType messageType) {
     Component translated = GlobalTranslator.render(message, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
     logger.info(LegacyComponentSerializer.legacySection().serialize(translated));

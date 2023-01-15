@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@ import com.google.gson.JsonSerializer;
 import com.velocitypowered.api.util.Favicon;
 import java.lang.reflect.Type;
 
+/**
+ * Serializes {@link Favicon} instances into JSON.
+ */
 public final class FaviconSerializer implements JsonSerializer<Favicon>, JsonDeserializer<Favicon> {
 
   public static final FaviconSerializer INSTANCE = new FaviconSerializer();

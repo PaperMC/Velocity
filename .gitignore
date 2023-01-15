@@ -86,6 +86,7 @@ server-icon.png
 /bin/
 run/
 plugins/
+lang/
 
 ### Natives stuff ###
 native/mbedtls

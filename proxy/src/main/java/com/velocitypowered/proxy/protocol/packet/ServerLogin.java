@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ import java.util.UUID;
 
 public class ServerLogin implements MinecraftPacket {
 
-  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
+  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
+      "Empty username!");
 
   private @Nullable String username;
   private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3

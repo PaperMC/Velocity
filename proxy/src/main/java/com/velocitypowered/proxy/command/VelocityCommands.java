@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,10 +38,9 @@ import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Provides utility methods common to most {@link Command} implementations.
- * In particular, {@link InvocableCommand} implementations use the same logic for
- * creating and parsing the alias and arguments command nodes, which is contained
- * in this class.
+ * Provides utility methods common to most {@link Command} implementations. In particular,
+ * {@link InvocableCommand} implementations use the same logic for creating and parsing the alias
+ * and arguments command nodes, which is contained in this class.
  */
 public final class VelocityCommands {
 
@@ -51,7 +50,7 @@ public final class VelocityCommands {
    * Normalizes the given command input.
    *
    * @param input the raw command input, without the leading slash ('/')
-   * @param trim whether to remove leading and trailing whitespace from the input
+   * @param trim  whether to remove leading and trailing whitespace from the input
    * @return the normalized command input
    */
   static String normalizeInput(final String input, final boolean trim) {
@@ -60,7 +59,7 @@ public final class VelocityCommands {
     if (firstSep != -1) {
       // Aliases are case-insensitive, arguments are not
       return command.substring(0, firstSep).toLowerCase(Locale.ENGLISH)
-              + command.substring(firstSep);
+          + command.substring(firstSep);
     } else {
       return command.toLowerCase(Locale.ENGLISH);
     }
@@ -85,18 +84,19 @@ public final class VelocityCommands {
   public static final String ARGS_NODE_NAME = "arguments";
 
   /**
-   * Returns the parsed arguments that come after the command alias, or {@code fallback} if
-   * no arguments were provided.
+   * Returns the parsed arguments that come after the command alias, or {@code fallback} if no
+   * arguments were provided.
    *
    * @param arguments the map of parsed arguments, as returned by
-   *        {@link CommandContext#getArguments()} or {@link CommandContextBuilder#getArguments()}
-   * @param type the type class of the arguments
-   * @param fallback the value to return if no arguments were provided
-   * @param <V> the type of the arguments
+   *                  {@link CommandContext#getArguments()} or
+   *                  {@link CommandContextBuilder#getArguments()}
+   * @param type      the type class of the arguments
+   * @param fallback  the value to return if no arguments were provided
+   * @param <V>       the type of the arguments
    * @return the command arguments
    */
   public static <V> V readArguments(final Map<String, ? extends ParsedArgument<?, ?>> arguments,
-                                    final Class<V> type, final V fallback) {
+      final Class<V> type, final V fallback) {
     final ParsedArgument<?, ?> argument = arguments.get(ARGS_NODE_NAME);
     if (argument == null) {
       return fallback; // either no arguments were given or this isn't an InvocableCommand
@@ -106,15 +106,15 @@ public final class VelocityCommands {
       return type.cast(result);
     } catch (final ClassCastException e) {
       throw new IllegalArgumentException("Parsed argument is of type " + result.getClass()
-              + ", expected " + type, e);
+          + ", expected " + type, e);
     }
   }
 
   // Alias nodes
 
   /**
-   * Returns whether a literal node with the given name can be added to
-   * the {@link RootCommandNode} associated to a {@link CommandManager}.
+   * Returns whether a literal node with the given name can be added to the {@link RootCommandNode}
+   * associated to a {@link CommandManager}.
    *
    * <p>This is an internal method and should not be used in user-facing
    * methods. Instead, they should lowercase the given aliases themselves.
@@ -130,11 +130,11 @@ public final class VelocityCommands {
    * Creates a copy of the given literal with the specified name.
    *
    * @param original the literal node to copy
-   * @param newName the name of the returned literal node
+   * @param newName  the name of the returned literal node
    * @return a copy of the literal with the given name
    */
   public static LiteralCommandNode<CommandSource> shallowCopy(
-          final LiteralCommandNode<CommandSource> original, final String newName) {
+      final LiteralCommandNode<CommandSource> original, final String newName) {
     // Brigadier resolves the redirect of a node if further input can be parsed.
     // Let <bar> be a literal node having a redirect to a <foo> literal. Then,
     // the context returned by CommandDispatcher#parseNodes when given the input
@@ -145,11 +145,11 @@ public final class VelocityCommands {
     Preconditions.checkNotNull(original, "original");
     Preconditions.checkNotNull(newName, "secondaryAlias");
     final LiteralArgumentBuilder<CommandSource> builder = LiteralArgumentBuilder
-            .<CommandSource>literal(newName)
-            .requires(original.getRequirement())
-            .requiresWithContext(original.getContextRequirement())
-            .forward(original.getRedirect(), original.getRedirectModifier(), original.isFork())
-            .executes(original.getCommand());
+        .<CommandSource>literal(newName)
+        .requires(original.getRequirement())
+        .requiresWithContext(original.getContextRequirement())
+        .forward(original.getRedirect(), original.getRedirectModifier(), original.isFork())
+        .executes(original.getCommand());
     for (final CommandNode<CommandSource> child : original.getChildren()) {
       builder.then(child);
     }
@@ -159,15 +159,15 @@ public final class VelocityCommands {
   // Arguments node
 
   /**
-   * Returns the arguments node for the command represented by the given alias node,
-   * if present; otherwise returns {@code null}.
+   * Returns the arguments node for the command represented by the given alias node, if present;
+   * otherwise returns {@code null}.
    *
    * @param alias the alias node
-   * @param <S> the type of the command source
+   * @param <S>   the type of the command source
    * @return the arguments node, or null if not present
    */
   static <S> @Nullable VelocityArgumentCommandNode<S, ?> getArgumentsNode(
-          final LiteralCommandNode<S> alias) {
+      final LiteralCommandNode<S> alias) {
     final CommandNode<S> node = alias.getChild(ARGS_NODE_NAME);
     if (node instanceof VelocityArgumentCommandNode) {
       return (VelocityArgumentCommandNode<S, ?>) node;

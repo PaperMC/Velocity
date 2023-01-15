@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class VelocityPluginModule implements Module {
   private final Path basePluginPath;
 
   VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-                       PluginContainer pluginContainer, Path basePluginPath) {
+      PluginContainer pluginContainer, Path basePluginPath) {
     this.server = server;
     this.description = description;
     this.pluginContainer = pluginContainer;

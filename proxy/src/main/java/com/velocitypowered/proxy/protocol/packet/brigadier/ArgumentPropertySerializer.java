@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface ArgumentPropertySerializer<T> {
+
   @Nullable T deserialize(ByteBuf buf, ProtocolVersion protocolVersion);
 
   void serialize(T object, ByteBuf buf, ProtocolVersion protocolVersion);

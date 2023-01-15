@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
-import com.velocitypowered.proxy.util.FileSystemUtils;
+import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
@@ -105,6 +105,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Implementation of {@link ProxyServer}.
+ */
 public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
@@ -250,7 +253,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         .create(Key.key("velocity", "translations"));
     translationRegistry.defaultLocale(Locale.US);
     try {
-      FileSystemUtils.visitResources(VelocityServer.class, path -> {
+      ResourceUtils.visitResources(VelocityServer.class, path -> {
         logger.info("Loading localizations...");
 
         final Path langPath = Path.of("lang");
@@ -274,7 +277,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
               }
             });
           }
-
 
           Files.walk(langPath).forEach(file -> {
             if (!Files.isRegularFile(file)) {
@@ -448,13 +450,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.close(configuration.getBind());
     }
 
-    if (configuration.isQueryEnabled() && (!newConfiguration.isQueryEnabled()
-        || newConfiguration.getQueryPort() != configuration.getQueryPort())) {
+    boolean queryPortChanged = newConfiguration.getQueryPort() != configuration.getQueryPort();
+    boolean queryAlreadyEnabled = configuration.isQueryEnabled();
+    boolean queryEnabled = newConfiguration.isQueryEnabled();
+    if ((!queryEnabled && queryAlreadyEnabled) || queryPortChanged) {
       this.cm.close(new InetSocketAddress(
           configuration.getBind().getHostString(), configuration.getQueryPort()));
     }
-
-    if (newConfiguration.isQueryEnabled()) {
+    if (queryEnabled && queryPortChanged) {
       this.cm.queryBind(newConfiguration.getBind().getHostString(),
           newConfiguration.getQueryPort());
     }
@@ -467,10 +470,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Shuts down the proxy, kicking players with the specified {@param reason}.
+   * Shuts down the proxy, kicking players with the specified reason.
    *
    * @param explicitExit whether the user explicitly shut down the proxy
-   * @param reason message to kick online players with
+   * @param reason       message to kick online players with
    */
   public void shutdown(boolean explicitExit, Component reason) {
     if (eventManager == null || pluginManager == null || cm == null || scheduler == null) {
@@ -501,8 +504,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           // makes sure that all the disconnect events are being fired
 
           CompletableFuture<Void> playersTeardownFuture = CompletableFuture.allOf(players.stream()
-                  .map(ConnectedPlayer::getTeardownFuture)
-                  .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
+              .map(ConnectedPlayer::getTeardownFuture)
+              .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
 
           playersTeardownFuture.get(10, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
@@ -579,6 +582,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   /**
    * Checks if the {@code connection} can be registered with the proxy.
+   *
    * @param connection the connection to check
    * @return {@code true} if we can register the connection, {@code false} if not
    */
@@ -590,9 +594,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return !(connectionsByName.containsKey(lowerName)
         || connectionsByUuid.containsKey(connection.getUniqueId()));
   }
-  
+
   /**
    * Attempts to register the {@code connection} with the proxy.
+   *
    * @param connection the connection to register
    * @return {@code true} if we registered the connection, {@code false} if not
    */
@@ -649,7 +654,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     return getAllPlayers().stream().filter(p -> p.getUsername()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
-            .collect(Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -658,7 +663,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     return getAllServers().stream().filter(s -> s.getServerInfo().getName()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
-            .collect(Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -29,6 +29,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
   /**
    * Constructs a CommandExecuteEvent.
+   *
    * @param commandSource the source executing the command
    * @param command the command being executed without first slash
    */
@@ -43,7 +44,8 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   }
 
   /**
-   * Gets the original command being executed without first slash.
+   * Gets the original command being executed without the first slash.
+   *
    * @return the original command being executed
    */
   public String getCommand() {
@@ -108,6 +110,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
     /**
      * Allows the command to be sent, without modification.
+     *
      * @return the allowed result
      */
     public static CommandResult allowed() {
@@ -116,6 +119,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
     /**
      * Prevents the command from being executed.
+     *
      * @return the denied result
      */
     public static CommandResult denied() {
@@ -123,7 +127,9 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     }
 
     /**
-     * Prevents the command from being executed, but forward command to server.
+     * Forwards the command to server instead of executing it on the proxy. This is the
+     * default behavior when a command is not registered on Velocity.
+     *
      * @return the forward result
      */
     public static CommandResult forwardToServer() {
@@ -132,6 +138,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
 
     /**
      * Prevents the command from being executed on proxy, but forward command to server.
+     *
      * @param newCommand the command without first slash to use instead
      * @return a result with a new command being forwarded to server
      */
@@ -141,7 +148,9 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     }
 
     /**
-     * Allows the command to be executed, but silently replaced old command with another.
+     * Allows the command to be executed, but silently replaces the command with a different
+     * command.
+     *
      * @param newCommand the command to use instead without first slash
      * @return a result with a new command
      */

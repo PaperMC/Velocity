@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,10 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 
+/**
+ * Base internal interface for a {@link InboundConnection}.
+ */
 public interface VelocityInboundConnection extends InboundConnection {
+
   MinecraftConnection getConnection();
 }

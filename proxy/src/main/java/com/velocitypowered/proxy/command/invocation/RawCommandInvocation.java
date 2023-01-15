@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,11 @@ import com.velocitypowered.proxy.command.VelocityCommands;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implements {@link RawCommand.Invocation}.
+ */
 public final class RawCommandInvocation extends AbstractCommandInvocation<String>
-        implements RawCommand.Invocation {
+    implements RawCommand.Invocation {
 
   public static final Factory FACTORY = new Factory();
 
@@ -35,8 +38,8 @@ public final class RawCommandInvocation extends AbstractCommandInvocation<String
 
     @Override
     public RawCommand.Invocation create(
-            final CommandSource source, final List<? extends ParsedCommandNode<?>> nodes,
-            final Map<String, ? extends ParsedArgument<?, ?>> arguments) {
+        final CommandSource source, final List<? extends ParsedCommandNode<?>> nodes,
+        final Map<String, ? extends ParsedArgument<?, ?>> arguments) {
       final String alias = VelocityCommands.readAlias(nodes);
       final String args = VelocityCommands.readArguments(arguments, String.class, "");
       return new RawCommandInvocation(source, alias, args);
@@ -46,7 +49,7 @@ public final class RawCommandInvocation extends AbstractCommandInvocation<String
   private final String alias;
 
   private RawCommandInvocation(final CommandSource source,
-                               final String alias, final String arguments) {
+      final String alias, final String arguments) {
     super(source, arguments);
     this.alias = Preconditions.checkNotNull(alias, "alias");
   }
@@ -82,9 +85,9 @@ public final class RawCommandInvocation extends AbstractCommandInvocation<String
   @Override
   public String toString() {
     return "RawCommandInvocation{"
-            + "source='" + this.source() + '\''
-            + ", alias='" + this.alias + '\''
-            + ", arguments='" + this.arguments() + '\''
-            + '}';
+        + "source='" + this.source() + '\''
+        + ", alias='" + this.alias + '\''
+        + ", arguments='" + this.arguments() + '\''
+        + '}';
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ public interface Ratelimiter {
 
   /**
    * Determines whether or not to allow the connection.
+   *
    * @param address the address to rate limit
    * @return true if allowed, false if not
    */

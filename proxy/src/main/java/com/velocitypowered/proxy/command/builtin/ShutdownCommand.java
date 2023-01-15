@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,31 +27,38 @@ import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-public final class ShutdownCommand  {
-  private ShutdownCommand() {}
+/**
+ * Shuts down the proxy.
+ */
+public final class ShutdownCommand {
+
+  private ShutdownCommand() {
+  }
 
   /**
    * Creates a Velocity Shutdown Command.
+   *
    * @param server the proxy instance
    * @return the Shutdown Command
    */
   public static BrigadierCommand command(final VelocityServer server) {
     return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("shutdown")
-      .requires(source -> source == server.getConsoleCommandSource())
-      .executes(context -> {
-        server.shutdown(true);
-        return Command.SINGLE_SUCCESS;
-      })
-      .then(RequiredArgumentBuilder.<CommandSource, String>argument("reason", StringArgumentType.greedyString())
+        .requires(source -> source == server.getConsoleCommandSource())
         .executes(context -> {
-          String reason = context.getArgument("reason", String.class);
-          server.shutdown(true, MiniMessage.miniMessage().deserialize(
-              MiniMessage.miniMessage().serialize(
-                  LegacyComponentSerializer.legacy('&').deserialize(reason)
-              )
-          ));
+          server.shutdown(true);
           return Command.SINGLE_SUCCESS;
         })
-      ).build());
+        .then(RequiredArgumentBuilder.<CommandSource, String>argument("reason",
+                StringArgumentType.greedyString())
+            .executes(context -> {
+              String reason = context.getArgument("reason", String.class);
+              server.shutdown(true, MiniMessage.miniMessage().deserialize(
+                  MiniMessage.miniMessage().serialize(
+                      LegacyComponentSerializer.legacy('&').deserialize(reason)
+                  )
+              ));
+              return Command.SINGLE_SUCCESS;
+            })
+        ).build());
   }
 }

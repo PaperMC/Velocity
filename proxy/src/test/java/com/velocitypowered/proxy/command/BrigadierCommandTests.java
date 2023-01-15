@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests for {@link BrigadierCommand}.
+ */
 public class BrigadierCommandTests extends CommandTestSuite {
 
   // Execution
@@ -43,15 +46,15 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> {
-              assertEquals(source, context.getSource());
-              assertEquals("hello", context.getInput());
-              assertEquals(1, context.getNodes().size());
-              callCount.incrementAndGet();
-              return 1;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> {
+          assertEquals(source, context.getSource());
+          assertEquals("hello", context.getInput());
+          assertEquals(1, context.getNodes().size());
+          callCount.incrementAndGet();
+          return 1;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertHandled("hello");
@@ -63,13 +66,13 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> {
-              assertEquals("hello", context.getInput());
-              callCount.incrementAndGet();
-              return 1;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> {
+          assertEquals("hello", context.getInput());
+          callCount.incrementAndGet();
+          return 1;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertHandled("Hello");
@@ -81,13 +84,13 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> {
-              assertEquals("hello", context.getInput());
-              callCount.incrementAndGet();
-              return 1;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> {
+          assertEquals("hello", context.getInput());
+          callCount.incrementAndGet();
+          return 1;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertHandled(" hello");
@@ -100,9 +103,9 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testExecuteAfterUnregisterForwards() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> fail())
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .build();
     manager.register(new BrigadierCommand(node));
     manager.unregister("hello");
 
@@ -114,14 +117,14 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> fail())
-            .requires(actualSource -> {
-              assertEquals(source, actualSource);
-              callCount.incrementAndGet();
-              return false;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .requires(actualSource -> {
+          assertEquals(source, actualSource);
+          callCount.incrementAndGet();
+          return false;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertForwarded("hello");
@@ -133,16 +136,16 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> fail())
-            .requiresWithContext((context, reader) -> {
-              assertEquals(source, context.getSource());
-              assertEquals("hello", reader.getRead());
-              assertEquals(1, context.getNodes().size());
-              callCount.incrementAndGet();
-              return false;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .requiresWithContext((context, reader) -> {
+          assertEquals(source, context.getSource());
+          assertEquals("hello", reader.getRead());
+          assertEquals(1, context.getNodes().size());
+          callCount.incrementAndGet();
+          return false;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertForwarded("hello");
@@ -154,18 +157,18 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("buy")
-            .executes(context -> fail())
-            .then(RequiredArgumentBuilder
-                    .<CommandSource, Integer>argument("quantity", integer())
-                    .executes(context -> {
-                      assertEquals("buy 12", context.getInput());
-                      assertEquals(12, getInteger(context, "quantity"));
-                      assertEquals(2, context.getNodes().size());
-                      callCount.incrementAndGet();
-                      return 1;
-                    }))
-            .build();
+        .<CommandSource>literal("buy")
+        .executes(context -> fail())
+        .then(RequiredArgumentBuilder
+            .<CommandSource, Integer>argument("quantity", integer())
+            .executes(context -> {
+              assertEquals("buy 12", context.getInput());
+              assertEquals(12, getInteger(context, "quantity"));
+              assertEquals(2, context.getNodes().size());
+              callCount.incrementAndGet();
+              return 1;
+            }))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertHandled("buy 12");
@@ -177,16 +180,16 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("world")
             .executes(context -> fail())
-            .then(LiteralArgumentBuilder
-                    .<CommandSource>literal("world")
-                    .executes(context -> fail())
-                    .requires(source -> {
-                      callCount.incrementAndGet();
-                      return false;
-                    }))
-            .build();
+            .requires(source -> {
+              callCount.incrementAndGet();
+              return false;
+            }))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertHandled("hello world");
@@ -197,15 +200,15 @@ public class BrigadierCommandTests extends CommandTestSuite {
   void testExecuteAsyncCompletesExceptionallyOnCallbackException() {
     final var expected = new RuntimeException();
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .executes(context -> {
-              throw expected;
-            })
-            .build();
+        .<CommandSource>literal("hello")
+        .executes(context -> {
+          throw expected;
+        })
+        .build();
     manager.register(new BrigadierCommand(node));
 
     final Exception wrapper = assertThrows(CompletionException.class, () ->
-            manager.executeAsync(source, "hello").join());
+        manager.executeAsync(source, "hello").join());
 
     assertSame(expected, wrapper.getCause().getCause());
   }
@@ -214,16 +217,16 @@ public class BrigadierCommandTests extends CommandTestSuite {
   void testExecuteAsyncCompletesExceptionallyOnRequirementException() {
     final var expected = new RuntimeException();
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .requires(source1 -> {
-              throw expected;
-            })
-            .executes(context -> fail()) // needed for dispatcher to consider the node
-            .build();
+        .<CommandSource>literal("hello")
+        .requires(source1 -> {
+          throw expected;
+        })
+        .executes(context -> fail()) // needed for dispatcher to consider the node
+        .build();
     manager.register(new BrigadierCommand(node));
 
     final Exception wrapper = assertThrows(CompletionException.class, () ->
-            manager.executeAsync(source, "hello").join());
+        manager.executeAsync(source, "hello").join());
 
     assertSame(expected, wrapper.getCause().getCause());
   }
@@ -233,8 +236,8 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestAliasAfterUnregister() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .build();
+        .<CommandSource>literal("hello")
+        .build();
     manager.register(new BrigadierCommand(node));
     manager.unregister("hello");
 
@@ -244,15 +247,15 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testArgumentSuggestions() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .then(RequiredArgumentBuilder
-                .<CommandSource, String>argument("argument", word())
-                .suggests((context, builder) -> builder
-                        .suggest("foo")
-                        .suggest("bar")
-                        .suggest("baz")
-                        .buildFuture()))
-            .build();
+        .<CommandSource>literal("hello")
+        .then(RequiredArgumentBuilder
+            .<CommandSource, String>argument("argument", word())
+            .suggests((context, builder) -> builder
+                .suggest("foo")
+                .suggest("bar")
+                .suggest("baz")
+                .buildFuture()))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("hello ", "bar", "baz", "foo");
@@ -266,11 +269,11 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testSuggestsEvenIfImpermissible() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("parent")
-            .then(LiteralArgumentBuilder
-                .<CommandSource>literal("child")
-                .requiresWithContext((context, reader) -> fail()))
-            .build();
+        .<CommandSource>literal("parent")
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("child")
+            .requiresWithContext((context, reader) -> fail()))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("parent ", "child");
@@ -282,19 +285,19 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("parent")
-            .then(LiteralArgumentBuilder
-                .<CommandSource>literal("child")
-                .requiresWithContext((context, reader) -> {
-                  // CommandDispatcher#parseNodes checks whether the child node can be added
-                  // to the context object. CommandDispatcher#getCompletionSuggestions then
-                  // considers a suggestion context with "parent" as the parent, and considers
-                  // the suggestions of relevant children, which includes "child".
-                  assertEquals(2, context.getNodes().size());
-                  callCount.incrementAndGet();
-                  return false;
-                }))
-            .build();
+        .<CommandSource>literal("parent")
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("child")
+            .requiresWithContext((context, reader) -> {
+              // CommandDispatcher#parseNodes checks whether the child node can be added
+              // to the context object. CommandDispatcher#getCompletionSuggestions then
+              // considers a suggestion context with "parent" as the parent, and considers
+              // the suggestions of relevant children, which includes "child".
+              assertEquals(2, context.getNodes().size());
+              callCount.incrementAndGet();
+              return false;
+            }))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("parent child");
@@ -304,12 +307,12 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestIfCustomSuggestionProviderFutureCompletesExceptionally() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("parent")
-            .then(RequiredArgumentBuilder
-                    .<CommandSource, String>argument("child", word())
-                    .suggests((context, builder) ->
-                        CompletableFuture.failedFuture(new RuntimeException())))
-            .build();
+        .<CommandSource>literal("parent")
+        .then(RequiredArgumentBuilder
+            .<CommandSource, String>argument("child", word())
+            .suggests((context, builder) ->
+                CompletableFuture.failedFuture(new RuntimeException())))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("parent ");
@@ -318,13 +321,13 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestIfCustomSuggestionProviderThrows() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("parent")
-            .then(RequiredArgumentBuilder
-                    .<CommandSource, String>argument("child", word())
-                    .suggests((context, builder) -> {
-                      throw new RuntimeException();
-                    }))
-            .build();
+        .<CommandSource>literal("parent")
+        .then(RequiredArgumentBuilder
+            .<CommandSource, String>argument("child", word())
+            .suggests((context, builder) -> {
+              throw new RuntimeException();
+            }))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("parent ");
@@ -333,17 +336,17 @@ public class BrigadierCommandTests extends CommandTestSuite {
   @Test
   void testSuggestCompletesExceptionallyIfRequirementPredicateThrows() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("parent")
-            .requires(source1 -> {
-              throw new RuntimeException();
-            })
-            .then(RequiredArgumentBuilder
-                    .<CommandSource, String>argument("child", word())
-                    .suggests((context, builder) -> fail()))
-            .build();
+        .<CommandSource>literal("parent")
+        .requires(source1 -> {
+          throw new RuntimeException();
+        })
+        .then(RequiredArgumentBuilder
+            .<CommandSource, String>argument("child", word())
+            .suggests((context, builder) -> fail()))
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertThrows(CompletionException.class, () ->
-            manager.offerSuggestions(source, "parent ").join());
+        manager.offerSuggestions(source, "parent ").join());
   }
 }

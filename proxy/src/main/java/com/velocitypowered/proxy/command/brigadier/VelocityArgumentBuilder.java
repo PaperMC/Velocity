@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,20 +31,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <T> the type of the argument to parse
  */
 public final class VelocityArgumentBuilder<S, T>
-        extends ArgumentBuilder<S, VelocityArgumentBuilder<S, T>> {
+    extends ArgumentBuilder<S, VelocityArgumentBuilder<S, T>> {
 
   /**
-   * Creates a builder for creating {@link VelocityArgumentCommandNode}s with
-   * the given name and type.
+   * Creates a builder for creating {@link VelocityArgumentCommandNode}s with the given name and
+   * type.
    *
    * @param name the name of the node
    * @param type the type of the argument to parse
-   * @param <S> the type of the command source
-   * @param <T> the type of the argument to parse
+   * @param <S>  the type of the command source
+   * @param <T>  the type of the argument to parse
    * @return a builder
    */
   public static <S, T> VelocityArgumentBuilder<S, T> velocityArgument(final String name,
-                                                                    final ArgumentType<T> type) {
+      final ArgumentType<T> type) {
     Preconditions.checkNotNull(name, "name");
     Preconditions.checkNotNull(type, "type");
     return new VelocityArgumentBuilder<>(name, type);
@@ -82,7 +82,7 @@ public final class VelocityArgumentBuilder<S, T>
   @Override
   public VelocityArgumentCommandNode<S, T> build() {
     return new VelocityArgumentCommandNode<>(this.name, this.type, getCommand(), getRequirement(),
-            getContextRequirement(), getRedirect(), getRedirectModifier(), isFork(),
-            this.suggestionsProvider);
+        getContextRequirement(), getRedirect(), getRedirectModifier(), isFork(),
+        this.suggestionsProvider);
   }
 }

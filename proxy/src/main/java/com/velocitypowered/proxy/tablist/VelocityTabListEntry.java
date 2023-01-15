@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,15 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Generic tab list entry implementation.
+ */
 public class VelocityTabListEntry implements TabListEntry {
+
   private final VelocityTabList tabList;
   private final GameProfile profile;
   private Component displayName;
@@ -36,8 +39,12 @@ public class VelocityTabListEntry implements TabListEntry {
   private boolean listed;
   private @Nullable ChatSession session;
 
-  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName, int latency,
-                              int gameMode, @Nullable ChatSession session, boolean listed) {
+  /**
+   * Constructs the instance.
+   */
+  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName,
+      int latency,
+      int gameMode, @Nullable ChatSession session, boolean listed) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;

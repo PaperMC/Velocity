@@ -78,19 +78,19 @@ minigames = "127.0.0.1:30068"
 
 # In what order we should try servers when a player logs in or is kicked from a server.
 try = [
-  "lobby"
+    "lobby"
 ]
 
 [forced-hosts]
 # Configure your forced hosts here.
 "lobby.example.com" = [
-  "lobby"
+    "lobby"
 ]
 "factions.example.com" = [
-  "factions"
+    "factions"
 ]
 "minigames.example.com" = [
-  "minigames"
+    "minigames"
 ]
 
 [advanced]

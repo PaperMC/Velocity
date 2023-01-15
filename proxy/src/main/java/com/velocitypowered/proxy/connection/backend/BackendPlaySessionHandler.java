@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,11 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles a connected player.
+ */
 public class BackendPlaySessionHandler implements MinecraftSessionHandler {
+
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
   private static final boolean BACKPRESSURE_LOG = Boolean
@@ -286,7 +290,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerData packet) {
     server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
         .thenComposeAsync(
-            ping -> server.getEventManager().fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
+            ping -> server.getEventManager()
+                .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
             playerConnection.eventLoop()
         )
         .thenAcceptAsync(pingEvent ->

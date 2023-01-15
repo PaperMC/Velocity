@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -33,6 +33,7 @@ public final class ServerPreConnectEvent implements
 
   /**
    * Creates the ServerPreConnectEvent.
+   *
    * @param player the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
    */
@@ -43,6 +44,7 @@ public final class ServerPreConnectEvent implements
 
   /**
    * Creates the ServerPreConnectEvent.
+   *
    * @param player the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
    * @param previousServer the server the player ís connected to
@@ -57,6 +59,7 @@ public final class ServerPreConnectEvent implements
 
   /**
    * Returns the player connecting to the server.
+   *
    * @return the player connecting to the server
    */
   public Player getPlayer() {
@@ -77,6 +80,7 @@ public final class ServerPreConnectEvent implements
    * Returns the server that the player originally tried to connect to. To get the server the
    * player will connect to, see the {@link ServerResult} of this event. To get the server the
    * player is currently on when this event is fired, use {@link #getPreviousServer()}.
+   *
    * @return the server that the player originally tried to connect to
    */
   public RegisteredServer getOriginalServer() {
@@ -88,6 +92,7 @@ public final class ServerPreConnectEvent implements
    * {@link Player#getCurrentServer()} as the current server might get reset after server kicks to
    * prevent connection issues. This is {@code null} if they were not connected to another server
    * beforehand (for instance, if the player has just joined the proxy).
+   *
    * @return the server the player is currently connected to.
    */
   public @Nullable RegisteredServer getPreviousServer() {
@@ -137,6 +142,7 @@ public final class ServerPreConnectEvent implements
      * Returns a result that will prevent players from connecting to another server. If this result
      * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status
      * {@link Status#CONNECTION_CANCELLED}.
+     *
      * @return a result to deny conneections
      */
     public static ServerResult denied() {
@@ -145,6 +151,7 @@ public final class ServerPreConnectEvent implements
 
     /**
      * Allows the player to connect to the specified server.
+     *
      * @param server the new server to connect to
      * @return a result to allow the player to connect to the specified server
      */

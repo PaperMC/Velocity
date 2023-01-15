@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public class LegacyTitlePacket extends GenericTitlePacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_11) < 0
-            && getAction() == ActionType.SET_ACTION_BAR) {
+        && getAction() == ActionType.SET_ACTION_BAR) {
       throw new IllegalStateException("Action bars are only supported on 1.11 and newer");
     }
     ProtocolUtils.writeVarInt(buf, getAction().getAction(version));

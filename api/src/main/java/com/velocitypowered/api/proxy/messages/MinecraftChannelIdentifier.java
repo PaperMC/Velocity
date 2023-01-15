@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,7 +7,8 @@
 
 package com.velocitypowered.api.proxy.messages;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Strings;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -49,13 +50,16 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
    * @return a new channel identifier
    */
   public static MinecraftChannelIdentifier create(String namespace, String name) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
-    Preconditions.checkArgument(name != null, "namespace is null or empty");
-    Preconditions.checkArgument(VALID_IDENTIFIER_REGEX.matcher(namespace).matches(),
-        "namespace is not valid, must match: %s got %s", VALID_IDENTIFIER_REGEX.toString(), namespace);
-    Preconditions
-        .checkArgument(VALID_IDENTIFIER_REGEX.matcher(name).matches(),
-          "name is not valid, must match: %s got %s", VALID_IDENTIFIER_REGEX.toString(), name);
+    checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
+    checkArgument(name != null, "namespace is null or empty");
+    checkArgument(VALID_IDENTIFIER_REGEX.matcher(namespace).matches(),
+        "namespace is not valid, must match: %s got %s",
+        VALID_IDENTIFIER_REGEX.toString(),
+        namespace);
+    checkArgument(VALID_IDENTIFIER_REGEX.matcher(name).matches(),
+        "name is not valid, must match: %s got %s",
+        VALID_IDENTIFIER_REGEX.toString(),
+        name);
     return new MinecraftChannelIdentifier(namespace, name);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ class CompressorUtils {
 
   /**
    * Ensures that the buffer does not go over {@code max}.
+   *
    * @param buf the buffer for check
    * @param max the maximum size for the buffer
    * @throws DataFormatException if the buffer becomes too bug

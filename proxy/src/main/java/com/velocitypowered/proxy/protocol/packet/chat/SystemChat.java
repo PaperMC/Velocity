@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@ import net.kyori.adventure.text.Component;
 
 public class SystemChat implements MinecraftPacket {
 
-  public SystemChat() {}
+  public SystemChat() {
+  }
 
   public SystemChat(Component component, ChatType type) {
     this.component = component;
@@ -45,15 +46,19 @@ public class SystemChat implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    component = ProtocolUtils.getJsonChatSerializer(protocolVersion).deserialize(ProtocolUtils.readString(buf));
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
+    component = ProtocolUtils.getJsonChatSerializer(protocolVersion)
+        .deserialize(ProtocolUtils.readString(buf));
     // System chat is never decoded so this doesn't matter for now
     type = ChatType.values()[ProtocolUtils.readVarInt(buf)];
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeString(buf,
+        ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       switch (type) {
         case SYSTEM:

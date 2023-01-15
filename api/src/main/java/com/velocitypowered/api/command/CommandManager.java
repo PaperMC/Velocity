@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -84,6 +84,7 @@ public interface CommandManager {
 
   /**
    * Retrieves the {@link CommandMeta} from the specified command alias, if registered.
+   *
    * @param alias the command alias to lookup
    * @return an {@link CommandMeta} of the alias
    */

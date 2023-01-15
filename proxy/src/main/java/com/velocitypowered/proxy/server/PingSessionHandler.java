@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,14 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import io.netty.channel.EventLoop;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Session handler used to implement
+ * {@link VelocityRegisteredServer#ping(EventLoop, ProtocolVersion)}.
+ */
 public class PingSessionHandler implements MinecraftSessionHandler {
 
   private final CompletableFuture<ServerPing> result;

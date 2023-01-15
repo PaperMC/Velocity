@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,21 +29,24 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.ListBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a registry of dimensions sent to the client by the server.
+ */
 public final class DimensionRegistry {
 
   private final Map<String, DimensionData> registeredDimensions;
   private final ImmutableSet<String> levelNames;
 
   /**
-   * Initializes a new {@link DimensionRegistry} instance.
-   * This registry is required for 1.16+ clients/servers to communicate,
-   * it constrains the dimension types and names the client can be sent
-   * in a Respawn action (dimension change).
-   * This WILL raise an IllegalArgumentException if the following is not met:
-   * - At least one valid DimensionData instance is provided
-   * - At least one valid world name is provided
+   * Initializes a new {@link DimensionRegistry} instance. This registry is required for 1.16+
+   * clients/servers to communicate, it constrains the dimension types and names the client can be
+   * sent in a Respawn action (dimension change). This WILL raise an IllegalArgumentException if the
+   * following is not met: - At least one valid DimensionData instance is provided - At least one
+   * valid world name is provided
+   *
    * @param registeredDimensions a populated {@link ImmutableSet} containing dimension data types
-   * @param levelNames a populated {@link ImmutableSet} of the level (world) names the server offers
+   * @param levelNames           a populated {@link ImmutableSet} of the level (world) names the
+   *                             server offers
    */
   public DimensionRegistry(ImmutableSet<DimensionData> registeredDimensions,
       ImmutableSet<String> levelNames) {
@@ -70,6 +73,7 @@ public final class DimensionRegistry {
 
   /**
    * Returns the internal dimension data type as used by the game.
+   *
    * @param dimensionIdentifier how the dimension is identified by the connection
    * @return game dimension data or null if not registered
    */
@@ -79,6 +83,7 @@ public final class DimensionRegistry {
 
   /**
    * Checks a {@link DimensionInfo} against this registry.
+   *
    * @param toValidate the {@link DimensionInfo} to validate
    * @return true: the dimension information is valid for this registry
    */
@@ -92,6 +97,7 @@ public final class DimensionRegistry {
 
   /**
    * Encodes the stored Dimension registry as CompoundTag.
+   *
    * @return the CompoundTag containing identifier:type mappings
    */
   public ListBinaryTag encodeRegistry(ProtocolVersion version) {
@@ -105,6 +111,7 @@ public final class DimensionRegistry {
 
   /**
    * Decodes a CompoundTag storing a dimension registry.
+   *
    * @param toParse CompoundTag containing a dimension registry
    */
   public static ImmutableSet<DimensionData> fromGameData(ListBinaryTag toParse,

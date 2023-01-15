@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,12 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The Velocity "scheduler", which is actually a thin wrapper around
+ * {@link ScheduledExecutorService} and a dynamically-sized {@link ExecutorService}.
+ * Many plugins are accustomed to the Bukkit Scheduler model although it is not relevant
+ * in a proxy context.
+ */
 public class VelocityScheduler implements Scheduler {
 
   private final PluginManager pluginManager;
@@ -93,6 +99,7 @@ public class VelocityScheduler implements Scheduler {
 
   /**
    * Shuts down the Velocity scheduler.
+   *
    * @return {@code true} if all tasks finished, {@code false} otherwise
    * @throws InterruptedException if the current thread was interrupted
    */
@@ -166,7 +173,8 @@ public class VelocityScheduler implements Scheduler {
     private @Nullable ScheduledFuture<?> future;
     private volatile @Nullable Thread currentTaskThread;
 
-    private VelocityTask(Object plugin, Runnable runnable, Consumer<ScheduledTask> consumer, long delay, long repeat) {
+    private VelocityTask(Object plugin, Runnable runnable, Consumer<ScheduledTask> consumer,
+        long delay, long repeat) {
       this.plugin = plugin;
       this.runnable = runnable;
       this.consumer = consumer;
@@ -236,7 +244,7 @@ public class VelocityScheduler implements Scheduler {
           } else {
             String friendlyPluginName = pluginManager.fromInstance(plugin)
                 .map(container -> container.getDescription().getName()
-                      .orElse(container.getDescription().getId()))
+                    .orElse(container.getDescription().getId()))
                 .orElse("UNKNOWN");
             Log.logger.error("Exception in task {} by plugin {}", runnable, friendlyPluginName,
                 e);

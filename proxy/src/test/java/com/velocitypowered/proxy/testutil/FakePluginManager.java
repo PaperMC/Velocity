@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@ import java.util.Collection;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A fake plugin manager.
+ */
 public class FakePluginManager implements PluginManager {
 
   public static final Object PLUGIN_A = new Object();

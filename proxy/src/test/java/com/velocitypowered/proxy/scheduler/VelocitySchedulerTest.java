@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,8 +79,8 @@ class VelocitySchedulerTest {
         latch.countDown();
       }
     }).delay(50, TimeUnit.MILLISECONDS)
-      .repeat(Duration.ofMillis(5))
-      .schedule();
+        .repeat(Duration.ofMillis(5))
+        .schedule();
 
     assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
 
@@ -94,10 +94,11 @@ class VelocitySchedulerTest {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
-    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_B, actualTask -> {
-      actualTask.cancel();
-      latch.countDown();
-    })
+    ScheduledTask task = scheduler.buildTask(
+        FakePluginManager.PLUGIN_B, actualTask -> {
+          actualTask.cancel();
+          latch.countDown();
+        })
         .repeat(5, TimeUnit.MILLISECONDS)
         .schedule();
 

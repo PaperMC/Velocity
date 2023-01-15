@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,9 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles loading plugins and provides a registry for loaded plugins.
+ */
 public class VelocityPluginManager implements PluginManager {
 
   private static final Logger logger = LogManager.getLogger(VelocityPluginManager.class);
@@ -73,6 +76,7 @@ public class VelocityPluginManager implements PluginManager {
 
   /**
    * Loads all plugins from the specified {@code directory}.
+   *
    * @param directory the directory to load from
    * @throws IOException if we could not open the directory
    */
@@ -137,8 +141,8 @@ public class VelocityPluginManager implements PluginManager {
         bind(CommandManager.class).toInstance(server.getCommandManager());
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
-            .annotatedWith(Names.named(container.getDescription().getId()))
-                  .toInstance(container);
+              .annotatedWith(Names.named(container.getDescription().getId()))
+              .toInstance(container);
         }
       }
     };

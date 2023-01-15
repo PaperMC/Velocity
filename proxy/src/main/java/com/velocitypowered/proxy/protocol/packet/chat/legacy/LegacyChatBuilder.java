@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 
 public class LegacyChatBuilder extends ChatBuilderV2 {
+
   public LegacyChatBuilder(ProtocolVersion version) {
     super(version);
   }
@@ -37,7 +38,8 @@ public class LegacyChatBuilder extends ChatBuilderV2 {
         : senderIdentity.uuid()) : sender.getUniqueId();
     Component msg = component == null ? Component.text(message) : component;
 
-    return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(), identity);
+    return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(),
+        identity);
   }
 
   @Override

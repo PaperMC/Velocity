@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ public class JoinGame implements MinecraftPacket {
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition;
   private CompoundBinaryTag chatTypeRegistry; // placeholder, 1.19+
+  private @Nullable CompoundBinaryTag originalRegistryContainerTag;
 
   public int getEntityId() {
     return entityId;
@@ -167,7 +168,7 @@ public class JoinGame implements MinecraftPacket {
     return currentDimensionData;
   }
 
-  public int getSimulationDistance(){
+  public int getSimulationDistance() {
     return simulationDistance;
   }
 
@@ -285,6 +286,7 @@ public class JoinGame implements MinecraftPacket {
     ImmutableSet<DimensionData> readData =
         DimensionRegistry.fromGameData(dimensionRegistryContainer, version);
     this.dimensionRegistry = new DimensionRegistry(readData, levelNames);
+    this.originalRegistryContainerTag = registryContainer;
 
     String dimensionIdentifier;
     String levelName = null;
@@ -378,21 +380,25 @@ public class JoinGame implements MinecraftPacket {
     }
     buf.writeByte(previousGamemode);
     ProtocolUtils.writeStringArray(buf, dimensionRegistry.getLevelNames().toArray(new String[0]));
-    CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
-    ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
-      CompoundBinaryTag.Builder dimensionRegistryEntry = CompoundBinaryTag.builder();
-      dimensionRegistryEntry.putString("type", "minecraft:dimension_type");
-      dimensionRegistryEntry.put("value", encodedDimensionRegistry);
-      registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
-      registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-        registryContainer.put("minecraft:chat_type", chatTypeRegistry);
-      }
+    if (this.originalRegistryContainerTag != null) {
+      ProtocolUtils.writeCompoundTag(buf, this.originalRegistryContainerTag);
     } else {
-      registryContainer.put("dimension", encodedDimensionRegistry);
+      CompoundBinaryTag.Builder registryContainer = CompoundBinaryTag.builder();
+      ListBinaryTag encodedDimensionRegistry = dimensionRegistry.encodeRegistry(version);
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+        CompoundBinaryTag.Builder dimensionRegistryEntry = CompoundBinaryTag.builder();
+        dimensionRegistryEntry.putString("type", "minecraft:dimension_type");
+        dimensionRegistryEntry.put("value", encodedDimensionRegistry);
+        registryContainer.put("minecraft:dimension_type", dimensionRegistryEntry.build());
+        registryContainer.put("minecraft:worldgen/biome", biomeRegistry);
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+          registryContainer.put("minecraft:chat_type", chatTypeRegistry);
+        }
+      } else {
+        registryContainer.put("dimension", encodedDimensionRegistry);
+      }
+      ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
     }
-    ProtocolUtils.writeCompoundTag(buf, registryContainer.build());
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
         && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
       ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());

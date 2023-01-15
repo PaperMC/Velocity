@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -67,12 +67,18 @@ public interface PlayerSettings {
    */
   boolean isClientListingAllowed();
 
+  /**
+   * The client's current chat display mode.
+   */
   enum ChatMode {
     SHOWN,
     COMMANDS_ONLY,
     HIDDEN
   }
 
+  /**
+   * The player's selected dominant hand.
+   */
   enum MainHand {
     LEFT,
     RIGHT

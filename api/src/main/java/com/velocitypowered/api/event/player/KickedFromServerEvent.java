@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -35,6 +35,7 @@ public final class KickedFromServerEvent implements
 
   /**
    * Creates a {@code KickedFromServerEvent} instance.
+   *
    * @param player the player affected
    * @param server the server the player disconnected from
    * @param originalReason the reason for being kicked, optional

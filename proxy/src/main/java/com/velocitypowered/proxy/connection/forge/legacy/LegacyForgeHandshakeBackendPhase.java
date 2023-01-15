@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import javax.annotation.Nullable;
 
 /**
- * Allows for simple tracking of the phase that the Legacy
- * Forge handshake is in (server side).
+ * Allows for simple tracking of the phase that the Legacy Forge handshake is in (server side).
  */
 public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
   /**
-   * Indicates that the handshake has not started, used for {@link BackendConnectionPhases#UNKNOWN}.
+   * Indicates that the handshake has not started, used for
+   * {@link BackendConnectionPhases#UNKNOWN}.
    */
   NOT_STARTED(LegacyForgeConstants.SERVER_HELLO_DISCRIMINATOR) {
     @Override
@@ -43,8 +43,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   },
 
   /**
-   * Sent a hello to the client, waiting for a hello back before sending
-   * the mod list.
+   * Sent a hello to the client, waiting for a hello back before sending the mod list.
    */
   HELLO(LegacyForgeConstants.MOD_LIST_DISCRIMINATOR) {
     @Override
@@ -65,8 +64,8 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   },
 
   /**
-   * The mod list from the client has been accepted and a server mod list
-   * has been sent. Waiting for the client to acknowledge.
+   * The mod list from the client has been accepted and a server mod list has been sent. Waiting for
+   * the client to acknowledge.
    */
   SENT_MOD_LIST(LegacyForgeConstants.REGISTRY_DISCRIMINATOR) {
     @Override
@@ -76,8 +75,8 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   },
 
   /**
-   * The server data is being sent or has been sent, and is waiting for
-   * the client to acknowledge it has processed this.
+   * The server data is being sent or has been sent, and is waiting for the client to acknowledge it
+   * has processed this.
    */
   SENT_SERVER_DATA(LegacyForgeConstants.ACK_DISCRIMINATOR) {
     @Override
@@ -106,16 +105,16 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
     }
   };
 
-  @Nullable private final Integer packetToAdvanceOn;
+  @Nullable
+  private final Integer packetToAdvanceOn;
 
   /**
    * Creates an instance of the {@link LegacyForgeHandshakeBackendPhase}.
    *
-   * @param packetToAdvanceOn The ID of the packet discriminator that indicates
-   *                          that the server has moved onto a new phase, and
-   *                          as such, Velocity should do so too (inspecting
-   *                          {@link #nextPhase()}. A null indicates there is no
-   *                          further phase to transition to.
+   * @param packetToAdvanceOn The ID of the packet discriminator that indicates that the server has
+   *                          moved onto a new phase, and as such, Velocity should do so too
+   *                          (inspecting {@link #nextPhase()}. A null indicates there is no further
+   *                          phase to transition to.
    */
   LegacyForgeHandshakeBackendPhase(@Nullable Integer packetToAdvanceOn) {
     this.packetToAdvanceOn = packetToAdvanceOn;
@@ -123,8 +122,8 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
   @Override
   public final boolean handle(VelocityServerConnection serverConnection,
-                              ConnectedPlayer player,
-                              PluginMessage message) {
+      ConnectedPlayer player,
+      PluginMessage message) {
     if (message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
       // Get the phase and check if we need to start the next phase.
       LegacyForgeHandshakeBackendPhase newPhase = getNewPhase(serverConnection, message);
@@ -148,7 +147,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
 
   @Override
   public void onDepartForNewServer(VelocityServerConnection serverConnection,
-                                   ConnectedPlayer player) {
+      ConnectedPlayer player) {
     // If the server we are departing is modded, we must always reset the client's handshake.
     player.getPhase().resetConnectionPhase(player);
   }
@@ -162,8 +161,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   }
 
   /**
-   * Gets the next phase, if any (will return self if we are at the end
-   * of the handshake).
+   * Gets the next phase, if any (will return self if we are at the end of the handshake).
    *
    * @return The next phase
    */
@@ -175,11 +173,11 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
    * Get the phase to act on, depending on the packet that has been sent.
    *
    * @param serverConnection The server Velocity is connecting to
-   * @param packet The packet
+   * @param packet           The packet
    * @return The phase to transition to, which may be the same as before.
    */
   private LegacyForgeHandshakeBackendPhase getNewPhase(VelocityServerConnection serverConnection,
-                                                       PluginMessage packet) {
+      PluginMessage packet) {
     if (packetToAdvanceOn != null
         && LegacyForgeUtil.getHandshakePacketDiscriminator(packet) == packetToAdvanceOn) {
       LegacyForgeHandshakeBackendPhase phaseToTransitionTo = nextPhase();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,9 @@ import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a server registered on the proxy.
+ */
 public class VelocityRegisteredServer implements RegisteredServer, ForwardingAudience {
 
   private final @Nullable VelocityServer server;
@@ -88,7 +91,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   /**
    * Pings the specified server using the specified event {@code loop}, claiming to be
    * {@code version}.
-   * @param loop the event loop to use
+   *
+   * @param loop    the event loop to use
    * @param version the version to report
    * @return the server list ping response
    */
@@ -146,14 +150,15 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * afterwards.
    *
    * @param identifier the channel ID to use
-   * @param data the data
+   * @param data       the data
    * @return whether or not the message was sent
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
-      VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
-        return connection.sendPluginMessage(identifier, data);
+      VelocityServerConnection serverConnection = player.getConnectedServer();
+      if (serverConnection != null && serverConnection.getConnection() != null
+              && serverConnection.getServer() == this) {
+        return serverConnection.sendPluginMessage(identifier, data);
       }
     }
 

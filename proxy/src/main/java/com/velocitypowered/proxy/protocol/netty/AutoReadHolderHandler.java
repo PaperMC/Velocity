@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 /**
- * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages
- * on {@code channelRead} and only releases them on an explicit read operation.
+ * A variation on {@link io.netty.handler.flow.FlowControlHandler} that explicitly holds messages on
+ * {@code channelRead} and only releases them on an explicit read operation.
  */
 public class AutoReadHolderHandler extends ChannelDuplexHandler {
 

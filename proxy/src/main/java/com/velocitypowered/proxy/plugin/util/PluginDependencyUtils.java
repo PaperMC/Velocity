@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Handles sorting plugin dependencies into an order that satisfies all dependencies.
+ */
 public class PluginDependencyUtils {
 
   private PluginDependencyUtils() {
@@ -39,8 +42,8 @@ public class PluginDependencyUtils {
   }
 
   /**
-   * Attempts to topographically sort all plugins for the proxy to load in dependency order using
-   * a depth-first search.
+   * Attempts to topographically sort all plugins for the proxy to load in dependency order using a
+   * depth-first search.
    *
    * @param candidates the plugins to sort
    * @return the sorted list of plugins

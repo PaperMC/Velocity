@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINIMUM_VERSION;
 import static com.velocitypowered.api.network.ProtocolVersion.SUPPORTED_VERSIONS;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.CLIENTBOUND;
+import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.SERVERBOUND;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
@@ -95,6 +97,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Registry of all Minecraft protocol states and the packets for each state.
+ */
 public enum StateRegistry {
 
   HANDSHAKE {
@@ -397,9 +402,17 @@ public enum StateRegistry {
 
   public static final int STATUS_ID = 1;
   public static final int LOGIN_ID = 2;
-  public final PacketRegistry clientbound = new PacketRegistry(Direction.CLIENTBOUND);
-  public final PacketRegistry serverbound = new PacketRegistry(Direction.SERVERBOUND);
+  protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND);
+  protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND);
 
+  public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(Direction direction,
+      ProtocolVersion version) {
+    return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
+  }
+
+  /**
+   * Packet registry.
+   */
   public static class PacketRegistry {
 
     private final Direction direction;
@@ -431,7 +444,7 @@ public enum StateRegistry {
     }
 
     <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
-                                              PacketMapping... mappings) {
+        PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
       }
@@ -490,6 +503,9 @@ public enum StateRegistry {
       }
     }
 
+    /**
+     * Protocol registry.
+     */
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
@@ -531,6 +547,9 @@ public enum StateRegistry {
     }
   }
 
+  /**
+   * Packet mapping.
+   */
   public static final class PacketMapping {
 
     private final int id;
@@ -539,7 +558,7 @@ public enum StateRegistry {
     private final @Nullable ProtocolVersion lastValidProtocolVersion;
 
     PacketMapping(int id, ProtocolVersion protocolVersion,
-                  ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
+        ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.lastValidProtocolVersion = lastValidProtocolVersion;
@@ -598,7 +617,7 @@ public enum StateRegistry {
    * @return PacketMapping with the provided arguments
    */
   private static PacketMapping map(int id, ProtocolVersion version,
-                                   ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
+      ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
     return new PacketMapping(id, version, lastValidProtocolVersion, encodeOnly);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a dimension sent to the client by the server.
+ */
 public final class DimensionData {
+
   private static final String UNKNOWN_DIMENSION_ID = "velocity:unknown_dimension";
 
   private final String registryIdentifier;
@@ -53,41 +57,50 @@ public final class DimensionData {
    *
    * @param registryIdentifier          the identifier for the dimension from the registry.
    * @param dimensionId                 the dimension ID contained in the registry (the "id" tag)
-   * @param isNatural                   indicates if the dimension use natural world generation (e.g. overworld)
+   * @param isNatural                   indicates if the dimension use natural world generation
+   *                                    (e.g. overworld)
    * @param ambientLight                the light level the client sees without external lighting
-   * @param isShrunk                    indicates if the world is shrunk, aka not the full 256 blocks (e.g. nether)
+   * @param isShrunk                    indicates if the world is shrunk, aka not the full 256
+   *                                    blocks (e.g. nether)
    * @param isUltrawarm                 internal dimension warmth flag
    * @param hasCeiling                  indicates if the dimension has a ceiling layer
    * @param hasSkylight                 indicates if the dimension should display the sun
-   * @param isPiglinSafe                indicates if piglins should naturally zombify in this dimension
-   * @param doBedsWork                  indicates if players should be able to sleep in beds in this dimension
-   * @param doRespawnAnchorsWork        indicates if player respawn points can be used in this dimension
+   * @param isPiglinSafe                indicates if piglins should naturally zombify in this
+   *                                    dimension
+   * @param doBedsWork                  indicates if players should be able to sleep in beds in this
+   *                                    dimension
+   * @param doRespawnAnchorsWork        indicates if player respawn points can be used in this
+   *                                    dimension
    * @param hasRaids                    indicates if raids can be spawned in the dimension
    * @param logicalHeight               the natural max height for the given dimension
    * @param burningBehaviourIdentifier  the identifier for how burning blocks work in the dimension
-   * @param fixedTime                   optional. If set to any game daytime value will deactivate time cycle
+   * @param fixedTime                   optional. If set to any game daytime value will deactivate
+   *                                    time cycle
    * @param createDragonFight           optional. Internal flag used in the end dimension
    * @param coordinateScale             optional, unknown purpose
    * @param effects                     optional, unknown purpose
    * @param minY                        the world effective lowest build-level
    * @param height                      the world height above zero
-   * @param monsterSpawnBlockLightLimit an integer controlling the block light needed to prevent monster spawns.
-   * @param monsterSpawnLightLevel      an int provider which is evaluated to find a value to compare the current
-   *                                    overall brightness with to determine if a monster should be allowed to spawn.
+   * @param monsterSpawnBlockLightLimit an integer controlling the block light needed to prevent
+   *                                    monster spawns.
+   * @param monsterSpawnLightLevel      an int provider which is evaluated to find a value to
+   *                                    compare the current overall brightness with to determine if
+   *                                    a monster should be allowed to spawn.
    */
   public DimensionData(String registryIdentifier,
-                       @Nullable Integer dimensionId,
-                       boolean isNatural,
-                       float ambientLight, boolean isShrunk, boolean isUltrawarm,
-                       boolean hasCeiling, boolean hasSkylight,
-                       boolean isPiglinSafe, boolean doBedsWork,
-                       boolean doRespawnAnchorsWork, boolean hasRaids,
-                       int logicalHeight, String burningBehaviourIdentifier,
-                       @Nullable Long fixedTime, @Nullable Boolean createDragonFight,
-                       @Nullable Double coordinateScale,
-                       @Nullable String effects,
-                       @Nullable Integer minY, @Nullable Integer height, @Nullable Integer monsterSpawnBlockLightLimit,
-                       @Nullable Integer monsterSpawnLightLevel) {
+      @Nullable Integer dimensionId,
+      boolean isNatural,
+      float ambientLight, boolean isShrunk, boolean isUltrawarm,
+      boolean hasCeiling, boolean hasSkylight,
+      boolean isPiglinSafe, boolean doBedsWork,
+      boolean doRespawnAnchorsWork, boolean hasRaids,
+      int logicalHeight, String burningBehaviourIdentifier,
+      @Nullable Long fixedTime, @Nullable Boolean createDragonFight,
+      @Nullable Double coordinateScale,
+      @Nullable String effects,
+      @Nullable Integer minY, @Nullable Integer height,
+      @Nullable Integer monsterSpawnBlockLightLimit,
+      @Nullable Integer monsterSpawnLightLevel) {
     this.monsterSpawnBlockLightLimit = monsterSpawnBlockLightLimit;
     this.monsterSpawnLightLevel = monsterSpawnLightLevel;
     Preconditions.checkNotNull(
@@ -198,19 +211,20 @@ public final class DimensionData {
   }
 
   /**
-   * Returns a fresh {@link DimensionData} with the specified {@code registryIdentifier}
-   * and {@code dimensionId}.
+   * Returns a fresh {@link DimensionData} with the specified {@code registryIdentifier} and
+   * {@code dimensionId}.
    *
    * @param registryIdentifier the identifier for the dimension from the registry
    * @param dimensionId        optional, dimension ID
    * @return a new {@link DimensionData}
    */
   public DimensionData annotateWith(String registryIdentifier,
-                                    @Nullable Integer dimensionId) {
+      @Nullable Integer dimensionId) {
     return new DimensionData(registryIdentifier, dimensionId, isNatural, ambientLight, isShrunk,
         isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
         hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, createDragonFight,
-        coordinateScale, effects, minY, height, monsterSpawnBlockLightLimit, monsterSpawnLightLevel);
+        coordinateScale, effects, minY, height, monsterSpawnBlockLightLimit,
+        monsterSpawnLightLevel);
   }
 
   public boolean isUnannotated() {
@@ -226,7 +240,7 @@ public final class DimensionData {
    * @return game dimension data
    */
   public static DimensionData decodeBaseCompoundTag(CompoundBinaryTag details,
-                                                    ProtocolVersion version) {
+      ProtocolVersion version) {
     boolean isNatural = details.getBoolean("natural");
     float ambientLight = details.getFloat("ambient_light");
     boolean isShrunk = details.getBoolean("shrunk");
@@ -249,10 +263,12 @@ public final class DimensionData {
         : null;
     Integer minY = details.keySet().contains("min_y") ? details.getInt("min_y") : null;
     Integer height = details.keySet().contains("height") ? details.getInt("height") : null;
-    Integer monsterSpawnBlockLightLimit = details.keySet().contains("monster_spawn_block_light_limit")
-        ? details.getInt("monster_spawn_block_light_limit") : null;
+    Integer monsterSpawnBlockLightLimit =
+        details.keySet().contains("monster_spawn_block_light_limit")
+            ? details.getInt("monster_spawn_block_light_limit") : null;
     Integer monsterSpawnLightLevel =
-        details.keySet().contains("monster_spawn_light_level") ? details.getInt("monster_spawn_block_light_limit") :
+        details.keySet().contains("monster_spawn_light_level") ? details.getInt(
+            "monster_spawn_block_light_limit") :
             null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
       Preconditions.checkNotNull(height,
@@ -262,27 +278,30 @@ public final class DimensionData {
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       Preconditions.checkNotNull(monsterSpawnBlockLightLimit,
-          "DimensionData requires 'monster_spawn_block_light_limit' to be present for this version.");
+          "DimensionData requires 'monster_spawn_block_light_limit' to be present"
+              + " for this version.");
       Preconditions.checkNotNull(monsterSpawnLightLevel,
-          "DimensionData requires 'monster_spawn_light_level' to be present for this version.");
+          "DimensionData requires 'monster_spawn_light_level' to be present"
+              + " for this version.");
     }
     return new DimensionData(
         UNKNOWN_DIMENSION_ID, null, isNatural, ambientLight, isShrunk,
         isUltrawarm, hasCeiling, hasSkylight, isPiglinSafe, doBedsWork, doRespawnAnchorsWork,
         hasRaids, logicalHeight, burningBehaviourIdentifier, fixedTime, hasEnderdragonFight,
-        coordinateScale, effects, minY, height, monsterSpawnBlockLightLimit, monsterSpawnLightLevel);
+        coordinateScale, effects, minY, height, monsterSpawnBlockLightLimit,
+        monsterSpawnLightLevel);
   }
 
   /**
-   * Parses a given CompoundTag to a DimensionData instance. Assumes the data is part of a
-   * dimension registry.
+   * Parses a given CompoundTag to a DimensionData instance. Assumes the data is part of a dimension
+   * registry.
    *
    * @param dimTag  the compound from the registry to read
    * @param version the protocol version
    * @return game dimension data
    */
   public static DimensionData decodeRegistryEntry(CompoundBinaryTag dimTag,
-                                                  ProtocolVersion version) {
+      ProtocolVersion version) {
     String registryIdentifier = dimTag.getString("name");
     CompoundBinaryTag details;
     Integer dimensionId = null;

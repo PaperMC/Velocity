@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.function.BooleanSupplier;
 
+/**
+ * Statically-computed constraints for native code.
+ */
 public class NativeConstraints {
   private static final boolean NATIVES_ENABLED = !Boolean.getBoolean("velocity.natives-disabled");
   private static final boolean IS_AMD64;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -15,6 +15,9 @@ import java.util.Objects;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the information for a Forge mod list.
+ */
 public final class ModInfo {
 
   public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
@@ -22,6 +25,12 @@ public final class ModInfo {
   private final String type;
   private final List<Mod> modList;
 
+  /**
+   * Constructs a new ModInfo instance.
+   *
+   * @param type the Forge server list version to use
+   * @param modList the mods to present to the client
+   */
   public ModInfo(String type, List<Mod> modList) {
     this.type = Preconditions.checkNotNull(type, "type");
     this.modList = ImmutableList.copyOf(modList);
@@ -60,6 +69,9 @@ public final class ModInfo {
     return Objects.hash(type, modList);
   }
 
+  /**
+   * Represents a mod to send to the client.
+   */
   public static final class Mod {
 
     @SerializedName("modid")

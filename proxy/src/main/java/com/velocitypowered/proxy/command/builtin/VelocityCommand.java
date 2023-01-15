@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,8 @@ package com.velocitypowered.proxy.command.builtin;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
@@ -35,15 +32,20 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -56,12 +58,11 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.BoundRequestBuilder;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * Implements the {@code /velocity} command and friends.
+ */
 public class VelocityCommand implements SimpleCommand {
 
   private interface SubCommand {
@@ -127,9 +128,9 @@ public class VelocityCommand implements SimpleCommand {
 
     if (currentArgs.length == 0) {
       return commands.entrySet().stream()
-              .filter(e -> e.getValue().hasPermission(source, new String[0]))
-              .map(Map.Entry::getKey)
-              .collect(ImmutableList.toImmutableList());
+          .filter(e -> e.getValue().hasPermission(source, new String[0]))
+          .map(Map.Entry::getKey)
+          .collect(ImmutableList.toImmutableList());
     }
 
     if (currentArgs.length == 1) {
@@ -347,7 +348,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Identity.nil(), Component.text("/velocity dump", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity dump", NamedTextColor.RED));
         return;
       }
 
@@ -355,11 +356,11 @@ public class VelocityCommand implements SimpleCommand {
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
         servers.add(iter.getServerInfo().getName(),
-                InformationUtils.collectServerInfo(iter));
+            InformationUtils.collectServerInfo(iter));
       }
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
-              server.getConfiguration().getAttemptConnectionOrder());
+          server.getConfiguration().getAttemptConnectionOrder());
       for (String s : attemptedConnectionOrder) {
         connectOrder.add(s);
       }
@@ -368,7 +369,7 @@ public class VelocityCommand implements SimpleCommand {
       proxyConfig.add("servers", servers);
       proxyConfig.add("connectOrder", connectOrder);
       proxyConfig.add("forcedHosts",
-              InformationUtils.collectForcedHosts(server.getConfiguration()));
+          InformationUtils.collectForcedHosts(server.getConfiguration()));
 
       JsonObject dump = new JsonObject();
       dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
@@ -376,93 +377,26 @@ public class VelocityCommand implements SimpleCommand {
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
 
-      source.sendMessage(Component.text().content("Uploading gathered information...").build());
-      AsyncHttpClient httpClient = ((VelocityServer) server).getAsyncHttpClient();
+      Path dumpPath = Paths.get("velocity-dump-"
+          + new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())
+          + ".json");
+      try (BufferedWriter bw = Files.newBufferedWriter(
+          dumpPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
+        bw.write(InformationUtils.toHumanReadableString(dump));
 
-      BoundRequestBuilder request =
-              httpClient.preparePost("https://dump.velocitypowered.com/documents");
-      request.setHeader("Content-Type", "text/plain");
-      request.addHeader("User-Agent", server.getVersion().getName() + "/"
-              + server.getVersion().getVersion());
-      request.setBody(
-              InformationUtils.toHumanReadableString(dump).getBytes(StandardCharsets.UTF_8));
-
-      ListenableFuture<Response> future = request.execute();
-      future.addListener(() -> {
-        try {
-          Response response = future.get();
-          if (response.getStatusCode() != 200) {
-            source.sendMessage(Component.text()
-                    .content("An error occurred while communicating with the Velocity servers. "
-                            + "The servers may be temporarily unavailable or there is an issue "
-                            + "with your network settings. You can find more information in the "
-                            + "log or console of your Velocity server.")
-                    .color(NamedTextColor.RED).build());
-            logger.error("Invalid status code while POST-ing Velocity dump: "
-                    + response.getStatusCode());
-            logger.error("Headers: \n--------------BEGIN HEADERS--------------\n"
-                    + response.getHeaders().toString()
-                    + "\n---------------END HEADERS---------------");
-            return;
-          }
-          JsonObject key = InformationUtils.parseString(
-                  response.getResponseBody(StandardCharsets.UTF_8));
-          if (!key.has("key")) {
-            throw new JsonSyntaxException("Missing Dump-Url-response");
-          }
-          String url = "https://dump.velocitypowered.com/"
-                  + key.get("key").getAsString() + ".json";
-          source.sendMessage(Component.text()
-                  .content("Created an anonymised report containing useful information about "
-                          + "this proxy. If a developer requested it, you may share the "
-                          + "following link with them:")
-                  .append(Component.newline())
-                  .append(Component.text(">> " + url)
-                          .color(NamedTextColor.GREEN)
-                          .clickEvent(ClickEvent.openUrl(url)))
-                 .append(Component.newline())
-                 .append(Component.text("Note: This link is only valid for a few days")
-                          .color(NamedTextColor.GRAY)
-                 ).build());
-        } catch (InterruptedException e) {
-          source.sendMessage(Component.text()
-                  .content("Could not complete the request, the command was interrupted."
-                          + "Please refer to the proxy-log or console for more information.")
-                  .color(NamedTextColor.RED).build());
-          logger.error("Failed to complete dump command, "
-                  + "the executor was interrupted: " + e.getMessage());
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          TextComponent.Builder message = Component.text()
-                  .content("An error occurred while attempting to upload the gathered "
-                          + "information to the Velocity servers.")
-                  .append(Component.newline())
-                  .color(NamedTextColor.RED);
-          if (e.getCause() instanceof UnknownHostException
-              || e.getCause() instanceof ConnectException) {
-            message.append(Component.text(
-                    "Likely cause: Invalid system DNS settings or no internet connection"));
-          }
-          source.sendMessage(message
-                  .append(Component.newline()
-                  .append(Component.text(
-                          "Error details can be found in the proxy log / console"))
-                  ).build());
-
-          logger.error("Failed to complete dump command, "
-                  + "the executor encountered an Exception: " + e.getCause().getMessage());
-          e.getCause().printStackTrace();
-        } catch (JsonParseException e) {
-          source.sendMessage(Component.text()
-                  .content("An error occurred on the Velocity servers and the dump could not "
-                          + "be completed. Please contact the Velocity staff about this problem. "
-                          + "If you do, provide the details about this error from the Velocity "
-                          + "console or server log.")
-                  .color(NamedTextColor.RED).build());
-          logger.error("Invalid response from the Velocity servers: " + e.getMessage());
-          e.printStackTrace();
-        }
-      }, MoreExecutors.directExecutor());
+        source.sendMessage(Component.text(
+            "An anonymised report containing useful information about "
+                + "this proxy has been saved at " + dumpPath.toAbsolutePath(),
+            NamedTextColor.GREEN));
+      } catch (IOException e) {
+        logger.error("Failed to complete dump command, "
+            + "the executor was interrupted: " + e.getMessage());
+        e.printStackTrace();
+        source.sendMessage(Component.text(
+            "We could not save the anonymized dump. Check the console for more details.",
+            NamedTextColor.RED)
+        );
+      }
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -35,6 +35,7 @@ public final class GameProfileRequestEvent {
 
   /**
    * Creates a new instance.
+   *
    * @param connection the connection connecting to the proxy
    * @param originalProfile the original {@link GameProfile} for the user
    * @param onlineMode whether or not the user connected in online or offline mode

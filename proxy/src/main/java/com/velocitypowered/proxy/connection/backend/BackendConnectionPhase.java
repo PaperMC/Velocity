@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 public interface BackendConnectionPhase {
 
   /**
-   * Handle a login plugin message in the context of
-   * this phase.
+   * Handle a login plugin message in the context of this phase.
    *
    * @param message The message to handle
    * @return true if handled, false otherwise.
@@ -44,20 +43,22 @@ public interface BackendConnectionPhase {
   }
 
   /**
-   * Handle a plugin message in the context of
-   * this phase.
+   * Handle a plugin message in the context of this phase.
    *
+   * @param server the server connection
+   * @param player the player
    * @param message The message to handle
    * @return true if handled, false otherwise.
    */
   default boolean handle(VelocityServerConnection server,
-                         ConnectedPlayer player,
-                         PluginMessage message) {
+      ConnectedPlayer player,
+      PluginMessage message) {
     return false;
   }
 
   /**
    * Indicates whether the connection is considered complete.
+   *
    * @return true if so
    */
   default boolean consideredComplete() {
@@ -65,14 +66,14 @@ public interface BackendConnectionPhase {
   }
 
   /**
-   * Fired when the provided server connection is about to be terminated
-   * because the provided player is connecting to a new server.
+   * Fired when the provided server connection is about to be terminated because the provided player
+   * is connecting to a new server.
    *
    * @param serverConnection The server the player is disconnecting from
-   * @param player The player
+   * @param player           The player
    */
   default void onDepartForNewServer(VelocityServerConnection serverConnection,
-                                    ConnectedPlayer player) {
+      ConnectedPlayer player) {
   }
 
   /**

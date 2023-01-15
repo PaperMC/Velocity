@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests for injecting Velocity commnads into a server Brigadier command tree.
+ */
 public class CommandGraphInjectorTests extends CommandTestSuite {
 
   private RootCommandNode<CommandSource> dest;
@@ -86,11 +89,11 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   @Test
   void testInjectsHintsOfInvocableCommand() {
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .build();
+        .<CommandSource>literal("hint")
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, (SimpleCommand) invocation -> fail());
     manager.getInjector().inject(dest, source);
 
@@ -104,11 +107,11 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .build();
+        .<CommandSource>literal("hint")
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -130,10 +133,10 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   @Test
   void testInjectsBrigadierCommand() {
     final LiteralCommandNode<CommandSource> node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .then(literal("world"))
-            .then(argument("count", integer()))
-            .build();
+        .<CommandSource>literal("hello")
+        .then(literal("world"))
+        .then(argument("count", integer()))
+        .build();
     manager.register(new BrigadierCommand(node));
     manager.getInjector().inject(dest, source);
 
@@ -145,20 +148,20 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var registered = LiteralArgumentBuilder
-            .<CommandSource>literal("greet")
-            .then(LiteralArgumentBuilder
-                    .<CommandSource>literal("somebody")
-                    .requires(source -> {
-                      callCount.incrementAndGet();
-                      return false;
-                    }))
-            .build();
+        .<CommandSource>literal("greet")
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("somebody")
+            .requires(source -> {
+              callCount.incrementAndGet();
+              return false;
+            }))
+        .build();
     manager.register(new BrigadierCommand(registered));
     manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
-            .literal("greet")
-            .build();
+        .literal("greet")
+        .build();
     assertEquals(expected, dest.getChild("greet"));
     assertEquals(1, callCount.get());
   }
@@ -166,20 +169,20 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   @Test
   void testInjectPreservesBrigadierCommandAliasRedirect() {
     final var registered = LiteralArgumentBuilder
-            .<CommandSource>literal("origin")
-            .redirect(LiteralArgumentBuilder
-                .<CommandSource>literal("target")
-                    .build())
-            .build();
+        .<CommandSource>literal("origin")
+        .redirect(LiteralArgumentBuilder
+            .<CommandSource>literal("target")
+            .build())
+        .build();
     manager.register(new BrigadierCommand(registered));
     manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
-            .<CommandSource>literal("origin")
-            .redirect(LiteralArgumentBuilder
-                .<CommandSource>literal("target")
-                .build())
-            .build();
+        .<CommandSource>literal("origin")
+        .redirect(LiteralArgumentBuilder
+            .<CommandSource>literal("target")
+            .build())
+        .build();
     assertEquals(expected, dest.getChild("origin"));
   }
 
@@ -188,26 +191,26 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
     final var callCount = new AtomicInteger();
 
     final var registered = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .then(LiteralArgumentBuilder
-                .<CommandSource>literal("origin")
-                .redirect(LiteralArgumentBuilder
-                    .<CommandSource>literal("target")
-                    .requires(source -> {
-                      callCount.incrementAndGet();
-                      return false;
-                    })
-                    .build()
-                )
+        .<CommandSource>literal("hello")
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("origin")
+            .redirect(LiteralArgumentBuilder
+                .<CommandSource>literal("target")
+                .requires(source -> {
+                  callCount.incrementAndGet();
+                  return false;
+                })
+                .build()
             )
-            .build();
+        )
+        .build();
     manager.register(new BrigadierCommand(registered));
     manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .then(literal("origin"))
-            .build();
+        .<CommandSource>literal("hello")
+        .then(literal("origin"))
+        .build();
     assertEquals(expected, dest.getChild("hello"));
     assertEquals(1, callCount.get());
   }
@@ -215,15 +218,15 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
   @Test
   void testInjectOverridesAliasInDestination() {
     final var registered = LiteralArgumentBuilder
-            .<CommandSource>literal("foo")
-            .then(literal("bar"))
-            .build();
+        .<CommandSource>literal("foo")
+        .then(literal("bar"))
+        .build();
     manager.register(new BrigadierCommand(registered));
 
     final var original = LiteralArgumentBuilder
-            .<CommandSource>literal("foo")
-            .then(literal("baz"))
-            .build();
+        .<CommandSource>literal("foo")
+        .then(literal("baz"))
+        .build();
     dest.addChild(original);
     manager.getInjector().inject(dest, source);
 
