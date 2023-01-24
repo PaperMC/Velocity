@@ -84,6 +84,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
+  public CompletableFuture<ServerPing> pingFromVersion(ProtocolVersion version) {
+    return ping(null, version);
+  }
+
+  @Override
   public CompletableFuture<ServerPing> ping() {
     return ping(null, ProtocolVersion.UNKNOWN);
   }
