@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.proxy.server;
 
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import java.util.Collection;
@@ -44,10 +43,11 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
 
   /**
    * Attempts to ping the remote server and return the server list ping result
-   * as if it had been requested from a specific Minecraft version.
+   * according to the options provided.
    *
-   * @param version the version of Minecraft from which ping will be simulated
+   * @param pingOptions the options provided for pinging the server
    * @return the server ping result from the server
+   * @since 3.2.0
    */
-  CompletableFuture<ServerPing> pingFromVersion(ProtocolVersion version);
+  CompletableFuture<ServerPing> ping(PingOptions pingOptions);
 }

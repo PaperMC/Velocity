@@ -68,7 +68,7 @@ public class ServerListPingHandler {
         continue;
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
-      pings.add(vrs.ping(connection.getConnection().eventLoop(), responseProtocolVersion));
+      pings.add(vrs.ping(connection.getConnection().eventLoop(), -1, responseProtocolVersion));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);
