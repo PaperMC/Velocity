@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.proxy.server;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -118,12 +117,14 @@ public final class PingOptions {
      * Sets the maximum time to wait to get the required {@link ServerPing}.
      *
      * @param timeout the timeout duration
+     *                A value of 0 means that the read-timeout value
+     *                from the Velocity configuration will be used,
+     *                while a negative value means that there will
+     *                be no timeout.
      * @return this builder
      */
     public Builder timeout(final @NotNull Duration timeout) {
-      final long time = timeout.toMillis();
-      checkArgument(time >= 0, "timeout cannot be negative");
-      this.timeout = time;
+      this.timeout = timeout.toMillis();
       return this;
     }
 
@@ -131,11 +132,14 @@ public final class PingOptions {
      * Sets the maximum time to wait to get the required {@link ServerPing}.
      *
      * @param time the timeout duration
+     *             A value of 0 means that the read-timeout value
+     *             from the Velocity configuration will be used,
+     *             while a negative value means that there will
+     *             be no timeout.
      * @param unit the unit of time to be used to provide the timeout duration
      * @return this builder
      */
     public Builder timeout(final long time, final @NotNull TimeUnit unit) {
-      checkArgument(time >= 0, "timeout cannot be negative");
       this.timeout = unit.toMillis(time);
       return this;
     }
