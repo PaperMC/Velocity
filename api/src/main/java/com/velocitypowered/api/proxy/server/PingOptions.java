@@ -8,6 +8,7 @@
 package com.velocitypowered.api.proxy.server;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.time.Duration;
@@ -26,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 public final class PingOptions {
   /**
    * Default PingOptions.
-   * Uses a {@link ProtocolVersion#UNKNOWN} version and a timeout of 3000.
    */
   public static final PingOptions DEFAULT = PingOptions.builder().build();
   private final ProtocolVersion protocolVersion;
@@ -96,7 +96,7 @@ public final class PingOptions {
    * @since 3.2.0
    */
   public static final class Builder implements AbstractBuilder<PingOptions> {
-    private ProtocolVersion protocolVersion;
+    private ProtocolVersion protocolVersion = ProtocolVersion.UNKNOWN;
     private long timeout = 0;
 
     private Builder() {
@@ -108,7 +108,8 @@ public final class PingOptions {
      * @param protocolVersion the specified protocol
      * @return this builder
      */
-    public Builder version(final ProtocolVersion protocolVersion) {
+    public Builder version(final @NotNull ProtocolVersion protocolVersion) {
+      checkNotNull(protocolVersion, "protocolVersion cannot be negative");
       this.protocolVersion = protocolVersion;
       return this;
     }
@@ -148,9 +149,6 @@ public final class PingOptions {
      */
     @Override
     public @NotNull PingOptions build() {
-      if (protocolVersion == null) {
-        protocolVersion = ProtocolVersion.UNKNOWN;
-      }
       return new PingOptions(this);
     }
   }
