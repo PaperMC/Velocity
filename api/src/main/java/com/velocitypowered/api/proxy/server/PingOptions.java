@@ -97,7 +97,7 @@ public final class PingOptions {
    */
   public static final class Builder implements AbstractBuilder<PingOptions> {
     private ProtocolVersion protocolVersion;
-    private long timeout = 3000;
+    private long timeout = 0;
 
     private Builder() {
     }

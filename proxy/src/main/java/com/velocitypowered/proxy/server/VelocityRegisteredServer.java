@@ -113,7 +113,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline()
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(pingOptions.getTimeout() < 0
+                    new ReadTimeoutHandler(pingOptions.getTimeout() == 0
                             ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
