@@ -108,7 +108,7 @@ public final class PingOptions {
      * @return this builder
      */
     public Builder version(final @NotNull ProtocolVersion protocolVersion) {
-      checkNotNull(protocolVersion, "protocolVersion cannot be negative");
+      checkNotNull(protocolVersion, "protocolVersion cannot be null");
       this.protocolVersion = protocolVersion;
       return this;
     }
@@ -124,6 +124,7 @@ public final class PingOptions {
      * @return this builder
      */
     public Builder timeout(final @NotNull Duration timeout) {
+      checkNotNull(timeout, "timeout cannot be null");
       this.timeout = timeout.toMillis();
       return this;
     }
@@ -136,11 +137,12 @@ public final class PingOptions {
      *             from the Velocity configuration will be used,
      *             while a negative value means that there will
      *             be no timeout.
-     * @param unit the unit of time to be used to provide the timeout duration
+     * @param timeunit the unit of time to be used to provide the timeout duration
      * @return this builder
      */
-    public Builder timeout(final long time, final @NotNull TimeUnit unit) {
-      this.timeout = unit.toMillis(time);
+    public Builder timeout(final long time, final @NotNull TimeUnit timeunit) {
+      checkNotNull(timeunit, "timeunit cannot be null");
+      this.timeout = timeunit.toMillis(time);
       return this;
     }
 
