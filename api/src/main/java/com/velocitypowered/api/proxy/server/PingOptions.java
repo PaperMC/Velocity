@@ -150,8 +150,6 @@ public final class PingOptions {
      * Create a new {@link PingOptions} with the values of this Builder.
      *
      * @return a new PingOptions object
-     * @throws NullPointerException if the timeout is not assigned
-     *     until this method is executed
      */
     @Override
     public @NotNull PingOptions build() {
