@@ -7,31 +7,38 @@
 
 package com.velocitypowered.api.proxy.server;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.builder.AbstractBuilder;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents the characteristics with which a ping to a Minecraft server is simulated.
+ * Contains the parameters used to ping a {@link RegisteredServer}.
  * This class is immutable.
  *
  * @since 3.2.0
+ * @see RegisteredServer#ping(PingOptions)
  */
 public final class PingOptions {
+  /**
+   * Default PingOptions.
+   * Uses a {@link ProtocolVersion#UNKNOWN} version and a timeout of 3000.
+   */
+  public static final PingOptions DEFAULT = PingOptions.builder().build();
   private final ProtocolVersion protocolVersion;
   private final long timeout;
 
   private PingOptions(final Builder builder) {
     this.protocolVersion = builder.protocolVersion;
-    this.timeout = builder.timeout.toMillis();
+    this.timeout = builder.timeout;
   }
 
   /**
-   * The version of Minecraft from which ping will be emulated.
+   * The protocol version used to ping the server.
    *
    * @return the emulated Minecraft version
    */
@@ -40,7 +47,7 @@ public final class PingOptions {
   }
 
   /**
-   * The maximum timeout duration for receiving the {@link ServerPing}.
+   * The maximum period of time to wait for a response from the remote server.
    *
    * @return the server ping timeout in milliseconds
    */
@@ -90,29 +97,9 @@ public final class PingOptions {
    */
   public static final class Builder implements AbstractBuilder<PingOptions> {
     private ProtocolVersion protocolVersion;
-    private Duration timeout;
+    private long timeout = 3000;
 
     private Builder() {
-    }
-
-    /**
-     * The protocol version used to ping the server
-     * corresponding to this Builder.
-     *
-     * @return the protocol version corresponding to this Builder
-     */
-    public @Nullable ProtocolVersion getProtocolVersion() {
-      return this.protocolVersion;
-    }
-
-    /**
-     * The maximum timeout duration to wait for the ping
-     * corresponding to this Builder.
-     *
-     * @return the timeout corresponding to this Builder
-     */
-    public @Nullable Duration getTimeout() {
-      return this.timeout;
     }
 
     /**
@@ -133,7 +120,9 @@ public final class PingOptions {
      * @return this builder
      */
     public Builder timeout(final @NotNull Duration timeout) {
-      this.timeout = timeout;
+      final long time = timeout.toMillis();
+      checkArgument(time >= 0, "timeout cannot be negative");
+      this.timeout = time;
       return this;
     }
 
@@ -145,7 +134,8 @@ public final class PingOptions {
      * @return this builder
      */
     public Builder timeout(final long time, final @NotNull TimeUnit unit) {
-      this.timeout = Duration.of(time, unit.toChronoUnit());
+      checkArgument(time >= 0, "timeout cannot be negative");
+      this.timeout = unit.toMillis(time);
       return this;
     }
 
@@ -158,9 +148,6 @@ public final class PingOptions {
      */
     @Override
     public @NotNull PingOptions build() {
-      if (timeout == null) {
-        throw new NullPointerException("TimeOut cannot be null");
-      }
       if (protocolVersion == null) {
         protocolVersion = ProtocolVersion.UNKNOWN;
       }
