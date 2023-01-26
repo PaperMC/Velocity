@@ -40,4 +40,14 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
    * @return the server ping result from the server
    */
   CompletableFuture<ServerPing> ping();
+
+  /**
+   * Attempts to ping the remote server and return the server list ping result
+   * according to the options provided.
+   *
+   * @param pingOptions the options provided for pinging the server
+   * @return the server ping result from the server
+   * @since 3.2.0
+   */
+  CompletableFuture<ServerPing> ping(PingOptions pingOptions);
 }
