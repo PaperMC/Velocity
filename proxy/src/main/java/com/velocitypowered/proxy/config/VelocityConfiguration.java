@@ -532,6 +532,24 @@ public class VelocityConfiguration implements ProxyConfig {
       mustResave = true;
     }
 
+    String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+
+    // MOTD Migration
+    if (configVersion < 2.6) {
+      if (!motd.startsWith("{")) {
+        final String migratedMotd = MiniMessage.miniMessage().serialize(
+                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+
+        config.set("motd", migratedMotd);
+        motd = migratedMotd;
+      }
+      config.setComment("motd",
+              " What should be the MOTD? This gets displayed when the player adds your server to\n"
+                      + "their server list. MiniMessage format and JSON are accepted.");
+      config.set("config-version", "2.6");
+      mustResave = true;
+    }
+
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
       config.save();
