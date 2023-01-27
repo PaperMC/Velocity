@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Identifies a type with a public RSA signature.
+ *
  * @since 3.1.2
  */
 public interface KeyIdentifiable {

@@ -18,6 +18,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
  * If this event is denied, it will retroactively send a DENIED status to the downstream
  * server in response.
  * If the downstream server has it set to "forced" it will forcefully disconnect the user.
+ *
  * @since 3.1.2
  */
 @AwaitingEvent

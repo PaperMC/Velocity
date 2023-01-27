@@ -12,6 +12,8 @@ import java.util.UUID;
 
 /**
  * Represents a chat session held by a player.
+ *
+ * @since 3.1.2
  */
 public interface ChatSession extends KeyIdentifiable {
   /**

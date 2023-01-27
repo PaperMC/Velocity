@@ -22,6 +22,7 @@ public interface TabListEntry extends KeyIdentifiable {
    * Returns the {@link ChatSession} associated with this entry.
    *
    * @return the chat session
+   * @since 3.1.2
    */
   @Nullable ChatSession getChatSession();
 
@@ -124,6 +125,7 @@ public interface TabListEntry extends KeyIdentifiable {
    * Returns whether or not this player will be visible to other players in the tab list.
    *
    * @return Whether this entry is listed; only changeable in 1.19.3 and above
+   * @since 3.1.2
    */
   default boolean isListed() {
     return true;
@@ -134,6 +136,7 @@ public interface TabListEntry extends KeyIdentifiable {
    *
    * @param listed whether this entry is listed
    * @return {@code this}, for chaining
+   * @since 3.1.2
    */
   default TabListEntry setListed(boolean listed) {
     return this;

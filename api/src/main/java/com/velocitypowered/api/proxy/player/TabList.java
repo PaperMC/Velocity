@@ -70,6 +70,8 @@ public interface TabList {
 
   /**
    * Clears all entries from the tab list.
+   *
+   * @since 3.1.2
    */
   void clearAll();
 
@@ -118,6 +120,7 @@ public interface TabList {
    * @param chatSession the chat session
    * @return the entry
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   * @since 3.1.2
    */
   @Deprecated
   default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
@@ -136,6 +139,7 @@ public interface TabList {
    * @param listed      the visible status of entry
    * @return the entry
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   * @since 3.1.2
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
