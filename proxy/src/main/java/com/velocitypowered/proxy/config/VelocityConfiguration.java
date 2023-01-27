@@ -274,11 +274,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public net.kyori.adventure.text.Component getMotd() {
     if (motdAsComponent == null) {
-      if (motd.startsWith("{")) {
-        motdAsComponent = GsonComponentSerializer.gson().deserialize(motd);
-      } else {
-        motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
-      }
+      motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
     }
     return motdAsComponent;
   }
@@ -534,18 +530,29 @@ public class VelocityConfiguration implements ProxyConfig {
 
     String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
 
-    // MOTD Migration
+    // Old MOTD Migration
     if (configVersion < 2.6) {
-      if (!motd.startsWith("{")) {
-        final String migratedMotd = MiniMessage.miniMessage().serialize(
-                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+      String migratedMotd = motd;
 
-        config.set("motd", migratedMotd);
-        motd = migratedMotd;
+      // JSON Format Migration
+      final String strippedMotd = migratedMotd.strip();
+      if (strippedMotd.startsWith("{\"") || strippedMotd.startsWith("[\"")) {
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                GsonComponentSerializer.gson().deserialize(migratedMotd))
+                .replace("\\", "");
       }
+
+      // Legacy '&' Format Migration
+      migratedMotd = MiniMessage.miniMessage().serialize(
+              LegacyComponentSerializer.legacyAmpersand().deserialize(migratedMotd))
+              .replace("\\", "");
+
+      config.set("motd", migratedMotd);
+      motd = migratedMotd;
+
       config.setComment("motd",
               " What should be the MOTD? This gets displayed when the player adds your server to\n"
-                      + "their server list. MiniMessage format and JSON are accepted.");
+                      + " their server list. Only MiniMessage format are accepted.");
       config.set("config-version", "2.6");
       mustResave = true;
     }
