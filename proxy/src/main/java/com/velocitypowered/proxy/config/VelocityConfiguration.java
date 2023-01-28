@@ -535,8 +535,7 @@ public class VelocityConfiguration implements ProxyConfig {
       String migratedMotd = motd;
 
       // JSON Format Migration
-      final String strippedMotd = migratedMotd.strip();
-      if (strippedMotd.startsWith("{\"") || strippedMotd.startsWith("[\"")) {
+      if (migratedMotd.strip().startsWith("{")) {
         migratedMotd = MiniMessage.miniMessage().serialize(
                 GsonComponentSerializer.gson().deserialize(migratedMotd))
                 .replace("\\", "");
