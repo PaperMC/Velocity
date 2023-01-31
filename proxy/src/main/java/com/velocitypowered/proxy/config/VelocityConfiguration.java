@@ -551,7 +551,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
       config.setComment("motd",
               " What should be the MOTD? This gets displayed when the player adds your server to\n"
-                      + " their server list. Only MiniMessage format are accepted.");
+                      + " their server list. Only MiniMessage format is accepted.");
       config.set("config-version", "2.6");
       mustResave = true;
     }
