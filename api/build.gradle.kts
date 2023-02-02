@@ -2,26 +2,66 @@ plugins {
     `java-library`
     `maven-publish`
     id("velocity-publish")
+    kotlin("jvm") version "1.9.22"
+}
+
+val apKotlinOnly by configurations.creating
+val apAndMain by configurations.creating
+
+val ap by sourceSets.creating
+
+tasks.named("compileApKotlin", org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class) {
+    libraries.from(apKotlinOnly)
+}
+
+// Make IDEA happy -- eclipse doesn't handle Kotlin anyways
+if (System.getProperty("idea.sync.active").toBoolean()) {
+    configurations.named("apImplementation") {
+        extendsFrom(apKotlinOnly)
+    }
+}
+
+configurations {
+    api { extendsFrom(apAndMain) }
+    named(ap.apiConfigurationName) { extendsFrom(apAndMain) }
+
+    // Expose AP to other subprojects
+    sequenceOf(apiElements, runtimeElements).forEach {
+        it {
+            outgoing.variants.named("classes") {
+                val classesDirs = ap.output.classesDirs
+                classesDirs.forEach { dir ->
+                    artifact(dir) {
+                        type = ArtifactTypeDefinition.JVM_CLASS_DIRECTORY
+                        builtBy(classesDirs.buildDependencies)
+                    }
+                }
+            }
+        }
+    }
+}
+
+kotlin {
+    val minimumKotlin = "1.7"
+    target.compilations.configureEach {
+        kotlinOptions {
+            apiVersion = minimumKotlin
+            languageVersion = minimumKotlin
+            jvmTarget = "17"
+        }
+    }
 }
 
 java {
     withJavadocJar()
     withSourcesJar()
-
-    sourceSets["main"].java {
-        srcDir("src/ap/java")
-    }
-
-    sourceSets["main"].resources {
-        srcDir("src/ap/resources")
-    }
 }
 
 dependencies {
     compileOnlyApi(libs.jspecify)
 
-    api(libs.gson)
-    api(libs.guava)
+    apAndMain(libs.gson)
+    apAndMain(libs.guava)
 
     // DEPRECATED: Will be removed in Velocity Polymer
     api("com.moandjiezana.toml:toml4j:0.7.2")
@@ -39,10 +79,13 @@ dependencies {
 
     api(libs.slf4j)
     api(libs.guice)
-    api(libs.checker.qual)
+    apAndMain(libs.checker.qual)
     api(libs.brigadier)
     api(libs.bundles.configurate4)
     api(libs.caffeine)
+    implementation(ap.output)
+    apKotlinOnly(libs.kspApi)
+    apKotlinOnly(kotlin("stdlib-jdk8", "1.7.22"))
 }
 
 tasks {
@@ -50,10 +93,9 @@ tasks {
         manifest {
             attributes["Automatic-Module-Name"] = "com.velocitypowered.api"
         }
+        from(ap.output)
     }
     withType<Javadoc> {
-        exclude("com/velocitypowered/api/plugin/ap/**")
-
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
         o.source = "8"
