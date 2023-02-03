@@ -78,6 +78,8 @@ import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.collect.CappedSet;
+import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
+import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
@@ -134,6 +136,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
+
+  private static final Ratelimiter<Player> limiter = Ratelimiters.createWithMaxHitLimit(4000, 10);
 
   private final Identity identity = new IdentityImpl();
   /**
@@ -543,6 +547,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public InternalTabList getTabList() {
     return tabList;
+  }
+
+  @Override
+  public boolean chatRateLimit() {
+    boolean allowed = limiter.attempt(this);
+
+    if (!allowed) {
+      disconnect(Component.translatable("disconnect.spam", NamedTextColor.RED));
+    }
+
+    return allowed;
   }
 
   @Override

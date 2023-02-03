@@ -167,6 +167,8 @@ public interface Player extends
    */
   TabList getTabList();
 
+  boolean chatRateLimit();
+
   /**
    * Disconnects the player with the specified reason. Once this method is called, further calls to
    * other {@link Player} methods will become undefined.
