@@ -23,9 +23,11 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.CommandTabCompleteEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
@@ -564,35 +566,52 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(suggestions -> {
-          if (suggestions.isEmpty()) {
-            return;
-          }
+            .thenAcceptAsync(suggestions -> {
+              if (suggestions.isEmpty()) {
+                return;
+              }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            Component tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-            }
-            offers.add(new Offer(offer, tooltip));
-          }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-          if (startPos > 0) {
-            TabCompleteResponse resp = new TabCompleteResponse();
-            resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
-            resp.setLength(packet.getCommand().length() - startPos);
-            resp.getOffers().addAll(offers);
-            player.getConnection().write(resp);
-          }
-        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-          logger.error("Exception while handling command tab completion for player {} executing {}",
-              player, command, ex);
-          return null;
-        });
+              // convert to command suggestions
+              List<CommandTabCompleteEvent.CommandSuggestion> eventSuggestions = new ArrayList<>(suggestions.getList().size());
+              for (Suggestion suggestion : suggestions.getList()) {
+                Message tooltip = suggestion.getTooltip();
+                eventSuggestions.add(new CommandTabCompleteEvent.CommandSuggestion(suggestion.getText(), tooltip == null ? null : tooltip instanceof VelocityBrigadierMessage ? ((VelocityBrigadierMessage) tooltip).asComponent() : Component.text(tooltip.getString())));
+              }
+
+              server.getEventManager()
+                      .fire(new CommandTabCompleteEvent(player, command, eventSuggestions))
+                      .thenAcceptAsync(e -> {
+                        List<CommandTabCompleteEvent.CommandSuggestion> eventOffers = e.getSuggestions();
+                        List<Offer> offers = new ArrayList<>();
+                        for (CommandTabCompleteEvent.CommandSuggestion suggestion : eventOffers) {
+                          String offer = suggestion.getText();
+                          Component tooltip = null;
+                          if (suggestion.getTooltip() != null) {
+                            tooltip = suggestion.getTooltip();
+                          }
+                          offers.add(new Offer(offer, tooltip));
+                        }
+                        int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+                        if (startPos > 0) {
+                          TabCompleteResponse resp = new TabCompleteResponse();
+                          resp.setTransactionId(packet.getTransactionId());
+                          resp.setStart(startPos);
+                          resp.setLength(packet.getCommand().length() - startPos);
+                          resp.getOffers().addAll(offers);
+                          player.getConnection().write(resp);
+                        }
+                      }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+                        logger.error("Unable to provide tab list completions for {} for command '{}'",
+                                player.getUsername(), command,
+                                ex);
+                        return null;
+                      });
+
+            }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+              logger.error("Exception while handling command tab completion for player {} executing {}",
+                      player, command, ex);
+              return null;
+            });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
