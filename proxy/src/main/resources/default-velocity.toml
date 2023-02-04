@@ -66,6 +66,11 @@ kick-existing-players = false
 #                  configuration is used if no servers could be contacted.
 ping-passthrough = "DISABLED"
 
+# If enabled (default is false), then a sample of the online players on the proxy will be visible
+# when hovering over the player count in the server list.
+# This doesn't have any effect when ping passthrough is set to either "description" or "all".
+sample-players-in-ping = false
+
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
 
