@@ -430,8 +430,8 @@ public final class ServerPing {
   public static final class SamplePlayer {
 
     public static final SamplePlayer ANONYMOUS = new SamplePlayer(
-      "Anonymous Player",
-      new UUID(0L, 0L),
+        "Anonymous Player",
+        new UUID(0L, 0L)
     );
     private final String name;
     private final UUID id;
