@@ -572,24 +572,29 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               }
 
               // convert to command suggestions
-              List<CommandTabCompleteEvent.CommandSuggestion> eventSuggestions = new ArrayList<>(suggestions.getList().size());
+              List<CommandTabCompleteEvent.CommandSuggestion> eventSuggestions = new ArrayList<>(
+                      suggestions.getList().size()
+              );
               for (Suggestion suggestion : suggestions.getList()) {
                 Message tooltip = suggestion.getTooltip();
                 Component componentTooltip = null;
-                if (tooltip != null) {
-                  componentTooltip = tooltip instanceof VelocityBrigadierMessage ?
-                          ((VelocityBrigadierMessage) tooltip).asComponent() :
-                          Component.text(tooltip.getString());
+                if (tooltip instanceof VelocityBrigadierMessage) {
+                  componentTooltip = ((VelocityBrigadierMessage) tooltip).asComponent();
+                } else if (tooltip != null) {
+                  componentTooltip = Component.text(tooltip.getString());
                 }
-                eventSuggestions.add(new CommandTabCompleteEvent.CommandSuggestion(suggestion.getText(), componentTooltip));
+                eventSuggestions.add(new CommandTabCompleteEvent.CommandSuggestion(
+                        suggestion.getText(),
+                        componentTooltip
+                ));
               }
 
               server.getEventManager()
                       .fire(new CommandTabCompleteEvent(player, command, eventSuggestions))
                       .thenAcceptAsync(e -> {
-                        List<CommandTabCompleteEvent.CommandSuggestion> eventOffers = e.getSuggestions();
+                        List<CommandTabCompleteEvent.CommandSuggestion> newOffers = e.getSuggestions();
                         List<Offer> offers = new ArrayList<>();
-                        for (CommandTabCompleteEvent.CommandSuggestion suggestion : eventOffers) {
+                        for (CommandTabCompleteEvent.CommandSuggestion suggestion : newOffers) {
                           String offer = suggestion.getText();
                           Component tooltip = null;
                           if (suggestion.getTooltip() != null) {
