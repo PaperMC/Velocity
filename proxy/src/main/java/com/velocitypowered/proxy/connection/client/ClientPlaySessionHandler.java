@@ -575,7 +575,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               List<CommandTabCompleteEvent.CommandSuggestion> eventSuggestions = new ArrayList<>(suggestions.getList().size());
               for (Suggestion suggestion : suggestions.getList()) {
                 Message tooltip = suggestion.getTooltip();
-                eventSuggestions.add(new CommandTabCompleteEvent.CommandSuggestion(suggestion.getText(), tooltip == null ? null : tooltip instanceof VelocityBrigadierMessage ? ((VelocityBrigadierMessage) tooltip).asComponent() : Component.text(tooltip.getString())));
+                Component componentTooltip = null;
+                if (tooltip != null) {
+                  componentTooltip = tooltip instanceof VelocityBrigadierMessage ?
+                          ((VelocityBrigadierMessage) tooltip).asComponent() :
+                          Component.text(tooltip.getString());
+                }
+                eventSuggestions.add(new CommandTabCompleteEvent.CommandSuggestion(suggestion.getText(), componentTooltip));
               }
 
               server.getEventManager()
