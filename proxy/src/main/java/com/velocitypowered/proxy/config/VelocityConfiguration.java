@@ -104,9 +104,9 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
-      boolean samplePlayersInPing,
-      boolean enablePlayerAddressLogging, Servers servers, ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
+      boolean samplePlayersInPing, boolean enablePlayerAddressLogging, Servers servers,
+      ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics,
+      boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
