@@ -40,6 +40,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -144,6 +146,40 @@ public class ArgumentPropertyRegistry {
 
   }
 
+
+  /**
+   * Returns the identifier with the given numeric identifier at the specified version.
+   *
+   * @param version the version for the identifier.
+   * @param id the numeric identifier used in {@code version}.
+   * @return the identifier, or {@code null} if unknown.
+   */
+  public static @Nullable ArgumentIdentifier getNewIdentifier(final ProtocolVersion version, final int id) {
+    for (ArgumentIdentifier i : byIdentifier.keySet()) {
+      Integer v = i.getIdByProtocolVersion(version);
+      if (v != null && v == id) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the identifier with the given string identifier.
+   *
+   * @param raw the string identifier.
+   * @return the identifier, or {@code null} if unknown.
+   */
+  public static @Nullable ArgumentIdentifier getOldIdentifier(final String raw) {
+    for (ArgumentIdentifier i : byIdentifier.keySet()) {
+      // 1.19+ identifiers might not have a string form.
+      if (raw.equals(i.getIdentifier())) {
+        return i;
+      }
+    }
+    return null;
+  }
+
   /**
    * Reads the {@link ArgumentIdentifier} from a version-specific buffer.
    *
@@ -154,21 +190,11 @@ public class ArgumentPropertyRegistry {
   public static ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(MINECRAFT_1_19) >= 0) {
       int id = ProtocolUtils.readVarInt(buf);
-      for (ArgumentIdentifier i : byIdentifier.keySet()) {
-        Integer v = i.getIdByProtocolVersion(protocolVersion);
-        if (v != null && v == id) {
-          return i;
-        }
-      }
+      return getNewIdentifier(protocolVersion, id);
     } else {
       String identifier = ProtocolUtils.readString(buf);
-      for (ArgumentIdentifier i : byIdentifier.keySet()) {
-        if (i.getIdentifier().equals(identifier)) {
-          return i;
-        }
-      }
+      return getOldIdentifier(identifier);
     }
-    return null;
   }
 
   static {

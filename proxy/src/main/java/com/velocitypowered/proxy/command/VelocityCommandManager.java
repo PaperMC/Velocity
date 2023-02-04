@@ -27,13 +27,10 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.Command;
-import com.velocitypowered.api.command.CommandManager;
-import com.velocitypowered.api.command.CommandMeta;
-import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.*;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
@@ -47,7 +44,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -330,5 +330,15 @@ public class VelocityCommandManager implements CommandManager {
 
   public CommandGraphInjector<CommandSource> getInjector() {
     return injector;
+  }
+
+  @Override
+  public @Nullable OpaqueArgumentType getOpaqueArgumentType(Key identifier) {
+    return ArgumentPropertyRegistry.getOldIdentifier(identifier.asString());
+  }
+
+  @Override
+  public @Nullable OpaqueArgumentType getOpaqueArgumentType(ProtocolVersion version, int identifier) {
+    return ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
   }
 }

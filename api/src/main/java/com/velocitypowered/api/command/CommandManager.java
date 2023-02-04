@@ -10,6 +10,9 @@ package com.velocitypowered.api.command;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+
+import com.velocitypowered.api.network.ProtocolVersion;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -126,4 +129,35 @@ public interface CommandManager {
    * @return true if the alias is registered; false otherwise
    */
   boolean hasCommand(String alias);
+
+  // Opaque argument types
+
+  /**
+   * Returns the argument type registered in a Minecraft ≤1.18 client with the given identifier.
+   *
+   * @param identifier the namespaced type identifier
+   * @return the opaque argument type, or {@code null} if unknown.
+   * @see #getOpaqueArgumentType(ProtocolVersion, int) to retrieve an argument type using a Minecraft
+   *         1.19+ numeric identifier.
+   */
+  // The ≤1.18 protocols use raw strings as identifiers; use `Key` for a more idiomatic API.
+  @Nullable
+  OpaqueArgumentType getOpaqueArgumentType(final Key identifier);
+
+  /**
+   * Returns the argument type registered in a Minecraft client at the given version with
+   * the specified identifier.
+   * <p>
+   * Numeric identifiers were introduced in Minecraft 1.19, hence calling this method with
+   * a lower version always returns {@code null}.
+   *
+   * @param version the protocol version for the identifier.
+   * @param identifier the numeric identifier used in {@code version} that refers to the
+   *                   requested argument type.
+   * @return the opaque argument type, or {@code null} if unknown.
+   * @see #getOpaqueArgumentType(Key) to retrieve an argument type using a Minecraft ≤1.18 namespaced
+   *         identifier.
+   */
+  @Nullable
+  OpaqueArgumentType getOpaqueArgumentType(final ProtocolVersion version, final int identifier);
 }
