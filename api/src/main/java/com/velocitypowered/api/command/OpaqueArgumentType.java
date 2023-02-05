@@ -10,30 +10,30 @@ import net.kyori.adventure.key.Key;
 /**
  * A Brigadier {@link ArgumentType} recognized by a Minecraft client, but
  * that provides no parsing nor suggestion provision logic in the proxy.
- * <p>
- * This class is useful when a plugin wants the client to parse the contents and
+ *
+ * <p>This class is useful when a plugin wants the client to parse the contents and
  * provide suggestions for an {@link ArgumentCommandNode} according to one of
  * the built-in argument parsers. The following example constructs a simplified
  * version of the {@code /give} command:
  * <pre>
  * CommandManager commandManager = ...;
  * OpaqueArgumentType itemType = commandManager.getOpaqueArgumentType(Key.key("item_stack"));
- * final LiteralCommandNode<CommandSource> literal = LiteralArgumentBuilder
- *         .<CommandSource>literal("give")
+ * final LiteralCommandNode&lt;CommandSource&gt; literal = LiteralArgumentBuilder
+ *         .&lt;CommandSource&gt;literal("give")
  *         .then(argument("item", itemType))
  *         .build();
  * </pre>
- * <p>
- * The execution of an {@link ArgumentCommandNode} of this type is automatically
+ *
+ * <p>The execution of an {@link ArgumentCommandNode} of this type is automatically
  * forwarded to the backend server. Thus, any {@link com.mojang.brigadier.Command},
  * predicate, or {@link SuggestionProvider} on the corresponding node is ignored.
- * <p>
- * Parsing of a command by Brigadier ends whenever a node with an opaque type is
+ *
+ * <p>Parsing of a command by Brigadier ends whenever a node with an opaque type is
  * encountered. For this reason, any {@link ParseResults} containing an argument
  * node with an opaque type may contain inaccurate data. This is a compromise
  * that must be made because the proxy does not know how to parse these types.
- * <p>
- * This type provides no suggestions nor examples. However, the client can often
+ *
+ * <p>This type provides no suggestions nor examples. However, the client can often
  * provide rich suggestions for the represented argument type.
  *
  * @see CommandManager#getOpaqueArgumentType(Key) to obtain an argument type by
