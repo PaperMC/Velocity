@@ -17,9 +17,9 @@
 
 package com.velocitypowered.proxy.command;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -241,20 +241,43 @@ public class CommandManagerTests extends CommandTestSuite {
   // Opaque argument types
 
   @Test
-  void testGetOpaqueArgumentTypeByOldId() {
-    assertNotNull(manager.getOpaqueArgumentType(Key.key("item_stack")),
-        "Retrieve the minecraft:item_stack parser type");
-    assertNull(manager.getOpaqueArgumentType(Key.key("unknown_type")),
-        "Returns null for unassigned string identifier");
+  void testCreateOpaqueArgumentTypeByOldId() {
+    final var type = manager.opaqueArgumentTypeBuilder(Key.key("item_stack")).build();
+
+    assertEquals("minecraft:item_stack", type.getIdentifier());
+    assertEquals(14, type.getIdentifier(ProtocolVersion.MINECRAFT_1_19_3));
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2).length);
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3).length);
   }
 
   @Test
-  void testGetOpaqueArgumentTypeByNewId() {
-    assertNotNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_19, 6),
-        "Retrieve the minecraft:entity parser type");
-    assertNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_7_2, 1),
-        "Protocols <=1.18 use string identifiers");
-    assertNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_19_1, 100),
-        "Returns null for unassigned numeric identifier");
+  void testCreateOpaqueArgumentTypeByNewId() {
+    final var type = manager.opaqueArgumentTypeBuilder(ProtocolVersion.MINECRAFT_1_19_3, 26)
+        .build();
+
+    assertEquals("minecraft:angle", type.getIdentifier());
+    assertEquals(26, type.getIdentifier(ProtocolVersion.MINECRAFT_1_19_3));
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3).length);
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2).length);
+  }
+
+  @Test
+  void testCreateOpaqueArgumentTypeWithProperties() {
+    final var expected = new byte[]{(byte) 0x1};
+    final var type = manager.opaqueArgumentTypeBuilder(Key.key("entity"))
+        .withProperties(expected)
+        .build();
+
+    assertArrayEquals(expected, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3));
+    assertArrayEquals(expected, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2));
+
+    final var otherType = manager.opaqueArgumentTypeBuilder(Key.key("score_holder"))
+        .withProperties(version -> new byte[]{
+            version == ProtocolVersion.MINECRAFT_1_19_3 ? (byte) 0x1 : (byte) 0x0
+        })
+        .build();
+
+    assertArrayEquals(new byte[]{0x1}, otherType.getProperties(ProtocolVersion.MINECRAFT_1_19_3));
+    assertArrayEquals(new byte[]{0x0}, otherType.getProperties(ProtocolVersion.MINECRAFT_1_18_2));
   }
 }

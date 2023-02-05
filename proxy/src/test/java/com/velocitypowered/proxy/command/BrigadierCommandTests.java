@@ -356,7 +356,8 @@ public class BrigadierCommandTests extends CommandTestSuite {
 
   @Test
   void testExecuteIsForwardedIfArgumentHasOpaqueType() {
-    final OpaqueArgumentType itemType = manager.getOpaqueArgumentType(Key.key("item_stack"));
+    final OpaqueArgumentType itemType =
+        manager.opaqueArgumentTypeBuilder(Key.key("item_stack")).build();
     final var node = LiteralArgumentBuilder
         .<CommandSource>literal("give")
         .then(RequiredArgumentBuilder.argument("give", itemType))
@@ -368,7 +369,8 @@ public class BrigadierCommandTests extends CommandTestSuite {
 
   @Test
   void testCommandIsNotCalledIfItHasOpaqueType() {
-    final OpaqueArgumentType posType = manager.getOpaqueArgumentType(Key.key("block_pos"));
+    final OpaqueArgumentType posType =
+        manager.opaqueArgumentTypeBuilder(Key.key("block_pos")).build();
     final var node = LiteralArgumentBuilder
         .<CommandSource>literal("teleport")
         .then(RequiredArgumentBuilder.<CommandSource, Void>argument("block", posType)
@@ -376,18 +378,28 @@ public class BrigadierCommandTests extends CommandTestSuite {
         .build();
     manager.register(new BrigadierCommand(node));
 
-    assertForwarded("teleport 0.25 2 -5");
+    assertForwarded("teleport 0 2 -5");
   }
 
   @Test
   void testDoesNotSuggestIfArgumentHasOpaqueType() {
-    final OpaqueArgumentType colorType = manager.getOpaqueArgumentType(Key.key("minecraft:color"));
+    final OpaqueArgumentType colorType =
+        manager.opaqueArgumentTypeBuilder(Key.key("color")).build();
     final var node = LiteralArgumentBuilder
         .<CommandSource>literal("paint")
-        .then(RequiredArgumentBuilder.argument("paint", colorType))
+        .then(RequiredArgumentBuilder.argument("color", colorType))
         .build();
     manager.register(new BrigadierCommand(node));
 
     assertSuggestions("paint ");
+
+    final var otherNode = LiteralArgumentBuilder
+        .<CommandSource>literal("paintWithSuggestionProvider")
+        .then(RequiredArgumentBuilder.<CommandSource, Void>argument("color", colorType)
+            .suggests((context, builder) -> fail()))
+        .build();
+    manager.register(new BrigadierCommand(otherNode));
+
+    assertSuggestions("paintWithSuggestionProvider ");
   }
 }

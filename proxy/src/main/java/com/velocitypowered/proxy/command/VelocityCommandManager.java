@@ -41,7 +41,9 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
-import com.velocitypowered.proxy.protocol.packet.brigadier.OpaqueArgumentTypeImpl;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
+import com.velocitypowered.proxy.protocol.packet.brigadier.OpaqueArgumentTypeBuilderImpl;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -345,13 +347,22 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public @Nullable OpaqueArgumentType getOpaqueArgumentType(Key identifier) {
-    return OpaqueArgumentTypeImpl.from(identifier.asString());
+  public OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(final Key identifier) {
+    final ArgumentIdentifier id = ArgumentPropertyRegistry.getOldIdentifier(identifier.asString());
+    if (id == null) {
+      throw new IllegalArgumentException("Unknown vanilla parser \"" + identifier + "\"");
+    }
+    return new OpaqueArgumentTypeBuilderImpl(id);
   }
 
   @Override
-  public @Nullable OpaqueArgumentType getOpaqueArgumentType(ProtocolVersion version,
-                                                            int identifier) {
-    return OpaqueArgumentTypeImpl.from(version, identifier);
+  public OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(final ProtocolVersion version,
+                                                              final int identifier) {
+    final ArgumentIdentifier id = ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
+    if (id == null) {
+      throw new IllegalArgumentException("Unknown vanilla parser with ID " + identifier
+          + " at version " + version);
+    }
+    return new OpaqueArgumentTypeBuilderImpl(id);
   }
 }

@@ -132,33 +132,32 @@ public interface CommandManager {
   // Opaque argument types
 
   /**
-   * Returns the argument type registered in a Minecraft ≤1.18 client with the given identifier.
+   * Returns a builder to create an {@link OpaqueArgumentType opaque argument type} with
+   * the given string identifier.
    *
-   * @param identifier the namespaced type identifier
-   * @return the opaque argument type, or {@code null} if unknown.
-   * @see #getOpaqueArgumentType(ProtocolVersion, int) to retrieve an argument type using a
-   *         Minecraft 1.19+ numeric identifier.
+   * @param identifier the namespaced type identifier used in Minecraft 1.18 and below.
+   * @return a builder to create an argument type.
+   * @throws IllegalArgumentException if an argument type with the given identifier
+   *                                  cannot be found.
    * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
+   * @see #opaqueArgumentTypeBuilder(ProtocolVersion, int) to create a builder for a type
+   *         identified by a version-specific numeric identifier (for Minecraft 1.19 and
+   *         above).
    */
   // The ≤1.18 protocols use raw strings as identifiers; use `Key` for a more idiomatic API.
-  @Nullable
-  OpaqueArgumentType getOpaqueArgumentType(final Key identifier);
+  OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(Key identifier);
 
   /**
-   * Returns the argument type registered in a Minecraft client at the given version with
-   * the specified identifier.
-   *
-   * <p>Numeric identifiers were introduced in Minecraft 1.19, hence calling this method with
-   * a lower version always returns {@code null}.
-   *
+   * Returns a builder to create an {@link OpaqueArgumentType opaque argument type} with
+   * the given version-specific numeric identifier.
    * @param version the protocol version for the identifier.
-   * @param identifier the numeric identifier used in {@code version} that refers to the
-   *                   requested argument type.
-   * @return the opaque argument type, or {@code null} if unknown.
-   * @see #getOpaqueArgumentType(Key) to retrieve an argument type using a Minecraft ≤1.18
-   *         namespaced identifier.
+   * @param identifier the numeric identifier used in Minecraft 1.19 and above.
+   * @return a builder to create an argument type.
+   * @throws IllegalArgumentException if an argument type with the given identifier
+   *                                  cannot be found.
    * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
+   * @see #opaqueArgumentTypeBuilder(Key) to create a builder for a type identified by
+   *         a string identifier (for Minecraft 1.18 and below).
    */
-  @Nullable
-  OpaqueArgumentType getOpaqueArgumentType(final ProtocolVersion version, final int identifier);
+  OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(ProtocolVersion version, int identifier);
 }

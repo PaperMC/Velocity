@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,35 +17,24 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import static java.util.Objects.requireNonNull;
+
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-public final class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
-
-  public static @Nullable OpaqueArgumentType from(final String identifier) {
-    final ArgumentIdentifier id = ArgumentPropertyRegistry.getOldIdentifier(identifier);
-    if (id != null) {
-      return new OpaqueArgumentTypeImpl(id);
-    }
-    return null;
-  }
-
-  public static @Nullable OpaqueArgumentType from(final ProtocolVersion version, final int identifier) {
-    final ArgumentIdentifier id = ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
-    if (id != null) {
-      return new OpaqueArgumentTypeImpl(id);
-    }
-    return null;
-  }
+class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
 
   private final ArgumentIdentifier identifier;
+  private final OpaqueArgumentType.PropertySerializer propSerializer;
 
-  private OpaqueArgumentTypeImpl(final ArgumentIdentifier identifier) {
-    this.identifier = identifier;
+  public OpaqueArgumentTypeImpl(final ArgumentIdentifier identifier,
+                                final OpaqueArgumentType.PropertySerializer propSerializer) {
+    this.identifier = requireNonNull(identifier);
+    this.propSerializer = requireNonNull(propSerializer);
   }
 
   @Override
@@ -55,8 +44,25 @@ public final class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
     return null;
   }
 
-  ArgumentIdentifier getIdentifier() {
-    return identifier;
+  ArgumentIdentifier identifier() {
+    return this.identifier;
+  }
+
+  @Nullable
+  @Override
+  public String getIdentifier() {
+    return this.identifier.getIdentifier();
+  }
+
+  @Nullable
+  @Override
+  public Integer getIdentifier(final ProtocolVersion version) {
+    return this.identifier.getIdByProtocolVersion(version);
+  }
+
+  @Override
+  public byte[] getProperties(final ProtocolVersion version) {
+    return this.propSerializer.serialize(version);
   }
 
   @Override
@@ -64,16 +70,18 @@ public final class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     OpaqueArgumentTypeImpl that = (OpaqueArgumentTypeImpl) o;
-    return Objects.equals(identifier, that.identifier);
+    return identifier.equals(that.identifier) && propSerializer.equals(that.propSerializer);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(identifier);
+    return Objects.hash(identifier, propSerializer);
   }
 
   @Override
   public String toString() {
-    return "OpaqueArgumentTypeImpl{" + identifier + '}';
+    return "OpaqueArgumentTypeImpl{" +
+        "identifier=" + identifier +
+        '}';
   }
 }

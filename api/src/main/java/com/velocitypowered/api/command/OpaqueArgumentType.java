@@ -12,6 +12,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.velocitypowered.api.network.ProtocolVersion;
+import javax.annotation.Nullable;
 import net.kyori.adventure.key.Key;
 
 /**
@@ -24,7 +25,8 @@ import net.kyori.adventure.key.Key;
  * version of the {@code /give} command:
  * <pre>
  * CommandManager commandManager = ...;
- * OpaqueArgumentType itemType = commandManager.getOpaqueArgumentType(Key.key("item_stack"));
+ * OpaqueArgumentType itemType = commandManager.opaqueArgumentTypeBuilder(Key.key("item_stack"))
+ *                                             .build();
  * final LiteralCommandNode&lt;CommandSource&gt; literal = LiteralArgumentBuilder
  *         .&lt;CommandSource&gt;literal("give")
  *         .then(argument("item", itemType))
@@ -43,13 +45,102 @@ import net.kyori.adventure.key.Key;
  * <p>This type provides no suggestions nor examples. However, the client can often
  * provide rich suggestions for the represented argument type.
  *
- * @see CommandManager#getOpaqueArgumentType(Key) to obtain an argument type by
+ * <p>The identifier and serialized form of the parser properties may change between
+ * different {@link ProtocolVersion protocol versions} of the game. As so, we
+ * recommend using a library that provides {@link OpaqueArgumentType} maintained
+ * definitions for the parsers implemented by the client, instead of manually creating
+ * them through a {@link OpaqueArgumentType.Builder}. Velocity cannot include these
+ * definitions in the API, since Minecraft updates might cause breaking changes.
+ * This is not a hypothetical case: the {@code minecraft:mob_effect} parser was
+ * removed in {@link ProtocolVersion#MINECRAFT_1_19_3}.
+ *
+ * @see CommandManager#opaqueArgumentTypeBuilder(Key) to construct an argument type from
  *        its string identifier (used in Minecraft 1.18 and below).
- * @see CommandManager#getOpaqueArgumentType(ProtocolVersion, int) to obtain an argument
- *        type by its version-dependent numeric identifier (used in Minecraft 1.19 and above).
+ * @see CommandManager#opaqueArgumentTypeBuilder(ProtocolVersion, int) to construct an argument
+ *        type from its version-dependent numeric identifier (used in Minecraft 1.19 and above).
  */
 public interface OpaqueArgumentType extends ArgumentType<Void> {
-  // We don't provide a way to retrieve the identifiers, since these are version-dependent
-  // and their type has changed from a string to a numerical value in Minecraft 1.19.
-  // This prevents API breakage if Mojang were to change their format yet again.
+
+  /**
+   * Returns the argument parser identifier used in Minecraft 1.18 and below.
+   *
+   * @return the string identifier, or {@code null} if the type was introduced in
+   *         Minecraft 1.19 or above (and so a string identifier has not been
+   *         specified for the parser).
+   */
+  @Nullable String getIdentifier();
+
+  /**
+   * Returns the argument parser identifier used in the given version (for
+   * Minecraft 1.19 and above).
+   *
+   * @param version the protocol version for the parser identifier
+   * @return the numeric identifier used in the given version, or {@code null} if
+   *         no numeric identifier was assigned to the parser in that version.
+   */
+  @Nullable Integer getIdentifier(ProtocolVersion version);
+
+  /**
+   * Returns the parser properties in serialized form, following the protocol
+   * at the given version.
+   *
+   * @param version the protocol version to use for serialization
+   * @return the serialized argument parser properties.
+   * @see <a href="https://wiki.vg/Command_Data#Properties">Properties specification</a>
+   */
+  byte[] getProperties(ProtocolVersion version);
+
+  /**
+   * Serializes the properties of an argument parser.
+   *
+   * @see <a href="https://wiki.vg/Command_Data#Properties">Properties specification</a>
+   */
+  interface PropertySerializer {
+    /**
+     * Serializes the properties of an argument parser, following the protocol
+     * at the given version.
+     *
+     * @param version the protocol version to use for serialization
+     * @return the serialized argument parser properties.
+     */
+    byte[] serialize(final ProtocolVersion version);
+  }
+
+  /**
+   * Provides a fluent interface to create {@link OpaqueArgumentType opaque argument types}.
+   */
+  interface Builder {
+    /**
+     * Specifies the instance to use when serializing the parser properties of
+     * the constructed argument type.
+     *
+     * @param serializer the properties serializer.
+     * @return this builder, for chaining.
+     */
+    Builder withProperties(PropertySerializer serializer);
+
+    /**
+     * Specifies the parser properties in serialized form of the constructed
+     * argument type. The serialized form of these properties generally depends
+     * on the protocol version; this is a helper method when the wire format
+     * is the same for all known {@link ProtocolVersion}.
+     *
+     * @param data the serialized form of the parser properties
+     * @return this builder, for chaining.
+     */
+    default Builder withProperties(final byte[] data) {
+      return withProperties(version -> data);
+    }
+
+    /**
+     * Returns a newly-created {@link OpaqueArgumentType} based on the specified
+     * identifier and properties. If no properties have been specified, then
+     * a placeholder {@link PropertySerializer} whose
+     * {@link PropertySerializer#serialize(ProtocolVersion)} method always returns
+     * an empty byte array is used.
+     *
+     * @return the built opaque argument type.
+     */
+    OpaqueArgumentType build();
+  }
 }
