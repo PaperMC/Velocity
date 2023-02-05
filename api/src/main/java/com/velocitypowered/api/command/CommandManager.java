@@ -150,6 +150,7 @@ public interface CommandManager {
   /**
    * Returns a builder to create an {@link OpaqueArgumentType opaque argument type} with
    * the given version-specific numeric identifier.
+   *
    * @param version the protocol version for the identifier.
    * @param identifier the numeric identifier used in Minecraft 1.19 and above.
    * @return a builder to create an argument type.

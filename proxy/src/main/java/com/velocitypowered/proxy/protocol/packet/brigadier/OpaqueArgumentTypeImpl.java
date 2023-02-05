@@ -40,6 +40,13 @@ class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
   @Override
   public Void parse(StringReader reader) throws CommandSyntaxException {
     // Consume all the input to halt parsing by Brigadier.
+    // We could instead throw an `UnsupportedOperationException`, but this is
+    // much more expensive since Brigadier constructs custom error types, fills
+    // in the stack trace, and wraps the message in a `Message` class. We could
+    // then search for the exception in VelocityCommandManager. It is easier to
+    // consume all the input so Brigadier returns parse results containing the
+    // node with this argument type, which we can search for iterating over
+    // the nodes of the parse results (see VelocityCommands#containsArgumentWithOpaqueType).
     reader.setCursor(reader.getTotalLength());
     return null;
   }
