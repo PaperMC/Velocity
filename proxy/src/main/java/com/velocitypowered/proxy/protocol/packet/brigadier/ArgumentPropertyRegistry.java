@@ -117,6 +117,7 @@ public class ArgumentPropertyRegistry {
     } else if (type instanceof OpaqueArgumentTypeImpl) {
       OpaqueArgumentTypeImpl opaqueType = (OpaqueArgumentTypeImpl) type;
       writeIdentifier(buf, opaqueType.getIdentifier(), protocolVersion);
+      // todo: serialize properties
     } else {
       ArgumentPropertySerializer serializer = byClass.get(type.getClass());
       ArgumentIdentifier id = classToId.get(type.getClass());
