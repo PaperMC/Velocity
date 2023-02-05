@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.command;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,8 +30,10 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -233,5 +236,25 @@ public class CommandManagerTests extends CommandTestSuite {
     public boolean hasPermission(final Invocation invocation) {
       return fail();
     }
+  }
+
+  // Opaque argument types
+
+  @Test
+  void testGetOpaqueArgumentTypeByOldId() {
+    assertNotNull(manager.getOpaqueArgumentType(Key.key("item_stack")),
+        "Retrieve the minecraft:item_stack parser type");
+    assertNull(manager.getOpaqueArgumentType(Key.key("unknown_type")),
+        "Returns null for unassigned string identifier");
+  }
+
+  @Test
+  void testGetOpaqueArgumentTypeByNewId() {
+    assertNotNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_19, 6),
+        "Retrieve the minecraft:entity parser type");
+    assertNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_7_2, 1),
+        "Protocols <=1.18 use string identifiers");
+    assertNull(manager.getOpaqueArgumentType(ProtocolVersion.MINECRAFT_1_19_1, 100),
+        "Returns null for unassigned numeric identifier");
   }
 }

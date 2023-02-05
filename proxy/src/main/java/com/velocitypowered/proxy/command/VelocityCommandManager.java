@@ -25,9 +25,15 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.api.command.*;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.Command;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -36,6 +42,7 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -44,8 +51,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -210,6 +215,14 @@ public class VelocityCommandManager implements CommandManager {
     try {
       // The parse can fail if the requirement predicates throw
       final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
+
+      if (VelocityCommands.containsArgumentWithOpaqueType(parse)) {
+        // The parse results contain an argument node whose contents the proxy
+        // does not know how to parse. We must forward the execution to
+        // the backend server.
+        return false;
+      }
+
       return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
@@ -338,7 +351,8 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public @Nullable OpaqueArgumentType getOpaqueArgumentType(ProtocolVersion version, int identifier) {
+  public @Nullable OpaqueArgumentType getOpaqueArgumentType(ProtocolVersion version,
+                                                            int identifier) {
     return ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
   }
 }

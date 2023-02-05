@@ -29,9 +29,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.OpaqueArgumentType;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -348,5 +350,44 @@ public class BrigadierCommandTests extends CommandTestSuite {
 
     assertThrows(CompletionException.class, () ->
         manager.offerSuggestions(source, "parent ").join());
+  }
+
+  // Opaque argument types
+
+  @Test
+  void testExecuteIsForwardedIfArgumentHasOpaqueType() {
+    final OpaqueArgumentType itemType = manager.getOpaqueArgumentType(Key.key("item_stack"));
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("give")
+        .then(RequiredArgumentBuilder.argument("give", itemType))
+        .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertForwarded("give minecraft:grass");
+  }
+
+  @Test
+  void testCommandIsNotCalledIfItHasOpaqueType() {
+    final OpaqueArgumentType posType = manager.getOpaqueArgumentType(Key.key("block_pos"));
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("teleport")
+        .then(RequiredArgumentBuilder.<CommandSource, Void>argument("block", posType)
+            .executes(context -> fail()))
+        .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertForwarded("teleport 0.25 2 -5");
+  }
+
+  @Test
+  void testDoesNotSuggestIfArgumentHasOpaqueType() {
+    final OpaqueArgumentType colorType = manager.getOpaqueArgumentType(Key.key("minecraft:color"));
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("paint")
+        .then(RequiredArgumentBuilder.argument("paint", colorType))
+        .build();
+    manager.register(new BrigadierCommand(node));
+
+    assertSuggestions("paint ");
   }
 }

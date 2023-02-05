@@ -139,6 +139,7 @@ public interface CommandManager {
    * @return the opaque argument type, or {@code null} if unknown.
    * @see #getOpaqueArgumentType(ProtocolVersion, int) to retrieve an argument type using a Minecraft
    *         1.19+ numeric identifier.
+   * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
    */
   // The ≤1.18 protocols use raw strings as identifiers; use `Key` for a more idiomatic API.
   @Nullable
@@ -157,6 +158,7 @@ public interface CommandManager {
    * @return the opaque argument type, or {@code null} if unknown.
    * @see #getOpaqueArgumentType(Key) to retrieve an argument type using a Minecraft ≤1.18 namespaced
    *         identifier.
+   * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
    */
   @Nullable
   OpaqueArgumentType getOpaqueArgumentType(final ProtocolVersion version, final int identifier);

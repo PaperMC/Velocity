@@ -200,6 +200,9 @@ final class SuggestionsProvider<S> {
       reader.setCursor(0);
       final ParseResults<S> parse = this.dispatcher.parse(reader, source);
       try {
+        // We don't know how to provide suggestions for a command that
+        // contains an argument with an opaque type. However, the client
+        // will not ask the server for these types of suggestions.
         return this.dispatcher.getCompletionSuggestions(parse);
       } catch (final Throwable e) {
         // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.

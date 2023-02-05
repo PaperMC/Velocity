@@ -1,16 +1,11 @@
 package com.velocitypowered.api.command;
 
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
-
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * A Brigadier {@link ArgumentType} recognized by a Minecraft client, but
@@ -34,8 +29,13 @@ import java.util.concurrent.CompletableFuture;
  * predicate, redirection, or {@link SuggestionProvider} on the corresponding
  * node is ignored.
  * <p>
- * Executing any methods from the {@link ArgumentType} interface on this class
- * result in a {@link UnsupportedOperationException} being thrown.
+ * Parsing of a command by Brigadier ends whenever a node with an opaque type is
+ * encountered. For this reason, any {@link ParseResults} containing an argument
+ * node with an opaque type may contain inaccurate data. This is a compromise
+ * that must be made because the proxy does not know how to parse these types.
+ * <p>
+ * This type provides no suggestions nor examples. However, the client can often
+ * provide rich suggestions for the represented argument type.
  */
 public interface OpaqueArgumentType extends ArgumentType<Void> {
 
@@ -45,16 +45,8 @@ public interface OpaqueArgumentType extends ArgumentType<Void> {
 
   @Override
   default Void parse(StringReader reader) throws CommandSyntaxException {
-    throw new UnsupportedOperationException("Opaque type doesn't support argument parsing");
-  }
-
-  @Override
-  default <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-    throw new UnsupportedOperationException("Opaque type doesn't support suggestion provision");
-  }
-
-  @Override
-  default Collection<String> getExamples() {
-    throw new UnsupportedOperationException("Opaque type doesn't have any examples");
+    // Consume all the input to halt parsing by Brigadier.
+    reader.setCursor(reader.getTotalLength());
+    return null;
   }
 }
