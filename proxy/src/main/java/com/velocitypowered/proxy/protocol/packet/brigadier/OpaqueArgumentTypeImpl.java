@@ -24,7 +24,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Objects;
-import org.jetbrains.annotations.Nullable;
 
 class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
 
@@ -55,16 +54,9 @@ class OpaqueArgumentTypeImpl implements OpaqueArgumentType {
     return this.identifier;
   }
 
-  @Nullable
   @Override
   public String getIdentifier() {
     return this.identifier.getIdentifier();
-  }
-
-  @Nullable
-  @Override
-  public Integer getIdentifier(final ProtocolVersion version) {
-    return this.identifier.getIdByProtocolVersion(version);
   }
 
   @Override

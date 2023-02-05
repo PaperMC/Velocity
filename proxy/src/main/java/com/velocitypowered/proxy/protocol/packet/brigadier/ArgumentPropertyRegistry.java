@@ -150,34 +150,17 @@ public class ArgumentPropertyRegistry {
 
   }
 
-
-  /**
-   * Returns the identifier with the given numeric identifier at the specified version.
-   *
-   * @param version the version for the identifier.
-   * @param id the numeric identifier used in {@code version}.
-   * @return the identifier, or {@code null} if unknown.
-   */
-  public static @Nullable ArgumentIdentifier getNewIdentifier(final ProtocolVersion version, final int id) {
-    for (ArgumentIdentifier i : byIdentifier.keySet()) {
-      Integer v = i.getIdByProtocolVersion(version);
-      if (v != null && v == id) {
-        return i;
-      }
-    }
-    return null;
-  }
-
   /**
    * Returns the identifier with the given string identifier.
    *
    * @param raw the string identifier.
    * @return the identifier, or {@code null} if unknown.
    */
-  public static @Nullable ArgumentIdentifier getOldIdentifier(final String raw) {
+  public static @Nullable ArgumentIdentifier getIdentifier(final String raw) {
     for (ArgumentIdentifier i : byIdentifier.keySet()) {
-      // 1.19+ identifiers might not have a string form.
-      if (raw.equals(i.getIdentifier())) {
+      // Even if 1.19+ identifiers don't have an official string form,
+      // we follow the names given in https://wiki.vg/Command_Data#Parsers.
+      if (i.getIdentifier().equals(raw)) {
         return i;
       }
     }
@@ -194,10 +177,16 @@ public class ArgumentPropertyRegistry {
   public static ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(MINECRAFT_1_19) >= 0) {
       int id = ProtocolUtils.readVarInt(buf);
-      return getNewIdentifier(protocolVersion, id);
+      for (ArgumentIdentifier i : byIdentifier.keySet()) {
+        Integer v = i.getIdByProtocolVersion(protocolVersion);
+        if (v != null && v == id) {
+          return i;
+        }
+      }
+      return null;
     } else {
       String identifier = ProtocolUtils.readString(buf);
-      return getOldIdentifier(identifier);
+      return getIdentifier(identifier);
     }
   }
 

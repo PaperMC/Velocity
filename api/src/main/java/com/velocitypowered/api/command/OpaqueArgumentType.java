@@ -12,7 +12,6 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.velocitypowered.api.network.ProtocolVersion;
-import javax.annotation.Nullable;
 import net.kyori.adventure.key.Key;
 
 /**
@@ -55,30 +54,16 @@ import net.kyori.adventure.key.Key;
  * removed in {@link ProtocolVersion#MINECRAFT_1_19_3}.
  *
  * @see CommandManager#opaqueArgumentTypeBuilder(Key) to construct an argument type from
- *        its string identifier (used in Minecraft 1.18 and below).
- * @see CommandManager#opaqueArgumentTypeBuilder(ProtocolVersion, int) to construct an argument
- *        type from its version-dependent numeric identifier (used in Minecraft 1.19 and above).
+ *        its string identifier.
  */
 public interface OpaqueArgumentType extends ArgumentType<Void> {
 
   /**
-   * Returns the argument parser identifier used in Minecraft 1.18 and below.
+   * Returns the argument parser identifier.
    *
-   * @return the string identifier, or {@code null} if the type was introduced in
-   *         Minecraft 1.19 or above (and so a string identifier has not been
-   *         specified for the parser).
+   * @return the string identifier.
    */
-  @Nullable String getIdentifier();
-
-  /**
-   * Returns the argument parser identifier used in the given version (for
-   * Minecraft 1.19 and above).
-   *
-   * @param version the protocol version for the parser identifier
-   * @return the numeric identifier used in the given version, or {@code null} if
-   *         no numeric identifier was assigned to the parser in that version.
-   */
-  @Nullable Integer getIdentifier(ProtocolVersion version);
+  String getIdentifier();
 
   /**
    * Returns the parser properties in serialized form, following the protocol

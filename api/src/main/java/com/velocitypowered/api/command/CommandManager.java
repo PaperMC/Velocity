@@ -8,7 +8,6 @@
 package com.velocitypowered.api.command;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.key.Key;
@@ -135,30 +134,15 @@ public interface CommandManager {
    * Returns a builder to create an {@link OpaqueArgumentType opaque argument type} with
    * the given string identifier.
    *
-   * @param identifier the namespaced type identifier used in Minecraft 1.18 and below.
+   * @param identifier the namespaced type identifier (this is officially specified in
+   *                   Minecraft 1.18 and below; for newer versions, the names in the
+   *                   <a href="https://wiki.vg/Command_Data#Parsers">wiki.vg Command Data</a>
+   *                   page are used).
    * @return a builder to create an argument type.
    * @throws IllegalArgumentException if an argument type with the given identifier
    *                                  cannot be found.
    * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
-   * @see #opaqueArgumentTypeBuilder(ProtocolVersion, int) to create a builder for a type
-   *         identified by a version-specific numeric identifier (for Minecraft 1.19 and
-   *         above).
    */
   // The ≤1.18 protocols use raw strings as identifiers; use `Key` for a more idiomatic API.
   OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(Key identifier);
-
-  /**
-   * Returns a builder to create an {@link OpaqueArgumentType opaque argument type} with
-   * the given version-specific numeric identifier.
-   *
-   * @param version the protocol version for the identifier.
-   * @param identifier the numeric identifier used in Minecraft 1.19 and above.
-   * @return a builder to create an argument type.
-   * @throws IllegalArgumentException if an argument type with the given identifier
-   *                                  cannot be found.
-   * @see <a href="https://wiki.vg/Command_Data#Parsers">the list of types</a> known by the client.
-   * @see #opaqueArgumentTypeBuilder(Key) to create a builder for a type identified by
-   *         a string identifier (for Minecraft 1.18 and below).
-   */
-  OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(ProtocolVersion version, int identifier);
 }

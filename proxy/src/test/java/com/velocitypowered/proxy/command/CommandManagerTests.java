@@ -241,24 +241,12 @@ public class CommandManagerTests extends CommandTestSuite {
   // Opaque argument types
 
   @Test
-  void testCreateOpaqueArgumentTypeByOldId() {
+  void testCreateOpaqueArgumentType() {
     final var type = manager.opaqueArgumentTypeBuilder(Key.key("item_stack")).build();
 
     assertEquals("minecraft:item_stack", type.getIdentifier());
-    assertEquals(14, type.getIdentifier(ProtocolVersion.MINECRAFT_1_19_3));
     assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2).length);
     assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3).length);
-  }
-
-  @Test
-  void testCreateOpaqueArgumentTypeByNewId() {
-    final var type = manager.opaqueArgumentTypeBuilder(ProtocolVersion.MINECRAFT_1_19_3, 26)
-        .build();
-
-    assertEquals("minecraft:angle", type.getIdentifier());
-    assertEquals(26, type.getIdentifier(ProtocolVersion.MINECRAFT_1_19_3));
-    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3).length);
-    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2).length);
   }
 
   @Test

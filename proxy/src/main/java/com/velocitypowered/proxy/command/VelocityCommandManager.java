@@ -35,7 +35,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
@@ -348,20 +347,9 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(final Key identifier) {
-    final ArgumentIdentifier id = ArgumentPropertyRegistry.getOldIdentifier(identifier.asString());
+    final ArgumentIdentifier id = ArgumentPropertyRegistry.getIdentifier(identifier.asString());
     if (id == null) {
       throw new IllegalArgumentException("Unknown vanilla parser \"" + identifier + "\"");
-    }
-    return new OpaqueArgumentTypeBuilderImpl(id);
-  }
-
-  @Override
-  public OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(final ProtocolVersion version,
-                                                              final int identifier) {
-    final ArgumentIdentifier id = ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
-    if (id == null) {
-      throw new IllegalArgumentException("Unknown vanilla parser with ID " + identifier
-          + " at version " + version);
     }
     return new OpaqueArgumentTypeBuilderImpl(id);
   }
