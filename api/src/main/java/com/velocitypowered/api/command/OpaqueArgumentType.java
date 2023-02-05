@@ -1,9 +1,7 @@
 package com.velocitypowered.api.command;
 
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -44,15 +42,7 @@ import net.kyori.adventure.key.Key;
  *        type by its version-dependent numeric identifier (used in Minecraft 1.19 and above).
  */
 public interface OpaqueArgumentType extends ArgumentType<Void> {
-
   // We don't provide a way to retrieve the identifiers, since these are version-dependent
   // and their type has changed from a string to a numerical value in Minecraft 1.19.
   // This prevents API breakage if Mojang were to change their format yet again.
-
-  @Override
-  default Void parse(StringReader reader) throws CommandSyntaxException {
-    // Consume all the input to halt parsing by Brigadier.
-    reader.setCursor(reader.getTotalLength());
-    return null;
-  }
 }

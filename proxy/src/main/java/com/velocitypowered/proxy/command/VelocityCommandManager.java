@@ -41,7 +41,7 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
-import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
+import com.velocitypowered.proxy.protocol.packet.brigadier.OpaqueArgumentTypeImpl;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -346,12 +346,12 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public @Nullable OpaqueArgumentType getOpaqueArgumentType(Key identifier) {
-    return ArgumentPropertyRegistry.getOldIdentifier(identifier.asString());
+    return OpaqueArgumentTypeImpl.from(identifier.asString());
   }
 
   @Override
   public @Nullable OpaqueArgumentType getOpaqueArgumentType(ProtocolVersion version,
                                                             int identifier) {
-    return ArgumentPropertyRegistry.getNewIdentifier(version, identifier);
+    return OpaqueArgumentTypeImpl.from(version, identifier);
   }
 }

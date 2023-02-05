@@ -19,13 +19,12 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.HashMap;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ArgumentIdentifier implements OpaqueArgumentType {
+public class ArgumentIdentifier {
 
   private final String identifier;
   private final Map<ProtocolVersion, Integer> versionById;
