@@ -18,26 +18,20 @@
 package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
-import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
+import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
 public interface CommandHandler<T extends MinecraftPacket> {
 
   Logger logger = LogManager.getLogger(CommandHandler.class);
-
-  Ratelimiter<Player> limiter = Ratelimiters.createWithMaxHitLimit(4000, 10);
 
   Class<T> packetClass();
 
@@ -62,7 +56,7 @@ public interface CommandHandler<T extends MinecraftPacket> {
       Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp) {
 
-    if(!player.chatRateLimit())
+    if(player.isChatRateLimited())
       return;
 
     player.getChatQueue().queuePacket(

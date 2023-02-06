@@ -48,7 +48,7 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
 
   @Override
   public void handlePlayerChatInternal(SessionPlayerChat packet) {
-    if(!player.chatRateLimit())
+    if(player.isChatRateLimited())
       return;
 
     ChatQueue chatQueue = this.player.getChatQueue();

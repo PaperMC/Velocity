@@ -550,23 +550,27 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public boolean chatRateLimit() {
-    boolean allowed = limiter.attempt(this);
-
-    if (!allowed) {
-      disconnect(Component.translatable("disconnect.spam", NamedTextColor.RED));
-    }
-
-    return allowed;
-  }
-
-  @Override
   public void disconnect(Component reason) {
     if (connection.eventLoop().inEventLoop()) {
       disconnect0(reason, false);
     } else {
       connection.eventLoop().execute(() -> disconnect0(reason, false));
     }
+  }
+
+  /**
+   * Checks and kicks the player when chat rate limit threshold has been reached.
+   *
+   * @return whether the message should be processed or not
+   */
+  public boolean isChatRateLimited() {
+    boolean allowed = limiter.attempt(this);
+
+    if (!allowed) {
+      disconnect(Component.translatable("disconnect.spam", NamedTextColor.RED));
+    }
+
+    return !allowed;
   }
 
   /**
