@@ -86,7 +86,7 @@ public class ArgumentPropertyRegistry {
 
     ArgumentPropertySerializer<?> serializer = byIdentifier.get(identifier);
     if (serializer == null) {
-      return null;
+      throw new IllegalArgumentException("Argument type identifier " + identifier + " unknown.");
     }
     Object result = serializer.deserialize(buf, protocolVersion);
 
@@ -260,8 +260,8 @@ public class ArgumentPropertyRegistry {
         ModArgumentProperty.class, MOD);
 
     // Forge support
-    register(id("forge:enum"), EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
-    register(id("forge:modid"), ModIdArgumentProperty.class,
+    register(id("forge:enum", mapSet(MINECRAFT_1_19, 50)), EnumArgumentProperty.class, EnumArgumentPropertySerializer.ENUM);
+    register(id("forge:modid", mapSet(MINECRAFT_1_19, 51)), ModIdArgumentProperty.class,
         new ArgumentPropertySerializer<>() {
           @Override
           public ModIdArgumentProperty deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
