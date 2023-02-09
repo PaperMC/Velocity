@@ -209,10 +209,6 @@ public class AvailableCommands implements MinecraftPacket {
         String name = ProtocolUtils.readString(buf);
         ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf, version);
 
-        if (argumentType == null) {
-          return null;
-        }
-
         RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
             .argument(name, argumentType);
         if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
