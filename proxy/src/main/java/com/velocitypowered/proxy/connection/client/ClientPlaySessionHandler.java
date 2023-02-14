@@ -277,7 +277,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    VelocityServerConnection serverConn = player.getConnectedServer();
+    // Handling edgecase when packet with FML client handshake (state COMPLETE)
+    // arrives after JoinGame packet from destination server
+    VelocityServerConnection serverConn = player.getConnectedServer() != null
+            ? player.getConnectedServer() : player.getConnectionInFlight();
+
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
