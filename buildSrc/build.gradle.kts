@@ -1,8 +1,8 @@
 plugins {
     `kotlin-dsl`
     checkstyle
-    id("net.kyori.indra.publishing") version "2.0.6"
-    id("com.diffplug.spotless") version "6.12.0"
+    id("net.kyori.indra.publishing") version "3.0.1"
+    id("com.diffplug.spotless") version "6.15.0"
 }
 
 repositories {
@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.12.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.15.0")
 }
 
 gradlePlugin {
