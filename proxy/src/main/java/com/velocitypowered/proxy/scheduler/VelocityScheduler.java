@@ -34,9 +34,9 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -69,7 +69,7 @@ public class VelocityScheduler implements Scheduler {
   public VelocityScheduler(PluginManager pluginManager) {
     this.pluginManager = pluginManager;
     this.taskService = new ThreadPoolExecutor(1, MAX_SCHEDULER_POOLED_THREAD_CAP,
-        60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+        60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
         new ThreadFactoryBuilder().setDaemon(true)
             .setNameFormat("Velocity Task Scheduler - #%d").build());
     this.timerExecutionService = Executors
