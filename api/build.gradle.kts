@@ -66,7 +66,7 @@ tasks {
                 "https://guava.dev/releases/$guavaVersion/api/docs/",
                 "https://google.github.io/guice/api-docs/$guiceVersion/javadoc/",
                 "https://docs.oracle.com/en/java/javase/11/docs/api/",
-                "https://jd.adventure.kyori.net/api/$adventureVersion/"
+                "https://jd.advntr.dev/api/$adventureVersion/"
         )
 
         // Disable the crazy super-strict doclint tool in Java 8
