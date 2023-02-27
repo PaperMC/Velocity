@@ -25,6 +25,8 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class ServerData implements MinecraftPacket {
 
@@ -50,7 +52,14 @@ public class ServerData implements MinecraftPacket {
           .deserialize(ProtocolUtils.readString(buf));
     }
     if (buf.readBoolean()) {
-      this.favicon = new Favicon(ProtocolUtils.readString(buf));
+      String iconBase64;
+      if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0) {
+        byte[] iconBytes = ProtocolUtils.readByteArray(buf);
+        iconBase64 = "data:image/png;base64," + new String(Base64.getEncoder().encode(iconBytes), StandardCharsets.UTF_8);
+      } else {
+        iconBase64 = ProtocolUtils.readString(buf);
+      }
+      this.favicon = new Favicon(iconBase64);
     }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
       buf.readBoolean();
@@ -75,7 +84,13 @@ public class ServerData implements MinecraftPacket {
     boolean hasFavicon = this.favicon != null;
     buf.writeBoolean(hasFavicon);
     if (hasFavicon) {
-      ProtocolUtils.writeString(buf, favicon.getBase64Url());
+      if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0) {
+        String cutIconBase64 = favicon.getBase64Url().substring("data:image/png;base64,".length());
+        byte[] iconBytes = Base64.getDecoder().decode(cutIconBase64.getBytes(StandardCharsets.UTF_8));
+        ProtocolUtils.writeByteArray(buf, iconBytes);
+      } else {
+        ProtocolUtils.writeString(buf, favicon.getBase64Url());
+      }
     }
 
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
