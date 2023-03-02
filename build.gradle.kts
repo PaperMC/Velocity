@@ -28,10 +28,8 @@ subprojects {
 
     repositories {
         mavenCentral()
-        // kyoripowered
-        maven("https://oss.sonatype.org/content/groups/public/")
-        // velocity
-        maven("https://nexus.velocitypowered.com/repository/maven-public/")
+        maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") // adventure
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
     dependencies {
         testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
