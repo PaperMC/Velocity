@@ -47,7 +47,7 @@ public class ServerData implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
-    if (buf.readBoolean()) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || buf.readBoolean()) {
       this.description = ProtocolUtils.getJsonChatSerializer(protocolVersion)
           .deserialize(ProtocolUtils.readString(buf));
     }
@@ -73,8 +73,10 @@ public class ServerData implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
     boolean hasDescription = this.description != null;
-    buf.writeBoolean(hasDescription);
-    if (hasDescription) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) < 0) {
+      buf.writeBoolean(hasDescription);
+    }
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || hasDescription) {
       ProtocolUtils.writeString(
           buf,
           ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(this.description)
