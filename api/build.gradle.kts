@@ -23,6 +23,7 @@ val adventureVersion: String by project.extra
 val slf4jVersion: String by project.extra
 val checkerFrameworkVersion: String by project.extra
 val configurateVersion: String by project.extra
+val caffeineVersion: String by project.extra
 
 dependencies {
     api("com.google.code.gson:gson:$gsonVersion")
@@ -46,6 +47,8 @@ dependencies {
     api("org.spongepowered:configurate-hocon:${configurateVersion}")
     api("org.spongepowered:configurate-yaml:${configurateVersion}")
     api("org.spongepowered:configurate-gson:${configurateVersion}")
+
+    api("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 }
 
 tasks {
@@ -66,7 +69,8 @@ tasks {
                 "https://guava.dev/releases/$guavaVersion/api/docs/",
                 "https://google.github.io/guice/api-docs/$guiceVersion/javadoc/",
                 "https://docs.oracle.com/en/java/javase/11/docs/api/",
-                "https://jd.advntr.dev/api/$adventureVersion/"
+                "https://jd.advntr.dev/api/$adventureVersion/",
+                "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 
         // Disable the crazy super-strict doclint tool in Java 8

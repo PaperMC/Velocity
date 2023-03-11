@@ -92,7 +92,6 @@ val adventureVersion: String by project.extra
 val adventureFacetVersion: String by project.extra
 val asyncHttpClientVersion: String by project.extra
 val bstatsVersion: String by project.extra
-val caffeineVersion: String by project.extra
 val completableFuturesVersion: String by project.extra
 val disruptorVersion: String by project.extra
 val fastutilVersion: String by project.extra
@@ -143,8 +142,6 @@ dependencies {
 
     implementation("org.bstats:bstats-base:$bstatsVersion")
     implementation("org.lanternpowered:lmbda:$lmbdaVersion")
-
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     implementation("space.vectrix.flare:flare:$flareVersion")
     implementation("space.vectrix.flare:flare-fastutil:$flareVersion")
