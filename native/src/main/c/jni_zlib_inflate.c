@@ -1,20 +1,20 @@
-#include <assert.h>
 #include <jni.h>
-#include <stdbool.h>
 #include <stdlib.h>
-#include <libdeflate.h>
+#include <igzip_lib.h>
 #include "jni_util.h"
 
 JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_compression_NativeZlibInflate_init(JNIEnv *env,
     jclass clazz)
 {
-    struct libdeflate_decompressor *decompress = libdeflate_alloc_decompressor();
+    struct inflate_state *decompress = malloc(sizeof(struct inflate_state));
     if (decompress == NULL) {
         // Out of memory!
-        throwException(env, "java/lang/OutOfMemoryError", "libdeflate allocate decompressor");
+        throwException(env, "java/lang/OutOfMemoryError", "isa-l inflate state allocation");
         return 0;
     }
+
+    decompress->crc_flag = IGZIP_ZLIB;
 
     return (jlong) decompress;
 }
@@ -24,7 +24,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_free(JNIEnv *env,
     jclass clazz,
     jlong ctx)
 {
-    libdeflate_free_decompressor((struct libdeflate_decompressor *) ctx);
+    free((struct inflate_state *) ctx);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -34,28 +34,21 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_process(JNIEnv *e
     jlong sourceAddress,
     jint sourceLength,
     jlong destinationAddress,
-    jint destinationLength,
-    jlong maximumSize)
+    jint destinationLength)
 {
-    struct libdeflate_decompressor *decompress = (struct libdeflate_decompressor *) ctx;
-    enum libdeflate_result result = libdeflate_zlib_decompress(decompress, (void *) sourceAddress,
-        sourceLength, (void *) destinationAddress, destinationLength, NULL);
+    struct inflate_state *decompress = (struct inflate_state *) ctx;
+    decompress->next_in = (uint8_t *) sourceAddress;
+    decompress->avail_in = sourceLength;
+    decompress->next_out = (uint8_t *) destinationAddress;
+    decompress->avail_out = destinationLength;
 
-    switch (result) {
-        case LIBDEFLATE_SUCCESS:
-            // We are happy
-            return JNI_TRUE;
-        case LIBDEFLATE_BAD_DATA:
-            throwException(env, "java/util/zip/DataFormatException", "inflate data is bad");
-            return JNI_FALSE;
-        case LIBDEFLATE_SHORT_OUTPUT:
-        case LIBDEFLATE_INSUFFICIENT_SPACE:
-            // These cases are the same for us. We expect the full uncompressed size to be known.
-            throwException(env, "java/util/zip/DataFormatException", "uncompressed size is inaccurate");
-            return JNI_FALSE;
-        default:
-            // Unhandled case
-            throwException(env, "java/util/zip/DataFormatException", "unknown libdeflate return code");
-            return JNI_FALSE;
+    int result = isal_inflate_stateless(decompress);
+    isal_inflate_reset(decompress);
+
+    if (result == ISAL_DECOMP_OK) {
+        return JNI_TRUE;
+    } else {
+        throwException(env, "java/util/zip/DataFormatException", "inflate data is bad");
+        return JNI_FALSE;
     }
 }
