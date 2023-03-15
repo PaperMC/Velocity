@@ -532,19 +532,17 @@ public class VelocityConfiguration implements ProxyConfig {
 
     // Old MOTD Migration
     if (configVersion < 2.6) {
-      String migratedMotd = motd;
-
+      final String migratedMotd;
       // JSON Format Migration
-      if (migratedMotd.strip().startsWith("{")) {
+      if (motd.strip().startsWith("{")) {
         migratedMotd = MiniMessage.miniMessage().serialize(
-                GsonComponentSerializer.gson().deserialize(migratedMotd))
+                GsonComponentSerializer.gson().deserialize(motd))
                 .replace("\\", "");
+      } else {
+        // Legacy '&' Format Migration
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
       }
-
-      // Legacy '&' Format Migration
-      migratedMotd = MiniMessage.miniMessage().serialize(
-              LegacyComponentSerializer.legacyAmpersand().deserialize(migratedMotd))
-              .replace("\\", "");
 
       config.set("motd", migratedMotd);
       motd = migratedMotd;
