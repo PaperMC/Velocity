@@ -82,8 +82,7 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     URL pluginJarUrl = candidate.getSource().get().toUri().toURL();
-    PluginClassLoader loader = AccessController.doPrivileged(
-        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
+    PluginClassLoader loader = new PluginClassLoader(new URL[]{pluginJarUrl});
     loader.addToClassloaders();
 
     JavaVelocityPluginDescriptionCandidate candidateInst =
