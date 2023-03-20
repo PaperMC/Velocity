@@ -473,7 +473,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    destination.setActiveDimensionRegistry(joinGame.getDimensionRegistry()); // 1.16
+    destination.setActiveDimensionRegistry(joinGame.getRegistry()); // 1.16
 
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
