@@ -23,9 +23,11 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.event.connection.ServerHandshakeEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.ServerHandshake;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.GameProfile.Property;
@@ -34,6 +36,7 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.client.AuthSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -52,6 +55,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -60,6 +65,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VelocityServerConnection implements MinecraftConnectionAssociation, ServerConnection {
 
+  private static final Logger logger = LogManager.getLogger(AuthSessionHandler.class);
   private final VelocityRegisteredServer registeredServer;
   private final @Nullable VelocityRegisteredServer previousServer;
   private final ConnectedPlayer proxyPlayer;
@@ -175,32 +181,50 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .orElseGet(() -> registeredServer.getServerInfo().getAddress())
         .getHostString();
 
-    Handshake handshake = new Handshake();
-    handshake.setNextStatus(StateRegistry.LOGIN_ID);
-    handshake.setProtocolVersion(protocolVersion);
+    String serverAddress;
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
-      handshake.setServerAddress(createLegacyForwardingAddress());
+      serverAddress = createLegacyForwardingAddress();
     } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
       byte[] secret = server.getConfiguration().getForwardingSecret();
-      handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
+      serverAddress = createBungeeGuardForwardingAddress(secret);
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
+      serverAddress = playerVhost + HANDSHAKE_HOSTNAME_TOKEN;
     } else {
-      handshake.setServerAddress(playerVhost);
+      serverAddress = playerVhost;
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
-    mc.delayedWrite(handshake);
+    ServerHandshake serverHandshake = new ServerHandshake(serverAddress,
+        registeredServer.getServerInfo().getAddress().getPort());
 
-    mc.setProtocolVersion(protocolVersion);
-    mc.setState(StateRegistry.LOGIN);
-    if (proxyPlayer.getIdentifiedKey() == null
-        && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
-    } else {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
-    }
-    mc.flush();
+    ServerHandshakeEvent event = new ServerHandshakeEvent(proxyPlayer, registeredServer,
+        protocolVersion, StateRegistry.LOGIN_ID, serverHandshake);
+    server.getEventManager().fire(event).thenAcceptAsync(newEvent -> {
+      if (mc.isClosed()) {
+        return;
+      }
+      ServerHandshake handshakeData = newEvent.getHandshake();
+      Handshake handshake = new Handshake();
+      handshake.setNextStatus(event.getNextStatus());
+      handshake.setProtocolVersion(event.getProtocolVersion());
+      handshake.setServerAddress(handshakeData.getServerAddress());
+      handshake.setPort(handshakeData.getPort());
+
+      mc.delayedWrite(handshake);
+
+      mc.setProtocolVersion(protocolVersion);
+      mc.setState(StateRegistry.LOGIN);
+      if (proxyPlayer.getIdentifiedKey() == null
+          && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+        mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
+      } else {
+        mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
+      }
+      mc.flush();
+    }, mc.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception during serverbound handshake of {}",
+          proxyPlayer.getGameProfile(), ex);
+      return null;
+    });
   }
 
   public @Nullable MinecraftConnection getConnection() {
