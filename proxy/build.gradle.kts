@@ -92,12 +92,11 @@ val adventureVersion: String by project.extra
 val adventureFacetVersion: String by project.extra
 val asyncHttpClientVersion: String by project.extra
 val bstatsVersion: String by project.extra
-val caffeineVersion: String by project.extra
 val completableFuturesVersion: String by project.extra
 val disruptorVersion: String by project.extra
 val fastutilVersion: String by project.extra
 val flareVersion: String by project.extra
-val jansiVersion: String by project.extra
+val jlineVersion: String by project.extra
 val joptSimpleVersion: String by project.extra
 val lmbdaVersion: String by project.extra
 val log4jVersion: String by project.extra
@@ -126,7 +125,7 @@ dependencies {
 
     implementation("net.sf.jopt-simple:jopt-simple:$joptSimpleVersion") // command-line options
     implementation("net.minecrell:terminalconsoleappender:$terminalConsoleAppenderVersion")
-    runtimeOnly("org.jline:jline-terminal-jansi:$jansiVersion")  // Needed for JLine
+    runtimeOnly("org.jline:jline-terminal-jansi:$jlineVersion")  // Needed for JLine
     runtimeOnly("com.lmax:disruptor:$disruptorVersion") // Async loggers
 
     implementation("it.unimi.dsi:fastutil-core:$fastutilVersion")
@@ -143,8 +142,6 @@ dependencies {
 
     implementation("org.bstats:bstats-base:$bstatsVersion")
     implementation("org.lanternpowered:lmbda:$lmbdaVersion")
-
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     implementation("space.vectrix.flare:flare:$flareVersion")
     implementation("space.vectrix.flare:flare-fastutil:$flareVersion")
