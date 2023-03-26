@@ -9,7 +9,7 @@ extensions.configure<PublishingExtension> {
             credentials(PasswordCredentials::class.java)
 
             name = "paper"
-            val base = "https://papermc.io/repo/repository/maven"
+            val base = "https://repo.papermc.io/repository/maven"
             val releasesRepoUrl = "$base-releases/"
             val snapshotsRepoUrl = "$base-snapshots/"
             setUrl(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
