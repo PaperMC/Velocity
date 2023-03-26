@@ -17,6 +17,7 @@ brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.0.1"
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.5"
 checker-qual = "org.checkerframework:checker-qual:3.28.0"
+checkstyle = "com.puppycrawl.tools:checkstyle:10.9.3"
 completablefutures = "com.spotify:completable-futures:0.3.5"
 configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
 configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
