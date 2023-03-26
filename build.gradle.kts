@@ -6,11 +6,6 @@ plugins {
     `java-library`
 }
 
-allprojects {
-    group = "com.velocitypowered"
-    version = rootProject.file("version").readLines().first()
-}
-
 subprojects {
     apply<JavaLibraryPlugin>()
 
