@@ -107,7 +107,7 @@ dependencies {
     runtimeOnly(libs.jline)
     runtimeOnly(libs.disruptor)
     implementation(libs.fastutil)
-    implementation(platform("net.kyori:adventure-bom:4.12.0"))
+    implementation(platform(libs.adventure.bom))
     implementation("net.kyori:adventure-nbt")
     implementation(libs.adventure.facet)
     implementation(libs.asynchttpclient)
