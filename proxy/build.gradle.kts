@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     application
-    `set-manifest-impl-version`
+    id("velocity-init-manifest")
     alias(libs.plugins.shadow)
 }
 
