@@ -335,8 +335,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Path updatePath = pluginPath.resolve("to-update");
       Path outdatedPluginsPath = pluginPath.resolve("outdated");
 
-      if (!Files.exists(pluginPath)) {
+      if (Files.notExists(pluginPath)) {
         Files.createDirectory(pluginPath);
+      }
+
+      if (Files.notExists(updatePath)) {
+        Files.createDirectory(updatePath);
+      }
+      if (Files.notExists(outdatedPluginsPath)) {
+        Files.createDirectory(outdatedPluginsPath);
       }
 
       if (!Files.isDirectory(pluginPath)) {
@@ -348,6 +355,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       boolean applyUpdates = false;
       if (configuration.isAutoUpdate()) {
         applyUpdates = true;
+
         if (Files.notExists(updatePath)) {
           Files.createDirectory(updatePath);
         }
@@ -365,8 +373,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           applyUpdates = false;
         }
       }
-      pluginManager.loadPlugins(pluginPath, updatePath, outdatedPluginsPath, applyUpdates);
 
+      pluginManager.loadPlugins(pluginPath, updatePath, outdatedPluginsPath, applyUpdates);
+      
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
     }

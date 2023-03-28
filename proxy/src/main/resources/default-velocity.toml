@@ -141,6 +141,9 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# Whether plugins should be auto updated/installed from the update folder
+auto-update = true
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

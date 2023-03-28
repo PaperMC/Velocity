@@ -78,6 +78,7 @@ public class VelocityPluginManager implements PluginManager {
 
   /**
    * Loads all plugins from the specified {@code pluginDirectory}.
+   *
    * @param pluginDirectory the directory to load from
    * @param updateDirectory the directory to update plugins from
    * @param outdatedPluginDirectory the directory to store outdated plugins in
@@ -93,7 +94,7 @@ public class VelocityPluginManager implements PluginManager {
           boolean applyUpdates
   ) throws IOException {
     checkNotNull(pluginDirectory, "directory");
-    checkArgument(pluginDirectory.toFile().isDirectory(), "provided plugin path isn't a directory");
+    checkArgument(Files.isDirectory(pluginDirectory), "provided plugin path isn't a directory");
 
     Map<String, PluginDescription> found = new HashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, pluginDirectory);
@@ -115,7 +116,8 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
-    //update plugins from update folder before checking for dependencies and making sorted dependency list
+    // update plugins from update folder before checking for
+    // dependencies and making sorted dependency list
     if (applyUpdates) {
       updatePlugins(
                 pluginDirectory,
@@ -126,7 +128,8 @@ public class VelocityPluginManager implements PluginManager {
       );
     }
 
-    List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(new ArrayList<>(found.values()));
+    List<PluginDescription> sortedPlugins = PluginDependencyUtils
+            .sortCandidates(new ArrayList<>(found.values()));
     Set<String> loadedPluginsById = new HashSet<>();
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
     // Now load the plugins
@@ -136,7 +139,7 @@ public class VelocityPluginManager implements PluginManager {
       for (PluginDependency dependency : candidate.getDependencies()) {
         if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
           logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
-              dependency.getId());
+                  dependency.getId());
           continue pluginLoad;
         }
       }
