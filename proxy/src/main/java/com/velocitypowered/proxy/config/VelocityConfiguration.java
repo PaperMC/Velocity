@@ -396,6 +396,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isAutoUpdate() {
+    return advanced.isAutoUpdate();
+  }
+
   public boolean isForceKeyAuthentication() {
     return forceKeyAuthentication;
   }
@@ -773,6 +777,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean logCommandExecutions = false;
     @Expose
     private boolean logPlayerConnections = true;
+    @Expose
+    private boolean autoUpdate = true;
 
     private Advanced() {
     }
@@ -797,6 +803,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.autoUpdate = config.getOrElse("auto-update", true);
       }
     }
 
@@ -852,6 +859,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logPlayerConnections;
     }
 
+    public boolean isAutoUpdate() {
+      return autoUpdate;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -868,6 +879,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
+          + ", autoUpdate=" + autoUpdate
           + '}';
     }
   }

@@ -335,13 +335,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Path updatePath = pluginPath.resolve("to-update");
       Path outdatedPluginsPath = pluginPath.resolve("outdated");
 
-      if (!Files.exists(pluginPath)) {
+      if (Files.notExists(pluginPath)) {
         Files.createDirectory(pluginPath);
       }
-      if (!Files.exists(updatePath)) {
+      if (Files.notExists(updatePath)) {
         Files.createDirectory(updatePath);
       }
-      if (!Files.exists(outdatedPluginsPath)) {
+      if (Files.notExists(outdatedPluginsPath)) {
         Files.createDirectory(outdatedPluginsPath);
       }
       if (!Files.isDirectory(pluginPath)) {
@@ -350,19 +350,22 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         return;
       }
 
-      boolean applyUpdates = true;
-      if (!Files.isDirectory(updatePath)) {
-        logger.warn("Plugin update location {} is not a directory, plugins will not be updated",
-                updatePath);
-        applyUpdates = false;
+      boolean applyUpdates = false;
+      if (configuration.isAutoUpdate()) {
+        applyUpdates = true;
+        if (!Files.isDirectory(updatePath)) {
+          logger.warn("Plugin update location {} is not a directory, plugins will not be updated",
+                  updatePath);
+          applyUpdates = false;
+        }
+        if (!Files.isDirectory(outdatedPluginsPath)) {
+          logger.warn("Plugin outdated location {} is not a directory, plugins will not be updated",
+                  outdatedPluginsPath);
+          applyUpdates = false;
+        }
       }
-      if (!Files.isDirectory(outdatedPluginsPath)) {
-        logger.warn("Plugin outdated location {} is not a directory, plugins will not be updated",
-                outdatedPluginsPath);
-        applyUpdates = false;
-      }
-      pluginManager.loadPlugins(pluginPath, updatePath, outdatedPluginsPath, applyUpdates);
 
+      pluginManager.loadPlugins(pluginPath, updatePath, outdatedPluginsPath, applyUpdates);
 
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
