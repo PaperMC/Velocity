@@ -1,17 +1,13 @@
+@Suppress("DSL_SCOPE_VIOLATION") // fixed in Gradle 8.1
 plugins {
     `kotlin-dsl`
     checkstyle
-    id("net.kyori.indra.publishing") version "2.0.6"
-    id("com.diffplug.spotless") version "6.12.0"
-}
-
-repositories {
-    mavenCentral()
-    maven("https://plugins.gradle.org/m2")
+    alias(libs.plugins.indra.publishing)
+    alias(libs.plugins.spotless)
 }
 
 dependencies {
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.12.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.plugins.spotless.get().version}")
 }
 
 gradlePlugin {

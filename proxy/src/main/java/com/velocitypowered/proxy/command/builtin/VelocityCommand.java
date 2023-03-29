@@ -34,10 +34,13 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -46,8 +49,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -89,6 +92,7 @@ public class VelocityCommand implements SimpleCommand {
         .put("plugins", new Plugins(server))
         .put("reload", new Reload(server))
         .put("dump", new Dump(server))
+        .put("heap", new Heap())
         .build();
   }
 
@@ -98,7 +102,7 @@ public class VelocityCommand implements SimpleCommand {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining("|"));
     String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(Identity.nil(), Component.text(commandText, NamedTextColor.RED));
+    source.sendMessage(Component.text(commandText, NamedTextColor.RED));
   }
 
   @Override
@@ -212,7 +216,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Identity.nil(), Component.text("/velocity version", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity version", NamedTextColor.RED));
         return;
       }
 
@@ -227,8 +231,8 @@ public class VelocityCommand implements SimpleCommand {
           .translatable("velocity.command.version-copyright",
               Component.text(version.getVendor()),
               Component.text(version.getName()));
-      source.sendMessage(Identity.nil(), velocity);
-      source.sendMessage(Identity.nil(), copyright);
+      source.sendMessage(velocity);
+      source.sendMessage(copyright);
 
       if (version.getName().equals("Velocity")) {
         TextComponent embellishment = Component.text()
@@ -245,7 +249,7 @@ public class VelocityCommand implements SimpleCommand {
                     "https://github.com/PaperMC/Velocity"))
                 .build())
             .build();
-        source.sendMessage(Identity.nil(), embellishment);
+        source.sendMessage(embellishment);
       }
     }
 
@@ -266,7 +270,7 @@ public class VelocityCommand implements SimpleCommand {
     @Override
     public void execute(CommandSource source, String @NonNull [] args) {
       if (args.length != 0) {
-        source.sendMessage(Identity.nil(), Component.text("/velocity plugins", NamedTextColor.RED));
+        source.sendMessage(Component.text("/velocity plugins", NamedTextColor.RED));
         return;
       }
 
@@ -292,7 +296,7 @@ public class VelocityCommand implements SimpleCommand {
           .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW)
           .args(listBuilder.build());
-      source.sendMessage(Identity.nil(), output);
+      source.sendMessage(output);
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
@@ -377,7 +381,7 @@ public class VelocityCommand implements SimpleCommand {
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));
 
-      Path dumpPath = Paths.get("velocity-dump-"
+      Path dumpPath = Path.of("velocity-dump-"
           + new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())
           + ".json");
       try (BufferedWriter bw = Files.newBufferedWriter(
@@ -403,5 +407,82 @@ public class VelocityCommand implements SimpleCommand {
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
       return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
     }
+  }
+
+  /**
+   * Heap SubCommand.
+   */
+  public static class Heap implements SubCommand {
+    private static final Logger logger = LogManager.getLogger(Heap.class);
+    private MethodHandle heapGenerator;
+    private Consumer<CommandSource> heapConsumer;
+    private final Path dir = Path.of("./dumps");
+
+    @Override
+    public void execute(CommandSource source, String @NonNull [] args) {
+      try {
+        if (Files.notExists(dir)) {
+          Files.createDirectories(dir);
+        }
+
+        // A single lookup of the heap dump generator method is performed on execution
+        // to avoid assigning variables unnecessarily in case the user never executes the command
+        if (heapGenerator == null || heapConsumer == null) {
+          javax.management.MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+          MethodHandles.Lookup lookup = MethodHandles.lookup();
+          SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+          MethodType type;
+          try {
+            Class<?> clazz = Class.forName("openj9.lang.management.OpenJ9DiagnosticsMXBean");
+            type = MethodType.methodType(String.class, String.class, String.class);
+
+            this.heapGenerator = lookup.findVirtual(clazz, "triggerDumpToFile", type);
+            this.heapConsumer = (src) -> {
+              String name = "heap-dump-" + format.format(new Date());
+              Path file = dir.resolve(name + ".phd");
+              try {
+                Object openj9Mbean = ManagementFactory.newPlatformMXBeanProxy(
+                    server, "openj9.lang.management:type=OpenJ9Diagnostics", clazz);
+                heapGenerator.invoke(openj9Mbean, "heap", file.toString());
+              } catch (Throwable e) {
+                // This should not occur
+                throw new RuntimeException(e);
+              }
+              src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+            };
+          } catch (ClassNotFoundException e) {
+            Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
+            type = MethodType.methodType(void.class, String.class, boolean.class);
+
+            this.heapGenerator = lookup.findVirtual(clazz, "dumpHeap", type);
+            this.heapConsumer = (src) -> {
+              String name = "heap-dump-" + format.format(new Date());
+              Path file = dir.resolve(name + ".hprof");
+              try {
+                Object hotspotMbean = ManagementFactory.newPlatformMXBeanProxy(
+                    server, "com.sun.management:type=HotSpotDiagnostic", clazz);
+                this.heapGenerator.invoke(hotspotMbean, file.toString(), true);
+              } catch (Throwable e1) {
+                // This should not occur
+                throw new RuntimeException(e);
+              }
+              src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
+            };
+          }
+        }
+
+        this.heapConsumer.accept(source);
+      } catch (Throwable t) {
+        source.sendMessage(Component.text("Failed to write heap dump, see server log for details",
+            NamedTextColor.RED));
+        logger.error("Could not write heap", t);
+      }
+    }
+
+    @Override
+    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
+      return source.getPermissionValue("velocity.command.heap") == Tristate.TRUE;
+    }
+
   }
 }

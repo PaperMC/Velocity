@@ -282,6 +282,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
+  @Override
+  public boolean hasSentPlayerSettings() {
+    return settings != null;
+  }
+
   void setPlayerSettings(ClientSettings settings) {
     ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
     this.settings = cs;

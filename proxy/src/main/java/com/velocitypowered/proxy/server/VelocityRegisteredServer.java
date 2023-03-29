@@ -26,9 +26,9 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -84,8 +84,13 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
+  public CompletableFuture<ServerPing> ping(PingOptions pingOptions) {
+    return ping(null, pingOptions);
+  }
+
+  @Override
   public CompletableFuture<ServerPing> ping() {
-    return ping(null, ProtocolVersion.UNKNOWN);
+    return ping(null, PingOptions.DEFAULT);
   }
 
   /**
@@ -93,10 +98,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * {@code version}.
    *
    * @param loop    the event loop to use
-   * @param version the version to report
+   * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
-  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, ProtocolVersion version) {
+  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions) {
     if (server == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
@@ -108,7 +113,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline()
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                    new ReadTimeoutHandler(pingOptions.getTimeout() == 0
+                            ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
@@ -124,7 +130,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           if (future.isSuccess()) {
             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
             conn.setSessionHandler(new PingSessionHandler(
-                pingFuture, VelocityRegisteredServer.this, conn, version));
+                pingFuture, VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion()));
           } else {
             pingFuture.completeExceptionally(future.cause());
           }

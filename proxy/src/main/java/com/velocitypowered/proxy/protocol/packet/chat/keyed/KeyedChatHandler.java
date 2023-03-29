@@ -104,9 +104,11 @@ public class KeyedChatHandler implements
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed()
-          && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-        invalidCancel(logger, player);
+      if (!chatResult.isAllowed()) {
+        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+          // Bad, very bad.
+          invalidCancel(logger, player);
+        }
         return null;
       }
 

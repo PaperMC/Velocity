@@ -36,6 +36,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +53,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VelocityScheduler implements Scheduler {
 
+  private static final int MAX_SCHEDULER_POOLED_THREAD_CAP = 200;
+
   private final PluginManager pluginManager;
   private final ExecutorService taskService;
   private final ScheduledExecutorService timerExecutionService;
@@ -64,8 +68,10 @@ public class VelocityScheduler implements Scheduler {
    */
   public VelocityScheduler(PluginManager pluginManager) {
     this.pluginManager = pluginManager;
-    this.taskService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true)
-        .setNameFormat("Velocity Task Scheduler - #%d").build());
+    this.taskService = new ThreadPoolExecutor(1, MAX_SCHEDULER_POOLED_THREAD_CAP,
+        60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
+        new ThreadFactoryBuilder().setDaemon(true)
+            .setNameFormat("Velocity Task Scheduler - #%d").build());
     this.timerExecutionService = Executors
         .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true)
             .setNameFormat("Velocity Task Scheduler Timer").build());

@@ -45,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -273,11 +274,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public net.kyori.adventure.text.Component getMotd() {
     if (motdAsComponent == null) {
-      if (motd.startsWith("{")) {
-        motdAsComponent = GsonComponentSerializer.gson().deserialize(motd);
-      } else {
-        motdAsComponent = LegacyComponentSerializer.legacy('&').deserialize(motd);
-      }
+      motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
     }
     return motdAsComponent;
   }
@@ -531,6 +528,32 @@ public class VelocityConfiguration implements ProxyConfig {
       mustResave = true;
     }
 
+    String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+
+    // Old MOTD Migration
+    if (configVersion < 2.6) {
+      final String migratedMotd;
+      // JSON Format Migration
+      if (motd.strip().startsWith("{")) {
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                GsonComponentSerializer.gson().deserialize(motd))
+                .replace("\\", "");
+      } else {
+        // Legacy '&' Format Migration
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+      }
+
+      config.set("motd", migratedMotd);
+      motd = migratedMotd;
+
+      config.setComment("motd",
+              " What should be the MOTD? This gets displayed when the player adds your server to\n"
+                      + " their server list. Only MiniMessage format is accepted.");
+      config.set("config-version", "2.6");
+      mustResave = true;
+    }
+
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
       config.save();
@@ -548,7 +571,6 @@ public class VelocityConfiguration implements ProxyConfig {
         PingPassthroughMode.DISABLED);
 
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
@@ -558,7 +580,7 @@ public class VelocityConfiguration implements ProxyConfig {
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
     Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
 
-    // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
+    // Throw an exception if the forwarding-secret file is empty and the proxy is using a
     // forwarding mode that requires it.
     if (forwardingSecret.length == 0
         && (forwardingMode == PlayerInfoForwarding.MODERN

@@ -1,9 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 
+@Suppress("DSL_SCOPE_VIOLATION") // fixed in Gradle 8.1
 plugins {
     application
     `set-manifest-impl-version`
-    id("com.github.johnrengelman.shadow") version "7.1.0"
+    alias(libs.plugins.shadow)
 }
 
 application {
@@ -88,68 +89,33 @@ tasks {
     }
 }
 
-val adventureVersion: String by project.extra
-val adventureFacetVersion: String by project.extra
-val asyncHttpClientVersion: String by project.extra
-val bstatsVersion: String by project.extra
-val caffeineVersion: String by project.extra
-val completableFuturesVersion: String by project.extra
-val disruptorVersion: String by project.extra
-val fastutilVersion: String by project.extra
-val flareVersion: String by project.extra
-val jansiVersion: String by project.extra
-val joptSimpleVersion: String by project.extra
-val lmbdaVersion: String by project.extra
-val log4jVersion: String by project.extra
-val nettyVersion: String by project.extra
-val nightConfigVersion: String by project.extra
-val semver4jVersion: String by project.extra
-val terminalConsoleAppenderVersion: String by project.extra
-
 dependencies {
     implementation(project(":velocity-api"))
     implementation(project(":velocity-native"))
 
-    implementation("io.netty:netty-codec:${nettyVersion}")
-    implementation("io.netty:netty-codec-haproxy:${nettyVersion}")
-    implementation("io.netty:netty-codec-http:${nettyVersion}")
-    implementation("io.netty:netty-handler:${nettyVersion}")
-    implementation("io.netty:netty-transport-native-epoll:${nettyVersion}")
-    implementation("io.netty:netty-transport-native-epoll:${nettyVersion}:linux-x86_64")
-    implementation("io.netty:netty-transport-native-epoll:${nettyVersion}:linux-aarch_64")
+    implementation(libs.bundles.log4j)
+    implementation(libs.netty.codec)
+    implementation(libs.netty.codec.haproxy)
+    implementation(libs.netty.codec.http)
+    implementation(libs.netty.handler)
+    implementation(libs.netty.transport.native.epoll)
+    implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-x86_64") })
+    implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-aarch_64") })
 
-    implementation("org.apache.logging.log4j:log4j-api:${log4jVersion}")
-    implementation("org.apache.logging.log4j:log4j-core:${log4jVersion}")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}")
-    implementation("org.apache.logging.log4j:log4j-iostreams:${log4jVersion}")
-    implementation("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
-
-    implementation("net.sf.jopt-simple:jopt-simple:$joptSimpleVersion") // command-line options
-    implementation("net.minecrell:terminalconsoleappender:$terminalConsoleAppenderVersion")
-    runtimeOnly("org.jline:jline-terminal-jansi:$jansiVersion")  // Needed for JLine
-    runtimeOnly("com.lmax:disruptor:$disruptorVersion") // Async loggers
-
-    implementation("it.unimi.dsi:fastutil-core:$fastutilVersion")
-
-    implementation(platform("net.kyori:adventure-bom:$adventureVersion"))
+    implementation(libs.jopt)
+    implementation(libs.terminalconsoleappender)
+    runtimeOnly(libs.jline)
+    runtimeOnly(libs.disruptor)
+    implementation(libs.fastutil)
+    implementation(platform(libs.adventure.bom))
     implementation("net.kyori:adventure-nbt")
-    implementation("net.kyori:adventure-platform-facet:$adventureFacetVersion")
-
-    implementation("org.asynchttpclient:async-http-client:$asyncHttpClientVersion")
-
-    implementation("com.spotify:completable-futures:$completableFuturesVersion")
-
-    implementation("com.electronwill.night-config:toml:$nightConfigVersion")
-
-    implementation("org.bstats:bstats-base:$bstatsVersion")
-    implementation("org.lanternpowered:lmbda:$lmbdaVersion")
-
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
-
-    implementation("space.vectrix.flare:flare:$flareVersion")
-    implementation("space.vectrix.flare:flare-fastutil:$flareVersion")
-
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
-
-    testImplementation("org.mockito:mockito-core:3.+")
+    implementation(libs.adventure.facet)
+    implementation(libs.asynchttpclient)
+    implementation(libs.completablefutures)
+    implementation(libs.nightconfig)
+    implementation(libs.bstats)
+    implementation(libs.lmbda)
+    implementation(libs.bundles.flare)
+    compileOnly(libs.spotbugs.annotations)
+    testImplementation(libs.mockito)
 }
