@@ -19,11 +19,13 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.ParsedCommandNode;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
@@ -31,6 +33,7 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
+import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.List;
 import java.util.Locale;
@@ -183,6 +186,26 @@ public final class VelocityCommands {
    */
   public static boolean isArgumentsNode(final CommandNode<?> node) {
     return node instanceof VelocityArgumentCommandNode && node.getName().equals(ARGS_NODE_NAME);
+  }
+
+  /**
+   * Returns whether the given parse results contain a parsed argument node whose
+   * type is {@link OpaqueArgumentType opaque}. The contents of such node cannot
+   * be parsed in the proxy.
+   *
+   * @param parse the parse results
+   * @return {@code true} if and only if the results contain an argument node whose type
+   *         is opaque.
+   */
+  static boolean containsArgumentWithOpaqueType(final ParseResults<?> parse) {
+    for (final var node : parse.getContext().getNodes()) {
+      if (node.getNode() instanceof ArgumentCommandNode<?, ?>) {
+        if (((ArgumentCommandNode<?, ?>) node.getNode()).getType() instanceof OpaqueArgumentType) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private VelocityCommands() {

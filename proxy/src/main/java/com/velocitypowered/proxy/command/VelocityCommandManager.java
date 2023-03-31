@@ -32,6 +32,7 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.OpaqueArgumentType;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
@@ -39,6 +40,9 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier;
+import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
+import com.velocitypowered.proxy.protocol.packet.brigadier.OpaqueArgumentTypeBuilderImpl;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -210,6 +215,14 @@ public class VelocityCommandManager implements CommandManager {
     try {
       // The parse can fail if the requirement predicates throw
       final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
+
+      if (VelocityCommands.containsArgumentWithOpaqueType(parse)) {
+        // The parse results contain an argument node whose contents the proxy
+        // does not know how to parse. We must forward the execution to
+        // the backend server.
+        return false;
+      }
+
       return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
@@ -330,5 +343,14 @@ public class VelocityCommandManager implements CommandManager {
 
   public CommandGraphInjector<CommandSource> getInjector() {
     return injector;
+  }
+
+  @Override
+  public OpaqueArgumentType.Builder opaqueArgumentTypeBuilder(final Key identifier) {
+    final ArgumentIdentifier id = ArgumentPropertyRegistry.getIdentifier(identifier.asString());
+    if (id == null) {
+      throw new IllegalArgumentException("Unknown vanilla parser \"" + identifier + "\"");
+    }
+    return new OpaqueArgumentTypeBuilderImpl(id);
   }
 }

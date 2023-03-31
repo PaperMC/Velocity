@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,8 +30,10 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.network.ProtocolVersion;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -233,5 +236,36 @@ public class CommandManagerTests extends CommandTestSuite {
     public boolean hasPermission(final Invocation invocation) {
       return fail();
     }
+  }
+
+  // Opaque argument types
+
+  @Test
+  void testCreateOpaqueArgumentType() {
+    final var type = manager.opaqueArgumentTypeBuilder(Key.key("item_stack")).build();
+
+    assertEquals("minecraft:item_stack", type.getIdentifier());
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2).length);
+    assertEquals(0, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3).length);
+  }
+
+  @Test
+  void testCreateOpaqueArgumentTypeWithProperties() {
+    final var expected = new byte[]{(byte) 0x1};
+    final var type = manager.opaqueArgumentTypeBuilder(Key.key("entity"))
+        .withProperties(expected)
+        .build();
+
+    assertArrayEquals(expected, type.getProperties(ProtocolVersion.MINECRAFT_1_19_3));
+    assertArrayEquals(expected, type.getProperties(ProtocolVersion.MINECRAFT_1_18_2));
+
+    final var otherType = manager.opaqueArgumentTypeBuilder(Key.key("score_holder"))
+        .withProperties(version -> new byte[]{
+            version == ProtocolVersion.MINECRAFT_1_19_3 ? (byte) 0x1 : (byte) 0x0
+        })
+        .build();
+
+    assertArrayEquals(new byte[]{0x1}, otherType.getProperties(ProtocolVersion.MINECRAFT_1_19_3));
+    assertArrayEquals(new byte[]{0x0}, otherType.getProperties(ProtocolVersion.MINECRAFT_1_18_2));
   }
 }

@@ -41,6 +41,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,6 +115,10 @@ public class ArgumentPropertyRegistry {
       ModArgumentProperty property = (ModArgumentProperty) type;
       writeIdentifier(buf, property.getIdentifier(), protocolVersion);
       buf.writeBytes(property.getData());
+    } else if (type instanceof OpaqueArgumentTypeImpl) {
+      OpaqueArgumentTypeImpl opaqueType = (OpaqueArgumentTypeImpl) type;
+      writeIdentifier(buf, opaqueType.identifier(), protocolVersion);
+      buf.writeBytes(opaqueType.getProperties(protocolVersion));
     } else {
       ArgumentPropertySerializer serializer = byClass.get(type.getClass());
       ArgumentIdentifier id = classToId.get(type.getClass());
@@ -146,6 +152,23 @@ public class ArgumentPropertyRegistry {
   }
 
   /**
+   * Returns the identifier with the given string identifier.
+   *
+   * @param raw the string identifier.
+   * @return the identifier, or {@code null} if unknown.
+   */
+  public static @Nullable ArgumentIdentifier getIdentifier(final String raw) {
+    for (ArgumentIdentifier i : byIdentifier.keySet()) {
+      // Even if 1.19+ identifiers don't have an official string form,
+      // we follow the names given in https://wiki.vg/Command_Data#Parsers.
+      if (i.getIdentifier().equals(raw)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Reads the {@link ArgumentIdentifier} from a version-specific buffer.
    *
    * @param buf             the buffer to write to
@@ -161,15 +184,11 @@ public class ArgumentPropertyRegistry {
           return i;
         }
       }
+      return null;
     } else {
       String identifier = ProtocolUtils.readString(buf);
-      for (ArgumentIdentifier i : byIdentifier.keySet()) {
-        if (i.getIdentifier().equals(identifier)) {
-          return i;
-        }
-      }
+      return getIdentifier(identifier);
     }
-    return null;
   }
 
   static {
