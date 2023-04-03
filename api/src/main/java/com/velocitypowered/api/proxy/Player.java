@@ -51,6 +51,20 @@ public interface Player extends
   String getUsername();
 
   /**
+   * Returns the player's display name.
+   *
+   * @return the display name
+   */
+  Component getDisplayName();
+
+  /**
+   * Sets the player's display name.
+   *
+   * @param displayName the display name
+   */
+  void setDisplayName(Component displayName);
+
+  /**
    * Returns the locale the proxy will use to send messages translated via the Adventure global
    * translator. By default, the value of {@link PlayerSettings#getLocale()} is used.
    *
