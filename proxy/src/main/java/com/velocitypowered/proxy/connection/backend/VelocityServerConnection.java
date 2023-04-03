@@ -44,6 +44,8 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +100,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
+    server.createBootstrap(proxyPlayer.getConnection().eventLoop(),
+        registeredServer.getServerInfo().getAddress() instanceof InetSocketAddress)
         .handler(server.getBackendChannelInitializer())
         .connect(registeredServer.getServerInfo().getAddress())
         .addListener((ChannelFutureListener) future -> {
@@ -138,9 +141,14 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
     StringBuilder data = new StringBuilder()
-        .append(proxyPlayer.getVirtualHost()
-            .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getHostString())
+        .append(proxyPlayer.getVirtualHost().map(InetSocketAddress::getHostString)
+            .orElseGet(() -> {
+              SocketAddress addr = registeredServer.getServerInfo().getAddress();
+              if (addr instanceof InetSocketAddress) {
+                return ((InetSocketAddress) addr).getHostString();
+              }
+              return addr.toString();
+            }))
         .append('\0')
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
@@ -171,9 +179,14 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    String playerVhost = proxyPlayer.getVirtualHost()
-        .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-        .getHostString();
+    String playerVhost = proxyPlayer.getVirtualHost().map(InetSocketAddress::getHostString)
+        .orElseGet(() -> {
+          SocketAddress addr = registeredServer.getServerInfo().getAddress();
+          if (addr instanceof InetSocketAddress) {
+            return ((InetSocketAddress) addr).getHostString();
+          }
+          return addr.toString();
+        });
 
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
@@ -189,7 +202,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(playerVhost);
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    if (registeredServer.getServerInfo().getAddress() instanceof InetSocketAddress) {
+      handshake.setPort(((InetSocketAddress) registeredServer.getServerInfo().getAddress())
+          .getPort());
+    } else {
+      handshake.setPort(-1);
+    }
+    
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);

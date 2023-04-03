@@ -364,8 +364,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
-    return this.cm.createWorker(group);
+  public Bootstrap createBootstrap(@Nullable EventLoopGroup group, boolean tcp) {
+    return this.cm.createWorker(group, tcp);
   }
 
   public ChannelInitializer<Channel> getBackendChannelInitializer() {

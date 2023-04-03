@@ -35,6 +35,8 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
@@ -248,8 +250,16 @@ public class BungeeCordMessageResponder {
 
       out.writeUTF("ServerIP");
       out.writeUTF(info.getServerInfo().getName());
-      out.writeUTF(info.getServerInfo().getAddress().getHostString());
-      out.writeShort(info.getServerInfo().getAddress().getPort());
+      SocketAddress addr = info.getServerInfo().getAddress();
+      if (addr instanceof InetSocketAddress) {
+        InetSocketAddress iaddr = (InetSocketAddress) addr;
+        out.writeUTF(iaddr.getHostString());
+        out.writeShort(iaddr.getPort());
+      } else {
+        out.writeUTF(addr.toString());
+        out.writeShort(-1);
+      }
+      
 
       sendResponseOnConnection(buf);
     });

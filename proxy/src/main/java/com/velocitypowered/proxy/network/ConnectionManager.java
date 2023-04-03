@@ -36,6 +36,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -176,20 +177,27 @@ public final class ConnectionManager {
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
    * @param group the event loop group to use. Use {@code null} for the default worker group.
+   * @param tcp if the worker should be created for tcp
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker(@Nullable EventLoopGroup group) {
-    Bootstrap bootstrap = new Bootstrap()
-        .channelFactory(this.transportType.socketChannelFactory)
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            this.server.getConfiguration().getConnectTimeout())
-        .group(group == null ? this.workerGroup : group)
-        .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+  public Bootstrap createWorker(@Nullable EventLoopGroup group, boolean tcp) {
+    if (tcp) {
+      Bootstrap bootstrap = new Bootstrap()
+          .channelFactory(this.transportType.socketChannelFactory)
+          .option(ChannelOption.TCP_NODELAY, true)
+          .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
+              this.server.getConfiguration().getConnectTimeout())
+          .group(group == null ? this.workerGroup : group)
+          .resolver(this.resolver.asGroup());
+      if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
+        bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+      }
+      return bootstrap;
+    } else {
+      return new Bootstrap()
+          .channel(EpollDomainSocketChannel.class)
+          .group(group == null ? this.workerGroup : group);
     }
-    return bootstrap;
   }
 
   /**

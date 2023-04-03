@@ -19,8 +19,10 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
 
 /**
@@ -38,14 +40,17 @@ public final class AddressUtil {
    * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
    * {@link InetSocketAddress} is not resolved.
    *
-   * @param ip the IP to parse
+   * @param address the Address to parse
    * @return the parsed address
    */
-  public static InetSocketAddress parseAddress(String ip) {
-    Preconditions.checkNotNull(ip, "ip");
-    URI uri = URI.create("tcp://" + ip);
+  public static SocketAddress parseAddress(String address) {
+    Preconditions.checkNotNull(address, "address");
+    if (address.startsWith("unix:")) {
+      return new DomainSocketAddress(address.substring(5));
+    }
+    URI uri = URI.create("tcp://" + address);
     if (uri.getHost() == null) {
-      throw new IllegalStateException("Invalid hostname/IP " + ip);
+      throw new IllegalStateException("Invalid hostname/IP " + address);
     }
 
     int port = uri.getPort() == -1 ? DEFAULT_MINECRAFT_PORT : uri.getPort();

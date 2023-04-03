@@ -29,6 +29,8 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import io.netty.channel.EventLoop;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -55,8 +57,16 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.STATUS_ID);
-    handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
-    handshake.setPort(server.getServerInfo().getAddress().getPort());
+    SocketAddress address = server.getServerInfo().getAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress iaddr = (InetSocketAddress) address;
+      handshake.setServerAddress(iaddr.getHostString());
+      handshake.setPort(iaddr.getPort());
+    } else {
+      handshake.setServerAddress(server.getServerInfo().getAddress().toString());
+      handshake.setPort(-1);
+    }
+    
     handshake.setProtocolVersion(version);
     connection.delayedWrite(handshake);
 
