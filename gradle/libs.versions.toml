@@ -43,6 +43,7 @@ netty-codec-haproxy = { module = "io.netty:netty-codec-haproxy", version.ref = "
 netty-codec-http = { module = "io.netty:netty-codec-http", version.ref = "netty" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
+netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 nightconfig = "com.electronwill.night-config:toml:3.6.6"
 slf4j = "org.slf4j:slf4j-api:1.7.30"
 spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.7.3"
