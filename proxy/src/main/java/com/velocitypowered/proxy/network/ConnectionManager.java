@@ -65,7 +65,7 @@ public final class ConnectionManager {
   private final HttpClient httpClient;
 
   /**
-   * Initalizes the {@code ConnectionManager}.
+   * Initializes the {@code ConnectionManager}.
    *
    * @param server a reference to the Velocity server
    */
@@ -104,7 +104,7 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (server.getConfiguration().useTcpFastOpen()) {
+    if (transportType != TransportType.NIO && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
     }
 
@@ -167,7 +167,7 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (server.getConfiguration().useTcpFastOpen()) {
+    if (transportType != TransportType.NIO && server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
