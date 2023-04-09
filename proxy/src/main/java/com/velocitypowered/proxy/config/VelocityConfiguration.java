@@ -451,17 +451,6 @@ public class VelocityConfiguration implements ProxyConfig {
         .build();
     config.load();
 
-    // Create temporary default configuration
-    File tmpFile = File.createTempFile("default-config", null);
-    tmpFile.deleteOnExit();
-
-    // Copy over default file to tmp location
-    try (InputStream in = defaultConfigLocation.openStream()) {
-      Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
-    defaultConfig.load();
-
     // TODO: migrate this on Velocity Polymer
     double configVersion;
     try {
