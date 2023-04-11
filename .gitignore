@@ -81,8 +81,8 @@ gradle-app.setting
 
 ### Other trash ###
 logs/
-/velocity.toml
-/forwarding.secret
+forwarding.secret
+velocity.toml
 server-icon.png
 /bin/
 run/
