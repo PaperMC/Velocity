@@ -10,8 +10,8 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.12.0"
-adventure-facet = "net.kyori:adventure-platform-facet:4.2.0"
+adventure-bom = "net.kyori:adventure-bom:4.13.1"
+adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asynchttpclient = "org.asynchttpclient:async-http-client:2.12.3"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.0.1"
