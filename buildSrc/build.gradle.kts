@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // fixed in Gradle 8.1
 plugins {
     `kotlin-dsl`
     checkstyle
