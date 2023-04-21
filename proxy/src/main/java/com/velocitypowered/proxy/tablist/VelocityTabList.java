@@ -62,7 +62,7 @@ public class VelocityTabList implements InternalTabList {
   public VelocityTabList(ConnectedPlayer player) {
     this.player = player;
     this.connection = player.getConnection();
-    this.entries = Maps.newHashMap();
+    this.entries = Maps.newConcurrentMap();
   }
 
   @Override
