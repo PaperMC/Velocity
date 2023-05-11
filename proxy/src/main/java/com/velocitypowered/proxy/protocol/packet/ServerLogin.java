@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
@@ -76,6 +77,7 @@ public class ServerLogin implements MinecraftPacket {
   public String toString() {
     return "ServerLogin{"
         + "username='" + username + '\''
+        + "uuid='" + holderUuid + '\''
         + "playerKey='" + playerKey + '\''
         + '}';
   }
