@@ -49,6 +49,7 @@ public class JoinGame implements MinecraftPacket {
   private short previousGamemode; // 1.16+
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
+  private int portalCooldown; // 1.20+
 
   public int getEntityId() {
     return entityId;
@@ -162,6 +163,14 @@ public class JoinGame implements MinecraftPacket {
     this.lastDeathPosition = lastDeathPosition;
   }
 
+  public int getPortalCooldown() {
+    return portalCooldown;
+  }
+
+  public void setPortalCooldown(int portalCooldown) {
+    this.portalCooldown = portalCooldown;
+  }
+
   public CompoundBinaryTag getRegistry() {
     return registry;
   }
@@ -187,6 +196,7 @@ public class JoinGame implements MinecraftPacket {
         + ", previousGamemode=" + previousGamemode
         + ", simulationDistance=" + simulationDistance
         + ", lastDeathPosition='" + lastDeathPosition + '\''
+        + ", portalCooldown=" + portalCooldown
         + '}';
   }
 
@@ -278,6 +288,10 @@ public class JoinGame implements MinecraftPacket {
     // optional death location
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
       this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
+    }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+      this.portalCooldown = ProtocolUtils.readVarInt(buf);
     }
   }
 
@@ -375,6 +389,10 @@ public class JoinGame implements MinecraftPacket {
       } else {
         buf.writeBoolean(false);
       }
+    }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+      ProtocolUtils.writeVarInt(buf, portalCooldown);
     }
   }
 
