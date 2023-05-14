@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,15 +28,13 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
@@ -451,17 +448,6 @@ public class VelocityConfiguration implements ProxyConfig {
         .build();
     config.load();
 
-    // Create temporary default configuration
-    File tmpFile = File.createTempFile("default-config", null);
-    tmpFile.deleteOnExit();
-
-    // Copy over default file to tmp location
-    try (InputStream in = defaultConfigLocation.openStream()) {
-      Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
-    defaultConfig.load();
-
     // TODO: migrate this on Velocity Polymer
     double configVersion;
     try {
@@ -537,19 +523,19 @@ public class VelocityConfiguration implements ProxyConfig {
       if (motd.strip().startsWith("{")) {
         migratedMotd = MiniMessage.miniMessage().serialize(
                 GsonComponentSerializer.gson().deserialize(motd))
-                .replace("\\", "");
+            .replace("\\", "");
       } else {
         // Legacy '&' Format Migration
         migratedMotd = MiniMessage.miniMessage().serialize(
-                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+            LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
       }
 
       config.set("motd", migratedMotd);
       motd = migratedMotd;
 
       config.setComment("motd",
-              " What should be the MOTD? This gets displayed when the player adds your server to\n"
-                      + " their server list. Only MiniMessage format is accepted.");
+          " What should be the MOTD? This gets displayed when the player adds your server to\n"
+              + " their server list. Only MiniMessage format is accepted.");
       config.set("config-version", "2.6");
       mustResave = true;
     }
