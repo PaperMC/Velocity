@@ -61,6 +61,7 @@ public class VelocityPluginContainer implements PluginContainer {
               Executors.newCachedThreadPool(
                 new ThreadFactoryBuilder().setDaemon(true)
                     .setNameFormat(name + " - Task Executor #%d")
+                    .setDaemon(true)
                     .build()
               )
           );
