@@ -118,7 +118,7 @@ public class VelocityScheduler implements Scheduler {
     timerExecutionService.shutdown();
     for (final PluginContainer container : this.pluginManager.getPlugins()) {
       if (container instanceof VelocityPluginContainer) {
-        (container).getService().shutdown();
+        (container).getExecutorService().shutdown();
       }
     }
 
@@ -128,7 +128,7 @@ public class VelocityScheduler implements Scheduler {
         continue;
       }
       final String id = container.getDescription().getId();
-      final ExecutorService service = (container).getService();
+      final ExecutorService service = (container).getExecutorService();
 
       try {
         if (!service.awaitTermination(10, TimeUnit.SECONDS)) {
@@ -268,7 +268,7 @@ public class VelocityScheduler implements Scheduler {
 
     @Override
     public void run() {
-      container.getService().execute(() -> {
+      container.getExecutorService().execute(() -> {
         currentTaskThread = Thread.currentThread();
         try {
           if (runnable != null) {

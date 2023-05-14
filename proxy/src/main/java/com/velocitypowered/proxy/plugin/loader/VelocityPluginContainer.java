@@ -52,14 +52,15 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   @Override
-  public ExecutorService getService() {
+  public ExecutorService getExecutorService() {
     if (this.service == null) {
       synchronized (this) {
         if (this.service == null) {
+          String name = this.description.getName().orElse(this.description.getId());
           this.service = Executors.unconfigurableExecutorService(
               Executors.newCachedThreadPool(
                 new ThreadFactoryBuilder().setDaemon(true)
-                    .setNameFormat(description.getId() + " - Task Scheduler #%d")
+                    .setNameFormat(name + " - Task Executor #%d")
                     .build()
               )
           );

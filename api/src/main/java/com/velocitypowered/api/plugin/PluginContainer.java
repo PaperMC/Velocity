@@ -37,5 +37,5 @@ public interface PluginContainer {
    *
    * @return an {@link ExecutorService} associated with this plugin
    */
-  ExecutorService getService();
+  ExecutorService getExecutorService();
 }

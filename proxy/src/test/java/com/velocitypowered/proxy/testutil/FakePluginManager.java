@@ -100,7 +100,7 @@ public class FakePluginManager implements PluginManager {
     }
 
     @Override
-    public ExecutorService getService() {
+    public ExecutorService getExecutorService() {
       return service;
     }
   }
