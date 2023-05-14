@@ -521,7 +521,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
         eventManager.fire(new ProxyShutdownEvent()).join();
 
-        timedOut = !eventManager.shutdown() || timedOut;
         timedOut = !scheduler.shutdown() || timedOut;
 
         if (timedOut) {

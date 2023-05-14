@@ -45,7 +45,7 @@ class SetManifestImplVersionPlugin : Plugin<Project> {
                         velocityHumanVersion = "${project.version} (git-$currentShortRevision)"
                     }
                 } else {
-                    velocityHumanVersion = archiveVersion.get()
+                    velocityHumanVersion = project.version.toString()
                 }
                 attributes["Implementation-Version"] = velocityHumanVersion
             }

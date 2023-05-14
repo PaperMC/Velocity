@@ -43,6 +43,6 @@ public @interface Subscribe {
    *
    * @return Requires async
    */
-  boolean async() default true;
+  boolean async() default false;
 
 }

@@ -46,6 +46,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -68,6 +70,7 @@ public class VelocityCommandManager implements CommandManager {
   private final SuggestionsProvider<CommandSource> suggestionsProvider;
   private final CommandGraphInjector<CommandSource> injector;
   private final Map<String, CommandMeta> commandMetas;
+  private final ExecutorService asyncExecutor;
 
   /**
    * Constructs a command manager.
@@ -86,6 +89,7 @@ public class VelocityCommandManager implements CommandManager {
     this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher, this.lock.readLock());
     this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
     this.commandMetas = new ConcurrentHashMap<>();
+    this.asyncExecutor = ForkJoinPool.commonPool(); // TODO: remove entirely
   }
 
   public void setAnnounceProxyCommands(boolean announceProxyCommands) {
@@ -251,7 +255,7 @@ public class VelocityCommandManager implements CommandManager {
         return false;
       }
       return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
-    }, eventManager.getAsyncExecutor());
+    }, asyncExecutor);
   }
 
   @Override
@@ -260,8 +264,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    return CompletableFuture.supplyAsync(
-        () -> executeImmediately0(source, cmdLine), eventManager.getAsyncExecutor());
+    return CompletableFuture.supplyAsync(() -> executeImmediately0(source, cmdLine), asyncExecutor);
   }
 
   /**

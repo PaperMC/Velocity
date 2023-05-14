@@ -37,18 +37,14 @@ class EventTypeTracker {
       return ImmutableSet.copyOf(friends.get(eventType));
     }
 
-    final Collection<Class<?>> types = getEventTypes(eventType);
+    final Collection<Class<?>> types = getFriendTypes(eventType);
     for (Class<?> type : types) {
-      if (type == eventType) {
-        continue;
-      }
-
       friends.put(type, eventType);
     }
     return types;
   }
 
-  private static Collection<Class<?>> getEventTypes(final Class<?> eventType) {
+  private static Collection<Class<?>> getFriendTypes(final Class<?> eventType) {
     return TypeToken.of(eventType).getTypes().rawTypes().stream()
         .filter(type -> type != Object.class)
         .collect(Collectors.toList());
