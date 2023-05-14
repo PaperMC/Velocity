@@ -31,7 +31,6 @@ import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -45,16 +44,6 @@ abstract class CommandTestSuite {
   @BeforeAll
   static void beforeAll() {
     eventManager = new MockEventManager();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    try {
-      eventManager.shutdown();
-      eventManager = null;
-    } catch (final InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   @BeforeEach
