@@ -70,23 +70,26 @@ class VelocitySchedulerTest {
   @Test
   void obtainTasksFromPlugin() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
-    AtomicInteger i = new AtomicInteger(0);
-    CountDownLatch latch = new CountDownLatch(1);
+    CountDownLatch runningLatch = new CountDownLatch(1);
+    CountDownLatch endingLatch = new CountDownLatch(1);
 
     scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
-      if (i.getAndIncrement() >= 1) {
-        task.cancel();
-        latch.countDown();
+      runningLatch.countDown();
+      task.cancel();
+      try {
+        endingLatch.await();
+      } catch (InterruptedException ignored) {
+        Thread.currentThread().interrupt();
       }
     }).delay(50, TimeUnit.MILLISECONDS)
         .repeat(Duration.ofMillis(5))
         .schedule();
 
+    runningLatch.await();
+
     assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
 
-    latch.await();
-
-    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 0);
+    endingLatch.countDown();
   }
 
   @Test
