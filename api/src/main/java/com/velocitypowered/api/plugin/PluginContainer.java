@@ -8,6 +8,7 @@
 package com.velocitypowered.api.plugin;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 /**
  * A wrapper around a plugin loaded by the proxy.
@@ -29,4 +30,12 @@ public interface PluginContainer {
   default Optional<?> getInstance() {
     return Optional.empty();
   }
+
+  /**
+   * Returns an executor service for this plugin. The executor will use a cached
+   * thread pool.
+   *
+   * @return an {@link ExecutorService} associated with this plugin
+   */
+  ExecutorService getExecutorService();
 }
