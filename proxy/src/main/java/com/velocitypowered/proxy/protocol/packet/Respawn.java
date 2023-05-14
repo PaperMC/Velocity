@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -39,7 +38,7 @@ public class Respawn implements MinecraftPacket {
   private byte dataToKeep; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16-1.16.1
   private short previousGamemode; // 1.16+
-  private DimensionData currentDimensionData; // 1.16.2+
+  private CompoundBinaryTag currentDimensionData; // 1.16.2+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
 
   public Respawn() {
@@ -47,7 +46,7 @@ public class Respawn implements MinecraftPacket {
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
       String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
-      short previousGamemode, DimensionData currentDimensionData,
+      short previousGamemode, CompoundBinaryTag currentDimensionData,
       @Nullable Pair<String, Long> lastDeathPosition) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
@@ -155,10 +154,8 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
+        this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
-        this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
-            .annotateWith(dimensionIdentifier, null);
       } else {
         dimensionIdentifier = ProtocolUtils.readString(buf);
         levelName = ProtocolUtils.readString(buf);
@@ -198,7 +195,7 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
+        ProtocolUtils.writeCompoundTag(buf, currentDimensionData);
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
