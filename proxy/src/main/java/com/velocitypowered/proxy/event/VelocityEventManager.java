@@ -29,7 +29,6 @@ import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.EventTask;
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -330,7 +329,7 @@ public class VelocityEventManager implements EventManager {
       if (subscribe.async()) {
         asyncType = AsyncType.ALWAYS;
       }
-      final short order = (short) subscribe.order().ordinal();
+      final short order = subscribe.order();
       final String errorsJoined = errors.isEmpty() ? null : String.join(",", errors);
       collected.put(key, new MethodHandlerInfo(method, asyncType, eventType, order, errorsJoined,
           continuationType));
@@ -370,13 +369,13 @@ public class VelocityEventManager implements EventManager {
   @Override
   @SuppressWarnings("unchecked")
   public <E> void register(final Object plugin, final Class<E> eventClass,
-      final PostOrder order, final EventHandler<E> handler) {
+      final short order, final EventHandler<E> handler) {
     final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(eventClass, "eventClass");
     requireNonNull(handler, "handler");
 
     final HandlerRegistration registration = new HandlerRegistration(pluginContainer,
-        (short) order.ordinal(), eventClass, handler, (EventHandler<Object>) handler,
+        order, eventClass, handler, (EventHandler<Object>) handler,
         AsyncType.SOMETIMES);
     register(Collections.singletonList(registration));
   }

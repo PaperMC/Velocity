@@ -10,8 +10,12 @@ package com.velocitypowered.api.event;
 /**
  * Represents the order an event will be posted to a listener method, relative to other listeners.
  */
-public enum PostOrder {
+public class PostOrder {
 
-  FIRST, EARLY, NORMAL, LATE, LAST
+  public static final short FIRST = -32768;
+  public static final short EARLY = -16384;
+  public static final short NORMAL = 0;
+  public static final short LATE = 16834;
+  public static final short LAST = 32767;
 
 }
