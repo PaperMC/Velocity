@@ -50,7 +50,6 @@ import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
-import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
@@ -354,7 +353,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Optional<?> instance = plugin.getInstance();
       if (instance.isPresent()) {
         try {
-          eventManager.registerInternally((VelocityPluginContainer) plugin, instance.get());
+          eventManager.registerInternally(plugin, instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
               plugin.getDescription().getName().orElse(plugin.getDescription().getId()), e);
