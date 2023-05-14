@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,6 +46,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 /**
  * The Velocity "scheduler", which is actually a thin wrapper around
@@ -198,7 +200,8 @@ public class VelocityScheduler implements Scheduler {
     }
   }
 
-  private class VelocityTask implements Runnable, ScheduledTask {
+  @VisibleForTesting
+  class VelocityTask implements Runnable, ScheduledTask {
 
     private final PluginContainer container;
     private final Runnable runnable;
@@ -295,6 +298,16 @@ public class VelocityScheduler implements Scheduler {
 
     private void onFinish() {
       tasksByPlugin.remove(plugin(), this);
+    }
+
+    public void awaitCompletion() {
+      try {
+        future.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

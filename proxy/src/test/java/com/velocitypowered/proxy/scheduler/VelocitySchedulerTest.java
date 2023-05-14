@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
+import com.velocitypowered.proxy.scheduler.VelocityScheduler.VelocityTask;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +40,7 @@ class VelocitySchedulerTest {
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
         .schedule();
     latch.await();
+    ((VelocityTask) task).awaitCompletion();
     assertEquals(TaskStatus.FINISHED, task.status());
   }
 
@@ -50,7 +52,6 @@ class VelocitySchedulerTest {
         .delay(100, TimeUnit.SECONDS)
         .schedule();
     task.cancel();
-    Thread.sleep(200);
     assertEquals(3, i.get());
     assertEquals(TaskStatus.CANCELLED, task.status());
   }
