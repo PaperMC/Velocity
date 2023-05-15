@@ -747,9 +747,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return bossBarManager;
   }
 
+  /**
+   * Returns a Gson instance for use in serializing server ping instances.
+   *
+   * @param version the protocol version in use
+   * @return the Gson instance
+   */
   public static Gson getPingGsonInstance(ProtocolVersion version) {
-    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_PING_SERIALIZER
-        : PRE_1_16_PING_SERIALIZER;
+    if (version == ProtocolVersion.UNKNOWN
+        || version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      return POST_1_16_PING_SERIALIZER;
+    }
+    return PRE_1_16_PING_SERIALIZER;
   }
 
   @Override
