@@ -76,12 +76,12 @@ class VelocitySchedulerTest {
 
     scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
       runningLatch.countDown();
-      task.cancel();
       try {
         endingLatch.await();
       } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
+      task.cancel();
     }).delay(50, TimeUnit.MILLISECONDS)
         .repeat(Duration.ofMillis(5))
         .schedule();
