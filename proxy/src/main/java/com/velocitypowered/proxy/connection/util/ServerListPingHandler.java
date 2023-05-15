@@ -47,6 +47,9 @@ public class ServerListPingHandler {
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
+    if (version == ProtocolVersion.UNKNOWN) {
+      version = ProtocolVersion.MAXIMUM_VERSION;
+    }
     VelocityConfiguration configuration = server.getConfiguration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
