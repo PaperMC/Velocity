@@ -136,7 +136,6 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
       playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
     }
-
     ServerLoginSuccess success = new ServerLoginSuccess();
     success.setUsername(player.getUsername());
     success.setProperties(player.getGameProfileProperties());

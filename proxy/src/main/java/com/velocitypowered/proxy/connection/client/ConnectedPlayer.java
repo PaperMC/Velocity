@@ -216,7 +216,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public String getUsername() {
-    return "*"+profile.getName();
+    return profile.getName();
   }
 
   @Override
@@ -234,7 +234,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public UUID getUniqueId() {
-    return UuidUtils.generateOfflinePlayerUuid("*"+profile.getName());
+    return profile.getId();
   }
 
   @Override

@@ -165,7 +165,7 @@ public final class GameProfile {
    */
   public static GameProfile forOfflinePlayer(String username) {
     Preconditions.checkNotNull(username, "username");
-    return new GameProfile(UuidUtils.generateOfflinePlayerUuid(username), username,
+    return new GameProfile(UuidUtils.generateOfflinePlayerUuid("*"+username), "*"+username,
         ImmutableList.of());
   }
 
