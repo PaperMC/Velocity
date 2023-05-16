@@ -79,8 +79,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.getConfiguration().getPlayerInfoForwardingMode());
-    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
-        onlineMode);
+    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile, onlineMode);
     final GameProfile finalProfile = profile;
 
     server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
@@ -91,8 +90,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
-          inbound.getIdentifiedKey());
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode, inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
@@ -137,32 +135,6 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     UUID playerUniqueId = player.getUniqueId();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
       playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
-    }
-
-    if (player.getIdentifiedKey() != null) {
-      IdentifiedKey playerKey = player.getIdentifiedKey();
-      if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl) {
-          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
-          // Failsafe
-          if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
-            if (onlineMode) {
-              inbound.disconnect(
-                  Component.translatable("multiplayer.disconnect.invalid_public_key"));
-              return;
-            } else {
-              logger.warn("Key for player " + player.getUsername() + " could not be verified!");
-            }
-          }
-        } else {
-          logger.warn("A custom key type has been set for player " + player.getUsername());
-        }
-      } else {
-        if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
-          logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-              + "Chat/Commands signatures will not work correctly for this player!");
-        }
-      }
     }
 
     ServerLoginSuccess success = new ServerLoginSuccess();

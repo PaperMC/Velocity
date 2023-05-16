@@ -49,6 +49,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
@@ -215,7 +216,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public String getUsername() {
-    return profile.getName();
+    return "*"+profile.getName();
   }
 
   @Override
@@ -233,7 +234,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public UUID getUniqueId() {
-    return profile.getId();
+    return UuidUtils.generateOfflinePlayerUuid("*"+profile.getName());
   }
 
   @Override
