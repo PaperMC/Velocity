@@ -43,7 +43,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    */
   public PreLoginEvent(InboundConnection connection, String username) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
-    this.username = Preconditions.checkNotNull(username, "username");
+    this.username = "*"+Preconditions.checkNotNull(username, "username");
     this.result = PreLoginComponentResult.allowed();
   }
 
