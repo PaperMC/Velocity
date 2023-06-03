@@ -12,6 +12,7 @@ spotless = "com.diffplug.spotless:6.12.0"
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:4.13.1"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
+asm = "org.ow2.asm:asm:9.5"
 asynchttpclient = "org.asynchttpclient:async-http-client:2.12.3"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.0.1"
@@ -30,7 +31,7 @@ jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.9.0"
 guava = "com.google.guava:guava:25.1-jre"
 gson = "com.google.code.gson:gson:2.10.1"
-guice = "com.google.inject:guice:5.1.0"
+guice = "com.google.inject:guice:6.0.0"
 lmbda = "org.lanternpowered:lmbda:2.0.0"
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
