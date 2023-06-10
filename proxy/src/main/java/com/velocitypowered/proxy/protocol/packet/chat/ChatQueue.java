@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,13 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import org.apache.logging.log4j.LogManager;
 
 /**
- * A precisely ordered queue which allows for outside entries into the ordered queue through piggybacking timestamps.
+ * A precisely ordered queue which allows for outside entries into the ordered queue through
+ * piggybacking timestamps.
  */
 public class ChatQueue {
+
   private final Object internalLock;
   private final ConnectedPlayer player;
   private CompletableFuture<WrappedPacket> packetFuture;
@@ -45,10 +46,9 @@ public class ChatQueue {
   }
 
   /**
-   * Queues a packet sent from the player - all packets must wait until this processes to send their packets.
-   * <br />
-   * This maintains order on the server-level for the client insertions of commands and messages. All entries are locked
-   * through an internal object lock.
+   * Queues a packet sent from the player - all packets must wait until this processes to send their
+   * packets. This maintains order on the server-level for the client insertions of commands
+   * and messages. All entries are locked through an internal object lock.
    *
    * @param nextPacket the {@link CompletableFuture} which will provide the next-processed packet.
    * @param timestamp  the {@link Instant} timestamp of this packet so we can allow piggybacking.
@@ -58,22 +58,24 @@ public class ChatQueue {
       MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
 
       CompletableFuture<WrappedPacket> nextInLine = WrappedPacket.wrap(timestamp, nextPacket);
-      awaitChat(smc, this.packetFuture, nextInLine); // we await chat, binding `this.packetFuture` -> `nextInLine`
+      awaitChat(smc, this.packetFuture,
+          nextInLine); // we await chat, binding `this.packetFuture` -> `nextInLine`
       this.packetFuture = nextInLine;
     }
   }
 
   /**
-   * Hijacks the latest sent packet's timestamp to provide an in-order packet without polling the physical, or prior
-   * packets sent through the stream.
+   * Hijacks the latest sent packet's timestamp to provide an in-order packet without polling the
+   * physical, or prior packets sent through the stream.
    *
    * @param packet        the {@link MinecraftPacket} to send.
-   * @param instantMapper the {@link InstantPacketMapper} which maps the prior timestamp and current packet to a new
-   *                      packet.
+   * @param instantMapper the {@link InstantPacketMapper} which maps the prior timestamp and current
+   *                      packet to a new packet.
    * @param <K>           the type of base to expect when mapping the packet.
    * @param <V>           the type of packet for instantMapper type-checking.
    */
-  public <K, V extends MinecraftPacket> void hijack(K packet, InstantPacketMapper<K, V> instantMapper) {
+  public <K, V extends MinecraftPacket> void hijack(K packet,
+      InstantPacketMapper<K, V> instantMapper) {
     synchronized (internalLock) {
       CompletableFuture<K> trueFuture = CompletableFuture.completedFuture(packet);
       MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
@@ -109,9 +111,11 @@ public class ChatQueue {
     // the binder will complete -> then the future will get the `write packet` caller
     binder.whenComplete((previous, ignored) -> {
       // map the new packet into a better "designed" packet with the hijacked packet's timestamp
-      WrappedPacket.wrap(previous.timestamp, future.thenApply(item -> packetMapper.map(previous.timestamp, item)))
+      WrappedPacket.wrap(previous.timestamp,
+              future.thenApply(item -> packetMapper.map(previous.timestamp, item)))
           .whenCompleteAsync(writePacket(connection), connection.eventLoop())
-          .whenComplete((packet, throwable) -> awaitedFuture.complete(throwable != null ? null : packet));
+          .whenComplete(
+              (packet, throwable) -> awaitedFuture.complete(throwable != null ? null : packet));
     });
     return awaitedFuture;
   }
@@ -123,6 +127,7 @@ public class ChatQueue {
    * @param <V> The resulting packet type.
    */
   public interface InstantPacketMapper<K, V extends MinecraftPacket> {
+
     /**
      * Maps a value into a packet with it and a timestamp.
      *
@@ -134,6 +139,7 @@ public class ChatQueue {
   }
 
   private static class WrappedPacket {
+
     private final Instant timestamp;
     private final MinecraftPacket packet;
 
@@ -149,7 +155,7 @@ public class ChatQueue {
     }
 
     private static CompletableFuture<WrappedPacket> wrap(Instant timestamp,
-                                                         CompletableFuture<MinecraftPacket> nextPacket) {
+        CompletableFuture<MinecraftPacket> nextPacket) {
       return nextPacket
           .thenApply(pkt -> new WrappedPacket(timestamp, pkt))
           .exceptionally(ignored -> new WrappedPacket(timestamp, null));

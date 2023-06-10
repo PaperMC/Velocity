@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,9 +53,9 @@ abstract class AbstractCommandRegistrar<T extends Command> implements CommandReg
   }
 
   protected void register(final LiteralCommandNode<CommandSource> node,
-                          final String secondaryAlias) {
+      final String secondaryAlias) {
     final LiteralCommandNode<CommandSource> copy =
-            VelocityCommands.shallowCopy(node, secondaryAlias);
+        VelocityCommands.shallowCopy(node, secondaryAlias);
     this.register(copy);
   }
 }

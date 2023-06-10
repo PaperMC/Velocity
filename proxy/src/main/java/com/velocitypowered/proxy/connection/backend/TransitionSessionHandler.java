@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +56,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   /**
    * Creates the new transition handler.
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   *
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
@@ -101,6 +102,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
       // Send keep alive to try to avoid timeouts
       player.sendKeepAlive();
+
+      // Reset Tablist header and footer to prevent desync
+      player.clearHeaderAndFooter();
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.

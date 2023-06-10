@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 package com.velocitypowered.proxy.crypto;
 
 import java.util.Arrays;
 import java.util.UUID;
 
+/**
+ * Represents a signer and a signature.
+ */
 public class SignaturePair {
 
   private final UUID signer;
@@ -42,8 +44,8 @@ public class SignaturePair {
   @Override
   public String toString() {
     return "SignaturePair{"
-            + "signer=" + signer
-            + ", signature=" + Arrays.toString(signature)
-            + '}';
+        + "signer=" + signer
+        + ", signature=" + Arrays.toString(signature)
+        + '}';
   }
 }

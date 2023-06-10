@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,8 +87,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Initializes a new {@link MinecraftConnection} instance.
+   *
    * @param channel the channel on the connection
-   * @param server the Velocity instance
+   * @param server  the Velocity instance
    */
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
@@ -211,6 +212,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Writes and immediately flushes a message to the connection.
+   *
    * @param msg the message to write
    */
   public void write(Object msg) {
@@ -223,6 +225,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Writes, but does not flush, a message to the connection.
+   *
    * @param msg the message to write
    */
   public void delayedWrite(Object msg) {
@@ -244,6 +247,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Closes the connection after writing the {@code msg}.
+   *
    * @param msg the message to write
    */
   public void closeWith(Object msg) {
@@ -273,6 +277,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Immediately closes the connection.
+   *
    * @param markKnown whether the disconnection is known
    */
   public void close(boolean markKnown) {
@@ -319,6 +324,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Determines whether or not the channel should continue reading data automaticaly.
+   *
    * @param autoReading whether or not we should read data automatically
    */
   public void setAutoReading(boolean autoReading) {
@@ -337,6 +343,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Changes the state of the Minecraft connection.
+   *
    * @param state the new state
    */
   public void setState(StateRegistry state) {
@@ -353,6 +360,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the new protocol version for the connection.
+   *
    * @param protocolVersion the protocol version to use
    */
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
@@ -380,6 +388,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the session handler for this connection.
+   *
    * @param sessionHandler the handler to use
    */
   public void setSessionHandler(MinecraftSessionHandler sessionHandler) {
@@ -399,6 +408,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   /**
    * Sets the compression threshold on the connection. You are responsible for sending
    * {@link com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   *
    * @param threshold the compression threshold to use
    */
   public void setCompressionThreshold(int threshold) {
@@ -440,6 +450,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Enables encryption on the connection.
+   *
    * @param secret the secret key negotiated between the client and the server
    * @throws GeneralSecurityException if encryption can't be enabled
    */
@@ -471,6 +482,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Gets the detected {@link ConnectionType}.
+   *
    * @return The {@link ConnectionType}
    */
   public ConnectionType getType() {
@@ -479,6 +491,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the detected {@link ConnectionType}.
+   *
    * @param connectionType The {@link ConnectionType}
    */
   public void setType(ConnectionType connectionType) {

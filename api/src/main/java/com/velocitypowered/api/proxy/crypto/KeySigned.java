@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -12,6 +12,9 @@ import java.security.PublicKey;
 import java.time.Instant;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the signature of a signed object.
+ */
 public interface KeySigned {
 
   /**

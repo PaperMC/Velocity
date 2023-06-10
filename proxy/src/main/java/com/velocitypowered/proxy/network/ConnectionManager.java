@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
-import com.velocitypowered.proxy.protocol.netty.GS4QueryHandler;
+import com.velocitypowered.proxy.protocol.netty.GameSpyQueryHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -49,6 +49,9 @@ import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
 import org.asynchttpclient.filter.RequestFilter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Manages endpoints managed by Velocity, along with initializing the Netty event loop group.
+ */
 public final class ConnectionManager {
 
   private static final WriteBufferWaterMark SERVER_WRITE_MARK = new WriteBufferWaterMark(1 << 20,
@@ -144,14 +147,14 @@ public final class ConnectionManager {
    * Binds a GS4 listener to the specified {@code hostname} and {@code port}.
    *
    * @param hostname the hostname to bind to
-   * @param port the port to bind to
+   * @param port     the port to bind to
    */
   public void queryBind(final String hostname, final int port) {
     InetSocketAddress address = new InetSocketAddress(hostname, port);
     final Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.datagramChannelFactory)
         .group(this.workerGroup)
-        .handler(new GS4QueryHandler(this.server))
+        .handler(new GameSpyQueryHandler(this.server))
         .localAddress(address);
     bootstrap.bind()
         .addListener((ChannelFutureListener) future -> {
@@ -173,7 +176,6 @@ public final class ConnectionManager {
    * Creates a TCP {@link Bootstrap} using Velocity's event loops.
    *
    * @param group the event loop group to use. Use {@code null} for the default worker group.
-   *
    * @return a new {@link Bootstrap}
    */
   public Bootstrap createWorker(@Nullable EventLoopGroup group) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
 public class UpsertPlayerInfo implements MinecraftPacket {
+
   private final EnumSet<Action> actions;
   private final List<Entry> entries;
 
@@ -82,7 +83,8 @@ public class UpsertPlayerInfo implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     Action[] actions = Action.class.getEnumConstants();
     byte[] bytes = new byte[-Math.floorDiv(-actions.length, 8)];
     buf.readBytes(bytes);
@@ -105,7 +107,8 @@ public class UpsertPlayerInfo implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     Action[] actions = Action.class.getEnumConstants();
     BitSet set = new BitSet(actions.length);
     for (int idx = 0; idx < actions.length; idx++) {
@@ -198,15 +201,18 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }
 
     private interface Read {
+
       void read(ProtocolVersion version, ByteBuf buf, Entry info);
     }
 
     private interface Write {
+
       void write(ProtocolVersion version, ByteBuf buf, Entry info);
     }
   }
 
   public static class Entry {
+
     private final UUID profileId;
     private GameProfile profile;
     private boolean listed;

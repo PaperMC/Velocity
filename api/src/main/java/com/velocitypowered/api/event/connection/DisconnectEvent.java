@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -51,6 +51,9 @@ public final class DisconnectEvent {
         + '}';
   }
 
+  /**
+   * The status of the connection when the player disconnected.
+   */
   public enum LoginStatus {
 
     SUCCESSFUL_LOGIN,

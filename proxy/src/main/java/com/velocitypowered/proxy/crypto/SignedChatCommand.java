@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,11 @@ import java.util.Map;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a signed chat command.
+ */
 public class SignedChatCommand implements KeySigned {
+
   private final String command;
   private final PublicKey signer;
   private final Instant expiry;
@@ -43,9 +47,9 @@ public class SignedChatCommand implements KeySigned {
    * Create a signed command from data.
    */
   public SignedChatCommand(String command, PublicKey signer, UUID sender,
-                           Instant expiry, Map<String, byte[]> signature, byte[] salt,
-                           boolean isPreviewSigned, SignaturePair[] previousSignatures,
-                           @Nullable SignaturePair lastSignature) {
+      Instant expiry, Map<String, byte[]> signature, byte[] salt,
+      boolean isPreviewSigned, SignaturePair[] previousSignatures,
+      @Nullable SignaturePair lastSignature) {
     this.command = Preconditions.checkNotNull(command);
     this.signer = Preconditions.checkNotNull(signer);
     this.sender = Preconditions.checkNotNull(sender);

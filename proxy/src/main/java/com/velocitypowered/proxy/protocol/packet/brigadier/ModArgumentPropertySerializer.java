@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class ModArgumentPropertySerializer implements ArgumentPropertySerializer<ModArgumentProperty> {
+
   static final ModArgumentPropertySerializer MOD = new ModArgumentPropertySerializer();
 
   private ModArgumentPropertySerializer() {
@@ -36,7 +37,7 @@ class ModArgumentPropertySerializer implements ArgumentPropertySerializer<ModArg
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       int idx = ProtocolUtils.readVarInt(buf);
       identifier = ArgumentIdentifier.id("crossstitch:identified_" + (idx < 0 ? "n" + (-idx) : idx),
-              ArgumentIdentifier.mapSet(version, idx));
+          ArgumentIdentifier.mapSet(version, idx));
     } else {
       identifier = ArgumentIdentifier.id(ProtocolUtils.readString(buf));
     }

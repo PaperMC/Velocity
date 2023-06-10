@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.util.List;
 
 public class SessionPlayerCommand implements MinecraftPacket {
+
   protected String command;
   protected Instant timeStamp;
   protected long salt;
@@ -36,7 +37,8 @@ public class SessionPlayerCommand implements MinecraftPacket {
   protected LastSeenMessages lastSeenMessages;
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     this.command = ProtocolUtils.readString(buf, 256);
     this.timeStamp = Instant.ofEpochMilli(buf.readLong());
     this.salt = buf.readLong();
@@ -45,7 +47,8 @@ public class SessionPlayerCommand implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, this.command);
     buf.writeLong(this.timeStamp.toEpochMilli());
     buf.writeLong(this.salt);
@@ -71,6 +74,7 @@ public class SessionPlayerCommand implements MinecraftPacket {
   }
 
   public static class ArgumentSignatures {
+
     private final List<ArgumentSignature> entries;
 
     public ArgumentSignatures() {
@@ -80,7 +84,8 @@ public class SessionPlayerCommand implements MinecraftPacket {
     public ArgumentSignatures(ByteBuf buf) {
       int size = ProtocolUtils.readVarInt(buf);
       if (size > 8) {
-        throw new QuietDecoderException(String.format("Too many argument signatures, %d is above limit %d", size, 8));
+        throw new QuietDecoderException(
+            String.format("Too many argument signatures, %d is above limit %d", size, 8));
       }
 
       this.entries = Lists.newArrayListWithCapacity(size);
@@ -102,6 +107,7 @@ public class SessionPlayerCommand implements MinecraftPacket {
   }
 
   public static class ArgumentSignature {
+
     private final String name;
     private final byte[] signature;
 

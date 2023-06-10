@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -28,6 +28,7 @@ public class PlayerChooseInitialServerEvent {
 
   /**
    * Constructs a PlayerChooseInitialServerEvent.
+   *
    * @param player the player that was connected
    * @param initialServer the initial server selected, may be {@code null}
    */
@@ -46,9 +47,10 @@ public class PlayerChooseInitialServerEvent {
 
   /**
    * Sets the new initial server.
+   *
    * @param server the initial server the player should connect to
    */
-  public void setInitialServer(RegisteredServer server) {
+  public void setInitialServer(@Nullable RegisteredServer server) {
     this.initialServer = server;
   }
 

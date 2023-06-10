@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ import java.util.UUID;
 
 public class ServerLogin implements MinecraftPacket {
 
-  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException("Empty username!");
+  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
+      "Empty username!");
 
   private @Nullable String username;
   private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3
@@ -142,7 +143,7 @@ public class ServerLogin implements MinecraftPacket {
   public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically
     // legal on the protocol level.
-    int base = 1 + (16 * 4);
+    int base = 1 + (16 * 3);
     // Adjustments for Key-authentication
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {

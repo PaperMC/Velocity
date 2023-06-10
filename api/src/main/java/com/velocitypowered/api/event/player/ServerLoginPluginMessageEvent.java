@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -37,6 +37,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
 
   /**
    * Constructs a new {@code ServerLoginPluginMessageEvent}.
+   *
    * @param connection the connection on which the plugin message was sent
    * @param identifier the channel identifier for the message sent
    * @param contents the contents of the message
@@ -114,6 +115,9 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
         + '}';
   }
 
+  /**
+   * The result class, containing a response to the login plugin message sent by the server.
+   */
   public static class ResponseResult implements ResultedEvent.Result {
 
     private static final ResponseResult UNKNOWN = new ResponseResult(null);

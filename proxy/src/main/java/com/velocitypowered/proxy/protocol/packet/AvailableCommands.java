@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AvailableCommands implements MinecraftPacket {
+
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
   private static final byte NODE_TYPE_ROOT = 0x00;
@@ -69,6 +70,7 @@ public class AvailableCommands implements MinecraftPacket {
 
   /**
    * Returns the root node.
+   *
    * @return the root node
    */
   public RootCommandNode<CommandSource> getRootNode() {
@@ -168,11 +170,11 @@ public class AvailableCommands implements MinecraftPacket {
     if (node instanceof ArgumentCommandNode<?, ?>) {
       ProtocolUtils.writeString(buf, node.getName());
       ArgumentPropertyRegistry.serialize(buf,
-              ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
+          ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
 
       if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
         SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
-                .getCustomSuggestions();
+            .getCustomSuggestions();
         String name = "minecraft:ask_server";
         if (provider instanceof ProtocolSuggestionProvider) {
           name = ((ProtocolSuggestionProvider) provider).name;
@@ -219,6 +221,7 @@ public class AvailableCommands implements MinecraftPacket {
   }
 
   private static class WireNode {
+
     private final int idx;
     private final byte flags;
     private final int[] children;
@@ -319,10 +322,10 @@ public class AvailableCommands implements MinecraftPacket {
       if (args != null) {
         if (args instanceof LiteralArgumentBuilder) {
           helper.add("argsLabel",
-                  ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
+              ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
         } else if (args instanceof RequiredArgumentBuilder) {
           helper.add("argsName",
-                  ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
+              ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
         }
       }
 

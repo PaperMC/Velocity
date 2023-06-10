@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,11 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A loader for native code.
+ *
+ * @param <T> the interface of the instance to load
+ */
 public final class NativeCodeLoader<T> implements Supplier<T> {
 
   private final Variant<T> selected;

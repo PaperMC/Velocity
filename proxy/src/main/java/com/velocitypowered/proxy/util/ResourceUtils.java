@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,22 +32,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class FileSystemUtils {
+/**
+ * Utilities to load resources.
+ */
+public class ResourceUtils {
 
   /**
-   * Visits the resources at the given {@link Path} within the resource
-   * path of the given {@link Class}.
+   * Visits the resources at the given {@link Path} within the resource path of the given
+   * {@link Class}.
    *
-   * @param target The target class of the resource path to scan
-   * @param consumer The consumer to visit the resolved path
-   * @param firstPathComponent First path component
+   * @param target                  The target class of the resource path to scan
+   * @param consumer                The consumer to visit the resolved path
+   * @param firstPathComponent      First path component
    * @param remainingPathComponents Remaining path components
    */
   @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
   public static boolean visitResources(Class<?> target, Consumer<Path> consumer,
       String firstPathComponent, String... remainingPathComponents)
       throws IOException {
-    final URL knownResource = FileSystemUtils.class.getClassLoader()
+    final URL knownResource = ResourceUtils.class.getClassLoader()
         .getResource("default-velocity.toml");
     if (knownResource == null) {
       throw new IllegalStateException(

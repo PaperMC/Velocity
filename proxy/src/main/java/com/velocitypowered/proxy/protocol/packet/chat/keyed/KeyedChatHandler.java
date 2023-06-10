@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,9 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChat> {
+public class KeyedChatHandler implements
+    com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChat> {
+
   private static final Logger logger = LogManager.getLogger(KeyedChatHandler.class);
 
   private final VelocityServer server;
@@ -80,7 +82,8 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
         }
 
         return player.getChatBuilderFactory().builder()
-            .message(chatResult.getMessage().orElse(packet.getMessage())).setTimestamp(packet.getExpiry()).toServer();
+            .message(chatResult.getMessage().orElse(packet.getMessage()))
+            .setTimestamp(packet.getExpiry()).toServer();
       });
     }
     chatQueue.queuePacket(
@@ -97,8 +100,11 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed() && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-        invalidCancel(logger, player);
+      if (!chatResult.isAllowed()) {
+        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+          // Bad, very bad.
+          invalidCancel(logger, player);
+        }
         return null;
       }
 

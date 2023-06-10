@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -60,6 +60,15 @@ public interface TabList {
    * @return {@code true} if it exists, {@code false} if it does not
    */
   boolean containsEntry(UUID uuid);
+
+  /**
+   * Retrieves the tab list entry associated with the given uuid.
+   *
+   * @param uuid The player's {@link UUID} the {@link TabListEntry} is in reference to.
+   * @return {@code Optional.empty()} if the player is not present in the provided player's
+   *     {@link TabList} otherwise a present {@link TabListEntry} in relation to the player.
+   */
+  Optional<TabListEntry> getEntry(UUID uuid);
 
   /**
    * Returns an immutable {@link Collection} of the {@link TabListEntry}s in the tab list.

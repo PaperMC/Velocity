@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
+
   private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
 
   private final ConnectedPlayer player;
@@ -61,7 +62,8 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
                 return null;
               }
 
-              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
+              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage()))
+                  .orElse(false)) {
                 if (packet.isSigned()) {
                   invalidChange(logger, player);
                   return null;

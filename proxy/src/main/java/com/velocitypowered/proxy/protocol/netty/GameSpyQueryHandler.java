@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.protocol.netty;
 import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.BASIC;
 import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.FULL;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.event.query.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -48,7 +48,10 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 
-public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+/**
+ * Implements the GameSpy protocol for Velocity.
+ */
+public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
   private static final short QUERY_MAGIC_FIRST = 0xFE;
   private static final short QUERY_MAGIC_SECOND = 0xFD;
@@ -70,20 +73,21 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       "hostip"
   );
 
-  private final Cache<InetAddress, Integer> sessions = CacheBuilder.newBuilder()
+  private final Cache<InetAddress, Integer> sessions = Caffeine.newBuilder()
       .expireAfterWrite(30, TimeUnit.SECONDS)
       .build();
   private final SecureRandom random;
   private final VelocityServer server;
 
-  public GS4QueryHandler(VelocityServer server) {
+  public GameSpyQueryHandler(VelocityServer server) {
     this.server = server;
     this.random = new SecureRandom();
   }
 
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
-        .hostname(PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
+        .hostname(
+            PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
         .map(server.getConfiguration().getQueryMap())
         .currentPlayers(server.getPlayerCount())
@@ -264,7 +268,7 @@ public class GS4QueryHandler extends SimpleChannelInboundHandler<DatagramPacket>
       if (isBasic) {
         return;
       }
-      
+
       StringBuilder pluginsString = new StringBuilder();
       pluginsString.append(serverVersion).append(':').append(' ');
       Iterator<QueryResponse.PluginInformation> iterator = plugins.iterator();

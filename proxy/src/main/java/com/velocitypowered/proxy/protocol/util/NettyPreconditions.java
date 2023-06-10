@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,11 @@ import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.handler.codec.CorruptedFrameException;
 
 /**
- * Extends {@link com.google.common.base.Preconditions} for Netty's {@link CorruptedFrameException}.
+ * Extends {@link com.google.common.base.Preconditions} for Netty's
+ * {@link CorruptedFrameException}.
  */
 public final class NettyPreconditions {
+
   private static final QuietDecoderException BAD = new QuietDecoderException(
       "Invalid packet received. Launch Velocity with -Dvelocity.packet-decode-logging=true "
           + "to see more.");
@@ -36,7 +38,8 @@ public final class NettyPreconditions {
 
   /**
    * Throws {@link CorruptedFrameException} if {@code b} is false.
-   * @param b the expression to check
+   *
+   * @param b       the expression to check
    * @param message the message to include in the thrown {@link CorruptedFrameException}
    */
   public static void checkFrame(boolean b, String message) {
@@ -47,11 +50,12 @@ public final class NettyPreconditions {
 
   /**
    * Throws {@link CorruptedFrameException} if {@code b} is false.
-   * @param b the expression to check
+   *
+   * @param b       the expression to check
    * @param message the message to include in the thrown {@link CorruptedFrameException}, formatted
    *                like {@link com.google.common.base.Preconditions#checkArgument(boolean)} and
    *                friends
-   * @param arg1 the first argument to format the message with
+   * @param arg1    the first argument to format the message with
    */
   public static void checkFrame(boolean b, String message, Object arg1) {
     if (!b) {
@@ -65,12 +69,13 @@ public final class NettyPreconditions {
 
   /**
    * Throws {@link CorruptedFrameException} if {@code b} is false.
-   * @param b the expression to check
+   *
+   * @param b       the expression to check
    * @param message the message to include in the thrown {@link CorruptedFrameException}, formatted
    *                like {@link com.google.common.base.Preconditions#checkArgument(boolean)} and
    *                friends
-   * @param arg1 the first argument to format the message with
-   * @param arg2 the second argument to format the message with
+   * @param arg1    the first argument to format the message with
+   * @param arg2    the second argument to format the message with
    */
   public static void checkFrame(boolean b, String message, Object arg1, Object arg2) {
     if (!b) {
@@ -84,11 +89,12 @@ public final class NettyPreconditions {
 
   /**
    * Throws {@link CorruptedFrameException} if {@code b} is false.
-   * @param b the expression to check
+   *
+   * @param b       the expression to check
    * @param message the message to include in the thrown {@link CorruptedFrameException}, formatted
    *                like {@link com.google.common.base.Preconditions#checkArgument(boolean)} and
    *                friends
-   * @param args the arguments to format the message with-
+   * @param args    the arguments to format the message with-
    */
   public static void checkFrame(boolean b, String message, Object... args) {
     if (!b) {

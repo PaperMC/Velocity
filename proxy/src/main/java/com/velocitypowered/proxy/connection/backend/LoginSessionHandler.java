@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,11 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles a player trying to log into the proxy.
+ */
 public class LoginSessionHandler implements MinecraftSessionHandler {
+
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
   private static final Component MODERN_IP_FORWARDING_FAILURE = Component
@@ -88,7 +92,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         requestedForwardingVersion = packet.content().readByte();
       }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(), requestedForwardingVersion);
+          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(),
+          requestedForwardingVersion);
 
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
@@ -104,7 +109,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
           .from(packet.getChannel());
       this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
-          contents, packet.getId()))
+              contents, packet.getId()))
           .thenAcceptAsync(event -> {
             if (event.getResult().isAllowed()) {
               mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
@@ -178,7 +183,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-        return requested >= VelocityConstants.MODERN_LAZY_SESSION ? VelocityConstants.MODERN_LAZY_SESSION
+        return requested >= VelocityConstants.MODERN_LAZY_SESSION
+            ? VelocityConstants.MODERN_LAZY_SESSION
             : VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }
       if (player.getIdentifiedKey() != null) {
@@ -189,7 +195,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
           case LINKED_V2:
             return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                  ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2 : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+                ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+                : VelocityConstants.MODERN_FORWARDING_DEFAULT;
           default:
             return VelocityConstants.MODERN_FORWARDING_DEFAULT;
         }
@@ -201,7 +208,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-                                              ConnectedPlayer player, int requestedVersion) {
+      ConnectedPlayer player, int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
       int actualVersion = findForwardingVersion(requestedVersion, player);

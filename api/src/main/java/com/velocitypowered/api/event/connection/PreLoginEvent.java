@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -37,6 +37,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
   /**
    * Creates a new instance.
+   *
    * @param connection the connection logging into the proxy
    * @param username the player's username
    */

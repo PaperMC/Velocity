@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,9 @@ import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles server list ping packets from a client.
+ */
 public class StatusSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(StatusSessionHandler.class);
@@ -66,7 +69,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     server.getServerListPingHandler().getInitialPing(this.inbound)
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(event -> connection.closeWith(
-            LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
+                LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
             connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);

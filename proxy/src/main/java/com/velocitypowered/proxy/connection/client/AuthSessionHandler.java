@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+/**
+ * A session handler that is activated to complete the login phase.
+ */
 public class AuthSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(AuthSessionHandler.class);
@@ -63,7 +66,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private final boolean onlineMode;
 
   AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
-                     GameProfile profile, boolean onlineMode) {
+      GameProfile profile, boolean onlineMode) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.profile = Preconditions.checkNotNull(profile, "profile");
@@ -88,7 +91,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode, inbound.getIdentifiedKey());
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
+          inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
@@ -143,7 +147,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
-              inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+              inbound.disconnect(
+                  Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
               logger.warn("Key for player " + player.getUsername() + " could not be verified!");
@@ -155,7 +160,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
           logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-                  + "Chat/Commands signatures will not work correctly for this player!");
+              + "Chat/Commands signatures will not work correctly for this player!");
         }
       }
     }
@@ -188,7 +193,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            mcConnection.setSessionHandler(new InitialConnectSessionHandler(player));
+            mcConnection.setSessionHandler(new InitialConnectSessionHandler(player, server));
             server.getEventManager().fire(new PostLoginEvent(player))
                 .thenCompose((ignored) -> connectToInitialServer(player))
                 .exceptionally((ex) -> {

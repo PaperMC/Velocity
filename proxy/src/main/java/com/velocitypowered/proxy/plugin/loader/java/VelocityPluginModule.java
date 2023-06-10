@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ class VelocityPluginModule implements Module {
   private final Path basePluginPath;
 
   VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-                       PluginContainer pluginContainer, Path basePluginPath) {
+      PluginContainer pluginContainer, Path basePluginPath) {
     this.server = server;
     this.description = description;
     this.pluginContainer = pluginContainer;
@@ -52,5 +53,7 @@ class VelocityPluginModule implements Module {
         .toInstance(basePluginPath.resolve(description.getId()));
     binder.bind(PluginDescription.class).toInstance(description);
     binder.bind(PluginContainer.class).toInstance(pluginContainer);
+
+    binder.bind(ExecutorService.class).toProvider(pluginContainer::getExecutorService);
   }
 }

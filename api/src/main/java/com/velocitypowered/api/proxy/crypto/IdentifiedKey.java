@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -30,6 +30,7 @@ public interface IdentifiedKey extends KeySigned {
 
   /**
    * Validates a signature against this public key.
+   *
    * @param signature the signature data
    * @param toVerify the signed data
    *
@@ -53,6 +54,9 @@ public interface IdentifiedKey extends KeySigned {
    */
   Revision getKeyRevision();
 
+  /**
+   * The different versions of player keys, per Minecraft version.
+   */
   enum Revision {
     GENERIC_V1(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19)),
     LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1));

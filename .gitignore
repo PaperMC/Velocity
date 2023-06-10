@@ -82,10 +82,12 @@ gradle-app.setting
 ### Other trash ###
 logs/
 /velocity.toml
+/forwarding.secret
 server-icon.png
 /bin/
 run/
 plugins/
+lang/
 
 ### Natives stuff ###
 native/mbedtls

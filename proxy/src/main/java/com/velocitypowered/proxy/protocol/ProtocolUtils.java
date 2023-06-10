@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
+/**
+ * Utilities for writing and reading data in the Minecraft protocol.
+ */
 public enum ProtocolUtils {
   ;
 
@@ -73,6 +76,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads a Minecraft-style VarInt from the specified {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the decoded VarInt
    */
@@ -89,6 +93,7 @@ public enum ProtocolUtils {
    * Reads a Minecraft-style VarInt from the specified {@code buf}. The difference between this
    * method and {@link #readVarInt(ByteBuf)} is that this function returns a sentinel value if the
    * varint is invalid.
+   *
    * @param buf the buffer to read from
    * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
    */
@@ -107,6 +112,7 @@ public enum ProtocolUtils {
 
   /**
    * Returns the exact byte size of {@code value} if it were encoded as a VarInt.
+   *
    * @param value the value to encode
    * @return the byte size of {@code value} if encoded as a VarInt
    */
@@ -116,7 +122,8 @@ public enum ProtocolUtils {
 
   /**
    * Writes a Minecraft-style VarInt to the specified {@code buf}.
-   * @param buf the buffer to read from
+   *
+   * @param buf   the buffer to read from
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
@@ -157,7 +164,8 @@ public enum ProtocolUtils {
   /**
    * Writes the specified {@code value} as a 21-bit Minecraft VarInt to the specified {@code buf}.
    * The upper 11 bits will be discarded.
-   * @param buf the buffer to read from
+   *
+   * @param buf   the buffer to read from
    * @param value the integer to write
    */
   public static void write21BitVarInt(ByteBuf buf, int value) {
@@ -173,6 +181,7 @@ public enum ProtocolUtils {
   /**
    * Reads a VarInt length-prefixed UTF-8 string from the {@code buf}, making sure to not go over
    * {@code cap} size.
+   *
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the decoded string
@@ -200,6 +209,7 @@ public enum ProtocolUtils {
 
   /**
    * Writes the specified {@code str} to the {@code buf} with a VarInt prefix.
+   *
    * @param buf the buffer to write to
    * @param str the string to write
    */
@@ -216,6 +226,7 @@ public enum ProtocolUtils {
   /**
    * Reads a VarInt length-prefixed byte array from the {@code buf}, making sure to not go over
    * {@code cap} size.
+   *
    * @param buf the buffer to read from
    * @param cap the maximum size of the string, in UTF-8 character length
    * @return the byte array
@@ -239,6 +250,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads an VarInt-prefixed array of VarInt integers from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return an array of integers
    */
@@ -254,6 +266,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads an UUID from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the UUID from the buffer
    */
@@ -270,6 +283,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads an UUID stored as an Integer Array from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the UUID from the buffer
    */
@@ -285,7 +299,8 @@ public enum ProtocolUtils {
 
   /**
    * Writes an UUID as an Integer Array to the {@code buf}.
-   * @param buf the buffer to write to
+   *
+   * @param buf  the buffer to write to
    * @param uuid the UUID to write
    */
   public static void writeUuidIntArray(ByteBuf buf, UUID uuid) {
@@ -297,7 +312,8 @@ public enum ProtocolUtils {
 
   /**
    * Reads a {@link net.kyori.adventure.nbt.CompoundBinaryTag} from the {@code buf}.
-   * @param buf the buffer to read from
+   *
+   * @param buf    the buffer to read from
    * @param reader the NBT reader to use
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
@@ -306,13 +322,14 @@ public enum ProtocolUtils {
       return reader.read((DataInput) new ByteBufInputStream(buf));
     } catch (IOException thrown) {
       throw new DecoderException(
-              "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
+          "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
     }
   }
 
   /**
    * Writes a CompoundTag to the {@code buf}.
-   * @param buf the buffer to write to
+   *
+   * @param buf         the buffer to write to
    * @param compoundTag the CompoundTag to write
    */
   public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
@@ -325,6 +342,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads a String array from the {@code buf}.
+   *
    * @param buf the buffer to read from
    * @return the String array from the buffer
    */
@@ -339,7 +357,8 @@ public enum ProtocolUtils {
 
   /**
    * Writes a String Array to the {@code buf}.
-   * @param buf the buffer to write to
+   *
+   * @param buf         the buffer to write to
    * @param stringArray the array to write
    */
   public static void writeStringArray(ByteBuf buf, String[] stringArray) {
@@ -351,7 +370,8 @@ public enum ProtocolUtils {
 
   /**
    * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
-   * @param buf the buffer to write to
+   *
+   * @param buf        the buffer to write to
    * @param properties the properties to serialize
    */
   public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
@@ -371,6 +391,7 @@ public enum ProtocolUtils {
 
   /**
    * Reads a list of {@link com.velocitypowered.api.util.GameProfile.Property} from the buffer.
+   *
    * @param buf the buffer to read from
    * @return the read properties
    */
@@ -433,8 +454,8 @@ public enum ProtocolUtils {
   /**
    * Writes an byte array for legacy version 1.7 to the specified {@code buf}
    *
-   * @param b array
-   * @param buf buf
+   * @param b             array
+   * @param buf           buf
    * @param allowExtended forge
    */
   public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
@@ -457,8 +478,8 @@ public enum ProtocolUtils {
   /**
    * Writes an {@link ByteBuf} for legacy version 1.7 to the specified {@code buf}
    *
-   * @param b array
-   * @param buf buf
+   * @param b             array
+   * @param buf           buf
    * @param allowExtended forge
    */
   public static void writeByteBuf17(ByteBuf b, ByteBuf buf, boolean allowExtended) {
@@ -497,7 +518,7 @@ public enum ProtocolUtils {
   /**
    * Writes a Minecraft-style extended short to the specified {@code buf}.
    *
-   * @param buf buf to write
+   * @param buf     buf to write
    * @param toWrite the extended short to write
    */
   public static void writeExtendedForgeShort(ByteBuf buf, int toWrite) {
@@ -524,8 +545,8 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Returns the appropriate {@link GsonComponentSerializer} for the given protocol version. This
-   * is used to constrain messages sent to older clients.
+   * Returns the appropriate {@link GsonComponentSerializer} for the given protocol version. This is
+   * used to constrain messages sent to older clients.
    *
    * @param version the protocol version used by the client.
    * @return the appropriate {@link GsonComponentSerializer}
@@ -540,7 +561,7 @@ public enum ProtocolUtils {
   /**
    * Writes a players {@link IdentifiedKey} to the buffer.
    *
-   * @param buf the buffer
+   * @param buf       the buffer
    * @param playerKey the key to write
    */
   public static void writePlayerKey(ByteBuf buf, IdentifiedKey playerKey) {
@@ -560,18 +581,15 @@ public enum ProtocolUtils {
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
     IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
-            ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+        ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
+  /**
+   * Represents the direction in which a packet flows.
+   */
   public enum Direction {
     SERVERBOUND,
-    CLIENTBOUND;
-
-    public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(StateRegistry state,
-        ProtocolVersion version) {
-      return (this == SERVERBOUND ? state.serverbound : state.clientbound)
-          .getProtocolRegistry(version);
-    }
+    CLIENTBOUND
   }
 }

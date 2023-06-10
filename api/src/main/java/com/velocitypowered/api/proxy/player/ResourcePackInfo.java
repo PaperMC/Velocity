@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -10,6 +10,9 @@ package com.velocitypowered.api.proxy.player;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the information for a resource pack to apply that can be sent to the client.
+ */
 public interface ResourcePackInfo {
 
   /**
@@ -75,12 +78,12 @@ public interface ResourcePackInfo {
   ResourcePackInfo.Builder asBuilder();
 
   /**
-   * Returns a copy of this {@link ResourcePackInfo} instance as a builder with the new URL as the pack URL so that
-   * it can be modified.
+   * Returns a copy of this {@link ResourcePackInfo} instance as a builder, using the new URL.
+   * <p/>
    * It is <b>not</b> guaranteed that
-   * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)} is true.
-   * That is due to the transient {@link ResourcePackInfo#getOrigin()} and
-   * {@link ResourcePackInfo#getOriginalOrigin()} fields.
+   * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)}
+   * is true, because the {@link ResourcePackInfo#getOrigin()} and
+   * {@link ResourcePackInfo#getOriginalOrigin()} fields are transient.
    *
    * @param newUrl The new URL to use in the updated builder.
    *
@@ -88,6 +91,9 @@ public interface ResourcePackInfo {
    */
   ResourcePackInfo.Builder asBuilder(String newUrl);
 
+  /**
+   * Builder for {@link ResourcePackInfo} instances.
+   */
   interface Builder {
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.util;
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
@@ -34,6 +35,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Common utilities for handling server list ping results.
+ */
 public class ServerListPingHandler {
 
   private final VelocityServer server;
@@ -43,6 +47,9 @@ public class ServerListPingHandler {
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
+    if (version == ProtocolVersion.UNKNOWN) {
+      version = ProtocolVersion.MAXIMUM_VERSION;
+    }
     VelocityConfiguration configuration = server.getConfiguration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
@@ -61,11 +68,12 @@ public class ServerListPingHandler {
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
       Optional<RegisteredServer> rs = server.getServer(s);
-      if (!rs.isPresent()) {
+      if (rs.isEmpty()) {
         continue;
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
-      pings.add(vrs.ping(connection.getConnection().eventLoop(), responseProtocolVersion));
+      pings.add(vrs.ping(connection.getConnection().eventLoop(), PingOptions.builder()
+              .version(responseProtocolVersion).build()));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);

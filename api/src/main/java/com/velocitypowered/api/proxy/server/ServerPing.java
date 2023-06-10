@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -191,6 +191,7 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code mods} list in the response.
+     *
      * @param mods the mods list to use
      * @return this build, for chaining
      */
@@ -240,6 +241,7 @@ public final class ServerPing {
     /**
      * Uses the information from this builder to create a new {@link ServerPing} instance. The
      * builder can be re-used after this event has been called.
+     *
      * @return a new {@link ServerPing} instance
      */
     public ServerPing build() {
@@ -303,6 +305,12 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * Represents the version of the server sent to the client. A protocol version
+   * that does not match the client's protocol version will show up on the server
+   * list as an incompatible version, but the client will still permit the user
+   * to connect to the server anyway.
+   */
   public static final class Version {
 
     private final int protocol;
@@ -310,6 +318,7 @@ public final class ServerPing {
 
     /**
      * Creates a new instance.
+     *
      * @param protocol the protocol version as an integer
      * @param name a friendly name for the protocol version
      */
@@ -352,6 +361,10 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * Represents what the players the server purports to have online, its maximum capacity,
+   * and a sample of players on the server.
+   */
   public static final class Players {
 
     private final int online;
@@ -360,6 +373,7 @@ public final class ServerPing {
 
     /**
      * Creates a new instance.
+     *
      * @param online the number of online players
      * @param max the maximum number of players
      * @param sample a sample of players on the server
@@ -410,6 +424,9 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * A player returned in the sample field of the server ping players field.
+   */
   public static final class SamplePlayer {
 
     private final String name;

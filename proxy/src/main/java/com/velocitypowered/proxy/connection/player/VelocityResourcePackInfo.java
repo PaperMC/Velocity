@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,11 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Implements {@link ResourcePackInfo}.
+ */
 public final class VelocityResourcePackInfo implements ResourcePackInfo {
+
   private final String url;
   private final @Nullable byte[] hash;
   private final boolean shouldForce;
@@ -31,7 +35,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   private Origin originalOrigin;
 
   private VelocityResourcePackInfo(String url, @Nullable byte[] hash, boolean shouldForce,
-                                  @Nullable Component prompt, Origin origin) {
+      @Nullable Component prompt, Origin origin) {
     this.url = url;
     this.hash = hash;
     this.shouldForce = shouldForce;
@@ -77,20 +81,24 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   @Override
   public Builder asBuilder() {
     return new BuilderImpl(url)
-            .setShouldForce(shouldForce)
-            .setHash(hash)
-            .setPrompt(prompt);
+        .setShouldForce(shouldForce)
+        .setHash(hash)
+        .setPrompt(prompt);
   }
 
   @Override
   public Builder asBuilder(String newUrl) {
     return new BuilderImpl(newUrl)
-            .setShouldForce(shouldForce)
-            .setHash(hash)
-            .setPrompt(prompt);
+        .setShouldForce(shouldForce)
+        .setHash(hash)
+        .setPrompt(prompt);
   }
 
+  /**
+   * Implements the builder for {@link ResourcePackInfo} instances.
+   */
   public static final class BuilderImpl implements ResourcePackInfo.Builder {
+
     private final String url;
     private boolean shouldForce;
     private @Nullable byte[] hash;

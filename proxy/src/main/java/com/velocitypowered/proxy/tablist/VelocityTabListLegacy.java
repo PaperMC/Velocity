@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Exposes the legacy 1.7 tab list to plugins.
+ */
 public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
@@ -112,7 +115,8 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
         case LegacyPlayerListItem.UPDATE_LATENCY:
         case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
           connection
-              .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
+              .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
+                  // ADD_PLAYER also updates ping
                   Collections.singletonList(LegacyPlayerListItem.Item.from(entry))));
           break;
         default:

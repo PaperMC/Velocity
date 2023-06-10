@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,21 +46,20 @@ public interface PluginLoader {
   PluginDescription createPluginFromCandidate(PluginDescription candidate) throws Exception;
 
   /**
-   * Creates a {@link Module} for the provided {@link PluginContainer}
-   * and verifies that the container's {@link PluginDescription} is correct.
+   * Creates a {@link Module} for the provided {@link PluginContainer} and verifies that the
+   * container's {@link PluginDescription} is correct.
    *
    * <p>Does not create an instance of the plugin.</p>
    *
    * @param container the plugin container
    * @return the module containing bindings specific to this plugin
-   * @throws IllegalArgumentException If the {@link PluginDescription}
-   *                                  is missing the path
+   * @throws IllegalArgumentException If the {@link PluginDescription} is missing the path
    */
   Module createModule(PluginContainer container) throws Exception;
 
   /**
-   * Creates an instance of the plugin as specified by the
-   * plugin's main class found in the {@link PluginDescription}.
+   * Creates an instance of the plugin as specified by the plugin's main class found in the
+   * {@link PluginDescription}.
    *
    * <p>The provided {@link Module modules} are used to create an
    * injector which is then used to create the plugin instance.</p>
@@ -69,8 +68,8 @@ public interface PluginLoader {
    *
    * @param container the plugin container
    * @param modules   the modules to be used when creating this plugin's injector
-   * @throws IllegalStateException If the plugin instance could not be
-   *                               created from the provided modules
+   * @throws IllegalStateException If the plugin instance could not be created from the provided
+   *                               modules
    */
   void createPlugin(PluginContainer container, Module... modules) throws Exception;
 }

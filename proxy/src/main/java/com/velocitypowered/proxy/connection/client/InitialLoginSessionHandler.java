@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,11 +56,15 @@ import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+/**
+ * Handles authenticating the player to Mojang's servers.
+ */
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-      System.getProperty("mojang.sessionserver", "https://sessionserver.mojang.com/session/minecraft/hasJoined")
+      System.getProperty("mojang.sessionserver",
+              "https://sessionserver.mojang.com/session/minecraft/hasJoined")
           .concat("?username=%s&serverId=%s");
 
   private final VelocityServer server;
@@ -72,12 +76,13 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-                             LoginInboundConnection inbound) {
+      LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
-            ? Boolean.getBoolean("auth.forceSecureProfiles") : server.getConfiguration().isForceKeyAuthentication();
+        ? Boolean.getBoolean("auth.forceSecureProfiles")
+        : server.getConfiguration().isForceKeyAuthentication();
   }
 
   @Override
@@ -87,13 +92,14 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     IdentifiedKey playerKey = packet.getPlayerKey();
     if (playerKey != null) {
       if (playerKey.hasExpired()) {
-        inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
+        inbound.disconnect(
+            Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
         return true;
       }
 
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-              && playerKey instanceof IdentifiedKeyImpl) {
+          && playerKey instanceof IdentifiedKeyImpl) {
         IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
       } else {
@@ -105,8 +111,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-            && forceKeyAuthentication
-            && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        && forceKeyAuthentication
+        && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }
@@ -145,7 +151,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
               } else {
                 mcConnection.setSessionHandler(new AuthSessionHandler(
-                        server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
+                    server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
                 ));
               }
             });
@@ -182,7 +188,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       KeyPair serverKeyPair = server.getServerKeyPair();
       if (inbound.getIdentifiedKey() != null) {
         IdentifiedKey playerKey = inbound.getIdentifiedKey();
-        if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify, Longs.toByteArray(packet.getSalt()))) {
+        if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
+            Longs.toByteArray(packet.getSalt()))) {
           throw new IllegalStateException("Invalid client public signature.");
         }
       } else {
@@ -226,14 +233,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         try {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
-            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
+            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
+                GameProfile.class);
             // Not so fast, now we verify the public key for 1.19.1+
             if (inbound.getIdentifiedKey() != null
-                    && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                    && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+                && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
               IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
               if (!key.internalAddHolder(profile.getId())) {
-                inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                inbound.disconnect(
+                    Component.translatable("multiplayer.disconnect.invalid_public_key"));
               }
             }
             // All went well, initialize the session.
@@ -289,7 +298,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private void assertState(LoginState expectedState) {
     if (this.currentState != expectedState) {
       if (MinecraftDecoder.DEBUG) {
-        logger.error("{} Received an unexpected packet requiring state {}, but we are in {}", inbound,
+        logger.error("{} Received an unexpected packet requiring state {}, but we are in {}",
+            inbound,
             expectedState, this.currentState);
       }
       mcConnection.close(true);

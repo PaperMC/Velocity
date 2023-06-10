@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,8 @@ public class LegacyChat implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     message = ProtocolUtils.readString(buf);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND
+        && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       type = buf.readByte();
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         sender = ProtocolUtils.readUuid(buf);
@@ -106,7 +107,8 @@ public class LegacyChat implements MinecraftPacket {
       throw new IllegalStateException("Message is not specified");
     }
     ProtocolUtils.writeString(buf, message);
-    if (direction == ProtocolUtils.Direction.CLIENTBOUND && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND
+        && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       buf.writeByte(type);
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
         ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);

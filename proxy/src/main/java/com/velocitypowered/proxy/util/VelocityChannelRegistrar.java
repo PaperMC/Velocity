@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Registry for channels recognized by the proxy.
+ */
 public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   private final Map<String, ChannelIdentifier> identifierMap = new ConcurrentHashMap<>();
@@ -107,6 +110,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   /**
    * Returns all the channel names to register depending on the Minecraft protocol version.
+   *
    * @param protocolVersion the protocol version in use
    * @return the list of channels to register
    */

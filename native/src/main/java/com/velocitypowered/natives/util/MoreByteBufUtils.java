@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@ import com.velocitypowered.natives.Native;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
+/**
+ * Additional utilities for {@link ByteBuf}.
+ */
 public class MoreByteBufUtils {
   private MoreByteBufUtils() {
     throw new AssertionError();

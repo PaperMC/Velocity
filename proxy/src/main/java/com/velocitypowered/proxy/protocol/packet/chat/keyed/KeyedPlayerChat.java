@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,8 @@ public class KeyedPlayerChat implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     message = ProtocolUtils.readString(buf, 256);
 
     long expiresAt = buf.readLong();
@@ -105,18 +106,21 @@ public class KeyedPlayerChat implements MinecraftPacket {
 
       SignaturePair[] lastSignatures = new SignaturePair[size];
       for (int i = 0; i < size; i++) {
-        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+        lastSignatures[i] = new SignaturePair(ProtocolUtils.readUuid(buf),
+            ProtocolUtils.readByteArray(buf));
       }
       previousMessages = lastSignatures;
 
       if (buf.readBoolean()) {
-        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf), ProtocolUtils.readByteArray(buf));
+        lastMessage = new SignaturePair(ProtocolUtils.readUuid(buf),
+            ProtocolUtils.readByteArray(buf));
       }
     }
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+      ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, message);
 
     buf.writeLong(unsigned ? Instant.now().toEpochMilli() : expiry.toEpochMilli());

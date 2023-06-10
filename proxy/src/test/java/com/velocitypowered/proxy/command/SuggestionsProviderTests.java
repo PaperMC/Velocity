@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,8 +116,8 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestsAllAliases() {
     final var meta = manager.metaBuilder("foo")
-            .aliases("bar", "baz")
-            .build();
+        .aliases("bar", "baz")
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("", "bar", "baz", "foo");
@@ -126,8 +126,8 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestsArgumentsViaAlias() {
     final var meta = manager.metaBuilder("hello")
-            .aliases("hi")
-            .build();
+        .aliases("hi")
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -148,11 +148,11 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestsHintLiteral() {
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .build();
+        .<CommandSource>literal("hint")
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello ", "hint");
@@ -163,16 +163,16 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestsHintCustomSuggestions() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) -> builder
-                    .suggest("one")
-                    .suggest("two")
-                    .suggest("three")
-                    .buildFuture())
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> builder
+            .suggest("one")
+            .suggest("two")
+            .suggest("three")
+            .buildFuture())
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello ", "one", "three", "two");
@@ -182,11 +182,11 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestsMergesArgumentsSuggestionsWithHintSuggestions() {
     final var hint = LiteralArgumentBuilder
-            .<CommandSource>literal("bar")
-            .build();
+        .<CommandSource>literal("bar")
+        .build();
     final var meta = manager.metaBuilder("foo")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -209,13 +209,13 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testSuggestIgnoresHintRequirementPredicateResults() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .requires(source1 -> fail())
-            .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .requires(source1 -> fail())
+        .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello ", "suggestion");
@@ -242,12 +242,12 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestHintIfHintSuggestionProviderFutureCompletesExceptionally() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello ");
@@ -256,14 +256,14 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void testDoesNotSuggestHintIfCustomSuggestionProviderThrows() {
     final var hint = RequiredArgumentBuilder
-            .<CommandSource, String>argument("hint", word())
-            .suggests((context, builder) -> {
-              throw new RuntimeException();
-            })
-            .build();
+        .<CommandSource, String>argument("hint", word())
+        .suggests((context, builder) -> {
+          throw new RuntimeException();
+        })
+        .build();
     final var meta = manager.metaBuilder("hello")
-            .hint(hint)
-            .build();
+        .hint(hint)
+        .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello ");
@@ -273,7 +273,8 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
     static final NoSuggestionsCommand INSTANCE = new NoSuggestionsCommand();
 
-    private NoSuggestionsCommand() {}
+    private NoSuggestionsCommand() {
+    }
 
     @Override
     public void execute(final Invocation invocation) {

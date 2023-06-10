@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -34,6 +33,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Command manager tests.
+ */
 public class CommandManagerTests extends CommandTestSuite {
 
   // Registration
@@ -51,9 +53,9 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testRegisterWithMetaContainingMultipleAliases() {
     final var meta = manager.metaBuilder("foo")
-            .aliases("bar")
-            .aliases("baz", "qux")
-            .build();
+        .aliases("bar")
+        .aliases("baz", "qux")
+        .build();
     manager.register(meta, DummyCommand.INSTANCE);
 
     assertTrue(manager.hasCommand("foo"));
@@ -70,8 +72,8 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testRegisterAliasesAreCaseInsensitive() {
     final var meta = manager.metaBuilder("Foo")
-            .aliases("Bar")
-            .build();
+        .aliases("Bar")
+        .build();
     manager.register(meta, DummyCommand.INSTANCE);
 
     assertTrue(manager.hasCommand("foo"));
@@ -82,8 +84,8 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testRegisterBrigadierCommand() {
     final var node = LiteralArgumentBuilder
-            .<CommandSource>literal("hello")
-            .build();
+        .<CommandSource>literal("hello")
+        .build();
     manager.register(new BrigadierCommand(node));
 
     assertTrue(manager.hasCommand("hello"));
@@ -109,9 +111,9 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testAddingExecutableHintToMetaThrows() {
     final var hintNode = LiteralArgumentBuilder
-            .<CommandSource>literal("hint")
-            .executes(context -> fail())
-            .build();
+        .<CommandSource>literal("hint")
+        .executes(context -> fail())
+        .build();
 
     assertThrows(IllegalArgumentException.class, () -> {
       manager.metaBuilder("hello").hint(hintNode);
@@ -121,12 +123,12 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testAddingHintWithRedirectToMetaThrows() {
     final var targetNode = LiteralArgumentBuilder
-            .<CommandSource>literal("target")
-            .build();
+        .<CommandSource>literal("target")
+        .build();
     final var hintNode = LiteralArgumentBuilder
-            .<CommandSource>literal("origin")
-            .redirect(targetNode)
-            .build();
+        .<CommandSource>literal("origin")
+        .redirect(targetNode)
+        .build();
 
     assertThrows(IllegalArgumentException.class, () -> {
       manager.metaBuilder("hello").hint(hintNode);
@@ -155,8 +157,8 @@ public class CommandManagerTests extends CommandTestSuite {
   @Test
   void testUnregisterSecondaryAlias() {
     final var meta = manager.metaBuilder("foo")
-            .aliases("bar")
-            .build();
+        .aliases("bar")
+        .build();
     manager.register(meta, DummyCommand.INSTANCE);
     manager.unregister("bar");
 
@@ -214,7 +216,8 @@ public class CommandManagerTests extends CommandTestSuite {
 
     static final DummyCommand INSTANCE = new DummyCommand();
 
-    private DummyCommand() {}
+    private DummyCommand() {
+    }
 
     @Override
     public void execute(final Invocation invocation) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ public class ConnectionTypeImpl implements ConnectionType {
   private final BackendConnectionPhase initialBackendPhase;
 
   public ConnectionTypeImpl(ClientConnectionPhase initialClientPhase,
-                            BackendConnectionPhase initialBackendPhase) {
+      BackendConnectionPhase initialBackendPhase) {
     this.initialClientPhase = initialClientPhase;
     this.initialBackendPhase = initialBackendPhase;
   }
@@ -49,7 +49,7 @@ public class ConnectionTypeImpl implements ConnectionType {
 
   @Override
   public GameProfile addGameProfileTokensIfRequired(GameProfile original,
-                                                    PlayerInfoForwarding forwardingType) {
+      PlayerInfoForwarding forwardingType) {
     return original;
   }
 }

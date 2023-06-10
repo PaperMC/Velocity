@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -121,7 +121,7 @@ public interface TabListEntry extends KeyIdentifiable {
   TabListEntry setGameMode(int gameMode);
 
   /**
-   * Whether or not the entry is listed, when listed they will be visible to other players in the tab list.
+   * Returns whether or not this player will be visible to other players in the tab list.
    *
    * @return Whether this entry is listed; only changeable in 1.19.3 and above
    */
@@ -193,7 +193,7 @@ public interface TabListEntry extends KeyIdentifiable {
 
     /**
      * Sets the {@link IdentifiedKey} of the {@link TabListEntry}.
-     * <p>This is only intended and only works for players currently <b>not</b> connected to this proxy.</p>
+     * <p>This only works for players currently <b>not</b> connected to this proxy.</p>
      * <p>For any player currently connected to this proxy this will be filled automatically.</p>
      * <p>Will ignore mismatching key revisions data.</p>
      *

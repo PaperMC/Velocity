@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ public final class RegistryKeyArgumentList {
     }
 
     public static class Serializer implements ArgumentPropertySerializer<ResourceOrTag> {
+
       static final ResourceOrTag.Serializer REGISTRY = new ResourceOrTag.Serializer();
 
       @Override
@@ -51,6 +52,7 @@ public final class RegistryKeyArgumentList {
     }
 
     public static class Serializer implements ArgumentPropertySerializer<ResourceOrTagKey> {
+
       static final ResourceOrTagKey.Serializer REGISTRY = new ResourceOrTagKey.Serializer();
 
       @Override
@@ -72,6 +74,7 @@ public final class RegistryKeyArgumentList {
     }
 
     public static class Serializer implements ArgumentPropertySerializer<Resource> {
+
       static final Resource.Serializer REGISTRY = new Resource.Serializer();
 
       @Override
@@ -93,6 +96,7 @@ public final class RegistryKeyArgumentList {
     }
 
     public static class Serializer implements ArgumentPropertySerializer<ResourceKey> {
+
       static final ResourceKey.Serializer REGISTRY = new ResourceKey.Serializer();
 
       @Override

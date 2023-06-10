@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@ import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
 import javax.crypto.SecretKey;
 
+/**
+ * Implements AES-CFB8 encryption/decryption using a native library.
+ */
 public class NativeVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {

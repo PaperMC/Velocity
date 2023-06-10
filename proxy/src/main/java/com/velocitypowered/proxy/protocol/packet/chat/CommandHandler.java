@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public interface CommandHandler<T extends MinecraftPacket> {
+
   Logger logger = LogManager.getLogger(CommandHandler.class);
 
   Class<T> packetClass();
@@ -44,16 +45,19 @@ public interface CommandHandler<T extends MinecraftPacket> {
     return false;
   }
 
-  default CompletableFuture<MinecraftPacket> runCommand(VelocityServer server, ConnectedPlayer player, String command,
-                                                        Function<Boolean, MinecraftPacket> hasRunPacketFunction) {
-    return server.getCommandManager().executeImmediatelyAsync(player, command).thenApply(hasRunPacketFunction);
+  default CompletableFuture<MinecraftPacket> runCommand(VelocityServer server,
+      ConnectedPlayer player, String command,
+      Function<Boolean, MinecraftPacket> hasRunPacketFunction) {
+    return server.getCommandManager().executeImmediatelyAsync(player, command)
+        .thenApply(hasRunPacketFunction);
   }
 
   default void queueCommandResult(VelocityServer server, ConnectedPlayer player,
-                                  Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
-                                  String message, Instant timestamp) {
+      Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
+      String message, Instant timestamp) {
     player.getChatQueue().queuePacket(
-        server.getCommandManager().callCommandEvent(player, message).thenComposeAsync(futurePacketCreator)
+        server.getCommandManager().callCommandEvent(player, message)
+            .thenComposeAsync(futurePacketCreator)
             .thenApply(pkt -> {
               if (server.getConfiguration().isLogCommandExecutions()) {
                 logger.info("{} -> executed command /{}", player, message);
@@ -61,7 +65,8 @@ public interface CommandHandler<T extends MinecraftPacket> {
               return pkt;
             }).exceptionally(e -> {
               logger.info("Exception occurred while running command for {}", player.getUsername(), e);
-              player.sendMessage(Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
+              player.sendMessage(
+                  Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
               return null;
             }), timestamp);
   }

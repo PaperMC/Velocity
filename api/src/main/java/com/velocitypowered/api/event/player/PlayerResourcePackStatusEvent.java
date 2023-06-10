@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -30,6 +30,7 @@ public class PlayerResourcePackStatusEvent {
 
   /**
    * Instantiates this event.
+   *
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, Status, ResourcePackInfo)} instead.
    */
