@@ -26,7 +26,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

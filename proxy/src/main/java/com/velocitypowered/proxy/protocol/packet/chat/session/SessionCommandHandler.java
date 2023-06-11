@@ -22,7 +22,6 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.Component;
 
 public class SessionCommandHandler implements CommandHandler<SessionPlayerCommand> {
 
@@ -44,14 +43,6 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
-        if (packet.isSigned()) {
-          logger.fatal("A plugin tried to deny a command with signable component(s). "
-              + "This is not supported. "
-              + "Disconnecting player " + player.getUsername());
-          player.disconnect(Component.text(
-              "A proxy plugin caused an illegal protocol state. "
-                  + "Contact your network administrator."));
-        }
         return CompletableFuture.completedFuture(null);
       }
 
@@ -60,16 +51,6 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
         if (packet.isSigned() && commandToRun.equals(packet.command)) {
           return CompletableFuture.completedFuture(packet);
         } else {
-          if (packet.isSigned()) {
-            logger.fatal("A plugin tried to change a command with signed component(s). "
-                + "This is not supported. "
-                + "Disconnecting player " + player.getUsername());
-            player.disconnect(Component.text(
-                "A proxy plugin caused an illegal protocol state. "
-                    + "Contact your network administrator."));
-            return CompletableFuture.completedFuture(null);
-          }
-
           return CompletableFuture.completedFuture(this.player.getChatBuilderFactory()
               .builder()
               .setTimestamp(packet.timeStamp)
@@ -84,16 +65,6 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
           if (packet.isSigned() && commandToRun.equals(packet.command)) {
             return packet;
           } else {
-            if (packet.isSigned()) {
-              logger.fatal("A plugin tried to change a command with signed component(s). "
-                  + "This is not supported. "
-                  + "Disconnecting player " + player.getUsername());
-              player.disconnect(Component.text(
-                  "A proxy plugin caused an illegal protocol state. "
-                      + "Contact your network administrator."));
-              return null;
-            }
-
             return this.player.getChatBuilderFactory()
                 .builder()
                 .setTimestamp(packet.timeStamp)
