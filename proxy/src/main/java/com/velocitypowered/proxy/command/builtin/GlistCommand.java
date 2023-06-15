@@ -28,7 +28,6 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -39,6 +38,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.util.TriState;
 
 /**
  * Implements the Velocity default {@code /glist} command.
@@ -60,7 +60,7 @@ public class GlistCommand {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
         .<CommandSource>literal("glist")
         .requires(source ->
-            source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
+            source.getPermissionValue("velocity.command.glist") == TriState.TRUE)
         .executes(this::totalCount)
         .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder

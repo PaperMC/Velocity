@@ -17,11 +17,7 @@
 
 package com.velocitypowered.proxy.console;
 
-import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
-
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
-import com.velocitypowered.api.permission.PermissionFunction;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
@@ -37,6 +33,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.util.TriState;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -57,7 +54,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
 
   private final VelocityServer server;
-  private PermissionFunction permissionFunction = ALWAYS_TRUE;
+  private PermissionChecker permissionChecker = PermissionChecker.always(TriState.TRUE);
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
       .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
       .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
@@ -78,8 +75,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public @NonNull Tristate getPermissionValue(@NonNull String permission) {
-    return this.permissionFunction.getPermissionValue(permission);
+  public @NonNull TriState getPermissionValue(@NonNull String permission) {
+    return this.permissionChecker.value(permission);
   }
 
   /**
@@ -94,16 +91,16 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
    * Sets up permissions for the console.
    */
   public void setupPermissions() {
-    PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
+    PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> PermissionChecker.always(TriState.TRUE));
     // we can safely block here, this is before any listeners fire
-    this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
-    if (this.permissionFunction == null) {
+    this.permissionChecker = this.server.getEventManager().fire(event).join().createChecker(this);
+    if (this.permissionChecker == null) {
       logger.error(
           "A plugin permission provider {} provided an invalid permission function"
               + " for the console. This is a bug in the plugin, not in Velocity. Falling"
               + " back to the default permission function.",
           event.getProvider().getClass().getName());
-      this.permissionFunction = ALWAYS_TRUE;
+      this.permissionChecker = PermissionChecker.always(TriState.TRUE);
     }
   }
 

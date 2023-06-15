@@ -35,9 +35,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -111,6 +109,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.util.TriState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -132,7 +131,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
               .mapper(TranslatableComponent.class, TranslatableComponent::key)
               .build())
           .build();
-  static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
+  static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionChecker.always(TriState.NOT_SET);
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
@@ -143,7 +142,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final MinecraftConnection connection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
-  private PermissionFunction permissionFunction;
+  private PermissionChecker permissionChecker;
   private int tryIndex = 0;
   private long ping = -1;
   private final boolean onlineMode;
@@ -168,7 +167,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       .withDynamic(Identity.NAME, this::getUsername)
       .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
       .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
-      .withStatic(PermissionChecker.POINTER, getPermissionChecker())
+      .withDynamic(PermissionChecker.POINTER, () -> this.permissionChecker)
       .withStatic(FacetPointers.TYPE, Type.PLAYER)
       .build();
   private @Nullable String clientBrand;
@@ -184,7 +183,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
-    this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
+    this.permissionChecker = PermissionChecker.always(TriState.NOT_SET);
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
@@ -319,8 +318,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return Optional.ofNullable(virtualHost);
   }
 
-  void setPermissionFunction(PermissionFunction permissionFunction) {
-    this.permissionFunction = permissionFunction;
+  void setPermissionChecker(PermissionChecker permissionChecker) {
+    this.permissionChecker = permissionChecker;
   }
 
   @Override
@@ -909,8 +908,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public Tristate getPermissionValue(String permission) {
-    return permissionFunction.getPermissionValue(permission);
+  public TriState getPermissionValue(String permission) {
+    return permissionChecker.value(permission);
   }
 
   @Override

@@ -9,9 +9,9 @@ package com.velocitypowered.api.event.permission;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.PermissionSubject;
+import net.kyori.adventure.permission.PermissionChecker;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -44,13 +44,13 @@ public final class PermissionsSetupEvent {
   }
 
   /**
-   * Uses the provider function to obtain a {@link PermissionFunction} for the subject.
+   * Uses the provider function to obtain a {@link PermissionChecker} for the subject.
    *
    * @param subject the subject
    * @return the obtained permission function
    */
-  public PermissionFunction createFunction(PermissionSubject subject) {
-    return this.provider.createFunction(subject);
+  public PermissionChecker createChecker(PermissionSubject subject) {
+    return this.provider.createChecker(subject);
   }
 
   public PermissionProvider getProvider() {
@@ -58,7 +58,7 @@ public final class PermissionsSetupEvent {
   }
 
   /**
-   * Sets the {@link PermissionFunction} that should be used for the subject.
+   * Sets the {@link PermissionChecker} that should be used for the subject.
    *
    * <p>Specifying <code>null</code> will reset the provider to the default
    * instance given when the event was posted.</p>
