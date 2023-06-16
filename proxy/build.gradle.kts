@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.nightconfig)
     implementation(libs.bstats)
     implementation(libs.lmbda)
+    implementation(libs.asm)
     implementation(libs.bundles.flare)
     compileOnly(libs.spotbugs.annotations)
     testImplementation(libs.mockito)
