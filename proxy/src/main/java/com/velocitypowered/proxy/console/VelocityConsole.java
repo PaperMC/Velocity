@@ -75,8 +75,8 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public @NonNull TriState getPermissionValue(@NonNull String permission) {
-    return this.permissionChecker.value(permission);
+  public PermissionChecker getPermissionChecker() {
+    return this.permissionChecker;
   }
 
   /**

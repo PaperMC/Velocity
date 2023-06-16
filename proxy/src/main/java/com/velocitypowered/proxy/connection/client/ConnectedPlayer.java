@@ -908,8 +908,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public TriState getPermissionValue(String permission) {
-    return permissionChecker.value(permission);
+  public PermissionChecker getPermissionChecker() {
+    return this.permissionChecker;
   }
 
   @Override
