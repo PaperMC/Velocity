@@ -75,7 +75,12 @@ public final class InitialInboundConnection implements VelocityInboundConnection
 
   @Override
   public String toString() {
-    return "[initial connection] " + connection.getRemoteAddress().toString();
+    boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+        .isPlayerAddressLoggingEnabled();
+    String playerIp =
+        isPlayerAddressLoggingEnabled
+            ? connection.getRemoteAddress().toString() : "<ip address withheld>";
+    return "[initial connection] " + playerIp;
   }
 
   @Override

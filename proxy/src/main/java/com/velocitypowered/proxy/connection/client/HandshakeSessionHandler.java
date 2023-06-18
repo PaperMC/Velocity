@@ -235,7 +235,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public String toString() {
-      return "[legacy connection] " + this.getRemoteAddress().toString();
+      boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+          .isPlayerAddressLoggingEnabled();
+      String playerIp =
+          isPlayerAddressLoggingEnabled
+              ? this.getRemoteAddress().toString() : "<ip address withheld>";
+      return "[legacy connection] " + playerIp;
     }
 
     @Override
