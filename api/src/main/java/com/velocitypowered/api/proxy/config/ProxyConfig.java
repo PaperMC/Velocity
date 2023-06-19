@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy.config;
 
+import com.velocitypowered.api.proxy.OnlineType;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.Favicon;
 import java.util.List;
@@ -120,6 +121,12 @@ public interface ProxyConfig {
    * @return the login rate limit (in milliseconds)
    */
   int getLoginRatelimit();
+
+  String getNeteaseGameId();
+
+  String getNeteaseHost();
+
+  OnlineType getOnlineType();
 
   /**
    * Get the proxy favicon shown in the tablist.

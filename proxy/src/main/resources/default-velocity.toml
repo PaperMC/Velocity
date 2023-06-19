@@ -15,6 +15,20 @@ show-max-players = 500
 # Should we authenticate players with Mojang? By default, this is on.
 online-mode = true
 
+# Players authenticate server type.
+# type: [mojang, netease]
+online-type = "mojang"
+
+# Netease china server game-id
+# online-type is netease
+# game-id get from https://mcdev.webapp.163.com/
+netease-game-id = "none"
+
+# Netease china server certification address
+# online-type is netease
+# netease-check-host get from https://mcdev.webapp.163.com/
+netease-host = "none"
+
 # Should the proxy enforce the new public key security standard? By default, this is on.
 force-key-authentication = true
 
