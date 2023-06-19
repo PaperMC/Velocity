@@ -151,7 +151,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
               } else {
                 mcConnection.setSessionHandler(new AuthSessionHandler(
-                    server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
+                    server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false, null
                 ));
               }
             });
@@ -247,7 +247,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             }
             // All went well, initialize the session.
             mcConnection.setSessionHandler(new AuthSessionHandler(
-                server, inbound, profile, true
+                server, inbound, profile, true, serverId
             ));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
