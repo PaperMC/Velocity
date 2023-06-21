@@ -35,7 +35,6 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.registry.DimensionRegistry;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -52,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -69,7 +69,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
-  private @MonotonicNonNull DimensionRegistry activeDimensionRegistry;
+  private @MonotonicNonNull CompoundBinaryTag activeDimensionRegistry;
 
   /**
    * Initializes a new server connection.
@@ -344,11 +344,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     return hasCompletedJoin;
   }
 
-  public DimensionRegistry getActiveDimensionRegistry() {
+  public CompoundBinaryTag getActiveDimensionRegistry() {
     return activeDimensionRegistry;
   }
 
-  public void setActiveDimensionRegistry(DimensionRegistry activeDimensionRegistry) {
+  public void setActiveDimensionRegistry(CompoundBinaryTag activeDimensionRegistry) {
     this.activeDimensionRegistry = activeDimensionRegistry;
   }
 }
