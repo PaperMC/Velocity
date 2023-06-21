@@ -21,7 +21,7 @@ extensions.configure<PublishingExtension> {
             pom {
                 name.set("Velocity")
                 description.set("The modern, next-generation Minecraft server proxy")
-                url.set("https://www.velocitypowered.com")
+                url.set("https://papermc.io/software/velocity")
                 scm {
                     url.set("https://github.com/PaperMC/Velocity")
                     connection.set("scm:git:https://github.com/PaperMC/Velocity.git")
