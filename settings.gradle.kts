@@ -9,7 +9,6 @@ dependencyResolutionManagement {
     }
 }
 
-
 pluginManagement {
     includeBuild("build-logic")
     repositories {
