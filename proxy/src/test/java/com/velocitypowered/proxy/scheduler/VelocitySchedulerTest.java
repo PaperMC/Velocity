@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
+import com.velocitypowered.proxy.scheduler.VelocityScheduler.VelocityTask;
 import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +40,7 @@ class VelocitySchedulerTest {
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
         .schedule();
     latch.await();
+    ((VelocityTask) task).awaitCompletion();
     assertEquals(TaskStatus.FINISHED, task.status());
   }
 
@@ -50,7 +52,6 @@ class VelocitySchedulerTest {
         .delay(100, TimeUnit.SECONDS)
         .schedule();
     task.cancel();
-    Thread.sleep(200);
     assertEquals(3, i.get());
     assertEquals(TaskStatus.CANCELLED, task.status());
   }
@@ -70,23 +71,26 @@ class VelocitySchedulerTest {
   @Test
   void obtainTasksFromPlugin() throws Exception {
     VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
-    AtomicInteger i = new AtomicInteger(0);
-    CountDownLatch latch = new CountDownLatch(1);
+    CountDownLatch runningLatch = new CountDownLatch(1);
+    CountDownLatch endingLatch = new CountDownLatch(1);
 
     scheduler.buildTask(FakePluginManager.PLUGIN_A, task -> {
-      if (i.getAndIncrement() >= 1) {
-        task.cancel();
-        latch.countDown();
+      runningLatch.countDown();
+      try {
+        endingLatch.await();
+      } catch (InterruptedException ignored) {
+        Thread.currentThread().interrupt();
       }
+      task.cancel();
     }).delay(50, TimeUnit.MILLISECONDS)
         .repeat(Duration.ofMillis(5))
         .schedule();
 
+    runningLatch.await();
+
     assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
 
-    latch.await();
-
-    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 0);
+    endingLatch.countDown();
   }
 
   @Test

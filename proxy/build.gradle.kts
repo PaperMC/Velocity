@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 
-@Suppress("DSL_SCOPE_VIOLATION") // fixed in Gradle 8.1
 plugins {
     application
     id("velocity-init-manifest")
@@ -115,6 +114,7 @@ dependencies {
     implementation(libs.nightconfig)
     implementation(libs.bstats)
     implementation(libs.lmbda)
+    implementation(libs.asm)
     implementation(libs.bundles.flare)
     compileOnly(libs.spotbugs.annotations)
     testImplementation(libs.mockito)

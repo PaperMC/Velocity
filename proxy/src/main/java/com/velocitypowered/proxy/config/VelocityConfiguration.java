@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,15 +28,12 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
@@ -450,17 +446,6 @@ public class VelocityConfiguration implements ProxyConfig {
         .sync()
         .build();
     config.load();
-
-    // Create temporary default configuration
-    File tmpFile = File.createTempFile("default-config", null);
-    tmpFile.deleteOnExit();
-
-    // Copy over default file to tmp location
-    try (InputStream in = defaultConfigLocation.openStream()) {
-      Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
-    defaultConfig.load();
 
     // TODO: migrate this on Velocity Polymer
     double configVersion;

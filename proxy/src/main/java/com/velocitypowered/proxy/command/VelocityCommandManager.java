@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -47,7 +48,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import net.kyori.adventure.identity.Identity;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -114,14 +115,21 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    // TODO Warn if command implements multiple registrable interfaces?
-    for (final CommandRegistrar<?> registrar : this.registrars) {
-      if (this.tryRegister(registrar, command, meta)) {
-        return; // success
-      }
+    final List<CommandRegistrar<?>> commandRegistrars = this.implementedRegistrars(command);
+    if (commandRegistrars.isEmpty()) {
+      throw new IllegalArgumentException(
+              command + " does not implement a registrable Command subinterface");
+    } else if (commandRegistrars.size() > 1) {
+      final String implementedInterfaces = commandRegistrars.stream()
+              .map(CommandRegistrar::registrableSuperInterface)
+              .map(Class::getSimpleName)
+              .collect(Collectors.joining(", "));
+      throw new IllegalArgumentException(
+              command + " implements multiple registrable Command subinterfaces: "
+                      + implementedInterfaces);
+    } else {
+      this.internalRegister(commandRegistrars.get(0), command, meta);
     }
-    throw new IllegalArgumentException(
-        command + " does not implement a registrable Command subinterface");
   }
 
   /**
@@ -133,21 +141,26 @@ public class VelocityCommandManager implements CommandManager {
    * @param command   the command to register
    * @param meta      the command metadata
    * @param <T>       the type of the command
-   * @return true if the command implements the registrable superinterface of the registrar; false
-   *         otherwise.
    * @throws IllegalArgumentException if the registrar cannot register the command
    */
-  private <T extends Command> boolean tryRegister(final CommandRegistrar<T> registrar,
+  private <T extends Command> void internalRegister(final CommandRegistrar<T> registrar,
       final Command command, final CommandMeta meta) {
     final Class<T> superInterface = registrar.registrableSuperInterface();
-    if (!superInterface.isInstance(command)) {
-      return false;
-    }
     registrar.register(meta, superInterface.cast(command));
     for (String alias : meta.getAliases()) {
       commandMetas.put(alias, meta);
     }
-    return true;
+  }
+
+  private List<CommandRegistrar<?>> implementedRegistrars(final Command command) {
+    final List<CommandRegistrar<?>> registrarsFound = new ArrayList<>(2);
+    for (final CommandRegistrar<?> registrar : this.registrars) {
+      final Class<?> superInterface = registrar.registrableSuperInterface();
+      if (superInterface.isInstance(command)) {
+        registrarsFound.add(registrar);
+      }
+    }
+    return registrarsFound;
   }
 
   @Override
@@ -215,7 +228,7 @@ public class VelocityCommandManager implements CommandManager {
       boolean isSyntaxError = !e.getType().equals(
           CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
-        source.sendMessage(Identity.nil(), Component.text(e.getMessage(), NamedTextColor.RED));
+        source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         // This is, of course, a lie, but the API will need to change...
         return true;
       } else {
