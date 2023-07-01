@@ -418,6 +418,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
+    logger.error("{}: An error occurred in the client-sided play handler: ",
+            player.getConnection().getRemoteAddress(), throwable);
+
     player.disconnect(
         Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
