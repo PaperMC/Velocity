@@ -30,6 +30,8 @@ dependencies {
     api("net.kyori:adventure-text-serializer-plain")
     api("net.kyori:adventure-text-minimessage")
 
+    api("org.yaml:snakeyaml:2.0")
+
     api(libs.slf4j)
     api(libs.guice)
     api(libs.checker.qual)
