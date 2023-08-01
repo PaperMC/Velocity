@@ -19,6 +19,9 @@ package com.velocitypowered.proxy.server;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.proxy.ServerRegisteredEvent;
+import com.velocitypowered.api.event.proxy.ServerUnRegisteredEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -84,6 +87,7 @@ public class ServerMap {
       throw new IllegalArgumentException(
           "Server with name " + serverInfo.getName() + " already registered");
     } else if (existing == null) {
+      if (server != null) server.getEventManager().fire(new ServerRegisteredEvent(serverInfo));
       return rs;
     } else {
       return existing;
@@ -105,6 +109,7 @@ public class ServerMap {
     }
     Preconditions.checkArgument(rs.getServerInfo().equals(serverInfo),
         "Trying to remove server %s with differing information", serverInfo.getName());
+    if (server != null) server.getEventManager().fire(new ServerUnRegisteredEvent(serverInfo));
     Preconditions.checkState(servers.remove(lowerName, rs),
         "Server with name %s replaced whilst unregistering", serverInfo.getName());
   }
