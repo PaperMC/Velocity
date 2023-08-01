@@ -5,6 +5,8 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 
 /**
  * This event is fired by the proxy before a backend server is unregistered
+ * "unregistered" in this context means new backend server was removed from the proxy dynamically at runtime.
+ * @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
  */
 public class ServerUnRegisteredEvent {
     private final ServerInfo serverInfo;
