@@ -369,6 +369,34 @@ public enum ProtocolUtils {
   }
 
   /**
+   * Reads an Integer array from the {@code buf}.
+   *
+   * @param buf the buffer to read from
+   * @return the Integer array from the buffer
+   */
+  public static int[] readVarIntArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    int[] ret = new int[length];
+    for (int i = 0; i < length; i++) {
+      ret[i] = readVarInt(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes an Integer Array to the {@code buf}.
+   *
+   * @param buf         the buffer to write to
+   * @param intArray the array to write
+   */
+  public static void writeVarIntArray(ByteBuf buf, int[] intArray) {
+    writeVarInt(buf, intArray.length);
+    for (int i = 0; i < intArray.length; i++) {
+      writeVarInt(buf, intArray[i]);
+    }
+  }
+
+  /**
    * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
    *
    * @param buf        the buffer to write to
