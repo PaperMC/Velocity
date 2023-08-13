@@ -28,8 +28,12 @@ public final class Ratelimiters {
     throw new AssertionError();
   }
 
-  public static Ratelimiter createWithMilliseconds(long ms) {
+  public static <T> Ratelimiter<T> createWithMilliseconds(long ms) {
     return ms <= 0 ? NoopCacheRatelimiter.INSTANCE : new CaffeineCacheRatelimiter(ms,
         TimeUnit.MILLISECONDS);
+  }
+
+  public static <T> Ratelimiter<T> createWithMaxHitLimit(long ms, int maxLimit) {
+    return new MaxHitRatelimiter(ms, maxLimit, TimeUnit.MILLISECONDS);
   }
 }

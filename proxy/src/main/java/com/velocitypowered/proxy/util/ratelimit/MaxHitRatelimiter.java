@@ -23,24 +23,27 @@ import com.github.benmanes.caffeine.cache.Ticker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A simple rate-limiter based on a Caffeine {@link Cache}.
+ * This particular version limits the number of actions
+ * that can be accomplished in a limited amount of time
  */
-public class CaffeineCacheRatelimiter<T> implements Ratelimiter<T> {
+public class MaxHitRatelimiter<T> implements Ratelimiter<T> {
 
-  private final Cache<T, Long> expiringCache;
-  private final long timeoutNanos;
+  private final Cache<T, AtomicInteger> expiringCache;
+  private final int maxLimit;
 
-  CaffeineCacheRatelimiter(long time, TimeUnit unit) {
-    this(time, unit, Ticker.systemTicker());
+  MaxHitRatelimiter(long time, int maxLimit, TimeUnit unit) {
+    this(time, maxLimit, unit, Ticker.systemTicker());
   }
 
   @VisibleForTesting
-  CaffeineCacheRatelimiter(long time, TimeUnit unit, Ticker ticker) {
+  MaxHitRatelimiter(long time, int maxLimit, TimeUnit unit, Ticker ticker) {
     Preconditions.checkNotNull(unit, "unit");
     Preconditions.checkNotNull(ticker, "ticker");
-    this.timeoutNanos = unit.toNanos(time);
+    this.maxLimit = maxLimit;
     this.expiringCache = Caffeine.newBuilder()
         .ticker(ticker)
         .expireAfterWrite(time, unit)
@@ -50,14 +53,14 @@ public class CaffeineCacheRatelimiter<T> implements Ratelimiter<T> {
   /**
    * Attempts to rate-limit the client.
    *
-   * @param key the address to rate limit
+   * @param key the key to rate limit
    * @return true if we should allow the client, false if we should rate-limit
    */
   @Override
   public boolean attempt(T key) {
     Preconditions.checkNotNull(key, "address");
-    long expectedNewValue = System.nanoTime() + timeoutNanos;
-    long last = expiringCache.get(key, (address1) -> expectedNewValue);
-    return expectedNewValue == last;
+    var last = expiringCache.get(key, (address1) -> new AtomicInteger(0));
+
+    return last.incrementAndGet() <= maxLimit;
   }
 }

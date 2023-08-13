@@ -55,6 +55,10 @@ public interface CommandHandler<T extends MinecraftPacket> {
   default void queueCommandResult(VelocityServer server, ConnectedPlayer player,
       Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp) {
+
+    if(player.isChatRateLimited())
+      return;
+
     player.getChatQueue().queuePacket(
         server.getCommandManager().callCommandEvent(player, message)
             .thenComposeAsync(futurePacketCreator)
