@@ -13,6 +13,20 @@ subprojects {
     apply<VelocityPublishPlugin>()
     apply<VelocitySpotlessPlugin>()
 
+    tasks.withType<JavaCompile> {
+        options.encoding = Charsets.UTF_8.name()
+        options.release.set(17)
+    }
+
+    tasks.withType<Javadoc> {
+        options.encoding = Charsets.UTF_8.name()
+    }
+
+    @Suppress("UnstableApiUsage")
+    tasks.withType<ProcessResources> {
+        filteringCharset = Charsets.UTF_8.name()
+    }
+
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(11))
