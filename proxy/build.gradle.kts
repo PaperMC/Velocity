@@ -89,8 +89,8 @@ tasks {
 }
 
 dependencies {
-    implementation(project(":velocity-api"))
-    implementation(project(":velocity-native"))
+    implementation(project(":kissenvelocity:api"))
+    implementation(project(":kissenvelocity:native"))
 
     implementation(libs.bundles.log4j)
     implementation(libs.netty.codec)
