@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * Enumerates all supported natives for Velocity.
+ */
 public class Natives {
 
   private Natives() {
@@ -70,7 +72,7 @@ public class Natives {
   private static Path createTemporaryNativeFilename(String ext) throws IOException {
     String temporaryFolderPath = System.getProperty("velocity.natives-tmpdir");
     if (temporaryFolderPath != null) {
-      return Files.createTempFile(Paths.get(temporaryFolderPath), "native-", ext);
+      return Files.createTempFile(Path.of(temporaryFolderPath), "native-", ext);
     } else {
       return Files.createTempFile("native-", ext);
     }
@@ -81,10 +83,14 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
               "libdeflate (Linux x86_64)",
-              LibdeflateVelocityCompressor.FACTORY),
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Debian 10
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
               "libdeflate (Linux aarch64)",
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Fedora 36
+          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
+              copyAndLoadNative("/macos_arm64/velocity-compress.dylib"),
+              "libdeflate (macOS ARM64 / Apple Silicon)",
               LibdeflateVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCompressor.FACTORY)
@@ -97,14 +103,30 @@ public class Natives {
               copyAndLoadNative("/linux_x86_64/velocity-cipher.so"), // Any local version
               "OpenSSL local (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl30x.so"), // Debian "Bookworm"
+              "OpenSSL 3.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Debian 9
               "OpenSSL 1.1.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl10x.so"), // CentOS 7
               "OpenSSL 1.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
-              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY),
+              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY), // Any local version
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
+              copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl30x.so"),
+              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY), // Fedora 36
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
+              copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl11x.so"),
+              "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Debian 11
+
+          new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
+              copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
+              "native (macOS ARM64 / Apple Silicon)",
+               NativeVelocityCipher.FACTORY),
+
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)
       )

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
@@ -34,7 +35,7 @@ class StringArgumentPropertySerializer implements ArgumentPropertySerializer<Str
   }
 
   @Override
-  public StringArgumentType deserialize(ByteBuf buf) {
+  public StringArgumentType deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     int type = ProtocolUtils.readVarInt(buf);
     switch (type) {
       case 0:
@@ -49,7 +50,7 @@ class StringArgumentPropertySerializer implements ArgumentPropertySerializer<Str
   }
 
   @Override
-  public void serialize(StringArgumentType object, ByteBuf buf) {
+  public void serialize(StringArgumentType object, ByteBuf buf, ProtocolVersion protocolVersion) {
     switch (object.getType()) {
       case SINGLE_WORD:
         ProtocolUtils.writeVarInt(buf, 0);

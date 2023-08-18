@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,10 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import io.netty.buffer.ByteBufUtil;
@@ -31,9 +34,13 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import space.vectrix.flare.fastutil.Int2ObjectSyncMap;
 
-public class LoginInboundConnection implements LoginPhaseConnection {
+/**
+ * Handles the actual login stage of a player logging in.
+ */
+public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifiable {
 
   private static final AtomicIntegerFieldUpdater<LoginInboundConnection> SEQUENCE_UPDATER =
       AtomicIntegerFieldUpdater.newUpdater(LoginInboundConnection.class, "sequenceCounter");
@@ -44,6 +51,7 @@ public class LoginInboundConnection implements LoginPhaseConnection {
   private final Queue<LoginPluginMessage> loginMessagesToSend;
   private volatile Runnable onAllMessagesHandled;
   private volatile boolean loginEventFired;
+  private @MonotonicNonNull IdentifiedKey playerKey;
 
   LoginInboundConnection(
       InitialInboundConnection delegate) {
@@ -103,6 +111,7 @@ public class LoginInboundConnection implements LoginPhaseConnection {
 
   /**
    * Disconnects the connection from the server.
+   *
    * @param reason the reason for disconnecting
    */
   public void disconnect(Component reason) {
@@ -143,5 +152,18 @@ public class LoginInboundConnection implements LoginPhaseConnection {
     } else {
       onAllMessagesHandled.run();
     }
+  }
+
+  MinecraftConnection delegatedConnection() {
+    return delegate.getConnection();
+  }
+
+  public void setPlayerKey(IdentifiedKey playerKey) {
+    this.playerKey = playerKey;
+  }
+
+  @Override
+  public IdentifiedKey getIdentifiedKey() {
+    return playerKey;
   }
 }

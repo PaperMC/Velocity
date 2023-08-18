@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.SkinParts;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import java.util.Locale;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Wraps the settings received in the Client Settings packet.
+ */
 public class ClientSettingsWrapper implements PlayerSettings {
 
   static final PlayerSettings DEFAULT = new ClientSettingsWrapper(
-      new ClientSettings("en_US", (byte) 10, 0, true, (short) 127, 1, true));
+      new ClientSettings("en_US", (byte) 10, 0, true, (short) 127, 1, true, false));
 
   private final ClientSettings settings;
   private final SkinParts parts;
@@ -74,5 +78,26 @@ public class ClientSettingsWrapper implements PlayerSettings {
     return settings.getMainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
   }
 
+  @Override
+  public boolean isClientListingAllowed() {
+    return settings.isClientListingAllowed();
+  }
 
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ClientSettingsWrapper that = (ClientSettingsWrapper) o;
+    return Objects.equals(settings, that.settings) && Objects.equals(parts, that.parts)
+        && Objects.equals(locale, that.locale);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(settings, parts, locale);
+  }
 }

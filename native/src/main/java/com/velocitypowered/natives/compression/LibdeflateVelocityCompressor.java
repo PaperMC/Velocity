@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.util.zip.DataFormatException;
 
+/**
+ * Implements deflate compression using the {@code libdeflate} native C library.
+ */
 public class LibdeflateVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = LibdeflateVelocityCompressor::new;
@@ -70,11 +73,13 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
           destinationAddress, destination.writableBytes());
       if (produced > 0) {
         destination.writerIndex(destination.writerIndex() + produced);
-        return;
+        break;
+      } else if (produced == 0) {
+        // Insufficient room - enlarge the buffer.
+        destination.capacity(destination.capacity() * 2);
+      } else {
+        throw new DataFormatException("libdeflate returned unknown code " + produced);
       }
-
-      // Insufficient room - enlarge the buffer.
-      destination.capacity(destination.capacity() * 2);
     }
   }
 

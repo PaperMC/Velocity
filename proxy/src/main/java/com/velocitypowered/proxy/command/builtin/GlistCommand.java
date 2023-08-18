@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,9 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+/**
+ * Implements the Velocity default {@code /glist} command.
+ */
 public class GlistCommand {
 
   private static final String SERVER_ARG = "server";
@@ -55,22 +58,22 @@ public class GlistCommand {
    */
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
-            .<CommandSource>literal("glist")
-            .requires(source ->
-                    source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
-            .executes(this::totalCount)
-            .build();
+        .<CommandSource>literal("glist")
+        .requires(source ->
+            source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
+        .executes(this::totalCount)
+        .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
-            .suggests((context, builder) -> {
-              for (RegisteredServer server : server.getAllServers()) {
-                builder.suggest(server.getServerInfo().getName());
-              }
-              builder.suggest("all");
-              return builder.buildFuture();
-            })
-            .executes(this::serverCount)
-            .build();
+        .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
+        .suggests((context, builder) -> {
+          for (RegisteredServer server : server.getAllServers()) {
+            builder.suggest(server.getServerInfo().getName());
+          }
+          builder.suggest("all");
+          return builder.buildFuture();
+        })
+        .executes(this::serverCount)
+        .build();
     totalNode.addChild(serverNode);
     server.getCommandManager().register(new BrigadierCommand(totalNode));
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
@@ -33,7 +34,10 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class InitialInboundConnection implements InboundConnection,
+/**
+ * Implements {@link InboundConnection} for a newly-established connection.
+ */
+public final class InitialInboundConnection implements VelocityInboundConnection,
     MinecraftConnectionAssociation {
 
   private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
@@ -74,25 +78,29 @@ public final class InitialInboundConnection implements InboundConnection,
     return "[initial connection] " + connection.getRemoteAddress().toString();
   }
 
+  @Override
   public MinecraftConnection getConnection() {
     return connection;
   }
 
   /**
    * Disconnects the connection from the server.
+   *
    * @param reason the reason for disconnecting
    */
   public void disconnect(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-
-    logger.info("{} has disconnected: {}", this,
-        LegacyComponentSerializer.legacySection().serialize(translated));
+    if (connection.server.getConfiguration().isLogPlayerConnections()) {
+      logger.info("{} has disconnected: {}", this,
+          LegacyComponentSerializer.legacySection().serialize(translated));
+    }
     connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
   }
 
   /**
    * Disconnects the connection from the server silently.
+   *
    * @param reason the reason for disconnecting
    */
   public void disconnectQuietly(Component reason) {

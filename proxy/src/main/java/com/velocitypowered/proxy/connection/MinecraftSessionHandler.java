@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.connection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.Chat;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
@@ -31,13 +30,15 @@ import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
+import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
@@ -46,6 +47,14 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
+import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -54,6 +63,9 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Interface for dispatching received Minecraft packets.
+ */
 public interface MinecraftSessionHandler {
 
   default boolean beforeHandle() {
@@ -104,7 +116,7 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(Chat packet) {
+  default boolean handle(LegacyChat packet) {
     return false;
   }
 
@@ -220,7 +232,7 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(PlayerListItem packet) {
+  default boolean handle(LegacyPlayerListItem packet) {
     return false;
   }
 
@@ -229,6 +241,42 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ResourcePackResponse packet) {
+    return false;
+  }
+
+  default boolean handle(KeyedPlayerChat packet) {
+    return false;
+  }
+
+  default boolean handle(SessionPlayerChat packet) {
+    return false;
+  }
+
+  default boolean handle(SystemChat packet) {
+    return false;
+  }
+
+  default boolean handle(KeyedPlayerCommand packet) {
+    return false;
+  }
+
+  default boolean handle(SessionPlayerCommand packet) {
+    return false;
+  }
+
+  default boolean handle(PlayerChatCompletion packet) {
+    return false;
+  }
+
+  default boolean handle(ServerData serverData) {
+    return false;
+  }
+
+  default boolean handle(RemovePlayerInfo packet) {
+    return false;
+  }
+
+  default boolean handle(UpsertPlayerInfo packet) {
     return false;
   }
 }

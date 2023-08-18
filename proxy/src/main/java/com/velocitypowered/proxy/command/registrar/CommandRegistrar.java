@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 
 /**
- * Creates and registers the {@link LiteralCommandNode} representations of
- * a given {@link Command} in a {@link RootCommandNode}.
+ * Creates and registers the {@link LiteralCommandNode} representations of a given {@link Command}
+ * in a {@link RootCommandNode}.
  *
  * @param <T> the type of the command to register
  */
@@ -33,16 +33,16 @@ public interface CommandRegistrar<T extends Command> {
   /**
    * Registers the given command.
    *
-   * @param meta the command metadata, including the case-insensitive aliases
+   * @param meta    the command metadata, including the case-insensitive aliases
    * @param command the command to register
    * @throws IllegalArgumentException if the given command cannot be registered
    */
   void register(final CommandMeta meta, final T command);
 
   /**
-   * Returns the superclass or superinterface of all {@link Command} classes
-   * compatible with this registrar. Note that {@link #register(CommandMeta, Command)}
-   * may impose additional restrictions on individual {@link Command} instances.
+   * Returns the superclass or superinterface of all {@link Command} classes compatible with this
+   * registrar. Note that {@link #register(CommandMeta, Command)} may impose additional restrictions
+   * on individual {@link Command} instances.
    *
    * @return the superclass of all the classes compatible with this registrar
    */

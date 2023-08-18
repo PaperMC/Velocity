@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -13,6 +13,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent.ResponseResult;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -22,8 +23,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a server sends a login plugin message to the proxy. Plugins have the opportunity to
- * respond to the messages as needed.
+ * respond to the messages as needed. Velocity will wait on this event to finish. The server will
+ * be responsible for continuing the login process once the server is satisfied with any login
+ * plugin responses sent by proxy plugins (or messages indicating a lack of response).
  */
+@AwaitingEvent
 public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResult> {
   private final ServerConnection connection;
   private final ChannelIdentifier identifier;
@@ -33,6 +37,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
 
   /**
    * Constructs a new {@code ServerLoginPluginMessageEvent}.
+   *
    * @param connection the connection on which the plugin message was sent
    * @param identifier the channel identifier for the message sent
    * @param contents the contents of the message
@@ -110,7 +115,10 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
         + '}';
   }
 
-  public static class ResponseResult implements Result {
+  /**
+   * The result class, containing a response to the login plugin message sent by the server.
+   */
+  public static class ResponseResult implements ResultedEvent.Result {
 
     private static final ResponseResult UNKNOWN = new ResponseResult(null);
 

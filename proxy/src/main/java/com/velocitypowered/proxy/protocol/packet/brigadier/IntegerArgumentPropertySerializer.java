@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 
 class IntegerArgumentPropertySerializer implements ArgumentPropertySerializer<IntegerArgumentType> {
@@ -32,7 +33,7 @@ class IntegerArgumentPropertySerializer implements ArgumentPropertySerializer<In
   }
 
   @Override
-  public IntegerArgumentType deserialize(ByteBuf buf) {
+  public IntegerArgumentType deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     byte flags = buf.readByte();
     int minimum = (flags & HAS_MINIMUM) != 0 ? buf.readInt() : Integer.MIN_VALUE;
     int maximum = (flags & HAS_MAXIMUM) != 0 ? buf.readInt() : Integer.MAX_VALUE;
@@ -40,7 +41,7 @@ class IntegerArgumentPropertySerializer implements ArgumentPropertySerializer<In
   }
 
   @Override
-  public void serialize(IntegerArgumentType object, ByteBuf buf) {
+  public void serialize(IntegerArgumentType object, ByteBuf buf, ProtocolVersion protocolVersion) {
     boolean hasMinimum = object.getMinimum() != Integer.MIN_VALUE;
     boolean hasMaximum = object.getMaximum() != Integer.MAX_VALUE;
     byte flag = getFlags(hasMinimum, hasMaximum);

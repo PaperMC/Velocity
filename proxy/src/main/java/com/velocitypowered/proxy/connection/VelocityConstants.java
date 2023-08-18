@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.connection;
 
+/**
+ * Various useful constants.
+ */
 public class VelocityConstants {
 
   private VelocityConstants() {
@@ -24,7 +27,11 @@ public class VelocityConstants {
   }
 
   public static final String VELOCITY_IP_FORWARDING_CHANNEL = "velocity:player_info";
-  public static final int FORWARDING_VERSION = 1;
+  public static final int MODERN_FORWARDING_DEFAULT = 1;
+  public static final int MODERN_FORWARDING_WITH_KEY = 2;
+  public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
+  public static final int MODERN_LAZY_SESSION = 4;
+  public static final int MODERN_FORWARDING_MAX_VERSION = MODERN_LAZY_SESSION;
 
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 }

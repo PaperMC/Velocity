@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,6 +7,12 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+/**
+ * Represents what, if any, extended parts of the skin this player has.
+ */
 public final class SkinParts {
 
   private final byte bitmask;
@@ -41,5 +47,22 @@ public final class SkinParts {
 
   public boolean hasHat() {
     return ((bitmask >> 6) & 1) == 1;
+  }
+
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    final SkinParts skinParts = (SkinParts) o;
+    return bitmask == skinParts.bitmask;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(bitmask);
   }
 }

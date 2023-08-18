@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -8,6 +8,7 @@
 package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Collection;
 import java.util.Optional;
@@ -43,12 +44,34 @@ public interface TabList {
   void addEntry(TabListEntry entry);
 
   /**
+   * Adds a {@link Iterable} of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   */
+  default void addEntries(Iterable<TabListEntry> entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
+
+  /**
+   * Adds an array of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   */
+  default void addEntries(TabListEntry... entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
+
+  /**
    * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile} identified with
    * the specified {@link UUID}.
    *
    * @param uuid of the entry
    * @return {@link Optional} containing the removed {@link TabListEntry} if present, otherwise
-   * {@link Optional#empty()}
+   *     {@link Optional#empty()}
    */
   Optional<TabListEntry> removeEntry(UUID uuid);
 
@@ -61,6 +84,15 @@ public interface TabList {
   boolean containsEntry(UUID uuid);
 
   /**
+   * Retrieves the tab list entry associated with the given uuid.
+   *
+   * @param uuid The player's {@link UUID} the {@link TabListEntry} is in reference to.
+   * @return {@code Optional.empty()} if the player is not present in the provided player's
+   *     {@link TabList} otherwise a present {@link TabListEntry} in relation to the player.
+   */
+  Optional<TabListEntry> getEntry(UUID uuid);
+
+  /**
    * Returns an immutable {@link Collection} of the {@link TabListEntry}s in the tab list.
    *
    * @return immutable {@link Collection} of tab list entries
@@ -68,16 +100,74 @@ public interface TabList {
   Collection<TabListEntry> getEntries();
 
   /**
+   * Clears all entries from the tab list.
+   */
+  void clearAll();
+
+  /**
    * Builds a tab list entry.
    *
-   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
-   * @param profile profile
+   * @param profile     profile
    * @param displayName display name
-   * @param latency latency
-   * @param gameMode game mode
+   * @param latency     latency
+   * @param gameMode    game mode
    * @return entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode) {
+    return buildEntry(profile, displayName, latency, gameMode, null, true);
+  }
+
+  /**
+   * Builds a tab list entry.
+   *
+   * @param profile     profile
+   * @param displayName display name
+   * @param latency     latency
+   * @param gameMode    game mode
+   * @param key         the player key
+   * @return entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable IdentifiedKey key) {
+    return buildEntry(profile, displayName, latency, gameMode, null, true);
+  }
+
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, true);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-      int gameMode);
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed);
 }

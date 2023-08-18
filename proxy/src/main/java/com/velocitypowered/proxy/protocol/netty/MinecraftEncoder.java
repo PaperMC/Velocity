@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+/**
+ * Encodes {@link MinecraftPacket} instances.
+ */
 public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
 
   private final ProtocolUtils.Direction direction;
@@ -39,8 +42,8 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
    */
   public MinecraftEncoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = direction
-        .getProtocolRegistry(StateRegistry.HANDSHAKE, ProtocolVersion.MINIMUM_VERSION);
+    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
+        direction, ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 
@@ -52,7 +55,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   }
 
   public void setProtocolVersion(final ProtocolVersion protocolVersion) {
-    this.registry = direction.getProtocolRegistry(state, protocolVersion);
+    this.registry = state.getProtocolRegistry(direction, protocolVersion);
   }
 
   public void setState(StateRegistry state) {

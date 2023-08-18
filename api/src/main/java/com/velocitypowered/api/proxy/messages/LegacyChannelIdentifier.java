@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -13,7 +13,7 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Reperesents a legacy channel identifier (for Minecraft 1.12 and below). For modern 1.13 plugin
+ * Represents a legacy channel identifier (for Minecraft 1.12 and below). For modern 1.13 plugin
  * messages, please see {@link MinecraftChannelIdentifier}. This class is immutable and safe for
  * multi-threaded use.
  */

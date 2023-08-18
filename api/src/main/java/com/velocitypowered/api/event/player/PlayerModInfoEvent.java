@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -14,6 +14,7 @@ import com.velocitypowered.api.util.ModInfo;
 
 /**
  * This event is fired when a Forge client sends its mods to the proxy while connecting to a server.
+ * Velocity will not wait on this event to finish firing.
  */
 public final class PlayerModInfoEvent {
 

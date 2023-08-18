@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionType;
@@ -29,6 +28,7 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -40,13 +40,16 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The initial handler used when a connection is established to the proxy. This will either
+ * transition to {@link StatusSessionHandler} or {@link InitialLoginSessionHandler} as soon
+ * as the handshake packet is received.
+ */
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
@@ -62,7 +65,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyPing packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
-    StatusSessionHandler handler = new StatusSessionHandler(server, connection,
+    StatusSessionHandler handler = new StatusSessionHandler(server,
         new LegacyInboundConnection(connection, packet));
     connection.setSessionHandler(handler);
     handler.handle(packet);
@@ -93,7 +96,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
       switch (nextState) {
         case STATUS:
-          connection.setSessionHandler(new StatusSessionHandler(server, connection, ic));
+          connection.setSessionHandler(new StatusSessionHandler(server, ic));
           break;
         case LOGIN:
           this.handleLogin(handshake, ic);
@@ -144,7 +147,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     LoginInboundConnection lic = new LoginInboundConnection(ic);
     server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(lic));
-    connection.setSessionHandler(new LoginSessionHandler(server, connection, lic));
+    connection.setSessionHandler(new InitialLoginSessionHandler(server, connection, lic));
   }
 
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {
@@ -199,7 +202,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     connection.close(true);
   }
 
-  private static class LegacyInboundConnection implements InboundConnection {
+  private static class LegacyInboundConnection implements VelocityInboundConnection {
 
     private final MinecraftConnection connection;
     private final LegacyPing ping;
@@ -228,6 +231,16 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     @Override
     public ProtocolVersion getProtocolVersion() {
       return ProtocolVersion.LEGACY;
+    }
+
+    @Override
+    public String toString() {
+      return "[legacy connection] " + this.getRemoteAddress().toString();
+    }
+
+    @Override
+    public MinecraftConnection getConnection() {
+      return connection;
     }
   }
 }

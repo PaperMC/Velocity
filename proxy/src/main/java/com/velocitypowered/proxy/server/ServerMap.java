@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Implements the Velocity server registry.
+ */
 public class ServerMap {
 
   private final @Nullable VelocityServer server;
@@ -55,8 +58,8 @@ public class ServerMap {
   }
 
   /**
-   * Creates a raw implementation of a {@link RegisteredServer} without
-   *  tying it to the internal server map.
+   * Creates a raw implementation of a {@link RegisteredServer} without tying it to the internal
+   * server map.
    *
    * @param serverInfo the server to create a registered server with
    * @return the {@link RegisteredServer} built from the {@link ServerInfo}

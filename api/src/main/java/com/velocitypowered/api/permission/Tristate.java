@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -43,7 +43,7 @@ public enum Tristate {
    *
    * @param val the boolean value
    * @return {@link #TRUE} or {@link #FALSE}, if the value is <code>true</code> or
-   * <code>false</code>, respectively.
+   *     <code>false</code>, respectively.
    */
   public static Tristate fromBoolean(boolean val) {
     return val ? TRUE : FALSE;
@@ -57,7 +57,7 @@ public enum Tristate {
    *
    * @param val the boolean value
    * @return {@link #UNDEFINED}, {@link #TRUE} or {@link #FALSE}, if the value is <code>null</code>,
-   * <code>true</code> or <code>false</code>, respectively.
+   *     <code>true</code> or <code>false</code>, respectively.
    */
   public static Tristate fromNullableBoolean(@Nullable Boolean val) {
     if (val == null) {

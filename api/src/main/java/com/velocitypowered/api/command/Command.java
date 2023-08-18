@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,11 +7,7 @@
 
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.Player;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Represents a command that can be executed by a {@link CommandSource}

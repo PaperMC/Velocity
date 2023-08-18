@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -24,6 +24,7 @@ public final class GameProfile {
 
   /**
    * Creates a new Mojang game profile.
+   *
    * @param id the UUID for the profile
    * @param name the profile's username
    * @param properties properties for the profile
@@ -35,6 +36,7 @@ public final class GameProfile {
 
   /**
    * Creates a new Mojang game profile.
+   *
    * @param undashedId the undashed, Mojang-style UUID for the profile
    * @param name the profile's username
    * @param properties properties for the profile
@@ -53,6 +55,7 @@ public final class GameProfile {
 
   /**
    * Returns the undashed, Mojang-style UUID.
+   *
    * @return the undashed UUID
    */
   public String getUndashedId() {
@@ -61,6 +64,7 @@ public final class GameProfile {
 
   /**
    * Returns the UUID associated with this game profile.
+   *
    * @return the UUID
    */
   public UUID getId() {
@@ -69,6 +73,7 @@ public final class GameProfile {
 
   /**
    * Returns the username associated with this profile.
+   *
    * @return the username
    */
   public String getName() {
@@ -77,6 +82,7 @@ public final class GameProfile {
 
   /**
    * Returns an immutable list of profile properties associated with this profile.
+   *
    * @return the properties associated with this profile
    */
   public List<Property> getProperties() {
@@ -183,6 +189,7 @@ public final class GameProfile {
 
     /**
      * Creates a profile property entry.
+     *
      * @param name the name of the property
      * @param value the value of the property
      * @param signature the Mojang signature for the property

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Manages all boss bars known to the proxy.
  */
 public class AdventureBossBarManager implements BossBar.Listener {
+
   private static final Enum2IntMap<Color> COLORS_TO_PROTOCOL =
       new Enum2IntMap.Builder<>(Color.class)
           .put(Color.PINK, 0)
@@ -94,8 +95,9 @@ public class AdventureBossBarManager implements BossBar.Listener {
   /**
    * Adds the specified player to the boss bar's viewers and spawns the boss bar, registering the
    * boss bar if needed.
+   *
    * @param player the intended viewer
-   * @param bar the boss bar to show
+   * @param bar    the boss bar to show
    */
   public void addBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getOrCreateHandler(bar);
@@ -106,8 +108,9 @@ public class AdventureBossBarManager implements BossBar.Listener {
 
   /**
    * Removes the specified player to the boss bar's viewers and despawns the boss bar.
+   *
    * @param player the intended viewer
-   * @param bar the boss bar to hide
+   * @param bar    the boss bar to hide
    */
   public void removeBossBar(ConnectedPlayer player, BossBar bar) {
     BossBarHolder holder = this.getHandler(bar);
@@ -185,6 +188,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
   }
 
   private class BossBarHolder {
+
     private final UUID id = UUID.randomUUID();
     private final BossBar bar;
     private final Set<ConnectedPlayer> subscribers = Collections.newSetFromMap(

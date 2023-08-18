@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@ package com.velocitypowered.proxy.command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 
+/**
+ * A fake {@link CommandSource}.
+ */
 public class MockCommandSource implements CommandSource {
 
   public static final CommandSource INSTANCE = new MockCommandSource();

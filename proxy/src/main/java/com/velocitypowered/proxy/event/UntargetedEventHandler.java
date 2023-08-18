@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,16 @@ import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventTask;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Core class for invoking event handlers registered by plugins.
+ */
 public interface UntargetedEventHandler {
 
   EventHandler<Object> buildHandler(Object targetInstance);
 
+  /**
+   * Interface used for invoking listeners that return {@link EventTask}.
+   */
   interface EventTaskHandler extends UntargetedEventHandler {
 
     @Nullable EventTask execute(Object targetInstance, Object event);
@@ -37,6 +43,9 @@ public interface UntargetedEventHandler {
     }
   }
 
+  /**
+   * Interface used for invoking listeners that return nothing.
+   */
   interface VoidHandler extends UntargetedEventHandler {
 
     void execute(Object targetInstance, Object event);
@@ -50,6 +59,9 @@ public interface UntargetedEventHandler {
     }
   }
 
+  /**
+   * Interface used for invoking listeners that take a {@link Continuation} along with an event.
+   */
   interface WithContinuationHandler extends UntargetedEventHandler {
 
     void execute(Object targetInstance, Object event, Continuation continuation);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
@@ -34,18 +35,20 @@ public class ClientSettings implements MinecraftPacket {
   private short skinParts;
   private int mainHand;
   private boolean chatFilteringEnabled; // Added in 1.17
+  private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
 
   public ClientSettings() {
   }
 
   public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-      short skinParts, int mainHand, boolean chatFilteringEnabled) {
+      short skinParts, int mainHand, boolean chatFilteringEnabled, boolean clientListingAllowed) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
     this.chatColors = chatColors;
     this.skinParts = skinParts;
     this.mainHand = mainHand;
+    this.clientListingAllowed = clientListingAllowed;
   }
 
   public String getLocale() {
@@ -107,6 +110,14 @@ public class ClientSettings implements MinecraftPacket {
     this.chatFilteringEnabled = chatFilteringEnabled;
   }
 
+  public boolean isClientListingAllowed() {
+    return clientListingAllowed;
+  }
+
+  public void setClientListingAllowed(boolean clientListingAllowed) {
+    this.clientListingAllowed = clientListingAllowed;
+  }
+
   @Override
   public String toString() {
     return "ClientSettings{"
@@ -117,6 +128,7 @@ public class ClientSettings implements MinecraftPacket {
         + ", skinParts=" + skinParts
         + ", mainHand=" + mainHand
         + ", chatFilteringEnabled=" + chatFilteringEnabled
+        + ", clientListingAllowed=" + clientListingAllowed
         + '}';
   }
 
@@ -138,6 +150,10 @@ public class ClientSettings implements MinecraftPacket {
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         this.chatFilteringEnabled = buf.readBoolean();
+
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+          this.clientListingAllowed = buf.readBoolean();
+        }
       }
     }
   }
@@ -163,6 +179,10 @@ public class ClientSettings implements MinecraftPacket {
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         buf.writeBoolean(chatFilteringEnabled);
+
+        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+          buf.writeBoolean(clientListingAllowed);
+        }
       }
     }
   }
@@ -170,5 +190,39 @@ public class ClientSettings implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public boolean equals(@Nullable final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    final ClientSettings that = (ClientSettings) o;
+    return viewDistance == that.viewDistance
+        && chatVisibility == that.chatVisibility
+        && chatColors == that.chatColors
+        && difficulty == that.difficulty
+        && skinParts == that.skinParts
+        && mainHand == that.mainHand
+        && chatFilteringEnabled == that.chatFilteringEnabled
+        && clientListingAllowed == that.clientListingAllowed
+        && Objects.equals(locale, that.locale);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        locale,
+        viewDistance,
+        chatVisibility,
+        chatColors,
+        difficulty,
+        skinParts,
+        mainHand,
+        chatFilteringEnabled,
+        clientListingAllowed);
   }
 }

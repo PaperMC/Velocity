@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import org.junit.jupiter.api.Test;

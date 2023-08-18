@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -47,13 +48,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import net.kyori.adventure.identity.Identity;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+/**
+ * Impelements Velocity's command handler.
+ */
 public class VelocityCommandManager implements CommandManager {
 
   private final @GuardedBy("lock") CommandDispatcher<CommandSource> dispatcher;
@@ -76,9 +80,9 @@ public class VelocityCommandManager implements CommandManager {
     this.eventManager = Preconditions.checkNotNull(eventManager);
     final RootCommandNode<CommandSource> root = this.dispatcher.getRoot();
     this.registrars = ImmutableList.of(
-            new BrigadierCommandRegistrar(root, this.lock.writeLock()),
-            new SimpleCommandRegistrar(root, this.lock.writeLock()),
-            new RawCommandRegistrar(root, this.lock.writeLock()));
+        new BrigadierCommandRegistrar(root, this.lock.writeLock()),
+        new SimpleCommandRegistrar(root, this.lock.writeLock()),
+        new RawCommandRegistrar(root, this.lock.writeLock()));
     this.suggestionsProvider = new SuggestionsProvider<>(this.dispatcher, this.lock.readLock());
     this.injector = new CommandGraphInjector<>(this.dispatcher, this.lock.readLock());
     this.commandMetas = new ConcurrentHashMap<>();
@@ -111,40 +115,52 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(meta, "meta");
     Preconditions.checkNotNull(command, "command");
 
-    // TODO Warn if command implements multiple registrable interfaces?
-    for (final CommandRegistrar<?> registrar : this.registrars) {
-      if (this.tryRegister(registrar, command, meta)) {
-        return; // success
-      }
+    final List<CommandRegistrar<?>> commandRegistrars = this.implementedRegistrars(command);
+    if (commandRegistrars.isEmpty()) {
+      throw new IllegalArgumentException(
+              command + " does not implement a registrable Command subinterface");
+    } else if (commandRegistrars.size() > 1) {
+      final String implementedInterfaces = commandRegistrars.stream()
+              .map(CommandRegistrar::registrableSuperInterface)
+              .map(Class::getSimpleName)
+              .collect(Collectors.joining(", "));
+      throw new IllegalArgumentException(
+              command + " implements multiple registrable Command subinterfaces: "
+                      + implementedInterfaces);
+    } else {
+      this.internalRegister(commandRegistrars.get(0), command, meta);
     }
-    throw new IllegalArgumentException(
-            command + " does not implement a registrable Command subinterface");
   }
 
   /**
    * Attempts to register the given command if it implements the
-   * {@linkplain CommandRegistrar#registrableSuperInterface() registrable superinterface}
-   * of the given registrar.
+   * {@linkplain CommandRegistrar#registrableSuperInterface() registrable superinterface} of the
+   * given registrar.
    *
    * @param registrar the registrar to register the command
-   * @param command the command to register
-   * @param meta the command metadata
-   * @param <T> the type of the command
-   * @return true if the command implements the registrable superinterface of the registrar;
-   *         false otherwise.
+   * @param command   the command to register
+   * @param meta      the command metadata
+   * @param <T>       the type of the command
    * @throws IllegalArgumentException if the registrar cannot register the command
    */
-  private <T extends Command> boolean tryRegister(final CommandRegistrar<T> registrar,
-                                                  final Command command, final CommandMeta meta) {
+  private <T extends Command> void internalRegister(final CommandRegistrar<T> registrar,
+      final Command command, final CommandMeta meta) {
     final Class<T> superInterface = registrar.registrableSuperInterface();
-    if (!superInterface.isInstance(command)) {
-      return false;
-    }
     registrar.register(meta, superInterface.cast(command));
     for (String alias : meta.getAliases()) {
       commandMetas.put(alias, meta);
     }
-    return true;
+  }
+
+  private List<CommandRegistrar<?>> implementedRegistrars(final Command command) {
+    final List<CommandRegistrar<?>> registrarsFound = new ArrayList<>(2);
+    for (final CommandRegistrar<?> registrar : this.registrars) {
+      final Class<?> superInterface = registrar.registrableSuperInterface();
+      if (superInterface.isInstance(command)) {
+        registrarsFound.add(registrar);
+      }
+    }
+    return registrarsFound;
   }
 
   @Override
@@ -188,7 +204,7 @@ public class VelocityCommandManager implements CommandManager {
   /**
    * Fires a {@link CommandExecuteEvent}.
    *
-   * @param source the source to execute the command for
+   * @param source  the source to execute the command for
    * @param cmdLine the command to execute
    * @return the {@link CompletableFuture} of the event
    */
@@ -212,7 +228,7 @@ public class VelocityCommandManager implements CommandManager {
       boolean isSyntaxError = !e.getType().equals(
           CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
-        source.sendMessage(Identity.nil(), Component.text(e.getMessage(), NamedTextColor.RED));
+        source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         // This is, of course, a lie, but the API will need to change...
         return true;
       } else {
@@ -251,10 +267,9 @@ public class VelocityCommandManager implements CommandManager {
   /**
    * Returns suggestions to fill in the given command.
    *
-   * @param source the source to execute the command for
+   * @param source  the source to execute the command for
    * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with a {@link List},
-   *         possibly empty
+   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
    */
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
       final String cmdLine) {
@@ -265,10 +280,10 @@ public class VelocityCommandManager implements CommandManager {
   /**
    * Returns suggestions to fill in the given command.
    *
-   * @param source the source to execute the command for
+   * @param source  the source to execute the command for
    * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with {@link Suggestions},
-   *         possibly empty
+   * @return a {@link CompletableFuture} eventually completed with {@link Suggestions}, possibly
+   *         empty
    */
   public CompletableFuture<Suggestions> offerBrigadierSuggestions(
       final CommandSource source, final String cmdLine) {
@@ -281,14 +296,15 @@ public class VelocityCommandManager implements CommandManager {
     } catch (final Throwable e) {
       // Again, plugins are naughty
       return CompletableFuture.failedFuture(
-        new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source, e));
+          new RuntimeException("Unable to provide suggestions for " + cmdLine + " for " + source,
+              e));
     }
   }
 
   /**
    * Parses the given command input.
    *
-   * @param input the normalized command input, without the leading slash ('/')
+   * @param input  the normalized command input, without the leading slash ('/')
    * @param source the command source to parse the command for
    * @return the parse results
    */
@@ -307,8 +323,8 @@ public class VelocityCommandManager implements CommandManager {
     try {
       // A RootCommandNode may only contain LiteralCommandNode children instances
       return dispatcher.getRoot().getChildren().stream()
-              .map(CommandNode::getName)
-              .collect(ImmutableList.toImmutableList());
+          .map(CommandNode::getName)
+          .collect(ImmutableList.toImmutableList());
     } finally {
       lock.readLock().unlock();
     }

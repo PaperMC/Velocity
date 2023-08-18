@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -10,7 +10,7 @@ package com.velocitypowered.api.event;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -109,7 +109,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
         return "allowed";
       }
       if (reason != null) {
-        return "denied: " + PlainComponentSerializer.plain().serialize(reason);
+        return "denied: " + PlainTextComponentSerializer.plainText().serialize(reason);
       }
       return "denied";
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,8 +18,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired when a player has initiated a connection with the proxy but before the proxy
  * authenticates the player with Mojang or before the player's proxy connection is fully established
- * (for offline mode).
+ * (for offline mode). Velocity will wait for this event to finish firing before proceeding further
+ * with the login process, but you should try to limit the work done in any event that fires during
+ * the login process.
+ *
+ * <p>
+ *   As of Velocity 3.1.0, you may cast the {@link InboundConnection} to a
+ *   {@link com.velocitypowered.api.proxy.LoginPhaseConnection} to allow a
+ *   proxy plugin to send login plugin messages to the client.
+ * </p>
  */
+@AwaitingEvent
 public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLoginComponentResult> {
 
   private final InboundConnection connection;
@@ -27,6 +37,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
   /**
    * Creates a new instance.
+   *
    * @param connection the connection logging into the proxy
    * @param username the player's username
    */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -15,7 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired after the player has connected to a server. The server the player is now connected to is
- * available in {@link Player#getCurrentServer()}.
+ * available in {@link Player#getCurrentServer()}. Velocity will not wait on this event to finish
+ * firing.
  */
 @Beta
 public class ServerPostConnectEvent {

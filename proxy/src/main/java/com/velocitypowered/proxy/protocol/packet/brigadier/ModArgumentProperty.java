@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,15 +30,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class ModArgumentProperty implements ArgumentType<ByteBuf> {
 
-  private final String identifier;
+  private final ArgumentIdentifier identifier;
   private final ByteBuf data;
 
-  public ModArgumentProperty(String identifier, ByteBuf data) {
+  public ModArgumentProperty(ArgumentIdentifier identifier, ByteBuf data) {
     this.identifier = identifier;
     this.data = Unpooled.unreleasableBuffer(data.asReadOnly());
   }
 
-  public String getIdentifier() {
+  public ArgumentIdentifier getIdentifier() {
     return identifier;
   }
 

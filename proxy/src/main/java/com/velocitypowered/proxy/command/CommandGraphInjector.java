@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,8 @@ import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Copies the nodes of a {@link RootCommandNode} to a possibly non-empty
- * destination {@link RootCommandNode}, respecting the requirements satisfied
- * by a given command source.
+ * Copies the nodes of a {@link RootCommandNode} to a possibly non-empty destination
+ * {@link RootCommandNode}, respecting the requirements satisfied by a given command source.
  *
  * @param <S> the type of the source to inject the nodes for
  */
@@ -55,13 +54,13 @@ public final class CommandGraphInjector<S> {
   // the root node we are copying nodes from to the destination node.
 
   /**
-   * Adds the node from the root node of this injector to the given root node,
-   * respecting the requirements satisfied by the given source.
+   * Adds the node from the root node of this injector to the given root node, respecting the
+   * requirements satisfied by the given source.
    *
    * <p>Prior to adding a literal with the same name as one previously contained
    * in the destination node, the old node is removed from the destination node.
    *
-   * @param dest the root node to add the permissible nodes to
+   * @param dest   the root node to add the permissible nodes to
    * @param source the command source to inject the nodes for
    */
   public void inject(final RootCommandNode<S> dest, final S source) {
@@ -69,7 +68,7 @@ public final class CommandGraphInjector<S> {
     try {
       final RootCommandNode<S> origin = this.dispatcher.getRoot();
       final CommandContextBuilder<S> rootContext =
-              new CommandContextBuilder<>(this.dispatcher, source, origin, 0);
+          new CommandContextBuilder<>(this.dispatcher, source, origin, 0);
 
       // Filter alias nodes
       for (final CommandNode<S> node : origin.getChildren()) {
@@ -78,7 +77,7 @@ public final class CommandGraphInjector<S> {
         }
 
         final CommandContextBuilder<S> context = rootContext.copy()
-                .withNode(node, ALIAS_RANGE);
+            .withNode(node, ALIAS_RANGE);
         if (!node.canUse(context, ALIAS_READER)) {
           continue;
         }
@@ -86,7 +85,7 @@ public final class CommandGraphInjector<S> {
         final LiteralCommandNode<S> asLiteral = (LiteralCommandNode<S>) node;
         final LiteralCommandNode<S> copy = asLiteral.createBuilder().build();
         final VelocityArgumentCommandNode<S, ?> argsNode =
-                VelocityCommands.getArgumentsNode(asLiteral);
+            VelocityCommands.getArgumentsNode(asLiteral);
         if (argsNode == null) {
           // This literal is associated to a BrigadierCommand, filter normally.
           this.copyChildren(node, copy, source);
@@ -126,7 +125,7 @@ public final class CommandGraphInjector<S> {
   }
 
   private void copyChildren(final CommandNode<S> parent, final CommandNode<S> dest,
-                            final S source) {
+      final S source) {
     for (final CommandNode<S> child : parent.getChildren()) {
       final CommandNode<S> filtered = this.filterNode(child, source);
       if (filtered != null) {

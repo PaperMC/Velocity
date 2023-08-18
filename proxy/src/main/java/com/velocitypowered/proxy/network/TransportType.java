@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
-enum TransportType {
+/**
+ * Enumerates the supported transports for Velocity.
+ */
+public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,
@@ -76,6 +79,11 @@ enum TransportType {
     return new VelocityNettyThreadFactory("Netty " + name + ' ' + type.toString() + " #%d");
   }
 
+  /**
+   * Determines the "best" transport to initialize.
+   *
+   * @return the transport to use
+   */
   public static TransportType bestType() {
     if (Boolean.getBoolean("velocity.disable-native-transport")) {
       return NIO;
@@ -83,13 +91,22 @@ enum TransportType {
 
     if (Epoll.isAvailable()) {
       return EPOLL;
-    } else {
-      return NIO;
     }
+
+    return NIO;
   }
 
+  /**
+   * Event loop group types.
+   */
   public enum Type {
+    /**
+     * Accepts connections and distributes them to workers.
+     */
     BOSS("Boss"),
+    /**
+     * Thread that handles connections.
+     */
     WORKER("Worker");
 
     private final String name;

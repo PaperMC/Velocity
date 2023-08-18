@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,19 +24,18 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.nbt.TagStringIO;
 import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEvent.ShowEntity;
 import net.kyori.adventure.text.event.HoverEvent.ShowItem;
 import net.kyori.adventure.text.serializer.gson.LegacyHoverEventSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.util.Codec.Decoder;
 import net.kyori.adventure.util.Codec.Encoder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * An implementation of {@link LegacyHoverEventSerializer} that implements the interface in the
- * most literal, albeit "incompatible" way possible.
+ * An implementation of {@link LegacyHoverEventSerializer} that implements the interface in the most
+ * literal, albeit "incompatible" way possible.
  */
 public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSerializer {
 
@@ -54,7 +53,7 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
   @Override
   public HoverEvent.@NonNull ShowItem deserializeShowItem(@NonNull Component input)
       throws IOException {
-    String snbt = PlainComponentSerializer.plain().serialize(input);
+    String snbt = PlainTextComponentSerializer.plainText().serialize(input);
     CompoundBinaryTag item = TagStringIO.get().asCompound(snbt);
 
     Key key;
@@ -66,13 +65,13 @@ public class VelocityLegacyHoverEventSerializer implements LegacyHoverEventSeria
     }
 
     byte count = item.getByte("Count", (byte) 1);
-    return ShowItem.of(key, count, BinaryTagHolder.of(snbt));
+    return ShowItem.of(key, count, BinaryTagHolder.binaryTagHolder(snbt));
   }
 
   @Override
   public HoverEvent.@NonNull ShowEntity deserializeShowEntity(@NonNull Component input,
       Decoder<Component, String, ? extends RuntimeException> componentDecoder) throws IOException {
-    String snbt = PlainComponentSerializer.plain().serialize(input);
+    String snbt = PlainTextComponentSerializer.plainText().serialize(input);
     CompoundBinaryTag item = TagStringIO.get().asCompound(snbt);
 
     Component name;

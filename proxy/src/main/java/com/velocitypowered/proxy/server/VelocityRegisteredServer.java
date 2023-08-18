@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@ import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -59,6 +59,9 @@ import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a server registered on the proxy.
+ */
 public class VelocityRegisteredServer implements RegisteredServer, ForwardingAudience {
 
   private final @Nullable VelocityServer server;
@@ -81,18 +84,24 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
+  public CompletableFuture<ServerPing> ping(PingOptions pingOptions) {
+    return ping(null, pingOptions);
+  }
+
+  @Override
   public CompletableFuture<ServerPing> ping() {
-    return ping(null, ProtocolVersion.UNKNOWN);
+    return ping(null, PingOptions.DEFAULT);
   }
 
   /**
    * Pings the specified server using the specified event {@code loop}, claiming to be
    * {@code version}.
-   * @param loop the event loop to use
-   * @param version the version to report
+   *
+   * @param loop    the event loop to use
+   * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
-  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, ProtocolVersion version) {
+  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions) {
     if (server == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
@@ -104,7 +113,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline()
                 .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
                 .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                    new ReadTimeoutHandler(pingOptions.getTimeout() == 0
+                            ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout(),
                         TimeUnit.MILLISECONDS))
                 .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
                 .addLast(MINECRAFT_DECODER,
@@ -120,7 +130,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
           if (future.isSuccess()) {
             MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
             conn.setSessionHandler(new PingSessionHandler(
-                pingFuture, VelocityRegisteredServer.this, conn, version));
+                pingFuture, VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion()));
           } else {
             pingFuture.completeExceptionally(future.cause());
           }
@@ -146,14 +156,15 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * afterwards.
    *
    * @param identifier the channel ID to use
-   * @param data the data
+   * @param data       the data
    * @return whether or not the message was sent
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
-      VelocityServerConnection connection = player.getConnectedServer();
-      if (connection != null && connection.getServer() == this) {
-        return connection.sendPluginMessage(identifier, data);
+      VelocityServerConnection serverConnection = player.getConnectedServer();
+      if (serverConnection != null && serverConnection.getConnection() != null
+              && serverConnection.getServer() == this) {
+        return serverConnection.sendPluginMessage(identifier, data);
       }
     }
 

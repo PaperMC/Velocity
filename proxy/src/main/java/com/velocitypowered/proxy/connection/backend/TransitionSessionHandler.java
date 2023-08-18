@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHands
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -55,8 +56,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   /**
    * Creates the new transition handler.
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   *
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
@@ -88,6 +90,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(JoinGame packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
+    RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
     VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
 
     final ConnectedPlayer player = serverConn.getPlayer();
@@ -99,13 +102,15 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
       // Send keep alive to try to avoid timeouts
       player.sendKeepAlive();
+
+      // Reset Tablist header and footer to prevent desync
+      player.clearHeaderAndFooter();
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(player, serverConn.getServer(),
-            existingConnection != null ? existingConnection.getServer() : null))
+        .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
         .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
@@ -136,7 +141,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // We're done! :)
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
-              existingConnection == null ? null : existingConnection.getServer()));
+              previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop())
         .exceptionally(exc -> {

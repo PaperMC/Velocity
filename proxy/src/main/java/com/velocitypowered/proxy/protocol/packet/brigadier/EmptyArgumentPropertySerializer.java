@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.brigadier;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -32,12 +33,12 @@ class EmptyArgumentPropertySerializer implements ArgumentPropertySerializer<Void
   }
 
   @Override
-  public @Nullable Void deserialize(ByteBuf buf) {
+  public @Nullable Void deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
     return null;
   }
 
   @Override
-  public void serialize(Void object, ByteBuf buf) {
+  public void serialize(Void object, ByteBuf buf, ProtocolVersion protocolVersion) {
 
   }
 }

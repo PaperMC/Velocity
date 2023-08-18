@@ -16,7 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-<Configuration status="warn">
+<!-- Disable shutdown hook, because we have our own -->
+<Configuration status="warn" shutdownHook="disable">
   <Appenders>
     <TerminalConsole name="TerminalConsole">
       <PatternLayout>
@@ -31,7 +32,8 @@
     <RollingRandomAccessFile name="File" fileName="logs/latest.log"
       filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz"
       immediateFlush="false">
-      <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
+      <PatternLayout
+        pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %minecraftFormatting{%msg}{strip}%n"/>
       <Policies>
         <TimeBasedTriggeringPolicy/>
         <OnStartupTriggeringPolicy/>

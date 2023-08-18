@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,13 @@
 package com.velocitypowered.proxy;
 
 import com.velocitypowered.proxy.config.VelocityConfiguration;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bstats.MetricsBase;
@@ -37,12 +35,15 @@ import org.bstats.charts.SingleLineChart;
 import org.bstats.config.MetricsConfig;
 import org.bstats.json.JsonObjectBuilder;
 
+/**
+ * Initializes bStats.
+ */
 public class Metrics {
 
   private MetricsBase metricsBase;
 
   private Metrics(Logger logger, int serviceId, boolean defaultEnabled) {
-    File configFile = Paths.get("plugins").resolve("bStats").resolve("config.txt").toFile();
+    File configFile = Path.of("plugins", "bStats", "config.txt").toFile();
     MetricsConfig config;
     try {
       config = new MetricsConfig(configFile, defaultEnabled);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -245,6 +245,7 @@ public final class QueryResponse {
 
     /**
      * Sets the hostname for the response.
+     *
      * @param hostname the hostname to set
      * @return this builder, for chaining
      */
@@ -255,6 +256,7 @@ public final class QueryResponse {
 
     /**
      * Sets the game version for the response.
+     *
      * @param gameVersion the game version to set
      * @return this builder, for chaining
      */
@@ -265,6 +267,7 @@ public final class QueryResponse {
 
     /**
      * Sets the map that will appear in the response.
+     *
      * @param map the map to set
      * @return this builder, for chaining
      */
@@ -275,6 +278,7 @@ public final class QueryResponse {
 
     /**
      * Sets the players that are currently claimed to be online.
+     *
      * @param currentPlayers a non-negative number representing all players online
      * @return this builder, for chaining
      */
@@ -286,6 +290,7 @@ public final class QueryResponse {
 
     /**
      * Sets the maximum number of players this server purportedly can hold.
+     *
      * @param maxPlayers a non-negative number representing the maximum number of builders
      * @return this builder, for chaining
      */
@@ -297,6 +302,7 @@ public final class QueryResponse {
 
     /**
      * Sets the host where this proxy is running.
+     *
      * @param proxyHost the host where the proxy is running
      * @return this instance, for chaining
      */
@@ -307,6 +313,7 @@ public final class QueryResponse {
 
     /**
      * Sets the port where this proxy is running.
+     *
      * @param proxyPort the port where the proxy is running
      * @return this instance, for chaining
      */
@@ -319,6 +326,7 @@ public final class QueryResponse {
 
     /**
      * Adds the specified players to the player list.
+     *
      * @param players the players to add
      * @return this builder, for chaining
      */
@@ -329,6 +337,7 @@ public final class QueryResponse {
 
     /**
      * Adds the specified players to the player list.
+     *
      * @param players the players to add
      * @return this builder, for chaining
      */
@@ -339,6 +348,7 @@ public final class QueryResponse {
 
     /**
      * Removes all players from the builder. This does not affect {@link #getCurrentPlayers()}.
+     *
      * @return this builder, for chaining
      */
     public Builder clearPlayers() {
@@ -348,6 +358,7 @@ public final class QueryResponse {
 
     /**
      * Sets the proxy version.
+     *
      * @param proxyVersion the proxy version to set
      * @return this builder, for chaining
      */
@@ -358,6 +369,7 @@ public final class QueryResponse {
 
     /**
      * Adds the specified plugins to the plugins list.
+     *
      * @param plugins the plugins to add
      * @return this builder, for chaining
      */
@@ -368,6 +380,7 @@ public final class QueryResponse {
 
     /**
      * Adds the specified plugins to the plugins list.
+     *
      * @param plugins the plugins to add
      * @return this builder, for chaining
      */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -12,6 +12,8 @@ import com.velocitypowered.api.proxy.InboundConnection;
 
 /**
  * This event is fired when a handshake is established between a client and the proxy.
+ * Velocity will fire this event asynchronously and will not wait for it to complete before
+ * handling the connection.
  */
 public final class ConnectionHandshakeEvent {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package com.velocitypowered.natives.compression;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.velocitypowered.natives.compression.CompressorUtils.ZLIB_BUFFER_SIZE;
-import static com.velocitypowered.natives.compression.CompressorUtils.ensureMaxSize;
 
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
@@ -29,6 +28,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+/**
+ * Implements deflate compression by wrapping {@link Deflater} and {@link Inflater}.
+ */
 public class JavaVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = JavaVelocityCompressor::new;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -11,7 +11,8 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.Player;
 
 /**
- * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message.
+ * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message. Velocity will
+ * not wait on the result of this event.
  */
 public final class PlayerClientBrandEvent {
   private final Player player;

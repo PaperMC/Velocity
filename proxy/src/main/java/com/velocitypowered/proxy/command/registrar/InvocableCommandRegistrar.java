@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,14 +42,14 @@ import java.util.function.Predicate;
  * {@link InvocableCommand} in a root node.
  */
 abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
-        I extends CommandInvocation<A>, A> extends AbstractCommandRegistrar<T> {
+    I extends CommandInvocation<A>, A> extends AbstractCommandRegistrar<T> {
 
   private final CommandInvocationFactory<I> invocationFactory;
   private final ArgumentType<A> argumentsType;
 
   protected InvocableCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock,
-                                      final CommandInvocationFactory<I> invocationFactory,
-                                      final ArgumentType<A> argumentsType) {
+      final CommandInvocationFactory<I> invocationFactory,
+      final ArgumentType<A> argumentsType) {
     super(root, lock);
     this.invocationFactory = Preconditions.checkNotNull(invocationFactory, "invocationFactory");
     this.argumentsType = Preconditions.checkNotNull(argumentsType, "argumentsType");
@@ -61,7 +61,7 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
 
     final String primaryAlias = aliases.next();
     final LiteralCommandNode<CommandSource> literal =
-            this.createLiteral(command, meta, primaryAlias);
+        this.createLiteral(command, meta, primaryAlias);
     this.register(literal);
 
     while (aliases.hasNext()) {
@@ -71,7 +71,7 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
   }
 
   private LiteralCommandNode<CommandSource> createLiteral(final T command, final CommandMeta meta,
-                                                          final String alias) {
+      final String alias) {
     final Predicate<CommandContextBuilder<CommandSource>> requirement = context -> {
       final I invocation = invocationFactory.create(context);
       return command.hasPermission(invocation);
@@ -83,35 +83,35 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
     };
 
     final LiteralCommandNode<CommandSource> literal = LiteralArgumentBuilder
-            .<CommandSource>literal(alias)
-            .requiresWithContext((context, reader) -> {
-              if (reader.canRead()) {
-                // InvocableCommands do not follow a tree-like permissions checking structure.
-                // Thus, a CommandSource may be able to execute a command with arguments while
-                // not being able to execute the argument-less variant.
-                // Only check for permissions once parsing is complete.
-                return true;
-              }
-              return requirement.test(context);
-            })
-            .executes(callback)
-            .build();
+        .<CommandSource>literal(alias)
+        .requiresWithContext((context, reader) -> {
+          if (reader.canRead()) {
+            // InvocableCommands do not follow a tree-like permissions checking structure.
+            // Thus, a CommandSource may be able to execute a command with arguments while
+            // not being able to execute the argument-less variant.
+            // Only check for permissions once parsing is complete.
+            return true;
+          }
+          return requirement.test(context);
+        })
+        .executes(callback)
+        .build();
 
     final ArgumentCommandNode<CommandSource, String> arguments = VelocityArgumentBuilder
-            .<CommandSource, A>velocityArgument(VelocityCommands.ARGS_NODE_NAME, argumentsType)
-            .requiresWithContext((context, reader) -> requirement.test(context))
-            .executes(callback)
-            .suggests((context, builder) -> {
-              final I invocation = invocationFactory.create(context);
-              return command.suggestAsync(invocation).thenApply(suggestions -> {
-                for (String value : suggestions) {
-                  Preconditions.checkNotNull(value, "suggestion");
-                  builder.suggest(value);
-                }
-                return builder.build();
-              });
-            })
-            .build();
+        .<CommandSource, A>velocityArgument(VelocityCommands.ARGS_NODE_NAME, argumentsType)
+        .requiresWithContext((context, reader) -> requirement.test(context))
+        .executes(callback)
+        .suggests((context, builder) -> {
+          final I invocation = invocationFactory.create(context);
+          return command.suggestAsync(invocation).thenApply(suggestions -> {
+            for (String value : suggestions) {
+              Preconditions.checkNotNull(value, "suggestion");
+              builder.suggest(value);
+            }
+            return builder.build();
+          });
+        })
+        .build();
     literal.addChild(arguments);
 
     // Add hinting nodes

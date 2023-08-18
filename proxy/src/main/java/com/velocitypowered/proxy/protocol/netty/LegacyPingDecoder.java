@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,9 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Decodes Minecraft 1.3-1.6.4 server ping requests.
+ */
 public class LegacyPingDecoder extends ByteToMessageDecoder {
 
   private static final String MC_1_6_CHANNEL = "MC|PingHost";

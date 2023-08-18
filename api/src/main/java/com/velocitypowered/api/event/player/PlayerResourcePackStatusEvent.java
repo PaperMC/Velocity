@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -16,8 +17,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This event is fired when the status of a resource pack sent to the player by the server is
- * changed.
+ * changed. Depending on the result of this event (which Velocity will wait until completely fired),
+ * the player may be kicked from the server.
  */
+@AwaitingEvent
 public class PlayerResourcePackStatusEvent {
 
   private final Player player;
@@ -25,9 +28,9 @@ public class PlayerResourcePackStatusEvent {
   private final @MonotonicNonNull ResourcePackInfo packInfo;
   private boolean overwriteKick;
 
-
   /**
    * Instantiates this event.
+   *
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, Status, ResourcePackInfo)} instead.
    */

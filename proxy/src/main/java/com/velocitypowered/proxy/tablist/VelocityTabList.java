@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,36 +18,53 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.player.TabList;
+import com.google.common.collect.Maps;
+import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabList implements TabList {
+/**
+ * Base class for handling tab lists.
+ */
+public class VelocityTabList implements InternalTabList {
 
-  protected final ConnectedPlayer player;
-  protected final MinecraftConnection connection;
-  protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
+  private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
+  private final ConnectedPlayer player;
+  private final MinecraftConnection connection;
+  private final Map<UUID, VelocityTabListEntry> entries;
 
-  public VelocityTabList(final ConnectedPlayer player) {
+  /**
+   * Constructs the instance.
+   *
+   * @param player player associated with this tab list
+   */
+  public VelocityTabList(ConnectedPlayer player) {
     this.player = player;
     this.connection = player.getConnection();
+    this.entries = Maps.newHashMap();
   }
 
-  @Deprecated
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
@@ -61,138 +78,181 @@ public class VelocityTabList implements TabList {
   }
 
   @Override
-  public void addEntry(TabListEntry entry) {
-    Preconditions.checkNotNull(entry, "entry");
-    Preconditions.checkArgument(entry.getTabList().equals(this),
-        "The provided entry was not created by this tab list");
-    Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
-        "this TabList already contains an entry with the same uuid");
-    Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
-        "Not a Velocity tab list entry");
+  public void addEntry(TabListEntry entry1) {
+    VelocityTabListEntry entry;
+    if (entry1 instanceof VelocityTabListEntry) {
+      entry = (VelocityTabListEntry) entry1;
+    } else {
+      entry = new VelocityTabListEntry(this, entry1.getProfile(),
+          entry1.getDisplayNameComponent().orElse(null),
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
+    }
 
-    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-    connection.write(
-        new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
-    entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
+    EnumSet<UpsertPlayerInfo.Action> actions = EnumSet.noneOf(UpsertPlayerInfo.Action.class);
+    UpsertPlayerInfo.Entry playerInfoEntry = new UpsertPlayerInfo.Entry(entry.getProfile().getId());
+
+    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+
+    TabListEntry previousEntry = this.entries.put(entry.getProfile().getId(), entry);
+
+    if (previousEntry != null) {
+      // we should merge entries here
+      if (previousEntry.equals(entry)) {
+        return; // nothing else to do, this entry is perfect
+      }
+      if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
+          entry.getDisplayNameComponent().orElse(null))) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().get());
+      }
+      if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_LATENCY);
+        playerInfoEntry.setLatency(entry.getLatency());
+      }
+      if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_GAME_MODE);
+        playerInfoEntry.setGameMode(entry.getGameMode());
+      }
+      if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_LISTED);
+        playerInfoEntry.setListed(entry.isListed());
+      }
+      if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
+        ChatSession from = entry.getChatSession();
+        if (from != null) {
+          actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
+          playerInfoEntry.setChatSession(
+              new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+        }
+      }
+    } else {
+      actions.addAll(EnumSet.of(UpsertPlayerInfo.Action.ADD_PLAYER,
+          UpsertPlayerInfo.Action.UPDATE_LATENCY,
+          UpsertPlayerInfo.Action.UPDATE_LISTED));
+      playerInfoEntry.setProfile(entry.getProfile());
+      if (entry.getDisplayNameComponent().isPresent()) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().get());
+      }
+      if (entry.getChatSession() != null) {
+        actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
+        ChatSession from = entry.getChatSession();
+        playerInfoEntry.setChatSession(
+            new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+      }
+      if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
+        actions.add(UpsertPlayerInfo.Action.UPDATE_GAME_MODE);
+        playerInfoEntry.setGameMode(entry.getGameMode());
+      }
+      playerInfoEntry.setLatency(entry.getLatency());
+      playerInfoEntry.setListed(entry.isListed());
+    }
+    this.connection.write(new UpsertPlayerInfo(actions, List.of(playerInfoEntry)));
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
-    Preconditions.checkNotNull(uuid, "uuid");
-
-    TabListEntry entry = entries.remove(uuid);
-    if (entry != null) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(
-          new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
-    }
-
-    return Optional.ofNullable(entry);
+    this.connection.write(new RemovePlayerInfo(List.of(uuid)));
+    return Optional.ofNullable(this.entries.remove(uuid));
   }
 
   @Override
   public boolean containsEntry(UUID uuid) {
-    Preconditions.checkNotNull(uuid, "uuid");
-    return entries.containsKey(uuid);
+    return this.entries.containsKey(uuid);
   }
 
-  /**
-   * Clears all entries from the tab list. Note that the entries are written with {@link
-   * MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit {@link
-   * MinecraftConnection#flush()}.
-   */
-  public void clearAll() {
-    Collection<VelocityTabListEntry> listEntries = entries.values();
-    if (listEntries.isEmpty()) {
-      return;
-    }
-    List<PlayerListItem.Item> items = new ArrayList<>(listEntries.size());
-    for (TabListEntry value : listEntries) {
-      items.add(PlayerListItem.Item.from(value));
-    }
-    entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+  @Override
+  public Optional<TabListEntry> getEntry(UUID uuid) {
+    return Optional.ofNullable(this.entries.get(uuid));
   }
 
   @Override
   public Collection<TabListEntry> getEntries() {
-    return Collections.unmodifiableCollection(this.entries.values());
+    return this.entries.values().stream().map(e -> (TabListEntry) e).collect(Collectors.toList());
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode);
+  public void clearAll() {
+    this.connection.delayedWrite(new RemovePlayerInfo(new ArrayList<>(this.entries.keySet())));
+    this.entries.clear();
   }
 
-  /**
-   * Processes a tab list entry packet from the backend.
-   *
-   * @param packet the packet to process
-   */
-  public void processBackendPacket(PlayerListItem packet) {
-    // Packets are already forwarded on, so no need to do that here
-    for (PlayerListItem.Item item : packet.getItems()) {
-      UUID uuid = item.getUuid();
-      assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
+  @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+      int gameMode,
+      @Nullable ChatSession chatSession, boolean listed) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
+        listed);
+  }
 
-      if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
-        // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
-        continue;
-      }
-
-      switch (packet.getAction()) {
-        case PlayerListItem.ADD_PLAYER: {
-          // ensure that name and properties are available
-          String name = item.getName();
-          List<GameProfile.Property> properties = item.getProperties();
-          if (name == null || properties == null) {
-            throw new IllegalStateException("Got null game profile for ADD_PLAYER");
-          }
-          entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
-              .tabList(this)
-              .profile(new GameProfile(uuid, name, properties))
-              .displayName(item.getDisplayName())
-              .latency(item.getLatency())
-              .gameMode(item.getGameMode())
-              .build());
-          break;
-        }
-        case PlayerListItem.REMOVE_PLAYER:
-          entries.remove(uuid);
-          break;
-        case PlayerListItem.UPDATE_DISPLAY_NAME: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setDisplayNameInternal(item.getDisplayName());
-          }
-          break;
-        }
-        case PlayerListItem.UPDATE_LATENCY: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setLatencyInternal(item.getLatency());
-          }
-          break;
-        }
-        case PlayerListItem.UPDATE_GAMEMODE: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setGameModeInternal(item.getGameMode());
-          }
-          break;
-        }
-        default:
-          // Nothing we can do here
-          break;
-      }
+  @Override
+  public void processUpdate(UpsertPlayerInfo infoPacket) {
+    for (UpsertPlayerInfo.Entry entry : infoPacket.getEntries()) {
+      processUpsert(infoPacket.getActions(), entry);
     }
   }
 
-  void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
+  protected UpsertPlayerInfo.Entry createRawEntry(VelocityTabListEntry entry) {
+    Preconditions.checkNotNull(entry, "entry");
+    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+    return new UpsertPlayerInfo.Entry(entry.getProfile().getId());
+  }
+
+  protected void emitActionRaw(UpsertPlayerInfo.Action action, UpsertPlayerInfo.Entry entry) {
+    this.connection.write(
+        new UpsertPlayerInfo(EnumSet.of(action), Collections.singletonList(entry)));
+  }
+
+  private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions,
+      UpsertPlayerInfo.Entry entry) {
+    Preconditions.checkNotNull(entry.getProfileId(), "Profile ID cannot be null");
+    UUID profileId = entry.getProfileId();
+    VelocityTabListEntry currentEntry = this.entries.get(profileId);
+    if (actions.contains(UpsertPlayerInfo.Action.ADD_PLAYER)) {
+      if (currentEntry == null) {
+        this.entries.put(profileId,
+            currentEntry = new VelocityTabListEntry(
+                this,
+                entry.getProfile(),
+                null,
+                0,
+                -1,
+                null,
+                false
+            )
+        );
+      } else {
+        logger.debug("Received an add player packet for an existing entry; this does nothing.");
+      }
+    } else if (currentEntry == null) {
+      logger.debug(
+          "Received a partial player before an ADD_PLAYER action; profile could not be built. {}",
+          entry);
+      return;
+    }
+    if (actions.contains(UpsertPlayerInfo.Action.UPDATE_GAME_MODE)) {
+      currentEntry.setGameModeWithoutUpdate(entry.getGameMode());
+    }
+    if (actions.contains(UpsertPlayerInfo.Action.UPDATE_LATENCY)) {
+      currentEntry.setLatencyWithoutUpdate(entry.getLatency());
+    }
+    if (actions.contains(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME)) {
+      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName());
+    }
+    if (actions.contains(UpsertPlayerInfo.Action.INITIALIZE_CHAT)) {
+      currentEntry.setChatSession(entry.getChatSession());
+    }
+    if (actions.contains(UpsertPlayerInfo.Action.UPDATE_LISTED)) {
+      currentEntry.setListedWithoutUpdate(entry.isListed());
+    }
+  }
+
+  @Override
+  public void processRemove(RemovePlayerInfo infoPacket) {
+    for (UUID uuid : infoPacket.getProfilesToRemove()) {
+      this.entries.remove(uuid);
     }
   }
 }

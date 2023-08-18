@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AvailableCommands implements MinecraftPacket {
+
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
 
   private static final byte NODE_TYPE_ROOT = 0x00;
@@ -69,6 +70,7 @@ public class AvailableCommands implements MinecraftPacket {
 
   /**
    * Returns the root node.
+   *
    * @return the root node
    */
   public RootCommandNode<CommandSource> getRootNode() {
@@ -83,7 +85,7 @@ public class AvailableCommands implements MinecraftPacket {
     int commands = ProtocolUtils.readVarInt(buf);
     WireNode[] wireNodes = new WireNode[commands];
     for (int i = 0; i < commands; i++) {
-      wireNodes[i] = deserializeNode(buf, i);
+      wireNodes[i] = deserializeNode(buf, i, protocolVersion);
     }
 
     // Iterate over the deserialized nodes and attempt to form a graph. We also resolve any cycles
@@ -130,13 +132,13 @@ public class AvailableCommands implements MinecraftPacket {
     // Now serialize the children.
     ProtocolUtils.writeVarInt(buf, idMappings.size());
     for (CommandNode<CommandSource> child : idMappings.keySet()) {
-      serializeNode(child, buf, idMappings);
+      serializeNode(child, buf, idMappings, protocolVersion);
     }
     ProtocolUtils.writeVarInt(buf, idMappings.getInt(rootNode));
   }
 
   private static void serializeNode(CommandNode<CommandSource> node, ByteBuf buf,
-      Object2IntMap<CommandNode<CommandSource>> idMappings) {
+      Object2IntMap<CommandNode<CommandSource>> idMappings, ProtocolVersion protocolVersion) {
     byte flags = 0;
     if (node.getRedirect() != null) {
       flags |= FLAG_IS_REDIRECT;
@@ -168,11 +170,11 @@ public class AvailableCommands implements MinecraftPacket {
     if (node instanceof ArgumentCommandNode<?, ?>) {
       ProtocolUtils.writeString(buf, node.getName());
       ArgumentPropertyRegistry.serialize(buf,
-              ((ArgumentCommandNode<CommandSource, ?>) node).getType());
+          ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
 
       if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
         SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
-                .getCustomSuggestions();
+            .getCustomSuggestions();
         String name = "minecraft:ask_server";
         if (provider instanceof ProtocolSuggestionProvider) {
           name = ((ProtocolSuggestionProvider) provider).name;
@@ -189,7 +191,7 @@ public class AvailableCommands implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  private static WireNode deserializeNode(ByteBuf buf, int idx) {
+  private static WireNode deserializeNode(ByteBuf buf, int idx, ProtocolVersion version) {
     byte flags = buf.readByte();
     int[] children = ProtocolUtils.readIntegerArray(buf);
     int redirectTo = -1;
@@ -205,14 +207,13 @@ public class AvailableCommands implements MinecraftPacket {
             .literal(ProtocolUtils.readString(buf)));
       case NODE_TYPE_ARGUMENT:
         String name = ProtocolUtils.readString(buf);
-        ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf);
+        ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf, version);
 
         RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
             .argument(name, argumentType);
         if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
           argumentBuilder.suggests(new ProtocolSuggestionProvider(ProtocolUtils.readString(buf)));
         }
-
         return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
       default:
         throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
@@ -220,6 +221,7 @@ public class AvailableCommands implements MinecraftPacket {
   }
 
   private static class WireNode {
+
     private final int idx;
     private final byte flags;
     private final int[] children;
@@ -320,10 +322,10 @@ public class AvailableCommands implements MinecraftPacket {
       if (args != null) {
         if (args instanceof LiteralArgumentBuilder) {
           helper.add("argsLabel",
-                  ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
+              ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
         } else if (args instanceof RequiredArgumentBuilder) {
           helper.add("argsName",
-                  ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
+              ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
         }
       }
 

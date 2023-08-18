@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import com.velocitypowered.api.proxy.server.ServerPing.Players;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class LegacyDisconnect {
 
@@ -40,8 +40,9 @@ public class LegacyDisconnect {
 
   /**
    * Converts a modern server list ping response into an legacy disconnect packet.
+   *
    * @param response the server ping to convert
-   * @param version the requesting clients' version
+   * @param version  the requesting clients' version
    * @return the disconnect packet
    */
   public static LegacyDisconnect fromServerPing(ServerPing response,
@@ -54,7 +55,7 @@ public class LegacyDisconnect {
         // remove all section symbols, along with fetching just the first line of an (unformatted)
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
-            cleanSectionSymbol(getFirstLine(PlainComponentSerializer.plain().serialize(
+            cleanSectionSymbol(getFirstLine(PlainTextComponentSerializer.plainText().serialize(
                 response.getDescriptionComponent()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
@@ -86,6 +87,7 @@ public class LegacyDisconnect {
 
   /**
    * Converts a {@link TextComponent} into a legacy disconnect packet.
+   *
    * @param component the component to convert
    * @return the disconnect packet
    */

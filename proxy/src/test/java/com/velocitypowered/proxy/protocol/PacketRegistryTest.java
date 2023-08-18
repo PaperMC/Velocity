@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.StatusPing;
-
 import org.junit.jupiter.api.Test;
 
 class PacketRegistryTest {
@@ -79,7 +78,7 @@ class PacketRegistryTest {
     assertNull(registry.getProtocolRegistry(MINECRAFT_1_14_2).createPacket(0x01),
         "Registry should return a null");
     assertNull(registry.getProtocolRegistry(MINECRAFT_1_16_2).createPacket(0),
-            "Registry should return null");
+        "Registry should return null");
   }
 
   @Test

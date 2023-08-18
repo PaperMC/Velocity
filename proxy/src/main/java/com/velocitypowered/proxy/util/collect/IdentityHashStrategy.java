@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,11 @@ package com.velocitypowered.proxy.util.collect;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
 
+/**
+ * An identity hash strategy for fastutil.
+ *
+ * @param <T> the type
+ */
 public final class IdentityHashStrategy<T> implements Strategy<T> {
 
   @SuppressWarnings("rawtypes")

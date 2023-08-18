@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,14 @@ public class ResourcePackResponse implements MinecraftPacket {
 
   private String hash = "";
   private @MonotonicNonNull Status status;
+
+  public ResourcePackResponse() {
+  }
+
+  public ResourcePackResponse(String hash, @MonotonicNonNull Status status) {
+    this.hash = hash;
+    this.status = status;
+  }
 
   public Status getStatus() {
     if (status == null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.plugin;
 
+import com.velocitypowered.proxy.Velocity;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,6 +26,9 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+/**
+ * The per-plugin class loader.
+ */
 public class PluginClassLoader extends URLClassLoader {
 
   private static final Set<PluginClassLoader> loaders = new CopyOnWriteArraySet<>();
@@ -34,7 +38,7 @@ public class PluginClassLoader extends URLClassLoader {
   }
 
   public PluginClassLoader(URL[] urls) {
-    super(urls);
+    super(urls, Velocity.class.getClassLoader());
   }
 
   public void addToClassloaders() {

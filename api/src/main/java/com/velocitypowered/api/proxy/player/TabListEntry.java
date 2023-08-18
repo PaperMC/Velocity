@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
@@ -15,7 +17,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Represents a single entry in a {@link TabList}.
  */
-public interface TabListEntry {
+public interface TabListEntry extends KeyIdentifiable {
+  /**
+   * Returns the {@link ChatSession} associated with this entry.
+   *
+   * @return the chat session
+   */
+  @Nullable ChatSession getChatSession();
+
+  @Override
+  default IdentifiedKey getIdentifiedKey() {
+    ChatSession session = getChatSession();
+    if (session == null) {
+      return null;
+    }
+    return getChatSession().getIdentifiedKey();
+  }
 
   /**
    * Returns the parent {@link TabList} of this {@code this} {@link TabListEntry}.
@@ -39,7 +56,7 @@ public interface TabListEntry {
    * {@link GameProfile#getName()} is shown.
    *
    * @return {@link Optional} text {@link net.kyori.adventure.text.Component} of name displayed in
-   *         the tab list
+   *     the tab list
    */
   Optional<Component> getDisplayNameComponent();
 
@@ -104,6 +121,25 @@ public interface TabListEntry {
   TabListEntry setGameMode(int gameMode);
 
   /**
+   * Returns whether or not this player will be visible to other players in the tab list.
+   *
+   * @return Whether this entry is listed; only changeable in 1.19.3 and above
+   */
+  default boolean isListed() {
+    return true;
+  }
+
+  /**
+   * Sets whether this entry is listed.
+   *
+   * @param listed whether this entry is listed
+   * @return {@code this}, for chaining
+   */
+  default TabListEntry setListed(boolean listed) {
+    return this;
+  }
+
+  /**
    * Returns a {@link Builder} to create a {@link TabListEntry}.
    *
    * @return {@link TabListEntry} builder
@@ -124,6 +160,9 @@ public interface TabListEntry {
     private @Nullable Component displayName;
     private int latency = 0;
     private int gameMode = 0;
+    private boolean listed = true;
+
+    private @Nullable ChatSession chatSession;
 
     private Builder() {
     }
@@ -149,6 +188,21 @@ public interface TabListEntry {
      */
     public Builder profile(GameProfile profile) {
       this.profile = profile;
+      return this;
+    }
+
+    /**
+     * Sets the {@link IdentifiedKey} of the {@link TabListEntry}.
+     * <p>This only works for players currently <b>not</b> connected to this proxy.</p>
+     * <p>For any player currently connected to this proxy this will be filled automatically.</p>
+     * <p>Will ignore mismatching key revisions data.</p>
+     *
+     * @param chatSession session to set
+     * @return {@code this}, for chaining
+     * @see TabListEntry#getChatSession()
+     */
+    public Builder chatSession(ChatSession chatSession) {
+      this.chatSession = chatSession;
       return this;
     }
 
@@ -189,6 +243,18 @@ public interface TabListEntry {
     }
 
     /**
+     * Sets wether this entry should be visible.
+     *
+     * @param listed to set
+     * @return ${code this}, for chaining
+     * @see TabListEntry#isListed()
+     */
+    public Builder listed(boolean listed) {
+      this.listed = listed;
+      return this;
+    }
+
+    /**
      * Constructs the {@link TabListEntry} specified by {@code this} {@link Builder}.
      *
      * @return the constructed {@link TabListEntry}
@@ -200,7 +266,7 @@ public interface TabListEntry {
       if (profile == null) {
         throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
       }
-      return tabList.buildEntry(profile, displayName, latency, gameMode);
+      return tabList.buildEntry(profile, displayName, latency, gameMode, chatSession, listed);
     }
   }
 }

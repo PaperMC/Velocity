@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -8,12 +8,15 @@
 package com.velocitypowered.api.event.query;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.server.QueryResponse;
 import java.net.InetAddress;
 
 /**
- * This event is fired if proxy is getting queried over GS4 Query protocol.
+ * This event is fired if proxy is getting queried over GS4 Query protocol. Velocity will wait on
+ * this event to fire before providing a response to the client.
  */
+@AwaitingEvent
 public final class ProxyQueryEvent {
 
   private final QueryType queryType;

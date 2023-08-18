@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@ import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
+/**
+ * Common connection request results.
+ */
 public class ConnectionRequestResults {
 
   private ConnectionRequestResults() {
@@ -38,6 +41,7 @@ public class ConnectionRequestResults {
 
   /**
    * Returns a plain result (one with a status but no reason).
+   *
    * @param status the status to use
    * @param server the server to use
    * @return the result
@@ -50,8 +54,9 @@ public class ConnectionRequestResults {
 
   /**
    * Returns a disconnect result with a reason.
+   *
    * @param component the reason for disconnecting from the server
-   * @param server the server to use
+   * @param server    the server to use
    * @return the result
    */
   public static Impl forDisconnect(Component component, RegisteredServer server) {
@@ -68,6 +73,9 @@ public class ConnectionRequestResults {
     return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
   }
 
+  /**
+   * Base implementation.
+   */
   public static class Impl implements ConnectionRequestBuilder.Result {
 
     private final Status status;
@@ -100,6 +108,7 @@ public class ConnectionRequestResults {
 
     /**
      * Returns whether or not it is safe to attempt a reconnect.
+     *
      * @return whether we can try to reconnect
      */
     public boolean isSafe() {
