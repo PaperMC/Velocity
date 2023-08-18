@@ -77,12 +77,10 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
-import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -155,7 +153,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final InternalTabList tabList;
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
-  private final Collection<String> knownChannels;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
   private @MonotonicNonNull Boolean previousResourceResponse;
@@ -185,7 +182,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.virtualHost = virtualHost;
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
-    this.knownChannels = CappedSet.create(MAX_PLUGIN_CHANNELS);
     this.onlineMode = onlineMode;
 
     if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
@@ -1101,15 +1097,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    */
   public void setPhase(ClientConnectionPhase connectionPhase) {
     this.connectionPhase = connectionPhase;
-  }
-
-  /**
-   * Return all the plugin message channels "known" to the client.
-   *
-   * @return the channels
-   */
-  public Collection<String> getKnownChannels() {
-    return knownChannels;
   }
 
   @Override
