@@ -482,6 +482,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
     serverBossBars.clear();
 
+    // Tell the server about the proxy's plugin message channels.
+    ProtocolVersion serverVersion = serverMc.getProtocolVersion();
+    final Collection<String> channels = server.getChannelRegistrar()
+        .getChannelsForProtocol(serverMc.getProtocolVersion());
+    if (!channels.isEmpty()) {
+      serverMc.delayedWrite(constructChannelsPacket(serverVersion, channels));
+    }
+
     // If we had plugin messages queued during login/FML handshake, send them now.
     PluginMessage pm;
     while ((pm = loginPluginMessages.poll()) != null) {
