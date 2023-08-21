@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.connection;
 
-import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhase;
 
