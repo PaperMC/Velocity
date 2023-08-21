@@ -78,6 +78,20 @@ public interface ProxyConfig {
   boolean shouldPreventClientProxyConnections();
 
   /**
+   * Retrieves the current player information forwarding mode.
+   *
+   * @return the player information forwarding mode
+   */
+  PlayerInfoForwarding getPlayerInfoForwardingMode();
+
+  /**
+   * Retrieves the forwarding secret used for player information forwarding.
+   *
+   * @return the forwarding secret as a byte array
+   */
+  byte[] getForwardingSecret();
+
+  /**
    * Get a Map of all servers registered in <code>velocity.toml</code>. This method does
    * <strong>not</strong> return all the servers currently in memory, although in most cases it
    * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.

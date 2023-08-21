@@ -24,6 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
+import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -290,10 +291,12 @@ public class VelocityConfiguration implements ProxyConfig {
     return preventClientProxyConnections;
   }
 
+  @Override
   public PlayerInfoForwarding getPlayerInfoForwardingMode() {
     return playerInfoForwardingMode;
   }
 
+  @Override
   public byte[] getForwardingSecret() {
     return forwardingSecret.clone();
   }
