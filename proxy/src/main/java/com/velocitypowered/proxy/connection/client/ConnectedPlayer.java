@@ -150,6 +150,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ModInfo modInfo;
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
+  private Component displayName;
   private final InternalTabList tabList;
   private final VelocityServer server;
   private ClientConnectionPhase connectionPhase;
@@ -162,7 +163,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
       .withDynamic(Identity.UUID, this::getUniqueId)
       .withDynamic(Identity.NAME, this::getUsername)
-      .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
+      .withDynamic(Identity.DISPLAY_NAME, this::getDisplayName)
       .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
       .withStatic(PermissionChecker.POINTER, getPermissionChecker())
       .withStatic(FacetPointers.TYPE, Type.PLAYER)
@@ -183,6 +184,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
+    this.displayName = Component.text(profile.getName());
 
     if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
       this.tabList = new VelocityTabList(this);
@@ -212,6 +214,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public String getUsername() {
     return profile.getName();
+  }
+
+  @Override
+  public Component getDisplayName() {
+    return displayName;
+  }
+
+  @Override
+  public void setDisplayName(final Component displayName) {
+    this.displayName = displayName;
   }
 
   @Override
