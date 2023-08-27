@@ -20,6 +20,8 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import io.netty.channel.ChannelFuture;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -86,7 +88,10 @@ public class ChatQueue {
   private static Function<WrappedPacket, WrappedPacket> writePacket(MinecraftConnection connection) {
     return wrappedPacket -> {
       if (!connection.isClosed()) {
-        wrappedPacket.write(connection);
+        ChannelFuture future = wrappedPacket.write(connection);
+        if (future != null) {
+          future.awaitUninterruptibly();
+        }
       }
 
       return wrappedPacket;
@@ -149,10 +154,12 @@ public class ChatQueue {
       this.packet = packet;
     }
 
-    public void write(MinecraftConnection connection) {
+    @Nullable
+    public ChannelFuture write(MinecraftConnection connection) {
       if (packet != null) {
-        connection.write(packet);
+        return connection.write(packet);
       }
+      return null;
     }
 
     private static CompletableFuture<WrappedPacket> wrap(Instant timestamp,

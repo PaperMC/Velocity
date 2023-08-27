@@ -49,6 +49,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -214,12 +215,16 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Writes and immediately flushes a message to the connection.
    *
    * @param msg the message to write
+   *
+   * @return A {@link ChannelFuture} that will complete when packet is successfully sent
    */
-  public void write(Object msg) {
+  @Nullable
+  public ChannelFuture write(Object msg) {
     if (channel.isActive()) {
-      channel.writeAndFlush(msg, channel.voidPromise());
+      return channel.writeAndFlush(msg, channel.newPromise());
     } else {
       ReferenceCountUtil.release(msg);
+      return null;
     }
   }
 
