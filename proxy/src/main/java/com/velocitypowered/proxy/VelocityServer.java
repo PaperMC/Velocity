@@ -38,6 +38,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
+import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
@@ -216,6 +217,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     commandManager.register("shutdown", ShutdownCommand.command(this),
         "end", "stop");
     new GlistCommand(this).register();
+    new SendCommand(this).register();
 
     this.doStartupConfigLoad();
 
