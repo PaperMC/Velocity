@@ -24,6 +24,8 @@ import com.velocitypowered.api.plugin.PluginManager;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -79,10 +81,12 @@ public class FakePluginManager implements PluginManager {
 
     private final String id;
     private final Object instance;
+    private final ExecutorService service;
 
     private FakePluginContainer(String id, Object instance) {
       this.id = id;
       this.instance = instance;
+      this.service = ForkJoinPool.commonPool();
     }
 
     @Override
@@ -93,6 +97,11 @@ public class FakePluginManager implements PluginManager {
     @Override
     public Optional<?> getInstance() {
       return Optional.of(instance);
+    }
+
+    @Override
+    public ExecutorService getExecutorService() {
+      return service;
     }
   }
 }

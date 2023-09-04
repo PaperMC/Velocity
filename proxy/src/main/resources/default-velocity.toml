@@ -1,12 +1,12 @@
 # Config version. Do not change this
-config-version = "2.5"
+config-version = "2.6"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
 
 # What should be the MOTD? This gets displayed when the player adds your server to
-# their server list. Legacy color codes and JSON are accepted.
-motd = "&#09add3A Velocity Server"
+# their server list. Only MiniMessage format is accepted.
+motd = "<#09add3>A Velocity Server"
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
 # on the number of players online.)

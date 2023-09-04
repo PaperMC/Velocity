@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.connection.registry.DimensionData;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -39,16 +38,17 @@ public class Respawn implements MinecraftPacket {
   private byte dataToKeep; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16-1.16.1
   private short previousGamemode; // 1.16+
-  private DimensionData currentDimensionData; // 1.16.2+
+  private CompoundBinaryTag currentDimensionData; // 1.16.2+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
+  private int portalCooldown; // 1.20+
 
   public Respawn() {
   }
 
   public Respawn(int dimension, long partialHashedSeed, short difficulty, short gamemode,
       String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
-      short previousGamemode, DimensionData currentDimensionData,
-      @Nullable Pair<String, Long> lastDeathPosition) {
+      short previousGamemode, CompoundBinaryTag currentDimensionData,
+      @Nullable Pair<String, Long> lastDeathPosition, int portalCooldown) {
     this.dimension = dimension;
     this.partialHashedSeed = partialHashedSeed;
     this.difficulty = difficulty;
@@ -59,13 +59,14 @@ public class Respawn implements MinecraftPacket {
     this.previousGamemode = previousGamemode;
     this.currentDimensionData = currentDimensionData;
     this.lastDeathPosition = lastDeathPosition;
+    this.portalCooldown = portalCooldown;
   }
 
   public static Respawn fromJoinGame(JoinGame joinGame) {
     return new Respawn(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
         joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),
         (byte) 0, joinGame.getDimensionInfo(), joinGame.getPreviousGamemode(),
-        joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition());
+        joinGame.getCurrentDimensionData(), joinGame.getLastDeathPosition(), joinGame.getPortalCooldown());
   }
 
   public int getDimension() {
@@ -124,12 +125,20 @@ public class Respawn implements MinecraftPacket {
     this.previousGamemode = previousGamemode;
   }
 
+  public Pair<String, Long> getLastDeathPosition() {
+    return lastDeathPosition;
+  }
+
   public void setLastDeathPosition(Pair<String, Long> lastDeathPosition) {
     this.lastDeathPosition = lastDeathPosition;
   }
 
-  public Pair<String, Long> getLastDeathPosition() {
-    return lastDeathPosition;
+  public int getPortalCooldown() {
+    return portalCooldown;
+  }
+
+  public void setPortalCooldown(int portalCooldown) {
+    this.portalCooldown = portalCooldown;
   }
 
   @Override
@@ -145,6 +154,7 @@ public class Respawn implements MinecraftPacket {
         + ", dimensionInfo=" + dimensionInfo
         + ", previousGamemode=" + previousGamemode
         + ", dimensionData=" + currentDimensionData
+        + ", portalCooldown=" + portalCooldown
         + '}';
   }
 
@@ -155,10 +165,8 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        CompoundBinaryTag dimDataTag = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
+        this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
-        this.currentDimensionData = DimensionData.decodeBaseCompoundTag(dimDataTag, version)
-            .annotateWith(dimensionIdentifier, null);
       } else {
         dimensionIdentifier = ProtocolUtils.readString(buf);
         levelName = ProtocolUtils.readString(buf);
@@ -191,6 +199,9 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
       this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
     }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+      this.portalCooldown = ProtocolUtils.readVarInt(buf);
+    }
   }
 
   @Override
@@ -198,7 +209,7 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        ProtocolUtils.writeCompoundTag(buf, currentDimensionData.serializeDimensionDetails());
+        ProtocolUtils.writeCompoundTag(buf, currentDimensionData);
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
@@ -236,6 +247,10 @@ public class Respawn implements MinecraftPacket {
       } else {
         buf.writeBoolean(false);
       }
+    }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+      ProtocolUtils.writeVarInt(buf, portalCooldown);
     }
   }
 

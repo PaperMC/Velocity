@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,15 +28,12 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -273,11 +270,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public net.kyori.adventure.text.Component getMotd() {
     if (motdAsComponent == null) {
-      if (motd.startsWith("{")) {
-        motdAsComponent = GsonComponentSerializer.gson().deserialize(motd);
-      } else {
-        motdAsComponent = LegacyComponentSerializer.legacy('&').deserialize(motd);
-      }
+      motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
     }
     return motdAsComponent;
   }
@@ -454,17 +447,6 @@ public class VelocityConfiguration implements ProxyConfig {
         .build();
     config.load();
 
-    // Create temporary default configuration
-    File tmpFile = File.createTempFile("default-config", null);
-    tmpFile.deleteOnExit();
-
-    // Copy over default file to tmp location
-    try (InputStream in = defaultConfigLocation.openStream()) {
-      Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-    CommentedFileConfig defaultConfig = CommentedFileConfig.of(tmpFile, TomlFormat.instance());
-    defaultConfig.load();
-
     // TODO: migrate this on Velocity Polymer
     double configVersion;
     try {
@@ -531,6 +513,32 @@ public class VelocityConfiguration implements ProxyConfig {
       mustResave = true;
     }
 
+    String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+
+    // Old MOTD Migration
+    if (configVersion < 2.6) {
+      final String migratedMotd;
+      // JSON Format Migration
+      if (motd.strip().startsWith("{")) {
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                GsonComponentSerializer.gson().deserialize(motd))
+                .replace("\\", "");
+      } else {
+        // Legacy '&' Format Migration
+        migratedMotd = MiniMessage.miniMessage().serialize(
+                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+      }
+
+      config.set("motd", migratedMotd);
+      motd = migratedMotd;
+
+      config.setComment("motd",
+              " What should be the MOTD? This gets displayed when the player adds your server to\n"
+                      + " their server list. Only MiniMessage format is accepted.");
+      config.set("config-version", "2.6");
+      mustResave = true;
+    }
+
     // Handle any cases where the config needs to be saved again
     if (mustResave) {
       config.save();
@@ -548,7 +556,6 @@ public class VelocityConfiguration implements ProxyConfig {
         PingPassthroughMode.DISABLED);
 
     String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    String motd = config.getOrElse("motd", "&#09add3A Velocity Server");
     int maxPlayers = config.getIntOrElse("show-max-players", 500);
     Boolean onlineMode = config.getOrElse("online-mode", true);
     Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
@@ -558,7 +565,7 @@ public class VelocityConfiguration implements ProxyConfig {
     Boolean kickExisting = config.getOrElse("kick-existing-players", false);
     Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
 
-    // Throw an exception if the forwarding-secret file is empty and the proxy is using a 
+    // Throw an exception if the forwarding-secret file is empty and the proxy is using a
     // forwarding mode that requires it.
     if (forwardingSecret.length == 0
         && (forwardingMode == PlayerInfoForwarding.MODERN

@@ -89,6 +89,13 @@ public interface Player extends
   PlayerSettings getPlayerSettings();
 
   /**
+   * Returns whether the player has sent its client settings.
+   *
+   * @return true if the player has sent its client settings
+   */
+  boolean hasSentPlayerSettings();
+
+  /**
    * Returns the player's mod info if they have a modded client.
    *
    * @return an {@link Optional} the mod info. which may be empty

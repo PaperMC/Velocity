@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19_3;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19_4;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.id;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.mapSet;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
@@ -232,8 +233,9 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:entity_summon", mapSet(MINECRAFT_1_19_3, -1), mapSet(MINECRAFT_1_19, 40)));
     empty(id("minecraft:dimension", mapSet(MINECRAFT_1_19_3, 38), mapSet(MINECRAFT_1_19, 41)));
     empty(id("minecraft:gamemode", mapSet(MINECRAFT_1_19_3, 39))); // 1.19.3
+
     empty(id("minecraft:time", mapSet(MINECRAFT_1_19_3, 40),
-        mapSet(MINECRAFT_1_19, 42))); // added in 1.14
+        mapSet(MINECRAFT_1_19, 42)), TimeArgumentSerializer.TIME); // added in 1.14
 
     register(
         id("minecraft:resource_or_tag", mapSet(MINECRAFT_1_19_3, 41), mapSet(MINECRAFT_1_19, 43)),
@@ -249,8 +251,9 @@ public class ArgumentPropertyRegistry {
 
     empty(id("minecraft:template_mirror", mapSet(MINECRAFT_1_19, 45))); // 1.19
     empty(id("minecraft:template_rotation", mapSet(MINECRAFT_1_19, 46))); // 1.19
+    empty(id("minecraft:heightmap", mapSet(MINECRAFT_1_19_4, 47))); // 1.19.4
 
-    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_19, 47))); // added in 1.16
+    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_19_4, 48), mapSet(MINECRAFT_1_19, 47))); // added in 1.16
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)),
